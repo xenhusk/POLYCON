@@ -1,5 +1,3 @@
-// script.js
-
 const startButton = document.getElementById("start-recording");
 const stopButton = document.getElementById("stop-recording");
 const finishButton = document.getElementById("finish-session");
@@ -9,7 +7,7 @@ const summaryOutput = document.getElementById("summary-output");
 
 let mediaRecorder;
 let audioChunks = [];
-let audioBlob = null; // To store the recorded audio blob
+let audioBlob = null;
 
 // Start Recording
 startButton.addEventListener("click", async () => {
@@ -26,54 +24,26 @@ startButton.addEventListener("click", async () => {
   audioChunks = [];
 });
 
-// Stop Recording
+// Stop Recording and Prepare Audio
 stopButton.addEventListener("click", () => {
   mediaRecorder.stop();
   stopButton.disabled = true;
   startButton.disabled = false;
 
   mediaRecorder.onstop = () => {
-    audioBlob = new Blob(audioChunks, { type: "audio/wav" });
+    audioBlob = new Blob(audioChunks, { type: "audio/webm" });
     const audioUrl = URL.createObjectURL(audioBlob);
     audioPlayback.src = audioUrl;
-
     console.log("Audio recording stopped and ready for upload");
   };
 });
 
-// Finish Session (Combine Transcription and Notes)
-finishButton.addEventListener("click", async () => {
-  const concern = document.getElementById("concern").value;
-  const actionTaken = document.getElementById("action-taken").value;
-  const outcome = document.getElementById("outcome").value;
-  const remarks = document.getElementById("remarks").value;
-
-  let transcription = null;
-
-  // Step 1: If audioBlob exists, upload and transcribe it
-  if (audioBlob) {
-    const audioUploadResponse = await uploadAudio(audioBlob);// Actual upload API call
-    transcription = await audioUploadResponse.transcription;// Transcription already included in the upload response
-  }
-
-  // Step 2: Summarize transcription (if available) and notes
-  const summary = await generateSummary(transcription, {
-    concern,
-    actionTaken,
-    outcome,
-    remarks,
-  });
-
-  // Display the summary
-  summaryOutput.textContent = summary;
-});
-
-// Actual Audio Upload Function (combined with transcribe)
+// Upload the recorded audio to the backend
 async function uploadAudio(audioBlob) {
   const formData = new FormData();
-  formData.append('audio', audioBlob, 'audio.wav');
+  formData.append('audio', audioBlob, 'audio.webm');
 
-  const response = await fetch('http://localhost:5000/consultation/transcribe', {
+  const response = await fetch('http://localhost:5001/consultation/transcribe', {
     method: 'POST',
     body: formData,
   });
@@ -84,19 +54,52 @@ async function uploadAudio(audioBlob) {
 
   const data = await response.json();
   console.log('Audio uploaded and transcription received:', data);
-  return data; // Return the response with the audio URL and transcription
+  return data;
 }
+
+// Finish Session: Handle the entire process
+finishButton.addEventListener("click", async () => {
+  const concern = document.getElementById("concern").value;
+  const actionTaken = document.getElementById("action-taken").value;
+  const outcome = document.getElementById("outcome").value;
+  const remarks = document.getElementById("remarks").value;
+
+  let transcription = null;
+
+  // Step 1: Check if audio is recorded
+  if (audioBlob) {
+    try {
+      const audioUploadResponse = await uploadAudio(audioBlob);
+      transcription = audioUploadResponse.transcription || "";
+    } catch (error) {
+      console.error("Error uploading audio:", error);
+      alert("Audio upload failed. Proceeding without transcription.");
+    }
+  } else {
+    console.log("No audio uploaded, proceeding with manual input.");
+  }
+
+  // Step 2: Summarize transcription (if available) and notes
+  const summary = await generateSummary(transcription || "", {
+    concern,
+    actionTaken,
+    outcome,
+    remarks,
+  });
+
+  summaryOutput.textContent = summary;
+});
 
 // Actual Summary Generation (replace with your summarization endpoint)
 async function generateSummary(transcription, notes) {
-  const response = await fetch('http://localhost:5000/consultation/summarize', {
+  const response = await fetch('http://localhost:5001/consultation/summarize', {
     method: 'POST',
     headers: {
       'Content-Type': 'application/json',
     },
     body: JSON.stringify({
-      transcription: transcription,
-      notes: `Concern: ${notes.concern}\nAction Taken: ${notes.actionTaken}\nOutcome: ${notes.outcome}\nRemarks: ${notes.remarks}`,
+      transcription: transcription || "No transcription available.",
+      notes: `Concern: ${notes.concern}\nAction Taken: ${notes.actionTaken}\nOutcome: ${notes.outcome}\nRemarks: ${notes.remarks || "No remarks"}`,
     }),
   });
 
@@ -106,5 +109,5 @@ async function generateSummary(transcription, notes) {
 
   const data = await response.json();
   console.log('Summary:', data.summary);
-  return data.summary; // Return the generated summary from the backend
+  return data.summary;
 }
