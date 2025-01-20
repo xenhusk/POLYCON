@@ -1,0 +1,7 @@
+Flask
+flask-cors
+google-cloud-storage
+google-cloud-speech
+firebase-admin
+google-generativeai
+python-dotenv

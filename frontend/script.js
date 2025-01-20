@@ -50,10 +50,10 @@ finishButton.addEventListener("click", async () => {
 
   let transcription = null;
 
-  // Step 1: If audioBlob exists, transcribe it
+  // Step 1: If audioBlob exists, upload and transcribe it
   if (audioBlob) {
-    const audioUploadResponse = await fakeUploadAudio(audioBlob);
-    transcription = await fakeTranscribeAudio(audioUploadResponse.audioUrl);
+    const audioUploadResponse = await uploadAudio(audioBlob);// Actual upload API call
+    transcription = await audioUploadResponse.transcription;// Transcription already included in the upload response
   }
 
   // Step 2: Summarize transcription (if available) and notes
@@ -68,27 +68,43 @@ finishButton.addEventListener("click", async () => {
   summaryOutput.textContent = summary;
 });
 
-// Simulated Upload Function (replace with API call)
-async function fakeUploadAudio(audioBlob) {
-  console.log("Audio uploaded");
-  return { audioUrl: "https://fake-url.com/audio-file.wav" }; // Simulated response
+// Actual Audio Upload Function (combined with transcribe)
+async function uploadAudio(audioBlob) {
+  const formData = new FormData();
+  formData.append('audio', audioBlob, 'audio.wav');
+
+  const response = await fetch('http://localhost:5000/consultation/transcribe', {
+    method: 'POST',
+    body: formData,
+  });
+
+  if (!response.ok) {
+    throw new Error('Audio upload and transcription failed');
+  }
+
+  const data = await response.json();
+  console.log('Audio uploaded and transcription received:', data);
+  return data; // Return the response with the audio URL and transcription
 }
 
-// Simulated Transcription Function (replace with API call)
-async function fakeTranscribeAudio(audioUrl) {
-  console.log("Transcription generated for", audioUrl);
-  return "This is a simulated transcription of the audio."; // Simulated transcription
-}
-
-// Simulated Summary Generation Function (replace with API call)
+// Actual Summary Generation (replace with your summarization endpoint)
 async function generateSummary(transcription, notes) {
-  console.log("Generating summary...");
-  const transcriptionPart = transcription ? `Transcription: ${transcription}\n` : "";
-  return `
-    ${transcriptionPart}
-    Concern: ${notes.concern}
-    Action Taken: ${notes.actionTaken}
-    Outcome: ${notes.outcome}
-    Remarks: ${notes.remarks || "None"}
-  `;
+  const response = await fetch('http://localhost:5000/consultation/summarize', {
+    method: 'POST',
+    headers: {
+      'Content-Type': 'application/json',
+    },
+    body: JSON.stringify({
+      transcription: transcription,
+      notes: `Concern: ${notes.concern}\nAction Taken: ${notes.actionTaken}\nOutcome: ${notes.outcome}\nRemarks: ${notes.remarks}`,
+    }),
+  });
+
+  if (!response.ok) {
+    throw new Error('Summary generation failed');
+  }
+
+  const data = await response.json();
+  console.log('Summary:', data.summary);
+  return data.summary; // Return the generated summary from the backend
 }

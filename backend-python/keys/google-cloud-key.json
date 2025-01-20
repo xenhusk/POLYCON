@@ -1,0 +1,13 @@
+{
+  "type": "service_account",
+  "project_id": "speech-to-text-448004",
+  "private_key_id": "98d6b1792b2124148b270e5227b5b6f39b292e71",
+  "private_key": "-----BEGIN PRIVATE KEY-----\nMIIEvAIBADANBgkqhkiG9w0BAQEFAASCBKYwggSiAgEAAoIBAQDxxKHRO5Wjg5ZI\nfyLVchQaxUv6O9452nBjDNuvWsei/bqfYKdwRtcYbhou/iNNnS7DDkKyowOskjuv\njHBm9wyV4hLrcROz6nh17bUTpRSwIQs2rfzRde+1v7nfE6jPP8fVWBy4NNhomIm+\nzlvUIlavIOVD5dWdVR6911lRqYjMTE3c1BVIm3xYD3UsGLuePqK2ZZykEg40dYH3\nPY2lyMt9lQ2XiDH9Iky5M9k8gXSw+TJ6rf7TXh4dKjhUcoo66KeSm4VSK5DrdSGB\njQw35oVGcz+l7vBvoNeiNwlJVFi6T7EvRmKIrVxMTNpE8XIdzflM1jnMpxlN8unB\nqJNVIf+3AgMBAAECggEAX2umGjiUJMcop1BWZTvzJ2W7SPYcDWVjehR3GEySAoh2\nAbVaIHw1JNU/zFBNirKA5Edal7qzFodYuz6IlnrnIrjpkrc8eYQPKyw4jZpYAfPo\nwxoEcH9FrswPBjZyJ+oaat+t5h4lU5LwurgjkiRDZjdrhVLO7pvL2E2IWSy6azbm\nExH77+LKvywUBF+1UGHrXnGPVZlP/GemUjpg+LuO/vKcVc/3aA9zXb5V6yT2GcFB\n0vEA2IgMsI2NuQw4I3kTHm06pFwHo+X8rM3VrsyxbLUxgDO/DG9C9sfIL+O9876W\nfFCb4iJs7JX7rSgC7f7YttY9X4uxTsweDug7q1DrEQKBgQD9L2GttoOcETnDoj/M\nB9p2S8GJv8xj47U4QE8mbHWANT9mpHiEnK2yJFMNofp6Fwe5dLnfjzN9QaaDzJBd\njKKzRXJx7zjE5JJ+SCIoA2FH3yVlgwnsedMH0SoJdsHpBg/7kavg+avebOGGQbGq\nvp7521sNlyBhi2RIP+UTSaSVJQKBgQD0dMFfu8DLafETu8+dqGlm03ZkBGRUsB+w\nfOg8PUx8zY3lGXWQ/c/Xb/HhlJmc406wOkgXfeC+bJq+OVwnvDdcKstHlpXNoYWy\nk6yz5pYkWY+MIgLkfEODyUOkUQ72ySBkfVP1CAZ4KXX5lLiA52kMLJZjR233aedw\nho0PYUrgqwKBgBhQsprSSnV0mg2VyXa40lxGDkJCb0iwl7jdRDy2cdpsQriC1yg1\nO+E959QJWFrdV1qSQT+dKx6+bVV/EeZKGV4KL2GNze/q277RAqbBHFigr6C+IvfZ\nA1Fe3yCljR3p/SL17IHguIbWAhq4uG1jfTUVwfreJrf3gRwHNuLRUcMZAoGAaGKm\n5EtXM0VE5WlQaYEtqPPpXSIm+abPkVx1CqweSji4O7kYY9aN9u/deLcstTq3Mjdg\n628cFhRoK4xw1qLffOLlNOePhmRPpAa9O4DeYh1AV9V6KLkLV24NDVBztFwEEgUW\nYc6QfKUvtGiWNK0cRU+Q1En/IiQ96OX7vDKOd8sCgYBeEZ96e8+UGWbC2xUbp1fO\n4c27RI/8JsRx6Xa1OOfjfWyzXZ9WBJGjZ2W1043HMflrK3zINYxTFfkJ7GG4eXYp\nuv6+lJ2a/qQh4upjys7jv4BIucaDgMWR2NYdcB+M1EIMQ71/uQ5jU5/igio4hSuQ\nhcTyk6Qqy/PdCgXMtz13nw==\n-----END PRIVATE KEY-----\n",
+  "client_email": "polycon-service-account@speech-to-text-448004.iam.gserviceaccount.com",
+  "client_id": "116778938326025931597",
+  "auth_uri": "https://accounts.google.com/o/oauth2/auth",
+  "token_uri": "https://oauth2.googleapis.com/token",
+  "auth_provider_x509_cert_url": "https://www.googleapis.com/oauth2/v1/certs",
+  "client_x509_cert_url": "https://www.googleapis.com/robot/v1/metadata/x509/polycon-service-account%40speech-to-text-448004.iam.gserviceaccount.com",
+  "universe_domain": "googleapis.com"
+}
