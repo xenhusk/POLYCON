@@ -1,11 +1,12 @@
 from flask import Flask, request, jsonify
 from flask_cors import CORS
 from pydub import AudioSegment
-from google.cloud import speech
 import os
+from services.assemblyai_service import transcribe_audio_with_assemblyai
+from routes.consultation_routes import consultation_bp  # Reintroducing blueprint import
 
 app = Flask(__name__)
-CORS(app)
+CORS(app, resources={r"/*": {"origins": "*"}})
 
 UPLOAD_FOLDER = "uploads/"
 CONVERTED_FOLDER = "converted/"
@@ -19,44 +20,34 @@ def convert_audio(input_path):
     audio.export(output_path, format="wav")
     return output_path
 
+@app.route('/')
+def home():
+    return jsonify({"message": "POLYCON Python Backend is Running"})  # Adding root route for health check
+
 @app.route('/consultation/transcribe', methods=['POST'])
 def transcribe():
     try:
         if 'audio' not in request.files:
-            # No audio provided, proceed without transcription
-            return jsonify({"audioUrl": None, "transcription": ""})
+            return jsonify({"error": "Audio file is required"}), 400
 
         audio_file = request.files['audio']
+        speaker_count = request.form.get('speaker_count', 1)  # Get speaker count (default to 1)
+
         input_path = os.path.join(UPLOAD_FOLDER, audio_file.filename)
         audio_file.save(input_path)
 
         # Convert audio to 16kHz mono WAV
         converted_audio_path = convert_audio(input_path)
 
-        # Perform transcription
-        transcription = transcribe_audio(converted_audio_path)
+        # Perform transcription using AssemblyAI with speaker count
+        transcription = transcribe_audio_with_assemblyai(converted_audio_path, int(speaker_count))
 
         return jsonify({"audioUrl": converted_audio_path, "transcription": transcription})
     except Exception as e:
-        return jsonify({"error": str(e)}), 500
+        return jsonify({"error": str(e)}), 500    
 
-def transcribe_audio(file_path):
-    from google.cloud import speech
-
-    client = speech.SpeechClient()
-    with open(file_path, "rb") as audio_file:
-        content = audio_file.read()
-
-    audio = speech.RecognitionAudio(content=content)
-    config = speech.RecognitionConfig(
-        encoding=speech.RecognitionConfig.AudioEncoding.LINEAR16,
-        sample_rate_hertz=16000,
-        language_code="en-US",
-    )
-
-    response = client.recognize(config=config, audio=audio)
-    transcription = " ".join(result.alternatives[0].transcript for result in response.results)
-    return transcription
+# Register the consultation routes as a blueprint
+app.register_blueprint(consultation_bp, url_prefix='/consultation')
 
 if __name__ == '__main__':
     app.run(debug=True, port=5001)

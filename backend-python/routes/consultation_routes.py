@@ -2,9 +2,26 @@ from flask import Blueprint, request, jsonify
 from services.google_storage import upload_audio
 from services.google_speech import transcribe_audio
 from services.google_gemini import generate_summary
+from services.google_gemini import identify_roles_in_transcription
+
 
 consultation_bp = Blueprint('consultation', __name__)
 
+@consultation_bp.route('/identify_roles', methods=['POST'])
+def identify_roles():
+    try:
+        data = request.json
+        transcription = data.get('transcription')
+
+        if not transcription:
+            return jsonify({"error": "Transcription is required"}), 400
+
+        role_identified_transcription = identify_roles_in_transcription(transcription)
+        return jsonify({"role_identified_transcription": role_identified_transcription})
+
+    except Exception as e:
+        return jsonify({"error": str(e)}), 500
+    
 @consultation_bp.route('/transcribe', methods=['POST'])
 def transcribe():
     try:

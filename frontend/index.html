@@ -13,6 +13,18 @@
   </header>
 
   <main>
+    <!-- Speaker Count Dropdown -->
+    <section id="speaker-section">
+      <h2>Expected Number of Speakers</h2>
+      <select id="speaker-count">
+        <option value="1">1 Speaker</option>
+        <option value="2">2 Speakers</option>
+        <option value="3">3 Speakers</option>
+        <option value="4">4 Speakers</option>
+        <option value="5">5 Speakers</option>
+      </select>
+    </section>
+
     <!-- Audio Recorder Section -->
     <section id="audio-section">
       <h2>Optional Audio Recording</h2>
@@ -49,8 +61,23 @@
       <h2>Summary</h2>
       <p id="summary-output">The summary will appear here after the session is finished.</p>
     </section>
+
+    <!-- Transcription Display Section -->
+    <section id="role-transcription-section">
+      <h2>Transcription</h2>
+      <p id="transcription-output">Transcription with identified roles will appear here.</p>
+  </section>
+  
   </main>
 
+  <script>
+    const speakerSlider = document.getElementById('speaker-count');
+    const speakerCountValue = document.getElementById('speaker-count-value');
+
+    speakerSlider.addEventListener('input', () => {
+      speakerCountValue.textContent = speakerSlider.value;
+    });
+  </script>
   <script src="script.js"></script>
 </body>
 </html>
