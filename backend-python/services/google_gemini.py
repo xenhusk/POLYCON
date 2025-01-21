@@ -30,6 +30,8 @@ def identify_roles_in_transcription(transcription):
     Teacher: [Teacher's statement]
     Student: [Student's statement]
 
+    If there are multiple students in the conversation, assign each student a unique identifier (e.g., Student 1, Student 2).
+
     Ensure the formatting is consistent and structured correctly.
     """
 

@@ -75,37 +75,51 @@ async function uploadAudio(audioBlob) {
 
 // Finish Session: Handle the entire process
 finishButton.addEventListener("click", async () => {
-    const concern = document.getElementById("concern").value;
-    const actionTaken = document.getElementById("action-taken").value;
-    const outcome = document.getElementById("outcome").value;
-    const remarks = document.getElementById("remarks").value;
+  const concern = document.getElementById("concern").value;
+  const actionTaken = document.getElementById("action-taken").value;
+  const outcome = document.getElementById("outcome").value;
+  const remarks = document.getElementById("remarks").value;
 
-    let transcription = null;
+  let transcription = null;
 
-    // Step 1: Check if audio is recorded
-    if (audioBlob) {
-        try {
-            const audioUploadResponse = await uploadAudio(audioBlob);
-            transcription = audioUploadResponse.transcription || "";
-        } catch (error) {
-            console.error("Error uploading audio:", error);
-            alert("Audio upload failed. Proceeding without transcription.");
-        }
-    } else {
-        console.log("No audio uploaded, proceeding with manual input.");
-    }
+  if (audioBlob) {
+      try {
+          const audioUploadResponse = await uploadAudio(audioBlob);
+          transcription = audioUploadResponse.transcription || "";
+      } catch (error) {
+          console.error("Error uploading audio:", error);
+          alert("Audio upload failed. Proceeding without transcription.");
+      }
+  } else {
+      console.log("No audio uploaded, proceeding with manual input.");
+  }
 
-    // Step 2: Summarize transcription (if available) and notes
-    const summary = await generateSummary(transcription || "", {
-        concern,
-        actionTaken,
-        outcome,
-        remarks,
-    });
+  if (transcription) {
+      try {
+          console.log("Sending transcription for role identification...");
+          const roleIdentifiedTranscription = await identifyRoles(transcription);
+          document.getElementById('transcription-output').innerHTML = roleIdentifiedTranscription.replace(/\n/g, '<br>');
+          console.log("Role Identified Transcription:", roleIdentifiedTranscription);
+          transcription = roleIdentifiedTranscription; // Update transcription with roles for storage
+      } catch (error) {
+          console.error("Error identifying roles:", error);
+          alert("Error processing roles.");
+      }
+  } else {
+      console.warn("No transcription available for role identification.");
+  }
 
-    summaryOutput.textContent = summary;
+  const summary = await generateSummary(transcription || "", {
+      concern,
+      actionTaken,
+      outcome,
+      remarks,
+  });
+
+  summaryOutput.textContent = summary;
+
+  await storeConsultation(transcription, summary, { concern, actionTaken, outcome, remarks });
 });
-
 
 // Actual Summary Generation
 async function generateSummary(transcription, notes) {
@@ -155,4 +169,58 @@ async function identifyRoles(transcription) {
     return data.role_identified_transcription;
   }
   
+  async function storeConsultation(transcription, summary, notes) {
+    const teacherIdElement = document.getElementById("teacher-id");
+    const studentIdsElement = document.getElementById("student-ids");
+
+    if (!teacherIdElement || !studentIdsElement) {
+        console.error("Error: Missing input fields for Teacher ID or Student IDs.");
+        alert("Please ensure all fields are filled.");
+        return;
+    }
+
+    const teacherId = teacherIdElement.value;
+    const studentIds = studentIdsElement.value.split(',').map(id => id.trim());
+
+    if (!audioBlob) {
+        console.error("Error: No audio file available.");
+        alert("Please record an audio session before submitting.");
+        return;
+    }
+
+    // Upload audio and get the actual path
+    try {
+        const audioUploadResponse = await uploadAudio(audioBlob);
+        const audioFilePath = audioUploadResponse.audioUrl;
+
+        const response = await fetch('http://localhost:5001/consultation/store_consultation', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+            },
+            body: JSON.stringify({
+                audio_file_path: audioFilePath,
+                transcription: transcription,
+                summary: summary,
+                teacher_id: teacherId,
+                student_ids: studentIds,
+                concern: notes.concern,
+                action_taken: notes.actionTaken,
+                outcome: notes.outcome,
+                remarks: notes.remarks || "No remarks"
+            }),
+        });
+
+        if (!response.ok) {
+            throw new Error('Storing consultation session failed');
+        }
+
+        const data = await response.json();
+        console.log('Consultation session stored successfully:', data);
+        alert(`Session stored successfully with ID: ${data.session_id}`);
+    } catch (error) {
+        console.error("Error storing consultation session:", error);
+        alert("Failed to store consultation session.");
+    }
+}
 
