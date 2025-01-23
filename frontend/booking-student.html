@@ -1,0 +1,136 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Student Booking</title>
+</head>
+<body>
+    <h2>Student Booking Panel</h2>
+
+    <label for="studentID">Your Student ID:</label>
+    <input type="text" id="studentID" placeholder="Enter your Student ID">
+
+    <label for="teacherSelect">Select Teacher:</label>
+    <select id="teacherSelect"></select>
+
+    <label>Select Fellow Students:</label>
+    <div id="studentCheckboxContainer"></div>
+
+    <button id="requestAppointment">Request Appointment</button>
+
+    <h3>Pending Appointments</h3>
+    <ul id="pendingAppointments"></ul>
+
+    <script>
+        async function fetchTeachers() {
+            try {
+                const response = await fetch('http://localhost:5001/bookings/get_teachers');
+                const teachers = await response.json();
+                const teacherSelect = document.getElementById("teacherSelect");
+
+                teachers.forEach(teacher => {
+                    let option = document.createElement("option");
+                    option.value = teacher.id;
+                    option.textContent = `${teacher.firstName} ${teacher.lastName}`;
+                    teacherSelect.appendChild(option);
+                });
+            } catch (error) {
+                console.error('Error fetching teachers:', error);
+            }
+        }
+
+        async function fetchStudents() {
+            try {
+                const response = await fetch('http://localhost:5001/bookings/get_students');
+                const students = await response.json();
+                const studentContainer = document.getElementById("studentCheckboxContainer");
+
+                students.forEach(student => {
+                    let checkbox = document.createElement("input");
+                    checkbox.type = "checkbox";
+                    checkbox.value = student.id;
+                    checkbox.id = `student-${student.id}`;
+                    checkbox.name = "students";
+
+                    let label = document.createElement("label");
+                    label.htmlFor = `student-${student.id}`;
+                    label.textContent = `${student.firstName} ${student.lastName}`;
+
+                    studentContainer.appendChild(checkbox);
+                    studentContainer.appendChild(label);
+                    studentContainer.appendChild(document.createElement("br"));
+                });
+            } catch (error) {
+                console.error('Error fetching students:', error);
+            }
+        }
+
+        async function fetchStudentAppointments() {
+            const studentID = document.getElementById('studentID').value;
+            if (!studentID) {
+                alert("Enter your student ID to view pending appointments.");
+                return;
+            }
+            try {
+                const response = await fetch(`http://localhost:5001/bookings/get_student_bookings?studentID=${studentID}`);
+                const bookings = await response.json();
+                const pendingList = document.getElementById("pendingAppointments");
+                pendingList.innerHTML = "";
+                bookings.forEach(booking => {
+                    let item = document.createElement("li");
+                    item.textContent = `Teacher: ${booking.teacherName}, Status: ${booking.status}`;
+                    pendingList.appendChild(item);
+                });
+            } catch (error) {
+                console.error('Error fetching student bookings:', error);
+            }
+        }
+
+        document.getElementById('requestAppointment').addEventListener('click', async () => {
+            const studentID = document.getElementById('studentID').value;
+            const teacherID = document.getElementById('teacherSelect').value;
+            const selectedStudents = Array.from(document.querySelectorAll('input[name="students"]:checked')).map(checkbox => checkbox.value);
+
+            // Add the current student ID to the list if not already included
+            if (!selectedStudents.includes(studentID)) {
+                selectedStudents.push(studentID);
+            }
+
+            if (!studentID || !teacherID || selectedStudents.length === 0) {
+                alert("Please fill in all fields.");
+                return;
+            }
+
+            const bookingData = {
+                createdBy: studentID,
+                teacherID: teacherID,
+                studentIDs: selectedStudents,
+                schedule: "",  // Empty as teacher will set it
+                venue: ""  // Empty as teacher will set it
+            };
+
+            try {
+                const response = await fetch('http://localhost:5001/bookings/create_booking', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify(bookingData),
+                });
+
+                const result = await response.json();
+                if (response.ok) {
+                    alert("Appointment request sent successfully!");
+                    fetchStudentAppointments();
+                } else {
+                    alert("Failed to request appointment: " + result.error);
+                }
+            } catch (error) {
+                console.error('Error requesting appointment:', error);
+            }
+        });
+
+        fetchTeachers();
+        fetchStudents();
+    </script>
+</body>
+</html>

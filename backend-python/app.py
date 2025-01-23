@@ -4,6 +4,7 @@ from pydub import AudioSegment
 import os
 from services.assemblyai_service import transcribe_audio_with_assemblyai
 from routes.consultation_routes import consultation_bp  # Reintroducing blueprint import
+from routes.booking_routes import booking_bp
 
 app = Flask(__name__)
 CORS(app, resources={r"/*": {"origins": "*"}})
@@ -12,6 +13,9 @@ UPLOAD_FOLDER = "uploads/"
 CONVERTED_FOLDER = "converted/"
 os.makedirs(UPLOAD_FOLDER, exist_ok=True)
 os.makedirs(CONVERTED_FOLDER, exist_ok=True)
+
+# Register booking routes
+app.register_blueprint(booking_bp, url_prefix='/bookings')
 
 def convert_audio(input_path):
     output_path = os.path.join(CONVERTED_FOLDER, "converted_audio.wav")
@@ -48,6 +52,7 @@ def transcribe():
 
 # Register the consultation routes as a blueprint
 app.register_blueprint(consultation_bp, url_prefix='/consultation')
+
 
 if __name__ == '__main__':
     app.run(debug=True, port=5001)

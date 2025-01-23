@@ -61,6 +61,7 @@ def store_consultation():
         summary = data.get('summary')
         teacher_id = data.get('teacher_id')
         student_ids = data.get('student_ids')
+        duration = data.get('duration')  # Capture duration field from request
 
         notes = {
             "concern": data.get('concern'),
@@ -69,27 +70,36 @@ def store_consultation():
             "remarks": data.get('remarks'),
         }
 
-        # Upload audio and store consultation details
-        audio_url, session_id = upload_audio(audio_file_path)
+        # Upload audio and get session details
+        audio_url, _ = upload_audio(audio_file_path)
+
+        # Reference to the Firestore collection
+        consultation_ref = db.collection('consultation_sessions')
+
+        # Count existing consultation documents to generate new session ID
+        consultations = consultation_ref.stream()
+        new_session_id = f"sessionID{len(list(consultations)) + 1:05d}"
 
         consultation_data = {
-            "session_id": session_id,
-            "teacher_id": teacher_id,
-            "student_ids": student_ids,
+            "session_id": new_session_id,
+            "teacher_id": db.document(f"faculty/{teacher_id}"),  # Store as Firestore reference
+            "student_ids": [db.document(f"students/{student}") for student in student_ids],  # References to student documents
             "audio_url": audio_url,
             "transcription": transcription,
             "summary": summary,
+            "duration": duration,  # Adding duration to Firestore document
             **notes,
         }
 
-        # Store consultation details in Firestore
-        store_consultation_details(consultation_data)
+        # Store consultation details in Firestore with custom document ID
+        consultation_ref.document(new_session_id).set(consultation_data)
 
         return jsonify({
             "message": "Consultation session stored successfully",
-            "session_id": session_id,
+            "session_id": new_session_id,
             "audio_url": audio_url
         }), 200
 
     except Exception as e:
         return jsonify({"error": str(e)}), 500
+

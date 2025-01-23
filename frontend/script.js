@@ -4,23 +4,52 @@ const finishButton = document.getElementById("finish-session");
 const audioPlayback = document.getElementById("audio-playback");
 const notesForm = document.getElementById("notes-form");
 const summaryOutput = document.getElementById("summary-output");
-const speakerDropdown = document.getElementById("speaker-count");
+
+const startSessionButton = document.getElementById("start-session");
+const timerDisplay = document.getElementById("timer-display");
 
 let mediaRecorder;
 let audioChunks = [];
 let audioBlob = null;
-let speakerCount = speakerDropdown.value;
 
-// Set speaker count before recording
-speakerDropdown.addEventListener("change", () => {
-  speakerCount = speakerDropdown.value;
-  console.log(`Speaker count set to: ${speakerCount}`);
+let timerInterval;
+let startTime;
+
+// Function to start the timer
+function startTimer() {
+  startTime = Date.now();
+  timerInterval = setInterval(() => {
+    const elapsedTime = Date.now() - startTime;
+    const hours = Math.floor(elapsedTime / 3600000);
+    const minutes = Math.floor((elapsedTime % 3600000) / 60000);
+    const seconds = Math.floor((elapsedTime % 60000) / 1000);
+    timerDisplay.textContent = `${String(hours).padStart(2, '0')}:${String(minutes).padStart(2, '0')}:${String(seconds).padStart(2, '0')}`;
+  }, 1000);
+}
+
+// Function to stop the timer and return the duration in seconds
+function stopTimer() {
+  clearInterval(timerInterval);
+  const elapsedTime = Date.now() - startTime;
+  return Math.floor(elapsedTime / 1000);
+}
+
+startSessionButton.addEventListener("click", () => {
+  startTimer();
+  startSessionButton.disabled = true;
+  startButton.disabled = false;
 });
 
 // Start Recording with validation for speaker count
 startButton.addEventListener("click", async () => {
-    if (!speakerCount || speakerCount < 1 || speakerCount > 5) {
-        alert("Please set the number of expected speakers (1-5) before recording.");
+    const teacherIdElement = document.getElementById("teacher-id").value.trim();
+    const studentIdsElement = document.getElementById("student-ids").value.trim();
+    const studentIds = studentIdsElement.split(',').filter(id => id.trim() !== "");
+
+    const expectedSpeakers = 1 + studentIds.length; // Teacher + students
+
+    if (expectedSpeakers < 1) {
+        alert("Please provide valid Teacher ID and Student IDs before recording.");
         return;
     }
 
@@ -34,9 +63,12 @@ startButton.addEventListener("click", async () => {
     mediaRecorder.start();
     startButton.disabled = true;
     stopButton.disabled = false;
+    startSessionButton.disabled = true; // Disable start session button when recording starts
     audioChunks = [];
 
-    console.log(`Recording started with ${speakerCount} expected speakers`);
+    startTimer();
+
+    console.log(`Recording started with ${expectedSpeakers} expected speakers`);
 });
 
 // Stop Recording and Prepare Audio
@@ -57,7 +89,16 @@ stopButton.addEventListener("click", () => {
 async function uploadAudio(audioBlob) {
     const formData = new FormData();
     formData.append('audio', audioBlob, 'audio.webm');
-    formData.append('speaker_count', speakerCount);
+
+    // Calculate speaker count dynamically based on participants
+    const teacherIdElement = document.getElementById("teacher-id").value.trim();
+    const studentIdsElement = document.getElementById("student-ids").value.trim();
+    const studentIds = studentIdsElement.split(',').filter(id => id.trim() !== "");
+
+    const expectedSpeakers = 1 + studentIds.length; // Teacher + students
+    formData.append('speaker_count', expectedSpeakers);
+
+    console.log(`Calculated speaker count: ${expectedSpeakers}`);
 
     const response = await fetch('http://localhost:5001/consultation/transcribe', {
         method: 'POST',
@@ -79,6 +120,8 @@ finishButton.addEventListener("click", async () => {
   const actionTaken = document.getElementById("action-taken").value;
   const outcome = document.getElementById("outcome").value;
   const remarks = document.getElementById("remarks").value;
+
+  const duration = stopTimer();
 
   let transcription = null;
 
@@ -118,7 +161,7 @@ finishButton.addEventListener("click", async () => {
 
   summaryOutput.textContent = summary;
 
-  await storeConsultation(transcription, summary, { concern, actionTaken, outcome, remarks });
+  await storeConsultation(transcription, summary, { concern, actionTaken, outcome, remarks, duration });
 });
 
 // Actual Summary Generation
@@ -207,7 +250,8 @@ async function identifyRoles(transcription) {
                 concern: notes.concern,
                 action_taken: notes.actionTaken,
                 outcome: notes.outcome,
-                remarks: notes.remarks || "No remarks"
+                remarks: notes.remarks || "No remarks",
+                duration: notes.duration // Adding duration to Firestore document
             }),
         });
 

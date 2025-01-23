@@ -1,0 +1,121 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Teacher Booking</title>
+</head>
+<body>
+    <h2>Teacher Booking Panel</h2>
+
+    <label for="teacherID">Your Teacher ID:</label>
+    <input type="text" id="teacherID" placeholder="Enter your Teacher ID">
+
+    <label>Select Students:</label>
+    <div id="studentCheckboxContainer"></div>
+
+    <label for="schedule">Select Schedule:</label>
+    <input type="datetime-local" id="schedule">
+
+    <label for="venue">Venue:</label>
+    <input type="text" id="venue" placeholder="Enter venue">
+
+    <button id="bookAppointment">Book Appointment</button>
+
+    <h3>Pending Appointments</h3>
+    <ul id="pendingAppointments"></ul>
+
+    <script>
+        async function fetchStudents() {
+            try {
+                const response = await fetch('http://localhost:5001/bookings/get_students');
+                const students = await response.json();
+                const studentContainer = document.getElementById("studentCheckboxContainer");
+
+                students.forEach(student => {
+                    let checkbox = document.createElement("input");
+                    checkbox.type = "checkbox";
+                    checkbox.value = student.id;
+                    checkbox.id = `student-${student.id}`;
+                    checkbox.name = "students";
+
+                    let label = document.createElement("label");
+                    label.htmlFor = `student-${student.id}`;
+                    label.textContent = `${student.firstName} ${student.lastName}`;
+
+                    studentContainer.appendChild(checkbox);
+                    studentContainer.appendChild(label);
+                    studentContainer.appendChild(document.createElement("br"));
+                });
+            } catch (error) {
+                console.error('Error fetching students:', error);
+            }
+        }
+
+        async function fetchTeacherAppointments() {
+            const teacherID = document.getElementById('teacherID').value;
+            if (!teacherID) {
+                alert("Enter your teacher ID to view pending appointments.");
+                return;
+            }
+            try {
+                const response = await fetch(`http://localhost:5001/bookings/get_teacher_bookings?teacherID=${teacherID}`);
+                const bookings = await response.json();
+                const pendingList = document.getElementById("pendingAppointments");
+                pendingList.innerHTML = "";
+                bookings.forEach(booking => {
+                    let item = document.createElement("li");
+                    item.textContent = `Student: ${booking.studentNames.join(", ")}, Status: ${booking.status}`;
+                    pendingList.appendChild(item);
+                });
+            } catch (error) {
+                console.error('Error fetching teacher bookings:', error);
+            }
+        }
+
+        document.getElementById('bookAppointment').addEventListener('click', async () => {
+            const teacherID = document.getElementById('teacherID').value;
+            const selectedStudents = Array.from(document.querySelectorAll('input[name="students"]:checked')).map(checkbox => checkbox.value);
+            const schedule = document.getElementById('schedule').value;
+            const venue = document.getElementById('venue').value;
+            
+            // Ensure teacher ID does not have prefix and students are formatted correctly
+            const createdBy = teacherID;
+
+            if (!teacherID || selectedStudents.length === 0 || !schedule || !venue) {
+                alert("Please fill in all fields.");
+                return;
+            }
+
+            const bookingData = {
+                teacherID: teacherID,
+                studentIDs: selectedStudents,
+                schedule: schedule,
+                venue: venue,
+                createdBy: teacherID
+            };
+
+            try {
+                const response = await fetch('http://localhost:5001/bookings/create_booking', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify(bookingData),
+                });
+
+                const result = await response.json();
+                if (response.ok) {
+                    alert("Appointment booked successfully!");
+                    fetchTeacherAppointments();
+                } else {
+                    alert(`Failed to book appointment: ${result.error || "Unknown error"}`);
+                }
+            } catch (error) {
+                console.error('Error booking appointment:', error);
+            }
+        });
+
+
+        fetchStudents();
+    </script>
+</body>
+</html>
