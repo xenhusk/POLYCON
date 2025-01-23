@@ -4,6 +4,13 @@ from services.firebase_service import db
 
 booking_bp = Blueprint('booking_routes', __name__)
 
+def convert_references(value):
+    if isinstance(value, list):
+        return [str(item.path) if isinstance(item, firestore.DocumentReference) else item for item in value]
+    elif isinstance(value, firestore.DocumentReference):
+        return str(value.path)
+    return value
+
 @booking_bp.route('/get_teachers', methods=['GET'])
 def get_teachers():
     try:
@@ -22,13 +29,6 @@ def get_teachers():
                 teacher_data['lastName'] = user_data.get('lastName', '')
 
             # Convert Firestore references to string paths
-            def convert_references(value):
-                if isinstance(value, list):
-                    return [str(item.path) if isinstance(item, firestore.DocumentReference) else item for item in value]
-                elif isinstance(value, firestore.DocumentReference):
-                    return str(value.path)
-                return value
-            
             teacher_data = {key: convert_references(value) for key, value in teacher_data.items()}
             teachers.append(teacher_data)
 
@@ -55,14 +55,6 @@ def get_students():
                 student_data['lastName'] = user_data.get('lastName', 'Unknown')
 
             # Convert Firestore DocumentReference fields to strings
-            def convert_references(value):
-                if isinstance(value, list):
-                    return [str(item.path) if isinstance(item, firestore.DocumentReference) else item for item in value]
-                elif isinstance(value, firestore.DocumentReference):
-                    return str(value.path)
-                return value
-
-            # Apply the conversion to all fields to prevent serialization issues
             student_data = {key: convert_references(value) for key, value in student_data.items()}
 
             students.append(student_data)
@@ -82,22 +74,74 @@ def get_student_bookings():
         if not student_id:
             return jsonify({"error": "Missing studentID"}), 400
 
-        bookings_ref = db.collection('bookings').where('studentID', '==', db.document(f'students/{student_id}')).stream()
-        bookings = [{"id": doc.id, **doc.to_dict()} for doc in bookings_ref]
+        bookings_ref = db.collection('bookings').where('studentID', 'array_contains', db.document(f'students/{student_id}')).stream()
+        bookings = []
+
+        for doc in bookings_ref:
+            booking_data = doc.to_dict()
+            booking_data['id'] = doc.id  # Include booking ID
+
+            # Fetch teacher details from the 'user' collection
+            teacher_ref = booking_data['teacherID']
+            teacher_doc = teacher_ref.get()
+            if teacher_doc.exists:
+                teacher_data = teacher_doc.to_dict()
+                booking_data['teacherName'] = f"{teacher_data.get('firstName', 'Unknown')} {teacher_data.get('lastName', 'Unknown')}"
+
+            # Fetch student details from the 'user' collection, excluding the current student
+            student_names = []
+            for student_ref in booking_data['studentID']:
+                student_doc = student_ref.get()
+                if student_doc.exists and student_ref.id != f'students/{student_id}':
+                    student_data = student_doc.to_dict()
+                    student_names.append(f"{student_data.get('firstName', 'Unknown')} {student_data.get('lastName', 'Unknown')}")
+            booking_data['studentNames'] = student_names
+
+            booking_data = {key: convert_references(value) for key, value in booking_data.items()}
+            bookings.append(booking_data)
+
         return jsonify(bookings), 200
     except Exception as e:
         return jsonify({"error": f"Failed to fetch student bookings: {str(e)}"}), 500
-
 
 @booking_bp.route('/get_teacher_bookings', methods=['GET'])
 def get_teacher_bookings():
     try:
         teacher_id = request.args.get('teacherID')
+        status = request.args.get('status')  # Fetch status from query parameters
         if not teacher_id:
             return jsonify({"error": "Missing teacherID"}), 400
 
-        bookings_ref = db.collection('bookings').where('teacherID', '==', db.document(f'faculty/{teacher_id}')).stream()
-        bookings = [{"id": doc.id, **doc.to_dict()} for doc in bookings_ref]
+        query = db.collection('bookings').where('teacherID', '==', db.document(f'faculty/{teacher_id}'))
+        if status:
+            query = query.where('status', '==', status)
+
+        bookings_ref = query.stream()
+        bookings = []
+
+        for doc in bookings_ref:
+            booking_data = doc.to_dict()
+            booking_data['id'] = doc.id  # Include booking ID
+
+            # Fetch teacher details from the 'user' collection
+            teacher_ref = booking_data['teacherID']
+            teacher_doc = teacher_ref.get()
+            if teacher_doc.exists:
+                teacher_data = teacher_doc.to_dict()
+                booking_data['teacherName'] = f"{teacher_data.get('firstName', 'Unknown')} {teacher_data.get('lastName', 'Unknown')}"
+            
+            # Fetch student details from the 'user' collection
+            student_names = []
+            for student_ref in booking_data['studentID']:
+                student_doc = student_ref.get()
+                if student_doc.exists:
+                    student_data = student_doc.to_dict()
+                    student_names.append(f"{student_data.get('firstName', 'Unknown')} {student_data.get('lastName', 'Unknown')}")
+            booking_data['studentNames'] = student_names
+
+            booking_data = {key: convert_references(value) for key, value in booking_data.items()}
+            bookings.append(booking_data)
+
         return jsonify(bookings), 200
     except Exception as e:
         return jsonify({"error": f"Failed to fetch teacher bookings: {str(e)}"}), 500
@@ -155,6 +199,75 @@ def create_booking():
 
     except Exception as e:
         return jsonify({"error": f"Failed to create booking: {str(e)}"}), 500
+
+@booking_bp.route('/confirm_booking', methods=['POST'])
+def confirm_booking():
+    try:
+        data = request.get_json()
+        booking_id = data.get('bookingID')
+        schedule = data.get('schedule')
+        venue = data.get('venue')
+
+        if not booking_id or not schedule or not venue:
+            return jsonify({"error": "Missing required fields: bookingID, schedule, venue"}), 400
+
+        booking_ref = db.collection('bookings').document(booking_id)
+        booking = booking_ref.get()
+
+        if not booking.exists:
+            return jsonify({"error": "Booking not found"}), 404
+
+        booking_ref.update({
+            "status": "confirmed",
+            "schedule": schedule,
+            "venue": venue
+        })
+
+        return jsonify({"message": "Booking confirmed successfully"}), 200
+
+    except Exception as e:
+        return jsonify({"error": f"Failed to confirm booking: {str(e)}"}), 500
+
+@booking_bp.route('/cancel_booking', methods=['POST'])
+def cancel_booking():
+    try:
+        data = request.get_json()
+        booking_id = data.get('bookingID')
+
+        if not booking_id:
+            return jsonify({"error": "Missing required field: bookingID"}), 400
+
+        booking_ref = db.collection('bookings').document(booking_id)
+        booking = booking_ref.get()
+
+        if not booking.exists:
+            return jsonify({"error": "Booking not found"}), 404
+
+        booking_ref.update({
+            "status": "canceled"
+        })
+
+        return jsonify({"message": "Booking canceled successfully"}), 200
+
+    except Exception as e:
+        return jsonify({"error": f"Failed to cancel booking: {str(e)}"}), 500
+
+@booking_bp.route('/get_user', methods=['GET'])
+def get_user():
+    try:
+        user_id = request.args.get('userID')
+        if not user_id:
+            return jsonify({"error": "Missing userID"}), 400
+
+        user_ref = db.collection('user').document(user_id).get()
+        if not user_ref.exists:
+            return jsonify({"error": "User not found"}), 404
+
+        user_data = user_ref.to_dict()
+        user_data = {key: convert_references(value) for key, value in user_data.items()}
+        return jsonify(user_data), 200
+    except Exception as e:
+        return jsonify({"error": f"Failed to fetch user: {str(e)}"}), 500
 
 
 

@@ -10,6 +10,7 @@
 
     <label for="teacherID">Your Teacher ID:</label>
     <input type="text" id="teacherID" placeholder="Enter your Teacher ID">
+    <button id="fetchAppointments">Fetch Appointments</button>
 
     <label>Select Students:</label>
     <div id="studentCheckboxContainer"></div>
@@ -24,6 +25,12 @@
 
     <h3>Pending Appointments</h3>
     <ul id="pendingAppointments"></ul>
+
+    <h3>Upcoming Appointments</h3>
+    <ul id="upcomingAppointments"></ul>
+
+    <h3>Canceled Appointments</h3>
+    <ul id="canceledAppointments"></ul>
 
     <script>
         async function fetchStudents() {
@@ -55,23 +62,128 @@
         async function fetchTeacherAppointments() {
             const teacherID = document.getElementById('teacherID').value;
             if (!teacherID) {
-                alert("Enter your teacher ID to view pending appointments.");
+                alert("Enter your teacher ID to view appointments.");
                 return;
             }
             try {
                 const response = await fetch(`http://localhost:5001/bookings/get_teacher_bookings?teacherID=${teacherID}`);
                 const bookings = await response.json();
+
+                if (!Array.isArray(bookings)) {
+                    throw new Error('Invalid response format');
+                }
+
                 const pendingList = document.getElementById("pendingAppointments");
+                const upcomingList = document.getElementById("upcomingAppointments");
+                const canceledList = document.getElementById("canceledAppointments");
+
                 pendingList.innerHTML = "";
-                bookings.forEach(booking => {
+                upcomingList.innerHTML = "";
+                canceledList.innerHTML = "";
+
+                for (const booking of bookings) {
+                    const studentNames = await Promise.all(booking.studentID.map(async ref => {
+                        const studentID = ref.split('/').pop();
+                        const userResponse = await fetch(`http://localhost:5001/bookings/get_user?userID=${studentID}`);
+                        const userData = await userResponse.json();
+                        return `${userData.firstName} ${userData.lastName}`;
+                    }));
+
                     let item = document.createElement("li");
-                    item.textContent = `Student: ${booking.studentNames.join(", ")}, Status: ${booking.status}`;
-                    pendingList.appendChild(item);
-                });
+                    item.textContent = `Student: ${studentNames.join(", ")}, Schedule: ${booking.schedule}, Venue: ${booking.venue}`;
+
+                    if (booking.status === "pending") {
+                        let confirmButton = document.createElement("button");
+                        confirmButton.textContent = "Confirm";
+                        confirmButton.onclick = () => showConfirmationInputs(booking.id, item);
+
+                        let cancelButton = document.createElement("button");
+                        cancelButton.textContent = "Cancel";
+                        cancelButton.onclick = () => cancelBooking(booking.id);
+
+                        item.appendChild(confirmButton);
+                        item.appendChild(cancelButton);
+                        pendingList.appendChild(item);
+                    } else if (booking.status === "confirmed") {
+                        upcomingList.appendChild(item);
+                    } else if (booking.status === "canceled") {
+                        canceledList.appendChild(item);
+                    }
+                }
             } catch (error) {
                 console.error('Error fetching teacher bookings:', error);
+                alert(`Error fetching teacher bookings: ${error.message}`);
             }
         }
+
+        function showConfirmationInputs(bookingID, bookingItem) {
+            const scheduleInput = document.createElement("input");
+            scheduleInput.type = "datetime-local";
+            scheduleInput.id = `schedule-${bookingID}`;
+
+            const venueInput = document.createElement("input");
+            venueInput.type = "text";
+            venueInput.id = `venue-${bookingID}`;
+            venueInput.placeholder = "Enter venue";
+
+            const confirmButton = document.createElement("button");
+            confirmButton.textContent = "Confirm Booking";
+            confirmButton.onclick = () => confirmBooking(bookingID, scheduleInput.value, venueInput.value);
+
+            bookingItem.appendChild(document.createElement("br"));
+            bookingItem.appendChild(scheduleInput);
+            bookingItem.appendChild(document.createElement("br"));
+            bookingItem.appendChild(venueInput);
+            bookingItem.appendChild(document.createElement("br"));
+            bookingItem.appendChild(confirmButton);
+        }
+
+        async function confirmBooking(bookingID, schedule, venue) {
+            if (!schedule || !venue) {
+                alert("Schedule and venue are required to confirm the booking.");
+                return;
+            }
+
+            try {
+                const response = await fetch('http://localhost:5001/bookings/confirm_booking', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ bookingID, schedule, venue }),
+                });
+
+                const result = await response.json();
+                if (response.ok) {
+                    alert("Booking confirmed successfully!");
+                    fetchTeacherAppointments();
+                } else {
+                    alert(`Failed to confirm booking: ${result.error || "Unknown error"}`);
+                }
+            } catch (error) {
+                console.error('Error confirming booking:', error);
+            }
+        }
+
+        async function cancelBooking(bookingID) {
+            try {
+                const response = await fetch('http://localhost:5001/bookings/cancel_booking', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ bookingID }),
+                });
+
+                const result = await response.json();
+                if (response.ok) {
+                    alert("Booking canceled successfully!");
+                    fetchTeacherAppointments();
+                } else {
+                    alert(`Failed to cancel booking: ${result.error || "Unknown error"}`);
+                }
+            } catch (error) {
+                console.error('Error canceling booking:', error);
+            }
+        }
+
+        document.getElementById('fetchAppointments').addEventListener('click', fetchTeacherAppointments);
 
         document.getElementById('bookAppointment').addEventListener('click', async () => {
             const teacherID = document.getElementById('teacherID').value;
@@ -113,7 +225,6 @@
                 console.error('Error booking appointment:', error);
             }
         });
-
 
         fetchStudents();
     </script>
