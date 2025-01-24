@@ -111,11 +111,6 @@
                     item.textContent = `Teacher: ${teacherName}, Students: ${studentNames.join(", ")}, Schedule: ${booking.schedule}, Venue: ${booking.venue}`;
 
                     if (booking.status === "pending") {
-                        let cancelButton = document.createElement("button");
-                        cancelButton.textContent = "Cancel";
-                        cancelButton.onclick = () => cancelBooking(booking.id);
-
-                        item.appendChild(cancelButton);
                         pendingList.appendChild(item);
                     } else if (booking.status === "confirmed") {
                         upcomingList.appendChild(item);
@@ -126,26 +121,6 @@
             } catch (error) {
                 console.error('Error fetching student bookings:', error);
                 alert(`Error fetching student bookings: ${error.message}`);
-            }
-        }
-
-        async function cancelBooking(bookingID) {
-            try {
-                const response = await fetch('http://localhost:5001/bookings/cancel_booking', {
-                    method: 'POST',
-                    headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify({ bookingID }),
-                });
-
-                const result = await response.json();
-                if (response.ok) {
-                    alert("Booking canceled successfully!");
-                    fetchStudentAppointments();
-                } else {
-                    alert(`Failed to cancel booking: ${result.error || "Unknown error"}`);
-                }
-            } catch (error) {
-                console.error('Error canceling booking:', error);
             }
         }
 

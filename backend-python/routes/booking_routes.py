@@ -99,7 +99,6 @@ def get_student_bookings():
 
             booking_data = {key: convert_references(value) for key, value in booking_data.items()}
             bookings.append(booking_data)
-
         return jsonify(bookings), 200
     except Exception as e:
         return jsonify({"error": f"Failed to fetch student bookings: {str(e)}"}), 500
@@ -268,7 +267,3 @@ def get_user():
         return jsonify(user_data), 200
     except Exception as e:
         return jsonify({"error": f"Failed to fetch user: {str(e)}"}), 500
-
-
-
-
