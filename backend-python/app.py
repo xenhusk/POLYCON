@@ -5,9 +5,10 @@ import os
 from services.assemblyai_service import transcribe_audio_with_assemblyai
 from routes.consultation_routes import consultation_bp  # Reintroducing blueprint import
 from routes.booking_routes import booking_bp
+from routes.account_management import acc_management_bp  # Import account management blueprint
 
 app = Flask(__name__)
-CORS(app, resources={r"/*": {"origins": "*"}})
+CORS(app, resources={r"/*": {"origins": "*"}})  # Allow all origins
 
 UPLOAD_FOLDER = "uploads/"
 CONVERTED_FOLDER = "converted/"
@@ -53,6 +54,8 @@ def transcribe():
 # Register the consultation routes as a blueprint
 app.register_blueprint(consultation_bp, url_prefix='/consultation')
 
+# Register the account management routes as a blueprint
+app.register_blueprint(acc_management_bp, url_prefix='/account')
 
 if __name__ == '__main__':
     app.run(debug=True, port=5001)
