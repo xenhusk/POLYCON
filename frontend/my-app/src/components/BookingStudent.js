@@ -187,14 +187,27 @@ function BookingStudent() {
             <h3 className="text-lg font-bold mt-6">Pending Appointments</h3>
             <ul>
                 {appointments.pending.map(app => (
-                    <li key={app.id}>{app.teacherName}, {app.schedule}, {app.venue}</li>
+                    <li key={app.id}>
+                        Teacher: {app.teacherName}, Students: {app.studentNames}, Schedule: {app.schedule}, Venue: {app.venue}
+                    </li>
                 ))}
             </ul>
 
             <h3 className="text-lg font-bold mt-6">Upcoming Appointments</h3>
             <ul>
                 {appointments.upcoming.map(app => (
-                    <li key={app.id}>{app.teacherName}, {app.schedule}, {app.venue}</li>
+                    <li key={app.id}>
+                        Teacher: {app.teacherName}, Students: {app.studentNames}, Schedule: {app.schedule}, Venue: {app.venue}
+                    </li>
+                ))}
+            </ul>
+
+            <h3 className="text-lg font-bold mt-6">Canceled Appointments</h3>
+            <ul>
+                {appointments.canceled.map(app => (
+                    <li key={app.id}>
+                        Teacher: {app.teacherName}, Students: {app.studentNames}, Schedule: {app.schedule}, Venue: {app.venue}
+                    </li>
                 ))}
             </ul>
         </div>

@@ -6,7 +6,7 @@ function BookingTeacher() {
     const [selectedStudents, setSelectedStudents] = useState([]);
     const [schedule, setSchedule] = useState('');
     const [venue, setVenue] = useState('');
-    const [appointments, setAppointments] = useState({ pending: [], upcoming: [] });
+    const [appointments, setAppointments] = useState({ pending: [], upcoming: [], canceled: [] });
 
     useEffect(() => {
         fetchStudents();
@@ -39,6 +39,7 @@ function BookingTeacher() {
             const categorizedAppointments = {
                 pending: [],
                 upcoming: [],
+                canceled: [],
             };
 
             for (const booking of bookings) {
@@ -60,6 +61,8 @@ function BookingTeacher() {
                     categorizedAppointments.pending.push(appointmentItem);
                 } else if (booking.status === "confirmed") {
                     categorizedAppointments.upcoming.push(appointmentItem);
+                } else if (booking.status === "canceled") {
+                    categorizedAppointments.canceled.push(appointmentItem);
                 }
             }
 
@@ -100,6 +103,73 @@ function BookingTeacher() {
         } catch (error) {
             console.error('Error booking appointment:', error);
         }
+    }
+
+    async function confirmBooking(bookingID, schedule, venue) {
+        if (!schedule || !venue) {
+            alert("Schedule and venue are required to confirm the booking.");
+            return;
+        }
+
+        try {
+            const response = await fetch('http://localhost:5001/bookings/confirm_booking', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ bookingID, schedule, venue }),
+            });
+
+            const result = await response.json();
+            if (response.ok) {
+                alert("Booking confirmed successfully!");
+                fetchTeacherAppointments();
+            } else {
+                alert(`Failed to confirm booking: ${result.error || "Unknown error"}`);
+            }
+        } catch (error) {
+            console.error('Error confirming booking:', error);
+        }
+    }
+
+    async function cancelBooking(bookingID) {
+        try {
+            const response = await fetch('http://localhost:5001/bookings/cancel_booking', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ bookingID }),
+            });
+
+            const result = await response.json();
+            if (response.ok) {
+                alert("Booking canceled successfully!");
+                fetchTeacherAppointments();
+            } else {
+                alert(`Failed to cancel booking: ${result.error || "Unknown error"}`);
+            }
+        } catch (error) {
+            console.error('Error canceling booking:', error);
+        }
+    }
+
+    function showConfirmationInputs(bookingID, bookingItem) {
+        const scheduleInput = document.createElement("input");
+        scheduleInput.type = "datetime-local";
+        scheduleInput.id = `schedule-${bookingID}`;
+
+        const venueInput = document.createElement("input");
+        venueInput.type = "text";
+        venueInput.id = `venue-${bookingID}`;
+        venueInput.placeholder = "Enter venue";
+
+        const confirmButton = document.createElement("button");
+        confirmButton.textContent = "Confirm Booking";
+        confirmButton.onclick = () => confirmBooking(bookingID, scheduleInput.value, venueInput.value);
+
+        bookingItem.appendChild(document.createElement("br"));
+        bookingItem.appendChild(scheduleInput);
+        bookingItem.appendChild(document.createElement("br"));
+        bookingItem.appendChild(venueInput);
+        bookingItem.appendChild(document.createElement("br"));
+        bookingItem.appendChild(confirmButton);
     }
 
     return (
@@ -157,6 +227,35 @@ function BookingTeacher() {
             <button onClick={bookAppointment} className="bg-blue-500 text-white px-4 py-2 rounded-lg">
                 Book Appointment
             </button>
+
+            <h3 className="text-lg font-bold mt-6">Pending Appointments</h3>
+            <ul>
+                {appointments.pending.map(app => (
+                    <li key={app.id}>
+                        Students: {app.studentNames}, Schedule: {app.schedule}, Venue: {app.venue}
+                        <button onClick={() => showConfirmationInputs(app.id, document.getElementById(`pending-${app.id}`))}>Confirm</button>
+                        <button onClick={() => cancelBooking(app.id)}>Cancel</button>
+                    </li>
+                ))}
+            </ul>
+
+            <h3 className="text-lg font-bold mt-6">Upcoming Appointments</h3>
+            <ul>
+                {appointments.upcoming.map(app => (
+                    <li key={app.id}>
+                        Students: {app.studentNames}, Schedule: {app.schedule}, Venue: {app.venue}
+                    </li>
+                ))}
+            </ul>
+
+            <h3 className="text-lg font-bold mt-6">Canceled Appointments</h3>
+            <ul>
+                {appointments.canceled.map(app => (
+                    <li key={app.id}>
+                        Students: {app.studentNames}, Schedule: {app.schedule}, Venue: {app.venue}
+                    </li>
+                ))}
+            </ul>
         </div>
     );
 }
