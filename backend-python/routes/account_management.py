@@ -1,5 +1,5 @@
 from flask import Blueprint, request, jsonify
-from services.firebase_service import db
+from services.firebase_service import db, register_user, login_user, auth
 from google.cloud import firestore
 import bcrypt
 
@@ -44,6 +44,13 @@ def signup():
         program_ref = db.collection('programs').document(program_id).get()
         if not program_ref.exists:
             return jsonify({"error": "Invalid program ID"}), 400
+        
+          # Register the user with Firebase Authentication using Pyrebase
+        try:
+            user = register_user(email, password)
+            user_id = user['localId']
+        except ValueError as e:
+            return jsonify({"error": str(e)}), 400
 
         # Hash the password before storing
         hashed_password = bcrypt.hashpw(password.encode('utf-8'), bcrypt.gensalt()).decode('utf-8')
@@ -86,6 +93,12 @@ def login():
 
         if not email or not password:
             return jsonify({"error": "Missing email or password"}), 400
+        
+        # Authenticate user using Pyrebase
+        try:
+            user = login_user(email, password)
+        except ValueError as e:
+            return jsonify({"error": str(e)}), 401
 
         # Fetch user by email
         users_ref = db.collection('user').where('email', '==', email).stream()
@@ -168,5 +181,23 @@ def get_departments():
             for doc in db.collection('departments').stream()
         ]
         return jsonify(departments)
+    except Exception as e:
+        return jsonify({"error": str(e)}), 500
+    
+@acc_management_bp.route('/get_user_role', methods=['GET'])
+def get_user_role():
+    try:
+        email = request.args.get('email')
+        users_ref = db.collection('user').where('email', '==', email).stream()
+        user_data = None
+        for doc in users_ref:
+            user_data = doc.to_dict()
+            break
+
+        if not user_data:
+            return jsonify({"error": "User not found"}), 404
+
+        return jsonify({"role": user_data.get('role')}), 200
+
     except Exception as e:
         return jsonify({"error": str(e)}), 500
