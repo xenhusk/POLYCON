@@ -84,6 +84,7 @@ def signup():
     except Exception as e:
         return jsonify({"error": str(e)}), 500
 
+
 @acc_management_bp.route('/login', methods=['POST'])
 def login():
     try:
@@ -93,35 +94,47 @@ def login():
 
         if not email or not password:
             return jsonify({"error": "Missing email or password"}), 400
-        
-        # Authenticate user using Pyrebase
-        try:
-            user = login_user(email, password)
-        except ValueError as e:
-            return jsonify({"error": str(e)}), 401
 
-        # Fetch user by email
+        # Firebase authentication
+        try:
+            user = auth.sign_in_with_email_and_password(email, password)
+            user_id = user['localId']
+            id_token = user['idToken']
+
+            # Get user info from Firebase
+            user_info = auth.get_account_info(id_token)['users'][0]
+
+        except Exception:
+            return jsonify({"error": "Invalid email or password"}), 401
+
+        # Retrieve user details from Firestore
         users_ref = db.collection('user').where('email', '==', email).stream()
-        user = None
+        student_id = None
+        user_data = None
+
         for doc in users_ref:
-            user = doc.to_dict()
-            user['id'] = doc.id
+            user_data = doc.to_dict()
+            student_id = user_data.get('ID')
             break
 
-        if not user:
-            print(f"Login failed: User with email {email} not found.")
-            return jsonify({"error": "Invalid email or password"}), 401
+        if not student_id:
+            return jsonify({"error": "Student ID not found"}), 404
 
-        # Check password
-        if not bcrypt.checkpw(password.encode('utf-8'), user['password'].encode('utf-8')):
-            print(f"Login failed: Incorrect password for email {email}.")
-            return jsonify({"error": "Invalid email or password"}), 401
-
-        return jsonify({"message": "Login successful", "role": user['role'], "userId": user['id']}), 200
+        # Return consolidated response
+        return jsonify({
+            "message": "Login successful",
+            "userId": user_id,
+            "studentId": student_id,
+            "email": user_info['email'],
+            "role": user_data.get('role', 'student'),
+            "firstName": user_data.get('firstName', ''),
+            "lastName": user_data.get('lastName', '')
+        }), 200
 
     except Exception as e:
-        print(f"Login error: {str(e)}")
         return jsonify({"error": str(e)}), 500
+
+
 
 @acc_management_bp.route('/programs', methods=['GET'])
 def get_programs():

@@ -1,6 +1,9 @@
 import React, { useEffect, useState } from 'react';
+import { useLocation } from 'react-router-dom';
+
 
 function BookingStudent() {
+    const location = useLocation();
     const [studentID, setStudentID] = useState('');
     const [teachers, setTeachers] = useState([]);
     const [students, setStudents] = useState([]);
@@ -9,9 +12,13 @@ function BookingStudent() {
     const [appointments, setAppointments] = useState({ pending: [], upcoming: [], canceled: [] });
 
     useEffect(() => {
+        if (location.state?.studentID) {
+            setStudentID(location.state.studentID);
+        }
         fetchTeachers();
         fetchStudents();
-    }, []);
+    }, [location]);
+    
 
     async function fetchTeachers() {
         try {
@@ -112,7 +119,6 @@ function BookingStudent() {
 
             if (response.ok) {
                 alert("Appointment request sent successfully!");
-                fetchStudentAppointments();
             } else {
                 alert("Failed to request appointment.");
             }
@@ -120,7 +126,6 @@ function BookingStudent() {
             console.error('Error requesting appointment:', error);
         }
     }
-
     return (
         <div className="max-w-md mx-auto p-6 bg-white shadow-lg rounded-lg">
             <h2 className="text-2xl font-bold mb-4 text-center text-gray-800">Student Booking Panel</h2>
@@ -129,10 +134,9 @@ function BookingStudent() {
                 <label className="block text-gray-700 font-medium mb-1">Your Student ID:</label>
                 <input
                     type="text"
-                    placeholder="Enter your Student ID"
                     value={studentID}
-                    onChange={(e) => setStudentID(e.target.value)}
-                    className="w-full border border-gray-300 rounded-lg px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500"
+                    readOnly
+                    className="w-full border border-gray-300 rounded-lg px-3 py-2 bg-gray-100 text-gray-600"
                 />
             </div>
 

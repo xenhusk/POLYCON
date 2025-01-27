@@ -1,4 +1,6 @@
 import React, { useState, useEffect } from 'react';
+import { useNavigate } from 'react-router-dom';
+
 
 const Signup = () => {
   const [step, setStep] = useState(1);
@@ -66,22 +68,31 @@ const Signup = () => {
     setStep(step + 1);
   };
 
-  const handleSubmit = async (e) => {
+  const navigate = useNavigate();
+
+const handleSubmit = async (e) => {
     e.preventDefault();
     try {
-      const response = await fetch('http://localhost:5001/account/signup', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify(formData),
-      });
-      const data = await response.json();
-      alert(data.message);
+        const response = await fetch('http://localhost:5001/account/signup', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+            },
+            body: JSON.stringify(formData),
+        });
+        const data = await response.json();
+
+        if (response.ok) {
+            alert(data.message);
+            navigate('/login');  // Redirect to login page after successful signup
+        } else {
+            alert('Signup failed. Please try again.');
+        }
     } catch (error) {
-      alert('Something went wrong!');
+        alert('Something went wrong!');
     }
-  };
+};
+
 
   return (
     <div className="min-h-screen flex items-center justify-center bg-gray-100">
