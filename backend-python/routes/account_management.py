@@ -30,9 +30,9 @@ def signup():
         sex = data.get('sex')
         year_section = data.get('year_section')
         department_id = data.get('department')
-        role = "student"
+        role = data.get('role')  # Use the role provided in the request data
 
-        if not all([id_number, first_name, last_name, email, password, phone, address, birthday, program_id, sex, year_section, department_id]):
+        if not all([id_number, first_name, last_name, email, password, phone, address, birthday, program_id, sex, year_section, department_id, role]):
             return jsonify({"error": "Missing required fields"}), 400
 
         # Check if department exists
@@ -45,7 +45,7 @@ def signup():
         if not program_ref.exists:
             return jsonify({"error": "Invalid program ID"}), 400
         
-          # Register the user with Firebase Authentication using Pyrebase
+        # Register the user with Firebase Authentication using Pyrebase
         try:
             user = register_user(email, password)
             user_id = user['localId']
@@ -68,16 +68,17 @@ def signup():
             "role": role
         })
 
-        # Store student-specific data in Firestore under 'students' collection
-        student_ref = db.collection('students').document(id_number)
-        student_ref.set({
-            "ID": f"/users/{id_number}",  # Firestore reference
-            "address": address,
-            "birthday": birthday,
-            "program": f"/programs/{program_id}",  # Firestore reference
-            "sex": sex,
-            "year_section": year_section
-        })
+        # Store student-specific data in Firestore under 'students' collection if role is student
+        if role == "student":
+            student_ref = db.collection('students').document(id_number)
+            student_ref.set({
+                "ID": f"/users/{id_number}",  # Firestore reference
+                "address": address,
+                "birthday": birthday,
+                "program": f"/programs/{program_id}",  # Firestore reference
+                "sex": sex,
+                "year_section": year_section
+            })
 
         return jsonify({"message": "User registered successfully."}), 201
 
@@ -152,7 +153,7 @@ def get_programs():
 
                 # Fetch department details from the 'departments' collection using department ID
                 department_ref = db.collection('departments').document(department_id).get()
-                if department_ref.exists:
+                if department_ref.exists():
                     department_data = department_ref.to_dict()
                     program_data['departmentName'] = department_data.get('departmentName', 'Unknown')
 
@@ -170,7 +171,7 @@ def get_programs():
                 department_ref = program_data['departmentID']
                 if isinstance(department_ref, firestore.DocumentReference):
                     department_ref = department_ref.get()
-                    if department_ref.exists:
+                    if department_ref.exists():
                         department_data = department_ref.to_dict()
                         program_data['departmentName'] = department_data.get('departmentName', 'Unknown')
 
@@ -212,5 +213,73 @@ def get_user_role():
 
         return jsonify({"role": user_data.get('role')}), 200
 
+    except Exception as e:
+        return jsonify({"error": str(e)}), 500
+
+@acc_management_bp.route('/get_all_users', methods=['GET'])
+def get_all_users():
+    try:
+        role_filter = request.args.get('role')
+        users_collection = db.collection('user')
+        if role_filter in ['faculty', 'student']:
+            query = users_collection.where('role', '==', role_filter).stream()
+        else:
+            query = users_collection.stream()
+
+        users = []
+        for doc in query:
+            user_data = doc.to_dict()
+            user_data = {key: convert_references(value) for key, value in user_data.items()}
+            users.append(user_data)
+
+        return jsonify(users), 200
+    except Exception as e:
+        return jsonify({"error": str(e)}), 500
+
+@acc_management_bp.route('/update_user', methods=['POST'])
+def update_user():
+    try:
+        data = request.json
+        id_number = data.get('idNumber')
+        if not id_number:
+            return jsonify({"error": "Missing idNumber"}), 400
+
+        user_ref = db.collection('user').document(id_number)
+        user_doc = user_ref.get()
+        if not user_doc.exists():
+            return jsonify({"error": "User not found"}), 404
+
+        updates = {}
+        if 'firstName' in data: updates['firstName'] = data['firstName']
+        if 'lastName' in data: updates['lastName'] = data['lastName']
+        if 'email' in data: updates['email'] = data['email']
+        if 'role' in data: updates['role'] = data['role']
+
+        user_ref.update(updates)
+        return jsonify({"message": "User updated successfully"}), 200
+    except Exception as e:
+        return jsonify({"error": str(e)}), 500
+
+@acc_management_bp.route('/delete_user', methods=['DELETE'])
+def delete_user():
+    try:
+        id_number = request.args.get('idNumber')
+        if not id_number:
+            return jsonify({"error": "Missing idNumber"}), 400
+
+        user_ref = db.collection('user').document(id_number)
+        user_doc = user_ref.get()
+        if not user_doc.exists():
+            return jsonify({"error": "User not found"}), 404
+
+        # Optionally also remove from 'students' or 'faculty' if needed
+        user_data = user_doc.to_dict()
+        if user_data.get('role') == 'student':
+            db.collection('students').document(id_number).delete()
+        elif user_data.get('role') == 'faculty':
+            db.collection('faculty').document(id_number).delete()
+
+        user_ref.delete()
+        return jsonify({"message": "User deleted successfully"}), 200
     except Exception as e:
         return jsonify({"error": str(e)}), 500

@@ -5,6 +5,7 @@ import BookingTeacher from './components/BookingTeacher';
 import Session from './components/Session';
 import Signup from './components/Signup';
 import Login from './components/Login';
+import AdminPortal from './components/AdminPortal';
 
 function App() {
   const [user, setUser] = useState(null);
@@ -23,7 +24,7 @@ function App() {
           } else if (data.role === 'faculty') {
             navigate('/booking-teacher');
           } else if (data.role === 'admin') {
-            alert('Admins do not have booking pages.');
+            navigate('/admin');
           }
         } catch (error) {
           console.error('Error fetching user role:', error);
@@ -32,14 +33,15 @@ function App() {
     };
 
     fetchUserRole();
-  }, []);
+  }, [navigate]);
 
   return (
     <div className="container mx-auto p-4">
       { (location.pathname !== '/login'
         && location.pathname !== '/signup'
         && location.pathname !== '/booking-student'
-        && location.pathname !== '/booking-teacher') && (
+        && location.pathname !== '/booking-teacher'
+        && location.pathname !== '/admin') && (
           <div>
             <h2 className="text-2xl font-bold text-center mb-4">Welcome to POLYCON System</h2>
 
@@ -61,6 +63,7 @@ function App() {
         <Route path="/session" element={<Session />} />
         <Route path="/signup" element={<Signup />} />
         <Route path="/login" element={<Login onLoginSuccess={setUser} />} />
+        <Route path="/admin" element={<AdminPortal />} />
       </Routes>
     </div>
   );

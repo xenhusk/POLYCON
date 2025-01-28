@@ -1,6 +1,7 @@
 import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 
+
 const Login = () => {
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
@@ -22,6 +23,10 @@ const Login = () => {
             setMessage(`Welcome ${data.firstName} ${data.lastName}`);
             if (data.role === 'student') {
                 navigate('/booking-student', { state: { studentID: data.studentId } });
+            } else if (data.role === 'faculty') {
+                navigate('/booking-teacher');
+            } else if (data.role === 'admin') {
+                navigate('/admin');
             } else {
                 setMessage('Unauthorized role.');
             }
@@ -33,10 +38,6 @@ const Login = () => {
     }
 };
 
-
-
-
-  
 
   return (
     <div className="min-h-screen flex items-center justify-center bg-gray-100">

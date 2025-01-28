@@ -1,5 +1,5 @@
 import firebase_admin
-from firebase_admin import credentials, firestore
+from firebase_admin import credentials, firestore, auth
 import pyrebase
 import os
 from dotenv import load_dotenv
@@ -34,25 +34,24 @@ firebase_config = {
 
 # Initialize Pyrebase
 pyrebase_app = pyrebase.initialize_app(firebase_config)
-auth = pyrebase_app.auth()
+auth_pyrebase = pyrebase_app.auth()
 
 def register_user(email, password):
     """
-    Register a new user with Firebase Authentication using Pyrebase.
+    Register a new user with Firebase Authentication using Firebase Admin SDK.
     """
-    try:
-        user = auth.create_user_with_email_and_password(email, password)
-        auth.send_email_verification(user['idToken'])
-        return user
-    except Exception as e:
-        raise ValueError(f"Error registering user: {e}")
+    user = auth.create_user(
+        email=email,
+        password=password
+    )
+    return user
 
 def login_user(email, password):
     """
     Log in an existing user using Pyrebase authentication.
     """
     try:
-        user = auth.sign_in_with_email_and_password(email, password)
+        user = auth_pyrebase.sign_in_with_email_and_password(email, password)
         return user
     except Exception as e:
         raise ValueError(f"Error logging in: {e}")
