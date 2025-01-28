@@ -1,9 +1,9 @@
 import React, { useEffect, useState } from 'react';
-import { useLocation } from 'react-router-dom';
-
+import { useLocation, useNavigate } from 'react-router-dom';
 
 function BookingStudent() {
     const location = useLocation();
+    const navigate = useNavigate();
     const [studentID, setStudentID] = useState('');
     const [teachers, setTeachers] = useState([]);
     const [students, setStudents] = useState([]);
@@ -126,9 +126,18 @@ function BookingStudent() {
             console.error('Error requesting appointment:', error);
         }
     }
+
+    const handleLogout = () => {
+        localStorage.removeItem('userEmail');
+        navigate('/login');
+    };
+
     return (
         <div className="max-w-md mx-auto p-6 bg-white shadow-lg rounded-lg">
-            <h2 className="text-2xl font-bold mb-4 text-center text-gray-800">Student Booking Panel</h2>
+            <header className="flex justify-between items-center mb-4">
+                <h2 className="text-2xl font-bold text-gray-800">Student Booking Panel</h2>
+                <button onClick={handleLogout} className="bg-red-500 text-white px-4 py-2 rounded">Logout</button>
+            </header>
 
             <div className="mb-4">
                 <label className="block text-gray-700 font-medium mb-1">Your Student ID:</label>

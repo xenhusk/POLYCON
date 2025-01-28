@@ -35,6 +35,12 @@ function App() {
     fetchUserRole();
   }, [navigate]);
 
+  const handleLogout = () => {
+    localStorage.removeItem('userEmail');
+    setUser(null);
+    navigate('/login');
+  };
+
   return (
     <div className="container mx-auto p-4">
       { (location.pathname !== '/login'
@@ -46,7 +52,10 @@ function App() {
             <h2 className="text-2xl font-bold text-center mb-4">Welcome to POLYCON System</h2>
 
             {user ? (
-              <p className="text-center">Logged in as {user.email}</p>
+              <div className="flex justify-between items-center">
+                <p className="text-center">Logged in as {user.email}</p>
+                <button onClick={handleLogout} className="bg-red-500 text-white px-4 py-2 rounded">Logout</button>
+              </div>
             ) : (
               <div className="flex justify-center gap-4">
                 <Link to="/login" className="bg-blue-500 text-white px-4 py-2 rounded">Login</Link>

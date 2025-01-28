@@ -1,4 +1,5 @@
 import React, { useEffect, useState } from 'react';
+import { useNavigate } from 'react-router-dom';
 
 export default function AdminPortal() {
   const [idNumber, setIdNumber] = useState('');
@@ -7,14 +8,27 @@ export default function AdminPortal() {
   const [email, setEmail] = useState('');
   const [role, setRole] = useState('');
   const [department, setDepartment] = useState('');
+  const [program, setProgram] = useState('');
+  const [sex, setSex] = useState('');
+  const [yearSection, setYearSection] = useState('');
   const [departments, setDepartments] = useState([]);
+  const [programs, setPrograms] = useState([]);
   const [userList, setUserList] = useState([]);
   const [editUser, setEditUser] = useState(null);
+  const navigate = useNavigate();
 
   useEffect(() => {
     fetchAllUsers();
     fetchDepartments();
   }, []);
+
+  useEffect(() => {
+    if (department && role === 'student') {
+      fetchPrograms(department);
+    } else {
+      setPrograms([]);
+    }
+  }, [department, role]);
 
   const fetchAllUsers = async () => {
     try {
@@ -42,24 +56,71 @@ export default function AdminPortal() {
     }
   };
 
-  const handleAddUser = async () => {
-    // Send form data to backend for user creation
-    const response = await fetch('http://localhost:5001/account/add_user', {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ idNumber, firstName, lastName, email, role, department }),
-    });
+  const fetchPrograms = async (departmentID) => {
+    try {
+      const response = await fetch(`http://localhost:5001/account/programs?departmentID=${departmentID}`);
+      const data = await response.json();
+      setPrograms(data);
+    } catch (error) {
+      console.error('Error fetching programs:', error);
+    }
+  };
 
-    if (response.ok) {
-      alert('User added successfully');
-      fetchAllUsers();
-    } else {
+  const handleAddUser = async () => {
+    const password = role === 'student' ? `student${idNumber}` : `faculty${idNumber}`;
+
+    const userData = {
+      idNumber,
+      firstName,
+      lastName,
+      email,
+      password,
+      role,
+      department,
+      ...(role === 'student' && { program, sex, year_section: yearSection })
+    };
+
+    try {
+      const response = await fetch('http://localhost:5001/account/signup', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(userData),
+      });
+
+      if (response.ok) {
+        alert('User added successfully');
+        fetchAllUsers();
+        // Clear input fields
+        setIdNumber('');
+        setFirstName('');
+        setLastName('');
+        setEmail('');
+        setRole('');
+        setDepartment('');
+        setProgram('');
+        setSex('');
+        setYearSection('');
+      } else {
+        alert('Failed to add user');
+      }
+    } catch (error) {
+      console.error('Error adding user:', error);
       alert('Failed to add user');
     }
   };
 
   const handleEditClick = (user) => {
-    setEditUser({ ...user });
+    setEditUser({
+      idNumber: user.ID,
+      firstName: user.firstName,
+      lastName: user.lastName,
+      email: user.email,
+      role: user.role,
+      department: user.department,
+      program: user.program || '',
+      sex: user.sex || '',
+      yearSection: user.year_section || ''
+    });
   };
 
   const handleUpdateUser = async () => {
@@ -73,6 +134,16 @@ export default function AdminPortal() {
         alert('User updated successfully');
         setEditUser(null);
         fetchAllUsers();
+        // Clear input fields
+        setIdNumber('');
+        setFirstName('');
+        setLastName('');
+        setEmail('');
+        setRole('');
+        setDepartment('');
+        setProgram('');
+        setSex('');
+        setYearSection('');
       } else {
         alert('Failed to update user');
       }
@@ -97,9 +168,17 @@ export default function AdminPortal() {
     }
   };
 
+  const handleLogout = () => {
+    localStorage.removeItem('userEmail');
+    navigate('/login');
+  };
+
   return (
     <div className="max-w-4xl mx-auto p-6 bg-white shadow-lg rounded-lg">
-      <h2 className="text-2xl font-bold mb-4 text-center text-gray-800">Admin Portal</h2>
+      <header className="flex justify-between items-center mb-4">
+        <h2 className="text-2xl font-bold text-center text-gray-800">Admin Portal</h2>
+        <button onClick={handleLogout} className="bg-red-500 text-white px-4 py-2 rounded">Logout</button>
+      </header>
       <div className="mb-4">
         <input
           placeholder="ID Number"
@@ -146,6 +225,37 @@ export default function AdminPortal() {
             </option>
           ))}
         </select>
+        {role === 'student' && department && (
+          <>
+            <select
+              value={program}
+              onChange={(e) => setProgram(e.target.value)}
+              className="w-full border border-gray-300 rounded-lg px-3 py-2 mb-2"
+            >
+              <option value="">Select Program</option>
+              {programs.map((prog) => (
+                <option key={prog.programID} value={prog.programID}>
+                  {prog.programName}
+                </option>
+              ))}
+            </select>
+            <select
+              value={sex}
+              onChange={(e) => setSex(e.target.value)}
+              className="w-full border border-gray-300 rounded-lg px-3 py-2 mb-2"
+            >
+              <option value="">Select Sex</option>
+              <option value="Male">Male</option>
+              <option value="Female">Female</option>
+            </select>
+            <input
+              placeholder="Year & Section"
+              value={yearSection}
+              onChange={(e) => setYearSection(e.target.value)}
+              className="w-full border border-gray-300 rounded-lg px-3 py-2 mb-2"
+            />
+          </>
+        )}
         <button
           onClick={handleAddUser}
           className="w-full bg-blue-500 text-white px-4 py-2 rounded-lg hover:bg-blue-600"
@@ -244,6 +354,37 @@ export default function AdminPortal() {
               </option>
             ))}
           </select>
+          {editUser.role === 'student' && editUser.department && (
+            <>
+              <select
+                value={editUser.program}
+                onChange={(e) => setEditUser({...editUser, program: e.target.value})}
+                className="w-full border border-gray-300 rounded-lg px-3 py-2 mb-2"
+              >
+                <option value="">Select Program</option>
+                {programs.map((prog) => (
+                  <option key={prog.programID} value={prog.programID}>
+                    {prog.programName}
+                  </option>
+                ))}
+              </select>
+              <select
+                value={editUser.sex}
+                onChange={(e) => setEditUser({...editUser, sex: e.target.value})}
+                className="w-full border border-gray-300 rounded-lg px-3 py-2 mb-2"
+              >
+                <option value="">Select Sex</option>
+                <option value="Male">Male</option>
+                <option value="Female">Female</option>
+              </select>
+              <input
+                placeholder="Year & Section"
+                value={editUser.yearSection || editUser.year_section}
+                onChange={(e) => setEditUser({...editUser, yearSection: e.target.value})}
+                className="w-full border border-gray-300 rounded-lg px-3 py-2 mb-2"
+              />
+            </>
+          )}
           <div className="flex space-x-2">
             <button
               onClick={handleUpdateUser}

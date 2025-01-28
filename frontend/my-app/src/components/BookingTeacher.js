@@ -1,4 +1,5 @@
 import React, { useEffect, useState } from 'react';
+import { useNavigate } from 'react-router-dom';
 
 function BookingTeacher() {
     const [teacherID, setTeacherID] = useState('');
@@ -7,6 +8,7 @@ function BookingTeacher() {
     const [schedule, setSchedule] = useState('');
     const [venue, setVenue] = useState('');
     const [appointments, setAppointments] = useState({ pending: [], upcoming: [], canceled: [] });
+    const navigate = useNavigate();
 
     useEffect(() => {
         fetchStudents();
@@ -172,9 +174,17 @@ function BookingTeacher() {
         bookingItem.appendChild(confirmButton);
     }
 
+    const handleLogout = () => {
+        localStorage.removeItem('userEmail');
+        navigate('/login');
+    };
+
     return (
         <div className="max-w-md mx-auto p-6 bg-white shadow-lg rounded-lg">
-            <h2 className="text-2xl font-bold mb-4 text-center text-gray-800">Teacher Booking Panel</h2>
+            <header className="flex justify-between items-center mb-4">
+                <h2 className="text-2xl font-bold text-gray-800">Teacher Booking Panel</h2>
+                <button onClick={handleLogout} className="bg-red-500 text-white px-4 py-2 rounded">Logout</button>
+            </header>
 
             <div className="mb-4">
                 <label className="block text-gray-700 font-medium mb-1">Your Teacher ID:</label>

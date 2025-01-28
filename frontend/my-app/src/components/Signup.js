@@ -1,7 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 
-
 const Signup = () => {
   const [step, setStep] = useState(1);
   const [departments, setDepartments] = useState([]);
@@ -12,9 +11,6 @@ const Signup = () => {
     lastName: '',
     email: '',
     password: '',
-    phone: '',
-    address: '',
-    birthday: '',
     program: '',
     sex: '',
     year_section: '',
@@ -111,9 +107,6 @@ const handleSubmit = async (e) => {
         ) : (
           <div>
             <h2 className="text-2xl font-bold text-center mb-6">Personal Information</h2>
-            <input className="w-full p-2 mb-3 border rounded" type="text" name="phone" placeholder="Phone" value={formData.phone} onChange={handleChange} required />
-            <input className="w-full p-2 mb-3 border rounded" type="text" name="address" placeholder="Address" value={formData.address} onChange={handleChange} required />
-            <input className="w-full p-2 mb-3 border rounded" type="date" name="birthday" value={formData.birthday} onChange={handleChange} required />
             <select className="w-full p-2 mb-3 border rounded" name="department" value={formData.department} onChange={handleChange} required>
               <option value="">Select Department</option>
               {departments.map((dept) => (
