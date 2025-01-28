@@ -229,6 +229,12 @@ def get_all_users():
         users = []
         for doc in query:
             user_data = doc.to_dict()
+            dept_path = user_data.get('department', '')
+            if dept_path.startswith("/departments/"):
+                dept_id = dept_path.split('/')[-1]
+                dept_doc = db.collection('departments').document(dept_id).get()
+                if dept_doc.exists:
+                    user_data['department'] = dept_doc.to_dict().get('departmentName', '')
             user_data = {key: convert_references(value) for key, value in user_data.items()}
             users.append(user_data)
 
