@@ -36,23 +36,26 @@ function App() {
 
   return (
     <div className="container mx-auto p-4">
-      {location.pathname !== '/login' && location.pathname !== '/signup' && location.pathname !== '/booking-student'
-      && location.pathname !== '/booking-teacher' && location.pathname !== '/session' (
-        <div>
-          <h2 className="text-2xl font-bold text-center mb-4">Welcome to POLYCON System</h2>
+      { (location.pathname !== '/login'
+        && location.pathname !== '/signup'
+        && location.pathname !== '/booking-student'
+        && location.pathname !== '/booking-teacher') && (
+          <div>
+            <h2 className="text-2xl font-bold text-center mb-4">Welcome to POLYCON System</h2>
 
-          {user ? (
-            <p className="text-center">Logged in as {user.email}</p>
-          ) : (
-            <div className="flex justify-center gap-4">
-              <Link to="/login" className="bg-blue-500 text-white px-4 py-2 rounded">Login</Link>
-              <Link to="/signup" className="bg-green-500 text-white px-4 py-2 rounded">Signup</Link>
-            </div>
-          )}
-        </div>
-      )}
+            {user ? (
+              <p className="text-center">Logged in as {user.email}</p>
+            ) : (
+              <div className="flex justify-center gap-4">
+                <Link to="/login" className="bg-blue-500 text-white px-4 py-2 rounded">Login</Link>
+                <Link to="/signup" className="bg-green-500 text-white px-4 py-2 rounded">Signup</Link>
+              </div>
+            )}
+          </div>
+        )}
 
       <Routes>
+        <Route path="/" element={<div></div>} />
         <Route path="/booking-student" element={<BookingStudent />} />
         <Route path="/booking-teacher" element={<BookingTeacher />} />
         <Route path="/session" element={<Session />} />
