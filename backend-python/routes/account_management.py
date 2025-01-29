@@ -333,8 +333,8 @@ def delete_user():
         user_ref.delete()
 
         # Delete user from Firebase Authentication
-        user = auth.get_user_by_email(email)
-        auth.delete_user(user.uid)
+        user = auth_pyrebase.get_user_by_email(email)
+        auth_pyrebase.delete_user(user.uid)
 
         return jsonify({"message": "User deleted successfully"}), 200
     except Exception as e:

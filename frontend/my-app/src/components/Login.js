@@ -21,6 +21,7 @@ const Login = ({ onLoginSuccess }) => {
         if (response.ok) {
             setMessage(`Welcome ${data.firstName} ${data.lastName}`);
             localStorage.setItem('userEmail', email);
+            onLoginSuccess({ email });
 
             if (data.role === 'student') {
                 navigate('/booking-student', { state: { studentID: data.studentId } });
@@ -38,7 +39,6 @@ const Login = ({ onLoginSuccess }) => {
         setMessage('Login failed.');
     }
 };
-
 
 
   return (

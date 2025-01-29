@@ -6,3 +6,4 @@ venv
 /backend/keys/
 /.venv/
 backend-python/.env
+backend-python/.env
