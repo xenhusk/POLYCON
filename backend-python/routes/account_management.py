@@ -136,12 +136,15 @@ def login():
             return jsonify({"error": "Invalid email or password"}), 401
 
         # Retrieve user details from Firestore
-        users_ref = db.collection('user').where('email', '==', email).stream()
+        user_ref = db.collection('user').where('email', '==', email).stream()
         user_data = None
+        teacher_id = None  # Variable to store teacher ID
 
-        for doc in users_ref:
+        for doc in user_ref:
             user_data = doc.to_dict()
-            break
+            if user_data.get('role') == 'faculty':  # Fetch teacher ID if faculty
+                teacher_id = user_data.get('ID')  # Get the teacher ID from Firestore
+            break  # Get only the first matched document
 
         if not user_data:
             print("User not found for email:", email)  # Debugging log
@@ -155,7 +158,8 @@ def login():
             "role": user_data.get('role'),
             "firstName": user_data.get('firstName', ''),
             "lastName": user_data.get('lastName', ''),
-            "studentId": user_data.get('ID') if user_data.get('role') == 'student' else None
+            "studentId": user_data.get('ID') if user_data.get('role') == 'student' else None,
+            "teacherId": teacher_id if user_data.get('role') == 'faculty' else None  # Send teacher ID if faculty
         }), 200
 
     except Exception as e:

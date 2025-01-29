@@ -1,5 +1,6 @@
 import React, { useEffect, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
+import { useLocation } from 'react-router-dom';
 
 function BookingTeacher() {
     const [teacherID, setTeacherID] = useState('');
@@ -9,10 +10,18 @@ function BookingTeacher() {
     const [venue, setVenue] = useState('');
     const [appointments, setAppointments] = useState({ pending: [], upcoming: [], canceled: [] });
     const navigate = useNavigate();
+    const location = useLocation();
 
     useEffect(() => {
+        const storedTeacherID = localStorage.getItem('teacherID');
+        if (location.state?.teacherID) {
+            setTeacherID(location.state.teacherID);
+            localStorage.setItem('teacherID', location.state.teacherID); // Store in localStorage
+        } else if (storedTeacherID) {
+            setTeacherID(storedTeacherID);  // Retrieve from localStorage
+        }
         fetchStudents();
-    }, []);
+    }, [location]);
 
     async function fetchStudents() {
         try {
@@ -190,10 +199,9 @@ function BookingTeacher() {
                 <label className="block text-gray-700 font-medium mb-1">Your Teacher ID:</label>
                 <input
                     type="text"
-                    placeholder="Enter your Teacher ID"
                     value={teacherID}
-                    onChange={(e) => setTeacherID(e.target.value)}
-                    className="w-full border border-gray-300 rounded-lg px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500"
+                    readOnly
+                    className="w-full border border-gray-300 rounded-lg px-3 py-2 bg-gray-100 text-gray-600"
                 />
             </div>
 

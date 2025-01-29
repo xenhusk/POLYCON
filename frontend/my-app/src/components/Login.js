@@ -21,12 +21,11 @@ const Login = ({ onLoginSuccess }) => {
         if (response.ok) {
             setMessage(`Welcome ${data.firstName} ${data.lastName}`);
             localStorage.setItem('userEmail', email);
-            onLoginSuccess({ email });
 
             if (data.role === 'student') {
                 navigate('/booking-student', { state: { studentID: data.studentId } });
             } else if (data.role === 'faculty') {
-                navigate('/booking-teacher');
+                navigate('/booking-teacher', { state: { teacherID: data.teacherId } });
             } else if (data.role === 'admin') {
                 navigate('/admin');
             } else {
@@ -39,6 +38,7 @@ const Login = ({ onLoginSuccess }) => {
         setMessage('Login failed.');
     }
 };
+
 
 
   return (
