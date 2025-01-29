@@ -1,4 +1,5 @@
-import React, { useState, useRef } from 'react';
+import React, { useState, useRef, useEffect } from 'react';
+import { useNavigate, useLocation } from 'react-router-dom';
 
 const Session = () => {
   const [teacherId, setTeacherId] = useState('');
@@ -18,6 +19,42 @@ const Session = () => {
   const mediaRecorderRef = useRef(null);
   const audioChunksRef = useRef([]);
   const timerIntervalRef = useRef(null);
+  const navigate = useNavigate();
+  const location = useLocation();
+
+  useEffect(() => {
+    const fetchSessionDetails = async (sessionID) => {
+      try {
+        const response = await fetch(`http://localhost:5001/consultation/get_session?sessionID=${sessionID}`);
+        const data = await response.json();
+        if (response.ok) {
+          setTeacherId(data.teacher_id.split('/').pop());
+          setStudentIds(data.student_ids.map(id => id.split('/').pop()).join(', '));
+        } else {
+          console.error('Failed to fetch session details:', data.error);
+        }
+      } catch (error) {
+        console.error('Error fetching session details:', error);
+      }
+    };
+
+    const queryParams = new URLSearchParams(location.search);
+    const sessionID = queryParams.get('sessionID');
+    const teacherID = queryParams.get('teacherID');
+    const studentIDs = queryParams.get('studentIDs');
+
+    if (sessionID) {
+      fetchSessionDetails(sessionID);
+    }
+
+    if (teacherID) {
+      setTeacherId(teacherID);
+    }
+
+    if (studentIDs) {
+      setStudentIds(studentIDs.split(',').map(id => id.split('/').pop()).join(', '));
+    }
+  }, [location.search]);
 
   // Start the timer
   const startTimer = () => {
@@ -147,6 +184,27 @@ const Session = () => {
     setSummary(summary);
 
     await storeConsultation(transcription, summary, { concern, actionTaken, outcome, remarks, duration });
+
+    // Remove the specific booking after the session is finished
+    const queryParams = new URLSearchParams(location.search);
+    const sessionID = queryParams.get('sessionID');
+    if (sessionID) {
+      try {
+        const response = await fetch(`http://localhost:5001/bookings/delete_booking?sessionID=${sessionID}`, {
+          method: 'DELETE',
+        });
+        if (!response.ok) {
+          throw new Error('Failed to delete booking');
+        }
+        alert('Booking deleted successfully');
+      } catch (error) {
+        console.error('Error deleting booking:', error);
+        alert('Failed to delete booking');
+      }
+    }
+
+    // Stop the timer
+    stopTimer();
   };
 
   // Generate summary
@@ -236,19 +294,25 @@ const Session = () => {
     }
   };
 
+  const handleLogout = () => {
+    localStorage.removeItem('userEmail');
+    navigate('/login');
+  };
+
   return (
     <div className="max-w-2xl mx-auto p-6 bg-white shadow-lg rounded-lg">
-      <header className="text-center mb-6">
+      <header className="flex justify-between items-center mb-4">
         <h1 className="text-3xl font-bold text-gray-800">POLYCON Consultation</h1>
+        <button onClick={handleLogout} className="bg-red-500 text-white px-4 py-2 rounded">Logout</button>
       </header>
 
       <main>
         <section className="mb-6">
           <label className="block mb-2 font-medium">Teacher ID:</label>
-          <input type="text" className="w-full border p-2 rounded" value={teacherId} onChange={(e) => setTeacherId(e.target.value)} placeholder="Enter Teacher ID" required />
+          <input type="text" className="w-full border p-2 rounded" value={teacherId} onChange={(e) => setTeacherId(e.target.value)} placeholder="Enter Teacher ID" required disabled />
 
           <label className="block mt-4 mb-2 font-medium">Student IDs (comma-separated):</label>
-          <input type="text" className="w-full border p-2 rounded" value={studentIds} onChange={(e) => setStudentIds(e.target.value)} placeholder="Enter Student IDs" required />
+          <input type="text" className="w-full border p-2 rounded" value={studentIds} onChange={(e) => setStudentIds(e.target.value)} placeholder="Enter Student IDs" required disabled />
         </section>
 
         <section className="mb-6">

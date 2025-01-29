@@ -76,7 +76,7 @@ function BookingStudent() {
                     id: booking.id,
                     teacherName,
                     studentNames: studentNames.join(", "),
-                    schedule: booking.schedule,
+                    schedule: formatDateTime(booking.schedule),
                     venue: booking.venue,
                 };
 
@@ -130,6 +130,13 @@ function BookingStudent() {
     const handleLogout = () => {
         localStorage.removeItem('userEmail');
         navigate('/login');
+    };
+
+    const formatDateTime = (dateTime) => {
+        const date = new Date(dateTime);
+        const formattedDate = date.toLocaleDateString();
+        const formattedTime = date.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
+        return `${formattedDate} at ${formattedTime}`;
     };
 
     return (
@@ -198,28 +205,37 @@ function BookingStudent() {
             </div>
 
             <h3 className="text-lg font-bold mt-6">Pending Appointments</h3>
-            <ul>
+            <ul className="list-disc pl-5">
                 {appointments.pending.map(app => (
-                    <li key={app.id}>
-                        Teacher: {app.teacherName}, Students: {app.studentNames}, Schedule: {app.schedule}, Venue: {app.venue}
+                    <li key={app.id} className="mb-2">
+                        <div className="font-semibold">Teacher: {app.teacherName}</div>
+                        <div>Students: {app.studentNames}</div>
+                        <div>Schedule: {app.schedule}</div>
+                        <div>Venue: {app.venue}</div>
                     </li>
                 ))}
             </ul>
 
             <h3 className="text-lg font-bold mt-6">Upcoming Appointments</h3>
-            <ul>
+            <ul className="list-disc pl-5">
                 {appointments.upcoming.map(app => (
-                    <li key={app.id}>
-                        Teacher: {app.teacherName}, Students: {app.studentNames}, Schedule: {app.schedule}, Venue: {app.venue}
+                    <li key={app.id} className="mb-2">
+                        <div className="font-semibold">Teacher: {app.teacherName}</div>
+                        <div>Students: {app.studentNames}</div>
+                        <div>Schedule: {app.schedule}</div>
+                        <div>Venue: {app.venue}</div>
                     </li>
                 ))}
             </ul>
 
             <h3 className="text-lg font-bold mt-6">Canceled Appointments</h3>
-            <ul>
+            <ul className="list-disc pl-5">
                 {appointments.canceled.map(app => (
-                    <li key={app.id}>
-                        Teacher: {app.teacherName}, Students: {app.studentNames}, Schedule: {app.schedule}, Venue: {app.venue}
+                    <li key={app.id} className="mb-2">
+                        <div className="font-semibold">Teacher: {app.teacherName}</div>
+                        <div>Students: {app.studentNames}</div>
+                        <div>Schedule: {app.schedule}</div>
+                        <div>Venue: {app.venue}</div>
                     </li>
                 ))}
             </ul>

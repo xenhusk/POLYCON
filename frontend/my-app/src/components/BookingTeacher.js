@@ -64,6 +64,7 @@ function BookingTeacher() {
                 const appointmentItem = {
                     id: booking.id,
                     studentNames: studentNames.join(", "),
+                    studentIDs: booking.studentID,
                     schedule: booking.schedule,
                     venue: booking.venue,
                 };
@@ -161,6 +162,29 @@ function BookingTeacher() {
         }
     }
 
+    async function startSession(appointment) {
+        try {
+            const response = await fetch('http://localhost:5001/consultation/start_session', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({
+                    teacher_id: teacherID,
+                    student_ids: appointment.studentIDs,
+                }),
+            });
+
+            const result = await response.json();
+            if (response.ok) {
+                const sessionUrl = `/session?sessionID=${result.session_id}&teacherID=${teacherID}&studentIDs=${appointment.studentIDs.join(',')}`;
+                window.open(sessionUrl, '_blank'); // Open session page in a new tab
+            } else {
+                alert(`Failed to start session: ${result.error || "Unknown error"}`);
+            }
+        } catch (error) {
+            console.error('Error starting session:', error);
+        }
+    }
+
     function showConfirmationInputs(bookingID, bookingItem) {
         const scheduleInput = document.createElement("input");
         scheduleInput.type = "datetime-local";
@@ -186,6 +210,13 @@ function BookingTeacher() {
     const handleLogout = () => {
         localStorage.removeItem('userEmail');
         navigate('/login');
+    };
+
+    const formatDateTime = (dateTime) => {
+        const date = new Date(dateTime);
+        const formattedDate = date.toLocaleDateString();
+        const formattedTime = date.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
+        return `${formattedDate} at ${formattedTime}`;
     };
 
     return (
@@ -247,30 +278,49 @@ function BookingTeacher() {
             </button>
 
             <h3 className="text-lg font-bold mt-6">Pending Appointments</h3>
-            <ul>
+            <ul className="space-y-4">
                 {appointments.pending.map(app => (
-                    <li key={app.id}>
-                        Students: {app.studentNames}, Schedule: {app.schedule}, Venue: {app.venue}
-                        <button onClick={() => showConfirmationInputs(app.id, document.getElementById(`pending-${app.id}`))}>Confirm</button>
-                        <button onClick={() => cancelBooking(app.id)}>Cancel</button>
+                    <li key={app.id} className="p-4 border rounded-lg shadow-sm bg-gray-50">
+                        <div className="flex justify-between items-center">
+                            <div>
+                                <p><strong>Students:</strong> {app.studentNames}</p>
+                                <p><strong>Schedule:</strong> {formatDateTime(app.schedule)}</p>
+                                <p><strong>Venue:</strong> {app.venue}</p>
+                            </div>
+                            <div className="flex space-x-2">
+                                <button onClick={() => showConfirmationInputs(app.id, document.getElementById(`pending-${app.id}`))} className="bg-blue-500 text-white px-4 py-2 rounded-lg">Confirm</button>
+                                <button onClick={() => cancelBooking(app.id)} className="bg-red-500 text-white px-4 py-2 rounded-lg">Cancel</button>
+                            </div>
+                        </div>
                     </li>
                 ))}
             </ul>
 
             <h3 className="text-lg font-bold mt-6">Upcoming Appointments</h3>
-            <ul>
+            <ul className="space-y-4">
                 {appointments.upcoming.map(app => (
-                    <li key={app.id}>
-                        Students: {app.studentNames}, Schedule: {app.schedule}, Venue: {app.venue}
+                    <li key={app.id} className="p-4 border rounded-lg shadow-sm bg-gray-50">
+                        <div className="flex justify-between items-center">
+                            <div>
+                                <p><strong>Students:</strong> {app.studentNames}</p>
+                                <p><strong>Schedule:</strong> {formatDateTime(app.schedule)}</p>
+                                <p><strong>Venue:</strong> {app.venue}</p>
+                            </div>
+                            <button onClick={() => startSession(app)} className="bg-green-500 text-white px-4 py-2 rounded-lg">Start Session</button>
+                        </div>
                     </li>
                 ))}
             </ul>
 
             <h3 className="text-lg font-bold mt-6">Canceled Appointments</h3>
-            <ul>
+            <ul className="space-y-4">
                 {appointments.canceled.map(app => (
-                    <li key={app.id}>
-                        Students: {app.studentNames}, Schedule: {app.schedule}, Venue: {app.venue}
+                    <li key={app.id} className="p-4 border rounded-lg shadow-sm bg-gray-50">
+                        <div>
+                            <p><strong>Students:</strong> {app.studentNames}</p>
+                            <p><strong>Schedule:</strong> {formatDateTime(app.schedule)}</p>
+                            <p><strong>Venue:</strong> {app.venue}</p>
+                        </div>
                     </li>
                 ))}
             </ul>

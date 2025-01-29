@@ -109,7 +109,7 @@ export default function AdminPortal() {
     }
   };
 
-  const handleEditClick = (user) => {
+  const handleEditClick = async (user) => {
     setEditUser({
       idNumber: user.ID,
       firstName: user.firstName,
@@ -121,6 +121,10 @@ export default function AdminPortal() {
       sex: user.sex || '',
       yearSection: user.year_section || ''
     });
+
+    if (user.role === 'student' && user.department) {
+      await fetchPrograms(user.department);
+    }
   };
 
   const handleUpdateUser = async () => {
@@ -344,7 +348,13 @@ export default function AdminPortal() {
           </select>
           <select
             value={editUser.department}
-            onChange={(e) => setEditUser({...editUser, department: e.target.value})}
+            onChange={async (e) => {
+              const newDepartment = e.target.value;
+              setEditUser({...editUser, department: newDepartment});
+              if (editUser.role === 'student') {
+                await fetchPrograms(newDepartment);
+              }
+            }}
             className="w-full border border-gray-300 rounded-lg px-3 py-2 mb-2"
           >
             <option value="">Select Department</option>

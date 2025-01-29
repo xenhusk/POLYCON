@@ -94,11 +94,92 @@ def store_consultation():
         # Store consultation details in Firestore with custom document ID
         consultation_ref.document(new_session_id).set(consultation_data)
 
+        # Delete the booking after storing the consultation
+        booking_ref = db.collection('bookings').document(new_session_id)
+        booking_ref.delete()
+
         return jsonify({
             "message": "Consultation session stored successfully",
             "session_id": new_session_id,
             "audio_url": audio_url
         }), 200
+
+    except Exception as e:
+        return jsonify({"error": str(e)}), 500
+
+@consultation_bp.route('/start_session', methods=['POST'])
+def start_session():
+    try:
+        data = request.json
+        teacher_id = data.get('teacher_id')
+        student_ids = data.get('student_ids')
+
+        # Ensure teacher_id and student_ids are correctly formatted
+        teacher_ref = db.document(f"faculty/{teacher_id}")
+        student_refs = [db.document(f"students/{student.split('/')[-1]}") for student in student_ids]
+
+        # Reference to the Firestore collection
+        consultation_ref = db.collection('consultation_sessions')
+
+        # Count existing consultation documents to generate new session ID
+        consultations = consultation_ref.stream()
+        new_session_id = f"sessionID{len(list(consultations)) + 1:05d}"
+
+        consultation_data = {
+            "session_id": new_session_id,
+            "teacher_id": teacher_ref,  # Store as Firestore reference
+            "student_ids": student_refs,  # References to student documents
+            "action_taken": "",
+            "audio_url": "",
+            "concern": "",
+            "duration": 0,
+            "outcome": "",
+            "remarks": "",
+            "summary": "",
+            "transcription": ""
+        }
+
+        # Store consultation details in Firestore with custom document ID
+        consultation_ref.document(new_session_id).set(consultation_data)
+
+        return jsonify({
+            "message": "Session started successfully",
+            "session_id": new_session_id
+        }), 200
+
+    except Exception as e:
+        return jsonify({"error": str(e)}), 500
+
+@consultation_bp.route('/get_session_details/<session_id>', methods=['GET'])
+def get_session_details(session_id):
+    try:
+        # Reference to the Firestore collection
+        consultation_ref = db.collection('consultation_sessions').document(session_id)
+        session_details = consultation_ref.get()
+
+        if not session_details.exists:
+            return jsonify({"error": "Session not found"}), 404
+
+        return jsonify(session_details.to_dict()), 200
+
+    except Exception as e:
+        return jsonify({"error": str(e)}), 500
+
+@consultation_bp.route('/get_session', methods=['GET'])
+def get_session():
+    try:
+        session_id = request.args.get('sessionID')
+        if not session_id:
+            return jsonify({"error": "Session ID is required"}), 400
+
+        # Reference to the Firestore collection
+        consultation_ref = db.collection('consultation_sessions').document(session_id)
+        session_details = consultation_ref.get()
+
+        if not session_details.exists:
+            return jsonify({"error": "Session not found"}), 404
+
+        return jsonify(session_details.to_dict()), 200
 
     except Exception as e:
         return jsonify({"error": str(e)}), 500

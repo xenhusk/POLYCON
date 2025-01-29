@@ -32,8 +32,11 @@ function App() {
       }
     };
 
-    fetchUserRole();
-  }, [navigate]);
+    // Only fetch user role if not on the session page
+    if (location.pathname !== '/session') {
+      fetchUserRole();
+    }
+  }, [navigate, location.pathname]);
 
   const handleLogout = () => {
     localStorage.removeItem('userEmail');
@@ -47,7 +50,8 @@ function App() {
         && location.pathname !== '/signup'
         && location.pathname !== '/booking-student'
         && location.pathname !== '/booking-teacher'
-        && location.pathname !== '/admin') && (
+        && location.pathname !== '/admin'
+        && location.pathname !== '/session') && ( // Allow access to session page
           <div>
             <h2 className="text-2xl font-bold text-center mb-4">Welcome to POLYCON System</h2>
 
