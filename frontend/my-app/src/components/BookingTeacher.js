@@ -220,10 +220,13 @@ function BookingTeacher() {
     };
 
     return (
-        <div className="max-w-md mx-auto p-6 bg-white shadow-lg rounded-lg">
+        <div className="max-w-3xl mx-auto p-8 bg-white shadow-lg rounded-lg">
             <header className="flex justify-between items-center mb-4">
                 <h2 className="text-2xl font-bold text-gray-800">Teacher Booking Panel</h2>
-                <button onClick={handleLogout} className="bg-red-500 text-white px-4 py-2 rounded">Logout</button>
+                <button onClick={() => navigate('/addgrade')} className=" bg-blue-500 text-white px-2 py-2 rounded">
+                    Add Grade
+                </button>
+                <button onClick={handleLogout} className="space-x-2 bg-red-500 text-white px-4 py-2 rounded ">Logout</button>
             </header>
 
             <div className="mb-4">

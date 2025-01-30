@@ -7,6 +7,7 @@ import Signup from './components/Signup';
 import Login from './components/Login';
 import AdminPortal from './components/AdminPortal';
 import Courses from './components/Courses'; 
+import AddGrade from './components/AddGrade';
 
 
 function App() {
@@ -35,7 +36,7 @@ function App() {
     };
 
     // Only fetch user role if not on the session page
-    if (location.pathname !== '/session') {
+    if (location.pathname !== '/session' && location.pathname !== '/courses' && location.pathname !== '/addgrade') {
       fetchUserRole();
     }
   }, [navigate, location.pathname]);
@@ -55,7 +56,8 @@ function App() {
         && location.pathname !== '/admin'
         && location.pathname !== '/session'
         && location.pathname !== '/admin-portal'
-        && location.pathname !== '/courses') && ( // Allow access to session page
+        && location.pathname !== '/courses') 
+        && location.pathname !== '/addgrade'&& ( // Allow access to session page
           <div>
             <h2 className="text-2xl font-bold text-center mb-4">Welcome to POLYCON System</h2>
 
@@ -82,6 +84,7 @@ function App() {
         <Route path="/login" element={<Login onLoginSuccess={setUser} />} />
         <Route path="/admin" element={<AdminPortal />} />
         <Route path="/courses" element={<Courses />} />
+        <Route path="/addgrade" element={<AddGrade />} />
       </Routes>
     </div>
   );

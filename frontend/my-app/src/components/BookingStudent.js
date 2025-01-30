@@ -140,7 +140,7 @@ function BookingStudent() {
     };
 
     return (
-        <div className="max-w-md mx-auto p-6 bg-white shadow-lg rounded-lg">
+        <div className="p-8 bg-white shadow-lg rounded-lg">
             <header className="flex justify-between items-center mb-4">
                 <h2 className="text-2xl font-bold text-gray-800">Student Booking Panel</h2>
                 <button onClick={handleLogout} className="bg-red-500 text-white px-4 py-2 rounded">Logout</button>

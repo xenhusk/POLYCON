@@ -36,3 +36,31 @@ def add_course():
         return jsonify({"message": "Course added successfully"}), 201
     except Exception as e:
         return jsonify({"error": str(e)}), 500
+
+@course_bp.route('/edit_course/<course_id>', methods=['PUT'])
+def edit_course(course_id):
+    try:
+        data = request.json
+        course_name = data.get('courseName')
+        credits = data.get('credits')
+        
+        if not course_name or not credits:
+            return jsonify({"error": "Missing required fields"}), 400
+        
+        course_ref = db.collection('courses').document(course_id)
+        course_ref.update({
+            "courseName": course_name,
+            "credits": credits
+        })
+        return jsonify({"message": "Course updated successfully"}), 200
+    except Exception as e:
+        return jsonify({"error": str(e)}), 500
+
+@course_bp.route('/delete_course/<course_id>', methods=['DELETE'])
+def delete_course(course_id):
+    try:
+        course_ref = db.collection('courses').document(course_id)
+        course_ref.delete()
+        return jsonify({"message": "Course deleted successfully"}), 200
+    except Exception as e:
+        return jsonify({"error": str(e)}), 500

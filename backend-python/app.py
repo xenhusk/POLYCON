@@ -6,7 +6,8 @@ from services.assemblyai_service import transcribe_audio_with_assemblyai
 from routes.consultation_routes import consultation_bp  # Reintroducing blueprint import
 from routes.booking_routes import booking_bp
 from routes.account_management import acc_management_bp
-from routes.course_routes import course_bp # Import account management blueprint
+from routes.course_routes import course_bp
+from routes.grade_routes import grade_bp # Import account management blueprint
 
 app = Flask(__name__)
 CORS(app, resources={r"/*": {"origins": "*"}})  # Allow all origins
@@ -59,6 +60,9 @@ app.register_blueprint(consultation_bp, url_prefix='/consultation')
 app.register_blueprint(acc_management_bp, url_prefix='/account')
 
 app.register_blueprint(course_bp, url_prefix='/course')
+
+# Register the grade routes as a blueprint
+app.register_blueprint(grade_bp, url_prefix='/grade')
 
 
 if __name__ == '__main__':
