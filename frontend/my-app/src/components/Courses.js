@@ -19,7 +19,7 @@ export default function Courses() {
 
   const fetchCourses = async () => {
     try {
-      const response = await fetch('http://localhost:5001/account/get_courses');
+      const response = await fetch('http://localhost:5001/course/get_courses');
       const data = await response.json();
       setCourses(data);
     } catch (error) {
@@ -36,7 +36,7 @@ export default function Courses() {
       return;
     }
     try {
-      const response = await fetch('http://localhost:5001/account/add_course', {
+      const response = await fetch('http://localhost:5001/course/add_course', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ courseID, courseName, credits })
