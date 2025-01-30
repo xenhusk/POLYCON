@@ -6,6 +6,8 @@ import Session from './components/Session';
 import Signup from './components/Signup';
 import Login from './components/Login';
 import AdminPortal from './components/AdminPortal';
+import Courses from './components/Courses'; 
+
 
 function App() {
   const [user, setUser] = useState(null);
@@ -51,7 +53,9 @@ function App() {
         && location.pathname !== '/booking-student'
         && location.pathname !== '/booking-teacher'
         && location.pathname !== '/admin'
-        && location.pathname !== '/session') && ( // Allow access to session page
+        && location.pathname !== '/session'
+        && location.pathname !== '/admin-portal'
+        && location.pathname !== '/courses') && ( // Allow access to session page
           <div>
             <h2 className="text-2xl font-bold text-center mb-4">Welcome to POLYCON System</h2>
 
@@ -77,6 +81,7 @@ function App() {
         <Route path="/signup" element={<Signup />} />
         <Route path="/login" element={<Login onLoginSuccess={setUser} />} />
         <Route path="/admin" element={<AdminPortal />} />
+        <Route path="/courses" element={<Courses />} />
       </Routes>
     </div>
   );

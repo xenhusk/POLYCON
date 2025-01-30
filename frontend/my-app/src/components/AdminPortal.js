@@ -30,6 +30,10 @@ export default function AdminPortal() {
     }
   }, [department, role]);
 
+  const handleNavigateToCourses = () => {
+    navigate('/courses');
+  };
+
   const fetchAllUsers = async () => {
     try {
       const response = await fetch('http://localhost:5001/account/get_all_users');
@@ -181,6 +185,7 @@ export default function AdminPortal() {
     <div className="max-w-4xl mx-auto p-6 bg-white shadow-lg rounded-lg">
       <header className="flex justify-between items-center mb-4">
         <h2 className="text-2xl font-bold text-center text-gray-800">Admin Portal</h2>
+        <button onClick={handleNavigateToCourses} className="bg-blue-500 text-white px-4 py-2 rounded">Add Courses</button>
         <button onClick={handleLogout} className="bg-red-500 text-white px-4 py-2 rounded">Logout</button>
       </header>
       <div className="mb-4">
