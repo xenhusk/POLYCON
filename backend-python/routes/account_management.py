@@ -96,7 +96,7 @@ def signup():
         if role == "student":
             student_ref = db.collection('students').document(id_number)
             student_ref.set({
-                "ID": f"/users/{id_number}",  # Firestore reference
+                "ID": f"/user/{id_number}",  # Firestore reference
                 "program": f"/programs/{program_id}",  # Firestore reference
                 "sex": sex,
                 "year_section": year_section
