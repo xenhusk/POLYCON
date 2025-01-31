@@ -8,3 +8,5 @@ venv
 backend-python/.env
 backend-python/.env
 backend-python/.env
+/backend-python/routes/__pycache__
+*.json
