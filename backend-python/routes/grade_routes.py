@@ -54,17 +54,53 @@ def add_grade():
         return jsonify({"message": "Grade added successfully", "gradeID": grade_id}), 201
     except Exception as e:
         return jsonify({"error": str(e)}), 500
-
 @grade_bp.route('/get_students', methods=['GET'])
 def get_students():
     try:
-        user_ref = db.collection('user').where('role', '==', 'student').stream()
+        students_ref = db.collection('users').where('role', '==', 'student').stream()
         students = []
-        for doc in user_ref:
+        for doc in students_ref:
             student_data = doc.to_dict()
             student_data['studentID'] = doc.id
+
+            # Ensure student has first and last name
+            first_name = student_data.get('first_name', '')
+            last_name = student_data.get('last_name', '')
+            full_name = f"{first_name} {last_name}".strip()
+
+            student_data['name'] = full_name if full_name else "Unknown Student"
             students.append(student_data)
+
         return jsonify(students), 200
     except Exception as e:
-        print(f"Error fetching students: {e}")  # Add error logging
+        print(f"Error fetching students: {e}")
+        return jsonify({"error": str(e)}), 500
+    
+@grade_bp.route('/search_students', methods=['GET'])
+def search_students():
+    try:
+        search_query = request.args.get('name', '').strip().lower()
+
+        if not search_query:
+            return jsonify([]), 200
+
+        students_ref = db.collection('user').where('role', '==', 'student').stream()
+
+        students = []
+        for doc in students_ref:
+            student_data = doc.to_dict()
+            student_data['studentID'] = doc.id
+
+            first_name = student_data.get('firstName', '').lower() 
+            last_name = student_data.get('lastName', '').lower()
+            full_name = f"{first_name} {last_name}".strip()
+
+            # Match if search query appears ANYWHERE in the full name
+            if search_query in full_name:
+                student_data['name'] = f"{first_name.title()} {last_name.title()}".strip()
+                students.append(student_data)
+
+        return jsonify(students), 200
+    except Exception as e:
+        print(f"Error searching students: {e}")
         return jsonify({"error": str(e)}), 500

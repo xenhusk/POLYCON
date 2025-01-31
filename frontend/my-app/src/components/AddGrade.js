@@ -33,32 +33,36 @@ export default function AddGrade() {
     try {
       const response = await fetch('http://localhost:5001/course/get_courses');
       const data = await response.json();
-      setCourses(data);
+      setCourses(Array.isArray(data.courses) ? data.courses : []);
     } catch (error) {
       console.error('Error fetching courses:', error);
     }
   };
-
-  const handleStudentChange = (e) => {
-    const selectedID = e.target.value;
-    setStudentID(selectedID);
-    const selectedStudent = students.find(student => student.studentID === selectedID);
-    setStudentName(selectedStudent ? selectedStudent.name : '');
-  };
-
-  const handleStudentNameChange = (e) => {
+  const handleStudentNameChange = async (e) => {
     const enteredName = e.target.value;
     setStudentName(enteredName);
-    const matchedStudents = students.filter(student => 
-      student.name.toLowerCase().includes(enteredName.toLowerCase())
-    );
-    setFilteredStudents(matchedStudents);
+  
+    if (enteredName.length === 0) {
+      setFilteredStudents([]);
+      return;
+    }
+  
+    try {
+      const response = await fetch(`http://localhost:5001/grade/search_students?name=${enteredName}`);
+      const data = await response.json();
+      setFilteredStudents(Array.isArray(data) ? data : []);
+    } catch (error) {
+      console.error("Error searching students:", error);
+      setFilteredStudents([]);
+    }
   };
+  
+  
 
   const handleStudentSelect = (student) => {
     setStudentName(student.name);
     setStudentID(student.studentID);
-    setFilteredStudents([]);
+    setFilteredStudents([]); // Hide dropdown after selection
   };
 
   const determineRemarks = (grade) => {
@@ -109,16 +113,17 @@ export default function AddGrade() {
     <div className="max-w-4xl mx-auto p-6 bg-white shadow-lg rounded-lg">
       <h2 className="text-2xl font-bold text-center text-gray-800">Add Grade</h2>
       <div className="grid grid-cols-3 gap-4">
+        {/* Student Name Search Field */}
         <div className="relative">
           <input 
             type="text" 
             placeholder="Student Name" 
             value={studentName} 
             onChange={handleStudentNameChange} 
-            className="border border-gray-300 rounded-lg px-3 py-2" 
+            className="border border-gray-300 rounded-lg px-3 py-2 w-full"
           />
           {filteredStudents.length > 0 && (
-            <ul className="absolute z-10 bg-white border border-gray-300 rounded-lg mt-1 max-h-40 overflow-y-auto">
+            <ul className="absolute z-10 bg-white border border-gray-300 rounded-lg mt-1 max-h-40 overflow-y-auto w-full shadow-md">
               {filteredStudents.map((student) => (
                 <li 
                   key={student.studentID} 
@@ -131,29 +136,70 @@ export default function AddGrade() {
             </ul>
           )}
         </div>
-        <select value={courseID} onChange={(e) => setCourseID(e.target.value)} className="border border-gray-300 rounded-lg px-3 py-2">
+
+        {/* Course Selection */}
+        <select 
+          value={courseID} 
+          onChange={(e) => setCourseID(e.target.value)} 
+          className="border border-gray-300 rounded-lg px-3 py-2 w-full"
+        >
           <option value="">Select Course</option>
           {courses.map((course) => (
             <option key={course.courseID} value={course.courseID}>{course.courseName}</option>
           ))}
         </select>
-        <input type="number" placeholder="Grade" value={grade} onChange={(e) => setGrade(e.target.value)} className="border border-gray-300 rounded-lg px-3 py-2" />
-        <select value={period} onChange={(e) => setPeriod(e.target.value)} className="border border-gray-300 rounded-lg px-3 py-2">
+
+        {/* Grade Input */}
+        <input 
+          type="number" 
+          placeholder="Grade" 
+          value={grade} 
+          onChange={(e) => setGrade(e.target.value)} 
+          className="border border-gray-300 rounded-lg px-3 py-2 w-full"
+        />
+
+        {/* Period Selection */}
+        <select 
+          value={period} 
+          onChange={(e) => setPeriod(e.target.value)} 
+          className="border border-gray-300 rounded-lg px-3 py-2 w-full"
+        >
           <option value="">Select Period</option>
           <option value="Prelim">Prelim</option>
           <option value="Midterm">Midterm</option>
           <option value="Pre-Final">Pre-Final</option>
           <option value="Final">Final</option>
         </select>
-        <input type="text" value={determineRemarks(grade)} readOnly className={`border border-gray-300 rounded-lg px-3 py-2 bg-gray-100 text-center ${determineRemarks(grade) === 'PASSED' ? 'text-green-500' : 'text-red-500'}`} />
-        <input type="text" placeholder="School Year" value={schoolYear} onChange={(e) => setSchoolYear(e.target.value)} className="border border-gray-300 rounded-lg px-3 py-2" />
-        <select value={semester} onChange={(e) => setSemester(e.target.value)} className="border border-gray-300 rounded-lg px-3 py-2">
+
+        {/* Remarks Display */}
+        <input 
+          type="text" 
+          value={determineRemarks(grade)} 
+          readOnly 
+          className={`border border-gray-300 rounded-lg px-3 py-2 w-full bg-gray-100 text-center ${
+            determineRemarks(grade) === 'PASSED' ? 'text-green-500' : 'text-red-500'
+          }`}
+        />
+
+        {/* Semester Selection */}
+        <select 
+          value={semester} 
+          onChange={(e) => setSemester(e.target.value)} 
+          className="border border-gray-300 rounded-lg px-3 py-2 w-full"
+        >
           <option value="">Select Semester</option>
           <option value="1st">1st</option>
           <option value="2nd">2nd</option>
         </select>
       </div>
-      <button onClick={handleSubmitGrade} className="mt-4 bg-blue-500 text-white px-4 py-2 rounded">Submit Grade</button>
+
+      {/* Submit Button */}
+      <button 
+        onClick={handleSubmitGrade} 
+        className="mt-4 bg-blue-500 text-white px-4 py-2 rounded"
+      >
+        Submit Grade
+      </button>
     </div>
   );
 }
