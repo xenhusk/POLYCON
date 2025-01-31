@@ -88,49 +88,102 @@ const Home = () => {
 
       
        {/* Contact Section */}
-       <section id="contact" className="bg-[#057DCD] p-10 text-white mt-20">
-        <div className="w-[95%] mx-auto flex flex-col md:flex-row justify-between items-start">
-          {/* Left Side: Contact Info */}
-          <div className="md:w-1/2">
-            <h2 className="text-4xl font-bold">Contact</h2>
-            <p className="mt-4 text-lg">Visit us in person at our department (CICT), Service Bldg.</p>
-            <p className="mt-2 flex items-center">
-              📍 <span className="ml-2 font-semibold">L N Agustin Dr, Bacolod, 6100 Negros Occidental</span>
+<section id="contact" className="bg-[#057DCD] text-white py-16 mt-20">
+  <div className="max-w-7xl mx-auto px-4">
+    <div className="grid grid-cols-1 lg:grid-cols-2 gap-12">
+      {/* Left Column - Contact Info */}
+      <div className="space-y-6">
+        <h2 className="text-4xl font-bold mb-6">Contact</h2>
+        
+        <div className="space-y-4">
+          <h3 className="text-2xl font-semibold">Visit Us</h3>
+          <p className="text-lg">
+            Visit us in person at our department (CICT), Service Bldg.
+          </p>
+          <div className="flex items-start space-x-2">
+            <span>📍</span>
+            <p className="font-medium">
+              L N Agustin Dr, Bacolod, 6100 Negros Occidental
             </p>
           </div>
-          
-          {/* Right Side: Contact Form */}
-          <form className="md:w-1/2 mt-10 md:mt-0 space-y-4 bg-white p-6 rounded-lg shadow-lg text-black">
-            <h3 className="text-xl font-semibold text-[#057DCD]">Get in touch with us!</h3>
-            <div className="flex space-x-4">
-              <input type="text" placeholder="First Name" className="w-1/2 p-3 rounded border border-gray-300" />
-              <input type="text" placeholder="Last Name" className="w-1/2 p-3 rounded border border-gray-300" />
-            </div>
-            <input type="email" placeholder="Email Address" className="w-full p-3 rounded border border-gray-300" />
-            <textarea placeholder="Leave a message" className="w-full p-3 rounded border border-gray-300"></textarea>
-            <button className="bg-[#057DCD] text-white px-6 py-2 rounded-md w-full font-bold">Submit</button>
-          </form>
         </div>
-      </section>
+      </div>
+
+      {/* Right Column - Contact Form */}
+      <form className="bg-white rounded-xl shadow-2xl p-8 space-y-6">
+        <h3 className="text-[#057DCD] text-2xl font-bold">Get in touch with us!</h3>
+        <p className="text-gray-600">Tell us about you.</p>
+        
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+          <input 
+            type="text" 
+            placeholder="First Name" 
+            className="w-full p-3 rounded-lg border border-gray-200 focus:border-[#057DCD] focus:ring-2 focus:ring-[#057DCD]/50 outline-none transition-all text-black"
+          />
+          <input 
+            type="text" 
+            placeholder="Last Name" 
+            className="w-full p-3 rounded-lg border border-gray-200 focus:border-[#057DCD] focus:ring-2 focus:ring-[#057DCD]/50 outline-none transition-all text-black"
+          />
+        </div>
+        
+        <input 
+          type="email" 
+          placeholder="Email Address" 
+          className="w-full p-3 rounded-lg border border-gray-200 focus:border-[#057DCD] focus:ring-2 focus:ring-[#057DCD]/50 outline-none transition-all text-black"
+        />
+        
+        <textarea 
+          placeholder="Leave a message" 
+          rows="4"
+          className="w-full p-3 rounded-lg border border-gray-200 focus:border-[#057DCD] focus:ring-2 focus:ring-[#057DCD]/50 outline-none transition-all text-black"
+        ></textarea>
+        
+        <button 
+          type="submit"
+          className="w-full bg-[#057DCD] text-white py-3 px-6 rounded-lg font-semibold hover:bg-[#0464a7] transition-colors"
+        >
+          Submit
+        </button>
+      </form>
+    </div>
+  </div>
+</section>
       
       {/* Footer */}
-      <footer className="bg-[#034C8C] p-6 text-white text-center mt-10">
-        <div className="w-[95%] mx-auto flex flex-col md:flex-row justify-between items-center">
-          <div className="flex items-center space-x-4">
-            <img src={logo} alt="Polycon Logo" className="h-10" />
-            <p className="text-lg font-semibold">We are still in development</p>
-          </div>
-          <div className="text-sm">
-            <p>© 2025 Polycon. All rights reserved.</p>
-          </div>
-          <div className="flex space-x-6 text-sm">
-            <a href="#" className="hover:underline">Terms of Service</a>
-            <a href="#" className="hover:underline">Privacy Policy</a>
-            <a href="#" className="hover:underline">Cookies Policy</a>
-            <a href="#" className="hover:underline">Data Processing</a>
-          </div>
+      {/* Footer */}
+<footer className="bg-[#034C8C] text-white mt-20 py-10">
+  <div className="max-w-7xl mx-auto px-4">
+    <div className="grid grid-cols-1 md:grid-cols-3 gap-8 mb-8">
+      {/* Middle Column - Development Info (Moved to Left) */}
+      <div className="flex flex-col items-center md:items-start space-y-4">
+        <img src={logo} alt="Polycon Logo" className="h-16" />
+        <p className="text-lg font-medium text-center md:text-left">
+          We are still in development
+        </p>
+        <p className="text-sm">Polycon, 2024</p>
+      </div>
+
+      {/* Copyright Section (Centered on mobile) */}
+      <div className="flex flex-col items-center justify-center text-center">
+        <p className="text-sm mb-4">
+          © 2024 Polycon Inc. All rights reserved.
+        </p>
+      </div>
+
+      {/* Right Column - Legal Links */}
+      <div className="flex flex-col items-center md:items-end space-y-2">
+        <h4 className="font-bold text-lg">Legal</h4>
+        <div className="grid grid-cols-2 gap-x-6 gap-y-2 text-center md:text-right">
+          <a href="#" className="hover:underline text-sm">Terms of Service</a>
+          <a href="#" className="hover:underline text-sm">Privacy Policy</a>
+          <a href="#" className="hover:underline text-sm">Cookies Policy</a>
+          <a href="#" className="hover:underline text-sm">Data Processing</a>
         </div>
-      </footer>
+      </div>
+    </div>
+  </div>
+</footer>
     </div>
 
     
