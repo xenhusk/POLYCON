@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 
-const Signup = () => {
+const Signup = ({ onSwitchToLogin }) => {
   const [step, setStep] = useState(1);
   const [departments, setDepartments] = useState([]);
   const [filteredPrograms, setFilteredPrograms] = useState([]);
@@ -64,9 +64,7 @@ const Signup = () => {
     setStep(step + 1);
   };
 
-  const navigate = useNavigate();
-
-const handleSubmit = async (e) => {
+  const handleSubmit = async (e) => {
     e.preventDefault();
     try {
         const response = await fetch('http://localhost:5001/account/signup', {
@@ -80,18 +78,17 @@ const handleSubmit = async (e) => {
 
         if (response.ok) {
             alert(data.message);
-            navigate('/login');  // Redirect to login page after successful signup
+            onSwitchToLogin();  // Switch to login modal after successful signup
         } else {
             alert('Signup failed. Please try again.');
         }
     } catch (error) {
         alert('Something went wrong!');
     }
-};
-
+  };
 
   return (
-    <div className="min-h-screen flex items-center justify-center bg-gray-100">
+    <div className="min-h-md flex items-center justify-center bg-gray-100 rounded-full">
       <div className="bg-white p-8 rounded-lg shadow-lg w-full max-w-lg">
         {step === 1 ? (
           <div>
@@ -102,7 +99,7 @@ const handleSubmit = async (e) => {
             <input className="w-full p-2 mb-3 border rounded" type="email" name="email" placeholder="Email" value={formData.email} onChange={handleChange} required />
             <input className="w-full p-2 mb-3 border rounded" type="password" name="password" placeholder="Password" value={formData.password} onChange={handleChange} required />
             <button className="w-full bg-blue-500 text-white p-2 rounded" onClick={handleNext}>Next</button>
-            <p>Already have an account? <a href="/">Login</a></p>
+            <p>Already have an account? <button onClick={onSwitchToLogin} className="text-blue-500">Login</button></p>
           </div>
         ) : (
           <div>
@@ -136,7 +133,7 @@ const handleSubmit = async (e) => {
               <option value="Female">Female</option>
             </select>
             <button className="w-full bg-blue-500 text-white p-2 rounded" onClick={handleSubmit}>Sign Up</button>
-            <p>Already have an account? <a href="/">Login</a></p>
+            <p>Already have an account? <button onClick={onSwitchToLogin} className="text-blue-500">Login</button></p>
           </div>
         )}
       </div>

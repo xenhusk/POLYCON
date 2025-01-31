@@ -1,7 +1,7 @@
 import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 
-const Login = ({ onLoginSuccess }) => {
+const Login = ({ onLoginSuccess, onSwitchToSignup }) => {
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [message, setMessage] = useState('');
@@ -42,14 +42,14 @@ const Login = ({ onLoginSuccess }) => {
 
 
   return (
-    <div className="min-h-screen flex items-center justify-center bg-gray-100">
+    <div className="min-h-md flex items-center justify-center bg-gray-100 rounded-full">
       <div className="bg-white p-8 rounded-lg shadow-lg w-full max-w-lg">
         <h2 className="text-2xl font-bold text-center mb-6">Login</h2>
         <form onSubmit={handleSubmit} className="space-y-4">
           <input
             className="w-full p-2 border rounded focus:outline-none focus:ring-2 focus:ring-blue-500"
             type="email"
-            placeholder="Email"
+            placeholder="sample@wnu.sti.edu.ph"
             value={email}
             onChange={(e) => setEmail(e.target.value)}
             required
@@ -71,7 +71,7 @@ const Login = ({ onLoginSuccess }) => {
         </form>
         {message && <p className="text-center text-red-500 mt-4">{message}</p>}
         <p className="text-center mt-4">
-          Don't have an account? <a href="/signup" className="text-blue-500">Sign up</a>
+          Don't have an account? <button onClick={onSwitchToSignup} className="text-blue-500">Sign up</button>
         </p>
       </div>
     </div>
