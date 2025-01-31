@@ -72,7 +72,7 @@ def signup():
         # Register the user with Firebase Authentication using Pyrebase
         try:
             user = register_user(email, password)
-            user_id = user.uid  # Access the uid attribute of the UserRecord object
+            user_id = user['localId']  # Access the localId attribute from the user dictionary
         except ValueError as e:
             print("Error registering user:", str(e))  # Debugging log
             return jsonify({"error": str(e)}), 400
@@ -339,6 +339,5 @@ def delete_user():
         return jsonify({"message": "User deleted successfully"}), 200
     except Exception as e:
         return jsonify({"error": str(e)}), 500
-    
 
-    
+

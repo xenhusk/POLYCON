@@ -79,10 +79,10 @@ const handleSubmit = async (e) => {
         const data = await response.json();
 
         if (response.ok) {
-            alert(data.message);
+            alert(`${data.message} Please check your email to verify your account.`);
             navigate('/login');  // Redirect to login page after successful signup
         } else {
-            alert('Signup failed. Please try again.');
+            alert(data.error || 'Signup failed. Please try again.');
         }
     } catch (error) {
         alert('Something went wrong!');

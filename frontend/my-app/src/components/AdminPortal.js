@@ -91,8 +91,10 @@ export default function AdminPortal() {
         body: JSON.stringify(userData),
       });
 
+      const data = await response.json();
+
       if (response.ok) {
-        alert('User added successfully');
+        alert(`${data.message} Verification email sent to the user.`);
         fetchAllUsers();
         // Clear input fields
         setIdNumber('');
@@ -105,7 +107,7 @@ export default function AdminPortal() {
         setSex('');
         setYearSection('');
       } else {
-        alert('Failed to add user');
+        alert(data.error || 'Failed to add user');
       }
     } catch (error) {
       console.error('Error adding user:', error);
