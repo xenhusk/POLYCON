@@ -40,21 +40,36 @@ def register_user(email, password):
     """
     Register a new user with Firebase Authentication using Firebase Admin SDK.
     """
-    user = auth.create_user(
-        email=email,
-        password=password
-    )
+    user = auth_pyrebase.create_user_with_email_and_password(email, password)
+    auth_pyrebase.send_email_verification(user['idToken'])
     return user
 
 def login_user(email, password):
     """
-    Log in an existing user using Pyrebase authentication.
+    Log in an existing user using Pyrebase authentication 
+    and check if the user is email-verified.
     """
     try:
+        # Sign in the user with email and password
         user = auth_pyrebase.sign_in_with_email_and_password(email, password)
+
+        # Get detailed account info using the user's ID token
+        account_info = auth_pyrebase.get_account_info(user['idToken'])
+
+        # Check the emailVerified field
+        is_verified = account_info['users'][0].get('emailVerified', False)
+
+        if not is_verified:
+            # You can raise an error, return a message, or handle this case however you prefer
+            raise ValueError("User's email is not verified.")
+
+        # If we reach here, user is logged in and verified
         return user
+
     except Exception as e:
+        # Handle any errors (invalid credentials, network issues, etc.)
         raise ValueError(f"Error logging in: {e}")
+
     
 def store_consultation_details(session_data):
     session_id = session_data["session_id"]

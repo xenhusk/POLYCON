@@ -7,3 +7,4 @@ venv
 /.venv/
 backend-python/.env
 backend-python/.env
+backend-python/.env

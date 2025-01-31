@@ -5,3 +5,9 @@ google-cloud-speech
 firebase-admin
 google-generativeai
 python-dotenv
+assemblyai
+pydub
+pyrebase4
+pycryptodome
+bcrypt
+setuptools

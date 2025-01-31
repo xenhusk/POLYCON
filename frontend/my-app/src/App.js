@@ -7,8 +7,7 @@ import Signup from './components/Signup';
 import Login from './components/Login';
 import AdminPortal from './components/AdminPortal';
 import Courses from './components/Courses'; 
-import AddGrade from './components/AddGrade';
-import Home from './components/Home';
+
 
 function App() {
   const [user, setUser] = useState(null);
@@ -22,12 +21,15 @@ function App() {
         try {
           const response = await fetch(`http://localhost:5001/account/get_user_role?email=${storedEmail}`);
           const data = await response.json();
-          if (data.role === 'student') {
+          if (data.role === 'student' && data.emailVerified) {
             navigate('/booking-student');
-          } else if (data.role === 'faculty') {
+          } else if (data.role === 'faculty' && data.emailVerified) {
             navigate('/booking-teacher');
-          } else if (data.role === 'admin') {
+          } else if (data.role === 'admin' && data.emailVerified) {
             navigate('/admin');
+          } else {
+            alert('Please verify your email to access the system.');
+            handleLogout();
           }
         } catch (error) {
           console.error('Error fetching user role:', error);
@@ -36,7 +38,7 @@ function App() {
     };
 
     // Only fetch user role if not on the session page
-    if (location.pathname !== '/session' && location.pathname !== '/courses' && location.pathname !== '/addgrade') {
+    if (location.pathname !== '/session') {
       fetchUserRole();
     }
   }, [navigate, location.pathname]);
@@ -44,21 +46,19 @@ function App() {
   const handleLogout = () => {
     localStorage.removeItem('userEmail');
     setUser(null);
-    navigate('/');
+    navigate('/login');
   };
 
   return (
-    <div className="container mx-auto">
-      {/* { (location.pathname !== '/login'
+    <div className="container mx-auto p-4">
+      { (location.pathname !== '/login'
         && location.pathname !== '/signup'
         && location.pathname !== '/booking-student'
         && location.pathname !== '/booking-teacher'
         && location.pathname !== '/admin'
         && location.pathname !== '/session'
         && location.pathname !== '/admin-portal'
-        && location.pathname !== '/courses'
-        && location.pathname !== '/addgrade'
-        && location.pathname !== '/home' )&& ( // Allow access to session page
+        && location.pathname !== '/courses') && ( // Allow access to session page
           <div>
             <h2 className="text-2xl font-bold text-center mb-4">Welcome to POLYCON System</h2>
 
@@ -74,10 +74,10 @@ function App() {
               </div>
             )}
           </div>
-        )} */}
+        )}
 
       <Routes>
-        <Route path="/" element={<Home />} />
+        <Route path="/" element={<div></div>} />
         <Route path="/booking-student" element={<BookingStudent />} />
         <Route path="/booking-teacher" element={<BookingTeacher />} />
         <Route path="/session" element={<Session />} />
@@ -85,7 +85,6 @@ function App() {
         <Route path="/login" element={<Login onLoginSuccess={setUser} />} />
         <Route path="/admin" element={<AdminPortal />} />
         <Route path="/courses" element={<Courses />} />
-        <Route path="/addgrade" element={<AddGrade />} />
       </Routes>
     </div>
   );
