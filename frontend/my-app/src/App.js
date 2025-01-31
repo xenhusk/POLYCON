@@ -8,7 +8,7 @@ import Login from './components/Login';
 import AdminPortal from './components/AdminPortal';
 import Courses from './components/Courses'; 
 import AddGrade from './components/AddGrade';
-
+import Home from './components/Home';
 
 function App() {
   const [user, setUser] = useState(null);
@@ -44,20 +44,21 @@ function App() {
   const handleLogout = () => {
     localStorage.removeItem('userEmail');
     setUser(null);
-    navigate('/login');
+    navigate('/');
   };
 
   return (
-    <div className="container mx-auto p-4">
-      { (location.pathname !== '/login'
+    <div className="container mx-auto">
+      {/* { (location.pathname !== '/login'
         && location.pathname !== '/signup'
         && location.pathname !== '/booking-student'
         && location.pathname !== '/booking-teacher'
         && location.pathname !== '/admin'
         && location.pathname !== '/session'
         && location.pathname !== '/admin-portal'
-        && location.pathname !== '/courses') 
-        && location.pathname !== '/addgrade'&& ( // Allow access to session page
+        && location.pathname !== '/courses'
+        && location.pathname !== '/addgrade'
+        && location.pathname !== '/home' )&& ( // Allow access to session page
           <div>
             <h2 className="text-2xl font-bold text-center mb-4">Welcome to POLYCON System</h2>
 
@@ -73,10 +74,10 @@ function App() {
               </div>
             )}
           </div>
-        )}
+        )} */}
 
       <Routes>
-        <Route path="/" element={<div></div>} />
+        <Route path="/" element={<Home />} />
         <Route path="/booking-student" element={<BookingStudent />} />
         <Route path="/booking-teacher" element={<BookingTeacher />} />
         <Route path="/session" element={<Session />} />
