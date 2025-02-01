@@ -14,3 +14,5 @@ backend-python/.env
 /backend-python/services/__pycache__
 *.json
 *.json
+frontend/my-app/package-lock.json
+frontend/my-app/package.json
