@@ -12,3 +12,4 @@ backend-python/.env
 *.json
 *.pyc
 /backend-python/services/__pycache__
+*.json
