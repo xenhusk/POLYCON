@@ -1,12 +1,6 @@
 import React, { useEffect, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useLocation } from 'react-router-dom';
-import { Calendar, momentLocalizer } from 'react-big-calendar';
-import moment from 'moment';
-import 'react-big-calendar/lib/css/react-big-calendar.css';
-import AppointmentsCalendar from './AppointmentsCalendar';
-
-const localizer = momentLocalizer(moment);
 
 function BookingTeacher() {
     const [teacherID, setTeacherID] = useState('');
@@ -231,15 +225,8 @@ function BookingTeacher() {
         return `${formattedDate} at ${formattedTime}`;
     };
 
-    const events = appointments.upcoming.map(app => ({
-        title: `Meeting with ${app.studentNames}`,
-        start: new Date(app.schedule),
-        end: new Date(new Date(app.schedule).getTime() + 60 * 60 * 1000), // Assuming 1-hour duration
-        allDay: false,
-    }));
-
     const navigateToCalendar = () => {
-        navigate('/appointments-calendar', { state: { events } });
+        navigate('/appointments-calendar');
     };
 
     return (
@@ -333,21 +320,6 @@ function BookingTeacher() {
                     </li>
                 ))}
             </ul>
-
-            <h3 className="text-lg font-bold mt-6">Upcoming Appointments Calendar</h3>
-            <div className="bg-white p-4 rounded-lg shadow-lg">
-                <Calendar
-                    localizer={localizer}
-                    events={events}
-                    startAccessor="start"
-                    endAccessor="end"
-                    style={{ height: 500 }}
-                />
-            </div>
-
-            <button onClick={navigateToCalendar} className="bg-blue-500 text-white px-4 py-2 rounded-lg">
-                View Calendar
-            </button>
 
             <h3 className="text-lg font-bold mt-6">Canceled Appointments</h3>
             <ul className="space-y-4">
