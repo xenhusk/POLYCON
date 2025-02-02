@@ -3,6 +3,7 @@ import { useLocation, useNavigate } from 'react-router-dom';
 import { Calendar, momentLocalizer } from 'react-big-calendar';
 import moment from 'moment';
 import 'react-big-calendar/lib/css/react-big-calendar.css';
+import AppointmentsCalendar from './AppointmentsCalendar';
 
 const localizer = momentLocalizer(moment);
 
@@ -19,10 +20,17 @@ function BookingStudent() {
     useEffect(() => {
         if (location.state?.studentID) {
             setStudentID(location.state.studentID);
+            localStorage.setItem('studentID', location.state.studentID); // Store in localStorage
         }
         fetchTeachers();
         fetchStudents();
     }, [location]);
+
+    useEffect(() => {
+        if (studentID) {
+            fetchStudentAppointments();
+        }
+    }, [studentID]);
 
     async function fetchTeachers() {
         try {
@@ -150,6 +158,10 @@ function BookingStudent() {
         allDay: false,
     }));
 
+    const navigateToCalendar = () => {
+        navigate('/appointments-calendar', { state: { events } });
+    };
+
     return (
         <div className="p-8 bg-white shadow-lg rounded-lg">
             <header className="flex justify-between items-center mb-4">
@@ -210,14 +222,14 @@ function BookingStudent() {
                 <button onClick={requestAppointment} className="bg-blue-500 text-white px-4 py-2 rounded-lg">
                     Request Appointment
                 </button>
-                <button onClick={fetchStudentAppointments} className="bg-green-500 text-white px-4 py-2 rounded-lg">
-                    Fetch Appointments
+                <button onClick={navigateToCalendar} className="bg-blue-500 text-white px-4 py-2 rounded-lg">
+                    View Calendar
                 </button>
             </div>
 
             <h3 className="text-lg font-bold mt-6">Pending Appointments</h3>
             <ul className="space-y-4">
-                {appointments.pending.map(app => (
+                {appointments.pending?.map(app => (
                     <li key={app.id} className="p-4 border rounded-lg shadow-sm bg-gray-50">
                         <div>
                             <p><strong>Teacher:</strong> {app.teacherName}</p>
@@ -231,7 +243,7 @@ function BookingStudent() {
 
             <h3 className="text-lg font-bold mt-6">Upcoming Appointments</h3>
             <ul className="space-y-4">
-                {appointments.upcoming.map(app => (
+                {appointments.upcoming?.map(app => (
                     <li key={app.id} className="p-4 border rounded-lg shadow-sm bg-gray-50">
                         <div>
                             <p><strong>Teacher:</strong> {app.teacherName}</p>
@@ -256,7 +268,7 @@ function BookingStudent() {
 
             <h3 className="text-lg font-bold mt-6">Canceled Appointments</h3>
             <ul className="space-y-4">
-                {appointments.canceled.map(app => (
+                {appointments.canceled?.map(app => (
                     <li key={app.id} className="p-4 border rounded-lg shadow-sm bg-gray-50">
                         <div>
                             <p><strong>Teacher:</strong> {app.teacherName}</p>

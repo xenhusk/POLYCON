@@ -4,6 +4,7 @@ import { useLocation } from 'react-router-dom';
 import { Calendar, momentLocalizer } from 'react-big-calendar';
 import moment from 'moment';
 import 'react-big-calendar/lib/css/react-big-calendar.css';
+import AppointmentsCalendar from './AppointmentsCalendar';
 
 const localizer = momentLocalizer(moment);
 
@@ -27,6 +28,12 @@ function BookingTeacher() {
         }
         fetchStudents();
     }, [location]);
+
+    useEffect(() => {
+        if (teacherID) {
+            fetchTeacherAppointments();
+        }
+    }, [teacherID]);
 
     async function fetchStudents() {
         try {
@@ -63,7 +70,7 @@ function BookingTeacher() {
                     const studentID = ref.split('/').pop();
                     const userResponse = await fetch(`http://localhost:5001/bookings/get_user?userID=${studentID}`);
                     const userData = await userResponse.json();
-                    return `${userData.firstName} ${userData.lastName}`;
+                    return `${userData.firstName} ${userData.lastName} (${userData.program} ${userData.year_section})`;
                 }));
 
                 const appointmentItem = {
@@ -231,6 +238,10 @@ function BookingTeacher() {
         allDay: false,
     }));
 
+    const navigateToCalendar = () => {
+        navigate('/appointments-calendar', { state: { events } });
+    };
+
     return (
         <div className="max-w-3xl mx-auto p-8 bg-white shadow-lg rounded-lg">
             <header className="flex justify-between items-center mb-4">
@@ -251,10 +262,6 @@ function BookingTeacher() {
                 />
             </div>
 
-            <button onClick={fetchTeacherAppointments} className="bg-green-500 text-white px-4 py-2 rounded-lg">
-                Fetch Appointments
-            </button>
-
             <div className="mb-4">
                 <label className="block text-gray-700 font-medium mb-1">Select Students:</label>
                 <div className="grid grid-cols-1 gap-2">
@@ -272,7 +279,7 @@ function BookingTeacher() {
                                 }}
                                 className="h-4 w-4"
                             />
-                            <span>{student.firstName} {student.lastName}</span>
+                            <span>{student.firstName} {student.lastName} ({student.program} {student.year_section})</span>
                         </label>
                     ))}
                 </div>
@@ -294,7 +301,7 @@ function BookingTeacher() {
 
             <h3 className="text-lg font-bold mt-6">Pending Appointments</h3>
             <ul className="space-y-4">
-                {appointments.pending.map(app => (
+                {appointments.pending?.map(app => (
                     <li key={app.id} className="p-4 border rounded-lg shadow-sm bg-gray-50">
                         <div className="flex justify-between items-center">
                             <div>
@@ -313,7 +320,7 @@ function BookingTeacher() {
 
             <h3 className="text-lg font-bold mt-6">Upcoming Appointments</h3>
             <ul className="space-y-4">
-                {appointments.upcoming.map(app => (
+                {appointments.upcoming?.map(app => (
                     <li key={app.id} className="p-4 border rounded-lg shadow-sm bg-gray-50">
                         <div className="flex justify-between items-center">
                             <div>
@@ -338,9 +345,13 @@ function BookingTeacher() {
                 />
             </div>
 
+            <button onClick={navigateToCalendar} className="bg-blue-500 text-white px-4 py-2 rounded-lg">
+                View Calendar
+            </button>
+
             <h3 className="text-lg font-bold mt-6">Canceled Appointments</h3>
             <ul className="space-y-4">
-                {appointments.canceled.map(app => (
+                {appointments.canceled?.map(app => (
                     <li key={app.id} className="p-4 border rounded-lg shadow-sm bg-gray-50">
                         <div>
                             <p><strong>Students:</strong> {app.studentNames}</p>
