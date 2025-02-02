@@ -18,6 +18,7 @@ const Signup = ({ onSwitchToLogin }) => {
     department: '',
     role: 'student'  // Default role set to student
   });
+  const [errorMessage, setErrorMessage] = useState('');
 
   useEffect(() => {
     if (formData.department) {
@@ -67,6 +68,14 @@ const Signup = ({ onSwitchToLogin }) => {
 
   const handleSubmit = async (e) => {
     e.preventDefault();
+    
+    // Email validation
+    const emailPattern = /^[a-zA-Z0-9._%+-]+@wnu\.sti\.edu\.ph$/;
+    if (!emailPattern.test(formData.email)) {
+      setErrorMessage('Email must end with @wnu.sti.edu.ph');
+      return;
+    }
+
     try {
         const response = await fetch('http://localhost:5001/account/signup', {
             method: 'POST',
@@ -75,18 +84,25 @@ const Signup = ({ onSwitchToLogin }) => {
             },
             body: JSON.stringify(formData),
         });
-        const data = await response.json();
+
+        const data = await response.json(); // This can throw if the response is not JSON, which should be handled.
 
         if (response.ok) {
             alert(data.message);
             onSwitchToLogin();  // Switch to login modal after successful signup
         } else {
-            alert('Signup failed. Please try again.');
+            // It's possible to get here with a non-200 status but still have JSON parsed correctly.
+            setErrorMessage(data.error || 'Signup failed. Please try again.');
         }
     } catch (error) {
-        alert('Something went wrong!');
+        // This could be due to network issues, or JSON parsing issues, or server sending non-JSON response
+        if (error instanceof SyntaxError) {
+            setErrorMessage('There was a problem processing your request.'); // Assuming it's a JSON parse error
+        } else {
+            setErrorMessage('Something went wrong! Please try again later.');
+        }
     }
-  };
+};
 
   return (
     <div>
@@ -152,6 +168,7 @@ const Signup = ({ onSwitchToLogin }) => {
                   <option value="Male">Male</option>
                   <option value="Female">Female</option>
                 </select>
+                {errorMessage && <p className="text-center text-red-500 text-lg">{errorMessage}</p>}
                 <button className="bg-[#057DCD] text-white w-[450px] h-[44.59px] rounded-lg my-2 mx-auto hover:bg-[#54BEFF]" 
                 onClick={handleSubmit}>Sign Up</button>
                 <div className="border-t-2 border-[#005B98] w-[350px] my-2 mx-auto border-opacity-50">

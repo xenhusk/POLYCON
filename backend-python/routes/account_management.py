@@ -30,6 +30,10 @@ def signup():
         department_id = data.get('department')
         role = data.get('role')  # Use the role provided in the request data
 
+        # Email validation
+        if not email.endswith('@wnu.sti.edu.ph'):
+            return jsonify({"error": "Email must end with @wnu.sti.edu.ph"}), 400
+
         # Debugging logs for missing fields
         if not id_number:
             print("Missing idNumber")
@@ -74,8 +78,20 @@ def signup():
             user = register_user(email, password)
             user_id = user['localId']  # Access the localId attribute from the user dictionary
         except ValueError as e:
-            print("Error registering user:", str(e))  # Debugging log
-            return jsonify({"error": str(e)}), 400
+            error_message = str(e)
+            if "EMAIL_EXISTS" in error_message:
+                return jsonify({"error": "The email address is already in use."}), 400
+            elif "INVALID_EMAIL" in error_message:
+                return jsonify({"error": "The email address is invalid."}), 400
+            elif "OPERATION_NOT_ALLOWED" in error_message:
+                return jsonify({"error": "Registration is currently disabled."}), 403
+            elif "TOO_MANY_ATTEMPTS_TRY_LATER" in error_message:
+                return jsonify({"error": "Too many attempts, please try again later."}), 429
+            else:
+                return jsonify({"error": "An error occurred during registration. Please try again."}), 400
+        except Exception as e:
+            # Log the exception for further investigation
+            return jsonify({"error": "An unexpected error occurred. Please try again later."}), 500
 
         # Hash the password before storing
         hashed_password = bcrypt.hashpw(password.encode('utf-8'), bcrypt.gensalt()).decode('utf-8')
@@ -106,7 +122,7 @@ def signup():
 
     except Exception as e:
         print("Error during signup:", str(e))  # Debugging log
-        return jsonify({"error": str(e)}), 500
+        return jsonify({"error": "An unexpected error occurred. Please try again later."}), 500
 
 
 @acc_management_bp.route('/login', methods=['POST'])
@@ -131,6 +147,13 @@ def login():
             user_info = auth_pyrebase.get_account_info(id_token)['users'][0]
             print("User authenticated successfully:", user_info)  # Debugging log
 
+        except ValueError as e:
+            error_message = str(e)
+            if "EMAIL_NOT_FOUND" in error_message:
+                return jsonify({"error": "The email address is not registered."}), 401
+            if "INVALID_PASSWORD" in error_message:
+                return jsonify({"error": "The password is incorrect."}), 401
+            return jsonify({"error": "An error occurred during login."}), 401
         except Exception as e:
             print("Error during Firebase authentication:", str(e))  # Debugging log
             return jsonify({"error": "Invalid email or password"}), 401

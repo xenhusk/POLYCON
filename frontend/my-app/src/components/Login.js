@@ -34,10 +34,10 @@ const Login = ({ onLoginSuccess, onSwitchToSignup }) => {
                 setMessage('Unauthorized role.');
             }
         } else {
-            setMessage('Login failed. Please check your credentials.');
+            setMessage(data.error || 'Login failed. Please check your credentials.');
         }
     } catch (error) {
-        setMessage('Login failed.');
+        setMessage('Login failed. Please try again later.');
     }
 };
 
