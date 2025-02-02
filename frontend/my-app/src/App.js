@@ -1,5 +1,5 @@
 import React, { useEffect, useState } from 'react';
-import { Routes, Route, Link, useNavigate, useLocation } from 'react-router-dom';
+import { BrowserRouter, Routes, Route, Link, useNavigate, useLocation } from 'react-router-dom';
 import BookingStudent from './components/BookingStudent';
 import BookingTeacher from './components/BookingTeacher';
 import Session from './components/Session';

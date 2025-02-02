@@ -6,16 +6,15 @@ export default function AddGrade() {
   const [studentName, setStudentName] = useState('');
   const [courseID, setCourseID] = useState('');
   const [grade, setGrade] = useState('');
+  const [grades, setGrades] = useState('');
   const [term, setTerm] = useState('');
-  const [quarter, setQuarter] = useState('');
-  const [program, setProgram] = useState('');
   const [period, setPeriod] = useState('');
   const [schoolYear, setSchoolYear] = useState('2024-2025');
   const [semester, setSemester] = useState('');
   const [students, setStudents] = useState([]);
   const [courses, setCourses] = useState([]);
   const [facultyID, setFacultyID] = useState('');
-
+  const [selectedGradeID, setSelectedGradeID] = useState(null); // For editing
   const [filteredStudents, setFilteredStudents] = useState([]);
 
   useEffect(() => {
@@ -24,6 +23,7 @@ export default function AddGrade() {
     setFacultyID(storedTeacherID); // Set the facultyID dynamically
   }
     fetchStudents();
+    fetchGrades();
     fetchCourses();
   }, []);
 
@@ -56,15 +56,41 @@ export default function AddGrade() {
     }
   };
 
+  const fetchGrades = async () => {
+    try {
+        const storedTeacherID = localStorage.getItem('teacherID'); 
+        if (!storedTeacherID) return;
+
+        const response = await fetch(`http://localhost:5001/grade/get_grades?facultyID=${storedTeacherID}`);
+        const data = await response.json();
+
+        console.log("✅ Received grades from backend:", data); // Debugging Log
+
+        // Ensure document ID is included
+        const gradesWithID = data.map(doc => ({
+            id: doc.id,  // Firestore document ID
+            ...doc       // Include all other fields
+        }));
+
+        setGrades(Array.isArray(gradesWithID) ? gradesWithID : []);
+    } catch (error) {
+        console.error('Error fetching grades:', error);
+    }
+};
+  
   const fetchCourses = async () => {
     try {
-      const response = await fetch('http://localhost:5001/course/get_courses');
-      const data = await response.json();
-      setCourses(Array.isArray(data.courses) ? data.courses : []);
+        const storedTeacherID = localStorage.getItem('teacherID');
+        if (!storedTeacherID) return;
+
+        const response = await fetch(`http://localhost:5001/course/get_courses?facultyID=${storedTeacherID}`);
+        const data = await response.json();
+        setCourses(Array.isArray(data.courses) ? data.courses : []);
     } catch (error) {
-      console.error('Error fetching courses:', error);
+        console.error('Error fetching courses:', error);
     }
-  };
+};
+
 
   const handleStudentNameChange = async (e) => {
     const enteredName = e.target.value;
@@ -84,8 +110,106 @@ export default function AddGrade() {
       setFilteredStudents([]);
     }
   };
+
+  const handleDeleteGrade = async (gradeDocID) => {
+    if (!gradeDocID) {
+        console.error("❌ No document ID provided for deletion. Ensure you are using Firestore document ID.");
+        return;
+    }
+
+    if (!window.confirm("Are you sure you want to delete this grade?")) return;
+
+    try {
+        console.log("🗑️ Attempting to delete grade document with ID:", gradeDocID); // Debugging Log
+
+        const response = await fetch('http://localhost:5001/grade/delete_grade', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ gradeID: gradeDocID }) // Pass Firestore document ID
+        });
+
+        const result = await response.json();
+        console.log("Delete Response:", result); // Debugging log
+
+        if (response.ok) {
+            alert('✅ Grade deleted successfully');
+            fetchGrades(); // Refresh table after deletion
+        } else {
+            alert('❌ Failed to delete grade: ' + result.error);
+        }
+    } catch (error) {
+        console.error('Error deleting grade:', error);
+    }
+};
+
+
+  const handleEditGrade = (grade) => {
+    setSelectedGradeID(grade.gradeID);
+    setStudentID(grade.studentID);
+    setStudentName(grade.studentName);
+    setCourseID(grade.courseID);
+    setGrade(grade.grade);
+    setPeriod(grade.period);
+    setSchoolYear(grade.school_year);
+    setSemester(grade.semester);
+  };
+
+  const handleCancelEdit = () => {
+    setSelectedGradeID(null);
+    setStudentID('');
+    setStudentName('');
+    setCourseID('');
+    setGrade('');
+    setPeriod('');
+    setSchoolYear('2024-2025');
+    setSemester('');
+  };
+
   
-  
+  const handleUpdateGrade = async () => {
+    if (!selectedGradeID) {
+      alert('No grade selected for update');
+      return;
+    }
+
+    try {
+      const response = await fetch('http://localhost:5001/grade/edit_grade', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          gradeID: selectedGradeID,
+          studentID,
+          courseID,
+          facultyID,
+          grade,
+          period,
+          school_year: schoolYear,
+          semester
+        })
+      });
+
+      if (response.ok) {
+        alert('Grade updated successfully');
+        handleCancelEdit();
+        fetchGrades();
+      } else {
+        alert('Failed to update grade');
+      }
+    } catch (error) {
+      console.error('Error updating grade:', error);
+    }
+  };
+
+// Ensure the edit form appears correctly
+{selectedGradeID && (
+<div className="mt-6">
+  <h2 className="text-xl font-bold">Edit Grade</h2>
+  <input type="number" value={grade} onChange={(e) => setGrade(e.target.value)} className="border px-3 py-2 w-full" />
+  <button onClick={handleUpdateGrade} className="mt-4 bg-blue-500 text-white px-4 py-2 rounded">
+    Update Grade
+  </button>
+</div>
+)}
 
   const handleStudentSelect = (student) => {
     setStudentName(student.name);
@@ -111,7 +235,7 @@ export default function AddGrade() {
         body: JSON.stringify({
           studentID,
           courseID,
-          facultyID, // Now dynamically fetched
+          facultyID,
           grade,
           period,
           remarks: determineRemarks(grade),
@@ -135,153 +259,176 @@ export default function AddGrade() {
     } catch (error) {
       console.error('Error adding grade:', error);
     }
-  };
+};
+
   
   return (
-    <div className="max-w-5xl mx-auto p-6 bg-white shadow-lg rounded-lg">
-      <h2 className="text-2xl font-bold text-center text-gray-800">Class Record</h2>
-      
-      {/* Filter Inputs */}
-      <div className="grid grid-cols-5 gap-4 mt-4">
-        <input type="text" placeholder="Period" value={period} onChange={(e) => setPeriod(e.target.value)} className="border border-gray-300 rounded-lg px-3 py-2 w-full" />
-        <input type="text" placeholder="Semester" value={semester} onChange={(e) => setSemester(e.target.value)} className="border border-gray-300 rounded-lg px-3 py-2 w-full" />
-        <input type="text" placeholder="School Year" value={schoolYear} onChange={(e) => setSchoolYear(e.target.value)} className="border border-gray-300 rounded-lg px-3 py-2 w-full" />
-        <input type="text" placeholder="Program" value={program} onChange={(e) => setProgram(e.target.value)} className="border border-gray-300 rounded-lg px-3 py-2 w-full" />
-        <select value={courseID} onChange={(e) => setCourseID(e.target.value)} className="border border-gray-300 rounded-lg px-3 py-2 w-full">
-          <option value="">Select Course</option>
-          {courses.map((course) => (
-            <option key={course.courseID} value={course.courseID}>{course.courseName}</option>
-          ))}
-        </select>
-      </div>
-      
-      {/* View Button */}
-      <button className="mt-4 bg-blue-500 text-white px-4 py-2 rounded">View</button>
-      
-      {/* Class Record Table */}
-      <div className="overflow-x-auto mt-6">
-        <table className="min-w-full bg-white border border-gray-300">
-          <thead>
-            <tr className="bg-gray-100">
-              <th className="border px-4 py-2">STUDENT ID</th>
-              <th className="border px-4 py-2">STUDENT NAME</th>
-              <th className="border px-4 py-2">PROGRAM</th>
-              <th className="border px-4 py-2">COURSE</th>
-              <th className="border px-4 py-2">CREDIT</th>
-              <th className="border px-4 py-2">SECTION</th>
-              <th className="border px-4 py-2">GRADE</th>
-              <th className="border px-4 py-2">REMARKS</th>
-            </tr>
-          </thead>
-          <tbody>
-            {students.map((student) => (
-              <tr key={student.studentID} className="text-center">
-                <td className="border px-4 py-2">{student.studentID}</td>
-                <td className="border px-4 py-2">{student.name}</td>
-                <td className="border px-4 py-2">{student.program || 'Unknown Program'}</td>
-                <td className="border px-4 py-2">{student.courseName || 'Unknown Course'}</td>
-                <td className="border px-4 py-2">3.0</td>
-                <td className="border px-4 py-2">3A</td>
-                <td className="border px-4 py-2">NA</td>
-                <td className="border px-4 py-2 bg-gray-100 text-gray-600">NOT ENCODED</td>
-              </tr>
-            ))}
-          </tbody>
+    <div className="max-w-9xl mx-auto p-6 bg-white shadow-lg rounded-lg">
+    {/* Grades Table */}
+    <div className="overflow-x-auto mt-6">
+        <table className="min-w-full bg-white border border-gray-300 text-center">
+            <thead>
+                <tr className="bg-gray-100">
+                    <th className="border px-4 py-2">Student ID</th>
+                    <th className="border px-4 py-2">Student Name</th>
+                    <th className="border px-4 py-2">Course</th>
+                    <th className="border px-4 py-2">Grade</th>
+                    <th className="border px-4 py-2">Period</th>
+                    <th className="border px-4 py-2">School Year</th>
+                    <th className="border px-4 py-2">Semester</th>
+                    <th className="border px-4 py-2">Remarks</th>
+                    <th className="border px-4 py-2">Actions</th>
+                </tr>
+            </thead>
+            <tbody>
+                {grades.length > 0 ? (
+                    grades.map((grade) => (
+                        <tr key={grade.gradeID}>
+                            <td className="border px-4 py-2">{grade.studentID}</td>
+                            <td className="border px-4 py-2">{grade.studentName}</td>
+                            <td className="border px-4 py-2">{grade.courseName}</td>
+                            <td className="border px-4 py-2">{grade.grade}</td>
+                            <td className="border px-4 py-2">{grade.period}</td>
+                            <td className="border px-4 py-2">{grade.school_year}</td>
+                            <td className="border px-4 py-2">{grade.semester}</td>
+                            <td className={`border px-4 py-2 ${grade.remarks === 'PASSED' ? 'text-green-500' : 'text-red-500'}`}>
+                                {grade.remarks}
+                            </td>
+                            <td>
+                                <button
+                                    onClick={() => handleEditGrade(grade)}
+                                    className="bg-yellow-500 text-white px-3 py-1 rounded mr-2"
+                                >
+                                    Edit
+                                </button>
+                                <button
+                                    onClick={() => {
+                                        console.log("🟡 Delete button clicked for document ID:", grade?.id); // Debugging Log
+                                        handleDeleteGrade(grade?.id); // Use Firestore document ID
+                                    }}
+                                    className="bg-red-500 text-white px-3 py-1 rounded"
+                                >
+                                    Delete
+                                </button> 
+
+                            </td>
+                        </tr>
+                    ))
+                ) : (
+                    <tr>
+                        <td colSpan="9" className="border px-4 py-2 text-center">No grades found</td>
+                    </tr>
+                )}
+            </tbody>
         </table>
-      </div>
-    <div className="max-w-4xl mx-auto p-6 bg-white shadow-lg rounded-lg">
-      <h2 className="text-2xl font-bold text-center text-gray-800">Add Grade</h2>
-      <div className="grid grid-cols-3 gap-4">
-        {/* Student Name Search Field */}
-        <div className="relative">
-          <input 
-            type="text" 
-            placeholder="Student Name" 
-            value={studentName} 
-            onChange={handleStudentNameChange} 
-            className="border border-gray-300 rounded-lg px-3 py-2 w-full"
-          />
-          {filteredStudents.length > 0 && (
-            <ul className="absolute z-10 bg-white border border-gray-300 rounded-lg mt-1 max-h-40 overflow-y-auto w-full shadow-md">
-              {filteredStudents.map((student) => (
-                <li 
-                  key={student.studentID} 
-                  onClick={() => handleStudentSelect(student)} 
-                  className="px-3 py-2 cursor-pointer hover:bg-gray-200"
-                >
-                  {student.name}
-                </li>
-              ))}
-            </ul>
-          )}
+    </div>
+
+    {/* Add / Edit Grade Form */}
+    <div className="max-w-4xl mx-auto p-6 bg-white shadow-lg rounded-lg mt-6">
+        <h2 className="text-2xl font-bold text-center text-gray-800">
+            {selectedGradeID ? "Edit Grade" : "Add Grade"}
+        </h2>
+        <div className="grid grid-cols-3 gap-4">
+            {/* Student Name Search Field */}
+            <div className="relative">
+                <input 
+                    type="text" 
+                    placeholder="Student Name" 
+                    value={studentName} 
+                    onChange={handleStudentNameChange} 
+                    className="border border-gray-300 rounded-lg px-3 py-2 w-full"
+                />
+                {filteredStudents.length > 0 && (
+                    <ul className="absolute z-10 bg-white border border-gray-300 rounded-lg mt-1 max-h-40 overflow-y-auto w-full shadow-md">
+                        {filteredStudents.map((student) => (
+                            <li 
+                                key={student.studentID} 
+                                onClick={() => handleStudentSelect(student)} 
+                                className="px-3 py-2 cursor-pointer hover:bg-gray-200"
+                            >
+                                {student.name}
+                            </li>
+                        ))}
+                    </ul>
+                )}
+            </div>
+
+            {/* Course Selection */}
+            <select 
+                value={courseID} 
+                onChange={(e) => setCourseID(e.target.value)} 
+                className="border border-gray-300 rounded-lg px-3 py-2 w-full"
+            >
+                <option value="">Select Course</option>
+                {courses.map((course) => (
+                    <option key={course.courseID} value={course.courseID}>{course.courseName}</option>
+                ))}
+            </select>
+
+            {/* Grade Input */}
+            <input 
+                type="number" 
+                placeholder="Grade" 
+                value={grade} 
+                onChange={(e) => setGrade(e.target.value)} 
+                className="border border-gray-300 rounded-lg px-3 py-2 w-full"
+            />
+
+            {/* Period Selection */}
+            <select 
+                value={period} 
+                onChange={(e) => setPeriod(e.target.value)} 
+                className="border border-gray-300 rounded-lg px-3 py-2 w-full"
+            >
+                <option value="">Select Period</option>
+                <option value="Prelim">Prelim</option>
+                <option value="Midterm">Midterm</option>
+                <option value="Pre-Final">Pre-Final</option>
+                <option value="Final">Final</option>
+            </select>
+
+            {/* Remarks Display */}
+            <input 
+                type="text" 
+                value={determineRemarks(grade)} 
+                readOnly 
+                className={`border border-gray-300 rounded-lg px-3 py-2 w-full bg-gray-100 text-center ${
+                    determineRemarks(grade) === 'PASSED' ? 'text-green-500' : 'text-red-500'
+                }`}
+            />
+
+            {/* Semester Selection */}
+            <select 
+                value={semester} 
+                onChange={(e) => setSemester(e.target.value)} 
+                className="border border-gray-300 rounded-lg px-3 py-2 w-full"
+            >
+                <option value="">Select Semester</option>
+                <option value="1st">1st</option>
+                <option value="2nd">2nd</option>
+            </select>
         </div>
 
-        {/* Course Selection */}
-        <select 
-          value={courseID} 
-          onChange={(e) => setCourseID(e.target.value)} 
-          className="border border-gray-300 rounded-lg px-3 py-2 w-full"
-        >
-          <option value="">Select Course</option>
-          {courses.map((course) => (
-            <option key={course.courseID} value={course.courseID}>{course.courseName}</option>
-          ))}
-        </select>
+        {/* Submit or Edit Button */}
+        <div className="flex justify-center mt-4">
+            <button 
+                onClick={selectedGradeID ? handleUpdateGrade : handleSubmitGrade} 
+                className="bg-blue-500 text-white px-4 py-2 rounded mr-2"
+            >
+                {selectedGradeID ? "Edit Grade" : "Submit Grade"}
+            </button>
 
-        {/* Grade Input */}
-        <input 
-          type="number" 
-          placeholder="Grade" 
-          value={grade} 
-          onChange={(e) => setGrade(e.target.value)} 
-          className="border border-gray-300 rounded-lg px-3 py-2 w-full"
-        />
-
-        {/* Period Selection */}
-        <select 
-          value={period} 
-          onChange={(e) => setPeriod(e.target.value)} 
-          className="border border-gray-300 rounded-lg px-3 py-2 w-full"
-        >
-          <option value="">Select Period</option>
-          <option value="Prelim">Prelim</option>
-          <option value="Midterm">Midterm</option>
-          <option value="Pre-Final">Pre-Final</option>
-          <option value="Final">Final</option>
-        </select>
-
-        {/* Remarks Display */}
-        <input 
-          type="text" 
-          value={determineRemarks(grade)} 
-          readOnly 
-          className={`border border-gray-300 rounded-lg px-3 py-2 w-full bg-gray-100 text-center ${
-            determineRemarks(grade) === 'PASSED' ? 'text-green-500' : 'text-red-500'
-          }`}
-        />
-
-        {/* Semester Selection */}
-        <select 
-          value={semester} 
-          onChange={(e) => setSemester(e.target.value)} 
-          className="border border-gray-300 rounded-lg px-3 py-2 w-full"
-        >
-          <option value="">Select Semester</option>
-          <option value="1st">1st</option>
-          <option value="2nd">2nd</option>
-        </select>
-      </div>
-
-      {/* Submit Button */}
-      <button 
-        onClick={handleSubmitGrade} 
-        className="mt-4 bg-blue-500 text-white px-4 py-2 rounded"
-      >
-        Submit Grade
-      </button>
-
-      
-      </div>
+            {selectedGradeID && (
+                <button 
+                    onClick={handleCancelEdit} 
+                    className="bg-gray-500 text-white px-4 py-2 rounded"
+                >
+                    Cancel
+                </button>
+            )}
+        </div>
     </div>
+</div>
+
   );
 }
