@@ -1,5 +1,10 @@
 import React, { useEffect, useState } from 'react';
 import { useLocation, useNavigate } from 'react-router-dom';
+import { Calendar, momentLocalizer } from 'react-big-calendar';
+import moment from 'moment';
+import 'react-big-calendar/lib/css/react-big-calendar.css';
+
+const localizer = momentLocalizer(moment);
 
 function BookingStudent() {
     const location = useLocation();
@@ -18,7 +23,6 @@ function BookingStudent() {
         fetchTeachers();
         fetchStudents();
     }, [location]);
-    
 
     async function fetchTeachers() {
         try {
@@ -76,7 +80,7 @@ function BookingStudent() {
                     id: booking.id,
                     teacherName,
                     studentNames: studentNames.join(", "),
-                    schedule: formatDateTime(booking.schedule),
+                    schedule: booking.schedule,
                     venue: booking.venue,
                 };
 
@@ -138,6 +142,13 @@ function BookingStudent() {
         const formattedTime = date.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
         return `${formattedDate} at ${formattedTime}`;
     };
+
+    const events = appointments.upcoming.map(app => ({
+        title: `Meeting with ${app.teacherName}`,
+        start: new Date(app.schedule),
+        end: new Date(new Date(app.schedule).getTime() + 60 * 60 * 1000), // Assuming 1-hour duration
+        allDay: false,
+    }));
 
     return (
         <div className="p-8 bg-white shadow-lg rounded-lg">
@@ -205,37 +216,54 @@ function BookingStudent() {
             </div>
 
             <h3 className="text-lg font-bold mt-6">Pending Appointments</h3>
-            <ul className="list-disc pl-5">
+            <ul className="space-y-4">
                 {appointments.pending.map(app => (
-                    <li key={app.id} className="mb-2">
-                        <div className="font-semibold">Teacher: {app.teacherName}</div>
-                        <div>Students: {app.studentNames}</div>
-                        <div>Schedule: {app.schedule}</div>
-                        <div>Venue: {app.venue}</div>
+                    <li key={app.id} className="p-4 border rounded-lg shadow-sm bg-gray-50">
+                        <div>
+                            <p><strong>Teacher:</strong> {app.teacherName}</p>
+                            <p><strong>Students:</strong> {app.studentNames}</p>
+                            <p><strong>Schedule:</strong> {formatDateTime(app.schedule)}</p>
+                            <p><strong>Venue:</strong> {app.venue}</p>
+                        </div>
                     </li>
                 ))}
             </ul>
 
             <h3 className="text-lg font-bold mt-6">Upcoming Appointments</h3>
-            <ul className="list-disc pl-5">
+            <ul className="space-y-4">
                 {appointments.upcoming.map(app => (
-                    <li key={app.id} className="mb-2">
-                        <div className="font-semibold">Teacher: {app.teacherName}</div>
-                        <div>Students: {app.studentNames}</div>
-                        <div>Schedule: {app.schedule}</div>
-                        <div>Venue: {app.venue}</div>
+                    <li key={app.id} className="p-4 border rounded-lg shadow-sm bg-gray-50">
+                        <div>
+                            <p><strong>Teacher:</strong> {app.teacherName}</p>
+                            <p><strong>Students:</strong> {app.studentNames}</p>
+                            <p><strong>Schedule:</strong> {formatDateTime(app.schedule)}</p>
+                            <p><strong>Venue:</strong> {app.venue}</p>
+                        </div>
                     </li>
                 ))}
             </ul>
 
+            <h3 className="text-lg font-bold mt-6">Upcoming Appointments Calendar</h3>
+            <div className="bg-white p-4 rounded-lg shadow-lg">
+                <Calendar
+                    localizer={localizer}
+                    events={events}
+                    startAccessor="start"
+                    endAccessor="end"
+                    style={{ height: 500 }}
+                />
+            </div>
+
             <h3 className="text-lg font-bold mt-6">Canceled Appointments</h3>
-            <ul className="list-disc pl-5">
+            <ul className="space-y-4">
                 {appointments.canceled.map(app => (
-                    <li key={app.id} className="mb-2">
-                        <div className="font-semibold">Teacher: {app.teacherName}</div>
-                        <div>Students: {app.studentNames}</div>
-                        <div>Schedule: {app.schedule}</div>
-                        <div>Venue: {app.venue}</div>
+                    <li key={app.id} className="p-4 border rounded-lg shadow-sm bg-gray-50">
+                        <div>
+                            <p><strong>Teacher:</strong> {app.teacherName}</p>
+                            <p><strong>Students:</strong> {app.studentNames}</p>
+                            <p><strong>Schedule:</strong> {formatDateTime(app.schedule)}</p>
+                            <p><strong>Venue:</strong> {app.venue}</p>
+                        </div>
                     </li>
                 ))}
             </ul>
