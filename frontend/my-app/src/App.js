@@ -9,6 +9,7 @@ import AdminPortal from './components/AdminPortal';
 import Courses from './components/Courses'; 
 import AddGrade from './components/AddGrade';
 import Home from './components/Home';
+import AppointmentsCalendar from './components/AppointmentsCalendar';
 
 function App() {
   const [user, setUser] = useState(null);
@@ -35,9 +36,14 @@ function App() {
       }
     };
 
-    // Only fetch user role if not on the session page
-    if (location.pathname !== '/session' && location.pathname !== '/courses' && location.pathname !== '/addgrade') {
-      fetchUserRole();
+    // Only fetch user role if not on the session, courses, addgrade, or calendar page
+    if (
+        location.pathname !== '/session' &&
+        location.pathname !== '/courses' &&
+        location.pathname !== '/addgrade' &&
+        location.pathname !== '/appointments-calendar'
+    ) {
+        fetchUserRole();
     }
   }, [navigate, location.pathname]);
 
@@ -86,6 +92,7 @@ function App() {
         <Route path="/admin" element={<AdminPortal />} />
         <Route path="/courses" element={<Courses />} />
         <Route path="/addgrade" element={<AddGrade />} />
+        <Route path="/appointments-calendar" element={<AppointmentsCalendar />} />
       </Routes>
     </div>
   );
