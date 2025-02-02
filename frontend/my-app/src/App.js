@@ -48,7 +48,7 @@ function App() {
   };
 
   return (
-    <div className="container mx-auto">
+    <div>
       {/* { (location.pathname !== '/login'
         && location.pathname !== '/signup'
         && location.pathname !== '/booking-student'
