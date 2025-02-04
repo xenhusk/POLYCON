@@ -215,7 +215,7 @@ function BookingTeacher() {
 
     const handleLogout = () => {
         localStorage.removeItem('userEmail');
-        navigate('/login');
+        navigate('/');
     };
 
     const formatDateTime = (dateTime) => {
