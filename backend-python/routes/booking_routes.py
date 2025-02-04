@@ -11,6 +11,16 @@ def convert_references(value):
         return str(value.path)
     return value
 
+def get_program_name(program_ref):
+    try:
+        program_doc = program_ref.get()
+        if program_doc.exists:
+            program_data = program_doc.to_dict()
+            return program_data.get('programName', 'Unknown')
+    except Exception as e:
+        print(f"Error fetching program name: {str(e)}")
+    return 'Unknown'
+
 @booking_bp.route('/get_teachers', methods=['GET'])
 def get_teachers():
     try:
@@ -53,6 +63,11 @@ def get_students():
                 user_data = user_ref.to_dict()
                 student_data['firstName'] = user_data.get('firstName', 'Unknown')
                 student_data['lastName'] = user_data.get('lastName', 'Unknown')
+            
+            # Fetch year_section and program from the 'students' collection
+            student_data['year_section'] = student_data.get('year_section', 'Unknown')
+            program_ref = student_data.get('program')
+            student_data['program'] = get_program_name(program_ref) if program_ref else 'Unknown'
 
             # Convert Firestore DocumentReference fields to strings
             student_data = {key: convert_references(value) for key, value in student_data.items()}
@@ -88,13 +103,20 @@ def get_student_bookings():
                 teacher_data = teacher_doc.to_dict()
                 booking_data['teacherName'] = f"{teacher_data.get('firstName', 'Unknown')} {teacher_data.get('lastName', 'Unknown')}"
 
-            # Fetch student details from the 'user' collection, excluding the current student
+            # Fetch student details from the 'user' and 'students' collections, excluding the current student
             student_names = []
             for student_ref in booking_data['studentID']:
                 student_doc = student_ref.get()
                 if student_doc.exists and student_ref.id != f'students/{student_id}':
                     student_data = student_doc.to_dict()
-                    student_names.append(f"{student_data.get('firstName', 'Unknown')} {student_data.get('lastName', 'Unknown')}")
+                    user_ref = db.collection('user').document(student_ref.id).get()
+                    if user_ref.exists:
+                        user_data = user_ref.to_dict()
+                        student_data['firstName'] = user_data.get('firstName', 'Unknown')
+                        student_data['lastName'] = user_data.get('lastName', 'Unknown')
+                    program_ref = student_data.get('program')
+                    program_name = get_program_name(program_ref) if program_ref else 'Unknown'
+                    student_names.append(f"{student_data.get('firstName', 'Unknown')} {student_data.get('lastName', 'Unknown')} {program_name} {student_data.get('year_section', 'Unknown')}")
             booking_data['studentNames'] = student_names
 
             booking_data = {key: convert_references(value) for key, value in booking_data.items()}
@@ -128,14 +150,21 @@ def get_teacher_bookings():
             if teacher_doc.exists:
                 teacher_data = teacher_doc.to_dict()
                 booking_data['teacherName'] = f"{teacher_data.get('firstName', 'Unknown')} {teacher_data.get('lastName', 'Unknown')}"
-            
-            # Fetch student details from the 'user' collection
+
+            # Fetch student details from the 'user' and 'students' collections
             student_names = []
             for student_ref in booking_data['studentID']:
                 student_doc = student_ref.get()
                 if student_doc.exists:
                     student_data = student_doc.to_dict()
-                    student_names.append(f"{student_data.get('firstName', 'Unknown')} {student_data.get('lastName', 'Unknown')}")
+                    user_ref = db.collection('user').document(student_ref.id).get()
+                    if user_ref.exists:
+                        user_data = user_ref.to_dict()
+                        student_data['firstName'] = user_data.get('firstName', 'Unknown')
+                        student_data['lastName'] = user_data.get('lastName', 'Unknown')
+                    program_ref = student_data.get('program')
+                    program_name = get_program_name(program_ref) if program_ref else 'Unknown'
+                    student_names.append(f"{student_data.get('firstName', 'Unknown')} {student_data.get('lastName', 'Unknown')} {program_name} {student_data.get('year_section', 'Unknown')}")
             booking_data['studentNames'] = student_names
 
             booking_data = {key: convert_references(value) for key, value in booking_data.items()}

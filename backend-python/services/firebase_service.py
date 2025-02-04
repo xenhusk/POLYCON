@@ -52,8 +52,8 @@ def login_user(email, password):
     try:
         # Sign in the user with email and password
         user = auth_pyrebase.sign_in_with_email_and_password(email, password)
-        auth_pyrebase.send_email_verification(user['idToken'])
-
+        # auth_pyrebase.send_email_verification(user['idToken'])
+        
         # Get detailed account info using the user's ID token
         account_info = auth_pyrebase.get_account_info(user['idToken'])
 

@@ -7,38 +7,67 @@ grade_bp = Blueprint('grade', __name__)
 @grade_bp.route('/get_grades', methods=['GET'])
 def get_grades():
     try:
-        grades_ref = db.collection('grades').stream()
-        grades = []
+        faculty_id = request.args.get('facultyID')  # Get logged-in teacher ID
+        if not faculty_id:
+            return jsonify({"error": "Faculty ID is required"}), 400
 
+        print(f"Received facultyID: {faculty_id}")  # Debugging log
+
+        # Fetch only grades where facultyID matches the logged-in teacher
+        faculty_ref = db.document(f'user/{faculty_id}')
+        grades_ref = db.collection('grades').where('facultyID', '==', faculty_ref).stream()
+
+        grades = []
         for doc in grades_ref:
             grade_data = doc.to_dict()
-            grade_data['gradeID'] = doc.id
+            grade_data['id'] = doc.id  # Include Firestore Document ID
 
-            # Resolve course name
+            # Convert facultyID to string
+            grade_data['facultyID'] = faculty_ref.id  # Convert reference to string
+
+            # Resolve Course Name
             if isinstance(grade_data.get('courseID'), DocumentReference):
                 course_ref = grade_data['courseID'].get()
                 if course_ref.exists:
                     grade_data['courseName'] = course_ref.to_dict().get('courseName', 'Unknown Course')
-                else:
-                    grade_data['courseName'] = 'Unknown Course'
+                grade_data['courseID'] = course_ref.id  # Convert reference to string
             else:
-                grade_data['courseName'] = 'Unknown Course'
+                grade_data['courseName'] = "Unknown Course"
 
-            # Fetch Student Data
+            # Resolve Student Name
+            student_name = "Unknown Student"
             if isinstance(grade_data.get('studentID'), DocumentReference):
                 student_ref = grade_data['studentID'].get()
                 if student_ref.exists:
                     student_data = student_ref.to_dict()
-                    grade_data['studentID'] = student_ref.id
-                    grade_data['studentName'] = f"{student_data.get('firstName', '')} {student_data.get('lastName', '')}".strip()
-                else:
-                    grade_data['studentName'] = 'Unknown Student'
-            else:
-                grade_data['studentName'] = 'Unknown Student'
+
+                    # Retrieve user reference from student document
+                    user_ref = student_data.get('ID')  # This is stored as a DocumentReference
+                    if isinstance(user_ref, DocumentReference):  # Ensure it's a Firestore reference
+                        user_doc = user_ref.get()
+                        if user_doc.exists:
+                            user_data = user_doc.to_dict()
+                            first_name = user_data.get('firstName', '').strip()
+                            last_name = user_data.get('lastName', '').strip()
+                            student_name = f"{first_name} {last_name}".strip() if first_name or last_name else "Unknown Student"
+                    elif isinstance(user_ref, str):  # If it's already a string
+                        user_doc = db.collection('user').document(user_ref).get()
+                        if user_doc.exists:
+                            user_data = user_doc.to_dict()
+                            first_name = user_data.get('firstName', '').strip()
+                            last_name = user_data.get('lastName', '').strip()
+                            student_name = f"{first_name} {last_name}".strip() if first_name or last_name else "Unknown Student"
+                    
+                    # Ensure studentID is stored correctly
+                    grade_data['studentID'] = student_ref.id  
+
+            grade_data['studentName'] = student_name  # Store Student Name
 
             grades.append(grade_data)
 
+        print(f"Final Grades List: {grades}")  # Debugging log
         return jsonify(grades), 200
+
     except Exception as e:
         print(f"Error in get_grades: {e}")
         return jsonify({"error": str(e)}), 500
@@ -48,7 +77,7 @@ def add_grade():
     try:
         data = request.json
         course_id = data.get('courseID')
-        faculty_id = data.get('facultyID')
+        faculty_id = data.get('facultyID')  # This now refers to 'user' collection
         student_id = data.get('studentID')
         grade = data.get('grade')
         period = data.get('period')
@@ -59,11 +88,26 @@ def add_grade():
             return jsonify({"error": "Missing required fields"}), 400
 
         remarks = "PASSED" if float(grade) >= 75 else "FAILED"
-        
-        grade_ref = db.collection('grades').document()
+
+        # Fetch the last added grade document to determine the next incremental ID
+        grades_ref = db.collection('grades').order_by("created_at", direction="DESCENDING").limit(1).stream()
+        last_grade = next(grades_ref, None)
+
+        if last_grade:
+            last_id = last_grade.id
+            if last_id.startswith("gradeID"):
+                last_number = int(last_id.replace("gradeID", ""))
+                new_id = f"gradeID{last_number + 1:03d}"  # Format as gradeID001, gradeID002, etc.
+            else:
+                new_id = "gradeID001"
+        else:
+            new_id = "gradeID001"
+
+        # Explicitly set the new document ID
+        grade_ref = db.collection('grades').document(new_id)
         grade_ref.set({
             "courseID": db.document(f'courses/{course_id}'),
-            "facultyID": db.document(f'faculty/{faculty_id}'),
+            "facultyID": db.document(f'user/{faculty_id}'),  # Now references 'user' collection
             "studentID": db.document(f'students/{student_id}'),
             "grade": grade,
             "period": period,
@@ -73,8 +117,52 @@ def add_grade():
             "created_at": SERVER_TIMESTAMP
         })
 
-        return jsonify({"message": "Grade added successfully", "gradeID": grade_ref.id}), 201
+        return jsonify({"message": "Grade added successfully", "gradeID": new_id}), 201
+
     except Exception as e:
+        print(f"Error in add_grade: {e}")
+        return jsonify({"error": str(e)}), 500
+    
+@grade_bp.route('/edit_grade', methods=['POST'])
+def edit_grade():
+    try:
+        data = request.json
+        grade_id = data.get('gradeID')
+        course_id = data.get('courseID')
+        faculty_id = data.get('facultyID')
+        student_id = data.get('studentID')
+        grade = data.get('grade')
+        period = data.get('period')
+        school_year = data.get('school_year')
+        semester = data.get('semester')
+
+        if not all([grade_id, course_id, faculty_id, student_id, grade, period, school_year, semester]):
+            return jsonify({"error": "Missing required fields"}), 400
+
+        remarks = "PASSED" if float(grade) >= 75 else "FAILED"
+
+        # Reference the existing grade document
+        grade_ref = db.collection('grades').document(grade_id)
+        if not grade_ref.get().exists:
+            return jsonify({"error": "Grade not found"}), 404
+
+        # Update the grade details
+        grade_ref.update({
+            "courseID": db.document(f'courses/{course_id}'),
+            "facultyID": db.document(f'user/{faculty_id}'),
+            "studentID": db.document(f'students/{student_id}'),
+            "grade": grade,
+            "period": period,
+            "remarks": remarks,
+            "school_year": school_year,
+            "semester": semester,
+            "updated_at": SERVER_TIMESTAMP
+        })
+
+        return jsonify({"message": "Grade updated successfully"}), 200
+
+    except Exception as e:
+        print(f"Error in edit_grade: {e}")
         return jsonify({"error": str(e)}), 500
 
 
@@ -152,4 +240,29 @@ def get_faculty():
         return jsonify(faculty_data), 200
     except Exception as e:
         print(f"Error fetching faculty: {e}")
+        return jsonify({"error": str(e)}), 500
+
+@grade_bp.route('/delete_grade', methods=['POST'])
+def delete_grade():
+    try:
+        data = request.json
+        print("Received delete request data:", data)  # Debugging log
+        grade_id = data.get('gradeID')  # Firestore document ID
+
+        if not grade_id:
+            return jsonify({"error": "Document ID is required"}), 400
+
+        # Reference the grade document
+        grade_ref = db.collection('grades').document(grade_id)
+
+        if not grade_ref.get().exists:
+            return jsonify({"error": "Grade document not found"}), 404
+
+        # Delete the document
+        grade_ref.delete()
+
+        return jsonify({"message": f"Grade {grade_id} deleted successfully"}), 200
+
+    except Exception as e:
+        print(f"Error in delete_grade: {e}")
         return jsonify({"error": str(e)}), 500

@@ -180,7 +180,7 @@ export default function AdminPortal() {
 
   const handleLogout = () => {
     localStorage.removeItem('userEmail');
-    navigate('/login');
+    navigate('/');
   };
 
   return (

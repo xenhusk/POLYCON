@@ -12,24 +12,42 @@ import Signup from "./Signup";
 const Home = () => {
   const [showLoginModal, setShowLoginModal] = useState(false);
   const [showSignupModal, setShowSignupModal] = useState(false);
+  const [errorMessage, setErrorMessage] = useState("");
 
-  const handleLoginClick = () => setShowLoginModal(true);
-  const handleSignupClick = () => setShowSignupModal(true);
+  const handleLoginClick = () => {
+    setShowLoginModal(true);
+    setErrorMessage("");
+  };
+  const handleSignupClick = () => {
+    setShowSignupModal(true);
+    setErrorMessage("");
+  };
   const closeModal = () => {
     setShowLoginModal(false);
     setShowSignupModal(false);
+    setErrorMessage("");
   };
 
   const switchToSignup = () => {
     setShowLoginModal(false);
     setShowSignupModal(true);
+    setErrorMessage("");
   };
 
   const switchToLogin = () => {
     setShowSignupModal(false);
     setShowLoginModal(true);
+    setErrorMessage("");
   };
-  
+
+  const handleLoginError = (message) => {
+    setErrorMessage(message);
+  };
+
+  const handleSignupError = (message) => {
+    setErrorMessage(message);
+  };
+
   return (
     <div className="min-h-screen bg-white font-poppins">
       <nav className="flex w-full justify-between items-center my-3">
@@ -180,7 +198,8 @@ const Home = () => {
             <button className="absolute top-4 right-7 text-[2rem] text-gray-500 hover:text-[#000000] hover:font-bold" onClick={closeModal}>
               &times;
             </button>
-            <Login onLoginSuccess={closeModal} onSwitchToSignup={switchToSignup} />
+            <Login onLoginSuccess={closeModal} onSwitchToSignup={switchToSignup} onError={handleLoginError} />
+            {errorMessage && <p className="text-red-500 mt-4">{errorMessage}</p>}
           </div>
         </div>
       )}
@@ -190,7 +209,8 @@ const Home = () => {
           <div className="bg-[white] p-6 rounded-[20px] shadow-lg w-[43%] h-[650px] relative">
             <button className="absolute top-4 right-7 text-[2rem] text-gray-500 hover:text-[#000000] hover:font-bold" onClick={closeModal}>
               &times;</button>
-            <Signup onSwitchToLogin={switchToLogin} />
+            <Signup onSwitchToLogin={switchToLogin} onError={handleSignupError} />
+            {errorMessage && <p className="text-red-500 mt-4">{errorMessage}</p>}
           </div>
         </div>
       )}
