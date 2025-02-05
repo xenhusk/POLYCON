@@ -138,7 +138,7 @@ const Home = () => {
       <footer className="flex w-full justify-between items-center">
         {/* Frames of footer */}
         <div className="w-full h-[30.5vh] relative overflow-hidden bg-[#005B98]">
-          <div className="h-[160px] w-[90%] absolute right-0 left-0 justify-between mx-auto flex-1 flex text-[#ffffff]">
+          <div className=" w-[90%] absolute right-0 left-0 justify-between mx-auto flex-1 flex text-[#ffffff]">
             {/* Content of footer  */}
             <div className="flex-row w-[90%] h-[152px] mx-auto">  
               <img src={logo} alt="Logo" className="h-[98px] w-[10%]"/>

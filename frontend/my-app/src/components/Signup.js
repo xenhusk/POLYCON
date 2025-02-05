@@ -108,11 +108,11 @@ const Signup = ({ onSwitchToLogin }) => {
       <div className="flex flex-col items-center w-full">
         {step === 1 ? (
           <div className="w-full max-w-[75.5%]">
-            <img src={logo} alt="Logo" className="h-[130px] w-[35%] mx-auto"/>
+            <img src={logo} alt="Logo" className="h-[130px] w-[33%] mx-auto"/>
             <h2 className="text-center text-lg font-bold text-[#005B98]">Registration Form</h2>
             <div className='flex justify-between gap-4'>
-              <input className="border-[#005B98] border-b-2 p-2 w-[45%] h-[44.59px] my-2 focus:outline-none" 
-              type="text" name="firstNumber" placeholder="First Name" value={formData.firstName} onChange={handleChange} required />
+            <input className="border-[#005B98] border-b-2 p-2 w-[45%] h-[44.59px] my-2 focus:outline-none" 
+              type="text" name="firstName" placeholder="First Name" value={formData.firstName} onChange={handleChange} required />
               
               <input className="border-[#005B98] border-b-2 p-2 w-[45%] h-[44.59px] my-2 focus:outline-none" 
               type="text" name="lastName" placeholder="Last Name" value={formData.lastName} onChange={handleChange} required />
