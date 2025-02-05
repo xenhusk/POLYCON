@@ -143,73 +143,92 @@ export default function AddGrade() {
 };
 
 
-  const handleEditGrade = (grade) => {
-    setSelectedGradeID(grade.gradeID);
-    setStudentID(grade.studentID);
-    setStudentName(grade.studentName);
-    setCourseID(grade.courseID);
-    setGrade(grade.grade);
-    setPeriod(grade.period);
-    setSchoolYear(grade.school_year);
-    setSemester(grade.semester);
-  };
+const handleEditGrade = (grade) => {
+  console.log("🟡 Edit Button Clicked for Grade:", grade); // Debugging log
+  setSelectedGradeID(grade.id);  // Ensure we're setting the correct grade ID
+  setStudentID(grade.studentID);
+  setStudentName(grade.studentName);
+  setCourseID(grade.courseID);
+  setGrade(grade.grade);
+  setPeriod(grade.period);
+  setSchoolYear(grade.school_year);
+  setSemester(grade.semester);
+};
 
-  const handleCancelEdit = () => {
-    setSelectedGradeID(null);
-    setStudentID('');
-    setStudentName('');
-    setCourseID('');
-    setGrade('');
-    setPeriod('');
-    setSchoolYear('2024-2025');
-    setSemester('');
-  };
+
+const handleCancelEdit = () => {
+  console.log("🔴 Cancel Edit Clicked - Resetting Form"); // Debugging log
+  setSelectedGradeID(null); // This will revert to "Submit Grade"
+  setStudentID('');
+  setStudentName('');
+  setCourseID('');
+  setGrade('');
+  setPeriod('');
+  setSchoolYear('2024-2025');
+  setSemester('');
+};
 
   
   const handleUpdateGrade = async () => {
+    console.log("🟡 Edit Grade Button Clicked"); // Debugging log
     if (!selectedGradeID) {
-      alert('No grade selected for update');
-      return;
+        alert('No grade selected for update');
+        return;
     }
 
     try {
-      const response = await fetch('http://localhost:5001/grade/edit_grade', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          gradeID: selectedGradeID,
-          studentID,
-          courseID,
-          facultyID,
-          grade,
-          period,
-          school_year: schoolYear,
-          semester
-        })
-      });
+        const response = await fetch('http://localhost:5001/grade/edit_grade', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({
+                gradeID: selectedGradeID,
+                studentID,
+                courseID,
+                facultyID,
+                grade,
+                period,
+                school_year: schoolYear,
+                semester
+            })
+        });
 
-      if (response.ok) {
-        alert('Grade updated successfully');
-        handleCancelEdit();
-        fetchGrades();
-      } else {
-        alert('Failed to update grade');
-      }
+        const result = await response.json();
+        console.log("📨 API Response:", result); // Debugging log
+
+        if (response.ok) {
+            alert('✅ Grade updated successfully');
+            handleCancelEdit();
+            fetchGrades();
+        } else {
+            alert('❌ Failed to update grade: ' + result.error);
+        }
     } catch (error) {
-      console.error('Error updating grade:', error);
+        console.error('❌ Error updating grade:', error);
     }
-  };
+};
 
-// Ensure the edit form appears correctly
-{selectedGradeID && (
-<div className="mt-6">
-  <h2 className="text-xl font-bold">Edit Grade</h2>
-  <input type="number" value={grade} onChange={(e) => setGrade(e.target.value)} className="border px-3 py-2 w-full" />
-  <button onClick={handleUpdateGrade} className="mt-4 bg-blue-500 text-white px-4 py-2 rounded">
-    Update Grade
-  </button>
-</div>
-)}
+const handleSchoolYearChange = (e) => {
+  let input = e.target.value;
+
+  // Allow only numbers and dash (-)
+  input = input.replace(/[^0-9-]/g, '');
+
+  // Ensure the format is 20XX-20XX
+  const match = input.match(/^20\d{2}-20\d{2}$/);
+  
+  if (input.length <= 9) {
+      setSchoolYear(input);
+  }
+
+  if (input.length === 9 && !match) {
+      alert("❌ Invalid format! Use YYYY-YYYY (e.g., 2024-2025)");
+      setSchoolYear("2024-2025"); // Reset to default if incorrect
+  }
+};
+
+
+
+// Ensure the edit form appears correct
 
   const handleStudentSelect = (student) => {
     setStudentName(student.name);
@@ -223,47 +242,50 @@ export default function AddGrade() {
   };
 
   const handleSubmitGrade = async () => {
+    console.log("🔵 Submit Grade Button Clicked"); // Debugging log
     if (!studentID || !courseID || !grade || !period || !schoolYear || !semester || !facultyID) {
-      alert('All fields are required');
-      return;
+        alert('All fields are required');
+        return;
     }
   
     try {
-      const response = await fetch('http://localhost:5001/grade/add_grade', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          studentID,
-          courseID,
-          facultyID,
-          grade,
-          period,
-          remarks: determineRemarks(grade),
-          school_year: schoolYear,
-          semester
-        })
-      });
-  
-      if (response.ok) {
-        alert('Grade added successfully');
-        setStudentID('');
-        setStudentName('');
-        setCourseID('');
-        setGrade('');
-        setPeriod('');
-        setSchoolYear('2024-2025');
-        setSemester('');
-      } else {
-        alert('Failed to add grade');
-      }
+        const response = await fetch('http://localhost:5001/grade/add_grade', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({
+                studentID,
+                courseID,
+                facultyID,
+                grade,
+                period,
+                remarks: determineRemarks(grade),
+                school_year: schoolYear,
+                semester
+            })
+        });
+
+        const result = await response.json();
+        console.log("📨 API Response:", result); // Debugging log
+
+        if (response.ok) {
+            alert('✅ Grade added successfully');
+            fetchGrades();
+        } else {
+            alert('❌ Failed to add grade: ' + result.error);
+        }
     } catch (error) {
-      console.error('Error adding grade:', error);
+        console.error('❌ Error adding grade:', error);
     }
 };
+
 
   
   return (
     <div className="max-w-9xl mx-auto p-6 bg-white shadow-lg rounded-lg">
+      <div className="max-w-9xl mx-auto p-4 bg-white mt-6">
+    <h2 className="text-2xl font-bold text-center text-gray-800 mb-4">
+        {selectedGradeID ? "Edit Grade" : "Add Grade"}
+    </h2>
     {/* Grades Table */}
     <div className="overflow-x-auto mt-6">
         <table className="min-w-full bg-white border border-gray-300 text-center">
@@ -322,100 +344,97 @@ export default function AddGrade() {
             </tbody>
         </table>
     </div>
-
     {/* Add / Edit Grade Form */}
-    <div className="max-w-4xl mx-auto p-6 bg-white shadow-lg rounded-lg mt-6">
-        <h2 className="text-2xl font-bold text-center text-gray-800">
-            {selectedGradeID ? "Edit Grade" : "Add Grade"}
-        </h2>
-        <div className="grid grid-cols-3 gap-4">
-            {/* Student Name Search Field */}
-            <div className="relative">
-                <input 
-                    type="text" 
-                    placeholder="Student Name" 
-                    value={studentName} 
-                    onChange={handleStudentNameChange} 
-                    className="border border-gray-300 rounded-lg px-3 py-2 w-full"
-                />
-                {filteredStudents.length > 0 && (
-                    <ul className="absolute z-10 bg-white border border-gray-300 rounded-lg mt-1 max-h-40 overflow-y-auto w-full shadow-md">
-                        {filteredStudents.map((student) => (
-                            <li 
-                                key={student.studentID} 
-                                onClick={() => handleStudentSelect(student)} 
-                                className="px-3 py-2 cursor-pointer hover:bg-gray-200"
-                            >
-                                {student.name}
-                            </li>
-                        ))}
-                    </ul>
-                )}
-            </div>
 
-            {/* Course Selection */}
-            <select 
-                value={courseID} 
-                onChange={(e) => setCourseID(e.target.value)} 
-                className="border border-gray-300 rounded-lg px-3 py-2 w-full"
-            >
-                <option value="">Select Course</option>
-                {courses.map((course) => (
-                    <option key={course.courseID} value={course.courseID}>{course.courseName}</option>
-                ))}
-            </select>
+    <div className="mt-6">
 
-            {/* Grade Input */}
-            <input 
-                type="number" 
-                placeholder="Grade" 
-                value={grade} 
-                onChange={(e) => setGrade(e.target.value)} 
-                className="border border-gray-300 rounded-lg px-3 py-2 w-full"
-            />
-
-            {/* Period Selection */}
-            <select 
-                value={period} 
-                onChange={(e) => setPeriod(e.target.value)} 
-                className="border border-gray-300 rounded-lg px-3 py-2 w-full"
-            >
-                <option value="">Select Period</option>
-                <option value="Prelim">Prelim</option>
-                <option value="Midterm">Midterm</option>
-                <option value="Pre-Final">Pre-Final</option>
-                <option value="Final">Final</option>
-            </select>
-
-            {/* Remarks Display */}
+    <div className="grid grid-cols-7 gap-2 items-center">
+        {/* Student Name Input */}
+        <div className="relative">
             <input 
                 type="text" 
-                value={determineRemarks(grade)} 
-                readOnly 
-                className={`border border-gray-300 rounded-lg px-3 py-2 w-full bg-gray-100 text-center ${
-                    determineRemarks(grade) === 'PASSED' ? 'text-green-500' : 'text-red-500'
-                }`}
-            />
-
-            {/* Semester Selection */}
-            <select 
-                value={semester} 
-                onChange={(e) => setSemester(e.target.value)} 
+                placeholder="Student Name" 
+                value={studentName} 
+                onChange={handleStudentNameChange} 
                 className="border border-gray-300 rounded-lg px-3 py-2 w-full"
-            >
-                <option value="">Select Semester</option>
-                <option value="1st">1st</option>
-                <option value="2nd">2nd</option>
-            </select>
+            />
+            {filteredStudents.length > 0 && (
+                <ul className="absolute z-10 bg-white border border-gray-300 rounded-lg mt-1 max-h-40 overflow-y-auto w-full shadow-md">
+                    {filteredStudents.map((student) => (
+                        <li 
+                            key={student.studentID} 
+                            onClick={() => handleStudentSelect(student)} 
+                            className="px-3 py-2 cursor-pointer hover:bg-gray-200"
+                        >
+                            {student.name}
+                        </li>
+                    ))}
+                </ul>
+            )}
         </div>
 
-        {/* Submit or Edit Button */}
-        <div className="flex justify-center mt-4">
+        {/* Course Selection */}
+        <select 
+            value={courseID} 
+            onChange={(e) => setCourseID(e.target.value)} 
+            className="border border-gray-300 rounded-lg px-3 py-2 w-full"
+        >
+            <option value="">Select Course</option>
+            {courses.map((course) => (
+                <option key={course.courseID} value={course.courseID}>{course.courseName}</option>
+            ))}
+        </select>
+
+        {/* Semester Selection */}
+        <select 
+            value={semester} 
+            onChange={(e) => setSemester(e.target.value)} 
+            className="border border-gray-300 rounded-lg px-3 py-2 w-full"
+        >
+            <option value="">Semester</option>
+            <option value="1st">1st</option>
+            <option value="2nd">2nd</option>
+        </select>
+
+        {/* Period Selection */}
+        <select 
+            value={period} 
+            onChange={(e) => setPeriod(e.target.value)} 
+            className="border border-gray-300 rounded-lg px-3 py-2 w-full"
+        >
+            <option value="">Period</option>
+            <option value="Prelim">Prelim</option>
+            <option value="Midterm">Midterm</option>
+            <option value="Pre-Final">Pre-Final</option>
+            <option value="Final">Final</option>
+        </select>
+
+        {/* Grade Input */}
+        <input 
+            type="number" 
+            placeholder="Grade" 
+            value={grade} 
+            onChange={(e) => setGrade(e.target.value)} 
+            className="border border-gray-300 rounded-lg px-3 py-2 w-full"
+        />
+        
+        {/* School Year Selection (New) */}
+        {/* Editable School Year Input (20XX-20XX) */}
+        <input 
+            type="text" 
+            placeholder="YYYY-YYYY" 
+            value={schoolYear} 
+            onChange={(e) => handleSchoolYearChange(e)} 
+            className="border border-gray-300 rounded-lg px-3 py-2 w-full text-center"
+        />
+
+        {/* Submit or Update Button */}
+        <div className="flex items-center space-x-2">
             <button 
                 onClick={selectedGradeID ? handleUpdateGrade : handleSubmitGrade} 
-                className="bg-blue-500 text-white px-4 py-2 rounded mr-2"
+                className={`px-2 py-2 rounded text-white ${selectedGradeID ? 'bg-yellow-500' : 'bg-blue-500'}`}
             >
-                {selectedGradeID ? "Edit Grade" : "Submit Grade"}
+                {selectedGradeID ? "Update Grade" : "Submit Grade"}
             </button>
 
             {selectedGradeID && (
@@ -428,6 +447,11 @@ export default function AddGrade() {
             )}
         </div>
     </div>
+</div>
+</div>
+
+
+ 
 </div>
 
   );
