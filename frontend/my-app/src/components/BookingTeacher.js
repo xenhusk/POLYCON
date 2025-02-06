@@ -9,6 +9,7 @@ function BookingTeacher() {
     const [schedule, setSchedule] = useState('');
     const [venue, setVenue] = useState('');
     const [appointments, setAppointments] = useState({ pending: [], upcoming: [], canceled: [] });
+    const [searchTerm, setSearchTerm] = useState('');
     const navigate = useNavigate();
     const location = useLocation();
 
@@ -248,27 +249,64 @@ function BookingTeacher() {
                 />
             </div>
 
-            <div className="mb-4">
-                <label className="block text-gray-700 font-medium mb-1">Select Students:</label>
-                <div className="grid grid-cols-1 gap-2">
-                    {students.map((student) => (
-                        <label key={student.id} className="flex items-center space-x-2">
-                            <input
-                                type="checkbox"
-                                value={student.id}
-                                onChange={(e) => {
-                                    if (e.target.checked) {
-                                        setSelectedStudents([...selectedStudents, student.id]);
-                                    } else {
-                                        setSelectedStudents(selectedStudents.filter(id => id !== student.id));
-                                    }
-                                }}
-                                className="h-4 w-4"
-                            />
-                            <span>{student.firstName} {student.lastName} ({student.program} {student.year_section})</span>
-                        </label>
-                    ))}
+            <div className="mb-4 relative">
+                <label className="block text-gray-700 font-medium mb-1">Search Students:</label>
+                <div className="flex flex-wrap items-center gap-2 border border-gray-300 rounded-lg px-3 py-2">
+                    {selectedStudents.map(studentId => {
+                        const student = students.find(s => s.id === studentId);
+                        return student ? (
+                            <div key={studentId} className="bg-blue-100 text-blue-800 px-2 py-1 rounded flex items-center">
+                                <img 
+                                    src="https://via.placeholder.com/24" 
+                                    alt="Profile" 
+                                    className="rounded-full w-6 h-6 mr-1" 
+                                />
+                                <span>{student.firstName} {student.lastName}</span>
+                                <button 
+                                    onClick={() => setSelectedStudents(selectedStudents.filter(id => id !== studentId))}
+                                    className="ml-1 text-red-500"
+                                >
+                                    x
+                                </button>
+                            </div>
+                        ) : null;
+                    })}
+                    <input
+                        type="text"
+                        value={searchTerm}
+                        onChange={(e) => setSearchTerm(e.target.value)}
+                        placeholder="Search by name"
+                        className="flex-grow min-w-[150px] focus:outline-none"
+                    />
                 </div>
+                {searchTerm && (
+                    <ul className="absolute z-10 bg-white border border-gray-300 rounded-lg mt-1 max-h-40 overflow-y-auto w-full shadow-md">
+                        {students
+                            .filter(student => {
+                                const fullName = `${student.firstName} ${student.lastName}`.toLowerCase();
+                                return fullName.includes(searchTerm.toLowerCase());
+                            })
+                            .map(student => (
+                                <li 
+                                    key={student.id} 
+                                    onClick={() => {
+                                        if (!selectedStudents.includes(student.id)) {
+                                            setSelectedStudents([...selectedStudents, student.id]);
+                                        }
+                                        setSearchTerm(''); // Clear search term after selection
+                                    }} 
+                                    className="px-3 py-2 cursor-pointer hover:bg-gray-200 flex items-center"
+                                >
+                                    <img 
+                                        src="https://via.placeholder.com/24" 
+                                        alt="Profile" 
+                                        className="rounded-full w-6 h-6 mr-1" 
+                                    />
+                                    <span>{student.firstName} {student.lastName} ({student.program} {student.year_section})</span>
+                                </li>
+                            ))}
+                    </ul>
+                )}
             </div>
 
             <div className="mb-4">
