@@ -14,47 +14,36 @@ def get_courses():
             course_data['courseID'] = doc.id
 
             # Handle department reference
-            department = course_data.get('department')
-            if isinstance(department, DocumentReference):
-                department_path = department.path
-            else:
-                department_path = department  # In case it's already a string
+            department_ref = course_data.get('department')
+            department_name = "Unknown Department"
 
-            # Extract department name
-            if department_path:
-                dept_id = department_path.split('/')[-1]
-                dept_doc = db.collection('departments').document(dept_id).get()
-                course_data['department'] = dept_doc.get('departmentName') if dept_doc.exists else 'Unknown Department'
-            else:
-                course_data['department'] = 'Unknown Department'
+            if isinstance(department_ref, DocumentReference):
+                dept_doc = department_ref.get()  # Corrected method call
+                if dept_doc.exists:
+                    department_name = dept_doc.get('departmentName')  # No default argument needed
+
+            course_data['department'] = department_name
 
             # Handle program references
             programs = course_data.get('program', [])
             program_names = []
-            
-            # Convert DocumentReferences to paths if necessary
-            if isinstance(programs, list):
-                programs = [
-                    p.path if isinstance(p, DocumentReference) else p 
-                    for p in programs
-                ]
 
-                # Extract program names
-                for program_path in programs:
-                    if program_path:
-                        prog_id = program_path.split('/')[-1]
-                        prog_doc = db.collection('programs').document(prog_id).get()
-                        program_names.append(prog_doc.get('programName') if prog_doc.exists else 'Unknown Program')
-                    else:
-                        program_names.append('Unknown Program')
+            if isinstance(programs, list):
+                for program_ref in programs:
+                    if isinstance(program_ref, DocumentReference):
+                        prog_doc = program_ref.get()  # Corrected method call
+                        if prog_doc.exists:
+                            program_names.append(prog_doc.get('programName'))  # No default argument
 
             course_data['program'] = program_names
 
-            # Debug prints
-            print(f"Course ID: {course_data['courseID']}, Department: {course_data.get('department')}, Programs: {course_data.get('program')}")
+            # Debug prints (for verification)
+            print(f"Course ID: {course_data['courseID']}, Department: {course_data['department']}, Programs: {course_data['program']}")
 
             courses.append(course_data)
+
         return jsonify({"courses": courses}), 200
+
     except Exception as e:
         print(f"Error: {str(e)}")
         return jsonify({"error": str(e), "courses": []}), 500
@@ -96,6 +85,8 @@ def get_programs():
         return jsonify({"error": str(e)}), 500
 
 
+from google.cloud.firestore import DocumentReference
+
 @course_bp.route('/add_course', methods=['POST'])
 def add_course():
     try:
@@ -103,24 +94,33 @@ def add_course():
         course_id = data.get('courseID')
         course_name = data.get('courseName')
         credits = data.get('credits')
-        department = data.get('department')
-        program = data.get('program', [])
-        
-        if not all([course_id, course_name, credits, department]):
+        department_id = data.get('department')  # Expecting department ID (e.g., "D01")
+        program_ids = data.get('program', [])  # Expecting program IDs (e.g., ["P01", "P02"])
+
+        if not all([course_id, course_name, credits, department_id]):
             return jsonify({"error": "Missing required fields"}), 400
-        
+
+        # Convert department_id to Firestore reference
+        department_ref = db.collection('departments').document(department_id)
+
+        # Convert program_ids to Firestore references
+        program_refs = [db.collection('programs').document(prog_id) for prog_id in program_ids]
+
+        # Store the course with references
         course_ref = db.collection('courses').document(course_id)
         course_ref.set({
             "courseID": course_id,
             "courseName": course_name,
             "credits": credits,
-            "department": department,
-            "program": program
+            "department": department_ref,  # Store as reference
+            "program": program_refs  # Store as list of references
         })
+
         return jsonify({"message": "Course added successfully"}), 201
     except Exception as e:
         print(f"Error: {str(e)}")
         return jsonify({"error": str(e)}), 500
+
 
 @course_bp.route('/edit_course/<course_id>', methods=['PUT'])
 def edit_course(course_id):
@@ -128,19 +128,27 @@ def edit_course(course_id):
         data = request.json
         course_name = data.get('courseName')
         credits = data.get('credits')
-        department = data.get('department')
-        program = data.get('program', [])
-        
-        if not all([course_name, credits, department]):
+        department_id = data.get('department')  # Expecting department ID (e.g., "D01")
+        program_ids = data.get('program', [])  # Expecting program IDs (e.g., ["P01", "P02"])
+
+        if not all([course_name, credits, department_id]):
             return jsonify({"error": "Missing required fields"}), 400
-        
+
+        # Convert department_id to Firestore reference
+        department_ref = db.collection('departments').document(department_id)
+
+        # Convert program_ids to Firestore references
+        program_refs = [db.collection('programs').document(prog_id) for prog_id in program_ids]
+
+        # Update the course with references
         course_ref = db.collection('courses').document(course_id)
         course_ref.update({
             "courseName": course_name,
             "credits": credits,
-            "department": department,
-            "program": program
+            "department": department_ref,  # Store as reference
+            "program": program_refs  # Store as list of references
         })
+
         return jsonify({"message": "Course updated successfully"}), 200
     except Exception as e:
         print(f"Error: {str(e)}")

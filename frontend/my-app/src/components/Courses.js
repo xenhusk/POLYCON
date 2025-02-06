@@ -15,6 +15,9 @@ export default function Courses() {
   const [filteredPrograms, setFilteredPrograms] = useState([]); // Filtered programs for selected department
   const [filteredCourses, setFilteredCourses] = useState([]); // Stores filtered courses
   const [selectedDepartment, setSelectedDepartment] = useState(""); // Selected department for filtering
+  const [showFilters, setShowFilters] = useState(false); // Controls filter visibility
+
+
 
 
   useEffect(() => {
@@ -56,32 +59,61 @@ export default function Courses() {
   };
 
   const handleDepartmentFilterChange = (e) => {
-    const selectedDept = e.target.value;
-    setSelectedDepartment(selectedDept);
-    applyFilters(selectedDept, selectedPrograms);
+    const selectedDeptName = e.target.value;
+    setSelectedDepartment(selectedDeptName);
+  
+    // Find department ID using name
+    const selectedDept = departments.find((dept) => dept.name === selectedDeptName);
+    const selectedDeptId = selectedDept ? selectedDept.id : null;
+  
+    // Get programs belonging to the selected department
+    if (selectedDeptId) {
+      const departmentPrograms = programs.filter((prog) => prog.departmentID === selectedDeptId);
+      setFilteredPrograms(departmentPrograms);
+    } else {
+      setFilteredPrograms([]);
+    }
+  
+    setSelectedPrograms([]); // Reset programs when switching departments
+    applyFilters(); // Apply filters immediately after selecting department
   };
+  
   const handleProgramFilterChange = (programId) => {
     const updatedPrograms = selectedPrograms.includes(programId)
-      ? selectedPrograms.filter((id) => id !== programId)
-      : [...selectedPrograms, programId];
-
+      ? selectedPrograms.filter((id) => id !== programId) // Remove if already selected
+      : [...selectedPrograms, programId]; // Add if not selected
+  
     setSelectedPrograms(updatedPrograms);
-    applyFilters(selectedDepartment, updatedPrograms);
+    
+    // Apply filters immediately after program selection
+    applyFilters();
   };
-  const applyFilters = (dept, progList) => {
+  
+  
+  const applyFilters = () => {
     let filtered = courses;
-
-    if (dept) {
-      filtered = filtered.filter((course) => course.department === dept);
+  
+    // Filter by department
+    if (selectedDepartment) {
+      filtered = filtered.filter((course) => course.department === selectedDepartment);
     }
-
-    if (progList.length > 0) {
+  
+    // Convert selected program IDs to program names
+    const selectedProgramNames = programs
+      .filter((prog) => selectedPrograms.includes(prog.id))
+      .map((prog) => prog.name); // Extract program names
+  
+    // Ensure the course contains all selected programs (AND logic)
+    if (selectedProgramNames.length > 0) {
       filtered = filtered.filter((course) =>
-        course.program.some((prog) => progList.includes(prog))
+        selectedProgramNames.every((progName) => course.program.includes(progName))
       );
     }
+  
     setFilteredCourses(filtered);
   };
+  
+  
 
   const handleDepartmentChange = (e) => {
     const selectedDepartment = e.target.value;
@@ -198,33 +230,40 @@ export default function Courses() {
     <div className="max-w-9xl mx-auto p-6 bg-white shadow-lg rounded-lg">
       <h2 className="text-2xl font-bold text-center text-gray-800">Courses</h2>
 
-            {/* Filter Sidebar */}
-            <div className="flex">
-        <div className="w-1/4 p-4 bg-blue-500 text-white rounded-lg">
-          <h3 className="text-xl font-bold">FILTERS</h3>
+      <button 
+        onClick={() => setShowFilters(!showFilters)} 
+        className="bg-blue-500 text-white px-4 py-2 rounded-lg mb-4"
+      >
+        {showFilters ? "Hide Filters" : "Show Filters"}
+      </button>
 
-          {/* Department Filter */}
-          <div className="mt-4">
-            <label className="font-semibold">Department</label>
-            <select
-              value={selectedDepartment}
-              onChange={handleDepartmentFilterChange}
-              className="block w-full p-2 mt-1 border border-gray-300 text-black rounded"
-            >
-              <option value="">All Departments</option>
-              {departments.map((dept) => (
-                <option key={dept.id} value={dept.name}>
-                  {dept.name}
-                </option>
-              ))}
-            </select>
-          </div>
+      {showFilters && (
+  <div className="w-1/4 p-4 bg-blue-500 text-white rounded-lg">
+    <h3 className="text-xl font-bold">FILTERS</h3>
 
-          {/* Program Filter */}
+    {/* Department Filter */}
+    <div className="mt-4">
+      <label className="font-semibold">Department</label>
+      <select
+        value={selectedDepartment}
+        onChange={handleDepartmentFilterChange}
+        className="block w-full p-2 mt-1 border border-gray-300 text-black rounded"
+      >
+        <option value="">All Departments</option>
+        {departments.map((dept) => (
+          <option key={dept.id} value={dept.name}>
+            {dept.name}
+          </option>
+        ))}
+      </select>
+    </div>
+
+        {/* Program Filter (Only show relevant programs for selected department) */}
+        {filteredPrograms.length > 0 && (
           <div className="mt-4">
             <label className="font-semibold">Programs</label>
             <div className="mt-2">
-              {programs.map((prog) => (
+              {filteredPrograms.map((prog) => (
                 <label key={prog.id} className="block">
                   <input
                     type="checkbox"
@@ -238,34 +277,19 @@ export default function Courses() {
               ))}
             </div>
           </div>
-        </div>
+        )}
 
-        {/* Table of Courses */}
-        <div className="w-3/4 ml-6">
-          <table className="min-w-full bg-white border border-gray-300 text-center">
-            <thead>
-              <tr>
-                <th className="py-2 px-4 border-b">ID</th>
-                <th className="py-2 px-4 border-b">NAME</th>
-                <th className="py-2 px-4 border-b">CREDITS</th>
-                <th className="py-2 px-4 border-b">DEPARTMENT</th>
-                <th className="py-2 px-4 border-b">PROGRAM</th>
-              </tr>
-            </thead>
-            <tbody>
-              {filteredCourses.map((course) => (
-                <tr key={course.courseID} className="text-center">
-                  <td className="py-2 px-4 border-b">{course.courseID}</td>
-                  <td className="py-2 px-4 border-b">{course.courseName}</td>
-                  <td className="py-2 px-4 border-b">{course.credits}</td>
-                  <td className="py-2 px-4 border-b">{course.department}</td>
-                  <td className="py-2 px-4 border-b">{course.program.join(', ')}</td>
-                </tr>
-              ))}
-            </tbody>
-          </table>
-        </div>
+
+          <button 
+            onClick={applyFilters} 
+            className="bg-white text-blue-500 px-4 py-2 rounded-lg mt-4"
+          >
+            Apply Filters
+          </button>
+
       </div>
+    )}
+
 
       <table className="min-w-full bg-white border border-gray-300 text-center">
         <thead>
@@ -279,8 +303,9 @@ export default function Courses() {
           </tr>
         </thead>
         <tbody>
-          {courses.map((course) => (
-            <tr key={course.courseID} className="text-center">
+            {filteredCourses.map((course) => (
+              <tr key={course.courseID} className="text-center">
+
               <td className="py-2 px-4 border-b">{course.courseID}</td>
               <td className="py-2 px-4 border-b">{course.courseName}</td>
               <td className="py-2 px-4 border-b">{course.credits}</td>
