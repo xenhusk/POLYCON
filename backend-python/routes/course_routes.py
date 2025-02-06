@@ -73,14 +73,28 @@ def get_departments():
 def get_programs():
     try:
         programs_ref = db.collection('programs').stream()
-        programs = [{
-            "id": doc.id,
-            "name": doc.to_dict().get("programName", "")
-        } for doc in programs_ref]
+        programs = []
+        
+        for doc in programs_ref:
+            program_data = doc.to_dict()
+            program_data["id"] = doc.id  # Firestore document ID
+
+            # Extract department ID from reference
+            department_ref = program_data.get("departmentID", "")
+            if isinstance(department_ref, DocumentReference):
+                program_data["departmentID"] = department_ref.id  # Extract only the document ID
+            elif isinstance(department_ref, str) and "/" in department_ref:
+                program_data["departmentID"] = department_ref.split("/")[-1]  # Extract last part
+
+            # Ensure 'programName' is correctly included
+            program_data["name"] = program_data.get("programName", "Unnamed Program")
+
+            programs.append(program_data)
+
         return jsonify(programs), 200
     except Exception as e:
-        print(f"Error: {str(e)}")
         return jsonify({"error": str(e)}), 500
+
 
 @course_bp.route('/add_course', methods=['POST'])
 def add_course():

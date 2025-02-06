@@ -97,6 +97,7 @@ def signup():
         hashed_password = bcrypt.hashpw(password.encode('utf-8'), bcrypt.gensalt()).decode('utf-8')
 
         # Store user data in Firestore under 'users' collection
+        # Reference to the user document
         user_ref = db.collection('user').document(id_number)
         user_ref.set({
             "ID": id_number,
@@ -104,7 +105,7 @@ def signup():
             "lastName": last_name,
             "email": email,
             "password": hashed_password,
-            "department": f"/departments/{department_id}",  # Firestore reference
+            "department": db.collection('departments').document(department_id),  # Firestore reference
             "role": role
         })
 
@@ -112,8 +113,8 @@ def signup():
         if role == "student":
             student_ref = db.collection('students').document(id_number)
             student_ref.set({
-                "ID": f"/user/{id_number}",  # Firestore reference
-                "program": f"/programs/{program_id}",  # Firestore reference
+                "ID": user_ref,  # Firestore reference to the user document
+                "program": db.collection('programs').document(program_id),  # Firestore reference
                 "sex": sex,
                 "year_section": year_section
             })
