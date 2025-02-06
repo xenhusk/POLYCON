@@ -127,6 +127,9 @@ const Signup = ({ onSwitchToLogin }) => {
             <input className="border-[#005B98] border-b-2 p-2 w-[100%] h-[44.59px] my-2 mx-auto focus:outline-none"
             type="password" name="password" placeholder="Password" value={formData.password} onChange={handleChange} required />
             
+            {/* error handling */}
+            {errorMessage && <p className="text-center text-red-500 text-base">{errorMessage}</p>}
+
             <button className="bg-[#057DCD] text-white w-[100%] h-[44.59px] rounded-lg my-2 mx-auto hover:bg-[#54BEFF]" 
             onClick={handleNext}>Next</button>
             <div className="border-t-2 border-[#005B98] w-[90%] my-2 mx-auto border-opacity-50">
@@ -168,7 +171,10 @@ const Signup = ({ onSwitchToLogin }) => {
                   <option value="Male">Male</option>
                   <option value="Female">Female</option>
                 </select>
+
+                {/* error handling */}
                 {errorMessage && <p className="text-center text-red-500 text-base">{errorMessage}</p>}
+                
                 <button className="bg-[#057DCD] text-white w-[100%] h-[44.59px] rounded-lg my-2 mx-auto hover:bg-[#54BEFF]" 
                 onClick={handleSubmit}>Sign Up</button>
                 <div className="border-t-2 border-[#005B98] w-[90%] my-2 mx-auto border-opacity-50">

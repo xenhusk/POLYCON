@@ -59,24 +59,26 @@ const Home = () => {
             <div className="w-[42%] flex items-end justify-end gap-5 md:w-full sm:mr-[15px]">
               <ul className="gap-[25px] flex flex-wrap items-center">
                 <li> 
-                  <a href="#Contact" className="text-[20px] text-white font-medium transition-all duration-800 ease-in-out delay-150 hover:underline underline-offset-4 focus:outline-none">
-                      Contact
+                  <a href="#Contact" className="text-xl text-white font-medium focus:outline-none relative group">
+                    Contact
+                    <span className="block absolute bottom-0 left-0 w-0 h-[2px] bg-white transition-all duration-300 ease-in-out group-hover:w-full"></span>
                   </a>
                 </li>
                 <li>
-                  <a href="#About" className="text-[20px] text-white font-medium transition-all duration-800 ease-in-out delay-150 hover:underline underline-offset-4 focus:outline-none">
-                      About
+                  <a href="#About" className="text-xl text-white font-medium focus:outline-none relative group">
+                    About
+                    <span className="block absolute bottom-0 left-0 w-0 h-[2px] bg-white transition-all duration-300 ease-in-out group-hover:w-full"></span>
                   </a>
                 </li>
                 <li>
-                  <button className="bg-white text-[20px] text-[#057DCD] px-auto w-[8rem] h-[55px] rounded-[50px] px-auto text-lg font-semibold transition-all duration-800 ease-in-out delay-150 hover:bg-[#54BEFF] hover:text-white"
+                  <button className="bg-white text-xl text-[#057DCD] px-auto w-[8rem] h-[55px] rounded-[50px] px-auto font-semibold transition-all duration-800 ease-in-out delay-150 hover:bg-[#54BEFF] hover:text-white"
                     onClick={handleLoginClick}>
                       Login
                   </button>
                 </li>
                 <li>
                   <button
-                    className="bg-white text-[20px] text-[#057DCD] text-center w-[8rem] h-[55px] rounded-[50px] px-auto text-lg font-semibold transition-all duration-800 ease-in-out delay-150 hover:bg-[#54BEFF] hover:text-white"
+                    className="bg-white text-xl text-[#057DCD] text-center w-[8rem] h-[55px] rounded-[50px] px-auto font-semibold transition-all duration-800 ease-in-out delay-150 hover:bg-[#54BEFF] hover:text-white"
                     onClick={handleSignupClick}>
                       Sign Up
                   </button>
@@ -242,10 +244,10 @@ const Body = () => {
         <div className="rounded-[25px] w-[94%] h-[80vh] bg-[#057DCD] mx-auto absolute right-0 left-0 flex flex-1 justify-between items-center p-[1rem] md:px-6 sm:p-3">
           <div className="w-[50%] h-[60vh] flex-row text-[#ffffff] text-justify mx-auto">
             <h1 className="text-[3rem] font-extrabold leading-tight w-[93%]">
-              POLYCON: CONSULTATION SYSTEM
+              POLYCON: <br/> CONSULTATION <br/> SYSTEM
             </h1>
             <h3 className="mt-2 text-lg w-[93%]">
-              Our consultation system simplifies the process of booking
+              Our consultation system simplifies the process of booking 
               appointments, whether for individual consultations or group
               sessions.
             </h3>
