@@ -12,9 +12,12 @@ function BookingStudent() {
     const [appointments, setAppointments] = useState({ pending: [], upcoming: [], canceled: [] });
 
     useEffect(() => {
+        const storedStudentID = localStorage.getItem('studentID');
         if (location.state?.studentID) {
             setStudentID(location.state.studentID);
             localStorage.setItem('studentID', location.state.studentID); // Store in localStorage
+        } else if (storedStudentID) {
+            setStudentID(storedStudentID);  // Retrieve from localStorage
         }
         fetchTeachers();
         fetchStudents();
@@ -71,12 +74,12 @@ function BookingStudent() {
                 const teacherData = await teacherResponse.json();
                 const teacherName = `${teacherData.firstName} ${teacherData.lastName}`;
 
-                const studentNames = await Promise.all(booking.studentID.map(async ref => {
-                    const studentID = ref.split('/').pop();
-                    const userResponse = await fetch(`http://localhost:5001/bookings/get_user?userID=${studentID}`);
-                    const userData = await userResponse.json();
-                    return `${userData.firstName} ${userData.lastName}`;
-                }));
+                // Use locally fetched students to build studentNames string.
+                const studentNames = booking.studentID.map(ref => {
+                    const id = ref.split('/').pop();
+                    const student = students.find(s => s.id === id);
+                    return student ? `${student.firstName} ${student.lastName} (${student.program} ${student.year_section})` : id;
+                });
 
                 const appointmentItem = {
                     id: booking.id,
@@ -125,6 +128,7 @@ function BookingStudent() {
 
             if (response.ok) {
                 alert("Appointment request sent successfully!");
+                fetchStudentAppointments(); // Refresh appointments after booking
             } else {
                 alert("Failed to request appointment.");
             }
@@ -221,8 +225,6 @@ function BookingStudent() {
                         <div>
                             <p><strong>Teacher:</strong> {app.teacherName}</p>
                             <p><strong>Students:</strong> {app.studentNames}</p>
-                            <p><strong>Schedule:</strong> {formatDateTime(app.schedule)}</p>
-                            <p><strong>Venue:</strong> {app.venue}</p>
                         </div>
                     </li>
                 ))}
@@ -249,7 +251,9 @@ function BookingStudent() {
                         <div>
                             <p><strong>Teacher:</strong> {app.teacherName}</p>
                             <p><strong>Students:</strong> {app.studentNames}</p>
-                            <p><strong>Schedule:</strong> {formatDateTime(app.schedule)}</p>
+                            <p>
+                                <strong>Schedule:</strong> {app.schedule && !isNaN(new Date(app.schedule).getTime()) ? formatDateTime(app.schedule) : ''}
+                            </p>
                             <p><strong>Venue:</strong> {app.venue}</p>
                         </div>
                     </li>
