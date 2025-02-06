@@ -205,7 +205,7 @@ function BookingStudent() {
                                 }}
                                 className="h-4 w-4"
                             />
-                            <span>{student.firstName} {student.lastName}</span>
+                            <span>{student.firstName} {student.lastName} ({student.program} {student.year_section})</span>
                         </label>
                     ))}
                 </div>
