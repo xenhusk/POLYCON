@@ -38,3 +38,14 @@ def upload_audio(file_path):
     print(f"Audio file uploaded to {blob.public_url}")
 
     return blob.public_url, session_id
+
+def upload_profile_picture(file_path):
+    """Uploads a profile picture to the 'profile_pictures' folder in Google Cloud Storage."""
+    unique_id = uuid.uuid4().hex  # Unique id for file name
+    blob_name = f"profile_pictures/{unique_id}.png"
+    bucket = storage_client.bucket(gcp_bucket_name)
+    blob = bucket.blob(blob_name)
+    blob.upload_from_filename(file_path)
+    blob.make_public()
+    print(f"Profile picture uploaded to {blob.public_url}")
+    return blob.public_url

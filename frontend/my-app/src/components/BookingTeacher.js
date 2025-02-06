@@ -1,6 +1,7 @@
-import React, { useEffect, useState } from 'react';
-import { useNavigate } from 'react-router-dom';
-import { useLocation } from 'react-router-dom';
+import React, { useState, useRef, useEffect } from 'react';
+import { useNavigate, useLocation } from 'react-router-dom';
+// ...existing imports...
+import ProfilePictureUploader from './ProfilePictureUploader'; // replaced wrong component import
 
 function BookingTeacher() {
     const [teacherID, setTeacherID] = useState('');
@@ -10,8 +11,29 @@ function BookingTeacher() {
     const [venue, setVenue] = useState('');
     const [appointments, setAppointments] = useState({ pending: [], upcoming: [], canceled: [] });
     const [searchTerm, setSearchTerm] = useState('');
+    const [profileDetails, setProfileDetails] = useState({ name: '', id: '', role: '', department: '' });
+    const [departmentName, setDepartmentName] = useState('');
+    const [selectedTeacherProfile, setSelectedTeacherProfile] = useState('');
     const navigate = useNavigate();
     const location = useLocation();
+
+    // New modal states
+    const modalFileInputRef = useRef(null);
+    const [showProfileModal, setShowProfileModal] = useState(false);
+    const [modalStep, setModalStep] = useState('upload'); // 'upload' or 'crop'
+    const [modalSelectedFile, setModalSelectedFile] = useState(null);
+
+    const handleProfilePictureClick = () => {
+        setShowProfileModal(true);
+        setModalStep('upload');
+    };
+
+    const onModalSelectFile = (e) => {
+        if (e.target.files && e.target.files.length > 0) {
+            setModalSelectedFile(e.target.files[0]);
+            setModalStep('crop');
+        }
+    };
 
     useEffect(() => {
         const storedTeacherID = localStorage.getItem('teacherID');
@@ -22,6 +44,7 @@ function BookingTeacher() {
             setTeacherID(storedTeacherID);  // Retrieve from localStorage
         }
         fetchStudents();
+        fetchProfileDetails(storedTeacherID || location.state?.teacherID);
     }, [location]);
 
     useEffect(() => {
@@ -39,6 +62,40 @@ function BookingTeacher() {
             console.error('Error fetching students:', error);
         }
     }
+
+    async function fetchProfileDetails(userID) {
+        try {
+            const response = await fetch(`http://localhost:5001/bookings/get_user?userID=${userID}`);
+            const data = await response.json();
+            setProfileDetails({
+                name: `${data.firstName} ${data.lastName}`,
+                id: userID,
+                role: data.role.charAt(0).toUpperCase() + data.role.slice(1),
+                department: data.department || 'Unknown Department',
+                profile_picture: data.profile_picture || 'https://via.placeholder.com/100'
+            });
+        } catch (error) {
+            console.error('Error fetching profile details:', error);
+        }
+    }
+
+    useEffect(() => {
+        if (profileDetails.department && profileDetails.department.startsWith("/departments/")) {
+            const deptID = profileDetails.department.split("/").pop();
+            fetch(`http://localhost:5001/account/departments`)
+                .then(response => response.json())
+                .then(data => {
+                    const dept = data.find(item => item.departmentID === deptID);
+                    setDepartmentName(dept ? dept.departmentName : 'Unknown Department');
+                })
+                .catch(err => {
+                    console.error(err);
+                    setDepartmentName('Unknown Department');
+                });
+        } else {
+            setDepartmentName(profileDetails.department || 'Unknown Department');
+        }
+    }, [profileDetails.department]);
 
     async function fetchTeacherAppointments() {
         if (!teacherID) {
@@ -239,25 +296,74 @@ function BookingTeacher() {
                 <button onClick={handleLogout} className="space-x-2 bg-red-500 text-white px-4 py-2 rounded ">Logout</button>
             </header>
 
-            <div className="mb-4">
-                <label className="block text-gray-700 font-medium mb-1">Your Teacher ID:</label>
-                <input
-                    type="text"
-                    value={teacherID}
-                    readOnly
-                    className="w-full border border-gray-300 rounded-lg px-3 py-2 bg-gray-100 text-gray-600"
+            {/* Updated Teacher profile details */}
+            <div className="mb-4 flex items-center">
+                <img 
+                    src={profileDetails.profile_picture} 
+                    alt="Profile" 
+                    className="rounded-full w-24 h-24 mr-4 cursor-pointer"
+                    onClick={handleProfilePictureClick}
                 />
+                <div>
+                    <h3 className="text-xl font-bold text-gray-800">{profileDetails.name || 'No profile info'}</h3>
+                    <p className="text-gray-600">{profileDetails.id} | {profileDetails.role}</p>
+                    <p className="text-gray-600">{departmentName}</p>
+                </div>
             </div>
+
+            {/* New Profile Picture Modal */}
+            {showProfileModal && (
+                <div className="fixed inset-0 bg-black bg-opacity-50 flex justify-center items-center z-50">
+                    <div className="bg-white p-6 rounded-lg shadow-lg">
+                        {modalStep === 'upload' && (
+                            <div>
+                                <h2 className="text-xl font-bold mb-4">Upload a Profile Picture</h2>
+                                <button
+                                    onClick={() => modalFileInputRef.current && modalFileInputRef.current.click()}
+                                    className="bg-blue-500 text-white px-4 py-2 rounded"
+                                >
+                                    Choose File
+                                </button>
+                                <input
+                                    ref={modalFileInputRef}
+                                    type="file"
+                                    accept="image/*"
+                                    onChange={onModalSelectFile}
+                                    style={{ display: 'none' }}
+                                />
+                                <button
+                                    onClick={() => setShowProfileModal(false)}
+                                    className="bg-gray-300 text-black px-4 py-2 rounded ml-4"
+                                >
+                                    Cancel
+                                </button>
+                            </div>
+                        )}
+                        {modalStep === 'crop' && (
+                            <ProfilePictureUploader
+                                initialFile={modalSelectedFile}
+                                onClose={() => {
+                                    setShowProfileModal(false);
+                                    setModalSelectedFile(null);
+                                }}
+                            />
+                        )}
+                    </div>
+                </div>
+            )}
 
             <div className="mb-4 relative">
                 <label className="block text-gray-700 font-medium mb-1">Search Students:</label>
                 <div className="flex flex-wrap items-center gap-2 border border-gray-300 rounded-lg px-3 py-2">
                     {selectedStudents.map(studentId => {
                         const student = students.find(s => s.id === studentId);
+                        const studentProfile = student.profile_picture && student.profile_picture.url 
+                           ? student.profile_picture.url 
+                           : student.profile_picture;
                         return student ? (
                             <div key={studentId} className="bg-blue-100 text-blue-800 px-2 py-1 rounded flex items-center">
                                 <img 
-                                    src="https://via.placeholder.com/24" 
+                                    src={studentProfile || 'https://via.placeholder.com/24'} 
                                     alt="Profile" 
                                     className="rounded-full w-6 h-6 mr-1" 
                                 />
@@ -286,25 +392,30 @@ function BookingTeacher() {
                                 const fullName = `${student.firstName} ${student.lastName}`.toLowerCase();
                                 return fullName.includes(searchTerm.toLowerCase());
                             })
-                            .map(student => (
-                                <li 
-                                    key={student.id} 
-                                    onClick={() => {
-                                        if (!selectedStudents.includes(student.id)) {
-                                            setSelectedStudents([...selectedStudents, student.id]);
-                                        }
-                                        setSearchTerm(''); // Clear search term after selection
-                                    }} 
-                                    className="px-3 py-2 cursor-pointer hover:bg-gray-200 flex items-center"
-                                >
-                                    <img 
-                                        src="https://via.placeholder.com/24" 
-                                        alt="Profile" 
-                                        className="rounded-full w-6 h-6 mr-1" 
-                                    />
-                                    <span>{student.firstName} {student.lastName} ({student.program} {student.year_section})</span>
-                                </li>
-                            ))}
+                            .map(student => {
+                                const studentProfile = student.profile_picture && student.profile_picture.url 
+                                   ? student.profile_picture.url 
+                                   : student.profile_picture;
+                                return (
+                                    <li 
+                                        key={student.id} 
+                                        onClick={() => {
+                                            if (!selectedStudents.includes(student.id)) {
+                                                setSelectedStudents([...selectedStudents, student.id]);
+                                            }
+                                            setSearchTerm(''); // Clear search term after selection
+                                        }} 
+                                        className="px-3 py-2 cursor-pointer hover:bg-gray-200 flex items-center"
+                                    >
+                                        <img 
+                                            src={studentProfile || 'https://via.placeholder.com/24'} 
+                                            alt="Profile" 
+                                            className="rounded-full w-6 h-6 mr-1" 
+                                        />
+                                        <span>{student.firstName} {student.lastName} ({student.program} {student.year_section})</span>
+                                    </li>
+                                );
+                            })}
                     </ul>
                 )}
             </div>

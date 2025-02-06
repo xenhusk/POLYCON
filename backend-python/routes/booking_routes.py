@@ -14,7 +14,7 @@ def convert_references(value):
 def get_program_name(program_ref):
     try:
         program_doc = program_ref.get()
-        if program_doc.exists:
+        if (program_doc.exists):
             program_data = program_doc.to_dict()
             return program_data.get('programName', 'Unknown')
     except Exception as e:
@@ -37,6 +37,7 @@ def get_teachers():
                 user_data = user_ref.to_dict()
                 teacher_data['firstName'] = user_data.get('firstName', '')
                 teacher_data['lastName'] = user_data.get('lastName', '')
+                teacher_data['profile_picture'] = user_data.get('profile_picture', 'https://via.placeholder.com/24')
 
             # Convert Firestore references to string paths
             teacher_data = {key: convert_references(value) for key, value in teacher_data.items()}
@@ -63,6 +64,7 @@ def get_students():
                 user_data = user_ref.to_dict()
                 student_data['firstName'] = user_data.get('firstName', 'Unknown')
                 student_data['lastName'] = user_data.get('lastName', 'Unknown')
+                student_data['profile_picture'] = user_data.get('profile_picture', 'https://via.placeholder.com/24')
             
             # Fetch year_section and program from the 'students' collection
             student_data['year_section'] = student_data.get('year_section', 'Unknown')
@@ -296,3 +298,23 @@ def get_user():
         return jsonify(user_data), 200
     except Exception as e:
         return jsonify({"error": f"Failed to fetch user: {str(e)}"}), 500
+
+@booking_bp.route('/get_student_details', methods=['GET'])
+def get_student_details():
+    try:
+        student_id = request.args.get('studentID')
+        if not student_id:
+            return jsonify({"error": "Missing studentID"}), 400
+
+        student_ref = db.collection('students').document(student_id).get()
+        if not student_ref.exists:
+            return jsonify({"error": "Student not found"}), 404
+
+        student_data = student_ref.to_dict()
+        program_ref = student_data.get('program')
+        program_name = get_program_name(program_ref) if program_ref else 'Unknown Program'
+        year_section = student_data.get('year_section', 'Unknown Year/Section')
+
+        return jsonify({"program": program_name, "year_section": year_section}), 200
+    except Exception as e:
+        return jsonify({"error": f"Failed to fetch student details: {str(e)}"}), 500
