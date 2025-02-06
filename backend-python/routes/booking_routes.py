@@ -37,7 +37,9 @@ def get_teachers():
                 user_data = user_ref.to_dict()
                 teacher_data['firstName'] = user_data.get('firstName', '')
                 teacher_data['lastName'] = user_data.get('lastName', '')
-                teacher_data['profile_picture'] = user_data.get('profile_picture', 'https://via.placeholder.com/24')
+                profile_pic = user_data.get('profile_picture', '')
+                teacher_data['profile_picture'] = profile_pic.strip() if profile_pic.strip() \
+                    else "https://avatar.iran.liara.run/public/boy?username=Ash"
 
             # Convert Firestore references to string paths
             teacher_data = {key: convert_references(value) for key, value in teacher_data.items()}
@@ -64,7 +66,9 @@ def get_students():
                 user_data = user_ref.to_dict()
                 student_data['firstName'] = user_data.get('firstName', 'Unknown')
                 student_data['lastName'] = user_data.get('lastName', 'Unknown')
-                student_data['profile_picture'] = user_data.get('profile_picture', 'https://via.placeholder.com/24')
+                profile_pic = user_data.get('profile_picture', '')
+                student_data['profile_picture'] = profile_pic.strip() if profile_pic.strip() \
+                    else "https://avatar.iran.liara.run/public/boy?username=Ash"
             
             # Fetch year_section and program from the 'students' collection
             student_data['year_section'] = student_data.get('year_section', 'Unknown')
@@ -294,6 +298,9 @@ def get_user():
             return jsonify({"error": "User not found"}), 404
 
         user_data = user_ref.to_dict()
+        profile_pic = user_data.get('profile_picture', '')
+        user_data['profile_picture'] = profile_pic.strip() if profile_pic.strip() \
+            else "https://avatar.iran.liara.run/public/boy?username=Ash"
         user_data = {key: convert_references(value) for key, value in user_data.items()}
         return jsonify(user_data), 200
     except Exception as e:

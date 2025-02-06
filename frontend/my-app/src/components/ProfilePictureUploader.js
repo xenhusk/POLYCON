@@ -1,4 +1,5 @@
 import React, { useState, useEffect, useRef } from 'react';
+import { getProfilePictureUrl } from '../utils/utils'; // import the utility function
 
 function ProfilePictureUploader({ initialFile, onClose }) {
   const [src, setSrc] = useState(null);
@@ -69,7 +70,7 @@ function ProfilePictureUploader({ initialFile, onClose }) {
       />
       {!src && (
         <div onClick={handlePlaceholderClick} className="cursor-pointer">
-          <img src="https://via.placeholder.com/200" alt="Click to upload" className="w-48 h-48" />
+          <img src={getProfilePictureUrl('')} alt="Click to upload" className="w-48 h-48" />
           <p className="mt-2 text-center">Click image to upload</p>
         </div>
       )}

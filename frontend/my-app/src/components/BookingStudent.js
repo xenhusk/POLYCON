@@ -2,6 +2,7 @@ import React, { useEffect, useState, useRef } from 'react';
 import { useLocation, useNavigate } from 'react-router-dom';
 import ProfilePictureUploader from './ProfilePictureUploader'; // adjusted import path
 import { fetchStudentDetails } from '../utils/fetchStudentDetails'; // import the helper function
+import { getProfilePictureUrl } from '../utils/utils'; // import the utility function
 
 function BookingStudent() {
     const location = useLocation();
@@ -267,7 +268,7 @@ function BookingStudent() {
                         <div className="flex items-center gap-2">
                             {/* Use actual teacher profile picture instead of placeholder */}
                             <img 
-                                src={selectedTeacherProfile || 'https://via.placeholder.com/24'} 
+                                src={getProfilePictureUrl(selectedTeacherProfile)} 
                                 alt="Teacher Profile" 
                                 className="rounded-full w-6 h-6"
                             />
@@ -310,13 +311,13 @@ function BookingStudent() {
                                     onClick={() => {
                                         setSelectedTeacher(teacher.id);
                                         setSelectedTeacherName(`${teacher.firstName} ${teacher.lastName}`);
-                                        setSelectedTeacherProfile(teacher.profile_picture);
+                                        setSelectedTeacherProfile(getProfilePictureUrl(teacher.profile_picture));
                                         setTeacherSearchTerm('');
                                     }} 
                                     className="px-3 py-2 cursor-pointer hover:bg-gray-200 flex items-center"
                                 >
                                     <img 
-                                        src={teacher.profile_picture || 'https://via.placeholder.com/24'} 
+                                        src={getProfilePictureUrl(teacher.profile_picture)} 
                                         alt="Profile" 
                                         className="rounded-full w-6 h-6 mr-1" 
                                     />
@@ -336,7 +337,7 @@ function BookingStudent() {
                             <div key={studentId} className="bg-blue-100 text-blue-800 px-2 py-1 rounded flex items-center">
                                 {/* Use actual student's profile picture */}
                                 <img 
-                                    src={student.profile_picture || 'https://via.placeholder.com/24'} 
+                                    src={getProfilePictureUrl(student.profile_picture)} 
                                     alt="Profile" 
                                     className="rounded-full w-6 h-6 mr-1" 
                                 />
@@ -377,7 +378,7 @@ function BookingStudent() {
                                     className="px-3 py-2 cursor-pointer hover:bg-gray-200 flex items-center"
                                 >
                                     <img 
-                                        src={student.profile_picture || 'https://via.placeholder.com/24'} 
+                                        src={getProfilePictureUrl(student.profile_picture)} 
                                         alt="Profile" 
                                         className="rounded-full w-6 h-6 mr-1" 
                                     />

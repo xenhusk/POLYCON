@@ -1,7 +1,7 @@
 import React, { useState, useRef, useEffect } from 'react';
 import { useNavigate, useLocation } from 'react-router-dom';
-// ...existing imports...
 import ProfilePictureUploader from './ProfilePictureUploader'; // replaced wrong component import
+import { getProfilePictureUrl } from '../utils/utils'; // import the utility function
 
 function BookingTeacher() {
     const [teacherID, setTeacherID] = useState('');
@@ -357,13 +357,11 @@ function BookingTeacher() {
                 <div className="flex flex-wrap items-center gap-2 border border-gray-300 rounded-lg px-3 py-2">
                     {selectedStudents.map(studentId => {
                         const student = students.find(s => s.id === studentId);
-                        const studentProfile = student.profile_picture && student.profile_picture.url 
-                           ? student.profile_picture.url 
-                           : student.profile_picture;
+                        const studentProfile = getProfilePictureUrl(student.profile_picture);
                         return student ? (
                             <div key={studentId} className="bg-blue-100 text-blue-800 px-2 py-1 rounded flex items-center">
                                 <img 
-                                    src={studentProfile || 'https://via.placeholder.com/24'} 
+                                    src={studentProfile} 
                                     alt="Profile" 
                                     className="rounded-full w-6 h-6 mr-1" 
                                 />
@@ -393,9 +391,7 @@ function BookingTeacher() {
                                 return fullName.includes(searchTerm.toLowerCase());
                             })
                             .map(student => {
-                                const studentProfile = student.profile_picture && student.profile_picture.url 
-                                   ? student.profile_picture.url 
-                                   : student.profile_picture;
+                                const studentProfile = getProfilePictureUrl(student.profile_picture);
                                 return (
                                     <li 
                                         key={student.id} 
@@ -408,7 +404,7 @@ function BookingTeacher() {
                                         className="px-3 py-2 cursor-pointer hover:bg-gray-200 flex items-center"
                                     >
                                         <img 
-                                            src={studentProfile || 'https://via.placeholder.com/24'} 
+                                            src={studentProfile} 
                                             alt="Profile" 
                                             className="rounded-full w-6 h-6 mr-1" 
                                         />
