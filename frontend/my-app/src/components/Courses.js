@@ -12,6 +12,13 @@ export default function Courses() {
   const [selectedPrograms, setSelectedPrograms] = useState([]);
   const [editing, setEditing] = useState(false);
   const navigate = useNavigate();
+  const [filteredPrograms, setFilteredPrograms] = useState([]); // Filtered programs for selected department
+  const [filteredCourses, setFilteredCourses] = useState([]); // Stores filtered courses
+  const [selectedDepartment, setSelectedDepartment] = useState(""); // Selected department for filtering
+  const [showFilters, setShowFilters] = useState(false); // Controls filter visibility
+
+
+
 
   useEffect(() => {
     fetchCourses();
@@ -23,12 +30,8 @@ export default function Courses() {
     try {
       const response = await fetch('http://localhost:5001/course/get_courses');
       const data = await response.json();
-      
-      if (Array.isArray(data.courses)) {
-        setCourses(data.courses);
-      } else {
-        setCourses([]);
-      }
+      setCourses(data.courses || []);
+      setFilteredCourses(data.courses || []); // Initialize filtered courses
     } catch (error) {
       console.error('Error fetching courses:', error);
       setCourses([]);
@@ -54,6 +57,82 @@ export default function Courses() {
       console.error('Error fetching programs:', error);
     }
   };
+
+  const handleDepartmentFilterChange = (e) => {
+    const selectedDeptName = e.target.value;
+    setSelectedDepartment(selectedDeptName);
+  
+    // Find department ID using name
+    const selectedDept = departments.find((dept) => dept.name === selectedDeptName);
+    const selectedDeptId = selectedDept ? selectedDept.id : null;
+  
+    // Get programs belonging to the selected department
+    if (selectedDeptId) {
+      const departmentPrograms = programs.filter((prog) => prog.departmentID === selectedDeptId);
+      setFilteredPrograms(departmentPrograms);
+    } else {
+      setFilteredPrograms([]);
+    }
+  
+    setSelectedPrograms([]); // Reset programs when switching departments
+    applyFilters(); // Apply filters immediately after selecting department
+  };
+  
+  const handleProgramFilterChange = (programId) => {
+    const updatedPrograms = selectedPrograms.includes(programId)
+      ? selectedPrograms.filter((id) => id !== programId) // Remove if already selected
+      : [...selectedPrograms, programId]; // Add if not selected
+  
+    setSelectedPrograms(updatedPrograms);
+    
+    // Apply filters immediately after program selection
+    applyFilters();
+  };
+  
+  
+  const applyFilters = () => {
+    let filtered = courses;
+  
+    // Filter by department
+    if (selectedDepartment) {
+      filtered = filtered.filter((course) => course.department === selectedDepartment);
+    }
+  
+    // Convert selected program IDs to program names
+    const selectedProgramNames = programs
+      .filter((prog) => selectedPrograms.includes(prog.id))
+      .map((prog) => prog.name); // Extract program names
+  
+    // Ensure the course contains all selected programs (AND logic)
+    if (selectedProgramNames.length > 0) {
+      filtered = filtered.filter((course) =>
+        selectedProgramNames.every((progName) => course.program.includes(progName))
+      );
+    }
+  
+    setFilteredCourses(filtered);
+  };
+  
+  
+
+  const handleDepartmentChange = (e) => {
+    const selectedDepartment = e.target.value;
+    setDepartment(selectedDepartment);
+
+    // Debugging: Log the selected department
+    console.log("Selected Department:", selectedDepartment);
+    console.log("Programs Before Filtering:", programs);
+
+    // Filter programs based on extracted department ID
+    const departmentPrograms = programs.filter(prog => prog.departmentID === selectedDepartment);
+
+    // Debugging: Log the filtered programs
+    console.log("Filtered Programs After Selection:", departmentPrograms);
+
+    setFilteredPrograms(departmentPrograms);
+    setSelectedPrograms([]); // Reset selected programs when department changes
+};
+
 
   const handleProgramChange = (programId) => {
     if (selectedPrograms.includes(programId)) {
@@ -96,10 +175,25 @@ export default function Courses() {
     setCourseID(course.courseID);
     setCourseName(course.courseName);
     setCredits(course.credits);
-    setDepartment(departments.find(d => d.name === course.department)?.id || '');
-    setSelectedPrograms(programs.filter(p => course.program.includes(p.name)).map(p => p.id));
+
+    // Find department ID from the selected course
+    const departmentId = departments.find(d => d.name === course.department)?.id || "";
+    setDepartment(departmentId);
+
+    // Filter programs based on selected department
+    const relatedPrograms = programs.filter(prog => prog.departmentId === departmentId);
+    setFilteredPrograms(relatedPrograms); // Set only relevant programs
+
+    // Select programs related to the course
+    const selectedProgramIds = relatedPrograms
+        .filter(p => course.program.includes(p.name))
+        .map(p => p.id);
+
+    setSelectedPrograms(selectedProgramIds);
+
     setEditing(true);
-  };
+};
+
 
   const handleDelete = async (courseID) => {
     const confirmDelete = window.confirm("Are you sure you want to delete this course?");
@@ -128,12 +222,75 @@ export default function Courses() {
     setCredits('');
     setDepartment('');
     setSelectedPrograms([]);
+    setFilteredPrograms([]);
     setEditing(false);
   };
 
   return (
-    <div className="max-w-5xl mx-auto p-6 bg-white shadow-lg rounded-lg">
-      <h2 className="text-2xl font-bold text-center text-gray-800">CICT Courses</h2>
+    <div className="max-w-9xl mx-auto p-6 bg-white shadow-lg rounded-lg">
+      <h2 className="text-2xl font-bold text-center text-gray-800">Courses</h2>
+
+      <button 
+        onClick={() => setShowFilters(!showFilters)} 
+        className="bg-blue-500 text-white px-4 py-2 rounded-lg mb-4"
+      >
+        {showFilters ? "Hide Filters" : "Show Filters"}
+      </button>
+
+      {showFilters && (
+  <div className="w-1/4 p-4 bg-blue-500 text-white rounded-lg">
+    <h3 className="text-xl font-bold">FILTERS</h3>
+
+    {/* Department Filter */}
+    <div className="mt-4">
+      <label className="font-semibold">Department</label>
+      <select
+        value={selectedDepartment}
+        onChange={handleDepartmentFilterChange}
+        className="block w-full p-2 mt-1 border border-gray-300 text-black rounded"
+      >
+        <option value="">All Departments</option>
+        {departments.map((dept) => (
+          <option key={dept.id} value={dept.name}>
+            {dept.name}
+          </option>
+        ))}
+      </select>
+    </div>
+
+        {/* Program Filter (Only show relevant programs for selected department) */}
+        {filteredPrograms.length > 0 && (
+          <div className="mt-4">
+            <label className="font-semibold">Programs</label>
+            <div className="mt-2">
+              {filteredPrograms.map((prog) => (
+                <label key={prog.id} className="block">
+                  <input
+                    type="checkbox"
+                    value={prog.id}
+                    checked={selectedPrograms.includes(prog.id)}
+                    onChange={() => handleProgramFilterChange(prog.id)}
+                    className="mr-2"
+                  />
+                  {prog.name}
+                </label>
+              ))}
+            </div>
+          </div>
+        )}
+
+
+          <button 
+            onClick={applyFilters} 
+            className="bg-white text-blue-500 px-4 py-2 rounded-lg mt-4"
+          >
+            Apply Filters
+          </button>
+
+      </div>
+    )}
+
+
       <table className="min-w-full bg-white border border-gray-300 text-center">
         <thead>
           <tr>
@@ -146,8 +303,9 @@ export default function Courses() {
           </tr>
         </thead>
         <tbody>
-          {courses.map((course) => (
-            <tr key={course.courseID} className="text-center">
+            {filteredCourses.map((course) => (
+              <tr key={course.courseID} className="text-center">
+
               <td className="py-2 px-4 border-b">{course.courseID}</td>
               <td className="py-2 px-4 border-b">{course.courseName}</td>
               <td className="py-2 px-4 border-b">{course.credits}</td>
@@ -162,57 +320,77 @@ export default function Courses() {
         </tbody>
       </table>
 
-      <div className="flex flex-col mt-6 gap-4">
+      <div className="flex flex-wrap items-center gap-4 mt-6">
+        {/* Course ID */}
         <input 
           type="text" 
           placeholder="Course ID" 
           value={courseID} 
           onChange={(e) => setCourseID(e.target.value)} 
-          className="border border-gray-300 rounded-lg px-3 py-1" 
+          className="border border-gray-300 rounded-lg px-3 py-2 w-40" 
           disabled={editing} 
         />
+
+        {/* Course Name */}
         <input 
           type="text" 
           placeholder="Course Name" 
           value={courseName} 
           onChange={(e) => setCourseName(e.target.value)} 
-          className="border border-gray-300 rounded-lg px-3 py-2" 
+          className="border border-gray-300 rounded-lg px-3 py-2 w-60" 
         />
+
+        {/* Credits */}
         <input 
           type="text" 
           placeholder="Credits" 
           value={credits} 
           onChange={(e) => setCredits(e.target.value)} 
-          className="border border-gray-300 rounded-lg px-3 py-2" 
+          className="border border-gray-300 rounded-lg px-3 py-2 w-32" 
         />
-        <select 
-          value={department} 
-          onChange={(e) => setDepartment(e.target.value)} 
-          className="border border-gray-300 rounded-lg px-3 py-2"
+
+        {/* Department Selection */}
+          <select 
+            value={department} 
+            onChange={handleDepartmentChange} 
+            className="border border-gray-300 rounded-lg px-3 py-2 w-48"
+          >
+            <option value="">Select Department</option>
+            {departments.map((dept) => (
+              <option key={dept.id} value={dept.id}>{dept.name}</option>
+            ))}
+          </select>
+
+        {/* Programs Selection - Show only if department is selected */}
+            {department && filteredPrograms.length > 0 && (
+              <div className="border border-gray-200 rounded-lg p-2 x-2">
+                <div className="flex flex-wrap gap-4">
+                  {filteredPrograms.map((prog) => (
+                    <label key={prog.id} className="flex items-center space-x-2">
+                      <input 
+                        type="checkbox" 
+                        value={prog.id} 
+                        checked={selectedPrograms.includes(prog.id)} 
+                        onChange={() => handleProgramChange(prog.id)}
+                      />
+                      <span className="ml-2">{prog.name || "Unnamed Program"}</span>  {/* Ensure the name is shown */}
+                    </label>
+                  ))}
+                </div>
+              </div>
+            )}
+
+
+
+
+
+        {/* Submit Button */}
+        <button 
+          onClick={handleSaveCourse} 
+          className="bg-blue-500 text-white px-4 py-2 rounded-lg"
         >
-          <option value="">Select Department</option>
-          {departments.map((dept) => (
-            <option key={dept.id} value={dept.id}>{dept.name}</option>
-          ))}
-        </select>
-
-        <div className="border border-gray-300 rounded-lg p-3">
-          <p className="font-semibold">Select Programs:</p>
-          {programs.map((prog) => (
-            <label key={prog.id} className="block">
-              <input 
-                type="checkbox" 
-                value={prog.id} 
-                checked={selectedPrograms.includes(prog.id)} 
-                onChange={() => handleProgramChange(prog.id)}
-                className="mr-2"
-              />
-              {prog.name}
-            </label>
-          ))}
-        </div>
-
-        <button onClick={handleSaveCourse} className="bg-blue-500 text-white px-4 py-2 rounded">{editing ? 'UPDATE' : 'ADD'}</button>
+          {editing ? 'UPDATE' : 'ADD'}
+        </button>
       </div>
     </div>
   );

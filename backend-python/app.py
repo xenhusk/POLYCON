@@ -8,6 +8,7 @@ from routes.booking_routes import booking_bp
 from routes.account_management import acc_management_bp
 from routes.course_routes import course_bp
 from routes.grade_routes import grade_bp # Import account management blueprint
+from routes.profile_routes import profile_bp  # added import for profile routes
 
 app = Flask(__name__)
 CORS(app, resources={r"/*": {"origins": "*"}})  # Allow all origins
@@ -64,6 +65,9 @@ app.register_blueprint(course_bp, url_prefix='/course')
 # Register the grade routes as a blueprint
 app.register_blueprint(grade_bp, url_prefix='/grade')
 
+# Register the profile routes as a blueprint
+app.register_blueprint(profile_bp, url_prefix='/profile')
 
 if __name__ == '__main__':
     app.run(debug=True, port=5001)
+
