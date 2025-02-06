@@ -60,12 +60,12 @@ function BookingTeacher() {
             };
 
             for (const booking of bookings) {
-                const studentNames = await Promise.all(booking.studentID.map(async ref => {
-                    const studentID = ref.split('/').pop();
-                    const userResponse = await fetch(`http://localhost:5001/bookings/get_user?userID=${studentID}`);
-                    const userData = await userResponse.json();
-                    return `${userData.firstName} ${userData.lastName} (${userData.program} ${userData.year_section})`;
-                }));
+                // Use locally fetched students to build studentNames string.
+                const studentNames = booking.studentID.map(ref => {
+                    const id = ref.split('/').pop();
+                    const student = students.find(s => s.id === id);
+                    return student ? `${student.firstName} ${student.lastName} (${student.program} ${student.year_section})` : id;
+                });
 
                 const appointmentItem = {
                     id: booking.id,
@@ -215,7 +215,7 @@ function BookingTeacher() {
 
     const handleLogout = () => {
         localStorage.removeItem('userEmail');
-        navigate('/');
+        navigate('/login');
     };
 
     const formatDateTime = (dateTime) => {
@@ -225,9 +225,6 @@ function BookingTeacher() {
         return `${formattedDate} at ${formattedTime}`;
     };
 
-    const navigateToCalendar = () => {
-        navigate('/appointments-calendar');
-    };
 
     return (
         <div className="max-w-3xl mx-auto p-8 bg-white shadow-lg rounded-lg">
@@ -289,12 +286,10 @@ function BookingTeacher() {
             <h3 className="text-lg font-bold mt-6">Pending Appointments</h3>
             <ul className="space-y-4">
                 {appointments.pending?.map(app => (
-                    <li key={app.id} className="p-4 border rounded-lg shadow-sm bg-gray-50">
+                    <li id={`pending-${app.id}`} key={app.id} className="p-4 border rounded-lg shadow-sm bg-gray-50">
                         <div className="flex justify-between items-center">
                             <div>
                                 <p><strong>Students:</strong> {app.studentNames}</p>
-                                <p><strong>Schedule:</strong> {formatDateTime(app.schedule)}</p>
-                                <p><strong>Venue:</strong> {app.venue}</p>
                             </div>
                             <div className="flex space-x-2">
                                 <button onClick={() => showConfirmationInputs(app.id, document.getElementById(`pending-${app.id}`))} className="bg-blue-500 text-white px-4 py-2 rounded-lg">Confirm</button>
@@ -315,7 +310,10 @@ function BookingTeacher() {
                                 <p><strong>Schedule:</strong> {formatDateTime(app.schedule)}</p>
                                 <p><strong>Venue:</strong> {app.venue}</p>
                             </div>
-                            <button onClick={() => startSession(app)} className="bg-green-500 text-white px-4 py-2 rounded-lg">Start Session</button>
+                            <div className="flex space-x-2">
+                                <button onClick={() => startSession(app)} className="bg-green-500 text-white px-4 py-2 rounded-lg">Start Session</button>
+                                <button onClick={() => cancelBooking(app.id)} className="bg-red-500 text-white px-4 py-2 rounded-lg">Cancel</button>
+                            </div>
                         </div>
                     </li>
                 ))}
@@ -327,7 +325,9 @@ function BookingTeacher() {
                     <li key={app.id} className="p-4 border rounded-lg shadow-sm bg-gray-50">
                         <div>
                             <p><strong>Students:</strong> {app.studentNames}</p>
-                            <p><strong>Schedule:</strong> {formatDateTime(app.schedule)}</p>
+                            <p>
+                                <strong>Schedule:</strong> {app.schedule && !isNaN(new Date(app.schedule).getTime()) ? formatDateTime(app.schedule) : ''}
+                            </p>
                             <p><strong>Venue:</strong> {app.venue}</p>
                         </div>
                     </li>
