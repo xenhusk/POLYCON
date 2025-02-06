@@ -44,8 +44,8 @@ const Login = ({ onLoginSuccess, onSwitchToSignup }) => {
 
   return (
       <div className="w-full h-[80vh] flex justify-center items-center">
-        <form onSubmit={handleSubmit} className="flex flex-col w-full max-w-md sm:max-w-lg md:max-w-xl">
-          <img src={logo} alt="Logo" className="h-[130px] w-[25%] mx-auto"/>
+        <form onSubmit={handleSubmit} className="flex flex-col w-full max-w-md sm:max-w-lg md:max-w-xl mx-auto">
+          <img src={logo} alt="Logo" className="h-[130px] w-[130px] mx-auto"/>
           <h2 className="text-center text-lg font-bold text-[#005B98]">Login</h2>
           <input
             className="border-[#005B98] border-b-2 p-2 w-[76%] h-[44.59px] my-2 mx-auto focus:outline-none"
@@ -62,7 +62,7 @@ const Login = ({ onLoginSuccess, onSwitchToSignup }) => {
             onChange={(e) => setPassword(e.target.value)}
             required/>
             <div className="h-[5%]">
-              {message && <p className="text-center text-red-500 text-lg">{message}</p>}
+              {message && <p className="text-center text-red-500 text-base">{message}</p>}
             </div>
           <button
             type="submit"
@@ -70,7 +70,7 @@ const Login = ({ onLoginSuccess, onSwitchToSignup }) => {
             Login
           </button>
           <div className="border-t-2 border-[#005B98] w-[70%] my-2 mx-auto border-opacity-50">
-            <p className="text-center font-light text-[14px] mx-auto my-2 text-opacity-50">
+            <p className="text-center font-light text-[0.9rem] mx-auto my-2 text-opacity-50">
               Don't have an account? <button onClick={onSwitchToSignup} className="text-[#005B98] focus:outline-none">Sign up</button>
             </p>
           </div>
