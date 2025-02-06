@@ -60,11 +60,13 @@ function BookingTeacher() {
             };
 
             for (const booking of bookings) {
-                // Use locally fetched students to build studentNames string.
-                const studentNames = booking.studentID.map(ref => {
+                // Rebuild studentNames using get_students data; fallback to booking.studentNames (if available) or "Unknown Student".
+                const studentNames = booking.studentID.map((ref, index) => {
                     const id = ref.split('/').pop();
                     const student = students.find(s => s.id === id);
-                    return student ? `${student.firstName} ${student.lastName} (${student.program} ${student.year_section})` : id;
+                    return student 
+                      ? `${student.firstName} ${student.lastName} ${student.program} ${student.year_section}` 
+                      : (booking.studentNames && booking.studentNames[index] ? booking.studentNames[index] : "Unknown Student");
                 });
 
                 const appointmentItem = {
