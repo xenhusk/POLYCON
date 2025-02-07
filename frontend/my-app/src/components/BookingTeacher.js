@@ -2,6 +2,7 @@ import React, { useState, useRef, useEffect } from 'react';
 import { useNavigate, useLocation } from 'react-router-dom';
 import ProfilePictureUploader from './ProfilePictureUploader'; // replaced wrong component import
 import { getProfilePictureUrl } from '../utils/utils'; // import the utility function
+import ProfileDetails from './ProfileDetails';
 
 function BookingTeacher() {
     const [teacherID, setTeacherID] = useState('');
@@ -296,20 +297,11 @@ function BookingTeacher() {
                 <button onClick={handleLogout} className="space-x-2 bg-red-500 text-white px-4 py-2 rounded ">Logout</button>
             </header>
 
-            {/* Updated Teacher profile details */}
-            <div className="mb-4 flex items-center">
-                <img 
-                    src={profileDetails.profile_picture} 
-                    alt="Profile" 
-                    className="rounded-full w-24 h-24 mr-4 cursor-pointer"
-                    onClick={handleProfilePictureClick}
-                />
-                <div>
-                    <h3 className="text-xl font-bold text-gray-800">{profileDetails.name || 'No profile info'}</h3>
-                    <p className="text-gray-600">{profileDetails.id} | {profileDetails.role}</p>
-                    <p className="text-gray-600">{departmentName}</p>
-                </div>
-            </div>
+            <ProfileDetails
+                profileDetails={profileDetails}
+                departmentName={departmentName}
+                onProfileClick={handleProfilePictureClick}
+            />
 
             {/* New Profile Picture Modal */}
             {showProfileModal && (

@@ -1,5 +1,5 @@
 import React, { useEffect, useState, useRef, useCallback } from 'react';
-import { BrowserRouter, Routes, Route, useNavigate, useLocation } from 'react-router-dom';
+import { BrowserRouter as Router, Routes, Route, useNavigate, useLocation } from 'react-router-dom';
 import BookingStudent from './components/BookingStudent';
 import BookingTeacher from './components/BookingTeacher';
 import Session from './components/Session';
@@ -13,6 +13,9 @@ import AppointmentsCalendar from './components/AppointmentsCalendar';
 import ReactCrop from 'react-image-crop';
 import 'react-image-crop/dist/ReactCrop.css';
 import ProfilePictureUploader from './components/ProfilePictureUploader'; // added import
+import SidebarPreview from './components/SidebarPreview'; // Import the SidebarPreview component
+// Remove Sidebar import temporarily
+// import Sidebar from './components/Sidebar';
 
 // Inline component with cropping/upload logic remains unchanged
 function InlineProfilePictureUploader({ initialFile, onClose }) {
@@ -142,6 +145,7 @@ function App() {
         location.pathname !== '/session' &&
         location.pathname !== '/courses' &&
         location.pathname !== '/addgrade' &&
+        location.pathname!== '/sidebar-preview' &&
         location.pathname !== '/appointments-calendar'
     ) {
         fetchUserRole();
@@ -210,88 +214,92 @@ function App() {
   };
 
   return (
-    <div>
-      {profile && (
-        <header className="bg-gray-100 p-4 flex justify-between items-center">
-          <div onClick={handleProfilePictureClick} className="cursor-pointer flex items-center">
-            <img src={profile.profile_picture} alt="Profile" className="rounded-full w-12 h-12 mr-2" />
-            <div>
-              <h2 className="text-xl font-bold">{profile.name}</h2>
-              {profile.role.toLowerCase() === 'admin' ? (
-                <p className="text-gray-600">Admin</p>
-              ) : profile.role.toLowerCase() === 'faculty' ? (
-                <>
-                  <p className="text-gray-600">{profile.id} | {profile.role}</p>
-                  <p className="text-gray-600">{profile.department}</p>
-                </>
-              ) : (
-                <>
-                  <p className="text-gray-600">{profile.id} | {profile.role}</p>
-                  <p className="text-gray-600">{profile.program} {profile.year_section}</p>
-                </>
+    <div className="app-container">
+      {/* Sidebar removed temporarily */}
+      <div className="main-content">
+        {profile && (
+          <header className="bg-gray-100 p-4 flex justify-between items-center">
+            <div onClick={handleProfilePictureClick} className="cursor-pointer flex items-center">
+              <img src={profile.profile_picture} alt="Profile" className="rounded-full w-12 h-12 mr-2" />
+              <div>
+                <h2 className="text-xl font-bold">{profile.name}</h2>
+                {profile.role.toLowerCase() === 'admin' ? (
+                  <p className="text-gray-600">Admin</p>
+                ) : profile.role.toLowerCase() === 'faculty' ? (
+                  <>
+                    <p className="text-gray-600">{profile.id} | {profile.role}</p>
+                    <p className="text-gray-600">{profile.department}</p>
+                  </>
+                ) : (
+                  <>
+                    <p className="text-gray-600">{profile.id} | {profile.role}</p>
+                    <p className="text-gray-600">{profile.program} {profile.year_section}</p>
+                  </>
+                )}
+              </div>
+            </div>
+            <button onClick={handleLogout} className="bg-red-500 text-white px-4 py-2 rounded">
+              Logout
+            </button>
+          </header>
+        )}
+
+        {/* New Profile Picture Modal */}
+        {showProfileModal && (
+          <div className="fixed inset-0 bg-black bg-opacity-50 flex justify-center items-center z-50">
+            <div className="bg-white p-6 rounded-lg shadow-lg">
+              {modalStep === 'upload' && (
+                <div>
+                  <h2 className="text-xl font-bold mb-4">Upload a Profile Picture</h2>
+                  <button
+                    onClick={() => modalFileInputRef.current && modalFileInputRef.current.click()}
+                    className="bg-blue-500 text-white px-4 py-2 rounded"
+                  >
+                    Choose File
+                  </button>
+                  <input
+                    ref={modalFileInputRef}
+                    type="file"
+                    accept="image/*"
+                    onChange={onModalSelectFile}
+                    style={{ display: 'none' }}
+                  />
+                  <button
+                    onClick={() => setShowProfileModal(false)}
+                    className="bg-gray-300 text-black px-4 py-2 rounded ml-4"
+                  >
+                    Cancel
+                  </button>
+                </div>
+              )}
+              {modalStep === 'crop' && (
+                <ProfilePictureUploader
+                  initialFile={modalSelectedFile}
+                  onClose={() => {
+                    setShowProfileModal(false);
+                    setModalSelectedFile(null);
+                  }}
+                />
               )}
             </div>
           </div>
-          <button onClick={handleLogout} className="bg-red-500 text-white px-4 py-2 rounded">
-            Logout
-          </button>
-        </header>
-      )}
+        )}
 
-      {/* New Profile Picture Modal */}
-      {showProfileModal && (
-        <div className="fixed inset-0 bg-black bg-opacity-50 flex justify-center items-center z-50">
-          <div className="bg-white p-6 rounded-lg shadow-lg">
-            {modalStep === 'upload' && (
-              <div>
-                <h2 className="text-xl font-bold mb-4">Upload a Profile Picture</h2>
-                <button
-                  onClick={() => modalFileInputRef.current && modalFileInputRef.current.click()}
-                  className="bg-blue-500 text-white px-4 py-2 rounded"
-                >
-                  Choose File
-                </button>
-                <input
-                  ref={modalFileInputRef}
-                  type="file"
-                  accept="image/*"
-                  onChange={onModalSelectFile}
-                  style={{ display: 'none' }}
-                />
-                <button
-                  onClick={() => setShowProfileModal(false)}
-                  className="bg-gray-300 text-black px-4 py-2 rounded ml-4"
-                >
-                  Cancel
-                </button>
-              </div>
-            )}
-            {modalStep === 'crop' && (
-              <ProfilePictureUploader
-                initialFile={modalSelectedFile}
-                onClose={() => {
-                  setShowProfileModal(false);
-                  setModalSelectedFile(null);
-                }}
-              />
-            )}
-          </div>
-        </div>
-      )}
-
-      <Routes>
-        <Route path="/" element={<Home />} />
-        <Route path="/booking-student" element={<BookingStudent />} />
-        <Route path="/booking-teacher" element={<BookingTeacher />} />
-        <Route path="/session" element={<Session />} />
-        <Route path="/signup" element={<Signup />} />
-        <Route path="/login" element={<Login onLoginSuccess={setUser} />} />
-        <Route path="/admin" element={<AdminPortal />} />
-        <Route path="/courses" element={<Courses />} />
-        <Route path="/addgrade" element={<AddGrade />} />
-        <Route path="/appointments-calendar" element={<AppointmentsCalendar />} />
-        {/* Remove /profile-picture route */}
-      </Routes>
+        <Routes>
+          <Route path="/" element={<Home />} />
+          <Route path="/booking-student" element={<BookingStudent />} />
+          <Route path="/booking-teacher" element={<BookingTeacher />} />
+          <Route path="/session" element={<Session />} />
+          <Route path="/signup" element={<Signup />} />
+          <Route path="/login" element={<Login onLoginSuccess={setUser} />} />
+          <Route path="/admin" element={<AdminPortal />} />
+          <Route path="/courses" element={<Courses />} />
+          <Route path="/addgrade" element={<AddGrade />} />
+          <Route path="/appointments-calendar" element={<AppointmentsCalendar />} />
+          <Route path="/sidebar-preview" element={<SidebarPreview />} /> {/* Add this route */}
+          {/* Remove /profile-picture route */}
+        </Routes>
+      </div>
     </div>
   );
 }

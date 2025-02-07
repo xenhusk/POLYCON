@@ -3,6 +3,7 @@ import { useLocation, useNavigate } from 'react-router-dom';
 import ProfilePictureUploader from './ProfilePictureUploader'; // adjusted import path
 import { fetchStudentDetails } from '../utils/fetchStudentDetails'; // import the helper function
 import { getProfilePictureUrl } from '../utils/utils'; // import the utility function
+import ProfileDetails from './ProfileDetails';
 
 function BookingStudent() {
     const location = useLocation();
@@ -205,20 +206,11 @@ function BookingStudent() {
                 <button onClick={handleLogout} className="bg-red-500 text-white px-4 py-2 rounded">Logout</button>
             </header>
 
-            {/* Profile details block */}
-            <div className="mb-4 flex items-center">
-                <img 
-                    src={profileDetails.profile_picture} 
-                    alt="Profile" 
-                    className="rounded-full w-24 h-24 mr-4 cursor-pointer"
-                    onClick={handleProfilePictureClick}
-                />
-                <div>
-                    <h3 className="text-xl font-bold text-gray-800">{profileDetails.name || 'No profile info'}</h3>
-                    <p className="text-gray-600">{profileDetails.id} | {profileDetails.role}</p>
-                    <p className="text-gray-600">{profileDetails.program} {profileDetails.year_section}</p>
-                </div>
-            </div>
+            {/* Replace Student profile details block */}
+            <ProfileDetails
+                profileDetails={profileDetails}
+                onProfileClick={handleProfilePictureClick}
+            />
 
             {/* New Profile Picture Modal */}
             {showProfileModal && (
