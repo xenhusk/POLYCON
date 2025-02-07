@@ -51,32 +51,34 @@ const Home = () => {
   return (
     <div className="min-h-screen bg-white font-poppins">
       <nav className="flex w-full justify-between items-center my-3">
-        <div className="w-[90%] h-[134px] relative">
+        <div className="w-[90%] h-[18.5vh] relative">
           <div className="rounded-br-[60px] rounded-tr-[60px] absolute bottom-0 right-0 left-0 flex h-[124px] w-full mx-auto flex-1 bg-[#057DCD] justify-end items-center p-5 md:px-5 sm:p-5">
             <a href="#Body">
-              <img src={logo} alt="Logo" className="h-[135px] w-[95%] my-auto mx-auto object-contain"/>
+              <img src={logo} alt="Logo" className="h-[130px] w-[130px] my-auto mx-auto object-contain"/>
             </a>
             <div className="w-[42%] flex items-end justify-end gap-5 md:w-full sm:mr-[15px]">
               <ul className="gap-[25px] flex flex-wrap items-center">
                 <li> 
-                  <a href="#Contact" className="text-[20px] text-white font-medium transition-all duration-800 ease-in-out delay-150 hover:underline underline-offset-4 focus:outline-none">
-                      Contact
+                  <a href="#Contact" className="text-xl text-white font-medium focus:outline-none relative group">
+                    Contact
+                    <span className="block absolute bottom-0 left-0 w-0 h-[2px] bg-white transition-all duration-300 ease-in-out group-hover:w-full"></span>
                   </a>
                 </li>
                 <li>
-                  <a href="#About" className="text-[20px] text-white font-medium transition-all duration-800 ease-in-out delay-150 hover:underline underline-offset-4 focus:outline-none">
-                      About
+                  <a href="#About" className="text-xl text-white font-medium focus:outline-none relative group">
+                    About
+                    <span className="block absolute bottom-0 left-0 w-0 h-[2px] bg-white transition-all duration-300 ease-in-out group-hover:w-full"></span>
                   </a>
                 </li>
                 <li>
-                  <button className="bg-white text-[20px] text-[#057DCD] px-auto w-[8rem] h-[55px] rounded-[50px] px-auto text-lg font-semibold transition-all duration-800 ease-in-out delay-150 hover:bg-[#54BEFF] hover:text-white"
+                  <button className="bg-white text-xl text-[#057DCD] px-auto w-[8rem] h-[55px] rounded-[50px] px-auto font-semibold transition-all duration-800 ease-in-out delay-150 hover:bg-[#54BEFF] hover:text-white"
                     onClick={handleLoginClick}>
                       Login
                   </button>
                 </li>
                 <li>
                   <button
-                    className="bg-white text-[20px] text-[#057DCD] text-center w-[8rem] h-[55px] rounded-[50px] px-auto text-lg font-semibold transition-all duration-800 ease-in-out delay-150 hover:bg-[#54BEFF] hover:text-white"
+                    className="bg-white text-xl text-[#057DCD] text-center w-[8rem] h-[55px] rounded-[50px] px-auto font-semibold transition-all duration-800 ease-in-out delay-150 hover:bg-[#54BEFF] hover:text-white"
                     onClick={handleSignupClick}>
                       Sign Up
                   </button>
@@ -96,7 +98,7 @@ const Home = () => {
       {/* Contact */}
       <section id="Contact"  className="flex w-full justify-between items-center">
         <div className="w-full h-[659px] relative overflow-hidden bg-[#057DCD]">
-          <h1 className="w-[90%] font-bold text-[40px] text-[#ffffff] my-[33px] mx-auto">
+          <h1 className="w-[90%] font-bold text-[40px] text-[#ffffff] my-[1rem] mx-auto">
             Contact
           </h1>
           <div className="absolute right-0 left-0 flex flex-1 justify-between md:px-5 text-[#ffffff]">
@@ -138,10 +140,10 @@ const Home = () => {
       <footer className="flex w-full justify-between items-center">
         {/* Frames of footer */}
         <div className="w-full h-[30.5vh] relative overflow-hidden bg-[#005B98]">
-          <div className=" w-[90%] absolute right-0 left-0 justify-between mx-auto flex-1 flex text-[#ffffff]">
+          <div className="w-[90%] absolute right-0 left-0 justify-between mx-auto flex-1 flex text-[#ffffff]">
             {/* Content of footer  */}
             <div className="flex-row w-[90%] h-[152px] mx-auto">  
-              <img src={logo} alt="Logo" className="h-[98px] w-[10%]"/>
+              <img src={logo} alt="Logo" className="h-[98px] w-[98px]"/>
               <h3 className="font-medium text-lg">
                 We are still development
               </h3>
@@ -154,12 +156,12 @@ const Home = () => {
                 Legal
               </h3>
               <div className="flex font-light text-base ">
-                <p className="w-[55%]">Terms of Service</p>
-                <p className="w-[55%]">Cookies Policy</p>
+                <p className="w-[58%]">Terms of Service</p>
+                <p className="w-[58%]">Cookies Policy</p>
               </div>
               <div className="flex font-light text-base ">
-                <p className="w-[55%]">Privacy Policy</p>
-                <p className="w-[55%]">Data Processing</p>
+                <p className="w-[58%]">Privacy Policy</p>
+                <p className="w-[58%]">Data Processing</p>
               </div>
             </div>
           </div>
@@ -193,8 +195,8 @@ const Home = () => {
 
       {/* Modals */}
       {showLoginModal && (
-       <div className="fixed inset-0 bg-black bg-opacity-60 flex items-center justify-center">
-          <div className="bg-white p-6 rounded-[20px] shadow-lg w-[43%] h-[650px] relative">
+       <div className="fixed inset-0 bg-black bg-opacity-60 flex items-center justify-center animate-modal-fade">
+          <div className="bg-white p-6 rounded-[20px] shadow-lg w-[43%] h-[650px] relative animate-modal-fade">
             <button className="absolute top-4 right-7 text-[2rem] text-gray-500 hover:text-[#000000] hover:font-bold" onClick={closeModal}>
               &times;
             </button>
@@ -205,8 +207,8 @@ const Home = () => {
       )}
 
       {showSignupModal && (
-        <div className="fixed inset-0 bg-black bg-opacity-60 flex items-center justify-center">
-          <div className="bg-[white] p-6 rounded-[20px] shadow-lg w-[43%] h-[650px] relative">
+        <div className="fixed inset-0 bg-black bg-opacity-60 flex items-center justify-center animate-modal-fade">
+          <div className="bg-white p-6 rounded-[20px] shadow-lg w-[43%] h-[650px] relative animate-modal-fade">
             <button className="absolute top-4 right-7 text-[2rem] text-gray-500 hover:text-[#000000] hover:font-bold" onClick={closeModal}>
               &times;</button>
             <Signup onSwitchToLogin={switchToLogin} onError={handleSignupError} />
@@ -242,10 +244,10 @@ const Body = () => {
         <div className="rounded-[25px] w-[94%] h-[80vh] bg-[#057DCD] mx-auto absolute right-0 left-0 flex flex-1 justify-between items-center p-[1rem] md:px-6 sm:p-3">
           <div className="w-[50%] h-[60vh] flex-row text-[#ffffff] text-justify mx-auto">
             <h1 className="text-[3rem] font-extrabold leading-tight w-[93%]">
-              POLYCON: CONSULTATION SYSTEM
+              POLYCON: <br/> CONSULTATION <br/> SYSTEM
             </h1>
             <h3 className="mt-2 text-lg w-[93%]">
-              Our consultation system simplifies the process of booking
+              Our consultation system simplifies the process of booking 
               appointments, whether for individual consultations or group
               sessions.
             </h3>
@@ -289,8 +291,8 @@ const About = () => {
   return(
     <section id="About" className="flex w-full justify-between items-center">
         <div className="w-full h-[90vh] relative overflow-hidden">
-        <div className="rounded-[25px] bg-[#005B98] h-[100px] w-[8%] rotate-[30deg] absolute top-[5%] right-[10px]"></div>
-          <div className="rounded-[25px] bg-[#057DCD] h-[219px] w-[12%] justify-end absolute top-[82%] left-[1366px] rotate-[20deg]"></div>
+        <div className="rounded-[25px] bg-[#005B98] h-[100px] w-[8%] rotate-[30deg] absolute top-[5%] right-[1%]"></div>
+          <div className="rounded-[25px] bg-[#057DCD] h-[219px] w-[12%] justify-end absolute top-[82%] left-[92%] rotate-[20deg]"></div>
           <h1 className="font-bold text-[40px] text-[#057DCD] text-center">About</h1>
           <div className="absolute right-0 left-0 flex flex-1 justify-between items-center md:px-5">
           <div className="rounded-[15px] bg-[#54BEFF] h-[50px] w-[8%] absolute bottom-[8%] right-[44%] rotate-[15deg]"></div>

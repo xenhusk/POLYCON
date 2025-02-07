@@ -107,8 +107,8 @@ const Signup = ({ onSwitchToLogin }) => {
     <div className="h-[600px] w-[100%] flex justify-center items-center">
       <div className="flex flex-col items-center w-full">
         {step === 1 ? (
-          <div className="w-full max-w-[75.5%]">
-            <img src={logo} alt="Logo" className="h-[130px] w-[33%] mx-auto"/>
+          <div className="w-full max-w-[75.5%] mx-auto">
+            <img src={logo} alt="Logo" className="h-[130px] w-[130px] mx-auto"/>
             <h2 className="text-center text-lg font-bold text-[#005B98]">Registration Form</h2>
             <div className='flex justify-between gap-4'>
             <input className="border-[#005B98] border-b-2 p-2 w-[45%] h-[44.59px] my-2 focus:outline-none" 
@@ -127,10 +127,13 @@ const Signup = ({ onSwitchToLogin }) => {
             <input className="border-[#005B98] border-b-2 p-2 w-[100%] h-[44.59px] my-2 mx-auto focus:outline-none"
             type="password" name="password" placeholder="Password" value={formData.password} onChange={handleChange} required />
             
+            {/* error handling */}
+            {errorMessage && <p className="text-center text-red-500 text-base">{errorMessage}</p>}
+
             <button className="bg-[#057DCD] text-white w-[100%] h-[44.59px] rounded-lg my-2 mx-auto hover:bg-[#54BEFF]" 
             onClick={handleNext}>Next</button>
             <div className="border-t-2 border-[#005B98] w-[90%] my-2 mx-auto border-opacity-50">
-              <p className="text-center font-light text-[0.7rem] mx-auto my-2 text-opacity-50">
+              <p className="text-center font-light text-[0.9rem] mx-auto my-2 text-opacity-50">
                 Don't have an account? <button onClick={onSwitchToLogin} className="text-[#005B98] focus:outline-none">Login</button>
               </p>
             </div>
@@ -138,8 +141,8 @@ const Signup = ({ onSwitchToLogin }) => {
         ) : (
           <div className="w-full flex justify-center items-center">
             <div className="flex flex-col items-center w-full">
-              <div className="w-full max-w-[75%]">
-                <img src={logo} alt="Logo" className="h-[130px] w-[30%] mx-auto"/>
+              <div className="w-full max-w-[75%] mx-auto">
+                <img src={logo} alt="Logo" className="h-[130px] w-[130px] mx-auto"/>
                 <h2 className="text-center text-lg font-bold text-[#005B98]">Personal Information</h2>
                 <select className="border-[#005B98] border-b-2 p-2 w-[100%] h-[44.59px] my-2 mx-auto focus:outline-none" 
                 name="department" value={formData.department} onChange={handleChange} required>
@@ -168,11 +171,14 @@ const Signup = ({ onSwitchToLogin }) => {
                   <option value="Male">Male</option>
                   <option value="Female">Female</option>
                 </select>
-                {errorMessage && <p className="text-center text-red-500 text-lg">{errorMessage}</p>}
-                <button className="bg-[#057DCD] text-white w-[450px] h-[44.59px] rounded-lg my-2 mx-auto hover:bg-[#54BEFF]" 
+
+                {/* error handling */}
+                {errorMessage && <p className="text-center text-red-500 text-base">{errorMessage}</p>}
+                
+                <button className="bg-[#057DCD] text-white w-[100%] h-[44.59px] rounded-lg my-2 mx-auto hover:bg-[#54BEFF]" 
                 onClick={handleSubmit}>Sign Up</button>
                 <div className="border-t-2 border-[#005B98] w-[90%] my-2 mx-auto border-opacity-50">
-                  <p className="text-center font-light text-[0.7rem] mx-auto my-2 text-opacity-50">
+                  <p className="text-center font-light text-[0.9rem] mx-auto my-2 text-opacity-50">
                     Don't have an account? <button onClick={onSwitchToLogin} className="text-[#005B98] focus:outline-none">Login</button>
                   </p>
                 </div>
