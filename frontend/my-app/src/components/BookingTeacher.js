@@ -70,9 +70,9 @@ function BookingTeacher() {
             setProfileDetails({
                 name: `${data.firstName} ${data.lastName}`,
                 id: userID,
-                role: data.role.charAt(0).toUpperCase() + data.role.slice(1),
+                role: 'Faculty',
                 department: data.department || 'Unknown Department',
-                profile_picture: data.profile_picture || 'https://via.placeholder.com/100'
+                profile_picture: getProfilePictureUrl(data.profile_picture)
             });
         } catch (error) {
             console.error('Error fetching profile details:', error);

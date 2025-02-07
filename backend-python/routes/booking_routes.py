@@ -301,6 +301,15 @@ def get_user():
         profile_pic = user_data.get('profile_picture', '')
         user_data['profile_picture'] = profile_pic.strip() if profile_pic.strip() \
             else "https://avatar.iran.liara.run/public/boy?username=Ash"
+
+        # Fetch department details
+        department_ref = user_data.get('department')
+        if department_ref:
+            department_doc = department_ref.get()
+            if department_doc.exists:
+                department_data = department_doc.to_dict()
+                user_data['department'] = department_data.get('departmentName', 'Unknown Department')
+
         user_data = {key: convert_references(value) for key, value in user_data.items()}
         return jsonify(user_data), 200
     except Exception as e:
