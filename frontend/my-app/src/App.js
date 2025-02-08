@@ -1,5 +1,5 @@
 import React, { useEffect, useState, useRef, useCallback } from 'react';
-import { BrowserRouter, Routes, Route, useNavigate, useLocation } from 'react-router-dom';
+import { BrowserRouter as Router, Routes, Route, useNavigate, useLocation, Navigate } from 'react-router-dom';
 import BookingStudent from './components/BookingStudent';
 import BookingTeacher from './components/BookingTeacher';
 import Session from './components/Session';
@@ -8,11 +8,16 @@ import Login from './components/Login';
 import AdminPortal from './components/AdminPortal';
 import Courses from './components/Courses'; 
 import AddGrade from './components/AddGrade';
-import Home from './components/Home';
+import UserHome from './pages/User_Home';  // Update import name and path
 import AppointmentsCalendar from './components/AppointmentsCalendar';
 import ReactCrop from 'react-image-crop';
 import 'react-image-crop/dist/ReactCrop.css';
 import ProfilePictureUploader from './components/ProfilePictureUploader'; // added import
+import SidebarPreview from './components/SidebarPreview'; // Import the SidebarPreview component
+import Appointments from './pages/Appointments'; // Import the Appointments page
+import Sidebar from './components/Sidebar';
+import Home from './pages/Home'; // Update this import
+import { PreloadProvider } from './context/PreloadContext';
 
 // Inline component with cropping/upload logic remains unchanged
 function InlineProfilePictureUploader({ initialFile, onClose }) {
@@ -115,6 +120,11 @@ function App() {
   const [profile, setProfile] = useState(null);
   const navigate = useNavigate();
   const location = useLocation();
+  const [userRole, setUserRole] = useState('');
+  const [sidebarExpanded, setSidebarExpanded] = useState(false);
+  
+  // List of routes that should not trigger role fetching
+  const noRoleFetchPaths = ['/appointments', '/someOtherRolelessPage'];
 
   // Remove the old fileInputRef used in header; add modal-specific states
   const modalFileInputRef = useRef(null);
@@ -124,68 +134,110 @@ function App() {
   const fileInputRef = useRef(null); // remains for other uses if needed
 
   useEffect(() => {
-    const fetchUserRole = async () => {
+    // Only fetch role if current pathname is not in noRoleFetchPaths
+    if (!noRoleFetchPaths.includes(location.pathname)) {
       const storedEmail = localStorage.getItem('userEmail');
       if (storedEmail) {
-        try {
-          const response = await fetch(`http://localhost:5001/account/get_user_role?email=${storedEmail}`);
-          const data = await response.json();
-          if (data.role === 'student') navigate('/booking-student');
-          else if (data.role === 'faculty') navigate('/booking-teacher');
-          else if (data.role === 'admin') navigate('/admin');
-        } catch (error) {
-          console.error('Error fetching user role:', error);
-        }
+        fetch(`http://localhost:5001/account/get_user_role?email=${storedEmail}`)
+          .then(res => res.json())
+          .then(data => setUserRole(data.role))
+          .catch(err => console.error('Error fetching user role:', err));
       }
-    };
-    if (
-        location.pathname !== '/session' &&
-        location.pathname !== '/courses' &&
-        location.pathname !== '/addgrade' &&
-        location.pathname !== '/appointments-calendar'
-    ) {
-        fetchUserRole();
     }
-  }, [navigate, location.pathname]);
+  }, [location.pathname]);
 
   useEffect(() => {
     const storedEmail = localStorage.getItem('userEmail');
     if (storedEmail) {
-      fetch(`http://localhost:5001/account/get_user?email=${storedEmail}`)
-        .then(response => response.json())
-        .then(data => {
-          localStorage.setItem('userID', data.id); // Ensure userID is stored
-          if (data.role === 'student') {
-            fetch(`http://localhost:5001/bookings/get_students`)
-              .then(response => response.json())
-              .then(students => {
-                const student = students.find(s => s.id === data.id);
-                if (student) {
-                  setProfile({
-                    name: `${student.firstName} ${student.lastName}`,
-                    id: student.id,
-                    role: 'Student',
-                    program: student.program || 'Unknown Program',
-                    year_section: student.year_section || 'Unknown Year/Section',
-                    profile_picture: data.profile_picture || 'https://via.placeholder.com/100'
+      // First get the user role
+      fetch(`http://localhost:5001/account/get_user_role?email=${storedEmail}`)
+        .then(res => res.json())
+        .then(roleData => {
+          const role = roleData.role;
+          
+          // Then fetch user details based on role
+          fetch(`http://localhost:5001/user/get_user?email=${storedEmail}`)
+            .then(response => response.json())
+            .then(data => {
+              localStorage.setItem('userID', data.id);
+              
+              if (role === 'faculty') {
+                setProfile({
+                  name: `${data.firstName} ${data.lastName}`,
+                  id: data.id || data.idNumber,
+                  role: 'Teacher',
+                  department: data.department,
+                  profile_picture: data.profile_picture || 'https://via.placeholder.com/100'
+                });
+              } else if (role === 'student') {
+                fetch(`http://localhost:5001/bookings/get_students`)
+                  .then(response => response.json())
+                  .then(students => {
+                    const student = students.find(s => s.id === data.id);
+                    if (student) {
+                      setProfile({
+                        name: `${student.firstName} ${student.lastName}`,
+                        id: student.id,
+                        role: 'Student',
+                        program: student.program || 'Unknown Program',
+                        year_section: student.year_section || 'Unknown Year/Section',
+                        profile_picture: data.profile_picture || 'https://via.placeholder.com/100'
+                      });
+                    }
                   });
-                }
-              });
-          } else {
-            setProfile({
-              name: `${data.firstName} ${data.lastName}`,
-              id: data.id || data.idNumber,
-              role: data.role ? data.role.charAt(0).toUpperCase() + data.role.slice(1) : '',
-              department: data.department || 'Unknown Department',
-              program: data.program || 'Unknown Program',
-              year_section: data.year_section || 'Unknown Year/Section',
-              profile_picture: data.profile_picture || 'https://via.placeholder.com/100'
+              } else {
+                // Handle admin or other roles
+                setProfile({
+                  name: `${data.firstName} ${data.lastName}`,
+                  id: data.id || data.idNumber,
+                  role: role.charAt(0).toUpperCase() + role.slice(1),
+                  profile_picture: data.profile_picture || 'https://via.placeholder.com/100'
+                });
+              }
             });
-          }
         })
-        .catch(error => console.error('Error fetching profile details:', error));
+        .catch(error => console.error('Error fetching user role:', error));
     }
   }, []);
+
+  const preloadAllData = async () => {
+    const userEmail = localStorage.getItem('userEmail');
+    const userRole = localStorage.getItem('userRole');
+    
+    if (!userEmail) return;
+
+    try {
+      // Fetch all necessary data in parallel
+      const [
+        userDetailsResponse,
+        appointmentsResponse,
+        gradesResponse,
+        coursesResponse
+      ] = await Promise.all([
+        fetch(`http://localhost:5001/user/get_user?email=${userEmail}`),
+        fetch(`http://localhost:5001/bookings/get_${userRole}_bookings?${userRole}ID=${localStorage.getItem(`${userRole}ID`)}`),
+        fetch(`http://localhost:5001/grade/get_grades?studentID=${localStorage.getItem('studentID')}`),
+        fetch(`http://localhost:5001/course/get_courses`)
+      ]);
+
+      const [userDetails, appointments, grades, courses] = await Promise.all([
+        userDetailsResponse.json(),
+        appointmentsResponse.json(),
+        gradesResponse.json(),
+        coursesResponse.json()
+      ]);
+
+      return {
+        userDetails,
+        appointments,
+        grades,
+        courses
+      };
+    } catch (error) {
+      console.error('Error preloading data:', error);
+      return null;
+    }
+  };
 
   const handleLogout = () => {
     localStorage.removeItem('userEmail');
@@ -210,89 +262,115 @@ function App() {
   };
 
   return (
-    <div>
-      {profile && (
-        <header className="bg-gray-100 p-4 flex justify-between items-center">
-          <div onClick={handleProfilePictureClick} className="cursor-pointer flex items-center">
-            <img src={profile.profile_picture} alt="Profile" className="rounded-full w-12 h-12 mr-2" />
-            <div>
-              <h2 className="text-xl font-bold">{profile.name}</h2>
-              {profile.role.toLowerCase() === 'admin' ? (
-                <p className="text-gray-600">Admin</p>
-              ) : profile.role.toLowerCase() === 'faculty' ? (
-                <>
-                  <p className="text-gray-600">{profile.id} | {profile.role}</p>
-                  <p className="text-gray-600">{profile.department}</p>
-                </>
-              ) : (
-                <>
-                  <p className="text-gray-600">{profile.id} | {profile.role}</p>
-                  <p className="text-gray-600">{profile.program} {profile.year_section}</p>
-                </>
-              )}
-            </div>
-          </div>
-          <button onClick={handleLogout} className="bg-red-500 text-white px-4 py-2 rounded">
-            Logout
-          </button>
-        </header>
-      )}
-
-      {/* New Profile Picture Modal */}
-      {showProfileModal && (
-        <div className="fixed inset-0 bg-black bg-opacity-50 flex justify-center items-center z-50">
-          <div className="bg-white p-6 rounded-lg shadow-lg">
-            {modalStep === 'upload' && (
-              <div>
-                <h2 className="text-xl font-bold mb-4">Upload a Profile Picture</h2>
-                <button
-                  onClick={() => modalFileInputRef.current && modalFileInputRef.current.click()}
-                  className="bg-blue-500 text-white px-4 py-2 rounded"
-                >
-                  Choose File
-                </button>
-                <input
-                  ref={modalFileInputRef}
-                  type="file"
-                  accept="image/*"
-                  onChange={onModalSelectFile}
-                  style={{ display: 'none' }}
-                />
-                <button
-                  onClick={() => setShowProfileModal(false)}
-                  className="bg-gray-300 text-black px-4 py-2 rounded ml-4"
-                >
-                  Cancel
-                </button>
+    <PreloadProvider>
+      <div className="app-container flex">
+        {localStorage.getItem('userEmail') && (
+          <Sidebar onExpandChange={setSidebarExpanded} />
+        )}
+        
+        <div className={`flex-1 transition-all duration-300 ${
+          localStorage.getItem('userEmail') ? sidebarExpanded ? 'ml-64' : 'ml-20' : ''
+        }`}>
+          {/* Remove the header section below */}
+          {/*
+          {profile && (
+            <header className="bg-gray-100 p-4 flex justify-between items-center">
+              <div onClick={handleProfilePictureClick} className="cursor-pointer flex items-center">
+                ... header content ...
               </div>
-            )}
-            {modalStep === 'crop' && (
-              <ProfilePictureUploader
-                initialFile={modalSelectedFile}
-                onClose={() => {
-                  setShowProfileModal(false);
-                  setModalSelectedFile(null);
-                }}
-              />
-            )}
-          </div>
-        </div>
-      )}
+              <button onClick={handleLogout} className="bg-red-500 text-white px-4 py-2 rounded">
+                Logout
+              </button>
+            </header>
+          )}
+          */}
 
-      <Routes>
-        <Route path="/" element={<Home />} />
-        <Route path="/booking-student" element={<BookingStudent />} />
-        <Route path="/booking-teacher" element={<BookingTeacher />} />
-        <Route path="/session" element={<Session />} />
-        <Route path="/signup" element={<Signup />} />
-        <Route path="/login" element={<Login onLoginSuccess={setUser} />} />
-        <Route path="/admin" element={<AdminPortal />} />
-        <Route path="/courses" element={<Courses />} />
-        <Route path="/addgrade" element={<AddGrade />} />
-        <Route path="/appointments-calendar" element={<AppointmentsCalendar />} />
-        {/* Remove /profile-picture route */}
-      </Routes>
-    </div>
+          {/* New Profile Picture Modal */}
+          {showProfileModal && (
+            <div className="fixed inset-0 bg-black bg-opacity-50 flex justify-center items-center z-50">
+              <div className="bg-white p-6 rounded-lg shadow-lg">
+                {modalStep === 'upload' && (
+                  <div>
+                    <h2 className="text-xl font-bold mb-4">Upload a Profile Picture</h2>
+                    <button
+                      onClick={() => modalFileInputRef.current && modalFileInputRef.current.click()}
+                      className="bg-blue-500 text-white px-4 py-2 rounded"
+                    >
+                      Choose File
+                    </button>
+                    <input
+                      ref={modalFileInputRef}
+                      type="file"
+                      accept="image/*"
+                      onChange={onModalSelectFile}
+                      style={{ display: 'none' }}
+                    />
+                    <button
+                      onClick={() => setShowProfileModal(false)}
+                      className="bg-gray-300 text-black px-4 py-2 rounded ml-4"
+                    >
+                      Cancel
+                    </button>
+                  </div>
+                )}
+                {modalStep === 'crop' && (
+                  <ProfilePictureUploader
+                    initialFile={modalSelectedFile}
+                    onClose={() => {
+                      setShowProfileModal(false);
+                      setModalSelectedFile(null);
+                    }}
+                  />
+                )}
+              </div>
+            </div>
+          )}
+
+          <Routes>
+            {/* Public home route with redirect for logged-in users */}
+            <Route path="/" element={
+              localStorage.getItem('userEmail') ? 
+                <Navigate to="/dashboard" /> : 
+                <Home />
+            } />
+
+            {/* Auth routes with redirects */}
+            <Route path="/login" element={
+              !localStorage.getItem('userEmail') ? 
+                <Login onLoginSuccess={setUser} /> : 
+                <Navigate to="/dashboard" />
+            } />
+            <Route path="/signup" element={
+              !localStorage.getItem('userEmail') ? 
+                <Signup /> : 
+                <Navigate to="/dashboard" />
+            } />
+
+            {/* Protected dashboard route */}
+            <Route path="/dashboard" element={
+              localStorage.getItem('userEmail') ? 
+                <UserHome /> : 
+                <Navigate to="/" />
+            } />
+
+            {/* Protected routes */}
+            <Route path="/booking-student" element={
+              localStorage.getItem('userEmail') ? 
+                <BookingStudent /> : 
+                <Navigate to="/login" replace />
+            } />
+            <Route path="/booking-teacher" element={<BookingTeacher />} />
+            <Route path="/session" element={<Session />} />
+            <Route path="/admin" element={<AdminPortal />} />
+            <Route path="/courses" element={<Courses />} />
+            <Route path="/addgrade" element={<AddGrade />} />
+            <Route path="/appointments-calendar" element={<AppointmentsCalendar />} />
+            <Route path="/sidebar-preview" element={<SidebarPreview />} /> {/* Add this route */}
+            <Route path="/appointments" element={<Appointments />} /> {/* Add this route */}
+          </Routes>
+        </div>
+      </div>
+    </PreloadProvider>
   );
 }
 

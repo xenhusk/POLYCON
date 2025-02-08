@@ -39,7 +39,7 @@ function AppointmentsCalendar() {
                         const response = await fetch(`http://localhost:5001/bookings/get_student_bookings?studentID=${studentID}`);
                         const bookings = await response.json();
                         const events = await Promise.all(bookings.map(async booking => {
-                            const teacherResponse = await fetch(`http://localhost:5001/bookings/get_user?userID=${booking.teacherID.split('/').pop()}`);
+                            const teacherResponse = await fetch(`http://localhost:5001/user/get_user?userID=${booking.teacherID.split('/').pop()}`);
                             const teacherData = await teacherResponse.json();
                             const teacherName = `Prof. ${teacherData.firstName} ${teacherData.lastName}`;
                             return {
