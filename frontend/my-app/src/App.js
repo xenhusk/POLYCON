@@ -15,8 +15,7 @@ import 'react-image-crop/dist/ReactCrop.css';
 import ProfilePictureUploader from './components/ProfilePictureUploader'; // added import
 import SidebarPreview from './components/SidebarPreview'; // Import the SidebarPreview component
 import Appointments from './pages/Appointments'; // Import the Appointments page
-// Remove Sidebar import temporarily
-// import Sidebar from './components/Sidebar';
+import Sidebar from './components/Sidebar';
 
 // Inline component with cropping/upload logic remains unchanged
 function InlineProfilePictureUploader({ initialFile, onClose }) {
@@ -120,6 +119,7 @@ function App() {
   const navigate = useNavigate();
   const location = useLocation();
   const [userRole, setUserRole] = useState('');
+  const [sidebarExpanded, setSidebarExpanded] = useState(false);
   
   // List of routes that should not trigger role fetching
   const noRoleFetchPaths = ['/appointments', '/someOtherRolelessPage'];
@@ -147,40 +147,54 @@ function App() {
   useEffect(() => {
     const storedEmail = localStorage.getItem('userEmail');
     if (storedEmail) {
-      // Change the endpoint to use /user/get_user instead of /account/get_user
-      fetch(`http://localhost:5001/user/get_user?email=${storedEmail}`)
-        .then(response => response.json())
-        .then(data => {
-          localStorage.setItem('userID', data.id); // Ensure userID is stored
-          if (data.role === 'student') {
-            fetch(`http://localhost:5001/bookings/get_students`)
-              .then(response => response.json())
-              .then(students => {
-                const student = students.find(s => s.id === data.id);
-                if (student) {
-                  setProfile({
-                    name: `${student.firstName} ${student.lastName}`,
-                    id: student.id,
-                    role: 'Student',
-                    program: student.program || 'Unknown Program',
-                    year_section: student.year_section || 'Unknown Year/Section',
-                    profile_picture: data.profile_picture || 'https://via.placeholder.com/100'
+      // First get the user role
+      fetch(`http://localhost:5001/account/get_user_role?email=${storedEmail}`)
+        .then(res => res.json())
+        .then(roleData => {
+          const role = roleData.role;
+          
+          // Then fetch user details based on role
+          fetch(`http://localhost:5001/user/get_user?email=${storedEmail}`)
+            .then(response => response.json())
+            .then(data => {
+              localStorage.setItem('userID', data.id);
+              
+              if (role === 'faculty') {
+                setProfile({
+                  name: `${data.firstName} ${data.lastName}`,
+                  id: data.id || data.idNumber,
+                  role: 'Teacher',
+                  department: data.department,
+                  profile_picture: data.profile_picture || 'https://via.placeholder.com/100'
+                });
+              } else if (role === 'student') {
+                fetch(`http://localhost:5001/bookings/get_students`)
+                  .then(response => response.json())
+                  .then(students => {
+                    const student = students.find(s => s.id === data.id);
+                    if (student) {
+                      setProfile({
+                        name: `${student.firstName} ${student.lastName}`,
+                        id: student.id,
+                        role: 'Student',
+                        program: student.program || 'Unknown Program',
+                        year_section: student.year_section || 'Unknown Year/Section',
+                        profile_picture: data.profile_picture || 'https://via.placeholder.com/100'
+                      });
+                    }
                   });
-                }
-              });
-          } else {
-            setProfile({
-              name: `${data.firstName} ${data.lastName}`,
-              id: data.id || data.idNumber,
-              role: data.role ? data.role.charAt(0).toUpperCase() + data.role.slice(1) : '',
-              department: data.department || 'Unknown Department',
-              program: data.program || 'Unknown Program',
-              year_section: data.year_section || 'Unknown Year/Section',
-              profile_picture: data.profile_picture || 'https://via.placeholder.com/100'
+              } else {
+                // Handle admin or other roles
+                setProfile({
+                  name: `${data.firstName} ${data.lastName}`,
+                  id: data.id || data.idNumber,
+                  role: role.charAt(0).toUpperCase() + role.slice(1),
+                  profile_picture: data.profile_picture || 'https://via.placeholder.com/100'
+                });
+              }
             });
-          }
         })
-        .catch(error => console.error('Error fetching profile details:', error));
+        .catch(error => console.error('Error fetching user role:', error));
     }
   }, []);
 
@@ -207,35 +221,31 @@ function App() {
   };
 
   return (
-    <div className="app-container">
-      {/* Sidebar removed temporarily */}
-      <div className="main-content">
+    <div className="app-container flex">
+      {localStorage.getItem('userEmail') && (
+        <Sidebar onExpandChange={setSidebarExpanded} />
+      )}
+      
+      <div className={`flex-1 transition-all duration-300 ${
+        localStorage.getItem('userEmail') 
+          ? sidebarExpanded 
+            ? 'ml-64' 
+            : 'ml-20'
+          : ''
+      }`}>
+        {/* Remove the header section below */}
+        {/*
         {profile && (
           <header className="bg-gray-100 p-4 flex justify-between items-center">
             <div onClick={handleProfilePictureClick} className="cursor-pointer flex items-center">
-              <img src={profile.profile_picture} alt="Profile" className="rounded-full w-12 h-12 mr-2" />
-              <div>
-                <h2 className="text-xl font-bold">{profile.name}</h2>
-                {profile.role.toLowerCase() === 'admin' ? (
-                  <p className="text-gray-600">Admin</p>
-                ) : profile.role.toLowerCase() === 'faculty' ? (
-                  <>
-                    <p className="text-gray-600">{profile.id} | {profile.role}</p>
-                    <p className="text-gray-600">{profile.department}</p>
-                  </>
-                ) : (
-                  <>
-                    <p className="text-gray-600">{profile.id} | {profile.role}</p>
-                    <p className="text-gray-600">{profile.program} {profile.year_section}</p>
-                  </>
-                )}
-              </div>
+              ... header content ...
             </div>
             <button onClick={handleLogout} className="bg-red-500 text-white px-4 py-2 rounded">
               Logout
             </button>
           </header>
         )}
+        */}
 
         {/* New Profile Picture Modal */}
         {showProfileModal && (

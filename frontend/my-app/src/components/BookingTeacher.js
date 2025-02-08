@@ -288,14 +288,6 @@ function BookingTeacher() {
 
     return (
         <div className="max-w-3xl mx-auto p-8 bg-white shadow-lg rounded-lg">
-            <header className="flex justify-between items-center mb-4">
-                <h2 className="text-2xl font-bold text-gray-800">Teacher Booking Panel</h2>
-                <button onClick={() => navigate('/addgrade')} className=" bg-blue-500 text-white px-2 py-2 rounded">
-                    Add Grade
-                </button>
-                <button onClick={handleLogout} className="space-x-2 bg-red-500 text-white px-4 py-2 rounded ">Logout</button>
-            </header>
-
             {/* New Profile Picture Modal */}
             {showProfileModal && (
                 <div className="fixed inset-0 bg-black bg-opacity-50 flex justify-center items-center z-50">
