@@ -14,6 +14,7 @@ import ReactCrop from 'react-image-crop';
 import 'react-image-crop/dist/ReactCrop.css';
 import ProfilePictureUploader from './components/ProfilePictureUploader'; // added import
 import SidebarPreview from './components/SidebarPreview'; // Import the SidebarPreview component
+import Appointments from './pages/Appointments'; // Import the Appointments page
 // Remove Sidebar import temporarily
 // import Sidebar from './components/Sidebar';
 
@@ -118,6 +119,10 @@ function App() {
   const [profile, setProfile] = useState(null);
   const navigate = useNavigate();
   const location = useLocation();
+  const [userRole, setUserRole] = useState('');
+  
+  // List of routes that should not trigger role fetching
+  const noRoleFetchPaths = ['/appointments', '/someOtherRolelessPage'];
 
   // Remove the old fileInputRef used in header; add modal-specific states
   const modalFileInputRef = useRef(null);
@@ -127,35 +132,23 @@ function App() {
   const fileInputRef = useRef(null); // remains for other uses if needed
 
   useEffect(() => {
-    const fetchUserRole = async () => {
+    // Only fetch role if current pathname is not in noRoleFetchPaths
+    if (!noRoleFetchPaths.includes(location.pathname)) {
       const storedEmail = localStorage.getItem('userEmail');
       if (storedEmail) {
-        try {
-          const response = await fetch(`http://localhost:5001/account/get_user_role?email=${storedEmail}`);
-          const data = await response.json();
-          if (data.role === 'student') navigate('/booking-student');
-          else if (data.role === 'faculty') navigate('/booking-teacher');
-          else if (data.role === 'admin') navigate('/admin');
-        } catch (error) {
-          console.error('Error fetching user role:', error);
-        }
+        fetch(`http://localhost:5001/account/get_user_role?email=${storedEmail}`)
+          .then(res => res.json())
+          .then(data => setUserRole(data.role))
+          .catch(err => console.error('Error fetching user role:', err));
       }
-    };
-    if (
-        location.pathname !== '/session' &&
-        location.pathname !== '/courses' &&
-        location.pathname !== '/addgrade' &&
-        location.pathname!== '/sidebar-preview' &&
-        location.pathname !== '/appointments-calendar'
-    ) {
-        fetchUserRole();
     }
-  }, [navigate, location.pathname]);
+  }, [location.pathname]);
 
   useEffect(() => {
     const storedEmail = localStorage.getItem('userEmail');
     if (storedEmail) {
-      fetch(`http://localhost:5001/account/get_user?email=${storedEmail}`)
+      // Change the endpoint to use /user/get_user instead of /account/get_user
+      fetch(`http://localhost:5001/user/get_user?email=${storedEmail}`)
         .then(response => response.json())
         .then(data => {
           localStorage.setItem('userID', data.id); // Ensure userID is stored
@@ -297,6 +290,7 @@ function App() {
           <Route path="/addgrade" element={<AddGrade />} />
           <Route path="/appointments-calendar" element={<AppointmentsCalendar />} />
           <Route path="/sidebar-preview" element={<SidebarPreview />} /> {/* Add this route */}
+          <Route path="/appointments" element={<Appointments />} /> {/* Add this route */}
           {/* Remove /profile-picture route */}
         </Routes>
       </div>

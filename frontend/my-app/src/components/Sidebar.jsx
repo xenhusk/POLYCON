@@ -43,13 +43,13 @@ const Sidebar = () => {
 
       if (email && userID) {
         try {
-          // First fetch basic user details
-          const response = await fetch(`http://localhost:5001/bookings/get_user?userID=${userID}`);
+          // Update endpoint URL for fetching user details
+          const response = await fetch(`http://localhost:5001/user/get_user?userID=${userID}`);
           const userData = await response.json();
           
-          // For students, fetch additional details
           if (userRole === 'student') {
-            const studentResponse = await fetch(`http://localhost:5001/bookings/get_student_details?studentID=${userID}`);
+            // Update endpoint URL for fetching student details
+            const studentResponse = await fetch(`http://localhost:5001/user/get_student_details?studentID=${userID}`);
             const studentData = await studentResponse.json();
             setUserDetails({
               ...userData,
@@ -57,11 +57,9 @@ const Sidebar = () => {
               year_section: studentData.year_section
             });
           } else {
-            // For faculty and admin, use userData as is
             setUserDetails(userData);
           }
-
-          // Update profile picture
+          
           if (userData.profile_picture) {
             setProfilePicture(userData.profile_picture);
           }

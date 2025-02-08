@@ -15,7 +15,7 @@ function BookingStudent() {
     const [selectedTeacherName, setSelectedTeacherName] = useState('');
     const [selectedTeacherProfile, setSelectedTeacherProfile] = useState('');
     const [selectedStudents, setSelectedStudents] = useState([]);
-    const [appointments, setAppointments] = useState({ pending: [], upcoming: [], canceled: [] });
+    const [appointments, setAppointments] = useState([]);
     const [searchTerm, setSearchTerm] = useState('');
     const [teacherSearchTerm, setTeacherSearchTerm] = useState('');
     const [profileDetails, setProfileDetails] = useState({ name: '', id: '', role: '', program: '', year_section: '' });
@@ -65,7 +65,8 @@ function BookingStudent() {
 
     async function fetchProfileDetails(userID) {
         try {
-            const response = await fetch(`http://localhost:5001/bookings/get_user?userID=${userID}`);
+            // Changed endpoint from /bookings/get_user to /user/get_user
+            const response = await fetch(`http://localhost:5001/user/get_user?userID=${userID}`);
             const data = await response.json();
             const studentDetails = await fetchStudentDetails(userID);
             setProfileDetails({
@@ -102,7 +103,8 @@ function BookingStudent() {
             };
 
             for (const booking of bookings) {
-                const teacherResponse = await fetch(`http://localhost:5001/bookings/get_user?userID=${booking.teacherID.split('/').pop()}`);
+                // Changed teacher fetch URL to /user/get_user so teacher details are correctly retrieved.
+                const teacherResponse = await fetch(`http://localhost:5001/user/get_user?userID=${booking.teacherID.split('/').pop()}`);
                 const teacherData = await teacherResponse.json();
                 const teacherName = `${teacherData.firstName} ${teacherData.lastName}`;
 
@@ -206,11 +208,13 @@ function BookingStudent() {
                 <button onClick={handleLogout} className="bg-red-500 text-white px-4 py-2 rounded">Logout</button>
             </header>
 
-            {/* Replace Student profile details block */}
+            {/* Removed Student profile details block */}
+            {/*
             <ProfileDetails
                 profileDetails={profileDetails}
                 onProfileClick={handleProfilePictureClick}
             />
+            */}
 
             {/* New Profile Picture Modal */}
             {showProfileModal && (
@@ -432,6 +436,7 @@ function BookingStudent() {
                     </li>
                 ))}
             </ul>
+
         </div>
     );
 }

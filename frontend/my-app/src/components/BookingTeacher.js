@@ -10,7 +10,7 @@ function BookingTeacher() {
     const [selectedStudents, setSelectedStudents] = useState([]);
     const [schedule, setSchedule] = useState('');
     const [venue, setVenue] = useState('');
-    const [appointments, setAppointments] = useState({ pending: [], upcoming: [], canceled: [] });
+    const [appointments, setAppointments] = useState([]);
     const [searchTerm, setSearchTerm] = useState('');
     const [profileDetails, setProfileDetails] = useState({ name: '', id: '', role: '', department: '' });
     const [departmentName, setDepartmentName] = useState('');
@@ -286,7 +286,6 @@ function BookingTeacher() {
         return `${formattedDate} at ${formattedTime}`;
     };
 
-
     return (
         <div className="max-w-3xl mx-auto p-8 bg-white shadow-lg rounded-lg">
             <header className="flex justify-between items-center mb-4">
@@ -296,12 +295,6 @@ function BookingTeacher() {
                 </button>
                 <button onClick={handleLogout} className="space-x-2 bg-red-500 text-white px-4 py-2 rounded ">Logout</button>
             </header>
-
-            <ProfileDetails
-                profileDetails={profileDetails}
-                departmentName={departmentName}
-                onProfileClick={handleProfilePictureClick}
-            />
 
             {/* New Profile Picture Modal */}
             {showProfileModal && (

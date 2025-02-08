@@ -9,6 +9,7 @@ from routes.account_management import acc_management_bp
 from routes.course_routes import course_bp
 from routes.grade_routes import grade_bp # Import account management blueprint
 from routes.profile_routes import profile_bp  # added import for profile routes
+from routes.user_routes import user_bp  # <-- new import
 
 app = Flask(__name__)
 CORS(app, resources={r"/*": {"origins": "*"}})  # Allow all origins
@@ -18,7 +19,8 @@ CONVERTED_FOLDER = "converted/"
 os.makedirs(UPLOAD_FOLDER, exist_ok=True)
 os.makedirs(CONVERTED_FOLDER, exist_ok=True)
 
-# Register booking routes
+# Register blueprints
+app.register_blueprint(user_bp, url_prefix='/user')  # <-- new registration
 app.register_blueprint(booking_bp, url_prefix='/bookings')
 
 def convert_audio(input_path):
