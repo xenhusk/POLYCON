@@ -13,6 +13,8 @@ import AppointmentsCalendar from './components/AppointmentsCalendar';
 import ReactCrop from 'react-image-crop';
 import 'react-image-crop/dist/ReactCrop.css';
 import ProfilePictureUploader from './components/ProfilePictureUploader'; // added import
+import HomeTeacher from './components/HomeTeacher'; // added import
+
 
 // Inline component with cropping/upload logic remains unchanged
 function InlineProfilePictureUploader({ initialFile, onClose }) {
@@ -113,6 +115,7 @@ function InlineProfilePictureUploader({ initialFile, onClose }) {
 function App() {
   const [user, setUser] = useState(null);
   const [profile, setProfile] = useState(null);
+  const [teacherId, setTeacherId] = useState(localStorage.getItem("teacherId") || null);
   const navigate = useNavigate();
   const location = useLocation();
 
@@ -130,23 +133,29 @@ function App() {
         try {
           const response = await fetch(`http://localhost:5001/account/get_user_role?email=${storedEmail}`);
           const data = await response.json();
-          if (data.role === 'student') navigate('/booking-student');
-          else if (data.role === 'faculty') navigate('/booking-teacher');
-          else if (data.role === 'admin') navigate('/admin');
+          
+          if (data.role === 'faculty' && data.teacherId) {
+            setTeacherId(data.teacherId);
+            localStorage.setItem("teacherId", data.teacherId); // Store it for persistence
+          }
+
+          if (data.role === 'student' && location.pathname !== '/booking-student') {
+            navigate('/booking-student');
+          } else if (data.role === 'faculty' && location.pathname !== '/home-teacher' && location.pathname !== '/booking-teacher') {
+            navigate('/home-teacher');
+          } else if (data.role === 'admin' && location.pathname !== '/admin') {
+            navigate('/admin');
+          }
         } catch (error) {
           console.error('Error fetching user role:', error);
         }
       }
     };
-    if (
-        location.pathname !== '/session' &&
-        location.pathname !== '/courses' &&
-        location.pathname !== '/addgrade' &&
-        location.pathname !== '/appointments-calendar'
-    ) {
-        fetchUserRole();
+
+    if (!teacherId) {
+      fetchUserRole();
     }
-  }, [navigate, location.pathname]);
+  }, [navigate, location.pathname, teacherId]);
 
   useEffect(() => {
     const storedEmail = localStorage.getItem('userEmail');
@@ -189,12 +198,13 @@ function App() {
 
   const handleLogout = () => {
     localStorage.removeItem('userEmail');
-    localStorage.removeItem('userID'); // Ensure userID is removed
+    localStorage.removeItem('userID'); 
+    localStorage.removeItem('teacherId'); // Ensure teacherId is removed
     setUser(null);
     setProfile(null);
+    setTeacherId(null);
     navigate('/');
   };
-
   // Clicking the profile placeholder now triggers the modal popup
   const handleProfilePictureClick = () => {
     setShowProfileModal(true);
@@ -211,32 +221,6 @@ function App() {
 
   return (
     <div>
-      {profile && (
-        <header className="bg-gray-100 p-4 flex justify-between items-center">
-          <div onClick={handleProfilePictureClick} className="cursor-pointer flex items-center">
-            <img src={profile.profile_picture} alt="Profile" className="rounded-full w-12 h-12 mr-2" />
-            <div>
-              <h2 className="text-xl font-bold">{profile.name}</h2>
-              {profile.role.toLowerCase() === 'admin' ? (
-                <p className="text-gray-600">Admin</p>
-              ) : profile.role.toLowerCase() === 'faculty' ? (
-                <>
-                  <p className="text-gray-600">{profile.id} | {profile.role}</p>
-                  <p className="text-gray-600">{profile.department}</p>
-                </>
-              ) : (
-                <>
-                  <p className="text-gray-600">{profile.id} | {profile.role}</p>
-                  <p className="text-gray-600">{profile.program} {profile.year_section}</p>
-                </>
-              )}
-            </div>
-          </div>
-          <button onClick={handleLogout} className="bg-red-500 text-white px-4 py-2 rounded">
-            Logout
-          </button>
-        </header>
-      )}
 
       {/* New Profile Picture Modal */}
       {showProfileModal && (
@@ -278,7 +262,6 @@ function App() {
           </div>
         </div>
       )}
-
       <Routes>
         <Route path="/" element={<Home />} />
         <Route path="/booking-student" element={<BookingStudent />} />
@@ -290,7 +273,9 @@ function App() {
         <Route path="/courses" element={<Courses />} />
         <Route path="/addgrade" element={<AddGrade />} />
         <Route path="/appointments-calendar" element={<AppointmentsCalendar />} />
-        {/* Remove /profile-picture route */}
+        console.log("Passing Teacher ID to HomeTeacher:", teacherId);
+        <Route path="/home-teacher" element={<HomeTeacher teacherId={teacherId} />} />
+
       </Routes>
     </div>
   );
