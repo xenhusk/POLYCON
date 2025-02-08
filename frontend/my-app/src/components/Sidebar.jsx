@@ -316,7 +316,7 @@ const Sidebar = ({ onExpandChange }) => {
                     className="rounded-full w-10 h-10"  
                   />
                   <div className="absolute inset-0 bg-black bg-opacity-50 rounded-full opacity-0 group-hover:opacity-100 flex items-center justify-center transition-opacity duration-200">
-                    <span className="text-white text-xs">Edit Photo</span>
+                    <span className="text-white text-xs">Edit</span>
                   </div>
                 </div>
               </div>
