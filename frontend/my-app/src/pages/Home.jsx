@@ -1,13 +1,15 @@
 import React, { useState, useEffect } from "react";
-import logo from "./icons/logo2.png";
-import Consult1 from "./icons/Consult1.jpg";
-import Consult3 from "./icons/consult3.webp";
-import Consult2 from "./icons/consultation.webp";
-import Image1 from "./icons/ImageAbout.jpg";
-import Image2 from "./icons/ImageAbout1.jpg";
-import Image3 from "./icons/ImageAbout2.jpg";
-import Login from "./Login";
-import Signup from "./Signup";
+// Update icon and image imports
+import logo from "../components/icons/logo2.png";
+import Consult1 from "../components/icons/Consult1.jpg";
+import Consult3 from "../components/icons/consult3.webp";
+import Consult2 from "../components/icons/consultation.webp";
+import Image1 from "../components/icons/ImageAbout.jpg";
+import Image2 from "../components/icons/ImageAbout1.jpg";
+import Image3 from "../components/icons/ImageAbout2.jpg";
+// Update component imports
+import Login from "../components/Login";
+import Signup from "../components/Signup";
 
 const Home = () => {
   const [showLoginModal, setShowLoginModal] = useState(false);

@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import './Sidebar.css'; // Import the CSS file
 // Placeholder imports for SVG icons
@@ -8,12 +8,15 @@ import { ReactComponent as PastIcon } from './icons/past_consultation.svg';
 import { ReactComponent as GradesIcon } from './icons/grade.svg';
 import { ReactComponent as BellIcon } from './icons/bell.svg';
 import { ReactComponent as SettingsIcon } from './icons/setting.svg';
+import { ReactComponent as ClassRecorderIcon } from './icons/classRecord.svg';
 import logo from './icons/logo2.png';
 // Import missing icons from react-icons/fa
 import { FaHome, FaGraduationCap, FaClipboardList, FaUser, FaUsers, FaCog } from 'react-icons/fa'; // Added FaUsers, FaCog
 // NEW: helper for profile picture
 import { getProfilePictureUrl } from '../utils/utils';
 import ProfilePictureUploader from './ProfilePictureUploader';
+import SettingsPopup from './SettingsPopup';
+import NotificationTray from './NotificationTray';
 
 const Sidebar = ({ onExpandChange }) => {
   const [isOpen, setIsOpen] = useState(false);
@@ -25,6 +28,12 @@ const Sidebar = ({ onExpandChange }) => {
   const [profile, setProfile] = useState(null);
   const [showUploadModal, setShowUploadModal] = useState(false);
   const [isFrozen, setIsFrozen] = useState(false);
+  const [showSettings, setShowSettings] = useState(false);
+  const [settingsPosition, setSettingsPosition] = useState({ top: 0, left: 0 });
+  const settingsButtonRef = useRef(null);
+  const [showNotifications, setShowNotifications] = useState(false);
+  const [notificationPosition, setNotificationPosition] = useState({ top: 0, left: 0 });
+  const bellButtonRef = useRef(null);
   const navigate = useNavigate();
 
   useEffect(() => {
@@ -126,16 +135,16 @@ const Sidebar = ({ onExpandChange }) => {
   // Add path mappings for each role
   const menuPaths = {
     student: {
-      dashboard: '/home',
-      upcoming: '/appointments',
+      dashboard: '/dashboard',
+      appointments: '/appointments',
       past: '/history',
       grades: '/grades'
     },
     faculty: {
-      dashboard: '/home',
-      addgrade: '/addgrade',
-      booking: '/booking-teacher',
-      profile: '/profile'
+      dashboard: '/dashboard',
+      classRecord: '/addgrade',
+      appointments: '/appointments',
+      past: '/history'
     },
     admin: {
       dashboard: '/home',
@@ -179,6 +188,30 @@ const Sidebar = ({ onExpandChange }) => {
     setShowUploadModal(false);
   };
 
+  const handleSettingsClick = () => {
+    if (settingsButtonRef.current) {
+      const rect = settingsButtonRef.current.getBoundingClientRect();
+      setSettingsPosition({
+        // Position the popup 100px above the settings icon
+        top: rect.top - 100,
+        left: rect.right + 10
+      });
+    }
+    setShowSettings(!showSettings);
+  };
+
+  const handleBellClick = () => {
+    if (bellButtonRef.current) {
+      const rect = bellButtonRef.current.getBoundingClientRect();
+      setNotificationPosition({
+        // Position higher up to prevent overflow
+        top: rect.top - 300, // Increased offset to move tray higher
+        left: rect.right + 10
+      });
+    }
+    setShowNotifications(!showNotifications);
+  };
+
   useEffect(() => {
     // Notify parent component when sidebar expansion state changes
     onExpandChange?.(isOpen || isFrozen);
@@ -205,7 +238,7 @@ const Sidebar = ({ onExpandChange }) => {
       {userRole === 'student' && (
         <ul className="mt-2 space-y-3"> {/* Changed from mt-6 to mt-2 */}
           {renderMenuItem("dashboard", HomeIcon, "Home")}
-          {renderMenuItem("upcoming", UpcomingIcon, "Appointments")}
+          {renderMenuItem("appointments", UpcomingIcon, "Appointments")}
           {renderMenuItem("past", PastIcon, "History")}
           {renderMenuItem("grades", GradesIcon, "Grades")}
         </ul>
@@ -213,10 +246,10 @@ const Sidebar = ({ onExpandChange }) => {
 
       {userRole === 'faculty' && (
         <ul className="mt-2 space-y-3"> {/* Changed from mt-6 to mt-2 */}
-          {renderMenuItem("dashboard", () => <FaHome size={24} className="icon-white" />, "Dashboard")}
-          {renderMenuItem("addgrade", () => <FaGraduationCap size={24} className="icon-white" />, "Add Grade")}
-          {renderMenuItem("booking", () => <FaClipboardList size={24} className="icon-white" />, "Booking Panel")}
-          {renderMenuItem("profile", () => <FaUser size={24} className="icon-white" />, "Profile")}
+          {renderMenuItem("dashboard", HomeIcon, "Home")}
+          {renderMenuItem("appointments", UpcomingIcon, "Appointments")}
+          {renderMenuItem("past", PastIcon, "History")}
+          {renderMenuItem("classRecord", ClassRecorderIcon, "Class Record")}
         </ul>
       )}
 
@@ -228,17 +261,41 @@ const Sidebar = ({ onExpandChange }) => {
         </ul>
       )}
 
-      {/* Bell and Settings container - stacked vertically with fade effect */}
+      {/* Bell and Settings container */}
       <div className="absolute bottom-32 left-0 pl-7">
         <ul className="flex flex-col items-center space-y-4">
-          <li className={`no-hover-item relative h-8 flex items-center cursor-pointer transition-opacity duration-300 ${isOpen ? 'opacity-100' : 'opacity-0'}`}>
+          <li 
+            ref={bellButtonRef}
+            onClick={handleBellClick}
+            className={`no-hover-item relative h-8 flex items-center cursor-pointer transition-opacity duration-300 ${isOpen ? 'opacity-100' : 'opacity-0'}`}
+          >
             <BellIcon className="w-6 h-6 bell-icon -mr-2" />
+            {/* Notification dot */}
+            <span className="absolute -top-0 -right-2 h-3 w-3 bg-red-500 rounded-full"></span>
           </li>
-          <li className={`no-hover-item relative h-8 flex items-center cursor-pointer transition-opacity duration-300 ${isOpen ? 'opacity-100' : 'opacity-0'}`}>
+          <li 
+            ref={settingsButtonRef}
+            onClick={handleSettingsClick}
+            className={`no-hover-item relative h-8 flex items-center cursor-pointer transition-opacity duration-300 ${isOpen ? 'opacity-100' : 'opacity-0'}`}
+          >
             <SettingsIcon className="w-6 h-6 justify -mr-2" />
           </li>
         </ul>
       </div>
+
+      {/* Notification Tray */}
+      <NotificationTray 
+        isVisible={showNotifications} 
+        onClose={() => setShowNotifications(false)}
+        position={notificationPosition}
+      />
+
+      {/* Settings Popup */}
+      <SettingsPopup 
+        isVisible={showSettings} 
+        onClose={() => setShowSettings(false)}
+        position={settingsPosition}
+      />
 
       {/* Profile photo and user info container */}
       <div className="absolute bottom-10 left-0 pl-3 w-full pr-2">
