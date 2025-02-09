@@ -18,6 +18,13 @@ import Appointments from './pages/Appointments'; // Import the Appointments page
 import Sidebar from './components/Sidebar';
 import Home from './pages/Home'; // Update this import
 import { PreloadProvider } from './context/PreloadContext';
+import { AnimatePresence, motion } from 'framer-motion'; // Add framer-motion import
+
+// Update the variants to only include fade in (no fade out)
+const getVariants = () => ({
+	initial: { opacity: 0 },
+	animate: { opacity: 1 }
+});
 
 // Inline component with cropping/upload logic remains unchanged
 function InlineProfilePictureUploader({ initialFile, onClose }) {
@@ -326,48 +333,58 @@ function App() {
             </div>
           )}
 
-          <Routes>
-            {/* Public home route with redirect for logged-in users */}
-            <Route path="/" element={
-              localStorage.getItem('userEmail') ? 
-                <Navigate to="/dashboard" /> : 
-                <Home />
-            } />
+          <AnimatePresence>
+            <motion.div
+              key={location.pathname}
+              variants={getVariants()}
+              initial="initial"
+              animate="animate"
+              transition={{ duration: 0.5 }}
+            >
+              <Routes>
+                {/* Public home route with redirect for logged-in users */}
+                <Route path="/" element={
+                  localStorage.getItem('userEmail') ? 
+                    <Navigate to="/dashboard" /> : 
+                    <Home />
+                } />
 
-            {/* Auth routes with redirects */}
-            <Route path="/login" element={
-              !localStorage.getItem('userEmail') ? 
-                <Login onLoginSuccess={setUser} /> : 
-                <Navigate to="/dashboard" />
-            } />
-            <Route path="/signup" element={
-              !localStorage.getItem('userEmail') ? 
-                <Signup /> : 
-                <Navigate to="/dashboard" />
-            } />
+                {/* Auth routes with redirects */}
+                <Route path="/login" element={
+                  !localStorage.getItem('userEmail') ? 
+                    <Login onLoginSuccess={setUser} /> : 
+                    <Navigate to="/dashboard" />
+                } />
+                <Route path="/signup" element={
+                  !localStorage.getItem('userEmail') ? 
+                    <Signup /> : 
+                    <Navigate to="/dashboard" />
+                } />
 
-            {/* Protected dashboard route */}
-            <Route path="/dashboard" element={
-              localStorage.getItem('userEmail') ? 
-                <UserHome /> : 
-                <Navigate to="/" />
-            } />
+                {/* Protected dashboard route */}
+                <Route path="/dashboard" element={
+                  localStorage.getItem('userEmail') ? 
+                    <UserHome /> : 
+                    <Navigate to="/" />
+                } />
 
-            {/* Protected routes */}
-            <Route path="/booking-student" element={
-              localStorage.getItem('userEmail') ? 
-                <BookingStudent /> : 
-                <Navigate to="/login" replace />
-            } />
-            <Route path="/booking-teacher" element={<BookingTeacher />} />
-            <Route path="/session" element={<Session />} />
-            <Route path="/admin" element={<AdminPortal />} />
-            <Route path="/courses" element={<Courses />} />
-            <Route path="/addgrade" element={<AddGrade />} />
-            <Route path="/appointments-calendar" element={<AppointmentsCalendar />} />
-            <Route path="/sidebar-preview" element={<SidebarPreview />} /> {/* Add this route */}
-            <Route path="/appointments" element={<Appointments />} /> {/* Add this route */}
-          </Routes>
+                {/* Protected routes */}
+                <Route path="/booking-student" element={
+                  localStorage.getItem('userEmail') ? 
+                    <BookingStudent /> : 
+                    <Navigate to="/login" replace />
+                } />
+                <Route path="/booking-teacher" element={<BookingTeacher />} />
+                <Route path="/session" element={<Session />} />
+                <Route path="/admin" element={<AdminPortal />} />
+                <Route path="/courses" element={<Courses />} />
+                <Route path="/addgrade" element={<AddGrade />} />
+                <Route path="/appointments-calendar" element={<AppointmentsCalendar />} />
+                <Route path="/sidebar-preview" element={<SidebarPreview />} /> {/* Add this route */}
+                <Route path="/appointments" element={<Appointments />} /> {/* Add this route */}
+              </Routes>
+            </motion.div>
+          </AnimatePresence>
         </div>
       </div>
     </PreloadProvider>
