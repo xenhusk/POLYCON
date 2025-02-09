@@ -20,6 +20,9 @@ const BookingPopup = () => {
   const [showModal, setShowModal] = useState(false);
   const userRole = localStorage.getItem('userRole'); // 'faculty' or 'student'
   
+  // Only render for faculty and student roles
+  if (!['faculty', 'student'].includes(userRole)) return null;
+  
   const openModal = () => setShowModal(true);
   const closeModal = () => setShowModal(false);
 

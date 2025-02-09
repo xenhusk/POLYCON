@@ -202,7 +202,7 @@ function BookingStudent() {
     };
 
     return (
-        <div className="p-8 bg-white shadow-lg rounded-lg">
+        <div className="p-8 bg-white rounded-lg">
             {/* Booking form section */}
             <div className="mb-4 relative">
                 <label className="block text-gray-700 font-medium mb-1">Teacher:</label>

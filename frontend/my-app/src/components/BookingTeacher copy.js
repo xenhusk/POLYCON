@@ -4,6 +4,35 @@ import ProfilePictureUploader from './ProfilePictureUploader'; // replaced wrong
 import { getProfilePictureUrl } from '../utils/utils'; // import the utility function
 import ProfileDetails from './ProfileDetails';
 
+// Add or confirm the startSession helper function
+export function startSession(appointment) {
+  const teacherID = localStorage.getItem('teacherID');
+  if (!appointment.studentIDs || !Array.isArray(appointment.studentIDs) || appointment.studentIDs.length === 0) {
+    alert("Cannot start session: Missing student IDs.");
+    console.error("startSession: appointment.studentIDs not valid", appointment);
+    return;
+  }
+  fetch('http://localhost:5001/consultation/start_session', {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({
+      teacher_id: teacherID,
+      student_ids: appointment.studentIDs,
+    }),
+  })
+    .then(response => response.json().then(result => ({ ok: response.ok, result })))
+    .then(({ ok, result }) => {
+      if (ok) {
+        const sessionUrl = `/session?sessionID=${result.session_id}&teacherID=${teacherID}&studentIDs=${appointment.studentIDs.join(',')}`;
+        window.open(sessionUrl, '_blank');
+      } else {
+        alert(`Failed to start session: ${result.error || "Unknown error"}`);
+        console.error('Start session error:', result.error);
+      }
+    })
+    .catch(error => console.error('Error starting session:', error));
+}
+
 function BookingTeacher() {
     const [teacherID, setTeacherID] = useState('');
     const [students, setStudents] = useState([]);
@@ -229,29 +258,6 @@ function BookingTeacher() {
         }
     }
 
-    async function startSession(appointment) {
-        try {
-            const response = await fetch('http://localhost:5001/consultation/start_session', {
-                method: 'POST',
-                headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({
-                    teacher_id: teacherID,
-                    student_ids: appointment.studentIDs,
-                }),
-            });
-
-            const result = await response.json();
-            if (response.ok) {
-                const sessionUrl = `/session?sessionID=${result.session_id}&teacherID=${teacherID}&studentIDs=${appointment.studentIDs.join(',')}`;
-                window.open(sessionUrl, '_blank'); // Open session page in a new tab
-            } else {
-                alert(`Failed to start session: ${result.error || "Unknown error"}`);
-            }
-        } catch (error) {
-            console.error('Error starting session:', error);
-        }
-    }
-
     function showConfirmationInputs(bookingID, bookingItem) {
         const scheduleInput = document.createElement("input");
         scheduleInput.type = "datetime-local";
@@ -287,7 +293,7 @@ function BookingTeacher() {
     };
 
     return (
-        <div className="max-w-3xl mx-auto p-8 bg-white rounded-lg">
+        <div className="max-w-3xl mx-auto p-8 bg-white shadow-lg rounded-lg">
             {/* New Profile Picture Modal */}
             {showProfileModal && (
                 <div className="fixed inset-0 bg-black bg-opacity-50 flex justify-center items-center z-50">
@@ -406,6 +412,57 @@ function BookingTeacher() {
             <button onClick={bookAppointment} className="bg-blue-500 text-white px-4 py-2 rounded-lg">
                 Book Appointment
             </button>
+
+            <h3 className="text-lg font-bold mt-6">Pending Appointments</h3>
+            <ul className="space-y-4">
+                {appointments.pending?.map(app => (
+                    <li id={`pending-${app.id}`} key={app.id} className="p-4 border rounded-lg shadow-sm bg-gray-50">
+                        <div className="flex justify-between items-center">
+                            <div>
+                                <p><strong>Students:</strong> {app.studentNames}</p>
+                            </div>
+                            <div className="flex space-x-2">
+                                <button onClick={() => showConfirmationInputs(app.id, document.getElementById(`pending-${app.id}`))} className="bg-blue-500 text-white px-4 py-2 rounded-lg">Confirm</button>
+                                <button onClick={() => cancelBooking(app.id)} className="bg-red-500 text-white px-4 py-2 rounded-lg">Cancel</button>
+                            </div>
+                        </div>
+                    </li>
+                ))}
+            </ul>
+
+            <h3 className="text-lg font-bold mt-6">Upcoming Appointments</h3>
+            <ul className="space-y-4">
+                {appointments.upcoming?.map(app => (
+                    <li key={app.id} className="p-4 border rounded-lg shadow-sm bg-gray-50">
+                        <div className="flex justify-between items-center">
+                            <div>
+                                <p><strong>Students:</strong> {app.studentNames}</p>
+                                <p><strong>Schedule:</strong> {formatDateTime(app.schedule)}</p>
+                                <p><strong>Venue:</strong> {app.venue}</p>
+                            </div>
+                            <div className="flex space-x-2">
+                                <button onClick={() => startSession(app)} className="bg-green-500 text-white px-4 py-2 rounded-lg">Start Session</button>
+                                <button onClick={() => cancelBooking(app.id)} className="bg-red-500 text-white px-4 py-2 rounded-lg">Cancel</button>
+                            </div>
+                        </div>
+                    </li>
+                ))}
+            </ul>
+
+            <h3 className="text-lg font-bold mt-6">Canceled Appointments</h3>
+            <ul className="space-y-4">
+                {appointments.canceled?.map(app => (
+                    <li key={app.id} className="p-4 border rounded-lg shadow-sm bg-gray-50">
+                        <div>
+                            <p><strong>Students:</strong> {app.studentNames}</p>
+                            <p>
+                                <strong>Schedule:</strong> {app.schedule && !isNaN(new Date(app.schedule).getTime()) ? formatDateTime(app.schedule) : ''}
+                            </p>
+                            <p><strong>Venue:</strong> {app.venue}</p>
+                        </div>
+                    </li>
+                ))}
+            </ul>
         </div>
     );
 }

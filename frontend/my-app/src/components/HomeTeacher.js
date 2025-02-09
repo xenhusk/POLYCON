@@ -79,22 +79,22 @@ const HomeTeacher = () => {
 
             {/* Stats Section - Placed at the Top */}
             <div className="grid grid-cols-3 gap-6 w-full max-w-5xl">
-                <div className="bg-red-500 text-white p-6 rounded-lg text-center shadow-lg">
-                    <p className="text-lg font-semibold">Total Number of Consultation Hours</p>
-                    <h2 className="text-5xl font-bold">{stats.total_hours}</h2>
-                    <p className="text-lg font-medium">Hours</p>
+                <div className="bg-[#ED6B60] text-white p-6 rounded-lg text-center shadow-lg">
+                    <p className="text-lg font-regular">Total Consultation Hours</p>
+                    <h2 className="text-6xl font-bold">{stats.total_hours}</h2>
+                    <p className="text-xs font-medium">Hours</p>
                 </div>
 
-                <div className="bg-blue-500 text-white p-6 rounded-lg text-center shadow-lg">
-                    <p className="text-lg font-semibold">Total Number of Consultations</p>
-                    <h2 className="text-5xl font-bold">{stats.total_consultations}</h2>
-                    <p className="text-lg font-medium">Consultations</p>
+                <div className="bg-[#057DCD] text-white p-6 rounded-lg text-center shadow-lg">
+                    <p className="text-lg font-regular">Total Consultations</p>
+                    <h2 className="text-6xl font-bold">{stats.total_consultations}</h2>
+                    <p className="text-xs font-medium">Consultations</p>
                 </div>
 
-                <div className="bg-green-500 text-white p-6 rounded-lg text-center shadow-lg">
-                    <p className="text-lg font-semibold">Total Number of Students Consulted</p>
-                    <h2 className="text-5xl font-bold">{stats.unique_students}</h2>
-                    <p className="text-lg font-medium">Students</p>
+                <div className="bg-[#03C5A8] text-white p-6 rounded-lg text-center shadow-lg">
+                    <p className="text-lg font-regular">Total Students Consulted</p>
+                    <h2 className="text-6xl font-bold">{stats.unique_students}</h2>
+                    <p className="text-xs font-medium">Students</p>
                 </div>
             </div>
 
@@ -141,14 +141,6 @@ const HomeTeacher = () => {
                 </ResponsiveContainer>
             </div>
         </div>
-
-        {/* Button to navigate to teacher booking */}
-        <button 
-            onClick={handleBookingClick} 
-            className="mt-6 bg-blue-500 text-white py-2 px-4 rounded-lg shadow-lg hover:bg-blue-700"
-        >
-            Go to Teacher Booking
-        </button>
         </div>
     );
 };
