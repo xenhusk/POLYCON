@@ -25,7 +25,7 @@ const Sidebar = ({ onExpandChange }) => {
   // NEW: state for profile picture URL
   const [profilePicture, setProfilePicture] = useState('');
   const [userDetails, setUserDetails] = useState(null);
-  const [activeItem, setActiveItem] = useState('dashboard'); // Changed from empty string to 'dashboard'
+  const [activeItem, setActiveItem] = useState('dashboard'); // Home is default
   const [profile, setProfile] = useState(null);
   const [showUploadModal, setShowUploadModal] = useState(false);
   const [isFrozen, setIsFrozen] = useState(false);
@@ -184,14 +184,18 @@ const Sidebar = ({ onExpandChange }) => {
     </li>
   );
 
-  // NEW: Update pointer position whenever the active item changes.
+  // NEW: When userRole changes, force pointer to "dashboard" (Home) if not already set
+  useEffect(() => {
+    setActiveItem('dashboard');
+  }, [userRole]);
+
+  // NEW: Update pointer position whenever activeItem or userRole changes
   useEffect(() => {
     const ref = menuItemRefs.current[activeItem];
     if (ref) {
-      // Set pointer's top to the vertical center of the item; adjust offset as needed.
       setPointerPosition(ref.offsetTop + ref.offsetHeight / 2);
     }
-  }, [activeItem]);
+  }, [activeItem, userRole]);
 
   const handleModalClose = () => {
     // Keep sidebar expanded for a moment after modal closes
