@@ -27,7 +27,7 @@ const GradeViewer = () => {
         studentID: studentID,
         schoolYear: schoolYear || "", 
         semester: semester || "",
-        period: period || ""
+         period: period || ""
       }).toString();
 
       const response = await fetch(`http://localhost:5001/grade/get_student_grades?${queryParams}`);
@@ -48,7 +48,7 @@ const GradeViewer = () => {
     <div className="p-6">
       <h2 className="text-2xl font-bold text-gray-800 mb-4">Grades</h2>
 
-      {/* Filters for School Year, Semester, and Period */}
+      {/* Filters for School Year and Semester */}
       <div className="flex gap-4 mb-4">
         <select
           className="border p-2 rounded-lg"
@@ -81,8 +81,8 @@ const GradeViewer = () => {
           <option value="Pre-Final">Pre-Final</option>
           <option value="Final">Final</option>
         </select>
-
-        {/* <button
+{/* 
+        <button
           className="bg-blue-500 text-white px-4 py-2 rounded-lg hover:bg-blue-600"
           onClick={fetchGrades}
         >
@@ -101,7 +101,7 @@ const GradeViewer = () => {
         <table className="min-w-full border border-gray-300">
           <thead>
             <tr className="bg-gray-100">
-              <th className="border p-2">Course ID</th>
+              <th className="border p-2">Subject Code</th>
               <th className="border p-2">Subject Name</th>
               <th className="border p-2">Credit</th>
               <th className="border p-2">Instructor</th>
@@ -115,7 +115,7 @@ const GradeViewer = () => {
                 <td className="border p-2">{grade.courseID}</td>
                 <td className="border p-2">{grade.courseName}</td>
                 <td className="border p-2">3.0</td>
-                <td className="border p-2">{grade.facultyID}</td>
+                <td className="border p-2">{grade.facultyName}</td>
                 <td className="border p-2">{grade.grade}</td>
                 <td className="border p-2">
                   <span
