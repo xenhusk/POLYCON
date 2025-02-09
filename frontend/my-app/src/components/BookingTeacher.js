@@ -2,6 +2,7 @@ import React, { useState, useRef, useEffect } from 'react';
 import { useNavigate, useLocation } from 'react-router-dom';
 import ProfilePictureUploader from './ProfilePictureUploader'; // replaced wrong component import
 import { getProfilePictureUrl } from '../utils/utils'; // import the utility function
+import ProfileDetails from './ProfileDetails';
 
 function BookingTeacher() {
     const [teacherID, setTeacherID] = useState('');
@@ -9,7 +10,7 @@ function BookingTeacher() {
     const [selectedStudents, setSelectedStudents] = useState([]);
     const [schedule, setSchedule] = useState('');
     const [venue, setVenue] = useState('');
-    const [appointments, setAppointments] = useState({ pending: [], upcoming: [], canceled: [] });
+    const [appointments, setAppointments] = useState([]);
     const [searchTerm, setSearchTerm] = useState('');
     const [profileDetails, setProfileDetails] = useState({ name: '', id: '', role: '', department: '' });
     const [departmentName, setDepartmentName] = useState('');
@@ -285,32 +286,8 @@ function BookingTeacher() {
         return `${formattedDate} at ${formattedTime}`;
     };
 
-
     return (
         <div className="max-w-3xl mx-auto p-8 bg-white shadow-lg rounded-lg">
-            <header className="flex justify-between items-center mb-4">
-                <h2 className="text-2xl font-bold text-gray-800">Teacher Booking Panel</h2>
-                <button onClick={() => navigate('/addgrade')} className=" bg-blue-500 text-white px-2 py-2 rounded">
-                    Add Grade
-                </button>
-                <button onClick={handleLogout} className="space-x-2 bg-red-500 text-white px-4 py-2 rounded ">Logout</button>
-            </header>
-
-            {/* Updated Teacher profile details */}
-            <div className="mb-4 flex items-center">
-                <img 
-                    src={profileDetails.profile_picture} 
-                    alt="Profile" 
-                    className="rounded-full w-24 h-24 mr-4 cursor-pointer"
-                    onClick={handleProfilePictureClick}
-                />
-                <div>
-                    <h3 className="text-xl font-bold text-gray-800">{profileDetails.name || 'No profile info'}</h3>
-                    <p className="text-gray-600">{profileDetails.id} | {profileDetails.role}</p>
-                    <p className="text-gray-600">{departmentName}</p>
-                </div>
-            </div>
-
             {/* New Profile Picture Modal */}
             {showProfileModal && (
                 <div className="fixed inset-0 bg-black bg-opacity-50 flex justify-center items-center z-50">

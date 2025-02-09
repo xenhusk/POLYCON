@@ -1,5 +1,5 @@
 import React, { useEffect, useState, useRef, useCallback } from 'react';
-import { BrowserRouter, Routes, Route, useNavigate, useLocation } from 'react-router-dom';
+import { BrowserRouter as Router, Routes, Route, useNavigate, useLocation } from 'react-router-dom';
 import BookingStudent from './components/BookingStudent';
 import BookingTeacher from './components/BookingTeacher';
 import Session from './components/Session';
@@ -15,6 +15,9 @@ import 'react-image-crop/dist/ReactCrop.css';
 import ProfilePictureUploader from './components/ProfilePictureUploader'; // added import
 import HomeTeacher from './components/HomeTeacher'; // added import
 
+import SidebarPreview from './components/SidebarPreview'; // Import the SidebarPreview component
+import Appointments from './pages/Appointments'; // Import the Appointments page
+import Sidebar from './components/Sidebar';
 
 // Inline component with cropping/upload logic remains unchanged
 function InlineProfilePictureUploader({ initialFile, onClose }) {
@@ -118,6 +121,11 @@ function App() {
   const [teacherId, setTeacherId] = useState(localStorage.getItem("teacherId") || null);
   const navigate = useNavigate();
   const location = useLocation();
+  const [userRole, setUserRole] = useState('');
+  const [sidebarExpanded, setSidebarExpanded] = useState(false);
+  
+  // List of routes that should not trigger role fetching
+  const noRoleFetchPaths = ['/appointments', '/someOtherRolelessPage'];
 
   // Remove the old fileInputRef used in header; add modal-specific states
   const modalFileInputRef = useRef(null);
@@ -127,72 +135,69 @@ function App() {
   const fileInputRef = useRef(null); // remains for other uses if needed
 
   useEffect(() => {
-    const fetchUserRole = async () => {
+    // Only fetch role if current pathname is not in noRoleFetchPaths
+    if (!noRoleFetchPaths.includes(location.pathname)) {
       const storedEmail = localStorage.getItem('userEmail');
       if (storedEmail) {
-        try {
-          const response = await fetch(`http://localhost:5001/account/get_user_role?email=${storedEmail}`);
-          const data = await response.json();
-          
-          if (data.role === 'faculty' && data.teacherId) {
-            setTeacherId(data.teacherId);
-            localStorage.setItem("teacherId", data.teacherId); // Store it for persistence
-          }
-
-          if (data.role === 'student' && location.pathname !== '/booking-student') {
-            navigate('/booking-student');
-          } else if (data.role === 'faculty' && location.pathname !== '/home-teacher' && location.pathname !== '/booking-teacher') {
-            navigate('/home-teacher');
-          } else if (data.role === 'admin' && location.pathname !== '/admin') {
-            navigate('/admin');
-          }
-        } catch (error) {
-          console.error('Error fetching user role:', error);
-        }
+        fetch(`http://localhost:5001/account/get_user_role?email=${storedEmail}`)
+          .then(res => res.json())
+          .then(data => setUserRole(data.role))
+          .catch(err => console.error('Error fetching user role:', err));
       }
-    };
-
-    if (!teacherId) {
-      fetchUserRole();
     }
-  }, [navigate, location.pathname, teacherId]);
+  }, [location.pathname]);
 
   useEffect(() => {
     const storedEmail = localStorage.getItem('userEmail');
     if (storedEmail) {
-      fetch(`http://localhost:5001/account/get_user?email=${storedEmail}`)
-        .then(response => response.json())
-        .then(data => {
-          localStorage.setItem('userID', data.id); // Ensure userID is stored
-          if (data.role === 'student') {
-            fetch(`http://localhost:5001/bookings/get_students`)
-              .then(response => response.json())
-              .then(students => {
-                const student = students.find(s => s.id === data.id);
-                if (student) {
-                  setProfile({
-                    name: `${student.firstName} ${student.lastName}`,
-                    id: student.id,
-                    role: 'Student',
-                    program: student.program || 'Unknown Program',
-                    year_section: student.year_section || 'Unknown Year/Section',
-                    profile_picture: data.profile_picture || 'https://via.placeholder.com/100'
+      // First get the user role
+      fetch(`http://localhost:5001/account/get_user_role?email=${storedEmail}`)
+        .then(res => res.json())
+        .then(roleData => {
+          const role = roleData.role;
+          
+          // Then fetch user details based on role
+          fetch(`http://localhost:5001/user/get_user?email=${storedEmail}`)
+            .then(response => response.json())
+            .then(data => {
+              localStorage.setItem('userID', data.id);
+              
+              if (role === 'faculty') {
+                setProfile({
+                  name: `${data.firstName} ${data.lastName}`,
+                  id: data.id || data.idNumber,
+                  role: 'Teacher',
+                  department: data.department,
+                  profile_picture: data.profile_picture || 'https://via.placeholder.com/100'
+                });
+              } else if (role === 'student') {
+                fetch(`http://localhost:5001/bookings/get_students`)
+                  .then(response => response.json())
+                  .then(students => {
+                    const student = students.find(s => s.id === data.id);
+                    if (student) {
+                      setProfile({
+                        name: `${student.firstName} ${student.lastName}`,
+                        id: student.id,
+                        role: 'Student',
+                        program: student.program || 'Unknown Program',
+                        year_section: student.year_section || 'Unknown Year/Section',
+                        profile_picture: data.profile_picture || 'https://via.placeholder.com/100'
+                      });
+                    }
                   });
-                }
-              });
-          } else {
-            setProfile({
-              name: `${data.firstName} ${data.lastName}`,
-              id: data.id || data.idNumber,
-              role: data.role ? data.role.charAt(0).toUpperCase() + data.role.slice(1) : '',
-              department: data.department || 'Unknown Department',
-              program: data.program || 'Unknown Program',
-              year_section: data.year_section || 'Unknown Year/Section',
-              profile_picture: data.profile_picture || 'https://via.placeholder.com/100'
+              } else {
+                // Handle admin or other roles
+                setProfile({
+                  name: `${data.firstName} ${data.lastName}`,
+                  id: data.id || data.idNumber,
+                  role: role.charAt(0).toUpperCase() + role.slice(1),
+                  profile_picture: data.profile_picture || 'https://via.placeholder.com/100'
+                });
+              }
             });
-          }
         })
-        .catch(error => console.error('Error fetching profile details:', error));
+        .catch(error => console.error('Error fetching user role:', error));
     }
   }, []);
 
@@ -220,63 +225,89 @@ function App() {
   };
 
   return (
-    <div>
-
-      {/* New Profile Picture Modal */}
-      {showProfileModal && (
-        <div className="fixed inset-0 bg-black bg-opacity-50 flex justify-center items-center z-50">
-          <div className="bg-white p-6 rounded-lg shadow-lg">
-            {modalStep === 'upload' && (
-              <div>
-                <h2 className="text-xl font-bold mb-4">Upload a Profile Picture</h2>
-                <button
-                  onClick={() => modalFileInputRef.current && modalFileInputRef.current.click()}
-                  className="bg-blue-500 text-white px-4 py-2 rounded"
-                >
-                  Choose File
-                </button>
-                <input
-                  ref={modalFileInputRef}
-                  type="file"
-                  accept="image/*"
-                  onChange={onModalSelectFile}
-                  style={{ display: 'none' }}
-                />
-                <button
-                  onClick={() => setShowProfileModal(false)}
-                  className="bg-gray-300 text-black px-4 py-2 rounded ml-4"
-                >
-                  Cancel
-                </button>
-              </div>
-            )}
-            {modalStep === 'crop' && (
-              <ProfilePictureUploader
-                initialFile={modalSelectedFile}
-                onClose={() => {
-                  setShowProfileModal(false);
-                  setModalSelectedFile(null);
-                }}
-              />
-            )}
-          </div>
-        </div>
+    <div className="app-container flex">
+      {localStorage.getItem('userEmail') && (
+        <Sidebar onExpandChange={setSidebarExpanded} />
       )}
-      <Routes>
-        <Route path="/" element={<Home />} />
-        <Route path="/booking-student" element={<BookingStudent />} />
-        <Route path="/booking-teacher" element={<BookingTeacher />} />
-        <Route path="/session" element={<Session />} />
-        <Route path="/signup" element={<Signup />} />
-        <Route path="/login" element={<Login onLoginSuccess={setUser} />} />
-        <Route path="/admin" element={<AdminPortal />} />
-        <Route path="/courses" element={<Courses />} />
-        <Route path="/addgrade" element={<AddGrade />} />
-        <Route path="/appointments-calendar" element={<AppointmentsCalendar />} />
-        console.log("Passing Teacher ID to HomeTeacher:", teacherId);
-        <Route path="/home-teacher" element={<HomeTeacher teacherId={teacherId} />} />
+      
+      <div className={`flex-1 transition-all duration-300 ${
+        localStorage.getItem('userEmail') 
+          ? sidebarExpanded 
+            ? 'ml-64' 
+            : 'ml-20'
+          : ''
+      }`}>
+        {/* Remove the header section below */}
+        {/*
+        {profile && (
+          <header className="bg-gray-100 p-4 flex justify-between items-center">
+            <div onClick={handleProfilePictureClick} className="cursor-pointer flex items-center">
+              ... header content ...
+            </div>
+            <button onClick={handleLogout} className="bg-red-500 text-white px-4 py-2 rounded">
+              Logout
+            </button>
+          </header>
+        )}
+        */}
 
-      </Routes>
+        {/* New Profile Picture Modal */}
+        {showProfileModal && (
+          <div className="fixed inset-0 bg-black bg-opacity-50 flex justify-center items-center z-50">
+            <div className="bg-white p-6 rounded-lg shadow-lg">
+              {modalStep === 'upload' && (
+                <div>
+                  <h2 className="text-xl font-bold mb-4">Upload a Profile Picture</h2>
+                  <button
+                    onClick={() => modalFileInputRef.current && modalFileInputRef.current.click()}
+                    className="bg-blue-500 text-white px-4 py-2 rounded"
+                  >
+                    Choose File
+                  </button>
+                  <input
+                    ref={modalFileInputRef}
+                    type="file"
+                    accept="image/*"
+                    onChange={onModalSelectFile}
+                    style={{ display: 'none' }}
+                  />
+                  <button
+                    onClick={() => setShowProfileModal(false)}
+                    className="bg-gray-300 text-black px-4 py-2 rounded ml-4"
+                  >
+                    Cancel
+                  </button>
+                </div>
+              )}
+              {modalStep === 'crop' && (
+                <ProfilePictureUploader
+                  initialFile={modalSelectedFile}
+                  onClose={() => {
+                    setShowProfileModal(false);
+                    setModalSelectedFile(null);
+                  }}
+                />
+              )}
+            </div>
+          </div>
+        )}
+
+        <Routes>
+          <Route path="/" element={<Home />} />
+          <Route path="/booking-student" element={<BookingStudent />} />
+          <Route path="/booking-teacher" element={<BookingTeacher />} />
+          <Route path="/session" element={<Session />} />
+          <Route path="/signup" element={<Signup />} />
+          <Route path="/login" element={<Login onLoginSuccess={setUser} />} />
+          <Route path="/admin" element={<AdminPortal />} />
+          <Route path="/courses" element={<Courses />} />
+          <Route path="/addgrade" element={<AddGrade />} />
+          <Route path="/appointments-calendar" element={<AppointmentsCalendar />} />
+          <Route path="/sidebar-preview" element={<SidebarPreview />} /> {/* Add this route */}
+          <Route path="/appointments" element={<Appointments />} /> {/* Add this route */}
+          {/* Remove /profile-picture route */}
+        </Routes>
+      </div>
     </div>
   );
 }
