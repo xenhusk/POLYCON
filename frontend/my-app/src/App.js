@@ -21,6 +21,8 @@ import Sidebar from './components/Sidebar';
 import Home from './pages/Home'; // Update this import
 import { PreloadProvider } from './context/PreloadContext';
 import { AnimatePresence, motion } from 'framer-motion'; // Add framer-motion import
+import BookingPopup from './components/BookingPopup'; // Add import
+import GradeViewer from './components/GradeViewer';
 
 // Update the variants to only include fade in (no fade out)
 const getVariants = () => ({
