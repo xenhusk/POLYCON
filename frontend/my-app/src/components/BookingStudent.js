@@ -203,60 +203,7 @@ function BookingStudent() {
 
     return (
         <div className="p-8 bg-white shadow-lg rounded-lg">
-            <header className="flex justify-between items-center mb-4">
-                <h2 className="text-2xl font-bold text-gray-800">Student Booking Panel</h2>
-                <button onClick={handleLogout} className="bg-red-500 text-white px-4 py-2 rounded">Logout</button>
-            </header>
-
-            {/* Removed Student profile details block */}
-            {/*
-            <ProfileDetails
-                profileDetails={profileDetails}
-                onProfileClick={handleProfilePictureClick}
-            />
-            */}
-
-            {/* New Profile Picture Modal */}
-            {showProfileModal && (
-                <div className="fixed inset-0 bg-black bg-opacity-50 flex justify-center items-center z-50">
-                    <div className="bg-white p-6 rounded-lg shadow-lg">
-                        {modalStep === 'upload' && (
-                            <div>
-                                <h2 className="text-xl font-bold mb-4">Upload a Profile Picture</h2>
-                                <button
-                                    onClick={() => modalFileInputRef.current && modalFileInputRef.current.click()}
-                                    className="bg-blue-500 text-white px-4 py-2 rounded"
-                                >
-                                    Choose File
-                                </button>
-                                <input
-                                    ref={modalFileInputRef}
-                                    type="file"
-                                    accept="image/*"
-                                    onChange={onModalSelectFile}
-                                    style={{ display: 'none' }}
-                                />
-                                <button
-                                    onClick={() => setShowProfileModal(false)}
-                                    className="bg-gray-300 text-black px-4 py-2 rounded ml-4"
-                                >
-                                    Cancel
-                                </button>
-                            </div>
-                        )}
-                        {modalStep === 'crop' && (
-                            <ProfilePictureUploader
-                                initialFile={modalSelectedFile}
-                                onClose={() => {
-                                    setShowProfileModal(false);
-                                    setModalSelectedFile(null);
-                                }}
-                            />
-                        )}
-                    </div>
-                </div>
-            )}
-
+            {/* Booking form section */}
             <div className="mb-4 relative">
                 <label className="block text-gray-700 font-medium mb-1">Teacher:</label>
                 <div className="flex items-center border border-gray-300 rounded-lg px-3 py-2">
@@ -390,53 +337,7 @@ function BookingStudent() {
                 <button onClick={requestAppointment} className="bg-blue-500 text-white px-4 py-2 rounded-lg">
                     Request Appointment
                 </button>
-                <button onClick={navigateToCalendar} className="bg-blue-500 text-white px-4 py-2 rounded-lg">
-                    View Calendar
-                </button>
             </div>
-
-            <h3 className="text-lg font-bold mt-6">Pending Appointments</h3>
-            <ul className="space-y-4">
-                {appointments.pending?.map(app => (
-                    <li key={app.id} className="p-4 border rounded-lg shadow-sm bg-gray-50">
-                        <div>
-                            <p><strong>Teacher:</strong> {app.teacherName}</p>
-                            <p><strong>Students:</strong> {app.studentNames}</p>
-                        </div>
-                    </li>
-                ))}
-            </ul>
-
-            <h3 className="text-lg font-bold mt-6">Upcoming Appointments</h3>
-            <ul className="space-y-4">
-                {appointments.upcoming?.map(app => (
-                    <li key={app.id} className="p-4 border rounded-lg shadow-sm bg-gray-50">
-                        <div>
-                            <p><strong>Teacher:</strong> {app.teacherName}</p>
-                            <p><strong>Students:</strong> {app.studentNames}</p>
-                            <p><strong>Schedule:</strong> {formatDateTime(app.schedule)}</p>
-                            <p><strong>Venue:</strong> {app.venue}</p>
-                        </div>
-                    </li>
-                ))}
-            </ul>
-
-            <h3 className="text-lg font-bold mt-6">Canceled Appointments</h3>
-            <ul className="space-y-4">
-                {appointments.canceled?.map(app => (
-                    <li key={app.id} className="p-4 border rounded-lg shadow-sm bg-gray-50">
-                        <div>
-                            <p><strong>Teacher:</strong> {app.teacherName}</p>
-                            <p><strong>Students:</strong> {app.studentNames}</p>
-                            <p>
-                                <strong>Schedule:</strong> {app.schedule && !isNaN(new Date(app.schedule).getTime()) ? formatDateTime(app.schedule) : ''}
-                            </p>
-                            <p><strong>Venue:</strong> {app.venue}</p>
-                        </div>
-                    </li>
-                ))}
-            </ul>
-
         </div>
     );
 }

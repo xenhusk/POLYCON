@@ -406,57 +406,6 @@ function BookingTeacher() {
             <button onClick={bookAppointment} className="bg-blue-500 text-white px-4 py-2 rounded-lg">
                 Book Appointment
             </button>
-
-            <h3 className="text-lg font-bold mt-6">Pending Appointments</h3>
-            <ul className="space-y-4">
-                {appointments.pending?.map(app => (
-                    <li id={`pending-${app.id}`} key={app.id} className="p-4 border rounded-lg shadow-sm bg-gray-50">
-                        <div className="flex justify-between items-center">
-                            <div>
-                                <p><strong>Students:</strong> {app.studentNames}</p>
-                            </div>
-                            <div className="flex space-x-2">
-                                <button onClick={() => showConfirmationInputs(app.id, document.getElementById(`pending-${app.id}`))} className="bg-blue-500 text-white px-4 py-2 rounded-lg">Confirm</button>
-                                <button onClick={() => cancelBooking(app.id)} className="bg-red-500 text-white px-4 py-2 rounded-lg">Cancel</button>
-                            </div>
-                        </div>
-                    </li>
-                ))}
-            </ul>
-
-            <h3 className="text-lg font-bold mt-6">Upcoming Appointments</h3>
-            <ul className="space-y-4">
-                {appointments.upcoming?.map(app => (
-                    <li key={app.id} className="p-4 border rounded-lg shadow-sm bg-gray-50">
-                        <div className="flex justify-between items-center">
-                            <div>
-                                <p><strong>Students:</strong> {app.studentNames}</p>
-                                <p><strong>Schedule:</strong> {formatDateTime(app.schedule)}</p>
-                                <p><strong>Venue:</strong> {app.venue}</p>
-                            </div>
-                            <div className="flex space-x-2">
-                                <button onClick={() => startSession(app)} className="bg-green-500 text-white px-4 py-2 rounded-lg">Start Session</button>
-                                <button onClick={() => cancelBooking(app.id)} className="bg-red-500 text-white px-4 py-2 rounded-lg">Cancel</button>
-                            </div>
-                        </div>
-                    </li>
-                ))}
-            </ul>
-
-            <h3 className="text-lg font-bold mt-6">Canceled Appointments</h3>
-            <ul className="space-y-4">
-                {appointments.canceled?.map(app => (
-                    <li key={app.id} className="p-4 border rounded-lg shadow-sm bg-gray-50">
-                        <div>
-                            <p><strong>Students:</strong> {app.studentNames}</p>
-                            <p>
-                                <strong>Schedule:</strong> {app.schedule && !isNaN(new Date(app.schedule).getTime()) ? formatDateTime(app.schedule) : ''}
-                            </p>
-                            <p><strong>Venue:</strong> {app.venue}</p>
-                        </div>
-                    </li>
-                ))}
-            </ul>
         </div>
     );
 }
