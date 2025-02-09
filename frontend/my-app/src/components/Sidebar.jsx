@@ -141,7 +141,7 @@ const Sidebar = ({ onExpandChange }) => {
       dashboard: '/dashboard',
       appointments: '/appointments',
       past: '/history',
-      grades: '/grades'
+      grades: '/gradeview'
     },
     faculty: {
       dashboard: '/dashboard',

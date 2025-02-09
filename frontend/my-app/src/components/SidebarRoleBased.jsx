@@ -19,6 +19,7 @@ const SidebarRoleBased = () => {
       { icon: <FaClipboardList size={24} />, text: 'Request Appointment', link: '/request' },
       { icon: <FaClipboardList size={24} />, text: 'Calendar', link: '/appointments-calendar' },
       { icon: <FaUser size={24} />, text: 'Profile', link: '/profile' },
+      { icon: <FaGraduationCap size={24} />, text: 'Grades', link: '/gradeview' },
     ],
     faculty: [
       { icon: <FaHome size={24} />, text: 'Dashboard', link: '/dashboard' },

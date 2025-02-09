@@ -33,13 +33,11 @@ def get_hometeacher_stats():
                     if isinstance(student_ref, firestore.DocumentReference):
                         student_visits.append(student_ref.id)
 
-        # Convert total seconds to hours:minutes format
-        hours = total_seconds // 3600
-        minutes = (total_seconds % 3600) // 60
-        total_hours_formatted = f"{hours}:{minutes:02d}"  # Format as HH:MM
+        # Convert total seconds to decimal hours
+        total_hours_decimal = total_seconds / 3600
 
         return jsonify({
-            'total_hours': total_hours_formatted,
+            'total_hours': round(total_hours_decimal, 2),  # Format as decimal with 2 decimal places
             'total_consultations': total_consultations,
             'unique_students': len(student_visits)
         })

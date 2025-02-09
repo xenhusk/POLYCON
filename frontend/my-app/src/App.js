@@ -21,7 +21,6 @@ import Sidebar from './components/Sidebar';
 import Home from './pages/Home'; // Update this import
 import { PreloadProvider } from './context/PreloadContext';
 import { AnimatePresence, motion } from 'framer-motion'; // Add framer-motion import
-import BookingPopup from './components/BookingPopup'; // Add import
 
 // Update the variants to only include fade in (no fade out)
 const getVariants = () => ({
@@ -387,6 +386,8 @@ function App() {
                 <Route path="/appointments-calendar" element={<AppointmentsCalendar />} />
                 <Route path="/sidebar-preview" element={<SidebarPreview />} /> {/* Add this route */}
                 <Route path="/appointments" element={<Appointments />} /> {/* Add this route */}
+                <Route path="/home-teacher" element={<HomeTeacher />} /> {/* Add this route */}
+                <Route path="/gradeview" element={<GradeViewer />} /> {/* Add this route */}
               </Routes>
             </motion.div>
           </AnimatePresence>

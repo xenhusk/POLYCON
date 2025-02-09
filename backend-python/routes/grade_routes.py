@@ -2,8 +2,8 @@ from flask import Blueprint, request, jsonify
 from services.firebase_service import db
 from google.cloud.firestore import SERVER_TIMESTAMP, DocumentReference
 
-
 grade_bp = Blueprint('grade', __name__)
+
 @grade_bp.route('/get_grades', methods=['GET'])
 def get_grades():
     try:
@@ -265,4 +265,70 @@ def delete_grade():
 
     except Exception as e:
         print(f"Error in delete_grade: {e}")
+        return jsonify({"error": str(e)}), 500
+
+@grade_bp.route('/get_student_grades', methods=['GET'])
+def get_student_grades():
+    try:
+        student_id = request.args.get('studentID')  # Get student ID
+        school_year = request.args.get('schoolYear', '')
+        semester = request.args.get('semester', '')
+        period = request.args.get('period', '')
+
+        if not student_id:
+            return jsonify({"error": "Student ID is required"}), 400
+
+        print(f"Fetching grades for studentID: {student_id}, School Year: {school_year}, Semester: {semester}, Period: {period}")  # Debugging log
+
+        student_ref = db.document(f'students/{student_id}')
+        grades_query = db.collection('grades').where('studentID', '==', student_ref)
+
+        # Apply optional filters
+        if school_year:
+            grades_query = grades_query.where('school_year', '==', school_year)
+        if semester:
+            grades_query = grades_query.where('semester', '==', semester)
+        if period:
+            grades_query = grades_query.where('period', '==', period)
+
+        grades_ref = grades_query.stream()
+
+        grades = []
+        for doc in grades_ref:
+            grade_data = doc.to_dict()
+            grade_data['id'] = doc.id  # Include Firestore Document ID
+
+            # Convert studentID to string
+            grade_data['studentID'] = student_ref.id
+
+            # Resolve Course Name
+            course_name = "Unknown Course"
+            if isinstance(grade_data.get('courseID'), DocumentReference):
+                course_ref = grade_data['courseID'].get()
+                if course_ref.exists:
+                    course_name = course_ref.to_dict().get('courseName', 'Unknown Course')
+                grade_data['courseID'] = course_ref.id  # Convert reference to string
+
+            grade_data['courseName'] = course_name
+
+            # Resolve Faculty Name
+            faculty_name = "Unknown Instructor"
+            if isinstance(grade_data.get('facultyID'), DocumentReference):
+                faculty_ref = grade_data['facultyID'].get()
+                if faculty_ref.exists:
+                    faculty_data = faculty_ref.to_dict()
+                    first_name = faculty_data.get('firstName', '').strip()
+                    last_name = faculty_data.get('lastName', '').strip()
+                    faculty_name = f"{first_name} {last_name}".strip() if first_name or last_name else "Unknown Instructor"
+                grade_data['facultyID'] = faculty_ref.id
+
+            grade_data['facultyName'] = faculty_name  # Store Instructor Name
+
+            grades.append(grade_data)
+
+        print(f"Student Grades: {grades}")  # Debugging log
+        return jsonify(grades), 200
+
+    except Exception as e:
+        print(f"Error in get_student_grades: {e}")
         return jsonify({"error": str(e)}), 500

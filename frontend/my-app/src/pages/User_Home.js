@@ -26,7 +26,7 @@ function Home() {
   };
 
   const handleViewGrades = () => {
-    navigate('/grades');
+    navigate('/grade');
   };
 
   return (
@@ -40,10 +40,12 @@ function Home() {
         </p>
       </div>
 
-      {/* HomeTeacher Section */}
-      <div className="mb-8">
-        <HomeTeacher />
-      </div>
+      {/* HomeTeacher Section for Faculty */}
+      {userRole === 'faculty' && (
+        <div className="mb-8">
+          <HomeTeacher />
+        </div>
+      )}
 
       {/* Main Calendar Section */}
       <div className="mb-8">
@@ -78,12 +80,10 @@ function Home() {
         )}
         
         {userRole === 'faculty' && (
-          <>
-            <div className="bg-white rounded-lg shadow-lg p-6">
-              <h3 className="text-lg font-semibold mb-4">Today's Schedule</h3>
-              {/* Add faculty-specific content here */}
-            </div>
-          </>
+          <div className="bg-white rounded-lg shadow-lg p-6">
+            <h3 className="text-lg font-semibold mb-4">Today's Schedule</h3>
+            {/* Add faculty-specific content here */}
+          </div>
         )}
       </div>
     </div>
