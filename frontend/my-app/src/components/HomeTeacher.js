@@ -4,7 +4,7 @@ import { LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, Legend, Responsi
 
 const HomeTeacher = () => {
     const [teacherId, setTeacherId] = useState(null);
-    const [stats, setStats] = useState({ total_hours: "0:00", total_consultations: 0, unique_students: 0 });
+    const [stats, setStats] = useState({ total_hours: "0.00", total_consultations: 0, unique_students: 0 });
     const [consultationData, setConsultationData] = useState([]);
     const [consultationHoursData, setConsultationHoursData] = useState([]);
     const navigate = useNavigate();
@@ -39,7 +39,7 @@ const HomeTeacher = () => {
             .then(data => {
                 console.log("API Response:", data);
                 setStats({
-                    total_hours: data.total_hours || "0:00",
+                    total_hours: data.total_hours.toFixed(2) || "0.00",
                     total_consultations: data.total_consultations || 0,
                     unique_students: data.unique_students || 0
                 });
@@ -53,7 +53,7 @@ const HomeTeacher = () => {
                 const formattedConsultations = Object.entries(data.consultations).map(([date, count]) => ({
                     date,
                     consultations: count
-                }));
+                })).sort((a, b) => new Date(a.date) - new Date(b.date)).slice(-5);
         
                 const formattedHours = Object.entries(data.consultation_hours).map(([date, hours]) => {
                     const [hh, mm] = hours.split(':').map(Number); // Convert HH:MM to numbers
@@ -61,7 +61,7 @@ const HomeTeacher = () => {
                         date,
                         consultation_hours: hh * 60 + mm // Convert to total minutes for plotting
                     };
-                });
+                }).sort((a, b) => new Date(a.date) - new Date(b.date)).slice(-5);
         
                 setConsultationData(formattedConsultations);
                 setConsultationHoursData(formattedHours);
@@ -74,7 +74,7 @@ const HomeTeacher = () => {
     };
 
     return (
-        <div className="flex flex-col items-center bg-gray-100 min-h-screen p-6">
+        <div className="flex flex-col items-center min-h-screen">
             <h1 className="text-3xl font-bold mb-6">Home</h1>
 
             {/* Stats Section - Placed at the Top */}

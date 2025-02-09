@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import AppointmentsCalendar from '../components/AppointmentsCalendar';
+import HomeTeacher from '../components/HomeTeacher';
 
 function Home() {
   const [userRole, setUserRole] = useState('');
@@ -37,6 +38,11 @@ function Home() {
         <p className="text-gray-600">
           {userRole === 'student' ? 'Student Dashboard' : 'Faculty Dashboard'}
         </p>
+      </div>
+
+      {/* HomeTeacher Section */}
+      <div className="mb-8">
+        <HomeTeacher />
       </div>
 
       {/* Main Calendar Section */}
