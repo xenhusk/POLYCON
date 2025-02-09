@@ -381,182 +381,185 @@ export default function AddGrade() {
           </button>
         </div>
 
-        {showFilters && (
-          <div className="w-1/4 p-4 bg-blue-500 text-white rounded-lg">
-            <h3 className="text-xl font-bold">FILTERS</h3>
+        {/* Wrap filters and table in a relative container */}
+        <div className="relative">
+          {showFilters && (
+            <div className="absolute top-16 left-0 w-1/4 p-4 bg-blue-500 text-white rounded-lg z-50">
+              <h3 className="text-xl font-bold">FILTERS</h3>
 
-            {/* Period Filter */}
-            <div className="mt-4">
-              <label className="font-semibold">Period</label>
-              <div className="mt-2">
-                {['Prelim', 'Midterm', 'Pre-Final', 'Final'].map((period) => (
-                  <label key={period} className="block">
-                    <input
-                      type="checkbox"
-                      value={period}
-                      checked={selectedPeriods.includes(period)}
-                      onChange={() => handlePeriodFilterChange(period)}
-                      className="mr-2"
-                    />
-                    {period}
-                  </label>
-                ))}
-              </div>
-            </div>
-
-            {/* Course Filter */}
-            <div className="mt-4">
-              <label className="font-semibold">Course</label>
-              <input
-                type="text"
-                value={courseFilter}
-                onChange={handleCourseFilterChange}
-                placeholder="Search Course"
-                className="block w-full p-2 mt-1 border border-gray-300 text-black rounded"
-              />
-              {courseFilter && (
-                <ul className="absolute z-10 bg-white border border-gray-300 rounded-lg mt-1 max-h-40 overflow-y-auto w-full shadow-md">
-                  {filteredCourses.map((course) => (
-                    <li
-                      key={course.courseID}
-                      onClick={() => {
-                        setCourseFilter(course.courseName);
-                        setFilteredCourses([]);
-                        applyFilters();
-                      }}
-                      className="px-3 py-2 cursor-pointer hover:bg-gray-200"
-                    >
-                      {course.courseName}
-                    </li>
+              {/* Period Filter */}
+              <div className="mt-4">
+                <label className="font-semibold">Period</label>
+                <div className="mt-2">
+                  {['Prelim', 'Midterm', 'Pre-Final', 'Final'].map((period) => (
+                    <label key={period} className="block">
+                      <input
+                        type="checkbox"
+                        value={period}
+                        checked={selectedPeriods.includes(period)}
+                        onChange={() => handlePeriodFilterChange(period)}
+                        className="mr-2"
+                      />
+                      {period}
+                    </label>
                   ))}
-                </ul>
-              )}
-            </div>
+                </div>
+              </div>
 
-            {/* School Year Filter */}
-            <div className="mt-4">
-              <label className="font-semibold">School Year</label>
-              <input
-                type="text"
-                value={schoolYearFilter}
-                onChange={handleSchoolYearFilterChange}
-                placeholder="YYYY-YYYY"
-                className="block w-full p-2 mt-1 border border-gray-300 text-black rounded"
-              />
-            </div>
-
-            {/* Semester Filter */}
-            <div className="mt-4">
-              <label className="font-semibold">Semester</label>
-              <select
-                value={semesterFilter}
-                onChange={handleSemesterFilterChange}
-                className="block w-full p-2 mt-1 border border-gray-300 text-black rounded"
-              >
-                <option value="">All Semesters</option>
-                <option value="1st">1st</option>
-                <option value="2nd">2nd</option>
-              </select>
-            </div>
-
-            {/* NEW: Students Filter */}
-            <div className="mt-4">
-              <label className="font-semibold">Students</label>
-              <div className="flex flex-wrap mt-2">
-                {selectedFilterStudents.map(student => (
-                  <div key={student.studentID} className="bg-gray-200 text-gray-700 px-2 py-1 mr-2 mb-2 rounded flex items-center">
-                    {student.name}
-                    <span onClick={() => handleRemoveFilterStudent(student.studentID)} className="ml-1 cursor-pointer">x</span>
-                  </div>
-                ))}
-                <input 
+              {/* Course Filter */}
+              <div className="mt-4">
+                <label className="font-semibold">Course</label>
+                <input
                   type="text"
-                  value={filterStudentQuery}
-                  onChange={handleFilterStudentQueryChange}
-                  placeholder="Search Students"
-                  className="border border-gray-300 rounded-lg px-2 py-1"
+                  value={courseFilter}
+                  onChange={handleCourseFilterChange}
+                  placeholder="Search Course"
+                  className="block w-full p-2 mt-1 border border-gray-300 text-black rounded"
+                />
+                {courseFilter && (
+                  <ul className="absolute z-10 bg-white border border-gray-300 rounded-lg mt-1 max-h-40 overflow-y-auto w-full shadow-md">
+                    {filteredCourses.map((course) => (
+                      <li
+                        key={course.courseID}
+                        onClick={() => {
+                          setCourseFilter(course.courseName);
+                          setFilteredCourses([]);
+                          applyFilters();
+                        }}
+                        className="px-3 py-2 cursor-pointer hover:bg-gray-200"
+                      >
+                        {course.courseName}
+                      </li>
+                    ))}
+                  </ul>
+                )}
+              </div>
+
+              {/* School Year Filter */}
+              <div className="mt-4">
+                <label className="font-semibold">School Year</label>
+                <input
+                  type="text"
+                  value={schoolYearFilter}
+                  onChange={handleSchoolYearFilterChange}
+                  placeholder="YYYY-YYYY"
+                  className="block w-full p-2 mt-1 border border-gray-300 text-black rounded"
                 />
               </div>
-              {filterStudentSuggestions.length > 0 && (
-                <ul className="bg-white text-black border border-gray-300 rounded-lg mt-1 max-h-40 overflow-y-auto shadow-md">
-                  {filterStudentSuggestions.map(student => (
-                    <li 
-                      key={student.studentID} 
-                      onClick={() => handleSelectFilterStudent(student)}
-                      className="px-3 py-2 cursor-pointer hover:bg-gray-200"
-                    >
+
+              {/* Semester Filter */}
+              <div className="mt-4">
+                <label className="font-semibold">Semester</label>
+                <select
+                  value={semesterFilter}
+                  onChange={handleSemesterFilterChange}
+                  className="block w-full p-2 mt-1 border border-gray-300 text-black rounded"
+                >
+                  <option value="">All Semesters</option>
+                  <option value="1st">1st</option>
+                  <option value="2nd">2nd</option>
+                </select>
+              </div>
+
+              {/* NEW: Students Filter */}
+              <div className="mt-4">
+                <label className="font-semibold">Students</label>
+                <div className="flex flex-wrap mt-2">
+                  {selectedFilterStudents.map(student => (
+                    <div key={student.studentID} className="bg-gray-200 text-gray-700 px-2 py-1 mr-2 mb-2 rounded flex items-center">
                       {student.name}
-                    </li>
+                      <span onClick={() => handleRemoveFilterStudent(student.studentID)} className="ml-1 cursor-pointer">x</span>
+                    </div>
                   ))}
-                </ul>
-              )}
+                  <input 
+                    type="text"
+                    value={filterStudentQuery}
+                    onChange={handleFilterStudentQueryChange}
+                    placeholder="Search Students"
+                    className="border border-gray-300 rounded-lg px-2 py-1"
+                  />
+                </div>
+                {filterStudentSuggestions.length > 0 && (
+                  <ul className="bg-white text-black border border-gray-300 rounded-lg mt-1 max-h-40 overflow-y-auto shadow-md">
+                    {filterStudentSuggestions.map(student => (
+                      <li 
+                        key={student.studentID} 
+                        onClick={() => handleSelectFilterStudent(student)}
+                        className="px-3 py-2 cursor-pointer hover:bg-gray-200"
+                      >
+                        {student.name}
+                      </li>
+                    ))}
+                  </ul>
+                )}
+              </div>
+
+              <button 
+                onClick={applyFilters} 
+                className="bg-white text-blue-500 px-4 py-2 rounded-lg mt-4"
+              >
+                Apply Filters
+              </button>
             </div>
+          )}
 
-            <button 
-              onClick={applyFilters} 
-              className="bg-white text-blue-500 px-4 py-2 rounded-lg mt-4"
-            >
-              Apply Filters
-            </button>
-          </div>
-        )}
-
-        {/* Grades Table */}
-        <div className="overflow-x-auto mt-6">
-          <table className="min-w-full bg-white border border-gray-300 text-center">
-            <thead>
-              <tr className="bg-gray-100">
-                <th className="border px-4 py-2">Student ID</th>
-                <th className="border px-4 py-2">Student Name</th>
-                <th className="border px-4 py-2">Course</th>
-                <th className="border px-4 py-2">Grade</th>
-                <th className="border px-4 py-2">Period</th>
-                <th className="border px-4 py-2">School Year</th>
-                <th className="border px-4 py-2">Semester</th>
-                <th className="border px-4 py-2">Remarks</th>
-                <th className="border px-4 py-2">Actions</th>
-              </tr>
-            </thead>
-            <tbody>
-              {filteredGrades.length > 0 ? (
-                filteredGrades.map((grade) => (
-                  <tr key={grade.gradeID}>
-                    <td className="border px-4 py-2">{grade.studentID}</td>
-                    <td className="border px-4 py-2">{grade.studentName}</td>
-                    <td className="border px-4 py-2">{grade.courseName}</td>
-                    <td className="border px-4 py-2">{grade.grade}</td>
-                    <td className="border px-4 py-2">{grade.period}</td>
-                    <td className="border px-4 py-2">{grade.school_year}</td>
-                    <td className="border px-4 py-2">{grade.semester}</td>
-                    <td className={`border px-4 py-2 ${grade.remarks === 'PASSED' ? 'text-green-500' : 'text-red-500'}`}>
-                      {grade.remarks}
-                    </td>
-                    <td>
-                      <button
-                        onClick={() => handleEditGrade(grade)}
-                        className="bg-yellow-500 text-white px-3 py-1 rounded mr-2"
-                      >
-                        Edit
-                      </button>
-                      <button
-                        onClick={() => {
-                          console.log("🟡 Delete button clicked for document ID:", grade?.id); // Debugging Log
-                          handleDeleteGrade(grade?.id); // Use Firestore document ID
-                        }}
-                        className="bg-red-500 text-white px-3 py-1 rounded"
-                      >
-                        Delete
-                      </button>
-                    </td>
-                  </tr>
-                ))
-              ) : (
-                <tr>
-                  <td colSpan="9" className="border px-4 py-2 text-center">No grades found</td>
+          {/* Grades Table */}
+          <div className="overflow-x-auto mt-6">
+            <table className="min-w-full bg-white border border-gray-300 text-center">
+              <thead>
+                <tr className="bg-gray-100">
+                  <th className="border px-4 py-2">Student ID</th>
+                  <th className="border px-4 py-2">Student Name</th>
+                  <th className="border px-4 py-2">Course</th>
+                  <th className="border px-4 py-2">Grade</th>
+                  <th className="border px-4 py-2">Period</th>
+                  <th className="border px-4 py-2">School Year</th>
+                  <th className="border px-4 py-2">Semester</th>
+                  <th className="border px-4 py-2">Remarks</th>
+                  <th className="border px-4 py-2">Actions</th>
                 </tr>
-              )}
-            </tbody>
-          </table>
+              </thead>
+              <tbody>
+                {filteredGrades.length > 0 ? (
+                  filteredGrades.map((grade) => (
+                    <tr key={grade.gradeID}>
+                      <td className="border px-4 py-2">{grade.studentID}</td>
+                      <td className="border px-4 py-2">{grade.studentName}</td>
+                      <td className="border px-4 py-2">{grade.courseName}</td>
+                      <td className="border px-4 py-2">{grade.grade}</td>
+                      <td className="border px-4 py-2">{grade.period}</td>
+                      <td className="border px-4 py-2">{grade.school_year}</td>
+                      <td className="border px-4 py-2">{grade.semester}</td>
+                      <td className={`border px-4 py-2 ${grade.remarks === 'PASSED' ? 'text-green-500' : 'text-red-500'}`}>
+                        {grade.remarks}
+                      </td>
+                      <td>
+                        <button
+                          onClick={() => handleEditGrade(grade)}
+                          className="bg-yellow-500 text-white px-3 py-1 rounded mr-2"
+                        >
+                          Edit
+                        </button>
+                        <button
+                          onClick={() => {
+                            console.log("🟡 Delete button clicked for document ID:", grade?.id); // Debugging Log
+                            handleDeleteGrade(grade?.id); // Use Firestore document ID
+                          }}
+                          className="bg-red-500 text-white px-3 py-1 rounded"
+                        >
+                          Delete
+                        </button>
+                      </td>
+                    </tr>
+                  ))
+                ) : (
+                  <tr>
+                    <td colSpan="9" className="border px-4 py-2 text-center">No grades found</td>
+                  </tr>
+                )}
+              </tbody>
+            </table>
+          </div>
         </div>
 
         {/* Add / Edit Grade Form */}

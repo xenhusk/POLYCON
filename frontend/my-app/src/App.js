@@ -1,5 +1,5 @@
 import React, { useEffect, useState, useRef, useCallback } from 'react';
-import { BrowserRouter as Router, Routes, Route, useNavigate, useLocation } from 'react-router-dom';
+import { BrowserRouter as Router, Routes, Route, useNavigate, useLocation, Navigate } from 'react-router-dom';
 import BookingStudent from './components/BookingStudent';
 import BookingTeacher from './components/BookingTeacher';
 import Session from './components/Session';
@@ -8,7 +8,7 @@ import Login from './components/Login';
 import AdminPortal from './components/AdminPortal';
 import Courses from './components/Courses'; 
 import AddGrade from './components/AddGrade';
-import Home from './components/Home';
+import UserHome from './pages/User_Home';  // Update import name and path
 import AppointmentsCalendar from './components/AppointmentsCalendar';
 import ReactCrop from 'react-image-crop';
 import 'react-image-crop/dist/ReactCrop.css';
@@ -18,6 +18,15 @@ import HomeTeacher from './components/HomeTeacher'; // added import
 import SidebarPreview from './components/SidebarPreview'; // Import the SidebarPreview component
 import Appointments from './pages/Appointments'; // Import the Appointments page
 import Sidebar from './components/Sidebar';
+import Home from './pages/Home'; // Update this import
+import { PreloadProvider } from './context/PreloadContext';
+import { AnimatePresence, motion } from 'framer-motion'; // Add framer-motion import
+
+// Update the variants to only include fade in (no fade out)
+const getVariants = () => ({
+	initial: { opacity: 0 },
+	animate: { opacity: 1 }
+});
 
 // Inline component with cropping/upload logic remains unchanged
 function InlineProfilePictureUploader({ initialFile, onClose }) {
@@ -201,6 +210,45 @@ function App() {
     }
   }, []);
 
+  const preloadAllData = async () => {
+    const userEmail = localStorage.getItem('userEmail');
+    const userRole = localStorage.getItem('userRole');
+    
+    if (!userEmail) return;
+
+    try {
+      // Fetch all necessary data in parallel
+      const [
+        userDetailsResponse,
+        appointmentsResponse,
+        gradesResponse,
+        coursesResponse
+      ] = await Promise.all([
+        fetch(`http://localhost:5001/user/get_user?email=${userEmail}`),
+        fetch(`http://localhost:5001/bookings/get_${userRole}_bookings?${userRole}ID=${localStorage.getItem(`${userRole}ID`)}`),
+        fetch(`http://localhost:5001/grade/get_grades?studentID=${localStorage.getItem('studentID')}`),
+        fetch(`http://localhost:5001/course/get_courses`)
+      ]);
+
+      const [userDetails, appointments, grades, courses] = await Promise.all([
+        userDetailsResponse.json(),
+        appointmentsResponse.json(),
+        gradesResponse.json(),
+        coursesResponse.json()
+      ]);
+
+      return {
+        userDetails,
+        appointments,
+        grades,
+        courses
+      };
+    } catch (error) {
+      console.error('Error preloading data:', error);
+      return null;
+    }
+  };
+
   const handleLogout = () => {
     localStorage.removeItem('userEmail');
     localStorage.removeItem('userID'); 
@@ -225,90 +273,125 @@ function App() {
   };
 
   return (
-    <div className="app-container flex">
-      {localStorage.getItem('userEmail') && (
-        <Sidebar onExpandChange={setSidebarExpanded} />
-      )}
-      
-      <div className={`flex-1 transition-all duration-300 ${
-        localStorage.getItem('userEmail') 
-          ? sidebarExpanded 
-            ? 'ml-64' 
-            : 'ml-20'
-          : ''
-      }`}>
-        {/* Remove the header section below */}
-        {/*
-        {profile && (
-          <header className="bg-gray-100 p-4 flex justify-between items-center">
-            <div onClick={handleProfilePictureClick} className="cursor-pointer flex items-center">
-              ... header content ...
-            </div>
-            <button onClick={handleLogout} className="bg-red-500 text-white px-4 py-2 rounded">
-              Logout
-            </button>
-          </header>
+    <PreloadProvider>
+      <div className="app-container flex">
+        {localStorage.getItem('userEmail') && (
+          <Sidebar onExpandChange={setSidebarExpanded} />
         )}
-        */}
+        
+        <div className={`flex-1 transition-all duration-300 ${
+          localStorage.getItem('userEmail') ? sidebarExpanded ? 'ml-64' : 'ml-20' : ''
+        }`}>
+          {/* Remove the header section below */}
+          {/*
+          {profile && (
+            <header className="bg-gray-100 p-4 flex justify-between items-center">
+              <div onClick={handleProfilePictureClick} className="cursor-pointer flex items-center">
+                ... header content ...
+              </div>
+              <button onClick={handleLogout} className="bg-red-500 text-white px-4 py-2 rounded">
+                Logout
+              </button>
+            </header>
+          )}
+          */}
 
-        {/* New Profile Picture Modal */}
-        {showProfileModal && (
-          <div className="fixed inset-0 bg-black bg-opacity-50 flex justify-center items-center z-50">
-            <div className="bg-white p-6 rounded-lg shadow-lg">
-              {modalStep === 'upload' && (
-                <div>
-                  <h2 className="text-xl font-bold mb-4">Upload a Profile Picture</h2>
-                  <button
-                    onClick={() => modalFileInputRef.current && modalFileInputRef.current.click()}
-                    className="bg-blue-500 text-white px-4 py-2 rounded"
-                  >
-                    Choose File
-                  </button>
-                  <input
-                    ref={modalFileInputRef}
-                    type="file"
-                    accept="image/*"
-                    onChange={onModalSelectFile}
-                    style={{ display: 'none' }}
+          {/* New Profile Picture Modal */}
+          {showProfileModal && (
+            <div className="fixed inset-0 bg-black bg-opacity-50 flex justify-center items-center z-50">
+              <div className="bg-white p-6 rounded-lg shadow-lg">
+                {modalStep === 'upload' && (
+                  <div>
+                    <h2 className="text-xl font-bold mb-4">Upload a Profile Picture</h2>
+                    <button
+                      onClick={() => modalFileInputRef.current && modalFileInputRef.current.click()}
+                      className="bg-blue-500 text-white px-4 py-2 rounded"
+                    >
+                      Choose File
+                    </button>
+                    <input
+                      ref={modalFileInputRef}
+                      type="file"
+                      accept="image/*"
+                      onChange={onModalSelectFile}
+                      style={{ display: 'none' }}
+                    />
+                    <button
+                      onClick={() => setShowProfileModal(false)}
+                      className="bg-gray-300 text-black px-4 py-2 rounded ml-4"
+                    >
+                      Cancel
+                    </button>
+                  </div>
+                )}
+                {modalStep === 'crop' && (
+                  <ProfilePictureUploader
+                    initialFile={modalSelectedFile}
+                    onClose={() => {
+                      setShowProfileModal(false);
+                      setModalSelectedFile(null);
+                    }}
                   />
-                  <button
-                    onClick={() => setShowProfileModal(false)}
-                    className="bg-gray-300 text-black px-4 py-2 rounded ml-4"
-                  >
-                    Cancel
-                  </button>
-                </div>
-              )}
-              {modalStep === 'crop' && (
-                <ProfilePictureUploader
-                  initialFile={modalSelectedFile}
-                  onClose={() => {
-                    setShowProfileModal(false);
-                    setModalSelectedFile(null);
-                  }}
-                />
-              )}
+                )}
+              </div>
             </div>
-          </div>
-        )}
+          )}
 
-        <Routes>
-          <Route path="/" element={<Home />} />
-          <Route path="/booking-student" element={<BookingStudent />} />
-          <Route path="/booking-teacher" element={<BookingTeacher />} />
-          <Route path="/session" element={<Session />} />
-          <Route path="/signup" element={<Signup />} />
-          <Route path="/login" element={<Login onLoginSuccess={setUser} />} />
-          <Route path="/admin" element={<AdminPortal />} />
-          <Route path="/courses" element={<Courses />} />
-          <Route path="/addgrade" element={<AddGrade />} />
-          <Route path="/appointments-calendar" element={<AppointmentsCalendar />} />
-          <Route path="/sidebar-preview" element={<SidebarPreview />} /> {/* Add this route */}
-          <Route path="/appointments" element={<Appointments />} /> {/* Add this route */}
-          {/* Remove /profile-picture route */}
-        </Routes>
+          <AnimatePresence>
+            <motion.div
+              key={location.pathname}
+              variants={getVariants()}
+              initial="initial"
+              animate="animate"
+              transition={{ duration: 0.5 }}
+            >
+              <Routes>
+                {/* Public home route with redirect for logged-in users */}
+                <Route path="/" element={
+                  localStorage.getItem('userEmail') ? 
+                    <Navigate to="/dashboard" /> : 
+                    <Home />
+                } />
+
+                {/* Auth routes with redirects */}
+                <Route path="/login" element={
+                  !localStorage.getItem('userEmail') ? 
+                    <Login onLoginSuccess={setUser} /> : 
+                    <Navigate to="/dashboard" />
+                } />
+                <Route path="/signup" element={
+                  !localStorage.getItem('userEmail') ? 
+                    <Signup /> : 
+                    <Navigate to="/dashboard" />
+                } />
+
+                {/* Protected dashboard route */}
+                <Route path="/dashboard" element={
+                  localStorage.getItem('userEmail') ? 
+                    <UserHome /> : 
+                    <Navigate to="/" />
+                } />
+
+                {/* Protected routes */}
+                <Route path="/booking-student" element={
+                  localStorage.getItem('userEmail') ? 
+                    <BookingStudent /> : 
+                    <Navigate to="/login" replace />
+                } />
+                <Route path="/booking-teacher" element={<BookingTeacher />} />
+                <Route path="/session" element={<Session />} />
+                <Route path="/admin" element={<AdminPortal />} />
+                <Route path="/courses" element={<Courses />} />
+                <Route path="/addgrade" element={<AddGrade />} />
+                <Route path="/appointments-calendar" element={<AppointmentsCalendar />} />
+                <Route path="/sidebar-preview" element={<SidebarPreview />} /> {/* Add this route */}
+                <Route path="/appointments" element={<Appointments />} /> {/* Add this route */}
+              </Routes>
+            </motion.div>
+          </AnimatePresence>
+        </div>
       </div>
-    </div>
+    </PreloadProvider>
   );
 }
 

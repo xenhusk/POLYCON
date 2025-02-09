@@ -1,15 +1,29 @@
 import React, { useState, useEffect } from "react";
-import logo from "./icons/logo2.png";
-import Consult1 from "./icons/Consult1.jpg";
-import Consult3 from "./icons/consult3.webp";
-import Consult2 from "./icons/consultation.webp";
-import Image1 from "./icons/ImageAbout.jpg";
-import Image2 from "./icons/ImageAbout1.jpg";
-import Image3 from "./icons/ImageAbout2.jpg";
-import Login from "./Login";
-import Signup from "./Signup";
+import logo from "../components/icons/logo2.png";
+import Consult1 from "../components/icons/Consult1.jpg";
+import Consult3 from "../components/icons/consult3.webp";
+import Consult2 from "../components/icons/consultation.webp";
+import Image1 from "../components/icons/ImageAbout.jpg";
+import Image2 from "../components/icons/ImageAbout1.jpg";
+import Image3 from "../components/icons/ImageAbout2.jpg";
+import Login from "../components/Login";
+import Signup from "../components/Signup";
 
 const Home = () => {
+
+  const [animateSection, setAnimateSection] = useState(null);
+
+  // New handler for section navigation
+  const handleSectionNavigation = (sectionId) => {
+    setAnimateSection(sectionId);
+    const section = document.getElementById(sectionId);
+    if (section) {
+      section.scrollIntoView({ behavior: 'smooth' });
+      // Reset animation after completion
+      setTimeout(() => setAnimateSection(null), 1000);
+    }
+  };
+
   const [showLoginModal, setShowLoginModal] = useState(false);
   const [showSignupModal, setShowSignupModal] = useState(false);
   const [errorMessage, setErrorMessage] = useState("");
@@ -22,6 +36,7 @@ const Home = () => {
     setShowSignupModal(true);
     setErrorMessage("");
   };
+  
   const closeModal = () => {
     setShowLoginModal(false);
     setShowSignupModal(false);
@@ -59,26 +74,28 @@ const Home = () => {
             <div className="w-[42%] flex items-end justify-end gap-5 md:w-full sm:mr-[15px]">
               <ul className="gap-[25px] flex flex-wrap items-center">
                 <li> 
-                  <a href="#Contact" className="text-xl text-white font-medium focus:outline-none relative group">
+                  <button onClick={() => handleSectionNavigation('Contact')}
+                    className="text-xl text-white font-medium focus:outline-none relative group">
                     Contact
                     <span className="block absolute bottom-0 left-0 w-0 h-[2px] bg-white transition-all duration-300 ease-in-out group-hover:w-full"></span>
-                  </a>
+                  </button>
                 </li>
                 <li>
-                  <a href="#About" className="text-xl text-white font-medium focus:outline-none relative group">
+                  <button onClick={() => handleSectionNavigation('About')}
+                    className="text-xl text-white font-medium focus:outline-none relative group">
                     About
                     <span className="block absolute bottom-0 left-0 w-0 h-[2px] bg-white transition-all duration-300 ease-in-out group-hover:w-full"></span>
-                  </a>
+                  </button>
                 </li>
                 <li>
-                  <button className="bg-white text-xl text-[#057DCD] px-auto w-[8rem] h-[55px] rounded-[50px] px-auto font-semibold transition-all duration-800 ease-in-out delay-150 hover:bg-[#54BEFF] hover:text-white"
+                  <button className="bg-white text-xl text-[#057DCD] px-auto w-[8rem] h-[55px] rounded-[50px] px-auto my-auto font-semibold transition-all duration-800 ease-in-out delay-150 hover:bg-[#54BEFF] hover:text-white"
                     onClick={handleLoginClick}>
                       Login
                   </button>
                 </li>
                 <li>
                   <button
-                    className="bg-white text-xl text-[#057DCD] text-center w-[8rem] h-[55px] rounded-[50px] px-auto font-semibold transition-all duration-800 ease-in-out delay-150 hover:bg-[#54BEFF] hover:text-white"
+                    className="bg-white text-xl text-[#057DCD] text-center w-[8rem] h-[55px] rounded-[50px] px-auto my-auto font-semibold transition-all duration-800 ease-in-out delay-150 hover:bg-[#54BEFF] hover:text-white"
                     onClick={handleSignupClick}>
                       Sign Up
                   </button>
@@ -92,11 +109,12 @@ const Home = () => {
       <Body/>
 
       {/* About */}
-      <About/>
+      <About animateSection={animateSection}/>
 
 
       {/* Contact */}
-      <section id="Contact"  className="flex w-full justify-between items-center">
+      <section id="Contact"  className={`flex w-full justify-between items-center ${ 
+        animateSection === 'Contact' ? 'animate-gentle' : ''}`}>
         <div className="w-full h-[659px] relative overflow-hidden bg-[#057DCD]">
           <h1 className="w-[90%] font-bold text-[40px] text-[#ffffff] my-[1rem] mx-auto">
             Contact
@@ -140,7 +158,7 @@ const Home = () => {
       <footer className="flex w-full justify-between items-center">
         {/* Frames of footer */}
         <div className="w-full h-[30.5vh] relative overflow-hidden bg-[#005B98]">
-          <div className="w-[90%] absolute right-0 left-0 justify-between mx-auto flex-1 flex text-[#ffffff]">
+          <div className="w-[89%] absolute right-0 left-0 justify-between mx-auto flex-1 flex text-[#ffffff]">
             {/* Content of footer  */}
             <div className="flex-row w-[90%] h-[152px] mx-auto">  
               <img src={logo} alt="Logo" className="h-[98px] w-[98px]"/>
@@ -151,17 +169,17 @@ const Home = () => {
                 Polycon, 2024
               </p>
             </div>
-            <div className="flex-row w-[25%] h-[152px] my-[3rem] justify-between gap-4">
+            <div className="flex-row w-[34%] h-[152px] my-[3rem] justify-between gap-4">
               <h3 className="font-medium text-lg">
                 Legal
               </h3>
               <div className="flex font-light text-base ">
-                <p className="w-[58%]">Terms of Service</p>
-                <p className="w-[58%]">Cookies Policy</p>
+                <p className="w-[65%]">Terms of Service</p>
+                <p className="w-[65%]">Cookies Policy</p>
               </div>
               <div className="flex font-light text-base ">
-                <p className="w-[58%]">Privacy Policy</p>
-                <p className="w-[58%]">Data Processing</p>
+                <p className="w-[65%]">Privacy Policy</p>
+                <p className="w-[65%]">Data Processing</p>
               </div>
             </div>
           </div>
@@ -194,28 +212,46 @@ const Home = () => {
       
 
       {/* Modals */}
-      {showLoginModal && (
-       <div className="fixed inset-0 bg-black bg-opacity-60 flex items-center justify-center animate-modal-fade">
-          <div className="bg-white p-6 rounded-[20px] shadow-lg w-[43%] h-[650px] relative animate-modal-fade">
-            <button className="absolute top-4 right-7 text-[2rem] text-gray-500 hover:text-[#000000] hover:font-bold" onClick={closeModal}>
-              &times;
+      {showLoginModal || showSignupModal ? (
+        <div className="fixed inset-0 bg-black bg-opacity-60 flex items-center justify-center animate-modal-fade" onClick={closeModal}>
+          <div className={`bg-white p-6 rounded-[20px] shadow-lg w-[43%] h-[650px] relative overflow-hidden 
+            ${showLoginModal || showSignupModal ? 'modal-enter' : 'modal-exit'}`} onClick={(e) => e.stopPropagation()}>
+            
+            {/* Close button */}
+            <button className='absolute top-8 right-7 z-50' onClick={(e) => { e.stopPropagation(); closeModal();}}>
+              <svg className="w-6 h-6 text-gray-500 hover:text-[#000000]" aria-hidden="true" 
+                  xmlns="http://www.w3.org/2000/svg" width="24" height="24" fill="none" viewBox="0 0 24 24">
+                <path stroke="currentColor" strokeLinecap="round" strokeLinejoin="round" strokeWidth="4" d="M6 18 17.94 6M18 18 6.06 6"/>
+              </svg>
             </button>
-            <Login onLoginSuccess={closeModal} onSwitchToSignup={switchToSignup} onError={handleLoginError} />
-            {errorMessage && <p className="text-red-500 mt-4">{errorMessage}</p>}
-          </div>
-        </div>
-      )}
 
-      {showSignupModal && (
-        <div className="fixed inset-0 bg-black bg-opacity-60 flex items-center justify-center animate-modal-fade">
-          <div className="bg-white p-6 rounded-[20px] shadow-lg w-[43%] h-[650px] relative animate-modal-fade">
-            <button className="absolute top-4 right-7 text-[2rem] text-gray-500 hover:text-[#000000] hover:font-bold" onClick={closeModal}>
-              &times;</button>
-            <Signup onSwitchToLogin={switchToLogin} onError={handleSignupError} />
-            {errorMessage && <p className="text-red-500 mt-4">{errorMessage}</p>}
+            {/* Login/Signup content */}
+            <div className={`relative h-full ${showSignupModal ? 'slide-left' : ''}`}>
+              {showLoginModal && (
+                <div className={`absolute w-full ${showSignupModal ? '-translate-x-full' : 'translate-x-0'} transition-transform duration-300`}>
+                  <Login 
+                    onLoginSuccess={closeModal} 
+                    onSwitchToSignup={switchToSignup}
+                    onError={handleLoginError} 
+                  />
+                </div>
+              )}
+              
+              {showSignupModal && (
+                <div className={`absolute w-full ${showLoginModal ? 'translate-x-full' : 'translate-x-0'} transition-transform duration-300`}>
+                  <Signup 
+                    onSwitchToLogin={switchToLogin}
+                    onError={handleSignupError} 
+                  />
+                </div>
+              )}
+            </div>
+
+            {/* Error message display */}
+            {errorMessage && <p className="text-red-500 mt-4 text-center fade-in">{errorMessage}</p>}
           </div>
         </div>
-      )}
+      ) : null}
     </div>
   );
 };
@@ -271,7 +307,7 @@ const Body = () => {
   );
 };
 
-const About = () => {
+const About = ({ animateSection }) => {
   const images = [Image1, Image2, Image3];
   const [currentImgAbout, setCurrentImgAbout] = useState(0);
   const [isFading, setIsFading] = useState(false);
@@ -289,20 +325,24 @@ const About = () => {
     return () => clearInterval(interval);
   }, []);
   return(
-    <section id="About" className="flex w-full justify-between items-center">
-        <div className="w-full h-[90vh] relative overflow-hidden">
-        <div className="rounded-[25px] bg-[#005B98] h-[100px] w-[8%] rotate-[30deg] absolute top-[5%] right-[1%]"></div>
+    <section id="About" className={`flex w-full justify-between items-center ${ animateSection === 'About' ? 'animate-gentle' : ''}`}>
+        <div className="w-full h-[90vh] relative overflow-hidden items-center text-center">
+          {/* Decorate elements */}
+          <div className="rounded-[25px] bg-[#005B98] h-[100px] w-[8%] rotate-[30deg] absolute top-[5%] right-[1%]"></div>
           <div className="rounded-[25px] bg-[#057DCD] h-[219px] w-[12%] justify-end absolute top-[82%] left-[92%] rotate-[20deg]"></div>
+          {/* Header */}
           <h1 className="font-bold text-[40px] text-[#057DCD] text-center">About</h1>
-          <div className="absolute right-0 left-0 flex flex-1 justify-between items-center md:px-5">
+          <div className="absolute right-0 left-0 flex flex-1 justify-between items-center md:px-5 my-auto">
+          {/* Decorate elements */}
           <div className="rounded-[15px] bg-[#54BEFF] h-[50px] w-[8%] absolute bottom-[8%] right-[44%] rotate-[15deg]"></div>
           <div className="rounded-[25px] bg-[#057DCD] h-[88px] w-[30%] justify-end absolute top-[98%] left-[40%] right-[40%] rotate-[172deg]"></div>
+            {/* Center Content */}
             <div className="w-full flex justify-center md:w-full sm:ml-[48%]">
-              <div className="w-[65%] h-[80vh] flex-row text-justify">
-                <h3 className="font-medium text-lg text-center w-[100%]">
+              <div className="w-[65%] h-[80vh] flex-row text-justify items-center ">
+                <h3 className="font-medium text-lg align-middle text-center w-full">
                   POLYCON (Consultation System)
                 </h3>
-                <p className="text-base w-[100%]">
+                <p className="text-[0.9rem] align-middle leading-relaxed w-full">
                   We are a group of passionate individuals dedicated to 
                   creating innovative solutions that address real-world 
                   challenges. POLYCON is the result of our collective 

@@ -66,4 +66,10 @@
   /* Remove styles */
 }
 
+/* NEW: Pointer styles */
+.pointer-icon {
+  /* Settings here are complemented by inline styles; adjust if needed */
+  z-index: 10;
+}
+
 /* Keep other existing styles */
