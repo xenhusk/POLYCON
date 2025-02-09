@@ -1,5 +1,4 @@
 import React, { useState, useEffect } from "react";
-// Update icon and image imports
 import logo from "../components/icons/logo2.png";
 import Consult1 from "../components/icons/Consult1.jpg";
 import Consult3 from "../components/icons/consult3.webp";
@@ -7,7 +6,6 @@ import Consult2 from "../components/icons/consultation.webp";
 import Image1 from "../components/icons/ImageAbout.jpg";
 import Image2 from "../components/icons/ImageAbout1.jpg";
 import Image3 from "../components/icons/ImageAbout2.jpg";
-// Update component imports
 import Login from "../components/Login";
 import Signup from "../components/Signup";
 
