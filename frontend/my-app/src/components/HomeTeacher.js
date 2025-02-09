@@ -1,6 +1,6 @@
 import { useEffect, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, Legend, ResponsiveContainer } from 'recharts';
+import { LineChart, Line, XAxis, YAxis, Tooltip, Legend, ResponsiveContainer, CartesianGrid } from 'recharts';
 
 const HomeTeacher = () => {
     const [teacherId, setTeacherId] = useState(null);
@@ -74,29 +74,41 @@ const HomeTeacher = () => {
     };
 
     return (
-        <div className="flex flex-col items-center min-h-screen">
+       <div className="flex flex-col items-center min-h-screen">
             <h1 className="text-3xl font-bold mb-6">Home</h1>
 
             {/* Stats Section - Placed at the Top */}
-            <div className="grid grid-cols-3 gap-6 w-full max-w-5xl">
-                <div className="bg-[#ED6B60] text-white p-6 rounded-lg text-center shadow-lg">
-                    <p className="text-lg font-regular">Total Consultation Hours</p>
-                    <h2 className="text-6xl font-bold">{stats.total_hours}</h2>
-                    <p className="text-xs font-medium">Hours</p>
+            <div className="flex gap-4 w-full max-w-5xl">
+                <div className="flex-1 bg-[#FF7171] text-white rounded-lg shadow-lg px-6 py-4">
+                    <div className="flex flex-col">
+                    <p className="text-sm mb-2">Total Number of Consultation Hours: </p>
+                    <div className="flex items-baseline gap-2">
+                        <span className="text-7xl font-bold">{stats.total_hours}</span>
+                        <span className="text-lg">Hours</span>
+                    </div>
+                    </div>
                 </div>
 
-                <div className="bg-[#057DCD] text-white p-6 rounded-lg text-center shadow-lg">
-                    <p className="text-lg font-regular">Total Consultations</p>
-                    <h2 className="text-6xl font-bold">{stats.total_consultations}</h2>
-                    <p className="text-xs font-medium">Consultations</p>
+                <div className="flex-1 bg-[#0088FF] text-white rounded-lg shadow-lg px-6 py-4">
+                    <div className="flex flex-col">
+                    <p className="text-sm mb-2">Total Number of Consultations: </p>
+                    <div className="flex items-baseline gap-2">
+                        <span className="text-7xl font-bold">{stats.total_consultations}</span>
+                        <span className="text-lg">Consultations</span>
+                    </div>
+                    </div>
                 </div>
 
-                <div className="bg-[#03C5A8] text-white p-6 rounded-lg text-center shadow-lg">
-                    <p className="text-lg font-regular">Total Students Consulted</p>
-                    <h2 className="text-6xl font-bold">{stats.unique_students}</h2>
-                    <p className="text-xs font-medium">Students</p>
+                <div className="flex-1 bg-[#00D1B2] text-white rounded-lg shadow-lg px-6 py-4">
+                    <div className="flex flex-col">
+                    <p className="text-sm mb-2">Total Number of Student Consulted: </p>
+                    <div className="flex items-baseline gap-2">
+                        <span className="text-7xl font-bold">{stats.unique_students}</span>
+                        <span className="text-lg">Students</span>
+                    </div>
+                    </div>
                 </div>
-            </div>
+                </div>
 
             <div className="grid grid-cols-2 gap-6 p-10">
             {/* Consultation Graph */}
@@ -104,12 +116,24 @@ const HomeTeacher = () => {
                 <h2 className="text-xl font-semibold text-blue-500 text-center mb-4">Consultations Over Time</h2>
                 <ResponsiveContainer width="105%" height={300}>
                     <LineChart data={consultationData}>
-                        <CartesianGrid strokeDasharray="3 3" />
-                        <XAxis dataKey="date" tickFormatter={(date) => new Date(date).toLocaleDateString('en-US', { month: 'short', year: 'numeric' })} />
-                        <YAxis tickFormatter={(value) => Math.round(value)} allowDecimals={false} domain={[0, 'dataMax']} />
+                        <CartesianGrid vertical={false} stroke="#D3D3D3" />
+                        <XAxis 
+                          dataKey="date" 
+                          axisLine={false} 
+                          tickLine={false}
+                          dy={20} // <-- Moved label lower
+                          tickFormatter={(date) => new Date(date).toLocaleDateString('en-US', { month: 'short', year: 'numeric' })} 
+                        />
+                        <YAxis 
+                          axisLine={false}
+                          tickLine={false}
+                          tickFormatter={(value) => Math.round(value)} 
+                          allowDecimals={false} 
+                          domain={[0, 'dataMax']} 
+                        />
                         <Tooltip />
-                        <Legend />
-                        <Line type="monotone" dataKey="consultations" stroke="#3B82F6" strokeWidth={3} />
+                        <Legend align="left" wrapperStyle={{ textAlign: 'left', marginTop: '20px', marginBottom: '-20px'}} />
+                        <Line type="monotone" dataKey="consultations" stroke="#3B82F6" strokeWidth={3} name="Consultations" />
                     </LineChart>
                 </ResponsiveContainer>
             </div>
@@ -119,24 +143,32 @@ const HomeTeacher = () => {
                 <h2 className="text-xl font-semibold text-red-500 text-center mb-4">Consultation Hours Over Time</h2>
                 <ResponsiveContainer width="105%" height={300}>
                     <LineChart data={consultationHoursData}>
-                        <CartesianGrid strokeDasharray="3 3" />
-                        <XAxis dataKey="date" tickFormatter={(date) => new Date(date).toLocaleDateString('en-US', { month: 'short', year: 'numeric' })} />
+                        <CartesianGrid vertical={false} stroke="#D3D3D3" />
+                        <XAxis 
+                          dataKey="date" 
+                          axisLine={false} 
+                          tickLine={false}
+                          dy={20} // <-- Moved label lower
+                          tickFormatter={(date) => new Date(date).toLocaleDateString('en-US', { month: 'short', year: 'numeric' })} 
+                        />
                         <YAxis
-                            tickFormatter={(minutes) => {
-                                const hh = Math.floor(minutes / 60);
-                                const mm = minutes % 60;
-                                return `${hh}:${mm.toString().padStart(2, '0')}`; // Convert minutes to HH:MM
-                            }}
+                          axisLine={false}
+                          tickLine={false}
+                          tickFormatter={(minutes) => {
+                              const hh = Math.floor(minutes / 60);
+                              const mm = minutes % 60;
+                              return `${hh}:${mm.toString().padStart(2, '0')}`;
+                          }}
                         />
                         <Tooltip 
-                            formatter={(value) => {
-                                const hh = Math.floor(value / 60);
-                                const mm = value % 60;
-                                return [`${hh}:${mm.toString().padStart(2, '0')}`, "Consultatation Hour"];
-                            }}
+                          formatter={(value) => {
+                              const hh = Math.floor(value / 60);
+                              const mm = value % 60;
+                              return [`${hh}:${mm.toString().padStart(2, '0')}`, "Consultation Hours"];
+                          }}
                         />
-                        <Legend />
-                        <Line type="monotone" dataKey="consultation_hours" stroke="#EF4444" strokeWidth={3} />
+                        <Legend align="left" wrapperStyle={{ textAlign: 'left', marginTop: '20px', marginBottom: '-20px'}} />
+                        <Line type="monotone" dataKey="consultation_hours" stroke="#EF4444" strokeWidth={3} name="Consultation Hours" />
                     </LineChart>
                 </ResponsiveContainer>
             </div>
