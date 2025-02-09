@@ -9,6 +9,7 @@ import { ReactComponent as GradesIcon } from './icons/grade.svg';
 import { ReactComponent as BellIcon } from './icons/bell.svg';
 import { ReactComponent as SettingsIcon } from './icons/setting.svg';
 import { ReactComponent as ClassRecorderIcon } from './icons/classRecord.svg';
+import { ReactComponent as PointerIcon } from './icons/pointer.svg'; // NEW import
 import logo from './icons/logo2.png';
 // Import missing icons from react-icons/fa
 import { FaHome, FaGraduationCap, FaClipboardList, FaUser, FaUsers, FaCog } from 'react-icons/fa'; // Added FaUsers, FaCog
@@ -34,6 +35,8 @@ const Sidebar = ({ onExpandChange }) => {
   const [showNotifications, setShowNotifications] = useState(false);
   const [notificationPosition, setNotificationPosition] = useState({ top: 0, left: 0 });
   const bellButtonRef = useRef(null);
+  const [pointerPosition, setPointerPosition] = useState(0); // NEW pointer state
+  const menuItemRefs = useRef({}); // NEW ref for menu items
   const navigate = useNavigate();
 
   useEffect(() => {
@@ -156,6 +159,7 @@ const Sidebar = ({ onExpandChange }) => {
   // Helper to render a menu item with an icon and a label that fades in
   const renderMenuItem = (id, IconComponent, label) => (
     <li 
+      ref={el => menuItemRefs.current[id] = el} // NEW: save ref
       className={`sidebar-item relative h-9 flex items-center cursor-pointer px-2 ${  // Changed px-3 to px-2
         activeItem === id ? 'bg-white outline outline-3 outline-[#54BEFF]' : ''
       }`}
@@ -179,6 +183,15 @@ const Sidebar = ({ onExpandChange }) => {
       </span>
     </li>
   );
+
+  // NEW: Update pointer position whenever the active item changes.
+  useEffect(() => {
+    const ref = menuItemRefs.current[activeItem];
+    if (ref) {
+      // Set pointer's top to the vertical center of the item; adjust offset as needed.
+      setPointerPosition(ref.offsetTop + ref.offsetHeight / 2);
+    }
+  }, [activeItem]);
 
   const handleModalClose = () => {
     // Keep sidebar expanded for a moment after modal closes
@@ -225,6 +238,20 @@ const Sidebar = ({ onExpandChange }) => {
       onMouseEnter={() => !isFrozen && setIsOpen(true)}
       onMouseLeave={() => !isFrozen && setIsOpen(false)}
     >
+      {/* NEW: Render the pointer element */}
+      <div 
+        className="pointer-icon" 
+        style={{
+          position: 'absolute',
+          right: '-1.7rem', // adjust horizontal offset as needed
+          top: pointerPosition,
+          transform: 'translateY(-50%)',
+          transition: 'top 0.3s ease'
+        }}
+      >
+        <PointerIcon width="48" height="48" /> {/* Increased size */}
+      </div>
+
       {/* Return to original logo placement but with fixed size */}
       <div className="flex items-center mb-10">
         <div className="w-20 min-w-[5rem] -ml-5">
