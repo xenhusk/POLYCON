@@ -72,7 +72,9 @@ function StudentAppointments() {
           <li key={app.id} className="p-4 border rounded-lg shadow-sm bg-gray-50">
             <div>
               <p><strong>Teacher:</strong> {app.teacherName}</p>
-              <p><strong>Students:</strong> {app.studentNames}</p>
+              <p>
+                <strong>Students:</strong> {Array.isArray(app.studentNames) ? app.studentNames.join(", ") : app.studentNames}
+              </p>
             </div>
           </li>
         ))}
@@ -84,7 +86,9 @@ function StudentAppointments() {
           <li key={app.id} className="p-4 border rounded-lg shadow-sm bg-gray-50">
             <div>
               <p><strong>Teacher:</strong> {app.teacherName}</p>
-              <p><strong>Students:</strong> {app.studentNames}</p>
+              <p>
+                <strong>Students:</strong> {Array.isArray(app.studentNames) ? app.studentNames.join(", ") : app.studentNames}
+              </p>
               <p><strong>Schedule:</strong> {formatDateTime(app.schedule)}</p>
               <p><strong>Venue:</strong> {app.venue}</p>
             </div>
@@ -98,7 +102,9 @@ function StudentAppointments() {
           <li key={app.id} className="p-4 border rounded-lg shadow-sm bg-gray-50">
             <div>
               <p><strong>Teacher:</strong> {app.teacherName}</p>
-              <p><strong>Students:</strong> {app.studentNames}</p>
+              <p>
+                <strong>Students:</strong> {Array.isArray(app.studentNames) ? app.studentNames.join(", ") : app.studentNames}
+              </p>
               <p><strong>Schedule:</strong> {app.schedule && !isNaN(new Date(app.schedule).getTime()) ? formatDateTime(app.schedule) : ''}</p>
               <p><strong>Venue:</strong> {app.venue}</p>
             </div>
@@ -114,13 +120,20 @@ function TeacherAppointments() {
   const [upcoming, setUpcoming] = useState([]);
   const [pending, setPending] = useState([]);
   const [canceled, setCanceled] = useState([]);
+  // New state to track confirmation inputs for each booking
+  const [confirmInputs, setConfirmInputs] = useState({});
 
   const fetchTeacherAppointments = async () => {
     const teacherID = localStorage.getItem('teacherID');
     try {
       const res = await fetch(`http://localhost:5001/bookings/get_teacher_bookings?teacherID=${teacherID}`);
       const data = await res.json();
-      setAppointments(data);
+      // Ensure each booking has a studentIDs field (check API field name accordingly)
+      const updatedData = data.map(booking => ({
+        ...booking,
+        studentIDs: booking.studentIDs || booking.student_ids || [] // adjust field names as needed
+      }));
+      setAppointments(updatedData);
     } catch (err) {
       console.error('Error fetching teacher appointments:', err);
     }
@@ -136,70 +149,31 @@ function TeacherAppointments() {
     setCanceled(appointments.filter(app => app.status === 'canceled'));
   }, [appointments]);
 
-  const handleConfirm = (bookingID) => {
-    // ...existing code for confirming booking...
-    console.log('Confirm booking:', bookingID);
+  // Trigger inline confirmation inputs for a given booking
+  const handleConfirmClick = (bookingID) => {
+    setConfirmInputs(prev => ({ ...prev, [bookingID]: { schedule: '', venue: '' } }));
   };
-
-  const handleCancel = (bookingID) => {
-    // ...existing code for canceling booking...
-    console.log('Cancel booking:', bookingID);
-  };
-
-  const handleStartSession = (bookingID) => {
-    // ...existing code for starting session...
-    console.log('Start session for booking:', bookingID);
-  };
-
-  const formatDateTime = (dateTime) => {
-    const date = new Date(dateTime);
-    const formattedDate = date.toLocaleDateString();
-    const formattedTime = date.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
-    return `${formattedDate} at ${formattedTime}`;
-  };
-
-  function showConfirmationInputs(bookingID, bookingItem) {
-    const scheduleInput = document.createElement("input");
-    scheduleInput.type = "datetime-local";
-    scheduleInput.id = `schedule-${bookingID}`;
-
-    const venueInput = document.createElement("input");
-    venueInput.type = "text";
-    venueInput.id = `venue-${bookingID}`;
-    venueInput.placeholder = "Enter venue";
-
-    const confirmButton = document.createElement("button");
-    confirmButton.textContent = "Confirm Booking";
-    confirmButton.className = "bg-blue-500 text-white px-4 py-2 rounded-lg";
-    confirmButton.onclick = () => confirmBooking(bookingID, scheduleInput.value, venueInput.value);
-
-    bookingItem.appendChild(document.createElement("br"));
-    bookingItem.appendChild(scheduleInput);
-    bookingItem.appendChild(document.createElement("br"));
-    bookingItem.appendChild(venueInput);
-    bookingItem.appendChild(document.createElement("br"));
-    bookingItem.appendChild(confirmButton);
-  }
 
   async function confirmBooking(bookingID, schedule, venue) {
     if (!schedule || !venue) {
       alert("Schedule and venue are required to confirm the booking.");
       return;
     }
-
     try {
       const response = await fetch('http://localhost:5001/bookings/confirm_booking', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ bookingID, schedule, venue }),
       });
-
       if (response.ok) {
         alert("Booking confirmed successfully!");
-        await fetchTeacherAppointments(); // Now fetchTeacherAppointments is in scope
+        await fetchTeacherAppointments();
+        // Clear inline inputs on success (if not already cleared)
+        setConfirmInputs(prev => { const updated = { ...prev }; delete updated[bookingID]; return updated; });
       } else {
         const result = await response.json();
         alert(`Failed to confirm booking: ${result.error || "Unknown error"}`);
+        console.error('Confirmation error:', result.error);
       }
     } catch (error) {
       console.error('Error confirming booking:', error);
@@ -213,13 +187,13 @@ function TeacherAppointments() {
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ bookingID }),
       });
-
       if (response.ok) {
         alert("Booking canceled successfully!");
-        await fetchTeacherAppointments(); // Now fetchTeacherAppointments is in scope
+        await fetchTeacherAppointments();
       } else {
         const result = await response.json();
         alert(`Failed to cancel booking: ${result.error || "Unknown error"}`);
+        console.error('Cancellation error:', result.error);
       }
     } catch (error) {
       console.error('Error canceling booking:', error);
@@ -228,27 +202,43 @@ function TeacherAppointments() {
 
   async function startSession(appointment) {
     const teacherID = localStorage.getItem('teacherID');
+    // Use fallback: if appointment.studentIDs is empty, use appointment.studentID.
+    let studentIDs = (appointment.studentIDs && appointment.studentIDs.length)
+      ? appointment.studentIDs
+      : appointment.studentID;
+    if (!studentIDs || !Array.isArray(studentIDs) || studentIDs.length === 0) {
+      alert("Cannot start session: Missing student IDs.");
+      console.error("startSession: studentIDs not valid", appointment);
+      return;
+    }
     try {
       const response = await fetch('http://localhost:5001/consultation/start_session', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
           teacher_id: teacherID,
-          student_ids: appointment.studentIDs,
+          student_ids: studentIDs,
         }),
       });
-
       const result = await response.json();
       if (response.ok) {
-        const sessionUrl = `/session?sessionID=${result.session_id}&teacherID=${teacherID}&studentIDs=${appointment.studentIDs.join(',')}`;
+        const sessionUrl = `/session?sessionID=${result.session_id}&teacherID=${teacherID}&studentIDs=${studentIDs.join(',')}`;
         window.open(sessionUrl, '_blank');
       } else {
         alert(`Failed to start session: ${result.error || "Unknown error"}`);
+        console.error('Start session error:', result.error);
       }
     } catch (error) {
       console.error('Error starting session:', error);
     }
   }
+
+  const formatDateTime = (dateTime) => {
+    const date = new Date(dateTime);
+    const formattedDate = date.toLocaleDateString();
+    const formattedTime = date.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
+    return `${formattedDate} at ${formattedTime}`;
+  };
 
   return (
     <div>
@@ -262,8 +252,13 @@ function TeacherAppointments() {
                 <p><strong>Schedule:</strong> {new Date(app.schedule).toLocaleString()}</p>
                 <p><strong>Venue:</strong> {app.venue}</p>
                 <div className="mt-2">
-                  <button onClick={() => handleStartSession(app.id)} className="bg-green-500 text-white px-3 py-1 rounded">Start Session</button>
-                  <button onClick={() => handleCancel(app.id)} className="bg-red-500 text-white px-3 py-1 rounded">Cancel</button>
+                  {/* Call startSession with the whole appointment object */}
+                  <button onClick={() => startSession(app)} className="bg-green-500 text-white px-3 py-1 rounded">
+                    Start Session
+                  </button>
+                  <button onClick={() => cancelBooking(app.id)} className="bg-red-500 text-white px-3 py-1 rounded">
+                    Cancel
+                  </button>
                 </div>
               </li>
             ))}
@@ -283,8 +278,39 @@ function TeacherAppointments() {
                 <p><strong>Schedule:</strong> {new Date(app.schedule).toLocaleString()}</p>
                 <p><strong>Venue:</strong> {app.venue}</p>
                 <div className="mt-2">
-                  <button onClick={() => handleConfirm(app.id)} className="mr-2 bg-blue-500 text-white px-3 py-1 rounded">Confirm</button>
-                  <button onClick={() => handleCancel(app.id)} className="bg-red-500 text-white px-3 py-1 rounded">Cancel</button>
+                  {/* If confirmation inputs not yet opened, show Confirm and Cancel buttons */}
+                  { !confirmInputs[app.id] ? (
+                    <>
+                      <button onClick={() => handleConfirmClick(app.id)} className="mr-2 bg-blue-500 text-white px-3 py-1 rounded">Confirm</button>
+                      <button onClick={() => cancelBooking(app.id)} className="bg-red-500 text-white px-3 py-1 rounded">Cancel</button>
+                    </>
+                  ) : (
+                    /* Render inline inputs for schedule and venue */
+                    <div className="mt-2">
+                      <input 
+                        type="datetime-local" 
+                        value={confirmInputs[app.id].schedule}
+                        onChange={(e) => setConfirmInputs(prev => ({ ...prev, [app.id]: { ...prev[app.id], schedule: e.target.value } }))}
+                        className="border p-1 mr-2"
+                      />
+                      <input 
+                        type="text" 
+                        placeholder="Enter venue"
+                        value={confirmInputs[app.id].venue}
+                        onChange={(e) => setConfirmInputs(prev => ({ ...prev, [app.id]: { ...prev[app.id], venue: e.target.value } }))}
+                        className="border p-1 mr-2"
+                      />
+                      <button 
+                        onClick={() => {
+                          confirmBooking(app.id, confirmInputs[app.id].schedule, confirmInputs[app.id].venue);
+                          setConfirmInputs(prev => { const updated = { ...prev }; delete updated[app.id]; return updated; });
+                        }}
+                        className="bg-blue-500 text-white px-2 py-1 rounded"
+                      >
+                        Confirm Booking
+                      </button>
+                    </div>
+                  )}
                 </div>
               </li>
             ))}
