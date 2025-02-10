@@ -10,6 +10,8 @@ import { ReactComponent as BellIcon } from './icons/bell.svg';
 import { ReactComponent as SettingsIcon } from './icons/setting.svg';
 import { ReactComponent as ClassRecorderIcon } from './icons/classRecord.svg';
 import { ReactComponent as PointerIcon } from './icons/pointer.svg'; // NEW import
+import { ReactComponent as UserAdd } from './icons/user-add.svg';
+import { ReactComponent as CourseAdd } from './icons/CourseAdd.svg'; 
 import logo from './icons/logo2.png';
 // Import missing icons from react-icons/fa
 import { FaHome, FaGraduationCap, FaClipboardList, FaUser, FaUsers, FaCog } from 'react-icons/fa'; // Added FaUsers, FaCog
@@ -141,7 +143,7 @@ const Sidebar = ({ onExpandChange }) => {
       dashboard: '/dashboard',
       appointments: '/appointments',
       past: '/history',
-      grades: '/gradeview'
+      grades: '/grades'
     },
     faculty: {
       dashboard: '/dashboard',
@@ -151,8 +153,8 @@ const Sidebar = ({ onExpandChange }) => {
     },
     admin: {
       dashboard: '/home',
-      users: '/admin/users',
-      settings: '/admin/settings'
+      add_users: '/admin/',
+      course: '/courses'
     }
   };
 
@@ -286,9 +288,9 @@ const Sidebar = ({ onExpandChange }) => {
 
       {userRole === 'admin' && (
         <ul className="mt-2 space-y-3"> {/* Changed from mt-6 to mt-2 */}
-          {renderMenuItem("dashboard", () => <FaHome size={24} className="icon-white" />, "Dashboard")}
-          {renderMenuItem("users", () => <FaUsers size={24} className="icon-white" />, "Manage Users")}
-          {renderMenuItem("settings", () => <FaCog size={24} className="icon-white" />, "Settings")}
+          {renderMenuItem("dashboard", HomeIcon, "Home")}
+          {renderMenuItem("add_users", UserAdd, "Manage Users")}
+          {renderMenuItem("course", CourseAdd, "Manage Courses")}
         </ul>
       )}
 

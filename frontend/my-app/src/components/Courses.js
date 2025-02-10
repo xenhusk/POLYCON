@@ -227,129 +227,136 @@ export default function Courses() {
   };
 
   return (
-    <div className="max-w-9xl mx-auto p-6 bg-white shadow-lg rounded-lg">
+    <div className="max-w-9xl mx-auto p-6 bg-white shadow-lg rounded-lg relative">
       <h2 className="text-2xl font-bold text-center text-gray-800">Courses</h2>
 
-      <button 
-        onClick={() => setShowFilters(!showFilters)} 
-        className="bg-blue-500 text-white px-4 py-2 rounded-lg mb-4"
-      >
-        {showFilters ? "Hide Filters" : "Show Filters"}
-      </button>
+      <div className="flex justify-between items-center mb-4">
+        <button 
+          onClick={() => setShowFilters(!showFilters)} 
+          className="bg-blue-500 text-white px-4 py-2 rounded-lg"
+        >
+          {showFilters ? "Hide Filters" : "Show Filters"}
+        </button>
+      </div>
 
-      {showFilters && (
-  <div className="w-1/4 p-4 bg-blue-500 text-white rounded-lg">
-    <h3 className="text-xl font-bold">FILTERS</h3>
+      {/* Wrap filters and table in a relative container */}
+      <div className="relative">
+        {showFilters && (
+          <div className="absolute left-0 w-1/4 p-4 bg-blue-500 text-white rounded-lg z-50">
+            <h3 className="text-xl font-bold">FILTERS</h3>
 
-    {/* Department Filter */}
-    <div className="mt-4">
-      <label className="font-semibold">Department</label>
-      <select
-        value={selectedDepartment}
-        onChange={handleDepartmentFilterChange}
-        className="block w-full p-2 mt-1 border border-gray-300 text-black rounded"
-      >
-        <option value="">All Departments</option>
-        {departments.map((dept) => (
-          <option key={dept.id} value={dept.name}>
-            {dept.name}
-          </option>
-        ))}
-      </select>
-    </div>
-
-        {/* Program Filter (Only show relevant programs for selected department) */}
-        {filteredPrograms.length > 0 && (
-          <div className="mt-4">
-            <label className="font-semibold">Programs</label>
-            <div className="mt-2">
-              {filteredPrograms.map((prog) => (
-                <label key={prog.id} className="block">
-                  <input
-                    type="checkbox"
-                    value={prog.id}
-                    checked={selectedPrograms.includes(prog.id)}
-                    onChange={() => handleProgramFilterChange(prog.id)}
-                    className="mr-2"
-                  />
-                  {prog.name}
-                </label>
-              ))}
+            {/* Department Filter */}
+            <div className="mt-4">
+              <label className="font-semibold">Department</label>
+              <select
+                value={selectedDepartment}
+                onChange={handleDepartmentFilterChange}
+                className="block w-full p-2 mt-1 border border-gray-300 text-black rounded"
+              >
+                <option value="">All Departments</option>
+                {departments.map((dept) => (
+                  <option key={dept.id} value={dept.name}>
+                    {dept.name}
+                  </option>
+                ))}
+              </select>
             </div>
+
+            {/* Program Filter (Only show relevant programs for selected department) */}
+            {filteredPrograms.length > 0 && (
+              <div className="mt-4">
+                <label className="font-semibold">Programs</label>
+                <div className="mt-2">
+                  {filteredPrograms.map((prog) => (
+                    <label key={prog.id} className="block">
+                      <input
+                        type="checkbox"
+                        value={prog.id}
+                        checked={selectedPrograms.includes(prog.id)}
+                        onChange={() => handleProgramFilterChange(prog.id)}
+                        className="mr-2"
+                      />
+                      {prog.name}
+                    </label>
+                  ))}
+                </div>
+              </div>
+            )}
+
+            <button 
+              onClick={applyFilters} 
+              className="bg-white text-blue-500 px-4 py-2 rounded-lg mt-4"
+            >
+              Apply Filters
+            </button>
+
+            <button 
+              onClick={() => setShowFilters(false)} 
+              className="absolute top-2 right-2 text-white text-xl"
+            >
+              &times;
+            </button>
           </div>
         )}
 
-
-          <button 
-            onClick={applyFilters} 
-            className="bg-white text-blue-500 px-4 py-2 rounded-lg mt-4"
-          >
-            Apply Filters
-          </button>
-
-      </div>
-    )}
-
-
-      <table className="min-w-full bg-white border border-gray-300 text-center">
-        <thead>
-          <tr>
-            <th className="py-2 px-4 border-b">ID</th>
-            <th className="py-2 px-4 border-b">NAME</th>
-            <th className="py-2 px-4 border-b">CREDITS</th>
-            <th className="py-2 px-4 border-b">DEPARTMENT</th>
-            <th className="py-2 px-4 border-b">PROGRAM</th>
-            <th className="py-2 px-4 border-b">Actions</th>
-          </tr>
-        </thead>
-        <tbody>
+        <table className="min-w-full bg-white border border-gray-300 text-center">
+          <thead>
+            <tr>
+              <th className="py-2 px-4 border-b">ID</th>
+              <th className="py-2 px-4 border-b">NAME</th>
+              <th className="py-2 px-4 border-b">CREDITS</th>
+              <th className="py-2 px-4 border-b">DEPARTMENT</th>
+              <th className="py-2 px-4 border-b">PROGRAM</th>
+              <th className="py-2 px-4 border-b">Actions</th>
+            </tr>
+          </thead>
+          <tbody>
             {filteredCourses.map((course) => (
               <tr key={course.courseID} className="text-center">
+                <td className="py-2 px-4 border-b">{course.courseID}</td>
+                <td className="py-2 px-4 border-b">{course.courseName}</td>
+                <td className="py-2 px-4 border-b">{course.credits}</td>
+                <td className="py-2 px-4 border-b">{course.department}</td>
+                <td className="py-2 px-4 border-b">{course.program.join(', ')}</td>
+                <td className="py-2 px-4 border-b">
+                  <button onClick={() => handleEdit(course)} className="bg-yellow-500 text-white px-2 py-1 rounded-lg mr-2">Edit</button>
+                  <button onClick={() => handleDelete(course.courseID)} className="bg-red-500 text-white px-2 py-1 rounded-lg">Delete</button>
+                </td>
+              </tr>
+            ))}
+          </tbody>
+        </table>
 
-              <td className="py-2 px-4 border-b">{course.courseID}</td>
-              <td className="py-2 px-4 border-b">{course.courseName}</td>
-              <td className="py-2 px-4 border-b">{course.credits}</td>
-              <td className="py-2 px-4 border-b">{course.department}</td>
-              <td className="py-2 px-4 border-b">{course.program.join(', ')}</td>
-              <td className="py-2 px-4 border-b">
-                <button onClick={() => handleEdit(course)} className="bg-yellow-500 text-white px-2 py-1 rounded-lg mr-2">Edit</button>
-                <button onClick={() => handleDelete(course.courseID)} className="bg-red-500 text-white px-2 py-1 rounded-lg">Delete</button>
-              </td>
-            </tr>
-          ))}
-        </tbody>
-      </table>
+        <div className="flex flex-wrap items-center gap-4 mt-6">
+          {/* Course ID */}
+          <input 
+            type="text" 
+            placeholder="Course ID" 
+            value={courseID} 
+            onChange={(e) => setCourseID(e.target.value)} 
+            className="border border-gray-300 rounded-lg px-3 py-2 w-40" 
+            disabled={editing} 
+          />
 
-      <div className="flex flex-wrap items-center gap-4 mt-6">
-        {/* Course ID */}
-        <input 
-          type="text" 
-          placeholder="Course ID" 
-          value={courseID} 
-          onChange={(e) => setCourseID(e.target.value)} 
-          className="border border-gray-300 rounded-lg px-3 py-2 w-40" 
-          disabled={editing} 
-        />
+          {/* Course Name */}
+          <input 
+            type="text" 
+            placeholder="Course Name" 
+            value={courseName} 
+            onChange={(e) => setCourseName(e.target.value)} 
+            className="border border-gray-300 rounded-lg px-3 py-2 w-60" 
+          />
 
-        {/* Course Name */}
-        <input 
-          type="text" 
-          placeholder="Course Name" 
-          value={courseName} 
-          onChange={(e) => setCourseName(e.target.value)} 
-          className="border border-gray-300 rounded-lg px-3 py-2 w-60" 
-        />
+          {/* Credits */}
+          <input 
+            type="text" 
+            placeholder="Credits" 
+            value={credits} 
+            onChange={(e) => setCredits(e.target.value)} 
+            className="border border-gray-300 rounded-lg px-3 py-2 w-32" 
+          />
 
-        {/* Credits */}
-        <input 
-          type="text" 
-          placeholder="Credits" 
-          value={credits} 
-          onChange={(e) => setCredits(e.target.value)} 
-          className="border border-gray-300 rounded-lg px-3 py-2 w-32" 
-        />
-
-        {/* Department Selection */}
+          {/* Department Selection */}
           <select 
             value={department} 
             onChange={handleDepartmentChange} 
@@ -361,36 +368,33 @@ export default function Courses() {
             ))}
           </select>
 
-        {/* Programs Selection - Show only if department is selected */}
-            {department && filteredPrograms.length > 0 && (
-              <div className="border border-gray-200 rounded-lg p-2 x-2">
-                <div className="flex flex-wrap gap-4">
-                  {filteredPrograms.map((prog) => (
-                    <label key={prog.id} className="flex items-center space-x-2">
-                      <input 
-                        type="checkbox" 
-                        value={prog.id} 
-                        checked={selectedPrograms.includes(prog.id)} 
-                        onChange={() => handleProgramChange(prog.id)}
-                      />
-                      <span className="ml-2">{prog.name || "Unnamed Program"}</span>  {/* Ensure the name is shown */}
-                    </label>
-                  ))}
-                </div>
+          {/* Programs Selection - Show only if department is selected */}
+          {department && filteredPrograms.length > 0 && (
+            <div className="border border-gray-200 rounded-lg p-2 x-2">
+              <div className="flex flex-wrap gap-4">
+                {filteredPrograms.map((prog) => (
+                  <label key={prog.id} className="flex items-center space-x-2">
+                    <input 
+                      type="checkbox" 
+                      value={prog.id} 
+                      checked={selectedPrograms.includes(prog.id)} 
+                      onChange={() => handleProgramChange(prog.id)}
+                    />
+                    <span className="ml-2">{prog.name || "Unnamed Program"}</span>  {/* Ensure the name is shown */}
+                  </label>
+                ))}
               </div>
-            )}
+            </div>
+          )}
 
-
-
-
-
-        {/* Submit Button */}
-        <button 
-          onClick={handleSaveCourse} 
-          className="bg-blue-500 text-white px-4 py-2 rounded-lg"
-        >
-          {editing ? 'UPDATE' : 'ADD'}
-        </button>
+          {/* Submit Button */}
+          <button 
+            onClick={handleSaveCourse} 
+            className="bg-blue-500 text-white px-4 py-2 rounded-lg"
+          >
+            {editing ? 'UPDATE' : 'ADD'}
+          </button>
+        </div>
       </div>
     </div>
   );
