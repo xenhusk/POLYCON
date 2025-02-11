@@ -1,12 +1,24 @@
 import React, { useEffect, useState } from 'react';
+import { useCachedFetch } from '../hooks/useCachedFetch'; // new import
 
 function StudentAppointments() {
-  const [appointments, setAppointments] = useState({
-    pending: [],
-    upcoming: [],
-    canceled: []
-  });
-  const [students, setStudents] = useState([]);
+  const [appointments, setAppointments] = useState({ pending: [], upcoming: [], canceled: [] });
+  const [teacherCache, setTeacherCache] = useState({});
+  const { cachedFetch } = useCachedFetch();
+
+  // Helper function: fetch teacher data only once per unique teacher ID
+  const fetchTeacher = async (teacherID) => {
+    if (teacherCache[teacherID]) return teacherCache[teacherID];
+    try {
+      const teacherData = await cachedFetch(`http://localhost:5001/user/get_user?userID=${teacherID}`);
+      const teacherName = `${teacherData.firstName} ${teacherData.lastName}`;
+      setTeacherCache(prev => ({ ...prev, [teacherID]: teacherName }));
+      return teacherName;
+    } catch (error) {
+      console.error(error);
+      return 'Unknown';
+    }
+  };
 
   const formatDateTime = (dateTime) => {
     const date = new Date(dateTime);
@@ -19,24 +31,21 @@ function StudentAppointments() {
     const fetchStudentAppointments = async () => {
       const studentID = localStorage.getItem('studentID');
       try {
-        const response = await fetch(`http://localhost:5001/bookings/get_student_bookings?studentID=${studentID}`);
-        const bookings = await response.json();
+        const bookings = await cachedFetch(`http://localhost:5001/bookings/get_student_bookings?studentID=${studentID}`);
+        if (!Array.isArray(bookings)) throw new Error('Invalid response format');
 
-        if (!Array.isArray(bookings)) {
-          throw new Error('Invalid response format');
-        }
+        const categorizedAppointments = { pending: [], upcoming: [], canceled: [] };
+        // Collect unique teacher IDs
+        const teacherIds = Array.from(new Set(bookings.map(b => b.teacherID.split('/').pop())));
+        // Batch fetch teacher names for unique IDs
+        const teacherDataMap = {};
+        await Promise.all(teacherIds.map(async tid => {
+          teacherDataMap[tid] = await fetchTeacher(tid);
+        }));
 
-        const categorizedAppointments = {
-          pending: [],
-          upcoming: [],
-          canceled: []
-        };
-
-        for (const booking of bookings) {
-          const teacherResponse = await fetch(`http://localhost:5001/user/get_user?userID=${booking.teacherID.split('/').pop()}`);
-          const teacherData = await teacherResponse.json();
-          const teacherName = `${teacherData.firstName} ${teacherData.lastName}`;
-
+        bookings.forEach(booking => {
+          const teacherID = booking.teacherID.split('/').pop();
+          const teacherName = teacherDataMap[teacherID] || 'Unknown';
           const appointmentItem = {
             id: booking.id,
             teacherName,
@@ -45,16 +54,10 @@ function StudentAppointments() {
             venue: booking.venue,
             status: booking.status
           };
-
-          if (booking.status === "pending") {
-            categorizedAppointments.pending.push(appointmentItem);
-          } else if (booking.status === "confirmed") {
-            categorizedAppointments.upcoming.push(appointmentItem);
-          } else if (booking.status === "canceled") {
-            categorizedAppointments.canceled.push(appointmentItem);
-          }
-        }
-
+          if (booking.status === "pending") categorizedAppointments.pending.push(appointmentItem);
+          else if (booking.status === "confirmed") categorizedAppointments.upcoming.push(appointmentItem);
+          else if (booking.status === "canceled") categorizedAppointments.canceled.push(appointmentItem);
+        });
         setAppointments(categorizedAppointments);
       } catch (error) {
         console.error('Error fetching student bookings:', error);
@@ -62,7 +65,7 @@ function StudentAppointments() {
     };
 
     fetchStudentAppointments();
-  }, []);
+  }, [cachedFetch]);
 
   return (
     <div>
@@ -117,21 +120,24 @@ function StudentAppointments() {
 
 function TeacherAppointments() {
   const [appointments, setAppointments] = useState([]);
-  const [upcoming, setUpcoming] = useState([]);
   const [pending, setPending] = useState([]);
+  const [upcoming, setUpcoming] = useState([]);
   const [canceled, setCanceled] = useState([]);
-  // New state to track confirmation inputs for each booking
   const [confirmInputs, setConfirmInputs] = useState({});
+  const { cachedFetch } = useCachedFetch();
+
+  // Added missing function
+  const handleConfirmClick = (bookingID) => {
+    setConfirmInputs(prev => ({ ...prev, [bookingID]: { schedule: '', venue: '' } }));
+  };
 
   const fetchTeacherAppointments = async () => {
     const teacherID = localStorage.getItem('teacherID');
     try {
-      const res = await fetch(`http://localhost:5001/bookings/get_teacher_bookings?teacherID=${teacherID}`);
-      const data = await res.json();
-      // Ensure each booking has a studentIDs field (check API field name accordingly)
+      const data = await cachedFetch(`http://localhost:5001/bookings/get_teacher_bookings?teacherID=${teacherID}`);
       const updatedData = data.map(booking => ({
         ...booking,
-        studentIDs: booking.studentIDs || booking.student_ids || [] // adjust field names as needed
+        studentIDs: booking.studentIDs || booking.student_ids || []
       }));
       setAppointments(updatedData);
     } catch (err) {
@@ -139,20 +145,12 @@ function TeacherAppointments() {
     }
   };
 
-  useEffect(() => {
-    fetchTeacherAppointments();
-  }, []);
-
-  useEffect(() => {
+  useEffect(() => { fetchTeacherAppointments(); }, [cachedFetch]);
+  useEffect(() => { 
     setUpcoming(appointments.filter(app => app.status === 'confirmed'));
     setPending(appointments.filter(app => app.status === 'pending'));
     setCanceled(appointments.filter(app => app.status === 'canceled'));
   }, [appointments]);
-
-  // Trigger inline confirmation inputs for a given booking
-  const handleConfirmClick = (bookingID) => {
-    setConfirmInputs(prev => ({ ...prev, [bookingID]: { schedule: '', venue: '' } }));
-  };
 
   async function confirmBooking(bookingID, schedule, venue) {
     if (!schedule || !venue) {

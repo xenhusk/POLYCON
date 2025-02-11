@@ -75,23 +75,64 @@ const Signup = ({ onSwitchToLogin }) => {
   };
   
 
-  const handleSubmit = () => {
+  const handleSubmit = async (e) => {
+    if (e) e.preventDefault();
+    
     const emailPattern = /^[a-zA-Z0-9._%+-]+@wnu\.sti\.edu\.ph$/;
     const errors = [];
 
+    // Validation checks
     if (!formData.firstName) errors.push("First name is required");
     if (!formData.lastName) errors.push("Last name is required");
     if (!formData.idNumber) errors.push("ID number is required");
     if (!emailPattern.test(formData.email)) errors.push("Valid WNU email is required");
     if (formData.password.length < 6) errors.push("Password must be at least 6 characters");
     if (formData.password !== formData.confirmNewPassword) errors.push("Passwords don't match");
+    if (!formData.department) errors.push("Department is required");
+    if (!formData.program) errors.push("Program is required");
+    if (!formData.year_section) errors.push("Year & Section is required");
+    if (!formData.sex) errors.push("Gender is required");
 
     if (errors.length > 0) {
-      setErrorMessage(errors.join(", "));
-      return false;
+        setErrorMessage(errors.join(", "));
+        return false;
     }
+
+    try {
+        const response = await fetch('http://localhost:5001/account/signup', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+            },
+            body: JSON.stringify({
+                idNumber: formData.idNumber,
+                firstName: formData.firstName,
+                lastName: formData.lastName,
+                email: formData.email,
+                password: formData.password,
+                program: formData.program,
+                sex: formData.sex,
+                year_section: formData.year_section,
+                department: formData.department,
+                role: formData.role
+            }),
+        });
+
+        const data = await response.json();
+
+        if (response.ok) {
+            alert('Registration successful!');
+            onSwitchToLogin(); // Switch to login after successful registration
+        } else {
+            setErrorMessage(data.message || 'Registration failed');
+        }
+    } catch (error) {
+        console.error('Error during registration:', error);
+        setErrorMessage('Registration failed. Please try again.');
+    }
+
     return true;
-  };
+};
 
   return (
     <div className="h-[600px] w-[100%] flex justify-center items-center font-poppins">

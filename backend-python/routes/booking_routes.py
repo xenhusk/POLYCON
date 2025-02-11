@@ -1,8 +1,24 @@
+import time
+import concurrent.futures  # NEW import
 from flask import Blueprint, request, jsonify
 from google.cloud import firestore
 from services.firebase_service import db
+from utils.firestore_utils import batch_fetch_documents  # NEW import
 
 booking_bp = Blueprint('booking_routes', __name__)
+
+# Simple in-memory cache with expiry (5 seconds example)
+_cache = {}
+CACHE_EXPIRY = 5
+
+def get_cache(key):
+    entry = _cache.get(key)
+    if entry and time.time() - entry['time'] < CACHE_EXPIRY:
+        return entry['data']
+    return None
+
+def set_cache(key, data):
+    _cache[key] = {'data': data, 'time': time.time()}
 
 def convert_references(value):
     if isinstance(value, list):
@@ -24,6 +40,9 @@ def get_program_name(program_ref):
 @booking_bp.route('/get_teachers', methods=['GET'])
 def get_teachers():
     try:
+        cached = get_cache('teachers')
+        if cached:
+            return jsonify(cached)
         teachers_ref = db.collection('faculty').stream()
 
         teachers = []
@@ -45,6 +64,7 @@ def get_teachers():
             teacher_data = {key: convert_references(value) for key, value in teacher_data.items()}
             teachers.append(teacher_data)
 
+        set_cache('teachers', teachers)
         return jsonify(teachers), 200
 
     except Exception as e:
@@ -53,6 +73,9 @@ def get_teachers():
 @booking_bp.route('/get_students', methods=['GET'])
 def get_students():
     try:
+        cached = get_cache('students')
+        if cached:
+            return jsonify(cached)
         students_ref = db.collection('students').stream()
         students = []
 
@@ -83,10 +106,39 @@ def get_students():
         if not students:
             return jsonify({"error": "No students found"}), 404
 
+        set_cache('students', students)
         return jsonify(students), 200
 
     except Exception as e:
         return jsonify({"error": f"Failed to fetch students: {str(e)}"}), 500
+
+def batch_fetch_student_info(student_refs):
+    """
+    Given a list of student DocumentReferences,
+    fetch their documents and corresponding user documents in batch.
+    Returns a list of tuples (combined, student_info) for each student.
+    """
+    # Batch fetch student documents.
+    student_docs = batch_fetch_documents(student_refs)
+    # Build corresponding user references.
+    user_refs = [db.collection('user').document(s_ref.id) for s_ref in student_refs]
+    user_docs = batch_fetch_documents(user_refs)
+    results = []
+    for s_ref in student_refs:
+        student_path = s_ref.path
+        student_data = student_docs.get(student_path, {})
+        # Construct user ref key (e.g., "user/1234")
+        user_key = f"user/{s_ref.id}"
+        if user_docs.get(user_key):
+            user_data = user_docs[user_key]
+            student_data['firstName'] = user_data.get('firstName', 'Unknown')
+            student_data['lastName'] = user_data.get('lastName', 'Unknown')
+            student_data['studentinfo'] = get_stdinfo(user_data)
+        program_ref = student_data.get('program')
+        program_name = get_program_name(program_ref) if program_ref else 'Unknown'
+        combined = f"{student_data.get('firstName', 'Unknown')} {student_data.get('lastName', 'Unknown')} {program_name} {student_data.get('year_section', 'Unknown')}"
+        results.append((combined, student_data.get('studentinfo', '')))
+    return results
 
 @booking_bp.route('/get_student_bookings', methods=['GET'])
 def get_student_bookings():
@@ -95,38 +147,49 @@ def get_student_bookings():
         if not student_id:
             return jsonify({"error": "Missing studentID"}), 400
 
+        cache_key = f'student_bookings_{student_id}'
+        cached = get_cache(cache_key)
+        if cached:
+            return jsonify(cached)
         bookings_ref = db.collection('bookings').where('studentID', 'array_contains', db.document(f'students/{student_id}')).stream()
         bookings = []
-
+        
+        # NEW: Preload teacher lookup by fetching teacher's name from the 'user' collection.
+        teacher_lookup_cache = get_cache('teacher_lookup')
+        if teacher_lookup_cache:
+            teacher_lookup = teacher_lookup_cache
+        else:
+            teacher_lookup = {}
+            for faculty_doc in db.collection('faculty').stream():
+                teacher_id = faculty_doc.id
+                user_doc = db.collection('user').document(teacher_id).get()
+                if user_doc.exists:
+                    user_data = user_doc.to_dict()
+                    teacher_name = f"{user_data.get('firstName', 'Unknown')} {user_data.get('lastName', 'Unknown')}"
+                else:
+                    faculty_data = faculty_doc.to_dict()
+                    teacher_name = f"{faculty_data.get('firstName', 'Unknown')} {faculty_data.get('lastName', 'Unknown')}"
+                teacher_lookup[faculty_doc.reference.path] = teacher_name
+            set_cache('teacher_lookup', teacher_lookup)
+        
         for doc in bookings_ref:
             booking_data = doc.to_dict()
-            booking_data['id'] = doc.id  # Include booking ID
-
-            # Fetch teacher details from the 'user' collection
+            booking_data['id'] = doc.id
             teacher_ref = booking_data['teacherID']
-            teacher_doc = teacher_ref.get()
-            if teacher_doc.exists:
-                teacher_data = teacher_doc.to_dict()
-                booking_data['teacherName'] = f"{teacher_data.get('firstName', 'Unknown')} {teacher_data.get('lastName', 'Unknown')}"
-
-            # Fetch student details from the 'user' and 'students' collections, excluding the current student
-            student_names = []
-            for student_ref in booking_data['studentID']:
-                student_doc = student_ref.get()
-                if student_doc.exists and student_ref.id != f'students/{student_id}':
-                    student_data = student_doc.to_dict()
-                    user_ref = db.collection('user').document(student_ref.id).get()
-                    if user_ref.exists:
-                        user_data = user_ref.to_dict()
-                        student_data['firstName'] = user_data.get('firstName', 'Unknown')
-                        student_data['lastName'] = user_data.get('lastName', 'Unknown')
-                    program_ref = student_data.get('program')
-                    program_name = get_program_name(program_ref) if program_ref else 'Unknown'
-                    student_names.append(f"{student_data.get('firstName', 'Unknown')} {student_data.get('lastName', 'Unknown')} {program_name} {student_data.get('year_section', 'Unknown')}")
+            teacher_key = str(teacher_ref.path)
+            booking_data['teacherName'] = teacher_lookup.get(teacher_key, "Unknown Unknown")
+            
+            # Batched fetch for student details.
+            student_refs = booking_data['studentID']
+            student_info = batch_fetch_student_info(student_refs)
+            student_names = [info[0] for info in student_info]
+            student_infos = [info[1] for info in student_info]
             booking_data['studentNames'] = student_names
+            booking_data['info'] = student_infos
 
             booking_data = {key: convert_references(value) for key, value in booking_data.items()}
             bookings.append(booking_data)
+        set_cache(cache_key, bookings)
         return jsonify(bookings), 200
     except Exception as e:
         return jsonify({"error": f"Failed to fetch student bookings: {str(e)}"}), 500
@@ -135,47 +198,52 @@ def get_student_bookings():
 def get_teacher_bookings():
     try:
         teacher_id = request.args.get('teacherID')
-        status = request.args.get('status')  # Fetch status from query parameters
+        status = request.args.get('status')  # Optional status filter
         if not teacher_id:
             return jsonify({"error": "Missing teacherID"}), 400
 
+        cache_key = f'teacher_bookings_{teacher_id}_{status or "all"}'
+        cached = get_cache(cache_key)
+        if cached:
+            return jsonify(cached)
         query = db.collection('bookings').where('teacherID', '==', db.document(f'faculty/{teacher_id}'))
         if status:
             query = query.where('status', '==', status)
 
         bookings_ref = query.stream()
         bookings = []
+        
+        teacher_cache = {}  # Local cache for teacher details
+
+        # Helper to fetch student details in batch.
+        def batch_fetch_teacher_students(student_refs):
+            # Reuse the batch_fetch_student_info helper.
+            student_info = batch_fetch_student_info(student_refs)
+            return [info[0] for info in student_info]
 
         for doc in bookings_ref:
             booking_data = doc.to_dict()
-            booking_data['id'] = doc.id  # Include booking ID
-
-            # Fetch teacher details from the 'user' collection
+            booking_data['id'] = doc.id
             teacher_ref = booking_data['teacherID']
-            teacher_doc = teacher_ref.get()
-            if teacher_doc.exists:
-                teacher_data = teacher_doc.to_dict()
-                booking_data['teacherName'] = f"{teacher_data.get('firstName', 'Unknown')} {teacher_data.get('lastName', 'Unknown')}"
+            teacher_key = str(teacher_ref.path)
+            if teacher_key in teacher_cache:
+                booking_data['teacherName'] = teacher_cache[teacher_key]
+            else:
+                teacher_doc = teacher_ref.get()
+                if teacher_doc.exists:
+                    teacher_data = teacher_doc.to_dict()
+                    teacher_name = f"{teacher_data.get('firstName', 'Unknown')} {teacher_data.get('lastName', 'Unknown')}"
+                    teacher_cache[teacher_key] = teacher_name
+                    booking_data['teacherName'] = teacher_name
 
-            # Fetch student details from the 'user' and 'students' collections
-            student_names = []
-            for student_ref in booking_data['studentID']:
-                student_doc = student_ref.get()
-                if student_doc.exists:
-                    student_data = student_doc.to_dict()
-                    user_ref = db.collection('user').document(student_ref.id).get()
-                    if user_ref.exists:
-                        user_data = user_ref.to_dict()
-                        student_data['firstName'] = user_data.get('firstName', 'Unknown')
-                        student_data['lastName'] = user_data.get('lastName', 'Unknown')
-                    program_ref = student_data.get('program')
-                    program_name = get_program_name(program_ref) if program_ref else 'Unknown'
-                    student_names.append(f"{student_data.get('firstName', 'Unknown')} {student_data.get('lastName', 'Unknown')} {program_name} {student_data.get('year_section', 'Unknown')}")
+            # Batch fetch all student details.
+            student_refs = booking_data['studentID']
+            student_names = batch_fetch_teacher_students(student_refs)
             booking_data['studentNames'] = student_names
 
             booking_data = {key: convert_references(value) for key, value in booking_data.items()}
             bookings.append(booking_data)
-
+        set_cache(cache_key, bookings)
         return jsonify(bookings), 200
     except Exception as e:
         return jsonify({"error": f"Failed to fetch teacher bookings: {str(e)}"}), 500
@@ -285,3 +353,28 @@ def cancel_booking():
 
     except Exception as e:
         return jsonify({"error": f"Failed to cancel booking: {str(e)}"}), 500
+
+
+
+def get_stdinfo(user_data):
+    try:
+        # user_id = request.args.get('userID')
+        # email = request.args.get('email')
+
+        # doc = db.collection('user').document(user_id).get()
+        profile_pic = user_data.get('profile_picture', '')
+        user_data['profile_picture'] = profile_pic.strip() if isinstance(profile_pic, str) and profile_pic.strip() else "https://avatar.iran.liara.run/public/boy?username=Ash"
+
+        # Check if 'department' is a DocumentReference before calling .get()
+        department_ref = user_data.get('department')
+        from google.cloud.firestore import DocumentReference
+        if department_ref and isinstance(department_ref, DocumentReference):
+            dept_doc = department_ref.get()
+            if dept_doc.exists:
+                department_data = dept_doc.to_dict()
+                user_data['department'] = department_data.get('departmentName', 'Unknown Department')
+        user_data = {key: convert_references(value) for key, value in user_data.items()}
+        return user_data
+    except Exception as e:
+        print(f"Failed to fetch std info: {str(e)}")
+        return {}

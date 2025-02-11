@@ -38,14 +38,7 @@ function Home() {
       </tr>
     </thead>
   );
-  
-  <MyCalendar
-    components={{
-      agenda: {
-        header: CustomAgendaHeader, // Override header to display correctly
-      }
-    }}
-  />
+
   
 
   return (

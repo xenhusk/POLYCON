@@ -80,3 +80,4 @@ def get_student_details():
         return jsonify({"program": program_name, "year_section": year_section}), 200
     except Exception as e:
         return jsonify({"error": f"Failed to fetch student details: {str(e)}"}), 500
+
