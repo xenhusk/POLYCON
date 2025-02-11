@@ -50,9 +50,7 @@ function Home() {
       {/* Main Calendar Section */}
       <div className="mb-8">
         <h2 className="text-xl font-semibold mb-4">Consultation Calendar</h2>
-        <div className="bg-white rounded-lg shadow-lg p-4">
           <AppointmentsCalendar />
-        </div>
       </div>
 
       {/* Role-specific Quick Actions */}

@@ -31,7 +31,7 @@ const BookingPopup = () => {
       {/* Fixed button on bottom right */}
       <button
         onClick={openModal}
-        className="fixed bottom-8 right-8 w-14 h-14 rounded-full flex items-center justify-center shadow-lg bg-[#057DCD] hover:bg-[#54BEFF] hover:scale-110 duration-300 ease-in-out text-white z-50"
+        className="fixed bottom-8 right-8 w-14 h-14 rounded-full flex items-center justify-center shadow-lg bg-[#0065A8] hover:bg-[#54BEFF] hover:scale-110 duration-300 ease-in-out text-white z-50"
       >
         <BookIcon />
       </button>

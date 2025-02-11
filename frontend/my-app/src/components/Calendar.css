@@ -1,0 +1,171 @@
+/* Custom Calendar Styles */
+.rbc-calendar {
+  background-color: white;
+  border-radius: 8px;
+  padding: 16px;
+}
+
+.rbc-header {
+  padding: 10px;
+  background-color: #057DCD;
+  color: #f8f9fa;
+  font-weight: 600;
+}
+
+.rbc-today {
+  background-color: #e6f3ff !important;
+}
+
+.rbc-event {
+  background-color: #057DCD !important;
+  border: none !important;
+  border-radius: 4px !important;
+  box-shadow: 0 2px 4px rgba(0,0,0,0.1) !important;
+  transition: transform 0.2s ease;
+}
+
+.rbc-event:hover {
+  transform: scale(1.02);
+}
+
+.rbc-toolbar button {
+  color: #057DCD !important;
+  border: 1px solid #057DCD !important;
+}
+
+.rbc-toolbar button:hover {
+  background-color: #057DCD !important;
+  color: white !important;
+}
+
+.rbc-toolbar button.rbc-active {
+  background-color: #057DCD !important;
+  color: white !important;
+}
+
+.rbc-time-header {
+  background-color: #f8f9fa;
+}
+
+.rbc-time-slot {
+  color: #666;
+}
+
+.rbc-day-slot .rbc-event {
+  padding: 4px 8px !important;
+}
+
+.rbc-agenda-view table.rbc-agenda-table {
+  border: none;
+  border-radius: 8px;
+  width: 100%;
+  border-collapse: collapse;
+  box-sizing: inherit !important;
+}
+
+.rbc-agenda-view table.rbc-agenda-table thead > tr > th {
+  background-color: #f8f9fa;
+  color: #057DCD;
+  padding: 12px;
+}
+
+/* Adjust column width */
+.rbc-agenda-view th:first-child,
+.rbc-agenda-view td:first-child {
+    width: 17.5%; /* Date column */
+}
+
+.rbc-agenda-view th:nth-child(2),
+.rbc-agenda-view td:nth-child(2) {
+    width: 15%; /* Time column */
+}
+
+.rbc-agenda-view th:last-child,
+.rbc-agenda-view td:last-child {
+    width: 65%; /* Event column */ 
+}
+
+.rbc-month-view{
+    border-radius: 8px;
+    overflow: hidden;
+    border-color: rgba(0,71,118,1);
+}
+
+.rbc-day-bg.rbc-off-range-bg{
+    background-color: #e8f2f8 !important;
+    
+}
+
+.rbc-date-cell .rbc-button-link{
+    color: rgba(0,71,118,1) !important;
+}
+
+.rbc-date-cell.rbc-off-range .rbc-button-link{
+    color: #84919a !important;
+}
+
+.rbc-day-bg.rbc-today{
+    background-color: #d8eafb !important;
+}
+
+/* NEW: Override grid line colors in week/day view */
+.rbc-time-grid,
+.rbc-time-grid .rbc-row,
+.rbc-time-grid .rbc-time-slot {
+  border-color: rgba(0,71,118,1); /* Change this value to your desired grid line color */
+}
+
+/* If needed, adjust the month view grid lines */
+.rbc-month-row,
+.rbc-month-row + .rbc-month-row {
+  border-color: rgba(0,71,118,1);
+}
+
+.rbc-month-row,
+.rbc-row-bg, .rbc-day-bg{
+    border-color: rgba(0,71,118,1) !important;
+    width: 100%;
+
+}
+
+.rbc-header{
+    border-color: rgba(0,71,118,1) !important;
+    width: 14%;
+}
+
+.rbc-header + .rbc-today{
+    background: #057DCD !important;
+}
+
+
+.rbc-row .rbc-time-header-cell,
+.rbc-header .rbc-header + .rbc-today{
+    height: 100%;
+}
+
+.rbc-header + .rbc-today, .rbc-header{
+    align-items: center;
+    justify-content: center;
+    height: 100%;
+    padding-bottom: 4%;
+    border-color: rgba(0,71,118,1) !important;
+}
+
+.rbc-time-view{
+    border-color: rgba(0,71,118,1) !important;
+    border-radius: 0.378rem;
+    overflow: hidden;
+}
+
+.rbc-label.rbc-time-header-gutter{    
+    background: #057DCD !important;  
+}
+
+.rbc-time-header .rbc-overflowing{
+    background-color: #057DCD !important;
+}
+.rbc-agenda-view td,
+.rbc-agenda-view th {
+    border: 1px solid #ddd !important;
+    text-align: left;
+}

@@ -143,7 +143,7 @@ const Sidebar = ({ onExpandChange }) => {
       dashboard: '/dashboard',
       appointments: '/appointments',
       past: '/history',
-      grades: '/grades'
+      grades: '/gradeview'
     },
     faculty: {
       dashboard: '/dashboard',
@@ -238,7 +238,7 @@ const Sidebar = ({ onExpandChange }) => {
 
   return (
     <div 
-      className={`fixed top-0 left-0 bg-[#057DCD] h-screen p-5 pt-8 z-40 transition-all duration-300 ${
+      className={`fixed top-0 left-0 bg-[#0065A8] h-screen p-5 pt-8 z-40 transition-all duration-300 ${
         isFrozen || isOpen ? 'w-64' : 'w-20'
       }`}
       onMouseEnter={() => !isFrozen && setIsOpen(true)}
