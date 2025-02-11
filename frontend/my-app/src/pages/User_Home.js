@@ -29,6 +29,25 @@ function Home() {
     navigate('/grade');
   };
 
+  const CustomAgendaHeader = () => (
+    <thead>
+      <tr>
+        <th>Date</th>
+        <th>Time</th>
+        <th>Event</th>
+      </tr>
+    </thead>
+  );
+  
+  <MyCalendar
+    components={{
+      agenda: {
+        header: CustomAgendaHeader, // Override header to display correctly
+      }
+    }}
+  />
+  
+
   return (
     <div className="p-6 max-w-7xl mx-auto">
       <div className="mb-8">
