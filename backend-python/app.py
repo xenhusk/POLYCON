@@ -11,6 +11,7 @@ from routes.grade_routes import grade_bp # Import account management blueprint
 from routes.profile_routes import profile_bp  # added import for profile routes
 from routes.user_routes import user_bp  # <-- new import
 from routes.hometeacher_routes import hometeacher_routes_bp
+from routes.program_routes import program_bp  # <-- new import
 
 app = Flask(__name__)
 CORS(app, resources={r"/*": {"origins": "*"}})  # Allow all origins
@@ -72,6 +73,8 @@ app.register_blueprint(grade_bp, url_prefix='/grade')
 app.register_blueprint(profile_bp, url_prefix='/profile')
 
 app.register_blueprint(hometeacher_routes_bp, url_prefix='/hometeacher')
+
+app.register_blueprint(program_bp, url_prefix='/program')
 
 if __name__ == '__main__':
     app.run(debug=True, port=5001)

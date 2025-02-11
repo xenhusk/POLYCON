@@ -14,6 +14,7 @@ import ReactCrop from 'react-image-crop';
 import 'react-image-crop/dist/ReactCrop.css';
 import ProfilePictureUploader from './components/ProfilePictureUploader'; // added import
 import HomeTeacher from './components/HomeTeacher'; // added import
+import Programs from './components/Programs';
 
 import SidebarPreview from './components/SidebarPreview'; // Import the SidebarPreview component
 import Appointments from './pages/Appointments'; // Import the Appointments page
@@ -390,6 +391,7 @@ function App() {
                 <Route path="/appointments" element={<Appointments />} /> {/* Add this route */}
                 <Route path="/home-teacher" element={<HomeTeacher />} /> {/* Add this route */}
                 <Route path="/gradeview" element={<GradeViewer />} /> {/* Add this route */}
+                <Route path="/programs" element={<Programs />} /> {/* Add this route */}
               </Routes>
             </motion.div>
           </AnimatePresence>
