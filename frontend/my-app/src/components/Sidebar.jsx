@@ -12,6 +12,7 @@ import { ReactComponent as ClassRecorderIcon } from './icons/classRecord.svg';
 import { ReactComponent as PointerIcon } from './icons/pointer.svg'; // NEW import
 import { ReactComponent as UserAdd } from './icons/user-add.svg';
 import { ReactComponent as CourseAdd } from './icons/CourseAdd.svg'; 
+import { ReactComponent as ProgramAdd } from './icons/Code.svg'; // NEW: import profile icon
 import logo from './icons/logo2.png';
 // Import missing icons from react-icons/fa
 import { FaHome, FaGraduationCap, FaClipboardList, FaUser, FaUsers, FaCog } from 'react-icons/fa'; // Added FaUsers, FaCog
@@ -154,7 +155,8 @@ const Sidebar = ({ onExpandChange }) => {
     admin: {
       dashboard: '/home',
       add_users: '/admin/',
-      course: '/courses'
+      course: '/courses',
+      program: '/programs' // NEW: add program path
     }
   };
 
@@ -291,6 +293,7 @@ const Sidebar = ({ onExpandChange }) => {
           {renderMenuItem("dashboard", HomeIcon, "Home")}
           {renderMenuItem("add_users", UserAdd, "Manage Users")}
           {renderMenuItem("course", CourseAdd, "Manage Courses")}
+          {renderMenuItem("program", ProgramAdd, "Manage Programs")}
         </ul>
       )}
 
