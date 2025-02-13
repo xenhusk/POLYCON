@@ -8,3 +8,38 @@ body {
   font-family: 'Poppins', sans-serif;
 }
 
+/* Hide scrollbar but allow scrolling */
+.no-scrollbar::-webkit-scrollbar {
+  display: none;
+}
+
+.no-scrollbar {
+  -ms-overflow-style: none;
+  scrollbar-width: none;
+}
+
+/* Limit Text Wrapping to Max 2 Lines */
+.truncate {
+  display: -webkit-box;
+  -webkit-line-clamp: 2; /* Maximum of 2 lines */
+  -webkit-box-orient: vertical;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  word-break: break-word;
+  white-space: normal;
+}
+
+/* Ensure table stays responsive on mobile */
+@media (max-width: 768px) {
+  table {
+    display: block;
+    width: 100%;
+    overflow-x: auto;
+    white-space: nowrap;
+  }
+
+  th, td {
+    font-size: 14px; /* Reduce font size on small screens */
+    padding: 10px;
+  }
+}
