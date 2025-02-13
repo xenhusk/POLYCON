@@ -37,6 +37,10 @@
   fill: none !important;
 }
 
+.sidebar-item:hover .sidebar-label {
+  color: #057DCD !important;
+}
+
 /* Update hover styles to properly handle role-dependent icons */
 .sidebar-item:hover svg {
   color: #057DCD !important;
@@ -56,9 +60,9 @@
 .active-icon,
 .active-icon path {
   fill: none !important;
-  stroke: #057DCD !important;
+  stroke: #0065A8 !important; /* Change to sidebar color */
   stroke-width: 2 !important;
-  color: #057DCD !important;
+  color: #0065A8 !important; /* Change to sidebar color */
 }
 
 /* Remove these styles since we're using Tailwind classes */
@@ -66,10 +70,33 @@
   /* Remove styles */
 }
 
+/* Add new style for active text */
+.sidebar-item.active .sidebar-label {
+  color: #0065A8 !important; /* Match sidebar color */
+}
+
 /* NEW: Pointer styles */
 .pointer-icon {
   /* Settings here are complemented by inline styles; adjust if needed */
   z-index: 10;
+}
+
+/* Add new specific active state styles with higher specificity */
+.sidebar-item.sidebar-item-active .active-label {
+  color: #0065A8 !important;
+}
+
+.sidebar-item.sidebar-item-active .active-icon,
+.sidebar-item.sidebar-item-active .active-icon path {
+  fill: none !important;
+  stroke: #0065A8 !important;
+  stroke-width: 2 !important;
+  color: #0065A8 !important;
+}
+
+/* Override any other styles that might be interfering */
+.sidebar-item.sidebar-item-active .sidebar-label {
+  color: #0065A8 !important;
 }
 
 /* Keep other existing styles */

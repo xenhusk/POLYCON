@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useRef } from 'react';
-import { Link, useNavigate, useLocation } from 'react-router-dom';
+import { Link, useNavigate } from 'react-router-dom';
 import './Sidebar.css'; // Import the CSS file
 // Placeholder imports for SVG icons
 import { ReactComponent as HomeIcon } from './icons/home.svg';
@@ -41,7 +41,6 @@ const Sidebar = ({ onExpandChange }) => {
   const [pointerPosition, setPointerPosition] = useState(0); // NEW pointer state
   const menuItemRefs = useRef({}); // NEW ref for menu items
   const navigate = useNavigate();
-  const location = useLocation();
 
   useEffect(() => {
     const userEmail = localStorage.getItem('userEmail');
@@ -164,9 +163,9 @@ const Sidebar = ({ onExpandChange }) => {
   // Helper to render a menu item with an icon and a label that fades in
   const renderMenuItem = (id, IconComponent, label) => (
     <li 
-      ref={el => menuItemRefs.current[id] = el} // NEW: save ref
-      className={`sidebar-item relative h-9 flex items-center cursor-pointer px-2 ${  // Changed px-3 to px-2
-        activeItem === id ? 'bg-white outline outline-3 outline-[#54BEFF]' : ''
+      ref={el => menuItemRefs.current[id] = el}
+      className={`sidebar-item relative h-9 flex items-center cursor-pointer px-2 ${
+        activeItem === id ? 'bg-white outline outline-3 outline-[#54BEFF] sidebar-item-active' : ''
       }`}
       onClick={() => {
         setActiveItem(id);
@@ -176,14 +175,14 @@ const Sidebar = ({ onExpandChange }) => {
         }
       }}
     >
-      <div className="flex-shrink-0 -translate-y-[0px]"> {/* Changed -mb-1 to -translate-y-[2px] for better vertical alignment */}
+      <div className="flex-shrink-0 -translate-y-[0px]">
         <IconComponent className={`w-6 h-6 icon-white ${
           activeItem === id ? 'active-icon' : ''
         }`} />
       </div>
       <span className={`sidebar-label transition-opacity duration-200 ${
         isOpen ? "opacity-100" : "opacity-0"
-      } ${activeItem === id ? 'text-[#057DCD]' : ''}`}>
+      } ${activeItem === id ? 'active-label' : ''}`}>
         {label}
       </span>
     </li>
@@ -239,14 +238,9 @@ const Sidebar = ({ onExpandChange }) => {
     onExpandChange?.(isOpen || isFrozen);
   }, [isOpen, isFrozen, onExpandChange]);
 
-  // Hide Sidebar on session page.
-  if (location.pathname.includes('/session')) {
-    return null;
-  }
-
   return (
     <div 
-      className={`fixed top-0 left-0 bg-[#0065A8] h-screen p-5 pt-8 z-40 transition-all duration-300 ease-in-out ${
+      className={`fixed top-0 left-0 bg-[#0065A8] h-screen p-5 pt-8 z-40 transition-all duration-300 ${
         isFrozen || isOpen ? 'w-64' : 'w-20'
       }`}
       onMouseEnter={() => !isFrozen && setIsOpen(true)}

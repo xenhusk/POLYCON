@@ -75,7 +75,7 @@ const HomeTeacher = () => {
 
     return (
        <div className="flex flex-col items-center min-h-screen">
-            <h1 className="text-3xl font-bold mb-6">Home</h1>
+            <h1 className="text-3xl font-bold text-[#0065A8] mb-6">Home</h1>
 
             {/* Stats Section - Reordered stats */}
             <div className="flex gap-4 w-full p-10 pb-0">
@@ -84,7 +84,7 @@ const HomeTeacher = () => {
                         <p className="text-sm mb-2 text-left">Total Number of Consultations:</p>
                         <div className="flex items-baseline gap-2 justify-center">
                             <span className="text-7xl font-bold">{stats.total_consultations}</span>
-                            <span className="text-lg">Consultations</span>
+                            <span className="text-lg ">Consultations</span>
                         </div>
                     </div>
                 </div>

@@ -80,22 +80,39 @@ function StudentAppointments() {
   }, [socket]);
 
   return (
-    <div>
-      <section>
-        <h3 className="text-xl font-semibold">Pending Appointments</h3>
-        <ul>
-          {appointments.pending.map(app => (
-            <AppointmentItem key={app.id} appointment={app} role="student" />
-          ))}
-        </ul>
+    <div className="grid grid-cols-2 gap-5 h-full">
+      <section className="bg-white rounded-xl shadow-sm p-6 flex flex-col max-h-[80vh]">
+        <h3 className="text-xl font-semibold mb-4 text-[#0065A8] border-b-2 border-[#54BEFF] pb-2 sticky top-0 bg-white z-10">
+          Pending Appointments
+        </h3>
+        <div className="flex-1 overflow-y-auto min-h-0">
+          {appointments.pending.length > 0 ? (
+            <ul className="space-y-4 pr-2">
+              {appointments.pending.map(app => (
+                <AppointmentItem key={app.id} appointment={app} role="student" />
+              ))}
+            </ul>
+          ) : (
+            <p className="text-gray-500 italic">No pending appointments</p>
+          )}
+        </div>
       </section>
-      <section className="mt-6">
-        <h3 className="text-xl font-semibold">Upcoming Appointments</h3>
-        <ul>
-          {appointments.upcoming.map(app => (
-            <AppointmentItem key={app.id} appointment={app} role="student" />
-          ))}
-        </ul>
+
+      <section className="bg-white rounded-xl shadow-sm p-6 flex flex-col max-h-[80vh]">
+        <h3 className="text-xl font-semibold mb-4 text-[#0065A8] border-b-2 border-[#54BEFF] pb-2 sticky top-0 bg-white z-10">
+          Upcoming Appointments
+        </h3>
+        <div className="flex-1 overflow-y-auto min-h-0">
+          {appointments.upcoming.length > 0 ? (
+            <ul className="space-y-4 pr-2">
+              {appointments.upcoming.map(app => (
+                <AppointmentItem key={app.id} appointment={app} role="student" />
+              ))}
+            </ul>
+          ) : (
+            <p className="text-gray-500 italic">No upcoming appointments</p>
+          )}
+        </div>
       </section>
     </div>
   );
@@ -230,46 +247,54 @@ function TeacherAppointments() {
   
 
   return (
-    <div>
-      <section>
-        <h3 className="text-xl font-semibold">Upcoming Appointments</h3>
-        {upcoming.length > 0 ? (
-          <ul>
-            {upcoming.map(app => (
-              <AppointmentItem 
-                key={app.id}
-                appointment={app}
-                role="faculty"
-                onStartSession={startSession}
-                onCancel={cancelBooking}
-              />
-            ))}
-          </ul>
-        ) : (
-          <p>No upcoming appointments.</p>
-        )}
+    <div className="grid grid-cols-2 gap-5 h-full">
+      <section className="bg-white rounded-xl shadow-sm p-6 flex flex-col max-h-[77vh]">
+        <h3 className="text-xl font-semibold mb-4 text-[#0065A8] border-b-2 border-[#54BEFF] pb-2 sticky top-0 bg-white z-10">
+          Pending Appointments
+        </h3>
+        <div className="flex-1 overflow-y-auto min-h-0">
+          {pending.length > 0 ? (
+            <ul className="space-y-4 pr-2">
+              {pending.map(app => (
+                <AppointmentItem 
+                  key={app.id}
+                  appointment={app}
+                  role="faculty"
+                  onCancel={cancelBooking}
+                  onConfirm={confirmBooking}
+                  confirmInputs={confirmInputs}
+                  handleConfirmClick={handleConfirmClick}
+                  setConfirmInputs={setConfirmInputs}
+                />
+              ))}
+            </ul>
+          ) : (
+            <p className="text-gray-500 italic">No pending appointments</p>
+          )}
+        </div>
       </section>
-      
-      <section className="mt-6">
-        <h3 className="text-xl font-semibold">Pending Appointments</h3>
-        {pending.length > 0 ? (
-          <ul>
-            {pending.map(app => (
-              <AppointmentItem 
-                key={app.id}
-                appointment={app}
-                role="faculty"
-                onCancel={cancelBooking}
-                onConfirm={confirmBooking}
-                confirmInputs={confirmInputs}
-                handleConfirmClick={handleConfirmClick}
-                setConfirmInputs={setConfirmInputs}
-              />
-            ))}
-          </ul>
-        ) : (
-          <p>No pending appointments.</p>
-        )}
+
+      <section className="bg-white rounded-xl shadow-sm p-6 flex flex-col max-h-[77vh]">
+        <h3 className="text-xl font-semibold mb-4 text-[#0065A8] border-b-2 border-[#54BEFF] pb-2 sticky top-0 bg-white z-10">
+          Upcoming Appointments
+        </h3>
+        <div className="flex-1 overflow-y-auto min-h-0">
+          {upcoming.length > 0 ? (
+            <ul className="space-y-4 pr-2">
+              {upcoming.map(app => (
+                <AppointmentItem 
+                  key={app.id}
+                  appointment={app}
+                  role="faculty"
+                  onStartSession={startSession}
+                  onCancel={cancelBooking}
+                />
+              ))}
+            </ul>
+          ) : (
+            <p className="text-gray-500 italic">No upcoming appointments</p>
+          )}
+        </div>
       </section>
     </div>
   );
@@ -288,9 +313,11 @@ function Appointments() {
 
   if (!role) return <p>Loading...</p>;
   return (
-    <div className="p-6">
-      <h2 className="text-2xl font-bold mb-4">Appointments</h2>
-      {role === 'student' ? <StudentAppointments /> : role === 'faculty' ? <TeacherAppointments /> : <p>No appointments available for your role.</p>}
+    <div className="h-screen overflow-hidden p-8">
+      <h2 className="text-3xl font-bold mb-8 text-[#0065A8]">Appointments</h2>
+      <div className="bg-[#dceffa] rounded-xl p-6 shadow-sm h-[calc(100vh-8rem)]">
+        {role === 'student' ? <StudentAppointments /> : role === 'faculty' ? <TeacherAppointments /> : <p>No appointments available for your role.</p>}
+      </div>
     </div>
   );
 }

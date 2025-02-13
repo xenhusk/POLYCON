@@ -44,7 +44,7 @@ function Home() {
   return (
     <div className="p-6 max-w-7xl mx-auto">
       <div className="mb-8">
-        <h1 className="text-2xl font-bold text-gray-800">
+        <h1 className="text-2xl font-bold text-[#0065A8]">
           Welcome, {userDetails?.firstName} {userDetails?.lastName}
         </h1>
         <p className="text-gray-600">
@@ -61,7 +61,7 @@ function Home() {
 
       {/* Main Calendar Section */}
       <div className="mb-8">
-        <h2 className="text-xl font-semibold mb-4">Consultation Calendar</h2>
+        <h2 className="text-xl font-semibold mb-4 text-center text-[#0065A8]">Consultation Calendar</h2>
           <AppointmentsCalendar />
       </div>
 

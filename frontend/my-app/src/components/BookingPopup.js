@@ -1,7 +1,6 @@
 import React, { useState } from 'react';
-import { useLocation } from 'react-router-dom';
 import { motion, AnimatePresence } from 'framer-motion';
-import BookingAppointment from './BookingAppointment';
+import BookingAppointment from './BookingAppointment'; // Ensure this component uses new endpoints (/create_booking, /get_bookings)
 
 // Inline SVG for bookAppointment icon with blue background and white stroke
 const BookIcon = () => (
@@ -17,14 +16,11 @@ const modalVariants = {
 };
 
 const BookingPopup = ({ closePopup, role }) => {
-  const location = useLocation();
   const [showModal, setShowModal] = useState(false);
   const userRole = localStorage.getItem('userRole'); // 'faculty' or 'student'
   
-  // Execute the conditional check after hooks are called.
-  if (location.pathname.includes('/session') || !['faculty', 'student'].includes(userRole)) {
-    return null;
-  }
+  // Only render for faculty and student roles
+  if (!['faculty', 'student'].includes(userRole)) return null;
   
   const openModal = () => setShowModal(true);
   const closeModal = () => setShowModal(false);
