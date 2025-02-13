@@ -1,5 +1,5 @@
 import React, { useEffect, useState, useRef, useCallback } from 'react';
-import { BrowserRouter as Router, Routes, Route, useNavigate, useLocation, Navigate } from 'react-router-dom';
+import { Routes, Route, useNavigate, useLocation, Navigate } from 'react-router-dom';
 import BookingStudent from './components/BookingStudent';
 import BookingTeacher from './components/BookingTeacher';
 import Session from './components/Session';
@@ -276,130 +276,137 @@ function App() {
   };
 
   return (
-    <PreloadProvider>
-      <div className="app-container flex">
-        {localStorage.getItem('userEmail') && (
-          <Sidebar onExpandChange={setSidebarExpanded} />
-        )}
-        
-        <div className={`flex-1 transition-all duration-300 ${
-          localStorage.getItem('userEmail') ? sidebarExpanded ? 'ml-64' : 'ml-20' : ''
-        }`}>
-          {/* Remove the header section below */}
-          {/*
-          {profile && (
-            <header className="bg-gray-100 p-4 flex justify-between items-center">
-              <div onClick={handleProfilePictureClick} className="cursor-pointer flex items-center">
-                ... header content ...
-              </div>
-              <button onClick={handleLogout} className="bg-red-500 text-white px-4 py-2 rounded">
-                Logout
-              </button>
-            </header>
+    <div className={location.pathname.includes('/session') ? '' : 'flex min-h-screen'}>
+      <PreloadProvider>
+        <div className="app-container flex flex-1">
+          {localStorage.getItem('userEmail') && !location.pathname.includes('/session') && (
+            <Sidebar onExpandChange={setSidebarExpanded} />
           )}
-          */}
+          
+          <div className={`flex-1 flex flex-col transition-all duration-300 ease-in-out ${
+            localStorage.getItem('userEmail') && !location.pathname.includes('/session')
+              ? sidebarExpanded 
+                ? 'ml-64' 
+                : 'ml-20'
+              : ''
+          }`}>
+            {/* Remove the header section below */}
+            {/*
+            {profile && (
+              <header className="bg-gray-100 p-4 flex justify-between items-center">
+                <div onClick={handleProfilePictureClick} className="cursor-pointer flex items-center">
+                  ... header content ...
+                </div>
+                <button onClick={handleLogout} className="bg-red-500 text-white px-4 py-2 rounded">
+                  Logout
+                </button>
+              </header>
+            )}
+            */}
 
-          {/* New Profile Picture Modal */}
-          {showProfileModal && (
-            <div className="fixed inset-0 bg-black bg-opacity-50 flex justify-center items-center z-50">
-              <div className="bg-white p-6 rounded-lg shadow-lg">
-                {modalStep === 'upload' && (
-                  <div>
-                    <h2 className="text-xl font-bold mb-4">Upload a Profile Picture</h2>
-                    <button
-                      onClick={() => modalFileInputRef.current && modalFileInputRef.current.click()}
-                      className="bg-blue-500 text-white px-4 py-2 rounded"
-                    >
-                      Choose File
-                    </button>
-                    <input
-                      ref={modalFileInputRef}
-                      type="file"
-                      accept="image/*"
-                      onChange={onModalSelectFile}
-                      style={{ display: 'none' }}
+            {/* New Profile Picture Modal */}
+            {showProfileModal && (
+              <div className="fixed inset-0 bg-black bg-opacity-50 flex justify-center items-center z-50">
+                <div className="bg-white p-6 rounded-lg shadow-lg">
+                  {modalStep === 'upload' && (
+                    <div>
+                      <h2 className="text-xl font-bold mb-4">Upload a Profile Picture</h2>
+                      <button
+                        onClick={() => modalFileInputRef.current && modalFileInputRef.current.click()}
+                        className="bg-blue-500 text-white px-4 py-2 rounded"
+                      >
+                        Choose File
+                      </button>
+                      <input
+                        ref={modalFileInputRef}
+                        type="file"
+                        accept="image/*"
+                        onChange={onModalSelectFile}
+                        style={{ display: 'none' }}
+                      />
+                      <button
+                        onClick={() => setShowProfileModal(false)}
+                        className="bg-gray-300 text-black px-4 py-2 rounded ml-4"
+                      >
+                        Cancel
+                      </button>
+                    </div>
+                  )}
+                  {modalStep === 'crop' && (
+                    <ProfilePictureUploader
+                      initialFile={modalSelectedFile}
+                      onClose={() => {
+                        setShowProfileModal(false);
+                        setModalSelectedFile(null);
+                      }}
                     />
-                    <button
-                      onClick={() => setShowProfileModal(false)}
-                      className="bg-gray-300 text-black px-4 py-2 rounded ml-4"
-                    >
-                      Cancel
-                    </button>
-                  </div>
-                )}
-                {modalStep === 'crop' && (
-                  <ProfilePictureUploader
-                    initialFile={modalSelectedFile}
-                    onClose={() => {
-                      setShowProfileModal(false);
-                      setModalSelectedFile(null);
-                    }}
-                  />
-                )}
+                  )}
+                </div>
               </div>
-            </div>
-          )}
+            )}
 
-          <AnimatePresence>
-            <motion.div
-              key={location.pathname}
-              variants={getVariants()}
-              initial="initial"
-              animate="animate"
-              transition={{ duration: 0.5 }}
-            >
-              <Routes>
-                {/* Public home route with redirect for logged-in users */}
-                <Route path="/" element={
-                  localStorage.getItem('userEmail') ? 
-                    <Navigate to="/dashboard" /> : 
-                    <Home />
-                } />
+            <AnimatePresence>
+              <motion.div
+                key={location.pathname}
+                variants={getVariants()}
+                initial="initial"
+                animate="animate"
+                transition={{ duration: 0.5 }}
+                className="flex-1 flex flex-col"
+              >
+                <Routes>
+                  {/* Public home route with redirect for logged-in users */}
+                  <Route path="/" element={
+                    localStorage.getItem('userEmail') ? 
+                      <Navigate to="/dashboard" /> : 
+                      <Home />
+                  } />
 
-                {/* Auth routes with redirects */}
-                <Route path="/login" element={
-                  !localStorage.getItem('userEmail') ? 
-                    <Login onLoginSuccess={setUser} /> : 
-                    <Navigate to="/dashboard" />
-                } />
-                <Route path="/signup" element={
-                  !localStorage.getItem('userEmail') ? 
-                    <Signup /> : 
-                    <Navigate to="/dashboard" />
-                } />
+                  {/* Auth routes with redirects */}
+                  <Route path="/login" element={
+                    !localStorage.getItem('userEmail') ? 
+                      <Login onLoginSuccess={setUser} /> : 
+                      <Navigate to="/dashboard" />
+                  } />
+                  <Route path="/signup" element={
+                    !localStorage.getItem('userEmail') ? 
+                      <Signup /> : 
+                      <Navigate to="/dashboard" />
+                  } />
 
-                {/* Protected dashboard route */}
-                <Route path="/dashboard" element={
-                  localStorage.getItem('userEmail') ? 
-                    <UserHome /> : 
-                    <Navigate to="/" />
-                } />
+                  {/* Protected dashboard route */}
+                  <Route path="/dashboard" element={
+                    localStorage.getItem('userEmail') ? 
+                      <UserHome /> : 
+                      <Navigate to="/" />
+                  } />
 
-                {/* Protected routes */}
-                <Route path="/booking-student" element={
-                  localStorage.getItem('userEmail') ? 
-                    <BookingStudent /> : 
-                    <Navigate to="/login" replace />
-                } />
-                <Route path="/booking-teacher" element={<BookingTeacher />} />
-                <Route path="/session" element={<Session />} />
-                <Route path="/admin" element={<AdminPortal />} />
-                <Route path="/courses" element={<Courses />} />
-                <Route path="/addgrade" element={<AddGrade />} />
-                <Route path="/appointments-calendar" element={<AppointmentsCalendar />} />
-                <Route path="/sidebar-preview" element={<SidebarPreview />} /> {/* Add this route */}
-                <Route path="/appointments" element={<Appointments />} /> {/* Add this route */}
-                <Route path="/home-teacher" element={<HomeTeacher />} /> {/* Add this route */}
-                <Route path="/gradeview" element={<GradeViewer />} /> {/* Add this route */}
-                <Route path="/programs" element={<Programs />} /> {/* Add this route */}
-              </Routes>
-            </motion.div>
-          </AnimatePresence>
+                  {/* Protected routes */}
+                  <Route path="/booking-student" element={
+                    localStorage.getItem('userEmail') ? 
+                      <BookingStudent /> : 
+                      <Navigate to="/login" replace />
+                  } />
+                  <Route path="/booking-teacher" element={<BookingTeacher />} />
+                  <Route path="/session" element={<Session />} />
+                  <Route path="/admin" element={<AdminPortal />} />
+                  <Route path="/courses" element={<Courses />} />
+                  <Route path="/addgrade" element={<AddGrade />} />
+                  <Route path="/appointments-calendar" element={<AppointmentsCalendar />} />
+                  <Route path="/sidebar-preview" element={<SidebarPreview />} /> {/* Add this route */}
+                  <Route path="/appointments" element={<Appointments />} /> {/* Add this route */}
+                  <Route path="/home-teacher" element={<HomeTeacher />} /> {/* Add this route */}
+                  <Route path="/gradeview" element={<GradeViewer />} /> {/* Add this route */}
+                  <Route path="/programs" element={<Programs />} /> {/* Add this route */}
+                </Routes>
+              </motion.div>
+            </AnimatePresence>
+          </div>
         </div>
-      </div>
-      {/* Render BookingPopup so the button is always present */}
-      <BookingPopup />
-    </PreloadProvider>
+        {/* Render BookingPopup so the button is always present */}
+        <BookingPopup />
+      </PreloadProvider>
+    </div>
   );
 }
 
