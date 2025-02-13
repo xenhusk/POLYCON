@@ -134,6 +134,10 @@ const Session = () => {
       startTimer();
     } catch (error) {
       console.error('Error starting recording:', error);
+      if (error.name === 'NotAllowedError') {
+        alert("Microphone permission denied. Please allow access to record audio.");
+        setMicEnabled(false);
+      }
     }
   };
 

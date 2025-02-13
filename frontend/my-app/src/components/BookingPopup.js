@@ -1,4 +1,5 @@
 import React, { useState } from 'react';
+import { useLocation } from 'react-router-dom';
 import { motion, AnimatePresence } from 'framer-motion';
 import BookingAppointment from './BookingAppointment'; // Ensure this component uses new endpoints (/create_booking, /get_bookings)
 
@@ -18,9 +19,15 @@ const modalVariants = {
 const BookingPopup = ({ closePopup, role }) => {
   const [showModal, setShowModal] = useState(false);
   const userRole = localStorage.getItem('userRole'); // 'faculty' or 'student'
-  
-  // Only render for faculty and student roles
-  if (!['faculty', 'student'].includes(userRole)) return null;
+  const location = useLocation();
+
+  // Don't render the button if we're in a session or if the role isn't faculty/student
+  if (
+    location.pathname.includes('/session') || 
+    !['faculty', 'student'].includes(userRole)
+  ) {
+    return null;
+  }
   
   const openModal = () => setShowModal(true);
   const closeModal = () => setShowModal(false);
