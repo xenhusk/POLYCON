@@ -45,18 +45,18 @@ const Login = ({ onLoginSuccess, onSwitchToSignup }) => {
 
 
   return (
-      <div className="w-full h-[80vh] flex justify-center items-center font-poppins">
+      <div className="w-[100%] h-[80vh] flex justify-center items-center font-poppins">
         <form onSubmit={handleSubmit} className="flex flex-col w-[76%] max-w-md sm:max-w-lg md:max-w-xl mx-auto">
           <img src={logo} alt="Logo" className="h-[130px] w-[130px] mx-auto"/>
           <h2 className="text-center text-lg font-bold text-[#005B98]">Login</h2>
-          <div class="relative z-0">
-            <input className="block px-[2%] my-2 mt-3 mx-auto w-full text-base text-gray-900 bg-transparent border-0 border-b-2 border-[#005B98] appearance-none dark:text-[#000000] dark:border-gray-600 dark:focus:border-blue-500 focus:outline-none focus:ring-0 focus:border-blue-600 peer"
+          <div class="relative z-0 my-1">
+            <input className="block px-1.5 my-2.5 mt-3 mx-auto w-full text-base text-gray-900 bg-transparent border-0 border-b-2 border-[#005B98] appearance-none dark:text-[#000000] dark:border-gray-600 dark:focus:border-blue-500 focus:outline-none focus:ring-0 focus:border-blue-600 peer"
               type="email" name='email' id='Email' placeholder=" " value={email} onChange={(e) => setEmail(e.target.value)} required/>
             <label for="Email" class="absolute text-base text-gray-500 dark:text-gray-400 duration-300 transform -translate-y-6 scale-75 top-3 -z-10 origin-[0] peer-focus:start-0 peer-focus:text-blue-600 peer-focus:dark:text-blue-500 peer-placeholder-shown:scale-100 peer-placeholder-shown:translate-y-0 peer-focus:scale-75 peer-focus:-translate-y-6 rtl:peer-focus:translate-x-1/4 rtl:peer-focus:left-auto">
               Email</label>
           </div>
-          <div class="relative z-0">
-            <input className="block px-[2%] my-2 mt-3 mx-auto w-full text-base text-gray-900 bg-transparent border-0 border-b-2 border-[#005B98] appearance-none dark:text-[#000000] dark:border-gray-600 dark:focus:border-blue-500 focus:outline-none focus:ring-0 focus:border-blue-600 peer"
+          <div class="relative z-0 my-1">
+            <input className="block px-1.5 my-2.5 mt-3 mx-auto w-full text-base text-gray-900 bg-transparent border-0 border-b-2 border-[#005B98] appearance-none dark:text-[#000000] dark:border-gray-600 dark:focus:border-blue-500 focus:outline-none focus:ring-0 focus:border-blue-600 peer"
               type="password" name='password' id='Password' placeholder=" " value={password} onChange={(e) => setPassword(e.target.value)} required/>
             <label for="Password" class="absolute text-base text-gray-500 dark:text-gray-400 duration-300 transform -translate-y-6 scale-75 top-3 -z-10 origin-[0] peer-focus:start-[-1] peer-focus:text-blue-600 peer-focus:dark:text-blue-500 peer-placeholder-shown:scale-100 peer-placeholder-shown:translate-y-0 peer-focus:scale-75 peer-focus:-translate-y-6 rtl:peer-focus:translate-x-1/4 rtl:peer-focus:left-auto">
             Password</label>

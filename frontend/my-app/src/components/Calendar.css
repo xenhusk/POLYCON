@@ -72,12 +72,12 @@
 /* Adjust column width */
 .rbc-agenda-view th:first-child,
 .rbc-agenda-view td:first-child {
-    width: 17.5%; /* Date column */
+    width: 19.2%; /* Date column */
 }
 
 .rbc-agenda-view th:nth-child(2),
 .rbc-agenda-view td:nth-child(2) {
-    width: 15%; /* Time column */
+    width: 15.8%; /* Time column */
 }
 
 .rbc-agenda-view th:last-child,
@@ -138,9 +138,10 @@
 }
 
 
+
 .rbc-row .rbc-time-header-cell,
 .rbc-header .rbc-header + .rbc-today{
-    height: 100%;
+    height: 100% !important;
 }
 
 .rbc-header + .rbc-today, .rbc-header{
@@ -157,15 +158,58 @@
     overflow: hidden;
 }
 
-.rbc-label.rbc-time-header-gutter{    
-    background: #057DCD !important;  
+.rbc-time-header.rbc-overflowing{
+    border-color: rgba(0,71,118,1) !important;
 }
 
-.rbc-time-header .rbc-overflowing{
-    background-color: #057DCD !important;
+.rbc-label.rbc-time-header-gutter{    
+    background: #057DCD !important;  
+    border-color: rgba(0,71,118,1) !important;
 }
+
+.rbc-time-header-content{
+    border-color: rgba(0,71,118,1) !important;
+}
+
+.rbc-time-header {
+  position: relative; /* Needed for absolute positioning */
+}
+
+.rbc-time-header::after {
+  content: "";
+  position: absolute;
+  top: 0;
+  right: -17px; /* Same as margin-right */
+  width: 16px; /* Same as margin-right */
+  height: 100%;
+  background-color: #057DCD !important; /* Color applied */
+}
+
+.rbc-time-content > .rbc-time-gutter {
+  border-color: rgb(0, 101, 168)!important;
+  background-color: #057DCD !important;
+}
+
+.rbc-time-content, .rbc-time-content > .rbc-time-gutter, 
+.rbc-timeslot-group, .rbc-events-container{
+    border-color: rgba(0,71,118,1) !important;
+}
+
+.rbc-label{
+    color: white !important;
+}
+
+.rbc-event {
+  align-items: center !important;
+  text-align: center !important;
+  overflow: hidden !important;
+}
+
+
+
 .rbc-agenda-view td,
 .rbc-agenda-view th {
     border: 1px solid #ddd !important;
     text-align: left;
 }
+

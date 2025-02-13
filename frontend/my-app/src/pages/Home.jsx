@@ -175,7 +175,7 @@ const Home = () => {
       {/* Modals */}
       {showLoginModal || showSignupModal ? (
         <div className="fixed inset-0 bg-black bg-opacity-60 flex items-center justify-center animate-modal-fade" onClick={closeModal}>
-          <div className={`bg-white p-6 rounded-[20px] shadow-lg w-[43%] h-[93vh] relative overflow-hidden 
+          <div className={`bg-white p-2 rounded-[20px] shadow-lg w-[40%] h-[93vh] relative overflow-hidden 
             ${showLoginModal || showSignupModal ? 'modal-enter' : 'modal-exit'}`} onClick={(e) => e.stopPropagation()}>
             
             {/* Close button */}
@@ -239,8 +239,8 @@ const Body = () => {
     <div id="Body" className="flex w-full justify-between items-center my-10">
       <div className="w-full h-[90.5vh] relative">
         <div className="rounded-[25px] w-[94%] h-[80vh] bg-[#057DCD] mx-auto absolute right-0 left-0 flex flex-1 justify-between items-center p-[1rem] md:px-6 sm:p-3">
-          <div className="w-[50%] h-[60vh] flex-row text-[#ffffff] text-justify mx-auto">
-            <h1 className="text-[3rem] font-extrabold leading-tight w-[93%]">
+          <div className="w-[50%] h-[60vh] flex-row text-[#ffffff] text-justify justify-center px-3 mx-auto">
+            <h1 className="text-[3rem] font-extrabold leading-tight w-[90%]">
               POLYCON: <br/> CONSULTATION <br/> SYSTEM
             </h1>
             <h3 className="mt-2 text-lg w-[93%]">
@@ -258,7 +258,7 @@ const Body = () => {
 
           <div className="relative h-[90vh] w-[50%] rounded-[25px] overflow-hidden mt-[6.9rem]">
             <img src={images[currentImage]} alt="Consultation Image"
-              className={`absolute top-0 left-0 h-full w-full transition-opacity duration-1000 ease-in-out ${isFading ? "opacity-0" : "opacity-100"}`}/>
+              className={`absolute top-0 left-0 h-full w-full object-cover transition-opacity duration-1000 ease-in-out ${isFading ? "opacity-0" : "opacity-100"}`}/>
               <div className="absolute inset-0 bg-gradient-to-b from-white to-[#005B98] opacity-50"></div>
           </div>
 
@@ -298,7 +298,7 @@ const About = ({ animateSection }) => {
           <div className="rounded-[15px] bg-[#54BEFF] h-[50px] w-[8%] absolute bottom-[8%] right-[44%] rotate-[15deg]"></div>
           <div className="rounded-[25px] bg-[#057DCD] h-[88px] w-[30%] justify-end absolute top-[98%] left-[40%] right-[40%] rotate-[172deg]"></div>
             {/* Center Content */}
-            <div className="w-full flex justify-center md:w-full sm:ml-[48%]">
+            <div className="w-full flex justify-center md:w-full sm:ml-[48%] mt-auto">
               <div className="w-[65%] h-[80vh] flex-row text-justify items-center ">
                 <h3 className="font-medium text-lg align-middle text-center w-full">
                   POLYCON (Consultation System)
@@ -323,7 +323,7 @@ const About = ({ animateSection }) => {
           </div>
           <div className="w-[46.5%] h-[55vh] bg-[#057DCD] rounded-tr-[20px] absolute bottom-0 right-0 left-0">
             <img src={images[currentImgAbout]} alt="Consultation Image"
-              className={`absolute bottom-[9.6%] left-[9%] h-[80vh] w-[88%] rounded-[25px] transition-opacity duration-1000 ease-in-out ${isFading ? "opacity-0" : "opacity-100"}`}/>
+              className={`absolute bottom-[9.6%] left-[9%] h-[80vh] w-[88%] rounded-[25px] object-cover transition-opacity duration-1000 ease-in-out ${isFading ? "opacity-0" : "opacity-100"}`}/>
             <div className="absolute bottom-[9.6%] left-[9%] h-[80vh] w-[88%] rounded-[25px] bg-gradient-to-b from-white to-[#005B98] opacity-50"></div>
           </div>
         </div>
