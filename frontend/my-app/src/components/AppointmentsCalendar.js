@@ -135,13 +135,14 @@ function AppointmentsCalendar() {
         const fetchAppointments = async () => {
             if (userRole === 'student') {
                 const studentID = localStorage.getItem('studentID');
-                console.log('Student ID:', studentID);
                 if (studentID) {
                     try {
-                        const response = await fetch(`http://localhost:5001/bookings/get_student_bookings?studentID=${studentID}`);
+                        // Updated endpoint: add booking prefix to URL
+                        const response = await fetch(`http://localhost:5001/bookings/get_bookings?role=student&userID=${studentID}&status=confirmed`, {
+                            cache: 'force-cache'
+                        });
                         const bookings = await response.json();
                         const events = bookings.map(booking => {
-                            // Use the teacherName field directly from booking data.
                             const teacherName = booking.teacherName;
                             return {
                                 title: teacherName,
@@ -152,27 +153,19 @@ function AppointmentsCalendar() {
                             };
                         });
                         setEvents(events);
-                        console.log('Student bookings:', bookings);
                     } catch (error) {
                         console.error('Error fetching student bookings:', error);
                     }
                 }
             } else if (userRole === 'faculty') {
                 const teacherID = localStorage.getItem('teacherID');
-                console.log('Teacher ID:', teacherID);
                 if (teacherID) {
                     try {
-                        const response = await fetch(`http://localhost:5001/bookings/get_teacher_bookings?teacherID=${teacherID}`);
+                        // Updated endpoint: add booking prefix to URL
+                        const response = await fetch(`http://localhost:5001/bookings/get_bookings?role=faculty&userID=${teacherID}&status=confirmed`);
                         const bookings = await response.json();
                         const events = bookings.map(booking => {
-                            const studentNamesString = booking.studentNames.map(name => {
-                                const match = name.match(/^(.*) (.*) \((.*) (.*)\)$/);
-                                if (match) {
-                                    const [, firstName, lastName, program, yearSection] = match;
-                                    return `${firstName} ${lastName} (${program} ${yearSection})`;
-                                }
-                                return name;
-                            }).join(", ");
+                            const studentNamesString = booking.studentNames.join(", ");
                             return {
                                 title: studentNamesString,
                                 start: new Date(booking.schedule),
@@ -182,7 +175,6 @@ function AppointmentsCalendar() {
                             };
                         });
                         setEvents(events);
-                        console.log('Teacher bookings:', bookings);
                     } catch (error) {
                         console.error('Error fetching teacher bookings:', error);
                     }
