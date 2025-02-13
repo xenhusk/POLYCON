@@ -219,23 +219,15 @@ function TeacherAppointments() {
       alert("Cannot start session: Missing student IDs.");
       return;
     }
-    try {
-      const response = await fetch('http://localhost:5001/consultation/start_session', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ teacher_id: teacherID, student_ids: studentIDs }),
-      });
-      const result = await response.json();
-      if (response.ok) {
-        const sessionUrl = `/session?sessionID=${result.session_id}&teacherID=${teacherID}&studentIDs=${studentIDs.join(',')}`;
-        window.open(sessionUrl, '_blank');
-      } else {
-        alert(`Failed to start session: ${result.error || "Unknown error"}`);
-      }
-    } catch (error) {
-      console.error('Error starting session:', error);
-    }
+    // Convert teacher and student details into JSON strings and URL-encode them.
+    const teacherInfo = appointment.teacher ? encodeURIComponent(JSON.stringify(appointment.teacher)) : '';
+    const studentInfo = appointment.info ? encodeURIComponent(JSON.stringify(appointment.info)) : '';
+    
+    // Build the session URL without a sessionID.
+    const sessionUrl = `/session?teacherID=${teacherID}&studentIDs=${studentIDs.join(',')}&teacherInfo=${teacherInfo}&studentInfo=${studentInfo}`;
+    window.open(sessionUrl, '_blank');
   }
+  
 
   return (
     <div>

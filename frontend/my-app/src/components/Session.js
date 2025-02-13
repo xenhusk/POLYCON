@@ -1,9 +1,16 @@
 import React, { useState, useRef, useEffect } from 'react';
 import { useNavigate, useLocation } from 'react-router-dom';
+import { ReactComponent as PlayIcon } from './icons/play.svg';
+import { ReactComponent as StopIcon } from './icons/stop.svg';
+import { ReactComponent as MicrophoneIcon } from './icons/microphone.svg';
+import { ReactComponent as MicrophoneSlashIcon } from './icons/microphoneSlash.svg';
+import AnimatedBackground from './AnimatedBackground';
 
 const Session = () => {
   const [teacherId, setTeacherId] = useState('');
   const [studentIds, setStudentIds] = useState('');
+  const [teacherInfo, setTeacherInfo] = useState(null);
+  const [studentInfo, setStudentInfo] = useState(null);
   const [concern, setConcern] = useState('');
   const [actionTaken, setActionTaken] = useState('');
   const [outcome, setOutcome] = useState('');
@@ -14,6 +21,7 @@ const Session = () => {
   const [timer, setTimer] = useState('00:00:00');
   const [timerRunning, setTimerRunning] = useState(false);
   const [audioBlob, setAudioBlob] = useState(null);
+  const [micEnabled, setMicEnabled] = useState(true);
 
   const audioRef = useRef(null);
   const mediaRecorderRef = useRef(null);
@@ -22,41 +30,62 @@ const Session = () => {
   const navigate = useNavigate();
   const location = useLocation();
 
+  // If a sessionID exists, fetch session details.
+  // Otherwise, use the query parameters to populate teacher and student details.
   useEffect(() => {
-    const fetchSessionDetails = async (sessionID) => {
-      try {
-        const response = await fetch(`http://localhost:5001/consultation/get_session?sessionID=${sessionID}`);
-        const data = await response.json();
-        if (response.ok) {
-          setTeacherId(data.teacher_id.split('/').pop());
-          setStudentIds(data.student_ids.map(id => id.split('/').pop()).join(', '));
-        } else {
-          console.error('Failed to fetch session details:', data.error);
-        }
-      } catch (error) {
-        console.error('Error fetching session details:', error);
-      }
-    };
-
     const queryParams = new URLSearchParams(location.search);
     const sessionID = queryParams.get('sessionID');
-    const teacherID = queryParams.get('teacherID');
-    const studentIDs = queryParams.get('studentIDs');
+    const teacherIDFromQuery = queryParams.get('teacherID');
+    const studentIDsFromQuery = queryParams.get('studentIDs');
+    const teacherInfoQuery = queryParams.get('teacherInfo');
+    const studentInfoQuery = queryParams.get('studentInfo');
 
     if (sessionID) {
+      // Existing session - fetch its details.
+      const fetchSessionDetails = async (sessionID) => {
+        try {
+          const response = await fetch(`http://localhost:5001/consultation/get_session?sessionID=${sessionID}`);
+          const data = await response.json();
+          if (response.ok) {
+            setTeacherId(data.teacher_id.split('/').pop());
+            setStudentIds(data.student_ids.map(id => id.split('/').pop()).join(', '));
+            // Optionally, you might set teacherInfo/studentInfo from data here.
+          } else {
+            console.error('Failed to fetch session details:', data.error);
+          }
+        } catch (error) {
+          console.error('Error fetching session details:', error);
+        }
+      };
       fetchSessionDetails(sessionID);
-    }
-
-    if (teacherID) {
-      setTeacherId(teacherID);
-    }
-
-    if (studentIDs) {
-      setStudentIds(studentIDs.split(',').map(id => id.split('/').pop()).join(', '));
+    } else {
+      // New session: use the query parameters provided from the appointment page.
+      if (teacherIDFromQuery) {
+        setTeacherId(teacherIDFromQuery);
+      }
+      if (studentIDsFromQuery) {
+        setStudentIds(
+          studentIDsFromQuery.split(',').map(id => id.trim()).join(', ')
+        );
+      }
+      if (teacherInfoQuery) {
+        try {
+          setTeacherInfo(JSON.parse(teacherInfoQuery));
+        } catch (e) {
+          console.error("Error parsing teacher info", e);
+        }
+      }
+      if (studentInfoQuery) {
+        try {
+          setStudentInfo(JSON.parse(studentInfoQuery));
+        } catch (e) {
+          console.error("Error parsing student info", e);
+        }
+      }
     }
   }, [location.search]);
 
-  // Start the timer
+  // Timer functions
   const startTimer = () => {
     const startTime = Date.now();
     timerIntervalRef.current = setInterval(() => {
@@ -69,31 +98,38 @@ const Session = () => {
     setTimerRunning(true);
   };
 
-  // Stop the timer
   const stopTimer = () => {
     clearInterval(timerIntervalRef.current);
-    const elapsedTime = Date.now() - timerIntervalRef.current;
-    return Math.floor(elapsedTime / 1000); // Return duration in seconds
+    setTimerRunning(false);
   };
 
-  // Start recording
+  // Audio recording functions
   const startRecording = async () => {
     try {
-      const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
-      mediaRecorderRef.current = new MediaRecorder(stream);
-      audioChunksRef.current = [];
+      if (micEnabled) {
+        // Stop any existing recording first
+        if (mediaRecorderRef.current && mediaRecorderRef.current.state === 'recording') {
+          stopRecording();
+        }
 
-      mediaRecorderRef.current.ondataavailable = (event) => {
-        audioChunksRef.current.push(event.data);
-      };
+        const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
+        mediaRecorderRef.current = new MediaRecorder(stream);
+        audioChunksRef.current = [];
 
-      mediaRecorderRef.current.onstop = () => {
-        const audioBlob = new Blob(audioChunksRef.current, { type: "audio/webm" });
-        setAudioBlob(audioBlob);
-        audioRef.current.src = URL.createObjectURL(audioBlob);
-      };
+        mediaRecorderRef.current.ondataavailable = (event) => {
+          audioChunksRef.current.push(event.data);
+        };
 
-      mediaRecorderRef.current.start();
+        mediaRecorderRef.current.onstop = () => {
+          const blob = new Blob(audioChunksRef.current, { type: "audio/webm" });
+          setAudioBlob(blob);
+          if (audioRef.current) {
+            audioRef.current.src = URL.createObjectURL(blob);
+          }
+        };
+
+        mediaRecorderRef.current.start();
+      }
       setRecording(true);
       startTimer();
     } catch (error) {
@@ -101,19 +137,28 @@ const Session = () => {
     }
   };
 
-  // Stop recording
   const stopRecording = () => {
-    mediaRecorderRef.current.stop();
+    if (mediaRecorderRef.current && mediaRecorderRef.current.state === 'recording') {
+      mediaRecorderRef.current.stop();
+      mediaRecorderRef.current.stream.getTracks().forEach(track => track.stop());
+    }
     setRecording(false);
     stopTimer();
   };
 
-  // Upload audio to backend
+  const toggleMicrophone = () => {
+    // Only allow toggling microphone when not recording
+    if (!recording) {
+      setMicEnabled(!micEnabled);
+    }
+  };
+
+  // Audio upload function remains the same.
   const uploadAudio = async (audioBlob) => {
     const formData = new FormData();
     formData.append('audio', audioBlob, 'session-audio.webm');
 
-    // Calculate speaker count dynamically based on participants
+    // Calculate speaker count dynamically based on participants.
     const teacherIdElement = teacherId.trim();
     const studentIdsElement = studentIds.trim();
     const studentIdsArray = studentIdsElement.split(',').filter(id => id.trim() !== "");
@@ -137,35 +182,35 @@ const Session = () => {
     return data;
   };
 
-  // Finish session
+  // Finish session creates the consultation record and then returns a sessionID.
   const finishSession = async () => {
     if (!teacherId || !studentIds || !concern || !actionTaken || !outcome) {
       alert('Please fill in all required fields');
       return;
     }
 
-    const duration = stopTimer();
-
-    let transcription = null;
-
-    if (audioBlob) {
-      try {
-        const audioUploadResponse = await uploadAudio(audioBlob);
-        transcription = audioUploadResponse.transcription || "";
-      } catch (error) {
-        console.error("Error uploading audio:", error);
-        alert("Audio upload failed. Proceeding without transcription.");
-      }
-    } else {
-      console.log("No audio uploaded, proceeding with manual input.");
+    if (!audioBlob) {
+      alert('Please record an audio session before submitting.');
+      return;
     }
 
-    if (transcription) {
+    stopTimer();
+
+    let transcriptionText = null;
+    try {
+      const audioUploadResponse = await uploadAudio(audioBlob);
+      transcriptionText = audioUploadResponse.transcription || "";
+    } catch (error) {
+      console.error("Error uploading audio:", error);
+      alert("Audio upload failed. Proceeding without transcription.");
+    }
+
+    if (transcriptionText) {
       try {
         console.log("Sending transcription for role identification...");
-        const roleIdentifiedTranscription = await identifyRoles(transcription);
+        const roleIdentifiedTranscription = await identifyRoles(transcriptionText);
         setTranscription(roleIdentifiedTranscription);
-        transcription = roleIdentifiedTranscription; // Update transcription with roles for storage
+        transcriptionText = roleIdentifiedTranscription;
       } catch (error) {
         console.error("Error identifying roles:", error);
         alert("Error processing roles.");
@@ -174,18 +219,17 @@ const Session = () => {
       console.warn("No transcription available for role identification.");
     }
 
-    const summary = await generateSummary(transcription || "", {
+    const generatedSummary = await generateSummary(transcriptionText || "", {
       concern,
       actionTaken,
       outcome,
       remarks,
     });
+    setSummary(generatedSummary);
 
-    setSummary(summary);
+    await storeConsultation(transcriptionText, generatedSummary, { concern, actionTaken, outcome, remarks });
 
-    await storeConsultation(transcription, summary, { concern, actionTaken, outcome, remarks, duration });
-
-    // Remove the specific booking after the session is finished
+    // After finishing the session, the booking record can be removed if desired.
     const queryParams = new URLSearchParams(location.search);
     const sessionID = queryParams.get('sessionID');
     if (sessionID) {
@@ -203,89 +247,62 @@ const Session = () => {
       }
     }
 
-    // Stop the timer
-    stopTimer();
+    // Optionally, you can now navigate away or update the UI with the new sessionID.
   };
 
-  // Generate summary
   const generateSummary = async (transcription, notes) => {
     const response = await fetch('http://localhost:5001/consultation/summarize', {
       method: 'POST',
-      headers: {
-        'Content-Type': 'application/json',
-      },
+      headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({
         transcription: transcription || "No transcription available.",
         notes: `Concern: ${notes.concern}\nAction Taken: ${notes.actionTaken}\nOutcome: ${notes.outcome}\nRemarks: ${notes.remarks || "No remarks"}`,
       }),
     });
-
     if (!response.ok) {
       throw new Error('Summary generation failed');
     }
-
     const data = await response.json();
     return data.summary;
   };
 
-  // Identify roles in transcription
   const identifyRoles = async (transcription) => {
     const response = await fetch('http://localhost:5001/consultation/identify_roles', {
       method: 'POST',
-      headers: {
-        'Content-Type': 'application/json',
-      },
-      body: JSON.stringify({
-        transcription: transcription || "No transcription available.",
-      }),
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ transcription: transcription || "No transcription available." }),
     });
-
     if (!response.ok) {
       throw new Error('Role identification failed');
     }
-
     const data = await response.json();
     return data.role_identified_transcription;
   };
 
-  // Store consultation details
   const storeConsultation = async (transcription, summary, notes) => {
     const teacherIdElement = teacherId;
     const studentIdsElement = studentIds.split(',').map(id => id.trim());
-
-    if (!audioBlob) {
-      console.error("Error: No audio file available.");
-      alert("Please record an audio session before submitting.");
-      return;
-    }
-
     try {
       const audioUploadResponse = await uploadAudio(audioBlob);
       const audioFilePath = audioUploadResponse.audioUrl;
-
       const response = await fetch('http://localhost:5001/consultation/store_consultation', {
         method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
+        headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
           audio_file_path: audioFilePath,
-          transcription: transcription,
-          summary: summary,
+          transcription,
+          summary,
           teacher_id: teacherIdElement,
           student_ids: studentIdsElement,
           concern: notes.concern,
           action_taken: notes.actionTaken,
           outcome: notes.outcome,
-          remarks: notes.remarks || "No remarks",
-          duration: notes.duration // Adding duration to Firestore document
+          remarks: notes.remarks || "No remarks"
         }),
       });
-
       if (!response.ok) {
         throw new Error('Storing consultation session failed');
       }
-
       const data = await response.json();
       alert(`Session stored successfully with ID: ${data.session_id}`);
     } catch (error) {
@@ -300,54 +317,131 @@ const Session = () => {
   };
 
   return (
-    <div className="max-w-2xl mx-auto p-6 bg-white shadow-lg rounded-lg">
-      <header className="flex justify-between items-center mb-4">
-        <h1 className="text-3xl font-bold text-gray-800">POLYCON Consultation</h1>
-        <button onClick={handleLogout} className="bg-red-500 text-white px-4 py-2 rounded">Logout</button>
-      </header>
+    <div className="relative min-h-screen p-10 flex justify-center items-center font-poppins">
+      <AnimatedBackground />
+      <div className="relative z-10 backdrop-blur-sm bg-white/5"> {/* Added bg-white/5 for subtle frosted glass effect */}
+        <div className="max-w-6xl w-full grid grid-cols-7 gap-6">
+          {/* Left Section: Adviser Notes */}
+          <div className="col-span-5 bg-[#0065A8] p-6 rounded-lg shadow-lg"> {/* Changed from col-span-3 to col-span-4 */}
+            <label className="block text-white text-lg mb-2">Concern</label>
+            <textarea
+              className="w-full p-3 rounded-md mb-4 focus:outline-none focus:ring-2 focus:ring-blue-400"
+              value={concern}
+              onChange={(e) => setConcern(e.target.value)}
+            />
+            <label className="block text-white text-lg mb-2">Action Taken</label>
+            <textarea
+              className="w-full p-3 rounded-md mb-4 focus:outline-none focus:ring-2 focus:ring-blue-400"
+              value={actionTaken}
+              onChange={(e) => setActionTaken(e.target.value)}
+            />
+            <label className="block text-white text-lg mb-2">Outcome</label>
+            <textarea
+              className="w-full p-3 rounded-md mb-4 focus:outline-none focus:ring-2 focus:ring-blue-400"
+              value={outcome}
+              onChange={(e) => setOutcome(e.target.value)}
+            />
+            <label className="block text-white text-lg mb-2">Remarks</label>
+            <textarea
+              className="w-full p-3 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-400"
+              value={remarks}
+              onChange={(e) => setRemarks(e.target.value)}
+            />
+          </div>
 
-      <main>
-        <section className="mb-6">
-          <label className="block mb-2 font-medium">Teacher ID:</label>
-          <input type="text" className="w-full border p-2 rounded" value={teacherId} onChange={(e) => setTeacherId(e.target.value)} placeholder="Enter Teacher ID" required disabled />
+          {/* Right Section: Teacher & Student Info, Recording & Finalize */}
+          <div className="col-span-2 flex flex-col justify-between h-full"> {/* Added h-full */}
+            <div className="space-y-4 flex-1"> {/* Added flex-1 */}
+              {/* Teacher Info Card */}
+              <div className="flex flex-col gap-2 p-8 sm:flex-row sm:items-center sm:gap-6 sm:py-4 bg-[#0065A8] text-white rounded-lg shadow-lg">
+                {teacherInfo ? (
+                  <>
+                    <div className="rounded-full p-1 bg-[#54BEFF]"> {/* Added blue outer border */}
+                      <div className="rounded-full p-1 bg-white"> {/* Added white inner border */}
+                        <img
+                          className="w-12 h-12 rounded-full"
+                          src={teacherInfo.profile_picture}
+                          alt="Teacher"
+                        />
+                      </div>
+                    </div>
+                    <div className="space-y-2 text-center sm:text-left">
+                      <p className="text-lg font-semibold">{teacherInfo.teacherName}</p>
+                      <p className="font-small text-gray-300">{teacherInfo.department}</p>
+                    </div>
+                  </>
+                ) : (
+                  <p className="text-white">ID: {teacherId}</p>
+                )}
+              </div>
 
-          <label className="block mt-4 mb-2 font-medium">Student IDs (comma-separated):</label>
-          <input type="text" className="w-full border p-2 rounded" value={studentIds} onChange={(e) => setStudentIds(e.target.value)} placeholder="Enter Student IDs" required disabled />
-        </section>
+              {/* Students Info Card - Updated height */}
+              <div className="bg-[#0065A8] text-white p-4 rounded-lg shadow-lg flex-1 min-h-[300px] overflow-y-auto"> {/* Added min-h-[300px] and overflow-y-auto */}
+                <p className="font-medium text-center mb-2">Student/s</p>
+                {studentInfo ? (
+                  <ul className="space-y-2">
+                    {Array.isArray(studentInfo)
+                      ? studentInfo.map((student, index) => (
+                          <li key={index} className="flex items-center">
+                            {student.profile_picture && (
+                              <img
+                                src={student.profile_picture}
+                                alt="Student"
+                                className="w-10 h-10 rounded-full mr-2"
+                              />
+                            )}
+                            {student.firstName} {student.lastName}
+                          </li>
+                        ))
+                      : <p>{studentIds}</p>}
+                  </ul>
+                ) : (
+                  <p>{studentIds}</p>
+                )}
+              </div>
+            </div>
 
-        <section className="mb-6">
-          <h2 className="text-xl font-semibold">Session Timer</h2>
-          <button onClick={startTimer} disabled={timerRunning} className="mt-2 bg-blue-500 text-white px-4 py-2 rounded">Start Session</button>
-          <p className="mt-2 font-mono">{timer}</p>
-        </section>
+            {/* Controls Section */}
+            <div className="mt-4 space-y-4"> {/* Changed from mt-auto to mt-4 */}
+              <div className="flex items-center justify-between">
+                <div className="flex items-center space-x-1">
+                  <button
+                    onClick={recording ? stopRecording : startRecording}
+                    className="p-2 transition-transform duration-200 hover:scale-110"
+                  >
+                    {recording ? (
+                      <StopIcon className="w-6 h-6 text-red-500" />
+                    ) : (
+                      <PlayIcon className="w-6 h-6 text-green-500" />
+                    )}
+                  </button>
+                  <button
+                    onClick={toggleMicrophone}
+                    disabled={recording}
+                    className={`p-2 transition-transform duration-200 ${
+                      !recording ? 'hover:scale-110' : 'cursor-not-allowed opacity-50'
+                    }`}
+                  >
+                    {micEnabled ? (
+                      <MicrophoneIcon className="w-6 h-6 text-blue-500" />
+                    ) : (
+                      <MicrophoneSlashIcon className="w-6 h-6 text-gray-400" />
+                    )}
+                  </button>
+                </div>
+                <span className="text-gray-600">{timer}</span>
+              </div>
 
-        <section className="mb-6">
-          <h2 className="text-xl font-semibold">Audio Recording</h2>
-          <button onClick={startRecording} disabled={recording} className="mt-2 bg-green-500 text-white px-4 py-2 rounded">Start Recording</button>
-          <button onClick={stopRecording} disabled={!recording} className="ml-2 bg-red-500 text-white px-4 py-2 rounded">Stop Recording</button>
-          <audio ref={audioRef} controls className="mt-4 w-full"></audio>
-        </section>
-
-        <section className="mb-6">
-          <h2 className="text-xl font-semibold">Adviser Notes</h2>
-          <textarea className="w-full border p-2 rounded mt-2" placeholder="Concern" value={concern} onChange={(e) => setConcern(e.target.value)} required />
-          <textarea className="w-full border p-2 rounded mt-2" placeholder="Action Taken" value={actionTaken} onChange={(e) => setActionTaken(e.target.value)} required />
-          <textarea className="w-full border p-2 rounded mt-2" placeholder="Outcome" value={outcome} onChange={(e) => setOutcome(e.target.value)} required />
-          <textarea className="w-full border p-2 rounded mt-2" placeholder="Remarks" value={remarks} onChange={(e) => setRemarks(e.target.value)} />
-        </section>
-
-        <button onClick={finishSession} className="bg-blue-500 text-white px-4 py-2 rounded">Finish Session</button>
-
-        <section className="mt-6">
-          <h2 className="text-xl font-semibold">Summary</h2>
-          <p>{summary || "Summary will appear here after session is finished."}</p>
-        </section>
-
-        <section className="mt-6">
-          <h2 className="text-xl font-semibold">Transcription</h2>
-          <p>{transcription || "Transcription will appear here after session is finished."}</p>
-        </section>
-      </main>
+              <button
+                onClick={finishSession}
+                className="w-full bg-[#0065A8] text-white py-3 rounded-lg shadow-md hover:hover:bg-[#54BEFF] duration-300ms ease-in-out"
+              >
+                Finalize Consultation
+              </button>
+            </div>
+          </div>
+        </div>
+      </div>
     </div>
   );
 };

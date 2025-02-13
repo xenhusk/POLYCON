@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useRef } from 'react';
-import { Link, useNavigate } from 'react-router-dom';
+import { Link, useNavigate, useLocation } from 'react-router-dom';
 import './Sidebar.css'; // Import the CSS file
 // Placeholder imports for SVG icons
 import { ReactComponent as HomeIcon } from './icons/home.svg';
@@ -41,6 +41,7 @@ const Sidebar = ({ onExpandChange }) => {
   const [pointerPosition, setPointerPosition] = useState(0); // NEW pointer state
   const menuItemRefs = useRef({}); // NEW ref for menu items
   const navigate = useNavigate();
+  const location = useLocation();
 
   useEffect(() => {
     const userEmail = localStorage.getItem('userEmail');
@@ -238,9 +239,14 @@ const Sidebar = ({ onExpandChange }) => {
     onExpandChange?.(isOpen || isFrozen);
   }, [isOpen, isFrozen, onExpandChange]);
 
+  // Hide Sidebar on session page.
+  if (location.pathname.includes('/session')) {
+    return null;
+  }
+
   return (
     <div 
-      className={`fixed top-0 left-0 bg-[#0065A8] h-screen p-5 pt-8 z-40 transition-all duration-300 ${
+      className={`fixed top-0 left-0 bg-[#0065A8] h-screen p-5 pt-8 z-40 transition-all duration-300 ease-in-out ${
         isFrozen || isOpen ? 'w-64' : 'w-20'
       }`}
       onMouseEnter={() => !isFrozen && setIsOpen(true)}
