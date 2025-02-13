@@ -11,3 +11,4 @@ pyrebase4
 pycryptodome
 bcrypt
 setuptools
+flask-socketio

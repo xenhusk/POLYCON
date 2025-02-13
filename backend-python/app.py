@@ -1,5 +1,6 @@
 from flask import Flask, request, jsonify
 from flask_cors import CORS
+from flask_socketio import SocketIO, emit
 from pydub import AudioSegment
 import os
 from services.assemblyai_service import transcribe_audio_with_assemblyai
@@ -12,9 +13,20 @@ from routes.profile_routes import profile_bp  # added import for profile routes
 from routes.user_routes import user_bp  # <-- new import
 from routes.hometeacher_routes import hometeacher_routes_bp
 from routes.program_routes import program_bp  # <-- new import
+from routes.search_routes import search_bp  # NEW import for search routes
+from services.socket_service import init_socket
 
 app = Flask(__name__)
-CORS(app, resources={r"/*": {"origins": "*"}})  # Allow all origins
+# Update CORS to allow WebSocket
+CORS(app, resources={
+    r"/*": {
+        "origins": "*",
+        "allow_headers": ["Content-Type"],
+        "methods": ["GET", "POST", "OPTIONS"]
+    }
+})
+
+socketio = init_socket(app)  # Initialize socket with app
 
 UPLOAD_FOLDER = "uploads/"
 CONVERTED_FOLDER = "converted/"
@@ -23,7 +35,8 @@ os.makedirs(CONVERTED_FOLDER, exist_ok=True)
 
 # Register blueprints
 app.register_blueprint(user_bp, url_prefix='/user')  # <-- new registration
-app.register_blueprint(booking_bp, url_prefix='/bookings')
+app.register_blueprint(booking_bp, url_prefix='/bookings')  # Remove the /bookings prefix
+app.register_blueprint(search_bp, url_prefix='/search')  # NEW registration for search endpoints
 
 def convert_audio(input_path):
     output_path = os.path.join(CONVERTED_FOLDER, "converted_audio.wav")
@@ -76,6 +89,15 @@ app.register_blueprint(hometeacher_routes_bp, url_prefix='/hometeacher')
 
 app.register_blueprint(program_bp, url_prefix='/program')
 
+@socketio.on('connect')
+def handle_connect():
+    print('Client connected')
+
+@socketio.on('disconnect')
+def handle_disconnect():
+    print('Client disconnected')
+
 if __name__ == '__main__':
-    app.run(debug=True, port=5001)
+    # Enable WebSocket support
+    socketio.run(app, debug=True, port=5001, allow_unsafe_werkzeug=True)
 

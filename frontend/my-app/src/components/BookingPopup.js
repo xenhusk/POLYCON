@@ -1,7 +1,6 @@
 import React, { useState } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import BookingTeacher from './BookingTeacher'; // Import teacher booking functionality
-import BookingStudent from './BookingStudent'; // Import student booking functionality
+import BookingAppointment from './BookingAppointment'; // Ensure this component uses new endpoints (/create_booking, /get_bookings)
 
 // Inline SVG for bookAppointment icon with blue background and white stroke
 const BookIcon = () => (
@@ -16,7 +15,7 @@ const modalVariants = {
   visible: { opacity: 1, scale: 1 }
 };
 
-const BookingPopup = () => {
+const BookingPopup = ({ closePopup, role }) => {
   const [showModal, setShowModal] = useState(false);
   const userRole = localStorage.getItem('userRole'); // 'faculty' or 'student'
   
@@ -54,16 +53,13 @@ const BookingPopup = () => {
               <button onClick={closeModal} className="absolute top-2 right-2 text-gray-500 hover:text-gray-800">
                 x
               </button>
-              {userRole === 'faculty' && <BookingTeacher closeModal={closeModal} />}
-              {userRole === 'student' && <BookingStudent closeModal={closeModal} />}
-              {!['faculty','student'].includes(userRole) && (
-                <div>
-                  <p>User role not recognized.</p>
-                  <button onClick={closeModal} className="mt-4 bg-gray-300 text-black px-4 py-2 rounded">
-                    Close
-                  </button>
-                </div>
-              )}
+              <BookingAppointment closeModal={closePopup} role={role} />
+              <button 
+                onClick={closePopup} 
+                className="mt-4 bg-gray-300 text-black px-4 py-2 rounded"
+              >
+                Close
+              </button>
             </motion.div>
           </div>
         )}
