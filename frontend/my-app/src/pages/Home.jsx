@@ -65,47 +65,8 @@ const Home = () => {
 
   return (
     <div className="min-h-screen bg-white font-poppins">
-      <nav className="flex w-full justify-between items-center my-3">
-        <div className="w-[90%] h-[18.5vh] relative">
-          <div className="rounded-br-[60px] rounded-tr-[60px] absolute bottom-0 right-0 left-0 flex h-[124px] w-full mx-auto flex-1 bg-[#057DCD] justify-end items-center p-5 md:px-5 sm:p-5">
-            <a href="#Body">
-              <img src={logo} alt="Logo" className="h-[130px] w-[130px] my-auto mx-auto object-contain"/>
-            </a>
-            <div className="w-[42%] flex items-end justify-end gap-5 md:w-full sm:mr-[15px]">
-              <ul className="gap-[25px] flex flex-wrap items-center">
-                <li> 
-                  <button onClick={() => handleSectionNavigation('Contact')}
-                    className="text-xl text-white font-medium focus:outline-none relative group">
-                    Contact
-                    <span className="block absolute bottom-0 left-0 w-0 h-[2px] bg-white transition-all duration-300 ease-in-out group-hover:w-full"></span>
-                  </button>
-                </li>
-                <li>
-                  <button onClick={() => handleSectionNavigation('About')}
-                    className="text-xl text-white font-medium focus:outline-none relative group">
-                    About
-                    <span className="block absolute bottom-0 left-0 w-0 h-[2px] bg-white transition-all duration-300 ease-in-out group-hover:w-full"></span>
-                  </button>
-                </li>
-                <li>
-                  <button className="bg-white text-xl text-[#057DCD] px-auto w-[8rem] h-[55px] rounded-[50px] px-auto my-auto font-semibold transition-all duration-800 ease-in-out delay-150 hover:bg-[#54BEFF] hover:text-white"
-                    onClick={handleLoginClick}>
-                      Login
-                  </button>
-                </li>
-                <li>
-                  <button
-                    className="bg-white text-xl text-[#057DCD] text-center w-[8rem] h-[55px] rounded-[50px] px-auto my-auto font-semibold transition-all duration-800 ease-in-out delay-150 hover:bg-[#54BEFF] hover:text-white"
-                    onClick={handleSignupClick}>
-                      Sign Up
-                  </button>
-                </li>
-              </ul>
-            </div>
-          </div>
-        </div>
-      </nav>
-
+      
+      <Nav handleLoginClick={handleLoginClick} handleSignupClick={handleSignupClick} handleSectionNavigation={handleSectionNavigation}/>
       <Body/>
 
       {/* About */}
@@ -214,7 +175,7 @@ const Home = () => {
       {/* Modals */}
       {showLoginModal || showSignupModal ? (
         <div className="fixed inset-0 bg-black bg-opacity-60 flex items-center justify-center animate-modal-fade" onClick={closeModal}>
-          <div className={`bg-white p-6 rounded-[20px] shadow-lg w-[43%] h-[650px] relative overflow-hidden 
+          <div className={`bg-white p-6 rounded-[20px] shadow-lg w-[43%] h-[93vh] relative overflow-hidden 
             ${showLoginModal || showSignupModal ? 'modal-enter' : 'modal-exit'}`} onClick={(e) => e.stopPropagation()}>
             
             {/* Close button */}
@@ -368,6 +329,59 @@ const About = ({ animateSection }) => {
         </div>
     </section>
   )
+};
+
+const Nav = ({handleLoginClick,handleSignupClick,handleSectionNavigation}) => {
+  const [SignUpClicked, setSignUpClicked] = useState(false);
+  const [LoginClicked, setLoginClicked] = useState(false);
+  const [ContactClicked, setContactClicked] = useState(false);
+  const [AboutClicked, setAboutClicked] = useState(false);
+
+  return (
+    <nav className="flex w-full justify-between items-center my-3">
+    <div className="w-[90%] h-[18.5vh] relative">
+      <div className="rounded-br-[60px] rounded-tr-[60px] absolute bottom-0 right-0 left-0 flex h-[124px] w-full mx-auto flex-1 bg-[#057DCD] justify-end items-center p-5 md:px-5 sm:p-5">
+        <a href="#Body">
+          <img src={logo} alt="Logo" className="h-[130px] w-[130px] my-auto mx-auto object-contain"/>
+        </a>
+        <div className="w-[42%] flex items-end justify-end gap-5 md:w-full sm:mr-[15px]">
+          <ul className="gap-[25px] flex flex-wrap items-center">
+            <li> 
+              <button onClick={() =>{ setContactClicked(true); setTimeout(() => setContactClicked(false), 200); handleSectionNavigation('Contact');}}
+                className={`text-xl text-white font-medium focus:outline-none relative group ${ContactClicked ? "scale-75" : "scale-100"}`}>
+                Contact
+                <span className="block absolute bottom-0 left-0 w-0 h-[2px] bg-white transition-all duration-300 ease-in-out group-hover:w-full"></span>
+              </button>
+            </li>
+            <li>
+              <button onClick={() =>{ setAboutClicked(true); setTimeout(() => setAboutClicked(false), 200);handleSectionNavigation('About');}}
+                className={`text-xl text-white font-medium focus:outline-none relative group ${AboutClicked ? "scale-75" : "scale-100"}`}>
+                About
+                <span className="block absolute bottom-0 left-0 w-0 h-[2px] bg-white transition-all duration-300 ease-in-out group-hover:w-full"></span>
+              </button>
+            </li>
+            <li>
+              <button 
+                className={`bg-white text-xl text-[#057DCD] w-[8rem] h-[55px] rounded-[50px] my-auto font-semibold transition-all duration-100 ease-in delay-50 hover:bg-[#54BEFF] hover:text-white 
+                  ${LoginClicked ? "scale-90" : "scale-100"}`}
+                onClick={() =>{ setLoginClicked(true); setTimeout(() => setLoginClicked(false), 300); handleLoginClick(); }}>
+                  Login
+              </button>
+            </li>
+            <li>
+              <button
+                className={`bg-white text-xl text-[#057DCD] w-[8rem] h-[55px] rounded-[50px] my-auto font-semibold transition-all duration-100 ease-in delay-50 hover:bg-[#54BEFF] hover:text-white
+                  ${SignUpClicked ? "scale-90" : "scale-100"}`}
+                onClick={() => {setSignUpClicked(true); setTimeout(() => setSignUpClicked(false), 300); handleSignupClick();}}>
+                  Sign Up
+              </button>
+            </li>
+          </ul>
+        </div>
+      </div>
+    </div>
+  </nav>
+  );
 };
 
 export default Home;

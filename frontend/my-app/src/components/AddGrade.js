@@ -33,54 +33,42 @@ export default function AddGrade() {
     if (storedTeacherID) {
       setFacultyID(storedTeacherID); // Set the facultyID dynamically
     }
-    fetchStudents();
-    fetchGrades();
-    fetchCourses();
+    fetchInitialData();
   }, []);
 
-  const fetchStudents = async () => {
+  const fetchInitialData = async () => {
     try {
-      const response = await fetch('http://localhost:5001/grade/get_students');
-      const data = await response.json();
-      setStudents(Array.isArray(data) ? data : []);
+      const cachedStudents = localStorage.getItem('students');
+      const cachedGrades = localStorage.getItem('grades');
+      const cachedCourses = localStorage.getItem('courses');
+
+      if (cachedStudents && cachedGrades && cachedCourses) {
+        setStudents(JSON.parse(cachedStudents));
+        setGrades(JSON.parse(cachedGrades));
+        setFilteredGrades(JSON.parse(cachedGrades));
+        setCourses(JSON.parse(cachedCourses));
+      } else {
+        const [studentsResponse, gradesResponse, coursesResponse] = await Promise.all([
+          fetch('http://localhost:5001/grade/get_students'),
+          fetch(`http://localhost:5001/grade/get_grades?facultyID=${localStorage.getItem('teacherID')}`),
+          fetch(`http://localhost:5001/course/get_courses?facultyID=${localStorage.getItem('teacherID')}`)
+        ]);
+
+        const studentsData = await studentsResponse.json();
+        const gradesData = await gradesResponse.json();
+        const coursesData = await coursesResponse.json();
+
+        setStudents(Array.isArray(studentsData) ? studentsData : []);
+        setGrades(Array.isArray(gradesData) ? gradesData : []);
+        setFilteredGrades(Array.isArray(gradesData) ? gradesData : []);
+        setCourses(Array.isArray(coursesData.courses) ? coursesData.courses : []);
+
+        localStorage.setItem('students', JSON.stringify(studentsData));
+        localStorage.setItem('grades', JSON.stringify(gradesData));
+        localStorage.setItem('courses', JSON.stringify(coursesData.courses));
+      }
     } catch (error) {
-      console.error('Error fetching students:', error);
-    }
-  };
-
-  const fetchGrades = async () => {
-    try {
-      const storedTeacherID = localStorage.getItem('teacherID');
-      if (!storedTeacherID) return;
-
-      const response = await fetch(`http://localhost:5001/grade/get_grades?facultyID=${storedTeacherID}`);
-      const data = await response.json();
-
-      console.log("✅ Received grades from backend:", data); // Debugging Log
-
-      // Ensure document ID is included
-      const gradesWithID = data.map(doc => ({
-        id: doc.id,  // Firestore document ID
-        ...doc       // Include all other fields
-      }));
-
-      setGrades(Array.isArray(gradesWithID) ? gradesWithID : []);
-      setFilteredGrades(Array.isArray(gradesWithID) ? gradesWithID : []); // Initialize filtered grades
-    } catch (error) {
-      console.error('Error fetching grades:', error);
-    }
-  };
-
-  const fetchCourses = async () => {
-    try {
-      const storedTeacherID = localStorage.getItem('teacherID');
-      if (!storedTeacherID) return;
-
-      const response = await fetch(`http://localhost:5001/course/get_courses?facultyID=${storedTeacherID}`);
-      const data = await response.json();
-      setCourses(Array.isArray(data.courses) ? data.courses : []);
-    } catch (error) {
-      console.error('Error fetching courses:', error);
+      console.error('Error fetching initial data:', error);
     }
   };
 
@@ -125,7 +113,9 @@ export default function AddGrade() {
 
       if (response.ok) {
         alert('✅ Grade deleted successfully');
-        fetchGrades(); // Refresh table after deletion
+        setGrades(prevGrades => prevGrades.filter(grade => grade.id !== gradeDocID));
+        localStorage.setItem('grades', JSON.stringify(grades.filter(grade => grade.id !== gradeDocID)));
+        applyFilters(); // Reapply filters after deletion
       } else {
         alert('❌ Failed to delete grade: ' + result.error);
       }
@@ -186,8 +176,11 @@ export default function AddGrade() {
 
       if (response.ok) {
         alert('✅ Grade updated successfully');
+        const updatedGrades = grades.map(grade => grade.id === selectedGradeID ? { ...grade, studentID, courseID, grade, period, school_year: schoolYear, semester } : grade);
+        setGrades(updatedGrades);
+        localStorage.setItem('grades', JSON.stringify(updatedGrades));
         handleCancelEdit();
-        fetchGrades();
+        applyFilters(); // Reapply filters after update
       } else {
         alert('❌ Failed to update grade: ' + result.error);
       }
@@ -254,7 +247,11 @@ export default function AddGrade() {
 
       if (response.ok) {
         alert('✅ Grade added successfully');
-        fetchGrades();
+        const newGrade = { id: result.gradeID, studentID, studentName, courseID, courseName: courses.find(course => course.courseID === courseID)?.courseName, grade, period, school_year: schoolYear, semester, remarks: determineRemarks(grade) };
+        const updatedGrades = [...grades, newGrade];
+        setGrades(updatedGrades);
+        localStorage.setItem('grades', JSON.stringify(updatedGrades));
+        applyFilters(); // Reapply filters after adding
       } else {
         alert('❌ Failed to add grade: ' + result.error);
       }

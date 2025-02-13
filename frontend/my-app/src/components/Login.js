@@ -6,6 +6,7 @@ const Login = ({ onLoginSuccess, onSwitchToSignup }) => {
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [message, setMessage] = useState('');
+  const [LoginClicked, setLoginClicked] = useState(false);
   const navigate = useNavigate();
 
   const handleLoginSuccess = (data) => {
@@ -50,21 +51,22 @@ const Login = ({ onLoginSuccess, onSwitchToSignup }) => {
           <h2 className="text-center text-lg font-bold text-[#005B98]">Login</h2>
           <div class="relative z-0">
             <input className="block px-[2%] my-2 mt-3 mx-auto w-full text-base text-gray-900 bg-transparent border-0 border-b-2 border-[#005B98] appearance-none dark:text-[#000000] dark:border-gray-600 dark:focus:border-blue-500 focus:outline-none focus:ring-0 focus:border-blue-600 peer"
-              type="email" id='Email' placeholder=" " value={email} onChange={(e) => setEmail(e.target.value)} required/>
-            <label for="Email" class="absolute text-base px-3 peer-focus:px-0 text-gray-500 dark:text-gray-400 duration-300 transform -translate-y-6 scale-75 top-3 -z-10 origin-[0] peer-focus:start-0 peer-focus:text-blue-600 peer-focus:dark:text-blue-500 peer-placeholder-shown:scale-100 peer-placeholder-shown:translate-y-0 peer-focus:scale-75 peer-focus:-translate-y-6 rtl:peer-focus:translate-x-1/4 rtl:peer-focus:left-auto">
+              type="email" name='email' id='Email' placeholder=" " value={email} onChange={(e) => setEmail(e.target.value)} required/>
+            <label for="Email" class="absolute text-base text-gray-500 dark:text-gray-400 duration-300 transform -translate-y-6 scale-75 top-3 -z-10 origin-[0] peer-focus:start-0 peer-focus:text-blue-600 peer-focus:dark:text-blue-500 peer-placeholder-shown:scale-100 peer-placeholder-shown:translate-y-0 peer-focus:scale-75 peer-focus:-translate-y-6 rtl:peer-focus:translate-x-1/4 rtl:peer-focus:left-auto">
               Email</label>
           </div>
           <div class="relative z-0">
             <input className="block px-[2%] my-2 mt-3 mx-auto w-full text-base text-gray-900 bg-transparent border-0 border-b-2 border-[#005B98] appearance-none dark:text-[#000000] dark:border-gray-600 dark:focus:border-blue-500 focus:outline-none focus:ring-0 focus:border-blue-600 peer"
-              type="password" id='Password' placeholder=" " value={password} onChange={(e) => setPassword(e.target.value)} required/>
-            <label for="Password" class="absolute text-base px-3 peer-focus:px-0 text-gray-500 dark:text-gray-400 duration-300 transform -translate-y-6 scale-75 top-3 -z-10 origin-[0] peer-focus:start-0 peer-focus:text-blue-600 peer-focus:dark:text-blue-500 peer-placeholder-shown:scale-100 peer-placeholder-shown:translate-y-0 peer-focus:scale-75 peer-focus:-translate-y-6 rtl:peer-focus:translate-x-1/4 rtl:peer-focus:left-auto">
-              Password</label>
+              type="password" name='password' id='Password' placeholder=" " value={password} onChange={(e) => setPassword(e.target.value)} required/>
+            <label for="Password" class="absolute text-base text-gray-500 dark:text-gray-400 duration-300 transform -translate-y-6 scale-75 top-3 -z-10 origin-[0] peer-focus:start-[-1] peer-focus:text-blue-600 peer-focus:dark:text-blue-500 peer-placeholder-shown:scale-100 peer-placeholder-shown:translate-y-0 peer-focus:scale-75 peer-focus:-translate-y-6 rtl:peer-focus:translate-x-1/4 rtl:peer-focus:left-auto">
+            Password</label>
           </div>
-            <div className="h-[5%]">
-              {message && <p className="text-center text-red-500 text-base">{message}</p>}
-            </div>
-          <button type="submit" className="bg-[#057DCD] text-white w-full h-[44.59px] rounded-lg my-2 mx-auto shadow-md hover:bg-[#54BEFF]">
-            Login
+            {message && <p className="text-center text-red-500 text-[0.9rem]">{message}</p>}
+          <button 
+            onClick={() => { setLoginClicked(true); setTimeout(() => setLoginClicked(false), 150)}}
+            type="submit" className={`bg-[#057DCD] text-white w-full h-[44.59px] rounded-lg my-2 mx-auto shadow-md hover:bg-[#54BEFF]
+            ${LoginClicked ? "scale-90" : "scale-100"}`}>
+              Login
           </button>
           <div className="border-t-2 border-[#005B98] w-[90%] my-2 mx-auto border-opacity-50">
             <p className="text-center font-light text-[0.9rem] mx-auto my-2 text-opacity-50">

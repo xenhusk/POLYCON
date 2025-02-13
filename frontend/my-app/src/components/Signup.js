@@ -5,6 +5,10 @@ const Signup = ({ onSwitchToLogin }) => {
   const [step, setStep] = useState(1);
   const [departments, setDepartments] = useState([]);
   const [filteredPrograms, setFilteredPrograms] = useState([]);
+  const [NextClicked, setNextClicked] = useState(false);
+  const [signupClicked, setSignupClicked] = useState(false);
+  const [loginClicked, setLoginClicked] = useState(false);
+  const [BackClicked, setBackClicked] = useState(false);
   const [formData, setFormData] = useState({
     idNumber: '',
     firstName: '',
@@ -145,14 +149,14 @@ const Signup = ({ onSwitchToLogin }) => {
               <div className="relative z-0">
                 <input className="block py-1 px-1.5 my-2 mx-auto w-full text-base text-gray-900 bg-transparent border-0 border-b-2 border-[#005B98] appearance-none dark:text-[#000000] dark:border-gray-600 dark:focus:border-blue-500 focus:outline-none focus:ring-0 focus:border-blue-600 peer"  
                   type="text" name="firstName" placeholder=" " value={formData.firstName} onChange={handleChange} required />
-                <label for="firstName" class="absolute text-base px-2 peer-focus:px-0 text-gray-500 dark:text-gray-400 duration-300 transform -translate-y-6 scale-75 top-4 -z-10 origin-[0] peer-focus:start-0 peer-focus:text-blue-600 peer-focus:dark:text-blue-500 peer-placeholder-shown:scale-100 peer-placeholder-shown:translate-y-0 peer-focus:scale-75 peer-focus:-translate-y-6 rtl:peer-focus:translate-x-1/4 rtl:peer-focus:left-auto">
+                <label for="firstName" class="absolute text-base text-gray-500 dark:text-gray-400 duration-300 transform -translate-y-6 scale-75 top-4 -z-10 origin-[0] peer-focus:start-0 peer-focus:text-blue-600 peer-focus:dark:text-blue-500 peer-placeholder-shown:scale-100 peer-placeholder-shown:translate-y-0 peer-focus:scale-75 peer-focus:-translate-y-6 rtl:peer-focus:translate-x-1/4 rtl:peer-focus:left-auto">
                   First Name</label>
               </div>
 
               <div className="relative z-0">
                 <input className="block py-1 px-1.5 my-2 mx-auto w-full text-base text-gray-900 bg-transparent border-0 border-b-2 border-[#005B98] appearance-none dark:text-[#000000] dark:border-gray-600 dark:focus:border-blue-500 focus:outline-none focus:ring-0 focus:border-blue-600 peer" 
                   type="text" name="lastName" placeholder=" " value={formData.lastName} onChange={handleChange} required />
-                <label for="lastName" class="absolute text-base px-2 peer-focus:px-0 text-gray-500 dark:text-gray-400 duration-300 transform -translate-y-6 scale-75 top-4 -z-10 origin-[0] peer-focus:start-0 peer-focus:text-blue-600 peer-focus:dark:text-blue-500 peer-placeholder-shown:scale-100 peer-placeholder-shown:translate-y-0 peer-focus:scale-75 peer-focus:-translate-y-6 rtl:peer-focus:translate-x-1/4 rtl:peer-focus:left-auto">
+                <label for="lastName" class="absolute text-base text-gray-500 dark:text-gray-400 duration-300 transform -translate-y-6 scale-75 top-4 -z-10 origin-[0] peer-focus:start-0 peer-focus:text-blue-600 peer-focus:dark:text-blue-500 peer-placeholder-shown:scale-100 peer-placeholder-shown:translate-y-0 peer-focus:scale-75 peer-focus:-translate-y-6 rtl:peer-focus:translate-x-1/4 rtl:peer-focus:left-auto">
                   Last Name</label>
               </div>
             </div>
@@ -160,40 +164,44 @@ const Signup = ({ onSwitchToLogin }) => {
             <div className="relative z-0">
               <input className="block py-1.5 px-1.5 my-2.5 mx-auto w-full text-base text-gray-900 bg-transparent border-0 border-b-2 border-[#005B98] appearance-none dark:text-[#000000] dark:border-gray-600 dark:focus:border-blue-500 focus:outline-none focus:ring-0 focus:border-blue-600 peer" 
                 type="text" name="idNumber" placeholder=" " value={formData.idNumber} onChange={handleChange} required />
-              <label for="IDNumber" class="absolute text-base px-2 peer-focus:px-0 text-gray-500 dark:text-gray-400 duration-300 transform -translate-y-6 scale-75 top-3 -z-10 origin-[0] peer-focus:start-0 peer-focus:text-blue-600 peer-focus:dark:text-blue-500 peer-placeholder-shown:scale-100 peer-placeholder-shown:translate-y-0 peer-focus:scale-75 peer-focus:-translate-y-6 rtl:peer-focus:translate-x-1/4 rtl:peer-focus:left-auto">
+              <label for="IDNumber" class="absolute text-base text-gray-500 dark:text-gray-400 duration-300 transform -translate-y-6 scale-75 top-3 -z-10 origin-[0] peer-focus:start-0 peer-focus:text-blue-600 peer-focus:dark:text-blue-500 peer-placeholder-shown:scale-100 peer-placeholder-shown:translate-y-0 peer-focus:scale-75 peer-focus:-translate-y-6 rtl:peer-focus:translate-x-1/4 rtl:peer-focus:left-auto">
                 ID Number</label>
             </div>
 
             <div className="relative z-0">
               <input className="block py-1.5 px-1.5 my-2.5 mt-4 mx-auto w-full text-base text-gray-900 bg-transparent border-0 border-b-2 border-[#005B98] appearance-none dark:text-[#000000] dark:border-gray-600 dark:focus:border-blue-500 focus:outline-none focus:ring-0 focus:border-blue-600 peer"
                 type="text" id="email" name="email" placeholder=" " value={formData.email} onChange={handleChange} required />
-              <label for="Email" class="absolute text-base px-2 peer-focus:px-0 text-gray-500 dark:text-gray-400 duration-300 transform -translate-y-6 scale-75 top-3 -z-10 origin-[0] peer-focus:start-0 peer-focus:text-blue-600 peer-focus:dark:text-blue-500 peer-placeholder-shown:scale-100 peer-placeholder-shown:translate-y-0 peer-focus:scale-75 peer-focus:-translate-y-6 rtl:peer-focus:translate-x-1/4 rtl:peer-focus:left-auto">
+              <label for="Email" class="absolute text-base text-gray-500 dark:text-gray-400 duration-300 transform -translate-y-6 scale-75 top-3 -z-10 origin-[0] peer-focus:start-0 peer-focus:text-blue-600 peer-focus:dark:text-blue-500 peer-placeholder-shown:scale-100 peer-placeholder-shown:translate-y-0 peer-focus:scale-75 peer-focus:-translate-y-6 rtl:peer-focus:translate-x-1/4 rtl:peer-focus:left-auto">
                 Email</label>
             </div>
 
             <div className="relative z-0">
               <input className="block py-1.5 px-1.5 my-2 mt-4 mx-auto w-full text-base text-gray-900 bg-transparent border-0 border-b-2 border-[#005B98] appearance-none dark:text-[#000000] dark:border-gray-600 dark:focus:border-blue-500 focus:outline-none focus:ring-0 focus:border-blue-600 peer"
                 type="password" id="Password" name="password" placeholder=" " value={formData.password} onChange={handleChange} required />
-              <label for="Password" class="absolute text-base px-2 peer-focus:px-0 text-gray-500 dark:text-gray-400 duration-300 transform -translate-y-6 scale-75 top-3 -z-10 origin-[0] peer-focus:start-0 peer-focus:text-blue-600 peer-focus:dark:text-blue-500 peer-placeholder-shown:scale-100 peer-placeholder-shown:translate-y-0 peer-focus:scale-75 peer-focus:-translate-y-6 rtl:peer-focus:translate-x-1/4 rtl:peer-focus:left-auto">
+              <label for="Password" class="absolute text-base text-gray-500 dark:text-gray-400 duration-300 transform -translate-y-6 scale-75 top-3 -z-10 origin-[0] peer-focus:start-0 peer-focus:text-blue-600 peer-focus:dark:text-blue-500 peer-placeholder-shown:scale-100 peer-placeholder-shown:translate-y-0 peer-focus:scale-75 peer-focus:-translate-y-6 rtl:peer-focus:translate-x-1/4 rtl:peer-focus:left-auto">
                 Password</label>
             </div>
 
             <div className="relative z-0">
               <input className="block py-1.5 px-1.5 my-2 mt-4 mx-auto w-full text-base text-gray-900 bg-transparent border-0 border-b-2 border-[#005B98] appearance-none dark:text-[#000000] dark:border-gray-600 dark:focus:border-blue-500 focus:outline-none focus:ring-0 focus:border-blue-600 peer"
                 type="password" id="ConfirmPassword" name="confirmNewPassword" placeholder=" " value={formData.confirmNewPassword} onChange={handleChange} required />
-              <label for="ConfirmPassword" class="absolute text-base px-2 peer-focus:px-0 text-gray-500 dark:text-gray-400 duration-300 transform -translate-y-6 scale-75 top-3 -z-10 origin-[0] peer-focus:start-0 peer-focus:text-blue-600 peer-focus:dark:text-blue-500 peer-placeholder-shown:scale-100 peer-placeholder-shown:translate-y-0 peer-focus:scale-75 peer-focus:-translate-y-6 rtl:peer-focus:translate-x-1/4 rtl:peer-focus:left-auto">
+              <label for="ConfirmPassword" class="absolute text-base text-gray-500 dark:text-gray-400 duration-300 transform -translate-y-6 scale-75 top-3 -z-10 origin-[0] peer-focus:start-0 peer-focus:text-blue-600 peer-focus:dark:text-blue-500 peer-placeholder-shown:scale-100 peer-placeholder-shown:translate-y-0 peer-focus:scale-75 peer-focus:-translate-y-6 rtl:peer-focus:translate-x-1/4 rtl:peer-focus:left-auto">
                 Confirm New Password</label>
             </div>
 
             {/* error handling */}
-            {errorMessage && <p className="text-center text-red-500 text-base">{errorMessage}</p>}
+            {errorMessage && <p className="text-center text-red-500 text-[0.9rem]">{errorMessage}</p>}
             
-            <button className="bg-[#057DCD] text-white w-[100%] h-[44.59px] rounded-lg my-2 mx-auto hover:bg-[#54BEFF] animate-modal-slide" 
-            onClick={handleNext}>Next</button>
+            <button 
+              className={`bg-[#057DCD] text-white w-[100%] h-[44.59px] rounded-lg my-2 mx-auto transition-all ease-in  hover:bg-[#54BEFF] animate-modal-slide
+              ${NextClicked ? "scale-90" : "scale-100"}`} 
+              onClick={ ()=>{ setNextClicked(true); setTimeout(()=> setNextClicked(false), 150); handleNext();}}>
+                Next</button>
             <div className="border-t-2 border-[#005B98] w-[90%] my-2 mx-auto border-opacity-50">
               <p className="text-center font-light text-[0.9rem] mx-auto my-2 text-opacity-50">
-                Don't have an account? <button onClick={(e) => {e.preventDefault();onSwitchToLogin();}} 
-                className="text-[#005B98] focus:outline-none hover:underline">Login</button>
+                Don't have an account? <button onClick={(e) => {setLoginClicked(true); setTimeout(()=> setLoginClicked(false), 300);e.preventDefault();onSwitchToLogin();}} 
+                  className={`text-[#005B98] transition-all ease-in focus:outline-none hover:underline ${loginClicked ? "scale-90" : "scale-100"}`}>
+                    Login</button>
               </p>
             </div>
           </div>
@@ -201,11 +209,15 @@ const Signup = ({ onSwitchToLogin }) => {
           <div className={`w-full flex justify-center items-center ${step === 2 ? 'slide-left' : 'slide-right'}`}>
             <div className="flex flex-col items-center w-full animate-modal-fade">
               {errorMessage && (
-                <div className='absolute top-8 left-7' onClick={handleBack}>
-                  <svg className="w-6 h-6 text-gray-500 hover:text-[#000000]" aria-hidden="true" 
-                      xmlns="http://www.w3.org/2000/svg" width="24" height="24" fill="none" viewBox="0 0 24 24">
-                    <path stroke="currentColor" strokeLinecap="round" strokeLinejoin="round" strokeWidth="4" d="m15 19-7-7 7-7"/>
-                  </svg>
+                <div className='absolute top-3 left-7 z-50'>
+                  <button 
+                    className={`text-gray-500 hover:text-[#000000] transition-all ease-in ${BackClicked ? "scale-90" : "scale-100"}`} 
+                    onClick={() => { setBackClicked(true); setTimeout(() => setBackClicked(false), 150); handleBack(); }}>
+                      
+                    <svg className="w-6 h-6" aria-hidden="true" xmlns="http://www.w3.org/2000/svg" width="24" height="24" fill="none" viewBox="0 0 24 24">
+                      <path stroke="currentColor" strokeLinecap="round" strokeLinejoin="round" strokeWidth="4" d="m15 19-7-7 7-7"/>
+                    </svg>
+                  </button>
                 </div>
               )}
               <div className="w-full max-w-[75%] mx-auto animate-modal-slideL">
@@ -222,7 +234,7 @@ const Signup = ({ onSwitchToLogin }) => {
                   
                   ))}
                   </select>
-                  <label for="Department" class="absolute text-base px-2 peer-focus:px-0 text-gray-500 dark:text-gray-400 duration-300 transform -translate-y-6 scale-75 top-3 -z-10 origin-[0] peer-focus:start-0 peer-focus:text-blue-600 peer-focus:dark:text-blue-500 peer-placeholder-shown:scale-100 peer-placeholder-shown:translate-y-0 peer-focus:scale-75 peer-focus:-translate-y-6 rtl:peer-focus:translate-x-1/4 rtl:peer-focus:left-auto">
+                  <label for="Department" class="absolute text-base text-gray-500 dark:text-gray-400 duration-300 transform -translate-y-6 scale-75 top-3 -z-10 origin-[0] peer-focus:start-0 peer-focus:text-blue-600 peer-focus:dark:text-blue-500 peer-placeholder-shown:scale-100 peer-placeholder-shown:translate-y-0 peer-focus:scale-75 peer-focus:-translate-y-6 rtl:peer-focus:translate-x-1/4 rtl:peer-focus:left-auto">
                     Department</label>
                 </div>
 
@@ -238,7 +250,7 @@ const Signup = ({ onSwitchToLogin }) => {
 
                   ))}
                     </select>
-                    <label for="Program" class="absolute text-base px-2 peer-focus:px-0 text-gray-500 dark:text-gray-400 duration-300 transform -translate-y-6 scale-75 top-3 -z-10 origin-[0] peer-focus:start-0 peer-focus:text-blue-600 peer-focus:dark:text-blue-500 peer-placeholder-shown:scale-100 peer-placeholder-shown:translate-y-0 peer-focus:scale-75 peer-focus:-translate-y-6 rtl:peer-focus:translate-x-1/4 rtl:peer-focus:left-auto">
+                    <label for="Program" class="absolute text-base text-gray-500 dark:text-gray-400 duration-300 transform -translate-y-6 scale-75 top-3 -z-10 origin-[0] peer-focus:start-0 peer-focus:text-blue-600 peer-focus:dark:text-blue-500 peer-placeholder-shown:scale-100 peer-placeholder-shown:translate-y-0 peer-focus:scale-75 peer-focus:-translate-y-6 rtl:peer-focus:translate-x-1/4 rtl:peer-focus:left-auto">
                       Program</label>
                   </div>
                 )}
@@ -246,7 +258,7 @@ const Signup = ({ onSwitchToLogin }) => {
                 <div class="relative z-0">
                   <input className="block py-2 px-1.5 my-2.5 mt-4 mx-auto w-full text-base text-gray-900 bg-transparent border-0 border-b-2 border-[#005B98] appearance-none dark:text-[#000000] dark:border-gray-600 dark:focus:border-blue-500 focus:outline-none focus:ring-0 focus:border-blue-600 peer"
                     type="text" name="year_section" placeholder=" " value={formData.year_section} onChange={handleChange} required />
-                  <label for="year_section" class="absolute text-base px-2 peer-focus:px-0 text-gray-500 dark:text-gray-400 duration-300 transform -translate-y-6 scale-75 top-3 -z-10 origin-[0] peer-focus:start-0 peer-focus:text-blue-600 peer-focus:dark:text-blue-500 peer-placeholder-shown:scale-100 peer-placeholder-shown:translate-y-0 peer-focus:scale-75 peer-focus:-translate-y-6 rtl:peer-focus:translate-x-1/4 rtl:peer-focus:left-auto">
+                  <label for="year_section" class="absolute text-base text-gray-500 dark:text-gray-400 duration-300 transform -translate-y-6 scale-75 top-3 -z-10 origin-[0] peer-focus:start-0 peer-focus:text-blue-600 peer-focus:dark:text-blue-500 peer-placeholder-shown:scale-100 peer-placeholder-shown:translate-y-0 peer-focus:scale-75 peer-focus:-translate-y-6 rtl:peer-focus:translate-x-1/4 rtl:peer-focus:left-auto">
                     Year & Section</label>
                 </div>
 
@@ -257,19 +269,22 @@ const Signup = ({ onSwitchToLogin }) => {
                     <option value="Male">Male</option>
                     <option value="Female">Female</option>
                   </select>
-                  <label for="sex" class="absolute text-base px-2 peer-focus:px-0 text-gray-500 dark:text-gray-400 duration-300 transform -translate-y-6 scale-75 top-3 -z-10 origin-[0] peer-focus:start-0 peer-focus:text-blue-600 peer-focus:dark:text-blue-500 peer-placeholder-shown:scale-100 peer-placeholder-shown:translate-y-0 peer-focus:scale-75 peer-focus:-translate-y-6 rtl:peer-focus:translate-x-1/4 rtl:peer-focus:left-auto">
+                  <label for="sex" class="absolute text-base text-gray-500 dark:text-gray-400 duration-300 transform -translate-y-6 scale-75 top-3 -z-10 origin-[0] peer-focus:start-0 peer-focus:text-blue-600 peer-focus:dark:text-blue-500 peer-placeholder-shown:scale-100 peer-placeholder-shown:translate-y-0 peer-focus:scale-75 peer-focus:-translate-y-6 rtl:peer-focus:translate-x-1/4 rtl:peer-focus:left-auto">
                     Gender</label>
                 </div>
 
                 {/* error handling */}
-                {errorMessage && <p className="text-center text-red-500 text-base">{errorMessage}</p>}
+                {errorMessage && <p className="text-center text-red-500 text-[0.9rem]">{errorMessage}</p>}
                 
-                <button className="bg-[#057DCD] text-white w-[100%] h-[44.59px] rounded-lg my-2 mx-auto hover:bg-[#54BEFF]" 
-                onClick={handleSubmit}>Sign Up</button>
+                <button 
+                  className={`bg-[#057DCD] text-white w-[100%] h-[44.59px] rounded-lg my-2 mx-auto transition-all ease-in hover:bg-[#54BEFF]
+                    ${signupClicked ? "scale-90" : "scale-100"}`} 
+                  onClick={()=>{ setSignupClicked(true); setTimeout(()=> setSignupClicked(false), 150); handleSubmit();}}>Sign Up</button>
                 <div className="border-t-2 border-[#005B98] w-[90%] my-2 mx-auto border-opacity-50">
                   <p className="text-center font-light text-[0.9rem] mx-auto my-2 text-opacity-50">
-                    Don't have an account? <button onClick={(e) => {e.preventDefault(); onSwitchToLogin();}} 
-                    className="text-[#005B98] focus:outline-none hover:underline">Login</button>
+                    Don't have an account? <button onClick={(e) => { setLoginClicked(true); setTimeout(()=> setLoginClicked(false), 150); e.preventDefault();onSwitchToLogin();}} 
+                  className={`text-[#005B98] transition-all ease-in delay-75 focus:outline-none hover:underline ${loginClicked ? "scale-90" : "scale-100"}`}>
+                    Login</button>
                   </p>
                 </div>
               </div>
