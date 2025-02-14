@@ -9,9 +9,17 @@ function AppointmentItem({ appointment, role, onStartSession, onCancel, onConfir
     return `${formattedDate} at ${formattedTime}`;
   };
 
+  // Ensure the appointment object contains booking_id (if not, map id accordingly)
+  const bookingID = appointment.booking_id || appointment.id; 
+  // In your Start Session button click handler:
+  const handleStart = () => {
+    onStartSession({ ...appointment, booking_id: bookingID });
+  };
+
   return (
-    <li className="bg-white rounded-lg shadow-md p-6 pb-0 my-4 border-l-4 border-[#0065A8] hover:shadow-lg transition-shadow flex flex-col">
-      <div className="mb-4">
+    <li className={`bg-white rounded-lg shadow-md p-6 my-4 border-l-4 border-[#0065A8] hover:shadow-lg transition-shadow flex flex-col fade-in
+      ${role === 'student' ? 'pb-6' : 'pb-0'}`}>
+      <div className="mb-4 fade-in delay-100">
         <p className="text-[#0065A8] font-semibold mb-2">Teacher</p>
         <div className="flex items-center">
           {teacherInfo.profile_picture && (
@@ -27,7 +35,7 @@ function AppointmentItem({ appointment, role, onStartSession, onCancel, onConfir
         </div>
       </div>
 
-      <div className="mt-4">
+      <div className="mt-4 fade-in delay-200">
         <p className="text-[#0065A8] font-semibold mb-2">Student(s)</p>
         <div className="flex flex-wrap items-center gap-3">
           {appointment.info && Array.isArray(appointment.info) && appointment.info.length > 0 ? (
@@ -45,7 +53,7 @@ function AppointmentItem({ appointment, role, onStartSession, onCancel, onConfir
         </div>
       </div>
 
-      <div className="grid grid-cols-2 gap-4 mt-4">
+      <div className="grid grid-cols-2 gap-4 mt-4 fade-in delay-300">
         {appointment.created_at && (
           <div>
             <p className="text-[#0065A8] font-semibold">Created at</p>
@@ -73,7 +81,7 @@ function AppointmentItem({ appointment, role, onStartSession, onCancel, onConfir
               {typeof onStartSession === 'function' ? (
                 <>
                   <button 
-                    onClick={() => onStartSession(appointment)} 
+                    onClick={handleStart} 
                     className="flex-1 bg-[#0065A8] hover:bg-[#00D1B2] text-white py-4 transition-colors rounded-bl-lg rounded-br-none"
                   >
                     Start Session

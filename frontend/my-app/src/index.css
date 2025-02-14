@@ -35,7 +35,6 @@ html, body {
   border: 3px solid #057DCD ;
 }
 
-
 body {
   font-family: 'Poppins', sans-serif;
 }
@@ -56,6 +55,17 @@ body {
   60% { transform: translate(-50px, -20px) scale(0.95); }
   80% { transform: translate(20px, 40px) scale(1.05); }
   100% { transform: translate(0, 0) scale(1); }
+}
+
+@keyframes fadeIn {
+  from {
+    opacity: 0;
+    transform: translateY(10px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
 }
 
 .animate-float {
@@ -95,5 +105,62 @@ body {
 
 :-moz-full-screen {
   background: white;
+}
+
+/* Calendar specific styles */
+.calendar-container {
+  width: 100%;
+  overflow-x: auto;
+  padding: 1rem 0;
+}
+
+.custom-calendar {
+  min-width: 900px !important;
+  width: 100% !important;
+}
+
+.rbc-calendar {
+  width: 100% !important;
+  min-width: 800px !important;
+}
+
+.rbc-toolbar {
+  flex-wrap: wrap;
+}
+
+.rbc-toolbar-label {
+  width: auto !important;
+}
+
+.rbc-time-view, 
+.rbc-month-view {
+  min-width: 800px !important;
+  width: 100% !important;
+}
+
+/* Ensure calendar headers and cells maintain proper width */
+.rbc-row {
+  min-width: 800px !important;
+}
+
+.rbc-time-header {
+  min-width: 800px !important;
+}
+
+/* Add fade-in animation utilities */
+.fade-in {
+  opacity: 0;
+  animation: fadeIn 0.5s ease-in forwards;
+}
+
+/* Add staggered animation delays */
+.delay-100 {
+  animation-delay: 100ms;
+}
+.delay-200 {
+  animation-delay: 200ms;
+}
+.delay-300 {
+  animation-delay: 300ms;
 }
 

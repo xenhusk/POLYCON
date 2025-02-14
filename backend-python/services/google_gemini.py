@@ -5,10 +5,10 @@ import google.generativeai as genai
 genai.configure(api_key=os.getenv('GEMINI_API_KEY'))
 
 # Initialize the model
-model = genai.GenerativeModel(model_name="gemini-2.0-flash")
+model = genai.GenerativeModel(model_name="gemini-2.0-flash-lite-preview-02-05")
 
 def generate_summary(text):
-    prompt = f"Summarize the following text and give the overall sentiment of the session[POSITIVE, NEGATIVE, NEUTRAL] at the end of the summary:\n{text}"
+    prompt = f"Summarize the following text (No need to say Summary:) and give the overall sentiment of the session[POSITIVE, NEGATIVE, NEUTRAL] at the end of the summary:\n{text}"
     
     try:
         response = model.generate_content(prompt)

@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useRef } from 'react';
-import { Link, useNavigate } from 'react-router-dom';
+import { Link, useNavigate, useLocation } from 'react-router-dom'; // Add useLocation import
 import './Sidebar.css'; // Import the CSS file
 // Placeholder imports for SVG icons
 import { ReactComponent as HomeIcon } from './icons/home.svg';
@@ -23,6 +23,7 @@ import SettingsPopup from './SettingsPopup';
 import NotificationTray from './NotificationTray';
 
 const Sidebar = ({ onExpandChange }) => {
+  const location = useLocation(); // Add this hook
   const [isOpen, setIsOpen] = useState(false);
   const [userRole, setUserRole] = useState('');
   // NEW: state for profile picture URL
@@ -138,7 +139,7 @@ const Sidebar = ({ onExpandChange }) => {
     fetchUserDetails();
   }, []);
 
-  // Add path mappings for each role
+  // Update path mappings to include exact paths
   const menuPaths = {
     student: {
       dashboard: '/dashboard',
@@ -154,11 +155,26 @@ const Sidebar = ({ onExpandChange }) => {
     },
     admin: {
       dashboard: '/home',
-      add_users: '/admin/',
+      add_users: '/admin',
       course: '/courses',
-      program: '/programs' // NEW: add program path
+      program: '/programs'
     }
   };
+
+  // Update the path matching useEffect
+  useEffect(() => {
+    const currentPath = location.pathname;
+    const userMenuPaths = menuPaths[userRole] || {};
+    
+    // Find matching menu item by comparing paths
+    const activeMenuItem = Object.entries(userMenuPaths).find(
+      ([_, path]) => path === currentPath
+    );
+
+    if (activeMenuItem) {
+      setActiveItem(activeMenuItem[0]);
+    }
+  }, [location.pathname, userRole, menuPaths]);
 
   // Helper to render a menu item with an icon and a label that fades in
   const renderMenuItem = (id, IconComponent, label) => (
@@ -187,11 +203,6 @@ const Sidebar = ({ onExpandChange }) => {
       </span>
     </li>
   );
-
-  // NEW: When userRole changes, force pointer to "dashboard" (Home) if not already set
-  useEffect(() => {
-    setActiveItem('dashboard');
-  }, [userRole]);
 
   // NEW: Update pointer position whenever activeItem or userRole changes
   useEffect(() => {

@@ -48,19 +48,22 @@ function History() {
   }, [socket]);
 
   return (
-    <div className="h-screen overflow-hidden p-8">
-      <h2 className="text-3xl font-bold mb-8 text-[#0065A8]">Session History</h2>
-      <div className="bg-[#dceffa] rounded-xl p-6 shadow-sm h-[calc(100vh-8rem)] overflow-y-auto">
+    <div className="h-screen overflow-hidden p-8 fade-in">
+      <h2 className="text-3xl font-bold mb-8 text-center text-[#0065A8] fade-in delay-100">
+        Session History
+      </h2>
+      <div className="bg-[#dceffa] rounded-xl p-6 shadow-sm h-[calc(100vh-8rem)] overflow-y-auto fade-in delay-200">
         {loading ? (
           <p>Loading history...</p>
         ) : error ? (
           <p>Error: {error}</p>
         ) : sessions.length > 0 ? (
           <ul className="space-y-4">
-            {sessions.map(session => (
+            {sessions.map((session, index) => (
               <HistoryItem 
                 key={session.session_id} 
                 session={session}
+                className={`fade-in delay-${(index + 3) * 100}`}
               />
             ))}
           </ul>

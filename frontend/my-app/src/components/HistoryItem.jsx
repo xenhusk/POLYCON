@@ -1,7 +1,7 @@
 import React from 'react';
 import { useNavigate } from 'react-router-dom';
 
-const HistoryItem = ({ session }) => {
+const HistoryItem = ({ session, className }) => {
   const navigate = useNavigate();
   
   const handleClick = () => {
@@ -41,9 +41,9 @@ const HistoryItem = ({ session }) => {
   return (
     <div 
       onClick={handleClick} 
-      className="bg-white rounded-lg p-4 shadow hover:shadow-lg transition-shadow cursor-pointer border-l-4 border-[#0065A8]"
+      className={`bg-white rounded-lg p-4 shadow hover:shadow-lg transition-shadow cursor-pointer border-l-4 border-[#0065A8] fade-in ${className || ''}`}
     >
-      <div className="flex justify-between items-start mb-4">
+      <div className="flex justify-between items-start mb-4 fade-in delay-100">
         <div>
           <div className="flex items-center">
             {session.teacher?.profile_picture ? (
@@ -69,7 +69,7 @@ const HistoryItem = ({ session }) => {
           </p>
         </div>
       </div>
-      <div className="mt-2">
+      <div className="mt-2 fade-in delay-200">
         <p className="text-sm text-gray-600 font-semibold">Student(s):</p>
         <div className="flex flex-wrap items-center gap-3">
           {Array.isArray(students) && students.length > 0 ? (
@@ -102,7 +102,7 @@ const HistoryItem = ({ session }) => {
           )}
         </div>
       </div>
-      <div className="mt-4">
+      <div className="mt-4 fade-in delay-300">
         <p className="text-sm text-gray-600 font-semibold">Summary:</p>
         <p className="text-sm">{session.summary || 'No summary available'}</p>
       </div>

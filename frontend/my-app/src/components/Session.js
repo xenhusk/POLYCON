@@ -12,7 +12,7 @@ const Session = () => {
   const [teacherInfo, setTeacherInfo] = useState(null);
   const [studentInfo, setStudentInfo] = useState(null);
   const [concern, setConcern] = useState('');
-  const [actionTaken, setActionTaken] = useState('');
+  const [action_taken, setActionTaken] = useState('');
   const [outcome, setOutcome] = useState('');
   const [remarks, setRemarks] = useState('');
   const [summary, setSummary] = useState('');
@@ -22,6 +22,7 @@ const Session = () => {
   const [timerRunning, setTimerRunning] = useState(false);
   const [audioBlob, setAudioBlob] = useState(null);
   const [micEnabled, setMicEnabled] = useState(true);
+  const [processing, setProcessing] = useState(false);
 
   const audioRef = useRef(null);
   const mediaRecorderRef = useRef(null);
@@ -32,6 +33,7 @@ const Session = () => {
   // Read venue from query parameters.
   const queryParams = new URLSearchParams(location.search);
   const venueFromQuery = queryParams.get('venue');
+  const bookingID = queryParams.get('booking_id');
 
   // If a sessionID exists, fetch session details.
   // Otherwise, use the query parameters to populate teacher and student details.
@@ -191,106 +193,108 @@ const Session = () => {
 
   // Finish session creates the consultation record and then returns a sessionID.
   const finishSession = async () => {
-    if (!teacherId || !studentIds || !concern || !actionTaken || !outcome) {
-      alert('Please fill in all required fields');
-      return;
-    }
-
-    if (!audioBlob) {
-      alert('Please record an audio session before submitting.');
-      return;
-    }
-
-    stopTimer();
-
-    let transcriptionText = null;
-    try {
-      const audioUploadResponse = await uploadAudio(audioBlob);
-      transcriptionText = audioUploadResponse.transcription || "";
-    } catch (error) {
-      console.error("Error uploading audio:", error);
-      alert("Audio upload failed. Proceeding without transcription.");
-    }
-
-    if (transcriptionText) {
-      try {
-        console.log("Sending transcription for role identification...");
-        const roleIdentifiedTranscription = await identifyRoles(transcriptionText);
-        setTranscription(roleIdentifiedTranscription);
-        transcriptionText = roleIdentifiedTranscription;
-      } catch (error) {
-        console.error("Error identifying roles:", error);
-        alert("Error processing roles.");
-      }
-    } else {
-      console.warn("No transcription available for role identification.");
-    }
-
-    const generatedSummary = await generateSummary(transcriptionText || "", {
+    setProcessing(true);
+    
+    // Add debug logging for required fields
+    console.log('Checking required fields:', {
+      teacherId,
+      studentIds,
       concern,
-      actionTaken,
-      outcome,
-      remarks,
+      action_taken,
+      outcome
     });
-    setSummary(generatedSummary);
-
-    // Pass the venue along with consultation details
-    await storeConsultation(transcriptionText, generatedSummary, { 
-      concern, 
-      actionTaken, 
-      outcome, 
-      remarks,
-      venue: venueFromQuery 
-    });
-
-    // After finishing the session, the booking record can be removed if desired.
-    const queryParams = new URLSearchParams(location.search);
-    const sessionID = queryParams.get('sessionID');
-    if (sessionID) {
+  
+    if (!teacherId || !studentIds || !concern || !action_taken || !outcome) {
+      console.log('Missing fields detected');
+      alert('Please fill in all required fields');
+      setProcessing(false);
+      return;
+    }
+  
+    stopTimer();
+  
+    let transcriptionText = "";
+    if (audioBlob) {
       try {
-        const response = await fetch(`http://localhost:5001/bookings/delete_booking?sessionID=${sessionID}`, {
-          method: 'DELETE',
-        });
-        if (!response.ok) {
-          throw new Error('Failed to delete booking');
-        }
-        alert('Booking deleted successfully');
+        const audioUploadResponse = await uploadAudio(audioBlob);
+        transcriptionText = audioUploadResponse.transcription || "";
       } catch (error) {
-        console.error('Error deleting booking:', error);
-        alert('Failed to delete booking');
+        console.error("Error uploading audio:", error);
+        alert("Audio upload failed. Proceeding without transcription.");
       }
     }
-
+  
+    const generatedSummary = await generateSummary(transcriptionText, {
+        concern,
+        action_taken,
+        outcome,
+        remarks,
+    });
+  
+    setSummary(generatedSummary);
+  
+    // 🔥 Ensure studentIds is correctly formatted as an array
+    let studentIdsArray = Array.isArray(studentIds) 
+        ? studentIds 
+        : studentIds.split(',').map(id => id.trim());
+  
     const payload = {
-      teacher_id: teacherId,       // existing payload fields
-      student_ids: studentIds,      // existing payload fields
-      transcription: transcriptionText,    // existing payload fields
-      summary: generatedSummary,          // existing payload fields
-      concern,          // existing payload fields
-      actionTaken,      // existing payload fields
-      outcome,          // existing payload fields
-      remarks,          // existing payload fields
-      duration: timer,         // existing payload fields
-      session_date: new Date().toISOString()  // NEW: add today's date
+        teacher_id: teacherId,
+        student_ids: studentIdsArray,  // 🔥 Ensure this is an array
+        transcription: transcriptionText,
+        summary: generatedSummary,
+        concern: concern,
+        action_taken: action_taken, // Make sure it matches backend's expected field name
+        outcome: outcome,
+        remarks: remarks,
+        duration: timer,
+        venue: venueFromQuery,
+        session_date: new Date().toISOString()
     };
-
+  
+    console.log('Sending payload:', payload);
+    console.log("Payload being sent:", payload); // Add this debug log
+  
     try {
-      // Assuming you use fetch to send the POST request.
-      const response = await fetch('http://localhost:5000/store_consultation', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify(payload)
-      });
-      const data = await response.json();
-      if (response.ok) {
-        // ...handle successful finish...
-      } else {
-        // ...handle error...
-      }
+        // Append booking_id as a query parameter if available.
+        let url = 'http://localhost:5001/consultation/store_consultation';
+        if (bookingID) {
+          url += `?booking_id=${bookingID}`;
+          console.log("🔍 Debug - Using booking_id:", bookingID); // Add debug log
+        }
+        const response = await fetch(url, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify(payload)
+        });
+  
+        if (!response.ok) {
+            const errorData = await response.json();
+            console.error("Server validation error:", errorData); // Add this debug log
+            alert(`Failed to store consultation: ${errorData.error}`);
+            return;
+        }
+  
+        const data = await response.json();
+        console.log("🚀 Debug: Server Response", data);
+  
+        if (response.ok) {
+            const newSessionID = data.session_id;
+            console.log(`✅ Navigating to: /finaldocument?sessionID=${newSessionID}`);
+  
+            setTimeout(() => {
+                navigate(`/finaldocument?sessionID=${newSessionID}`);
+            }, 100);
+        } else {
+            console.error("❌ Error: Response from server was not OK", data);
+        }
     } catch (error) {
-      console.error('Error finishing session:', error);
+        console.error('🚨 Error finishing session:', error);
     }
-  };
+    setProcessing(false);
+};
+
+
 
   const generateSummary = async (transcription, notes) => {
     const response = await fetch('http://localhost:5001/consultation/summarize', {
@@ -337,7 +341,7 @@ const Session = () => {
           teacher_id: teacherIdElement,
           student_ids: studentIdsElement,
           concern: notes.concern,
-          action_taken: notes.actionTaken,
+          action_taken: notes.action_taken,
           outcome: notes.outcome,
           remarks: notes.remarks || "No remarks"
         }),
@@ -361,10 +365,17 @@ const Session = () => {
   return (
     <div className="relative min-h-screen p-10 flex justify-center items-center font-poppins">
       <AnimatedBackground />
-      <div className="relative z-10 backdrop-blur-sm bg-white/5"> {/* Added bg-white/5 for subtle frosted glass effect */}
+      {processing && (
+        <div className="fixed top-0 left-0 w-full h-full bg-black bg-opacity-50 flex items-center justify-center z-50">
+          <div className="text-white text-2xl">
+            Processing Consultation...
+          </div>
+        </div>
+      )}
+      <div className="relative z-10 backdrop-blur-sm bg-white/5 fade-in">
         <div className="max-w-6xl w-full grid grid-cols-7 gap-6">
           {/* Left Section: Adviser Notes */}
-          <div className="col-span-5 bg-[#0065A8] p-6 rounded-lg shadow-lg"> {/* Changed from col-span-3 to col-span-4 */}
+          <div className="col-span-5 bg-[#0065A8] p-6 rounded-lg shadow-lg fade-in delay-100">
             <label className="block text-white text-lg mb-2">Concern</label>
             <textarea
               className="w-full p-3 rounded-md mb-4 focus:outline-none focus:ring-2 focus:ring-blue-400"
@@ -374,7 +385,7 @@ const Session = () => {
             <label className="block text-white text-lg mb-2">Action Taken</label>
             <textarea
               className="w-full p-3 rounded-md mb-4 focus:outline-none focus:ring-2 focus:ring-blue-400"
-              value={actionTaken}
+              value={action_taken}
               onChange={(e) => setActionTaken(e.target.value)}
             />
             <label className="block text-white text-lg mb-2">Outcome</label>
@@ -395,11 +406,11 @@ const Session = () => {
           <div className="col-span-2 flex flex-col justify-between h-full"> {/* Added h-full */}
             <div className="space-y-4 flex-1"> {/* Added flex-1 */}
               {/* Teacher Info Card */}
-              <div className="flex flex-col gap-2 p-8 sm:flex-row sm:items-center sm:gap-6 sm:py-4 bg-[#0065A8] text-white rounded-lg shadow-lg">
+              <div className="flex flex-col gap-2 p-3 sm:flex-row sm:items-center sm:gap-2 sm:py-5 bg-[#0065A8] text-white rounded-lg shadow-lg fade-in delay-200">
                 {teacherInfo ? (
                   <>
-                    <div className="rounded-full p-1 bg-[#54BEFF]"> {/* Added blue outer border */}
-                      <div className="rounded-full p-1 bg-white"> {/* Added white inner border */}
+                    <div className="rounded-full p-1 bg-[#54BEFF]">
+                      <div className="rounded-full p-1 bg-white">
                         <img
                           className="w-12 h-12 rounded-full"
                           src={teacherInfo.profile_picture}
@@ -407,9 +418,9 @@ const Session = () => {
                         />
                       </div>
                     </div>
-                    <div className="space-y-2 text-center sm:text-left">
+                    <div className="text-center sm:text-left">
                       <p className="text-lg font-semibold">{teacherInfo.teacherName}</p>
-                      <p className="font-small text-gray-300">{teacherInfo.department}</p>
+                      <p className="font-small text-gray-300">{teacherInfo.department} {teacherInfo.role}</p>
                     </div>
                   </>
                 ) : (
@@ -418,7 +429,7 @@ const Session = () => {
               </div>
 
               {/* Students Info Card - Updated height */}
-              <div className="bg-[#0065A8] text-white p-4 rounded-lg shadow-lg flex-1 min-h-[300px] overflow-y-auto"> {/* Added min-h-[300px] and overflow-y-auto */}
+              <div className="bg-[#0065A8] text-white p-4 rounded-lg shadow-lg flex-1 min-h-[300px] overflow-y-auto fade-in delay-300"> {/* Added min-h-[300px] and overflow-y-auto */}
                 <p className="font-medium text-center mb-2">Student/s</p>
                 {studentInfo ? (
                   <ul className="space-y-2">
@@ -444,7 +455,7 @@ const Session = () => {
             </div>
 
             {/* Controls Section */}
-            <div className="mt-4 space-y-4"> {/* Changed from mt-auto to mt-4 */}
+            <div className="mt-4 space-y-4 fade-in delay-400"> {/* Changed from mt-auto to mt-4 */}
               <div className="flex items-center justify-between">
                 <div className="flex items-center space-x-1">
                   <button
@@ -476,6 +487,7 @@ const Session = () => {
 
               <button
                 onClick={finishSession}
+                disabled={processing}
                 className="w-full bg-[#0065A8] text-white py-3 rounded-lg shadow-md hover:hover:bg-[#54BEFF] duration-300ms ease-in-out"
               >
                 Finalize Consultation

@@ -67,8 +67,8 @@ const FinalizeSession = () => {
   };
 
   return (
-    <div className="max-w-2xl mx-auto p-6 bg-white shadow-lg rounded-lg">
-      <header className="flex justify-between items-center mb-4">
+    <div className="max-w-2xl mx-auto p-6 bg-white shadow-lg rounded-lg fade-in">
+      <header className="flex justify-between items-center mb-4 fade-in delay-100">
         <h1 className="text-3xl font-bold text-gray-800">Finalize Session</h1>
         <button onClick={handleLogout} className="bg-red-500 text-white px-4 py-2 rounded">
           Logout
@@ -76,7 +76,7 @@ const FinalizeSession = () => {
       </header>
 
       {/* Display teacher information */}
-      <section className="mb-6">
+      <section className="mb-6 fade-in delay-200">
         <h2 className="text-xl font-semibold">Teacher Information</h2>
         {teacherInfo ? (
           <div className="flex items-center">
@@ -94,7 +94,7 @@ const FinalizeSession = () => {
       </section>
 
       {/* Display student information */}
-      <section className="mb-6">
+      <section className="mb-6 fade-in delay-300">
         <h2 className="text-xl font-semibold">Student Information</h2>
         {studentInfo ? (
           <div>
@@ -122,7 +122,7 @@ const FinalizeSession = () => {
       </section>
 
       {/* Adviser Notes & Finalization */}
-      <section className="mb-6">
+      <section className="mb-6 fade-in delay-400">
         <h2 className="text-xl font-semibold">Adviser Notes</h2>
         <textarea
           className="w-full border p-2 rounded mt-2"
@@ -154,7 +154,7 @@ const FinalizeSession = () => {
       </section>
 
       {/* Transcription & Summary */}
-      <section className="mb-6">
+      <section className="mb-6 fade-in delay-500">
         <h2 className="text-xl font-semibold">Transcription</h2>
         <textarea
           className="w-full border p-2 rounded mt-2"
@@ -164,7 +164,7 @@ const FinalizeSession = () => {
         />
       </section>
 
-      <section className="mb-6">
+      <section className="mb-6 fade-in delay-600">
         <h2 className="text-xl font-semibold">Summary</h2>
         <textarea
           className="w-full border p-2 rounded mt-2"
@@ -177,7 +177,7 @@ const FinalizeSession = () => {
       <button
         onClick={finalizeSession}
         disabled={processing}
-        className="bg-blue-500 text-white px-4 py-2 rounded"
+        className="bg-blue-500 text-white px-4 py-2 rounded fade-in delay-700"
       >
         {processing ? 'Finalizing...' : 'Finalize Session'}
       </button>

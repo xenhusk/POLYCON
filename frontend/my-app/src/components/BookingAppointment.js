@@ -115,6 +115,13 @@ function BookingAppointment({ closeModal, role: propRole }) {
     };
   }, [teacherSearchTerm]);
 
+  // NEW: Helper function to check if booking quota is exceeded.
+  const isBookingOverQuota = () => {
+    const selectedCount = selectedStudents.length;
+    // For student users, include the booking student in the count.
+    return role === 'student' ? (selectedCount + 1 > 4) : (selectedCount > 4);
+  };
+
   async function submitBooking() {
     if (role === 'faculty') {
       // Validate required fields: teacherID, at least one student, schedule, and venue must be provided.
@@ -184,154 +191,212 @@ function BookingAppointment({ closeModal, role: propRole }) {
   }
   
   return (
-    <div className="p-8 bg-white rounded-lg">
+    <div className="p-4">
       {role === 'faculty' ? (
         <>
-          <h2 className="text-xl font-bold mb-4">Book Appointment (Teacher)</h2>
-          <div className="mb-4 relative">
-            <label className="block text-gray-700 font-medium mb-1">Search Students:</label>
-            <div className="flex flex-wrap items-center gap-2 border border-gray-300 rounded-lg px-3 py-2">
-              {/* --- Modified: render selected student objects directly --- */}
-              {selectedStudents.map(student => (
-                <div key={student.id} className="bg-blue-100 text-blue-800 px-2 py-1 rounded flex items-center">
-                  <img 
-                    src={getProfilePictureUrl(student.profile_picture)} 
-                    alt="Profile"
-                    className="rounded-full w-6 h-6 mr-1" 
-                  />
-                  <span>{student.firstName} {student.lastName}</span>
-                  <button onClick={() => setSelectedStudents(selectedStudents.filter(s => s.id !== student.id))} className="ml-1 text-red-500">
-                    x
-                  </button>
-                </div>
-              ))}
-              <input 
-                type="text"
-                value={searchTerm}
-                onChange={handleSearchChange}
-                onFocus={() => setIsStudentInputFocused(true)}
-                onBlur={() => setTimeout(() => setIsStudentInputFocused(false), 200)}
-                placeholder="Search by name"
-                className="flex-grow min-w-[150px] focus:outline-none"
-              />
-            </div>
-            {isStudentInputFocused && studentResults.length > 0 && (
-              <ul className="absolute z-10 bg-white border border-gray-300 rounded-lg mt-1 max-h-40 overflow-y-auto w-full shadow-md">
-                {studentResults
-                  .filter(student => student.id !== studentID && !selectedStudents.some(s => s.id === student.id))
-                  .map(student => (
-                    <li key={student.id} 
-                      onClick={() => {
-                        // --- Modified: add full student object rather than just the id ---
-                        if (!selectedStudents.some(s => s.id === student.id)) {
-                          setSelectedStudents([...selectedStudents, student]);
-                        }
-                        setSearchTerm('');
-                      }}
-                      className="px-3 py-2 cursor-pointer hover:bg-gray-200 flex items-center">
-                      <img src={getProfilePictureUrl(student.profile_picture)} alt="Profile" className="rounded-full w-6 h-6 mr-1"/>
-                      <span>{student.firstName} {student.lastName}</span>
-                    </li>
+          {/* Teacher's Form */}
+          <div className="space-y-6">
+            {/* Student Selection */}
+            <div className="relative">
+              <label className="block text-sm font-medium text-gray-700 mb-2">
+                Students <span className="text-red-500">*</span>
+              </label>
+              <div className="min-h-[45px] flex flex-wrap items-center gap-2 border-2 border-[#0065A8] rounded-lg px-3 py-2 focus-within:ring-2 focus-within:ring-[#54BEFF]">
+                {selectedStudents.map(student => (
+                  <div key={student.id} 
+                    className="bg-[#0065A8] text-white px-2 py-1 rounded-full flex items-center gap-2 text-sm">
+                    <img src={getProfilePictureUrl(student.profile_picture)} 
+                      alt="Profile" 
+                      className="w-5 h-5 rounded-full" />
+                    <span>{student.firstName} {student.lastName}</span>
+                    <button onClick={() => setSelectedStudents(selectedStudents.filter(s => s.id !== student.id))}
+                      className="hover:text-red-300 transition-colors">
+                      ×
+                    </button>
+                  </div>
                 ))}
-              </ul>
-            )}
-          </div>
-          <div className="mb-4">
-            <label className="block text-gray-700 font-medium mb-1">Select Schedule:</label>
-            <input type="datetime-local" value={schedule} onChange={(e) => setSchedule(e.target.value)} className="w-full border border-gray-300 rounded-lg px-3 py-2"/>
-          </div>
-          <div className="mb-4">
-            <label className="block text-gray-700 font-medium mb-1">Venue:</label>
-            <input type="text" placeholder="Enter venue" value={venue} onChange={(e) => setVenue(e.target.value)} className="w-full border border-gray-300 rounded-lg px-3 py-2"/>
+                <input type="text"
+                  value={searchTerm}
+                  onChange={handleSearchChange}
+                  onFocus={() => setIsStudentInputFocused(true)}
+                  onBlur={() => setTimeout(() => setIsStudentInputFocused(false), 200)}
+                  placeholder="Search students..."
+                  className="flex-1 min-w-[120px] outline-none bg-transparent" />
+              </div>
+              {/* Student Search Results Dropdown */}
+              {isStudentInputFocused && studentResults.length > 0 && (
+                <ul className="absolute z-20 w-full mt-1 bg-white border border-gray-200 rounded-lg shadow-lg max-h-60 overflow-y-auto">
+                  {studentResults
+                    .filter(student => !selectedStudents.some(s => s.id === student.id))
+                    .map(student => (
+                      <li key={student.id}
+                        onClick={() => {
+                          setSelectedStudents([...selectedStudents, student]);
+                          setSearchTerm('');
+                        }}
+                        className="px-4 py-2 hover:bg-gray-50 flex items-center gap-3 cursor-pointer">
+                        <img src={getProfilePictureUrl(student.profile_picture)}
+                          alt="Profile"
+                          className="w-8 h-8 rounded-full" />
+                        <div>
+                          <div className="font-medium">{student.firstName} {student.lastName}</div>
+                          <div className="text-sm text-gray-500">{student.program} • {student.year_section}</div>
+                        </div>
+                      </li>
+                    ))}
+                </ul>
+              )}
+            </div>
+
+            {/* Schedule Selection */}
+            <div>
+              <label className="block text-sm font-medium text-gray-700 mb-2">
+                Schedule <span className="text-red-500">*</span>
+              </label>
+              <input type="datetime-local"
+                value={schedule}
+                onChange={(e) => setSchedule(e.target.value)}
+                className="w-full border-2 border-[#0065A8] rounded-lg px-3 py-2 focus:outline-none focus:ring-2 focus:ring-[#54BEFF]" />
+            </div>
+
+            {/* Venue Input */}
+            <div>
+              <label className="block text-sm font-medium text-gray-700 mb-2">
+                Venue <span className="text-red-500">*</span>
+              </label>
+              <input type="text"
+                value={venue}
+                onChange={(e) => setVenue(e.target.value)}
+                placeholder="Enter venue (e.g., Room 101)"
+                className="w-full border-2 border-[#0065A8] rounded-lg px-3 py-2 focus:outline-none focus:ring-2 focus:ring-[#54BEFF]" />
+            </div>
           </div>
         </>
       ) : (
         <>
-          <h2 className="text-xl font-bold mb-4">Book Appointment (Student)</h2>
-          <div className="mb-4 relative">
-            <label className="block text-gray-700 font-medium mb-1">Teacher:</label>
-            <div className="flex items-center border border-gray-300 rounded-lg px-3 py-2">
-              {selectedTeacher && !teacherSearchTerm && (
-                <div className="flex items-center gap-2">
-                  <img src={selectedTeacherProfile || 'https://avatar.iran.liara.run/public/boy?username=Ash'} alt="Teacher Profile" className="rounded-full w-6 h-6"/>
-                  <span>{selectedTeacherName}</span>
-                  <button onClick={() => { setSelectedTeacher(''); setSelectedTeacherName(''); setSelectedTeacherProfile(''); }} className="text-red-500">x</button>
-                </div>
-              )}
-              <input 
-                type="text"
-                value={teacherSearchTerm}
-                onChange={e => {
-                  setTeacherSearchTerm(e.target.value);
-                  setSelectedTeacher('');
-                  setSelectedTeacherName('');
-                  setSelectedTeacherProfile('');
-                }}
-                onFocus={() => setIsTeacherInputFocused(true)}
-                onBlur={() => setTimeout(() => setIsTeacherInputFocused(false), 200)}
-                placeholder="Search by name"
-                className="flex-grow focus:outline-none"
-              />
-            </div>
-            {isTeacherInputFocused && teacherResults.length > 0 && (
-              <ul className="absolute z-10 bg-white border border-gray-300 rounded-lg mt-1 max-h-40 overflow-y-auto w-full shadow-md">
-                {teacherResults.map(teacher => (
-                  <li key={teacher.id} onClick={() => { 
-                    setSelectedTeacher(teacher.id);
-                    setSelectedTeacherName(`${teacher.firstName} ${teacher.lastName}`);
-                    setSelectedTeacherProfile(teacher.profile_picture);
-                    setTeacherSearchTerm('');
-                  }} className="px-3 py-2 cursor-pointer hover:bg-gray-200 flex items-center">
-                    <img src={getProfilePictureUrl(teacher.profile_picture)} alt="Profile" className="rounded-full w-6 h-6 mr-1"/>
-                    <span>{teacher.firstName} {teacher.lastName}</span>
-                  </li>
-                ))}
-              </ul>
-            )}
-          </div>
-          <div className="mb-4 relative">
-            <label className="block text-gray-700 font-medium mb-1">Fellow Students:</label>
-            <div className="flex flex-wrap items-center gap-2 border border-gray-300 rounded-lg px-3 py-2">
-              {/* --- Modified: render selected student objects directly --- */}
-              {selectedStudents.map(student => (
-                <div key={student.id} className="bg-blue-100 text-blue-800 px-2 py-1 rounded flex items-center">
-                  <img src={getProfilePictureUrl(student.profile_picture)} alt="Profile" className="rounded-full w-6 h-6 mr-1"/>
-                  <span>{student.firstName} {student.lastName}</span>
-                  <button onClick={() => setSelectedStudents(selectedStudents.filter(s => s.id !== student.id))} className="ml-1 text-red-500">x</button>
-                </div>
-              ))}
-              <input 
-                type="text"
-                value={searchTerm}
-                onChange={handleSearchChange}
-                onFocus={() => setIsStudentInputFocused(true)}
-                onBlur={() => setTimeout(() => setIsStudentInputFocused(false), 200)}
-                placeholder="Search by name"
-                className="flex-grow min-w-[150px] focus:outline-none"
-              />
-            </div>
-            {isStudentInputFocused && studentResults.length > 0 && (
-              <ul className="absolute z-10 bg-white border border-gray-300 rounded-lg mt-1 max-h-40 overflow-y-auto w-full shadow-md">
-                {studentResults
-                  .filter(student => student.id !== studentID && !selectedStudents.some(s => s.id === student.id))
-                  .map(student => (
-                    <li key={student.id} onClick={() => {
-                      if (!selectedStudents.some(s => s.id === student.id)) {
-                        setSelectedStudents([...selectedStudents, student]);
-                      }
-                      setSearchTerm('');
-                    }} className="px-3 py-2 cursor-pointer hover:bg-gray-200 flex items-center">
-                      <img src={getProfilePictureUrl(student.profile_picture)} alt="Profile" className="rounded-full w-6 h-6 mr-1"/>
-                      <span>{student.firstName} {student.lastName}</span>
+          {/* Student's Form */}
+          <div className="space-y-6">
+            {/* Teacher Selection */}
+            <div className="relative">
+              <label className="block text-sm font-medium text-gray-700 mb-2">
+                Teacher <span className="text-red-500">*</span>
+              </label>
+              <div className="min-h-[45px] flex items-center gap-2 border-2 border-[#0065A8] rounded-lg px-3 py-2 focus-within:ring-2 focus-within:ring-[#54BEFF]">
+                {selectedTeacher && !teacherSearchTerm ? (
+                  <div className="bg-[#0065A8] text-white px-2 py-1 rounded-full flex items-center gap-2 text-sm">
+                    <img src={getProfilePictureUrl(selectedTeacherProfile)}
+                      alt="Teacher"
+                      className="w-5 h-5 rounded-full" />
+                    <span>{selectedTeacherName}</span>
+                    <button onClick={() => {
+                      setSelectedTeacher('');
+                      setSelectedTeacherName('');
+                      setSelectedTeacherProfile('');
+                    }} className="hover:text-red-300 transition-colors">×</button>
+                  </div>
+                ) : (
+                  <input type="text"
+                    value={teacherSearchTerm}
+                    onChange={e => {
+                      setTeacherSearchTerm(e.target.value);
+                      setSelectedTeacher('');
+                      setSelectedTeacherName('');
+                      setSelectedTeacherProfile('');
+                    }}
+                    onFocus={() => setIsTeacherInputFocused(true)}
+                    onBlur={() => setTimeout(() => setIsTeacherInputFocused(false), 200)}
+                    placeholder="Search for a teacher..."
+                    className="flex-1 outline-none bg-transparent" />
+                )}
+              </div>
+              
+              {/* Teacher Search Results Dropdown */}
+              {isTeacherInputFocused && teacherResults.length > 0 && (
+                <ul className="absolute z-20 w-full mt-1 bg-white border border-gray-200 rounded-lg shadow-lg max-h-60 overflow-y-auto">
+                  {teacherResults.map(teacher => (
+                    <li key={teacher.id}
+                      onClick={() => {
+                        setSelectedTeacher(teacher.id);
+                        setSelectedTeacherName(`${teacher.firstName} ${teacher.lastName}`);
+                        setSelectedTeacherProfile(teacher.profile_picture);
+                        setTeacherSearchTerm('');
+                      }}
+                      className="px-4 py-2 hover:bg-gray-50 flex items-center gap-3 cursor-pointer">
+                      <img src={getProfilePictureUrl(teacher.profile_picture)}
+                        alt="Profile"
+                        className="w-8 h-8 rounded-full" />
+                      <div>
+                        <div className="font-medium">{teacher.firstName} {teacher.lastName}</div>
+                        <div className="text-sm text-gray-500">{teacher.department}</div>
+                      </div>
                     </li>
+                  ))}
+                </ul>
+              )}
+            </div>
+
+            {/* Fellow Students Selection (Optional) */}
+            <div className="relative">
+              <label className="block text-sm font-medium text-gray-700 mb-2">
+                Fellow Students (Optional)
+              </label>
+              <div className="min-h-[45px] flex flex-wrap items-center gap-2 border-2 border-[#0065A8] rounded-lg px-3 py-2 focus-within:ring-2 focus-within:ring-[#54BEFF]">
+                {selectedStudents.map(student => (
+                  <div key={student.id} className="bg-[#0065A8] text-white px-2 py-1 rounded-full flex items-center gap-2 text-sm">
+                    <img src={getProfilePictureUrl(student.profile_picture)} alt="Profile" className="w-5 h-5 rounded-full" />
+                    <span>{student.firstName} {student.lastName}</span>
+                    <button onClick={() => setSelectedStudents(selectedStudents.filter(s => s.id !== student.id))} className="hover:text-red-300 transition-colors">×</button>
+                  </div>
                 ))}
-              </ul>
-            )}
+                <input type="text"
+                  value={searchTerm}
+                  onChange={handleSearchChange}
+                  onFocus={() => setIsStudentInputFocused(true)}
+                  onBlur={() => setTimeout(() => setIsStudentInputFocused(false), 200)}
+                  placeholder="Search students..."
+                  className="flex-1 min-w-[120px] outline-none bg-transparent" />
+              </div>
+              {isStudentInputFocused && studentResults.length > 0 && (
+                <ul className="absolute z-20 w-full mt-1 bg-white border border-gray-200 rounded-lg shadow-lg max-h-60 overflow-y-auto">
+                  {studentResults
+                    .filter(student => !selectedStudents.some(s => s.id === student.id))
+                    .map(student => (
+                      <li key={student.id}
+                        onClick={() => {
+                          setSelectedStudents([...selectedStudents, student]);
+                          setSearchTerm('');
+                        }}
+                        className="px-4 py-2 hover:bg-gray-50 flex items-center gap-3 cursor-pointer">
+                        <img src={getProfilePictureUrl(student.profile_picture)}
+                          alt="Profile"
+                          className="w-8 h-8 rounded-full" />
+                        <div>
+                          <div className="font-medium">{student.firstName} {student.lastName}</div>
+                          <div className="text-sm text-gray-500">{student.program} • {student.year_section}</div>
+                        </div>
+                      </li>
+                    ))}
+                </ul>
+              )}
+            </div>
           </div>
         </>
       )}
-      <div className="flex space-x-2">
-        <button onClick={submitBooking} className="bg-blue-500 text-white px-4 py-2 rounded-lg">
+
+      {/* Submit Button */}
+      <div className="mt-8 flex flex-col items-end">
+        {isBookingOverQuota() && (
+          <div className="text-red-500 mb-2">
+            Warning: You have exceeded the maximum number of 4 students per consultation.
+          </div>
+        )}
+        <button
+          onClick={submitBooking}
+          disabled={isBookingOverQuota()}
+          className={`${
+            isBookingOverQuota() ? 'opacity-50 cursor-not-allowed' : ''
+          } bg-[#0065A8] hover:bg-[#54BEFF] text-white px-4 py-2 rounded-lg transition-colors`}
+        >
           {role === 'faculty' ? 'Book Appointment' : 'Request Appointment'}
         </button>
       </div>

@@ -18,9 +18,7 @@ const DocumentTemplate = ({
     return date.toLocaleString(undefined, {
       year: 'numeric',
       month: 'short',
-      day: 'numeric',
-      hour: '2-digit',
-      minute: '2-digit'
+      day: 'numeric'
     });
   };
 
@@ -82,6 +80,7 @@ const DocumentTemplate = ({
       {/* Title & Date/Venue */}
       <p style={{
             paddingTop: '6pt',
+            paddingBottom: '10pt',
             borderTop: '1pt solid #000',
             lineHeight: '2.0',
             textAlign: 'center',
@@ -417,7 +416,7 @@ const DocumentTemplate = ({
                 >
                 {teacherInfo
                     ? teacherInfo.department || 'Position of Teacher / Name Program'
-                    : 'Position of Teacher / Name Program'}
+                    : 'Position of Teacher / Name Program'} {teacherInfo.role}
                 </p>
             </td>
             </tr>

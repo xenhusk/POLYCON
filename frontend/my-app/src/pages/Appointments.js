@@ -1,75 +1,55 @@
-import React, { useEffect, useState } from 'react';
-import { useCachedFetch } from '../hooks/useCachedFetch';
-import AppointmentItem from '../components/AppointmentItem'; // new import
+import React, { useState, useEffect } from 'react';
+import { useQuery } from 'react-query';
+import AppointmentItem from '../components/AppointmentItem';
 import { useSocket } from '../hooks/useSocket';
 
-function StudentAppointments() {
-  // Removed cancelled appointments from state.
-  const [appointments, setAppointments] = useState({ pending: [], upcoming: [] });
-  const { cachedFetch } = useCachedFetch();
-  const socket = useSocket('http://localhost:5001');
+// Fetch student appointments via React Query
+const fetchStudentAppointments = async () => {
   const studentID = localStorage.getItem('studentID');
+  const res = await fetch(`http://localhost:5001/bookings/get_bookings?role=student&userID=${studentID}`);
+  if (!res.ok) throw new Error('Network response was not ok');
+  return res.json();
+};
 
-  const formatDateTime = (dateTime) => {
-    const date = new Date(dateTime);
-    const formattedDate = date.toLocaleDateString();
-    const formattedTime = date.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
-    return `${formattedDate} at ${formattedTime}`;
-  };
+function StudentAppointments() {
+  const { data: bookings = [], refetch } = useQuery('studentAppointments', fetchStudentAppointments, {
+    staleTime: 30000, // 30 seconds caching
+    refetchOnWindowFocus: false,
+  });
 
-  const fetchStudentAppointments = async () => {
-    console.log('Fetching student appointments...');
-    const studentID = localStorage.getItem('studentID');
-    try {
-      const bookings = await fetch(`http://localhost:5001/bookings/get_bookings?role=student&userID=${studentID}`)
-        .then(res => res.json());
-      console.log('Received student bookings:', bookings);
-      if (!Array.isArray(bookings)) throw new Error('Invalid response format');
+  const [appointments, setAppointments] = useState({ pending: [], upcoming: [] });
+  const socket = useSocket('http://localhost:5001');
 
-      const categorizedAppointments = { pending: [], upcoming: [] };
-      bookings.forEach(booking => {
-        // Add created_at from booking data.
-        const appointmentItem = {
-          id: booking.id,
-          teacher: booking.teacher || {},
-          studentNames: booking.studentNames,
-          info: booking.info,
-          schedule: booking.schedule,
-          venue: booking.venue,
-          status: booking.status,
-          created_at: booking.created_at, // new field for created timestamp
-        };
-        if (booking.status === "pending") {
-          categorizedAppointments.pending.push(appointmentItem);
-        } else if (booking.status === "confirmed") {
-          categorizedAppointments.upcoming.push(appointmentItem);
-        }
-      });
-
-      // Sort pending appointments by created_at (earliest to latest)
-      categorizedAppointments.pending.sort((a, b) => new Date(a.created_at) - new Date(b.created_at));
-      // Sort upcoming appointments by schedule (nearest date first)
-      categorizedAppointments.upcoming.sort((a, b) => new Date(a.schedule) - new Date(b.schedule));
-
-      setAppointments(categorizedAppointments);
-    } catch (error) {
-      console.error('Error fetching student bookings:', error);
-    }
-  };
-
-  // Initial fetch only
   useEffect(() => {
-    console.log('Initial student appointments fetch');
-    fetchStudentAppointments();
-  }, []); // Remove cachedFetch dependency
+    const categorizedAppointments = { pending: [], upcoming: [] };
+    bookings.forEach(booking => {
+      const appointmentItem = {
+        id: booking.id,
+        teacher: booking.teacher || {},
+        studentNames: booking.studentNames,
+        info: booking.info,
+        schedule: booking.schedule,
+        venue: booking.venue,
+        status: booking.status,
+        created_at: booking.created_at,
+      };
+      if (booking.status === "pending") {
+        categorizedAppointments.pending.push(appointmentItem);
+      } else if (booking.status === "confirmed") {
+        categorizedAppointments.upcoming.push(appointmentItem);
+      }
+    });
 
-  // Socket listener
+    categorizedAppointments.pending.sort((a, b) => new Date(a.created_at) - new Date(b.created_at));
+    categorizedAppointments.upcoming.sort((a, b) => new Date(a.schedule) - new Date(b.schedule));
+
+    setAppointments(categorizedAppointments);
+  }, [bookings]);
+
   useEffect(() => {
     if (socket) {
-      console.log('Setting up student socket listeners');
-      socket.on('booking_updated', (data) => {
-        console.log('Student received booking update:', data);
-        fetchStudentAppointments();
+      socket.on('booking_updated', () => {
+        refetch();
       });
     }
     return () => {
@@ -77,7 +57,7 @@ function StudentAppointments() {
         socket.off('booking_updated');
       }
     };
-  }, [socket]);
+  }, [socket, refetch]);
 
   return (
     <div className="grid grid-cols-2 gap-5 h-full">
@@ -118,45 +98,25 @@ function StudentAppointments() {
   );
 }
 
+// Similarly, update TeacherAppointments to use useQuery
+const fetchTeacherAppointments = async () => {
+  const teacherID = localStorage.getItem('teacherID');
+  const res = await fetch(`http://localhost:5001/bookings/get_bookings?role=faculty&userID=${teacherID}`);
+  if (!res.ok) throw new Error('Network response was not ok');
+  return res.json();
+};
+
 function TeacherAppointments() {
-  const [appointments, setAppointments] = useState([]);
+  const { data: appointments = [], refetch } = useQuery('teacherAppointments', fetchTeacherAppointments, {
+    staleTime: 30000,
+    refetchOnWindowFocus: false,
+  });
+
   const [pending, setPending] = useState([]);
   const [upcoming, setUpcoming] = useState([]);
   const [confirmInputs, setConfirmInputs] = useState({});
-  const { cachedFetch } = useCachedFetch();
   const socket = useSocket('http://localhost:5001');
-  const teacherID = localStorage.getItem('teacherID');
 
-  const handleConfirmClick = (bookingID) => {
-    setConfirmInputs(prev => ({ ...prev, [bookingID]: { schedule: '', venue: '' } }));
-  };
-
-  const fetchTeacherAppointments = async () => {
-    console.log('Fetching teacher appointments...');
-    const teacherID = localStorage.getItem('teacherID');
-    try {
-      const data = await fetch(`http://localhost:5001/bookings/get_bookings?role=faculty&userID=${teacherID}`)
-        .then(res => res.json());
-      console.log('Received teacher bookings:', data);
-      // Include created_at field for sorting and ensure studentIDs is set.
-      const updatedData = data.map(booking => ({
-        ...booking,
-        studentIDs: booking.studentIDs || booking.student_ids || [],
-        created_at: booking.created_at,
-      })).filter(booking => booking.status !== 'canceled'); // Filter out cancelled bookings
-      setAppointments(updatedData);
-    } catch (err) {
-      console.error('Error fetching teacher appointments:', err);
-    }
-  };
-
-  // Initial fetch only
-  useEffect(() => {
-    console.log('Initial teacher appointments fetch');
-    fetchTeacherAppointments();
-  }, []); // Remove cachedFetch and refresh dependencies
-
-  // Update pending and upcoming categories and sort them.
   useEffect(() => {
     const upcomingApps = appointments
       .filter(app => app.status === 'confirmed')
@@ -168,21 +128,25 @@ function TeacherAppointments() {
     setPending(pendingApps);
   }, [appointments]);
 
-  // Socket listener
   useEffect(() => {
+    const bookingUpdateHandler = (data) => {
+      console.log('Booking update (teacher):', data);
+      // Always refetch on any booking update
+      refetch();
+    };
     if (socket) {
-      console.log('Setting up teacher socket listeners');
-      socket.on('booking_updated', (data) => {
-        console.log('Teacher received booking update:', data);
-        fetchTeacherAppointments();
-      });
+      socket.on('booking_updated', bookingUpdateHandler);
     }
     return () => {
       if (socket) {
-        socket.off('booking_updated');
+        socket.off('booking_updated', bookingUpdateHandler);
       }
     };
-  }, [socket]);
+  }, [socket, refetch]);
+
+  const handleConfirmClick = (bookingID) => {
+    setConfirmInputs(prev => ({ ...prev, [bookingID]: { schedule: '', venue: '' } }));
+  };
 
   async function confirmBooking(bookingID, schedule, venue) {
     if (!schedule || !venue) {
@@ -229,23 +193,14 @@ function TeacherAppointments() {
 
   async function startSession(appointment) {
     const teacherID = localStorage.getItem('teacherID');
-    let studentIDs = (appointment.studentIDs && appointment.studentIDs.length)
-      ? appointment.studentIDs
-      : appointment.studentID;
-    if (!studentIDs || !Array.isArray(studentIDs) || studentIDs.length === 0) {
-      alert("Cannot start session: Missing student IDs.");
-      return;
-    }
-    // Convert teacher and student details into JSON strings and URL-encode them.
+    // Remove the prefix since it's already in the correct format
+    const studentIDs = appointment.info.map(student => student.ID); // Changed from student.id
     const teacherInfo = appointment.teacher ? encodeURIComponent(JSON.stringify(appointment.teacher)) : '';
     const studentInfo = appointment.info ? encodeURIComponent(JSON.stringify(appointment.info)) : '';
-    // Include the venue from the appointment in the URL.
     const venue = appointment.venue ? encodeURIComponent(appointment.venue) : '';
-    // Build the session URL with the venue query parameter.
-    const sessionUrl = `/session?teacherID=${teacherID}&studentIDs=${studentIDs.join(',')}&teacherInfo=${teacherInfo}&studentInfo=${studentInfo}&venue=${venue}`;
+    const sessionUrl = `/session?teacherID=${teacherID}&studentIDs=${studentIDs.join(',')}&teacherInfo=${teacherInfo}&studentInfo=${studentInfo}&venue=${venue}&booking_id=${appointment.id}`;
     window.open(sessionUrl, '_blank');
   }
-  
 
   return (
     <div className="grid grid-cols-2 gap-5 h-full">
@@ -304,18 +259,17 @@ function TeacherAppointments() {
 function Appointments() {
   const [role, setRole] = useState('');
 
-  // This effect runs only once to set the role.
   useEffect(() => {
     const storedRole = localStorage.getItem('userRole');
     if (storedRole && role !== storedRole.toLowerCase()) {
       setRole(storedRole.toLowerCase());
     }
-  }, []); // empty dependency array
+  }, []);
 
   if (!role) return <p>Loading...</p>;
   return (
     <div className="h-screen overflow-hidden p-8">
-      <h2 className="text-3xl font-bold mb-8 text-[#0065A8]">Appointments</h2>
+      <h2 className="text-3xl font-bold mb-8 text-center text-[#0065A8]">Appointments</h2>
       <div className="bg-[#dceffa] rounded-xl p-6 shadow-sm h-[calc(100vh-8rem)]">
         {role === 'student' ? <StudentAppointments /> : role === 'faculty' ? <TeacherAppointments /> : <p>No appointments available for your role.</p>}
       </div>
