@@ -48,7 +48,7 @@ function Home() {
           Welcome, {userDetails?.firstName} {userDetails?.lastName}
         </h1>
         <p className="text-gray-600">
-          {userRole === 'student' ? 'Student Dashboard' : 'Faculty Dashboard'}
+        {userRole === 'student' ? 'Student Dashboard' : userRole === 'faculty' ? 'Faculty Dashboard' : userRole === 'admin' ? 'Admin Dashboard' : 'Dashboard'}
         </p>
       </div>
 

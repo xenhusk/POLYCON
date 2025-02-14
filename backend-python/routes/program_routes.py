@@ -1,8 +1,10 @@
 from flask import Blueprint, request, jsonify
 from services.firebase_service import db
 from google.cloud.firestore import DocumentReference
+from flask_cors import CORS
 
 program_bp = Blueprint('program', __name__)
+CORS(program_bp)  # Enable CORS for this blueprint
 
 @program_bp.route('/get_programs', methods=['GET'])
 def get_programs():
@@ -102,6 +104,21 @@ def update_program(program_id):
     except Exception as e:
         print(f"Error updating program: {str(e)}")
         return jsonify({"error": str(e)}), 500
+
+@program_bp.route('/delete_program/<program_id>', methods=['DELETE'])
+def delete_program(program_id):
+    try:
+        program_ref = db.collection('programs').document(program_id)
+        if not program_ref.get().exists:
+            return jsonify({"error": "Program not found"}), 404
+        
+        program_ref.delete()
+        return jsonify({"message": "Program deleted successfully"}), 200
+
+    except Exception as e:
+        print(f"Error deleting program: {str(e)}")
+        return jsonify({"error": str(e)}), 500
+
 
 # Initialize the routes in your application setup
 def init_app(app):
