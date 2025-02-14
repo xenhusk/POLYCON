@@ -42,20 +42,36 @@ const FinalDocument = () => {
       const clonedElement = documentRef.current.cloneNode(true);
       clonedElement.style.transform = 'none';
       clonedElement.style.boxShadow = 'none';
+      
+      const printStyles = `
+        @page { size: 8.5in 11in; margin: 0; }
+        body { margin: 0; padding: 0; }
+        * { 
+          -webkit-print-color-adjust: exact !important;
+          print-color-adjust: exact !important;
+          color-adjust: exact !important;
+        }
+        td[style*="background-color: #cfe2f3"],
+        tr td[style*="background-color: rgb(207, 226, 243)"] {
+          background-color: #cfe2f3 !important;
+          -webkit-print-color-adjust: exact !important;
+          print-color-adjust: exact !important;
+          color-adjust: exact !important;
+        }
+      `;
+      
       const styles = Array.from(document.querySelectorAll('style, link[rel="stylesheet"]'))
         .map(node => node.outerHTML)
         .join('');
+
       const printWindow = window.open('', '_blank');
       printWindow.document.open();
       printWindow.document.write(`
         <html>
           <head>
-            <title>Print Preview</title>
+            <title>Print/Save Document</title>
             ${styles}
-            <style>
-              @page { size: 8.5in 11in; margin: 0; }
-              body { margin: 0; padding: 0; }
-            </style>
+            <style>${printStyles}</style>
           </head>
           <body>
             ${clonedElement.outerHTML}
@@ -68,29 +84,6 @@ const FinalDocument = () => {
         printWindow.print();
         printWindow.close();
       }, 500);
-    }
-  };
-
-  const handleDownloadPDF = () => {
-    if (documentRef.current) {
-      const clonedElement = documentRef.current.cloneNode(true);
-      clonedElement.style.transform = "none";
-      clonedElement.style.position = "absolute";
-      clonedElement.style.top = "-10000px";
-      document.body.appendChild(clonedElement);
-      html2canvas(clonedElement, {
-        scale: window.devicePixelRatio,
-        useCORS: true,
-      }).then((canvas) => {
-        const imgData = canvas.toDataURL('image/png');
-        const pdf = new jsPDF('p', 'pt', 'letter');
-        const pdfWidth = pdf.internal.pageSize.getWidth();
-        const pdfHeight = (canvas.height * pdfWidth) / canvas.width;
-        pdf.addImage(imgData, 'PNG', 0, 0, pdfWidth, pdfHeight);
-        pdf.save('consultation-report.pdf');
-      }).finally(() => {
-        document.body.removeChild(clonedElement);
-      });
     }
   };
 
@@ -277,18 +270,12 @@ const FinalDocument = () => {
                 Your browser does not support the audio element.
               </audio>
             </div>
-            <div className="space-x-4">
+            <div>
               <button
                 onClick={handlePrint}
                 className="bg-[#0065A8] hover:bg-[#54BEFF] text-white px-4 py-2 rounded-lg transition-colors"
               >
-                Print
-              </button>
-              <button
-                onClick={handleDownloadPDF}
-                className="bg-[#0065A8] hover:bg-[#54BEFF] text-white px-4 py-2 rounded-lg transition-colors"
-              >
-                Download PDF
+                Print/Save Document
               </button>
             </div>
           </div>
