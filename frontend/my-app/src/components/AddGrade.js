@@ -38,6 +38,14 @@ export default function AddGrade() {
     fetchInitialData();
   }, []);
 
+  useEffect(() => {
+    const uniqueSchoolYears = [...new Set(grades.map(grade => grade.school_year))];
+    setUniqueSchoolYears(uniqueSchoolYears);
+  }, [grades]);
+  
+  // Add state for unique school years
+  const [uniqueSchoolYears, setUniqueSchoolYears] = useState([]);
+
   const fetchInitialData = async () => {
     try {
       const cachedStudents = localStorage.getItem('students');
@@ -485,30 +493,28 @@ export default function AddGrade() {
         )}
       </div>
 
-      {/* School Year Filter */}
-      <div className="mt-4">
-        <label className="font-semibold">School Year</label>
-        <input
-          type="text"
-          value={schoolYearFilter}
-          onChange={(e) => {
-            setSchoolYearFilter(e.target.value);
-            applyFilters();
-          }}
-          placeholder="YYYY-YYYY"
-          className="block w-full p-2 mt-1 border border-gray-300 text-black rounded"
-        />
-      </div>
-
+        {/* School Year Filter */}
+        <div className="mt-4">
+          <label className="font-semibold">School Year</label>
+          <select
+            value={schoolYearFilter}
+            onChange={handleSchoolYearFilterChange}
+            className="block w-full p-2 mt-1 border border-gray-300 text-black rounded"
+          >
+            <option value="">All School Years</option>
+            {uniqueSchoolYears.map((year) => (
+              <option key={year} value={year}>{year}</option>
+            ))}
+          </select>
+        </div>
       {/* Semester Filter */}
       <div className="mt-4">
         <label className="font-semibold">Semester</label>
         <select
           value={semesterFilter}
-          onChange={(e) => {
-            setSemesterFilter(e.target.value);
-            applyFilters();
-          }}
+          onChange={
+            handleSemesterFilterChange
+          }
           className="block w-full p-2 mt-1 border border-gray-300 text-black rounded"
         >
           <option value="">All Semesters</option>
@@ -520,7 +526,6 @@ export default function AddGrade() {
   )}
 </div>
 
-{/* Scrollable Table Body with Fixed Row Height */}
 {/* Scrollable Table with Modern UI */}
 <div className="mt-4 shadow-md rounded-lg overflow-hidden">
   <div className="overflow-x-auto">
@@ -535,19 +540,19 @@ export default function AddGrade() {
           <th className="px-4 py-3 w-[180px] min-w-[150px]">School Year</th>
           <th className="px-4 py-3 w-[120px] min-w-[100px]">Semester</th>
           <th className="px-4 py-3 w-[160px] min-w-[140px]">Remarks</th>
-          <th className="px-4 py-3 w-[100px] min-w-[80px] text-center">Actions</th>
+          <th className="px-4 py-3 pr-7 w-[100px] min-w-[80px] text-center">Actions</th>
         </tr>
       </thead>
     </table>
   </div>
 
   {/* Scrollable Table Body */}
-  <div className="max-h-80 overflow-y-scroll no-scrollbar block">
+  <div className="max-h-80 overflow-y-scroll">
       <table className="w-full bg-white text-center">
       <tbody>
         {filteredGrades.length > 0 ? (
           filteredGrades.map((grade) => (
-            <tr key={grade.gradeID} className="border-b hover:bg-gray-100 h-[50px] align-middle">
+            <tr key={grade.gradeID} className="border-b hover:bg-gray-100 align-middle">
               <td className="px-4 py-3 w-[150px] min-w-[120px]">{grade.studentID}</td>
               <td className="px-4 py-3 w-[200px] min-w-[180px]">{grade.studentName}</td>
               <td className="px-4 py-3 w-[350px] min-w-[200px]">{grade.courseName}</td>
@@ -559,13 +564,15 @@ export default function AddGrade() {
                 {grade.remarks}
               </td>
               {/* Icons in Actions Column */}
-              <td className="px-4 py-3 w-[100px] min-w-[80px] flex justify-center space-x-3 align-middle">
-                <button onClick={() => handleEditGrade(grade)} className="text-gray-500 hover:text-gray-700">
-                  <EditIcon className="w-5 h-5" />
-                </button>
-                <button onClick={() => handleDeleteGrade(grade?.id)} className="text-gray-500 hover:text-gray-700">
-                  <DeleteIcon className="w-5 h-5" />
-                </button>
+              <td className="align-middle px-4 py-3 w-[100px] min-w-[80px] space-x-3">
+                <div className="flex items-center justify-center h-full space-x-3">
+                  <button onClick={() => handleEditGrade(grade)} className="mx-2 text-gray-500 hover:text-gray-700 inline-block">
+                    <EditIcon className="w-5 h-5 inline-block" />
+                  </button>
+                  <button onClick={() => handleDeleteGrade(grade?.id)} className="mx-2 text-gray-500 hover:text-gray-700 inline-block">
+                    <DeleteIcon className="w-5 h-5 inline-block" />
+                  </button>
+                </div>
               </td>
             </tr>
           ))
@@ -673,7 +680,7 @@ export default function AddGrade() {
     {selectedGradeID && (
       <button 
         onClick={handleCancelEdit} 
-        className="bg-gray-500 hover:bg-gray-600 text-white px-4 py-2 rounded shadow-md transition duration-300"
+        className="bg-gray-500 hover:bg-gray-600 text-white px-4 py-2 rounded-lg shadow-md transition duration-300"
       >
         Cancel
       </button>
