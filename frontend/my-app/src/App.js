@@ -15,6 +15,8 @@ import 'react-image-crop/dist/ReactCrop.css';
 import ProfilePictureUploader from './components/ProfilePictureUploader'; // added import
 import HomeTeacher from './components/HomeTeacher'; // added import
 import Programs from './components/Programs';
+import FinalDocument from './pages/finaldocument'; // add import for FinalDocument
+import History from './pages/History'; // add import for History
 
 import SidebarPreview from './components/SidebarPreview'; // Import the SidebarPreview component
 import Appointments from './pages/Appointments'; // Import the Appointments page
@@ -279,12 +281,16 @@ function App() {
     <div className={location.pathname.includes('/session') ? '' : 'flex min-h-screen'}>
       <PreloadProvider>
         <div className="app-container flex flex-1">
-          {localStorage.getItem('userEmail') && !location.pathname.includes('/session') && (
+          {localStorage.getItem('userEmail') && 
+           !location.pathname.includes('/session') && 
+           !location.pathname.includes('/finaldocument') && (
             <Sidebar onExpandChange={setSidebarExpanded} />
           )}
           
           <div className={`flex-1 flex flex-col transition-all duration-300 ease-in-out ${
-            localStorage.getItem('userEmail') && !location.pathname.includes('/session')
+            localStorage.getItem('userEmail') && 
+            !location.pathname.includes('/session') && 
+            !location.pathname.includes('/finaldocument')
               ? sidebarExpanded 
                 ? 'ml-64' 
                 : 'ml-20'
@@ -398,13 +404,16 @@ function App() {
                   <Route path="/home-teacher" element={<HomeTeacher />} /> {/* Add this route */}
                   <Route path="/gradeview" element={<GradeViewer />} /> {/* Add this route */}
                   <Route path="/programs" element={<Programs />} /> {/* Add this route */}
+                  <Route path="/finaldocument" element={<FinalDocument />} /> {/* New route */}
+                  <Route path="/history" element={<History />} /> {/* New route */}
                 </Routes>
               </motion.div>
             </AnimatePresence>
           </div>
         </div>
-        {/* Render BookingPopup so the button is always present */}
-        <BookingPopup />
+        {/* Only show BookingPopup if not on session or finaldocument page */}
+        {!location.pathname.includes('/session') && 
+         !location.pathname.includes('/finaldocument') && <BookingPopup />}
       </PreloadProvider>
     </div>
   );
