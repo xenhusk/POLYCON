@@ -239,9 +239,10 @@ function TeacherAppointments() {
     // Convert teacher and student details into JSON strings and URL-encode them.
     const teacherInfo = appointment.teacher ? encodeURIComponent(JSON.stringify(appointment.teacher)) : '';
     const studentInfo = appointment.info ? encodeURIComponent(JSON.stringify(appointment.info)) : '';
-    
-    // Build the session URL without a sessionID.
-    const sessionUrl = `/session?teacherID=${teacherID}&studentIDs=${studentIDs.join(',')}&teacherInfo=${teacherInfo}&studentInfo=${studentInfo}`;
+    // Include the venue from the appointment in the URL.
+    const venue = appointment.venue ? encodeURIComponent(appointment.venue) : '';
+    // Build the session URL with the venue query parameter.
+    const sessionUrl = `/session?teacherID=${teacherID}&studentIDs=${studentIDs.join(',')}&teacherInfo=${teacherInfo}&studentInfo=${studentInfo}&venue=${venue}`;
     window.open(sessionUrl, '_blank');
   }
   

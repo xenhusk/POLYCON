@@ -29,6 +29,9 @@ const Session = () => {
   const timerIntervalRef = useRef(null);
   const navigate = useNavigate();
   const location = useLocation();
+  // Read venue from query parameters.
+  const queryParams = new URLSearchParams(location.search);
+  const venueFromQuery = queryParams.get('venue');
 
   // If a sessionID exists, fetch session details.
   // Otherwise, use the query parameters to populate teacher and student details.
@@ -231,7 +234,14 @@ const Session = () => {
     });
     setSummary(generatedSummary);
 
-    await storeConsultation(transcriptionText, generatedSummary, { concern, actionTaken, outcome, remarks });
+    // Pass the venue along with consultation details
+    await storeConsultation(transcriptionText, generatedSummary, { 
+      concern, 
+      actionTaken, 
+      outcome, 
+      remarks,
+      venue: venueFromQuery 
+    });
 
     // After finishing the session, the booking record can be removed if desired.
     const queryParams = new URLSearchParams(location.search);
@@ -251,7 +261,35 @@ const Session = () => {
       }
     }
 
-    // Optionally, you can now navigate away or update the UI with the new sessionID.
+    const payload = {
+      teacher_id: teacherId,       // existing payload fields
+      student_ids: studentIds,      // existing payload fields
+      transcription: transcriptionText,    // existing payload fields
+      summary: generatedSummary,          // existing payload fields
+      concern,          // existing payload fields
+      actionTaken,      // existing payload fields
+      outcome,          // existing payload fields
+      remarks,          // existing payload fields
+      duration: timer,         // existing payload fields
+      session_date: new Date().toISOString()  // NEW: add today's date
+    };
+
+    try {
+      // Assuming you use fetch to send the POST request.
+      const response = await fetch('http://localhost:5000/store_consultation', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(payload)
+      });
+      const data = await response.json();
+      if (response.ok) {
+        // ...handle successful finish...
+      } else {
+        // ...handle error...
+      }
+    } catch (error) {
+      console.error('Error finishing session:', error);
+    }
   };
 
   const generateSummary = async (transcription, notes) => {
