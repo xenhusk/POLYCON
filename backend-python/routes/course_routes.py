@@ -1,8 +1,11 @@
 from flask import Blueprint, request, jsonify
 from services.firebase_service import db
 from google.cloud.firestore import DocumentReference
+from flask_cors import CORS
 
 course_bp = Blueprint('course', __name__)
+
+CORS(course_bp)
 
 @course_bp.route('/get_courses', methods=['GET'])
 def get_courses():
@@ -84,9 +87,6 @@ def get_programs():
     except Exception as e:
         return jsonify({"error": str(e)}), 500
 
-
-from google.cloud.firestore import DocumentReference
-
 @course_bp.route('/add_course', methods=['POST'])
 def add_course():
     try:
@@ -121,7 +121,6 @@ def add_course():
         print(f"Error: {str(e)}")
         return jsonify({"error": str(e)}), 500
 
-
 @course_bp.route('/edit_course/<course_id>', methods=['PUT'])
 def edit_course(course_id):
     try:
@@ -153,7 +152,6 @@ def edit_course(course_id):
     except Exception as e:
         print(f"Error: {str(e)}")
         return jsonify({"error": str(e)}), 500
-
 
 @course_bp.route('/delete_course/<course_id>', methods=['DELETE'])
 def delete_course(course_id):
