@@ -24,7 +24,16 @@ def get_hometeacher_stats():
 
         for consultation in consultations:
             data = consultation.to_dict()
-            total_seconds += int(data.get('duration', 0))
+            duration = data.get('duration', '00:00:00')
+            if isinstance(duration, str):
+                try:
+                    hh, mm, ss = map(int, duration.split(':'))
+                    total_seconds += hh * 3600 + mm * 60 + ss
+                except ValueError:
+                    print(f"Skipping invalid duration format: {duration}")
+                    continue
+            elif isinstance(duration, int):
+                total_seconds += duration
             total_consultations += 1
 
             student_refs = data.get('student_ids', [])
@@ -45,7 +54,6 @@ def get_hometeacher_stats():
         print(f"Error in /hometeacher/stats: {str(e)}")
         return jsonify({'error': str(e)}), 500
 
-
 @hometeacher_routes_bp.route('/consultations_by_date', methods=['GET'])
 def get_consultations_by_date():
     try:
@@ -64,7 +72,7 @@ def get_consultations_by_date():
 
         for consultation in consultations:
             data = consultation.to_dict()
-            timestop = data.get('timestop')
+            timestop = data.get('session_date')
 
             # Convert Firestore timestamp to Python datetime
             if hasattr(timestop, 'timestamp'):  # Firestore Timestamp Object
@@ -79,13 +87,25 @@ def get_consultations_by_date():
                 print("Unknown timestop format:", timestop)
                 continue
 
-            duration = int(data.get('duration', 0))  # Duration in seconds
+            duration = data.get('duration', '00:00:00')
+            if isinstance(duration, str):
+                try:
+                    hh, mm, ss = map(int, duration.split(':'))
+                    duration_seconds = hh * 3600 + mm * 60 + ss  # Duration in seconds
+                except ValueError:
+                    print(f"Skipping invalid duration format: {duration}")
+                    continue
+            elif isinstance(duration, int):
+                duration_seconds = duration
+            else:
+                print(f"Unknown duration format: {duration}")
+                continue
 
             # Count consultations per month & year
             consultation_data[timestop_date] = consultation_data.get(timestop_date, 0) + 1
 
             # Sum total duration per month & year
-            duration_data[timestop_date] = duration_data.get(timestop_date, 0) + duration
+            duration_data[timestop_date] = duration_data.get(timestop_date, 0) + duration_seconds
 
         # Convert durations to HH:MM format
         formatted_duration_data = {

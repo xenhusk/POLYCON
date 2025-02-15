@@ -99,4 +99,11 @@
   color: #0065A8 !important;
 }
 
+/* Define the "sidebar" class with the desired border radius */
+.sidebar {
+  border-top-right-radius: 40px;
+  border-bottom-right-radius: 40px;
+  /* ...existing styles... */
+}
+
 /* Keep other existing styles */

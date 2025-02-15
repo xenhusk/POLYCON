@@ -1,9 +1,9 @@
 import React, { useState } from 'react';
 import { useLocation } from 'react-router-dom';
 import { motion, AnimatePresence } from 'framer-motion';
-import BookingAppointment from './BookingAppointment'; // Ensure this component uses new endpoints (/create_booking, /get_bookings)
+import BookingAppointment from './BookingAppointment';
 
-// Inline SVG for bookAppointment icon with blue background and white stroke
+// Restore original calendar icon
 const BookIcon = () => (
   <svg width="34" height="34" viewBox="0 0 34 34" fill="none" xmlns="http://www.w3.org/2000/svg">
     <rect width="34" height="34" rx="4" fill="none"/>
@@ -12,61 +12,92 @@ const BookIcon = () => (
 );
 
 const modalVariants = {
-  hidden: { opacity: 0, scale: 0.8 },
-  visible: { opacity: 1, scale: 1 }
+  hidden: { 
+    opacity: 0,
+    scale: 0.95,
+    y: 20
+  },
+  visible: { 
+    opacity: 1,
+    scale: 1,
+    y: 0,
+    transition: {
+      type: "spring",
+      stiffness: 300,
+      damping: 30
+    }
+  },
+  exit: {
+    opacity: 0,
+    scale: 0.95,
+    y: 20,
+    transition: {
+      duration: 0.2
+    }
+  }
 };
 
-const BookingPopup = ({ closePopup, role }) => {
+const BookingPopup = () => {
   const [showModal, setShowModal] = useState(false);
-  const userRole = localStorage.getItem('userRole'); // 'faculty' or 'student'
+  const userRole = localStorage.getItem('userRole');
   const location = useLocation();
 
-  // Don't render the button if we're in a session or if the role isn't faculty/student
-  if (
-    location.pathname.includes('/session') || 
-    !['faculty', 'student'].includes(userRole)
-  ) {
+  // Don't render on session pages or for non-faculty/student users
+  if (location.pathname.includes('/session') || !['faculty', 'student'].includes(userRole)) {
     return null;
   }
-  
-  const openModal = () => setShowModal(true);
-  const closeModal = () => setShowModal(false);
+
+  const handleCloseModal = () => {
+    setShowModal(false);
+  };
 
   return (
     <>
-      {/* Fixed button on bottom right */}
+      {/* Floating Action Button */}
       <button
-        onClick={openModal}
-        className="fixed bottom-8 right-8 w-14 h-14 rounded-full flex items-center justify-center shadow-lg bg-[#0065A8] hover:bg-[#54BEFF] hover:scale-110 duration-300 ease-in-out text-white z-50"
+        onClick={() => setShowModal(true)}
+        className="fixed bottom-8 right-8 w-14 h-14 rounded-full bg-[#0065A8] hover:bg-[#54BEFF] 
+                   flex items-center justify-center shadow-lg transform hover:scale-110 
+                   transition-all duration-300 ease-in-out z-50"
+        title="Book Appointment"
       >
         <BookIcon />
       </button>
-      
+
+      {/* Modal Overlay */}
       <AnimatePresence>
         {showModal && (
-          // Clicking the overlay closes the modal
-          <div onClick={closeModal} className="fixed inset-0 bg-black bg-opacity-50 backdrop-blur-sm flex justify-center items-center z-50">
-            {/* Stop propagation so clicks inside don't close the modal */}
-            <motion.div 
-              onClick={(e) => e.stopPropagation()}
+          <div className="fixed inset-0 bg-black/50 backdrop-blur-sm flex items-center justify-center z-50 p-4">
+            <motion.div
               variants={modalVariants}
               initial="hidden"
               animate="visible"
-              exit="hidden"
-              transition={{ duration: 0.1 }} // updated quicker transition
-              className="relative bg-white p-6 rounded-lg shadow-lg w-11/12 max-w-md"
+              exit="exit"
+              className="bg-white rounded-xl shadow-2xl w-full max-w-2xl overflow-hidden"
+              onClick={(e) => e.stopPropagation()}
             >
-              {/* "x" button to close modal */}
-              <button onClick={closeModal} className="absolute top-2 right-2 text-gray-500 hover:text-gray-800">
-                x
-              </button>
-              <BookingAppointment closeModal={closePopup} role={role} />
-              <button 
-                onClick={closePopup} 
-                className="mt-4 bg-gray-300 text-black px-4 py-2 rounded"
-              >
-                Close
-              </button>
+              {/* Modal Header */}
+              <div className="bg-[#0065A8] px-6 py-4 flex justify-between items-center">
+                <h2 className="text-xl font-semibold text-white">
+                  {userRole === 'faculty' ? 'Book Appointment' : 'Request Appointment'}
+                </h2>
+                <button
+                  onClick={handleCloseModal}
+                  className="text-white hover:text-gray-200 transition-colors"
+                >
+                  <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M6 18L18 6M6 6l12 12" />
+                  </svg>
+                </button>
+              </div>
+
+              {/* Modal Content */}
+              <div className="p-6">
+                <BookingAppointment 
+                  closeModal={handleCloseModal}
+                  role={userRole}
+                />
+              </div>
             </motion.div>
           </div>
         )}

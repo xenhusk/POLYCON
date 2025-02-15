@@ -154,18 +154,32 @@ const FinalDocument = () => {
     }
   }, []);
 
+  // New: Helper function to format the transcription
+  const formatTranscription = (text) => {
+    if (!text) return "";
+    return text
+      .replace(/Teacher:/g, "\nTeacher:")
+      .replace(/Student 1:/g, "\nStudent 1:")
+      .replace(/Student 2:/g, "\nStudent 2:")
+      .replace(/Student 3:/g, "\nStudent 3:")
+      .replace(/Student 4:/g, "\nStudent 4:")
+      .replace(/Student 5:/g, "\nStudent 5:")
+      .replace(/Student:/g, "\nStudent:")
+      .trim();
+  };
+
   return (
-    <div className="relative h-screen overflow-hidden">
+    <div className="relative h-screen overflow-hidden fade-in">
       <AnimatedBackground />
       {loading ? (
         <div className="flex h-full items-center justify-center">Loading...</div>
       ) : (
         <div className="relative z-10 h-full p-8 flex flex-col">
-          <h1 className="text-3xl font-bold text-[#0065A8] mb-6 text-center">Final Document</h1>
+          <h1 className="text-3xl font-bold text-[#0065A8] mb-6 text-center fade-in delay-100">Final Document</h1>
           <div className="flex gap-8 flex-1 overflow-hidden mb-6">
             <div className="w-1/2 flex flex-col">
               {/* Left Column: Displaying Summary, Transcription, etc. */}
-              <div className="flex-1 bg-[#0065A8] rounded-lg p-6 overflow-hidden flex flex-col">
+              <div className="flex-1 bg-[#0065A8] rounded-lg p-6 overflow-hidden flex flex-col fade-in delay-200">
                 <div className="flex-1 overflow-y-auto pr-4 final-document-scroll">
                   <section className="mb-6">
                     <h2 className="text-xl font-semibold text-white mb-2">Summary</h2>
@@ -175,9 +189,10 @@ const FinalDocument = () => {
                   </section>
                   <section className="mb-6">
                     <h2 className="text-xl font-semibold text-white mb-2">Transcription</h2>
-                    <div className="p-4 bg-white rounded-lg">
-                      {transcription || "Transcription is not available."}
-                    </div>
+                    {/* New: Use pre to preserve line breaks from formatted transcription */}
+                    <pre className="p-4 bg-white rounded-lg whitespace-pre-wrap">
+                      {formatTranscription(transcription) || "Transcription is not available."}
+                    </pre>
                   </section>
                   <section className="mb-6">
                     <h2 className="text-xl font-semibold text-white mb-2">Concern</h2>
@@ -201,7 +216,7 @@ const FinalDocument = () => {
               </div>
             </div>
             {/* Right Column: Document Preview */}
-            <div className="w-1/2 bg-white rounded-lg shadow-lg p-6 flex flex-col">
+            <div className="w-1/2 bg-white rounded-lg shadow-lg p-6 flex flex-col fade-in delay-300">
               <TransformWrapper
                 initialScale={initialScale}
                 minScale={0.35}
@@ -264,16 +279,16 @@ const FinalDocument = () => {
             </div>
           </div>
           {/* Controls */}
-          <div className="w-full p-4 rounded-lg flex items-center justify-between">
-            <div className="w-3/4">
-              <audio ref={audioRef} controls src={audioUrl} className="w-full">
+          <div className="w-full p-4 rounded-lg flex items-center justify-between  ">
+            <div className="w-1/2">
+              <audio ref={audioRef} controls src={audioUrl} className="w-full fade-in delay-400">
                 Your browser does not support the audio element.
-              </audio>
+              </audio> 
             </div>
-            <div>
+            <div>     
               <button
                 onClick={handlePrint}
-                className="bg-[#0065A8] hover:bg-[#54BEFF] text-white px-4 py-2 rounded-lg transition-colors"
+                className="bg-[#0065A8] hover:bg-[#54BEFF] text-white px-4 py-2 rounded-lg transition-colors fade-in delay-200"
               >
                 Print/Save Document
               </button>
