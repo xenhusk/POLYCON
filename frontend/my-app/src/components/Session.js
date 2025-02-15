@@ -214,10 +214,12 @@ const Session = () => {
     stopTimer();
   
     let transcriptionText = "";
+    let audioUrl = ""; // <-- new variable for audio URL
     if (audioBlob) {
       try {
         const audioUploadResponse = await uploadAudio(audioBlob);
         transcriptionText = audioUploadResponse.transcription || "";
+        audioUrl = audioUploadResponse.audioUrl || "";
       } catch (error) {
         console.error("Error uploading audio:", error);
         alert("Audio upload failed. Proceeding without transcription.");
@@ -226,30 +228,31 @@ const Session = () => {
   
     const generatedSummary = await generateSummary(transcriptionText, {
         concern,
-        action_taken,
+        actionTaken: action_taken,
         outcome,
         remarks,
     });
   
     setSummary(generatedSummary);
   
-    // 🔥 Ensure studentIds is correctly formatted as an array
+    // Ensure student_ids is an array
     let studentIdsArray = Array.isArray(studentIds) 
         ? studentIds 
         : studentIds.split(',').map(id => id.trim());
   
     const payload = {
         teacher_id: teacherId,
-        student_ids: studentIdsArray,  // 🔥 Ensure this is an array
+        student_ids: studentIdsArray,
         transcription: transcriptionText,
         summary: generatedSummary,
         concern: concern,
-        action_taken: action_taken, // Make sure it matches backend's expected field name
+        action_taken: action_taken,
         outcome: outcome,
         remarks: remarks,
         duration: timer,
         venue: venueFromQuery,
-        session_date: new Date().toISOString()
+        session_date: new Date().toISOString(),
+        audio_file_path: audioUrl  // <-- include the audio URL here
     };
   
     console.log('Sending payload:', payload);

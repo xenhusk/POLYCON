@@ -1,15 +1,16 @@
 from flask import Blueprint, request, jsonify
 from services.google_storage import upload_audio
-from services.google_speech import transcribe_audio
 from services.google_gemini import generate_summary
 from services.google_gemini import identify_roles_in_transcription
 from services.firebase_service import db, store_consultation_details
 import os
+import tempfile
+from services.audio_conversion_service import convert_audio
 from google.cloud.firestore_v1 import DocumentReference, SERVER_TIMESTAMP
 from cachetools import TTLCache  # NEW import for caching
 from google.cloud import firestore  # NEW import for query ordering
 from services.socket_service import socketio  # Add this import at the top
-
+from services.assemblyai_service import transcribe_audio_with_assemblyai
 consultation_bp = Blueprint('consultation', __name__)
 
 cache = TTLCache(maxsize=100, ttl=60)  # Cache up to 100 items for 60 seconds
@@ -64,13 +65,36 @@ def transcribe():
             return jsonify({"error": "Audio file is required"}), 400
 
         audio_file = request.files['audio']
-        audio_url = upload_audio(audio_file)
-        transcription = transcribe_audio(audio_url)
+        speaker_count = int(request.form.get('speaker_count', 1))
 
-        return jsonify({"audioUrl": audio_url, "transcription": transcription})
+        # Save the raw audio file to a temporary directory
+        temp_dir = tempfile.gettempdir()
+        raw_path = os.path.join(temp_dir, audio_file.filename)
+        audio_file.save(raw_path)
+
+        # Convert the raw audio file and get the path of the converted file
+        converted_path = convert_audio(raw_path)
+
+        # Upload the converted file to Google Cloud Storage and get the public URL
+        audio_url, _ = upload_audio(converted_path)
+
+        # Clean up temporary files
+        os.remove(raw_path)
+        os.remove(converted_path)
+
+        # Transcribe the audio using AssemblyAI (which should handle longer files)
+        transcription = transcribe_audio_with_assemblyai(audio_url, speaker_count)
+
+        # Process the transcription with Gemini to identify roles
+        processed_transcription = identify_roles_in_transcription(transcription)
+
+        return jsonify({
+            "audioUrl": audio_url,
+            "transcription": processed_transcription
+        })
     except Exception as e:
         return jsonify({"error": str(e)}), 500
-
+    
 @consultation_bp.route('/summarize', methods=['POST'])
 def summarize():
     try:

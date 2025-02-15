@@ -10,7 +10,7 @@ booking_bp = Blueprint('booking_routes', __name__)
 
 # Simple in-memory cache with expiry (5 seconds example)
 _cache = {}
-CACHE_EXPIRY = 5
+CACHE_EXPIRY = 50
 
 def get_cache(key):
     entry = _cache.get(key)
@@ -275,6 +275,9 @@ def create_booking():
         # Save to Firestore with custom document ID.
         bookings_ref.document(new_booking_id).set(booking_data)
 
+        # Clear cache to enable realtime updates
+        _cache.clear()
+
         # Enhanced socket event with more details.
         socketio.emit('booking_updated', {
             'action': 'create',
@@ -323,6 +326,9 @@ def confirm_booking():
             'studentIDs': student_ids
         })
 
+        # Clear cache to enable realtime updates
+        _cache.clear()
+
         return jsonify({"message": "Booking confirmed successfully"}), 200
 
     except Exception as e:
@@ -358,6 +364,9 @@ def cancel_booking():
             'teacherID': teacher_id,
             'studentIDs': student_ids
         })
+
+        # Clear cache to enable realtime updates
+        _cache.clear()
 
         return jsonify({"message": "Booking canceled successfully"}), 200
 
