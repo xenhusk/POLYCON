@@ -12,3 +12,4 @@ pycryptodome
 bcrypt
 setuptools
 flask-socketio
+eventlet

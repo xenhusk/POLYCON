@@ -84,6 +84,11 @@ function AppointmentsCalendar() {
 
     // Simple front-end cache: using localStorage as an example (cached for 30 seconds)
     const fetchCalendarData = async () => {
+        const studentID = localStorage.getItem('studentID');
+        if (!studentID) {
+            console.warn('studentID is null. Skipping calendar data fetch.');
+            return;
+        }
         const cacheKey = 'appointmentsCalendar';
         const cached = localStorage.getItem(cacheKey);
         if (cached) {
@@ -94,13 +99,11 @@ function AppointmentsCalendar() {
             }
         }
         try {
-            const response = await fetch('http://localhost:5001/bookings/get_student_bookings?studentID=' + localStorage.getItem('studentID'), {
-                // Leverage the browser cache if available.
+            const response = await fetch(`http://localhost:5001/bookings/get_bookings?role=student&userID=${studentID}&status=confirmed`, {
                 cache: 'force-cache'
             });
             const data = await response.json();
             setCalendarData(data);
-            // NEW: Increase TTL to 30 seconds.
             localStorage.setItem(cacheKey, JSON.stringify({ data, expiry: Date.now() + 30000 }));
         } catch (error) {
             console.error('Error fetching calendar data:', error);

@@ -364,4 +364,29 @@ def delete_user():
     except Exception as e:
         return jsonify({"error": str(e)}), 500
 
+@acc_management_bp.route('/reset_password', methods=['POST'])
+def reset_password():
+    try:
+        data = request.json
+        email = data.get('email')
+        password = data.get('password')
+        if not email or not password:
+            return jsonify({"error": "Email and password are required"}), 400
+
+        # Validate the user's password by attempting to log in.
+        try:
+            login_user(email, password)
+        except Exception:
+            return jsonify({"error": "Invalid password"}), 401
+
+        # Send password reset email using Firebase service
+        try:
+            auth_pyrebase.send_password_reset_email(email)
+            return jsonify({"message": "Password reset email sent"}), 200
+        except Exception as e:
+            return jsonify({"error": str(e)}), 500
+
+    except Exception as e:
+        return jsonify({"error": str(e)}), 500
+
 

@@ -1,3 +1,4 @@
+
 from flask import Flask, request, jsonify
 from flask_cors import CORS
 from flask_socketio import SocketIO, emit
@@ -12,6 +13,9 @@ from routes.hometeacher_routes import hometeacher_routes_bp
 from routes.program_routes import program_bp  # <-- new import
 from routes.search_routes import search_bp  # NEW import for search routes
 from services.socket_service import init_socket
+from routes.notification_routes import notification_bp
+from services.socket_service import socketio  # Ensure socket service is imported
+
 
 app = Flask(__name__)
 # Update CORS to allow WebSocket
@@ -35,6 +39,7 @@ app.register_blueprint(search_bp, url_prefix='/search')  # NEW registration for 
 def home():
     return jsonify({"message": "POLYCON Python Backend is Running"})  # Adding root route for health check
 
+app.register_blueprint(notification_bp, url_prefix='/')
 # Register the consultation routes as a blueprint
 app.register_blueprint(consultation_bp, url_prefix='/consultation')
 
@@ -62,6 +67,6 @@ def handle_disconnect():
     print('Client disconnected')
 
 if __name__ == '__main__':
-    # Enable WebSocket support
-    socketio.run(app, debug=True, port=5001, allow_unsafe_werkzeug=True)
+    # Start the Socket.IO server along with Flask app
+    socketio.run(app, host='0.0.0.0', port=5001)
 

@@ -33,12 +33,36 @@ def convert_references(value):
 def get_program_name(program_ref):
     try:
         program_doc = program_ref.get()
-        if program_doc.exists:
+        if (program_doc.exists):
             program_data = program_doc.to_dict()
             return program_data.get('programName', 'Unknown')
     except Exception as e:
         print(f"Error fetching program name: {str(e)}")
     return 'Unknown'
+
+def format_student_names(student_refs):
+    """Helper function to format student names for notifications"""
+    try:
+        names = []
+        for ref in student_refs:
+            user_doc = db.collection('user').document(ref.id).get()
+            if user_doc.exists:
+                user_data = user_doc.to_dict()
+                # Ensure we strip any whitespace
+                full_name = f"{user_data.get('firstName', '').strip()} {user_data.get('lastName', '').strip()}"
+                names.append(full_name)
+        
+        if len(names) == 0:
+            return "Unknown student"
+        elif len(names) == 1:
+            return names[0]
+        elif len(names) == 2:
+            return f"{names[0]} and {names[1]}"
+        else:
+            return f"{names[0]} and {len(names)-1} others"
+    except Exception as e:
+        print(f"Error formatting student names: {str(e)}")
+        return "Unknown student(s)"
 
 @booking_bp.route('/get_teachers', methods=['GET'])
 def get_teachers():
@@ -253,6 +277,9 @@ def create_booking():
         if user_role not in ['student', 'faculty']:
             return jsonify({"error": "Unauthorized role"}), 403
 
+        # Compute creator's full name.
+        creator_name = f"{user_data.get('firstName', '').strip()} {user_data.get('lastName', '').strip()}"
+
         # Count existing booking documents to generate a new booking ID.
         bookings_ref = db.collection('bookings')
         bookings = bookings_ref.stream()
@@ -278,7 +305,37 @@ def create_booking():
         # Clear cache to enable realtime updates
         _cache.clear()
 
-        # Enhanced socket event with more details.
+        # Fetch teacher name robustly.
+        teacher_doc = db.collection('user').document(teacher_id).get()
+        if not teacher_doc.exists:
+            teacher_doc = db.collection('faculty').document(teacher_id).get()
+        teacher_name = "Unknown Teacher"
+        if teacher_doc.exists:
+            teacher_data = teacher_doc.to_dict()
+            teacher_name = f"{teacher_data.get('firstName', '').strip()} {teacher_data.get('lastName', '').strip()}"
+            if not teacher_name.strip():
+                teacher_name = "Unknown Teacher"
+
+        # Format student names.
+        student_refs = [db.document(f"students/{student}") for student in student_ids]
+        students_display = format_student_names(student_refs)
+
+        # Emit raw notification payload for front-end personalization.
+        # The payload includes creatorRole and creatorName so that the front end
+        # can determine which personalized message to display.
+        notification_payload = {
+            'action': 'create',
+            'bookingID': new_booking_id,
+            'creatorRole': user_role,
+            'creatorName': creator_name,
+            'teacherName': teacher_name,
+            'studentNames': students_display,
+            'schedule': schedule,
+            'venue': venue
+        }
+        socketio.emit('notification', notification_payload)
+
+        # Emit booking_updated event for realtime appointment updates.
         socketio.emit('booking_updated', {
             'action': 'create',
             'bookingID': new_booking_id,
@@ -310,6 +367,18 @@ def confirm_booking():
         booking_data = booking.to_dict()
         teacher_ref = booking_data.get('teacherID')
         teacher_id = teacher_ref.id if teacher_ref else None
+        
+        # Fetch teacher name robustly.
+        teacher_doc = db.collection('user').document(teacher_id).get() if teacher_id else None
+        if teacher_doc is None or not teacher_doc.exists:
+            teacher_doc = db.collection('faculty').document(teacher_id).get() if teacher_id else None
+        teacher_name = "Unknown Teacher"
+        if teacher_doc and teacher_doc.exists:
+            teacher_data = teacher_doc.to_dict()
+            teacher_name = f"{teacher_data.get('firstName', '').strip()} {teacher_data.get('lastName', '').strip()}"
+            if not teacher_name.strip():
+                teacher_name = "Unknown Teacher"
+
         student_refs = booking_data.get('studentID', [])
         student_ids = [ref.id for ref in student_refs] if student_refs else []
 
@@ -326,9 +395,21 @@ def confirm_booking():
             'studentIDs': student_ids
         })
 
-        # Clear cache to enable realtime updates
-        _cache.clear()
+        # Format student names.
+        students_display = format_student_names(student_refs)
 
+        # Emit raw notification payload for confirmation.
+        notification_payload = {
+            'action': 'confirm',
+            'bookingID': booking_id,
+            'teacherName': teacher_name,
+            'studentNames': students_display,
+            'schedule': schedule,
+            'venue': venue
+        }
+        socketio.emit('notification', notification_payload)
+
+        _cache.clear()
         return jsonify({"message": "Booking confirmed successfully"}), 200
 
     except Exception as e:
@@ -351,6 +432,18 @@ def cancel_booking():
         booking_data = booking.to_dict()
         teacher_ref = booking_data.get('teacherID')
         teacher_id = teacher_ref.id if teacher_ref else None
+
+        # Fetch teacher name robustly.
+        teacher_doc = db.collection('user').document(teacher_id).get() if teacher_id else None
+        if teacher_doc is None or not teacher_doc.exists:
+            teacher_doc = db.collection('faculty').document(teacher_id).get() if teacher_id else None
+        teacher_name = "Unknown Teacher"
+        if teacher_doc and teacher_doc.exists:
+            teacher_data = teacher_doc.to_dict()
+            teacher_name = f"{teacher_data.get('firstName', '').strip()} {teacher_data.get('lastName', '').strip()}"
+            if not teacher_name.strip():
+                teacher_name = "Unknown Teacher"
+
         student_refs = booking_data.get('studentID', [])
         student_ids = [ref.id for ref in student_refs] if student_refs else []
 
@@ -365,9 +458,19 @@ def cancel_booking():
             'studentIDs': student_ids
         })
 
-        # Clear cache to enable realtime updates
-        _cache.clear()
+        # Format student names.
+        students_display = format_student_names(student_refs)
 
+        # Emit raw cancellation notification payload.
+        notification_payload = {
+            'action': 'cancel',
+            'bookingID': booking_id,
+            'teacherName': teacher_name,
+            'studentNames': students_display
+        }
+        socketio.emit('notification', notification_payload)
+
+        _cache.clear()
         return jsonify({"message": "Booking canceled successfully"}), 200
 
     except Exception as e:

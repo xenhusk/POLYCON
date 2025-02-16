@@ -1,24 +1,25 @@
 import patchResizeObserver from './utils/resizeObserverPatch';
 import './patches/resizeObserverPatch';
 import React from 'react';
-import ReactDOM from 'react-dom';
+import { createRoot } from 'react-dom/client';
 import './index.css';
 import App from './App';
-import { BrowserRouter } from 'react-router-dom';
+import { BrowserRouter as Router } from 'react-router-dom';
 import { QueryClient, QueryClientProvider } from 'react-query';
 
 // Apply the patch before rendering
 patchResizeObserver();
 
 const queryClient = new QueryClient();
+const container = document.getElementById('root');
+const root = createRoot(container);
 
-ReactDOM.render(
+root.render(
   <React.StrictMode>
-    <QueryClientProvider client={queryClient}>
-      <BrowserRouter>
+    <Router>
+      <QueryClientProvider client={queryClient}>
         <App />
-      </BrowserRouter>
-    </QueryClientProvider>
-  </React.StrictMode>,
-  document.getElementById('root')
+      </QueryClientProvider>
+    </Router>
+  </React.StrictMode>
 );

@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useRef } from 'react';
+import React, { useState, useEffect, useRef, useContext } from 'react';
 import { Link, useNavigate, useLocation } from 'react-router-dom'; // Add useLocation import
 import './Sidebar.css'; // Import the CSS file
 // Placeholder imports for SVG icons
@@ -21,6 +21,7 @@ import { getProfilePictureUrl } from '../utils/utils';
 import ProfilePictureUploader from './ProfilePictureUploader';
 import SettingsPopup from './SettingsPopup';
 import NotificationTray from './NotificationTray';
+import { NotificationContext } from '../context/NotificationContext'; // NEW import
 
 const Sidebar = ({ onExpandChange }) => {
   const location = useLocation(); // Add this hook
@@ -42,6 +43,8 @@ const Sidebar = ({ onExpandChange }) => {
   const [pointerPosition, setPointerPosition] = useState(0); // NEW pointer state
   const menuItemRefs = useRef({}); // NEW ref for menu items
   const navigate = useNavigate();
+  const { notifications } = useContext(NotificationContext); // Change this line to use context
+  const unreadCount = notifications?.filter(n => !n.isRead)?.length || 0; // Add null check
 
   useEffect(() => {
     const userEmail = localStorage.getItem('userEmail');
@@ -317,8 +320,9 @@ const Sidebar = ({ onExpandChange }) => {
             className={`no-hover-item relative h-8 flex items-center cursor-pointer transition-opacity duration-300 ${isOpen ? 'opacity-100' : 'opacity-0'}`}
           >
             <BellIcon className="w-6 h-6 bell-icon -mr-2" />
-            {/* Notification dot */}
-            <span className="absolute -top-0 -right-2 h-3 w-3 bg-red-500 rounded-full"></span>
+            {unreadCount > 0 && (
+              <span className="absolute -top-0 -right-2 h-3 w-3 bg-red-500 rounded-full"></span>
+            )}
           </li>
           <li 
             ref={settingsButtonRef}
