@@ -19,6 +19,9 @@ const useNotifications = () => {
   const [toast, setToast] = useState({ visible: false, message: '' });
 
   useEffect(() => {
+    const userEmail = localStorage.getItem('userEmail');
+    if (!userEmail) return; // Only connect if user is authenticated
+
     const socket = io(SOCKET_SERVER_URL);
     
     socket.on('notification', (data) => {

@@ -30,7 +30,6 @@ const HomeTeacher = () => {
 
     useEffect(() => {
         if (!teacherId) {
-            console.error("Teacher ID not provided, API call skipped!");
             return;
         }
 
