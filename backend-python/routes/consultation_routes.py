@@ -170,6 +170,15 @@ def store_consultation():
 
         consultation_ref.document(new_session_id).set(consultation_data)
 
+        # Emit a notification for the new consultation session
+        socketio.emit('notification', {
+            'message': 'New consultation session stored.',
+            'type': 'consultation',
+            'session_id': new_session_id,
+            'created_at': SERVER_TIMESTAMP,
+            'isRead': False  # NEW field for unread status
+        })
+
         # If a booking_id exists in the query parameters, delete the corresponding booking document.
         booking_id = request.args.get('booking_id')
         if booking_id:
@@ -233,6 +242,14 @@ def start_session():
 
         # Store consultation details in Firestore with custom document ID
         consultation_ref.document(new_session_id).set(consultation_data)
+
+        # Optionally emit a notification event when a session starts
+        socketio.emit('notification', {
+            'message': 'Consultation session started.',
+            'type': 'consultation',
+            'session_id': new_session_id,
+            'created_at': SERVER_TIMESTAMP
+        })
 
         return jsonify({
             "message": "Session started successfully",

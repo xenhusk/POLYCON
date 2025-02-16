@@ -1,8 +1,11 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { useNavigate, useLocation } from 'react-router-dom';
 import { getProfilePictureUrl } from '../utils/utils';
+import { useQueryClient } from 'react-query';
+import { motion } from 'framer-motion'; // Add this import
 
 function BookingAppointment({ closeModal, role: propRole }) {
+  const queryClient = useQueryClient();
   // Determine role setup
   const role = propRole || localStorage.getItem('userRole') || 'student';
   const navigate = useNavigate();
@@ -33,6 +36,8 @@ function BookingAppointment({ closeModal, role: propRole }) {
   const searchTimeout = useRef(null);
   const [isStudentInputFocused, setIsStudentInputFocused] = useState(false);
   const [isTeacherInputFocused, setIsTeacherInputFocused] = useState(false);
+  const [isLoading, setIsLoading] = useState(false);
+  const [message, setMessage] = useState({ type: '', content: '' });
 
   // Debounced search function
   const debouncedSearch = (term) => {
@@ -126,9 +131,11 @@ function BookingAppointment({ closeModal, role: propRole }) {
     if (role === 'faculty') {
       // Validate required fields: teacherID, at least one student, schedule, and venue must be provided.
       if (!teacherID || selectedStudents.length === 0 || !schedule || !venue) {
-        alert("Please fill in all fields.");
+        setMessage({ type: 'error', content: "Please fill in all required fields." });
         return;
       }
+      
+      setIsLoading(true);
       // Build payload using the required fields.
       const bookingData = {
         teacherID,                     
@@ -145,22 +152,33 @@ function BookingAppointment({ closeModal, role: propRole }) {
           headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify(bookingData)
         });
+        
         if (response.ok) {
-          alert("Appointment booked successfully!");
-          if (typeof closeModal === 'function') closeModal();
+          // Force refresh of appointments data
+          queryClient.invalidateQueries('studentAppointments');
+          queryClient.invalidateQueries('teacherAppointments');
+          setMessage({ type: 'success', content: "Appointment booked successfully!" });
+          setTimeout(() => {
+            if (typeof closeModal === 'function') closeModal();
+          }, 1500);
         } else {
           const errorData = await response.json();
-          alert("Failed to book appointment. " + (errorData.error || ''));
+          setMessage({ type: 'error', content: errorData.error || "Failed to book appointment." });
         }
       } catch (error) {
         console.error('Error booking appointment:', error);
+        setMessage({ type: 'error', content: "Network error. Please try again." });
+      } finally {
+        setIsLoading(false);
       }
     } else {
       // Validate required fields: selectedTeacher and studentID must be provided.
       if (!studentID || !selectedTeacher) {
-        alert("Please fill in all fields.");
+        setMessage({ type: 'error', content: "Please fill in all required fields." });
         return;
       }
+      
+      setIsLoading(true);
       // Build payload with required keys.
       const bookingData = {
         teacherID: selectedTeacher,
@@ -178,14 +196,22 @@ function BookingAppointment({ closeModal, role: propRole }) {
           body: JSON.stringify(bookingData)
         });
         if (response.ok) {
-          alert("Appointment request sent successfully!");
-          if (typeof closeModal === 'function') closeModal();
+          // Force refresh of appointments data
+          queryClient.invalidateQueries('studentAppointments');
+          queryClient.invalidateQueries('teacherAppointments');
+          setMessage({ type: 'success', content: "Appointment request sent successfully!" });
+          setTimeout(() => {
+            if (typeof closeModal === 'function') closeModal();
+          }, 1500);
         } else {
           const errorData = await response.json();
-          alert("Failed to request appointment. " + (errorData.error || ''));
+          setMessage({ type: 'error', content: errorData.error || "Failed to request appointment." });
         }
       } catch (error) {
         console.error('Error requesting appointment:', error);
+        setMessage({ type: 'error', content: "Network error. Please try again." });
+      } finally {
+        setIsLoading(false);
       }
     }
   }
@@ -383,6 +409,15 @@ function BookingAppointment({ closeModal, role: propRole }) {
         </>
       )}
 
+      {/* Message display */}
+      {message.content && (
+        <div className={`mt-4 p-3 rounded-lg ${
+          message.type === 'success' ? 'bg-green-100 text-green-700' : 'bg-red-100 text-red-700'
+        }`}>
+          {message.content}
+        </div>
+      )}
+
       {/* Submit Button */}
       <div className="mt-8 flex flex-col items-end">
         {isBookingOverQuota() && (
@@ -392,12 +427,22 @@ function BookingAppointment({ closeModal, role: propRole }) {
         )}
         <button
           onClick={submitBooking}
-          disabled={isBookingOverQuota()}
+          disabled={isBookingOverQuota() || isLoading}
           className={`${
-            isBookingOverQuota() ? 'opacity-50 cursor-not-allowed' : ''
-          } bg-[#0065A8] hover:bg-[#54BEFF] text-white px-4 py-2 rounded-lg transition-colors`}
+            isBookingOverQuota() || isLoading ? 'opacity-50 cursor-not-allowed' : ''
+          } bg-[#0065A8] hover:bg-[#54BEFF] text-white px-4 py-2 rounded-lg transition-colors flex items-center space-x-2`}
         >
-          {role === 'faculty' ? 'Book Appointment' : 'Request Appointment'}
+          {isLoading ? (
+            <>
+              <svg className="animate-spin h-5 w-5 text-white" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+                <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
+                <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+              </svg>
+              <span>Processing...</span>
+            </>
+          ) : (
+            <span>{role === 'faculty' ? 'Book Appointment' : 'Request Appointment'}</span>
+          )}
         </button>
       </div>
     </div>
