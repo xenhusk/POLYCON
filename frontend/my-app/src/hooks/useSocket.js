@@ -21,12 +21,15 @@ export function useSocket(url) {
       socketInstance.on('connect_error', (error) => {
         console.error('Socket connection error:', error);
       });
+
+      socketInstance.on('notification', (data) => {
+        console.log('Notification received in useSocket:', data);
+      });
     }
 
     socketRef.current = socketInstance;
 
     return () => {
-      // Don't disconnect, just remove listeners
       if (socketRef.current) {
         socketRef.current.removeAllListeners();
       }

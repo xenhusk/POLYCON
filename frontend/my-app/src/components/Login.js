@@ -34,6 +34,7 @@ const Login = ({ onLoginSuccess, onSwitchToSignup }) => {
 
         if (response.ok) {
             setMessage(`Welcome ${data.firstName} ${data.lastName}`);
+            localStorage.setItem('userEmail', data.email);
             handleLoginSuccess(data);
         } else {
             setMessage(data.error || 'Login failed. Please check your credentials.');

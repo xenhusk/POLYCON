@@ -48,15 +48,15 @@ function StudentAppointments() {
 
   useEffect(() => {
     if (socket) {
-      socket.on('booking_updated', () => {
+      const handleBookingUpdate = (data) => {
+        console.log('Booking update received:', data);
+        // Refetch on any booking update, including creates
         refetch();
-      });
+      };
+
+      socket.on('booking_updated', handleBookingUpdate);
+      return () => socket.off('booking_updated', handleBookingUpdate);
     }
-    return () => {
-      if (socket) {
-        socket.off('booking_updated');
-      }
-    };
   }, [socket, refetch]);
 
   return (
@@ -129,19 +129,16 @@ function TeacherAppointments() {
   }, [appointments]);
 
   useEffect(() => {
-    const bookingUpdateHandler = (data) => {
-      console.log('Booking update (teacher):', data);
-      // Always refetch on any booking update
-      refetch();
-    };
     if (socket) {
-      socket.on('booking_updated', bookingUpdateHandler);
+      const handleBookingUpdate = (data) => {
+        console.log('Booking update received:', data);
+        // Refetch on any booking update, including creates
+        refetch();
+      };
+
+      socket.on('booking_updated', handleBookingUpdate);
+      return () => socket.off('booking_updated', handleBookingUpdate);
     }
-    return () => {
-      if (socket) {
-        socket.off('booking_updated', bookingUpdateHandler);
-      }
-    };
   }, [socket, refetch]);
 
   const handleConfirmClick = (bookingID) => {
