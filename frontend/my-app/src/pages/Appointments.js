@@ -147,45 +147,32 @@ function TeacherAppointments() {
 
   async function confirmBooking(bookingID, schedule, venue) {
     if (!schedule || !venue) {
-      alert("Schedule and venue are required to confirm the booking.");
-      return;
+      // Remove alert; instead, throw an error to be caught later.
+      throw new Error("Schedule and venue are required to confirm the booking.");
     }
-    try {
-      const response = await fetch('http://localhost:5001/bookings/confirm_booking', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ bookingID, schedule, venue }),
-      });
-      if (response.ok) {
-        alert("Booking confirmed successfully!");
-        setConfirmInputs(prev => { 
-          const updated = { ...prev }; 
-          delete updated[bookingID]; 
-          return updated; 
-        });
-      } else {
-        const result = await response.json();
-        alert(`Failed to confirm booking: ${result.error || "Unknown error"}`);
-      }
-    } catch (error) {
-      console.error('Error confirming booking:', error);
+    const response = await fetch('http://localhost:5001/bookings/confirm_booking', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ bookingID, schedule, venue }),
+    });
+    if (!response.ok) {
+      const result = await response.json();
+      throw new Error(result.error || "Unknown error");
     }
+    // On success no alert will be shown.
   }
 
   async function cancelBooking(bookingID) {
-    try {
-      const response = await fetch('http://localhost:5001/bookings/cancel_booking', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ bookingID }),
-      });
-      if (!response.ok) {
-        const result = await response.json();
-        alert(`Failed to cancel booking: ${result.error || "Unknown error"}`);
-      }
-    } catch (error) {
-      console.error('Error canceling booking:', error);
+    const response = await fetch('http://localhost:5001/bookings/cancel_booking', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ bookingID }),
+    });
+    if (!response.ok) {
+      const result = await response.json();
+      throw new Error(result.error || "Unknown error");
     }
+    // On success, no alert is shown.
   }
 
   async function startSession(appointment) {

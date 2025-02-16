@@ -1,6 +1,10 @@
-import React from 'react';
+import React, { useState } from 'react';
 
 function AppointmentItem({ appointment, role, onStartSession, onCancel, onConfirm, confirmInputs = {}, handleConfirmClick, setConfirmInputs }) {
+  const [isLoading, setIsLoading] = useState(false);
+  const [message, setMessage] = useState({ type: '', content: '' });
+  const [actionType, setActionType] = useState(''); // 'cancel', 'confirm', or 'start'
+
   const teacherInfo = appointment.teacher || {};
   const formatDateTime = (dateTime) => {
     const date = new Date(dateTime);
@@ -12,8 +16,48 @@ function AppointmentItem({ appointment, role, onStartSession, onCancel, onConfir
   // Ensure the appointment object contains booking_id (if not, map id accordingly)
   const bookingID = appointment.booking_id || appointment.id; 
   // In your Start Session button click handler:
-  const handleStart = () => {
-    onStartSession({ ...appointment, booking_id: bookingID });
+  const handleStart = async () => {
+    setIsLoading(true);
+    setActionType('start');
+    try {
+      await onStartSession({ ...appointment, booking_id: bookingID });
+      setMessage({ type: 'success', content: 'Session started successfully' });
+    } catch (error) {
+      setMessage({ type: 'error', content: error.message || 'Failed to start session' });
+    } finally {
+      setIsLoading(false);
+      setActionType('');
+    }
+  };
+
+  const handleCancel = async (id) => {
+    setIsLoading(true);
+    setActionType('cancel');
+    try {
+      await onCancel(id);
+      setMessage({ type: 'success', content: 'Appointment cancelled successfully' });
+      setTimeout(() => setMessage({ type: '', content: '' }), 3000);
+    } catch (error) {
+      setMessage({ type: 'error', content: error.message || 'Failed to cancel appointment' });
+    } finally {
+      setIsLoading(false);
+      setActionType('');
+    }
+  };
+
+  const handleConfirmation = async (id, schedule, venue) => {
+    setIsLoading(true);
+    setActionType('confirm');
+    try {
+      await onConfirm(id, schedule, venue);
+      setMessage({ type: 'success', content: 'Appointment confirmed successfully' });
+      setTimeout(() => setMessage({ type: '', content: '' }), 3000);
+    } catch (error) {
+      setMessage({ type: 'error', content: error.message || 'Failed to confirm appointment' });
+    } finally {
+      setIsLoading(false);
+      setActionType('');
+    }
   };
 
   return (
@@ -74,6 +118,15 @@ function AppointmentItem({ appointment, role, onStartSession, onCancel, onConfir
         )}
       </div>
 
+      {/* Message display */}
+      {message.content && (
+        <div className={`mt-4 p-3 rounded-lg ${
+          message.type === 'success' ? 'bg-green-100 text-green-700' : 'bg-red-100 text-red-700'
+        }`}>
+          {message.content}
+        </div>
+      )}
+
       {role === 'faculty' && (
         <div className="mt-6 -mx-6 flex">
           {!confirmInputs || !confirmInputs[appointment.id] ? (
@@ -81,31 +134,79 @@ function AppointmentItem({ appointment, role, onStartSession, onCancel, onConfir
               {typeof onStartSession === 'function' ? (
                 <>
                   <button 
-                    onClick={handleStart} 
-                    className="flex-1 bg-[#0065A8] hover:bg-[#00D1B2] text-white py-4 transition-colors rounded-bl-lg rounded-br-none"
+                    onClick={handleStart}
+                    disabled={isLoading}
+                    className={`flex-1 bg-[#0065A8] hover:bg-[#00D1B2] text-white py-4 transition-colors rounded-bl-lg rounded-br-none flex items-center justify-center gap-2
+                      ${isLoading && actionType === 'start' ? 'opacity-50 cursor-not-allowed' : ''}`}
                   >
-                    Start Session
+                    {isLoading && actionType === 'start' ? (
+                      <>
+                        <svg className="animate-spin h-5 w-5 text-white" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+                          <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
+                          <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+                        </svg>
+                        <span>Starting...</span>
+                      </>
+                    ) : (
+                      'Start Session'
+                    )}
                   </button>
                   <button 
-                    onClick={() => onCancel(appointment.id)} 
-                    className="flex-1 bg-[#54BEFF] hover:bg-[#FF7171] text-white py-4 transition-colors rounded-br-lg rounded-bl-none"
+                    onClick={() => handleCancel(appointment.id)}
+                    disabled={isLoading}
+                    className={`flex-1 bg-[#54BEFF] hover:bg-[#FF7171] text-white py-4 transition-colors rounded-br-lg rounded-bl-none flex items-center justify-center gap-2
+                      ${isLoading && actionType === 'cancel' ? 'opacity-50 cursor-not-allowed' : ''}`}
                   >
-                    Cancel
+                    {isLoading && actionType === 'cancel' ? (
+                      <>
+                        <svg className="animate-spin h-5 w-5 text-white" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+                          <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
+                          <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+                        </svg>
+                        <span>Cancelling...</span>
+                      </>
+                    ) : (
+                      'Cancel'
+                    )}
                   </button>
                 </>
               ) : (
                 <>
                   <button 
-                    onClick={() => handleConfirmClick(appointment.id)} 
-                    className="flex-1 bg-[#0065A8] hover:bg-[#0088FF] text-white py-4 transition-colors rounded-bl-lg rounded-br-none"
+                    onClick={() => handleConfirmClick(appointment.id)}
+                    disabled={isLoading}
+                    className={`flex-1 bg-[#0065A8] hover:bg-[#0088FF] text-white py-4 transition-colors rounded-bl-lg rounded-br-none flex items-center justify-center gap-2
+                      ${isLoading && actionType === 'confirm' ? 'opacity-50 cursor-not-allowed' : ''}`}
                   >
-                    Confirm
+                    {isLoading && actionType === 'confirm' ? (
+                      <>
+                        <svg className="animate-spin h-5 w-5 text-white" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+                          <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
+                          <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+                        </svg>
+                        <span>Confirming...</span>
+                      </>
+                    ) : (
+                      'Confirm'
+                    )}
                   </button>
                   <button 
-                    onClick={() => onCancel(appointment.id)} 
-                    className="flex-1 bg-[#54BEFF] hover:bg-[#FF7171] text-white py-4 transition-colors rounded-br-lg rounded-bl-none"
+                    onClick={() => handleCancel(appointment.id)}
+                    disabled={isLoading}
+                    className={`flex-1 bg-[#54BEFF] hover:bg-[#FF7171] text-white py-4 transition-colors rounded-br-lg rounded-bl-none flex items-center justify-center gap-2
+                      ${isLoading && actionType === 'cancel' ? 'opacity-50 cursor-not-allowed' : ''}`}
                   >
-                    Cancel
+                    {isLoading && actionType === 'cancel' ? (
+                      <>
+                        <svg className="animate-spin h-5 w-5 text-white" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+                          <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
+                          <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+                        </svg>
+                        <span>Cancelling...</span>
+                      </>
+                    ) : (
+                      'Cancel'
+                    )}
                   </button>
                 </>
               )}
@@ -142,7 +243,7 @@ function AppointmentItem({ appointment, role, onStartSession, onCancel, onConfir
                   <button 
                     onClick={() => {
                       if (onConfirm && confirmInputs[appointment.id]) {
-                        onConfirm(
+                        handleConfirmation(
                           appointment.id, 
                           confirmInputs[appointment.id].schedule, 
                           confirmInputs[appointment.id].venue
@@ -154,9 +255,21 @@ function AppointmentItem({ appointment, role, onStartSession, onCancel, onConfir
                         });
                       }
                     }}
-                    className="flex-1 bg-[#0065A8] hover:bg-[#0088FF] text-white py-4 transition-colors rounded-bl-lg rounded-br-none"
+                    disabled={isLoading}
+                    className={`flex-1 bg-[#0065A8] hover:bg-[#0088FF] text-white py-4 transition-colors rounded-bl-lg rounded-br-none flex items-center justify-center gap-2
+                      ${isLoading && actionType === 'confirm' ? 'opacity-50 cursor-not-allowed' : ''}`}
                   >
-                    Confirm Booking
+                    {isLoading && actionType === 'confirm' ? (
+                      <>
+                        <svg className="animate-spin h-5 w-5 text-white" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+                          <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
+                          <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+                        </svg>
+                        <span>Confirming...</span>
+                      </>
+                    ) : (
+                      'Confirm Booking'
+                    )}
                   </button>
                   <button 
                     onClick={() => setConfirmInputs?.(prev => {
@@ -164,9 +277,21 @@ function AppointmentItem({ appointment, role, onStartSession, onCancel, onConfir
                       delete updated[appointment.id];
                       return updated;
                     })}
-                    className="flex-1 bg-[#54BEFF] hover:bg-[#FF7171] text-white py-4 transition-colors rounded-br-lg rounded-bl-none"
+                    disabled={isLoading}
+                    className={`flex-1 bg-[#54BEFF] hover:bg-[#FF7171] text-white py-4 transition-colors rounded-br-lg rounded-bl-none flex items-center justify-center gap-2
+                      ${isLoading && actionType === 'cancel' ? 'opacity-50 cursor-not-allowed' : ''}`}
                   >
-                    Cancel
+                    {isLoading && actionType === 'cancel' ? (
+                      <>
+                        <svg className="animate-spin h-5 w-5 text-white" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+                          <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
+                          <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+                        </svg>
+                        <span>Cancelling...</span>
+                      </>
+                    ) : (
+                      'Cancel'
+                    )}
                   </button>
                 </div>
               </div>
