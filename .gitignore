@@ -16,3 +16,5 @@ backend-python/.env
 *.json
 frontend/my-app/package-lock.json
 frontend/my-app/package.json
+docker-compose.yml
+backend-python/Dockerfile

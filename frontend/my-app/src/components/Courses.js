@@ -21,11 +21,27 @@ export default function Courses() {
   const [showFilters, setShowFilters] = useState(false); // Controls filter visibility
   const [filterSelectedPrograms, setFilterSelectedPrograms] = useState([]); // Programs selected in filter
   const [courseFilter, setCourseFilter] = useState(''); // Course filter input
+  const [showProgramModal, setShowProgramModal] = useState(false);
+  const [selectedDepartmentPrograms, setSelectedDepartmentPrograms] = useState([]);
   const filterRef = useRef(null);
+  const modalRef = useRef(null);
 
   useEffect(() => {
     fetchInitialData();
   }, []);
+
+  useEffect(() => {
+    const handleClickOutside = (event) => {
+      if (modalRef.current && !modalRef.current.contains(event.target)) {
+        setShowProgramModal(false);
+      }
+    };
+
+    document.addEventListener('mousedown', handleClickOutside);
+    return () => {
+      document.removeEventListener('mousedown', handleClickOutside);
+    };
+  }, [modalRef]);
 
   useEffect(() => {
     const handleClickOutside = (event) => {
@@ -82,6 +98,17 @@ export default function Courses() {
     } catch (error) {
       console.error('Error fetching initial data:', error);
     }
+  };
+
+  const handleDepartmentClick = (departmentId) => {
+    const departmentPrograms = programs.filter(prog => prog.departmentID === departmentId);
+    setSelectedDepartmentPrograms(departmentPrograms);
+    setShowProgramModal(true);
+  };
+
+  const closeProgramModal = () => {
+    setShowProgramModal(false);
+    setSelectedDepartmentPrograms([]);
   };
 
   const handleDepartmentFilterChange = (e) => {
@@ -276,7 +303,7 @@ export default function Courses() {
   };
 
   return (
-    <div className=" items-center mx-auto p-6 bg-white shadow-lg rounded-lg">
+    <div className=" items-center mx-auto p-6 bg-white">
       <h2 className="text-2xl mt-10 font-bold text-center text-gray-800">Courses</h2>
 
       <div className="flex items-center justify-center space-x-2 w-full mt-4">
@@ -291,20 +318,20 @@ export default function Courses() {
         </div>
         <button 
           onClick={applyFilters} 
-          className="bg-blue-500 text-white px-6 py-2 rounded-lg shadow-md hover:bg-blue-600 transition"
+          className="bg-[#057DCD] text-white px-6 py-2 rounded-lg shadow-md hover:bg-[#0065A8] transition"
         >
           Search
         </button>
         <button 
           onClick={() => setShowFilters(!showFilters)} 
-          className="bg-blue-500 text-white p-3 rounded-full shadow-md flex items-center justify-center hover:bg-blue-600 transition"
+          className="bg-[#057DCD] text-white p-3 rounded-full shadow-md flex items-center justify-center hover:bg-[#0065A8] transition"
         >
           <FilterIcon className="w-5 h-5" />
         </button>
       </div>
 
       {showFilters && (
-        <div ref={filterRef} className="absolute right-[23rem] mt-2 mx-auto w-64 bg-blue-500 bg-opacity-95 text-white p-4 rounded-lg shadow-lg z-100">
+        <div ref={filterRef} className="absolute right-[23rem] mt-2 mx-auto w-64 bg-[#057DCD] bg-opacity-95 text-white p-4 rounded-lg shadow-lg z-10">
           <h3 className="text-xl font-bold">FILTERS</h3>
 
           {/* Department Filter */}
@@ -313,7 +340,7 @@ export default function Courses() {
             <select
               value={selectedDepartment}
               onChange={handleDepartmentFilterChange}
-              className="block w-full p-2 mt-1 border border-gray-300 text-black rounded"
+              className="block w-full p-2 mt-1 rounded-lg border-gray-300 text-black rounded"
             >
               <option value="">All Departments</option>
               {departments.map((dept) => (
@@ -330,7 +357,8 @@ export default function Courses() {
               <label className="font-semibold">Programs</label>
               <div className="mt-2">
                 {filteredPrograms.map((prog) => (
-                  <label key={prog.id} className="block">
+                  <div key={prog.id} className='mb-1'>
+                  <label className={`block p-2 rounded-lg transition-colors duration-200 ${filterSelectedPrograms.includes(prog.id) ? 'bg-white text-black' : 'hover:bg-white hover:text-black'}`}>
                     <input
                       type="checkbox"
                       value={prog.id}
@@ -340,6 +368,7 @@ export default function Courses() {
                     />
                     {prog.name}
                   </label>
+                  </div>
                 ))}
               </div>
             </div>
@@ -347,131 +376,170 @@ export default function Courses() {
         </div>
       )}
 
-      <div className="mt-4 shadow-md rounded-lg overflow-hidden">
-        <div className="overflow-x-auto">
-          <table className="w-full bg-white text-center">
-            <thead className="bg-gray-100 text-gray-700">
-              <tr className="border-b">
-                <th className="px-4 py-3 w-[150px] min-w-[120px]">ID</th>
-                <th className="px-4 py-3 w-[200px] min-w-[180px]">Course Name</th>
-                <th className="px-4 py-3 w-[100px] min-w-[80px]">Credits</th>
-                <th className="px-4 py-3 w-[200px] min-w-[180px]">Department</th>
-                <th className="px-4 py-3 w-[200px] min-w-[180px]">Program</th>
-                <th className="px-4 py-3 text-center">Actions</th>
+<div className="flex justify-center w-full">
+  <div className="mt-4 shadow-md rounded-lg overflow-hidden w-[70%] mx-auto">
+    <div className="overflow-x-auto">
+      <table className="w-full bg-white text-center table-fixed">
+        {/* Fixed Table Header */}
+        <thead className="bg-[#0065A8] text-white top-0 z-10">
+          <tr className="border-b">
+            <th className="py-3 ">ID</th>
+            <th className=" py-3  ">Course Name</th>
+            <th className=" py-3 pr-1">Credits</th>
+            <th className="py-3 pr-1 ">Department</th>
+            <th className=" py-3 pr-3">Program</th>
+            <th className=" py-3 pr-4 text-center">Actions</th>
+          </tr>
+        </thead>
+      </table>
+      
+      {/* Scrollable Table Body */}
+      <div className="max-h-80 overflow-y-auto">
+        <table className="w-full bg-white text-center table-fixed">
+          <tbody>
+            {courses.length === 0 ? (
+              <tr>
+                <td colSpan="6" className="px-6 py-4 text-center text-gray-500">
+                  Loading, please wait...
+                </td>
               </tr>
-            </thead>
-          </table>
-        </div>
-
-        <div className="max-h-80 overflow-y-scroll">
-          <table className="w-full bg-white text-center">
-            <tbody>
-              {filteredCourses.length > 0 ? (
-                filteredCourses.map((course) => (
-                  <tr key={course.courseID} className="border-b hover:bg-gray-100 h-[50px] align-middle">
-                    <td className="px-4 py-3 w-[150px] min-w-[120px]">{course.courseID}</td>
-                    <td className="px-4 py-3 w-[200px] min-w-[180px]">{course.courseName}</td>
-                    <td className="px-4 py-3 w-[100px] min-w-[80px]">{course.credits}</td>
-                    <td className="px-4 py-3 w-[200px] min-w-[180px]">{course.department}</td>
-                    <td className="px-4 py-3 w-[200px] min-w-[180px]">{course.program.join(', ')}</td>
-                    <td className="px-4 py-3 flex justify-center space-x-3 align-middle">
-                      <button onClick={() => handleEdit(course)} className="text-gray-500 hover:text-gray-700">
+            ) : filteredCourses.length > 0 ? (
+              filteredCourses.map((course) => (
+                <tr key={course.courseID} className="border-b hover:bg-[#DBF1FF] h-[50px] align-middle">
+                  <td className="px-4 py-3">{course.courseID}</td>
+                  <td className="px-4 py-3">{course.courseName}</td>
+                  <td className="px-4 py-3">{course.credits}</td>
+                  <td className="px-4 py-3">{course.department}</td>
+                  <td className="px-4 py-3">{course.program.join(', ')}</td>
+                  <td className="px-4 py-3 text-center">
+                    <div className="flex items-center justify-center space-x-3">
+                      <button
+                        onClick={() => handleEdit(course)}
+                        className="text-gray-500 hover:text-gray-700"
+                      >
                         <EditIcon className="w-5 h-5" />
                       </button>
-                      <button onClick={() => handleDelete(course.courseID)} className="text-gray-500 hover:text-gray-700">
+                      <button
+                        onClick={() => handleDelete(course.courseID)}
+                        className="text-gray-500 hover:text-gray-700"
+                      >
                         <DeleteIcon className="w-5 h-5" />
                       </button>
-                    </td>
-                  </tr>
-                ))
-              ) : (
-                <tr>
-                  <td colSpan="6" className="px-6 py-4 text-center text-gray-500">No courses found</td>
+                    </div>
+                  </td>
                 </tr>
-              )}
-            </tbody>
-          </table>
-        </div>
+              ))
+            ) : (
+              <tr>
+                <td colSpan="6" className="px-6 py-4 text-center text-gray-500">
+                  No courses found
+                </td>
+              </tr>
+            )}
+          </tbody>
+        </table>
       </div>
+    </div>
+  </div>
+</div>
 
-      <div className="flex flex-wrap items-center gap-4 mt-6">
-        {/* Course ID */}
-        <input 
-          type="text" 
-          placeholder="Course ID" 
-          value={courseID} 
-          onChange={(e) => setCourseID(e.target.value)} 
-          className="border border-gray-300 rounded-lg px-3 py-2 w-40" 
-          disabled={editing} 
-        />
+      
+<div className="flex justify-center w-full">
+  <div className="relative mt-6 shadow-md rounded-lg p-1 bg-white">
+    <div className="flex flex-wrap items-center gap-4 justify-center">
+      {/* Course ID */}
+      <input 
+        type="text" 
+        placeholder="Course ID" 
+        value={courseID} 
+        onChange={(e) => setCourseID(e.target.value)} 
+        className="rounded-lg px-4 py-2 outline-none focus:ring focus:ring-blue-500 focus:border-blue-500" 
+        disabled={editing} 
+      />
 
-        {/* Course Name */}
-        <input 
-          type="text" 
-          placeholder="Course Name" 
-          value={courseName} 
-          onChange={(e) => setCourseName(e.target.value)} 
-          className="border border-gray-300 rounded-lg px-3 py-2 w-60" 
-        />
+      {/* Course Name */}
+      <input 
+        type="text" 
+        placeholder="Course Name" 
+        value={courseName} 
+        onChange={(e) => setCourseName(e.target.value)} 
+        className="rounded-lg px-3 py-2 w-60 outline-none focus:ring focus:ring-blue-500 focus:border-blue-500" 
+      />
 
-        {/* Credits */}
-        <input 
-          type="text" 
-          placeholder="Credits" 
-          value={credits} 
-          onChange={(e) => setCredits(e.target.value)} 
-          className="border border-gray-300 rounded-lg px-3 py-2 w-32" 
-        />
+      {/* Credits */}
+      <input 
+        type="text" 
+        placeholder="Credits" 
+        value={credits} 
+        onChange={(e) => setCredits(e.target.value)} 
+        className="rounded-lg px-3 py-2 w-32 outline-none focus:ring focus:ring-blue-500 focus:border-blue-500" 
+      />
 
-        {/* Department Selection */}
-        <select 
-          value={department} 
-          onChange={handleDepartmentChange} 
-          className="border border-gray-300 rounded-lg px-3 py-2 w-48"
-        >
-          <option value="">Select Department</option>
-          {departments.map((dept) => (
-            <option key={dept.id} value={dept.id}>{dept.name}</option>
-          ))}
-        </select>
+      {/* Department Selection */}
+      <select
+        value={selectedDepartment}
+        onChange={(e) => {
+          setSelectedDepartment(e.target.value);
+          handleDepartmentClick(e.target.value);
+        }}
+        className="block p-2 outline-none focus:ring focus:ring-blue-500 focus:border-blue-500 text-black rounded-lg"
+      >
+        <option value="">Select Department</option>
+        {departments.map((dept) => (
+          <option key={dept.id} value={dept.id}>{dept.name}</option>
+        ))}
+      </select>
 
-        {/* Programs Selection - Show only if department is selected */}
-        {department && filteredPrograms.length > 0 && (
-          <div className="border border-gray-200 rounded-lg p-2 x-2">
-            <div className="flex flex-wrap gap-4">
-              {filteredPrograms.map((prog) => (
-                <label key={prog.id} className="flex items-center space-x-2">
-                  <input 
-                    type="checkbox" 
-                    value={prog.id} 
-                    checked={selectedPrograms.includes(prog.id)} 
-                    onChange={() => handleProgramChange(prog.id)}
-                  />
-                  <span className="ml-2">{prog.name || "Unnamed Program"}</span>  {/* Ensure the name is shown */}
-                </label>
+      {/* Program Modal */}
+      {showProgramModal && (
+        <div className="absolute right-[3.5rem] bottom-[4rem] mt-2 w-64 bg-blue-500 bg-opacity-95 text-white p-4 rounded-lg shadow-lg z-50">
+          <div ref={modalRef}>
+            <h3 className="text-xl font-bold mb-4">Programs</h3>
+            <div className="max-h-60 overflow-y-auto">
+              {selectedDepartmentPrograms.map((prog) => (
+                <div key={prog.id} className="mb-1">
+                  <label
+                    className={`block p-2 rounded-lg transition-colors duration-200 ${
+                      selectedPrograms.includes(prog.id) ? 'bg-white text-black' : 'hover:bg-white hover:text-black'
+                    }`}
+                  >
+                    <input
+                      type="checkbox"
+                      value={prog.id}
+                      checked={selectedPrograms.includes(prog.id)}
+                      onChange={() => handleProgramChange(prog.id)}
+                      className="mr-2"
+                    />
+                    {prog.name}
+                  </label>
+                </div>
               ))}
             </div>
           </div>
-        )}
+        </div>
+      )}
 
-        {/* Submit and Cancel Buttons */}
-        <div className="flex items-center space-x-2">
+      {/* Submit and Cancel Buttons */}
+      <div className="flex items-center space-x-2">
         <button 
           onClick={handleSaveCourse} 
-          className={`px-4 py-2 rounded-lg ${editing ? 'bg-yellow-500 text-' : 'bg-blue-500 text-white'}`}
+          className={`px-4 py-2 rounded-lg ${editing ? 'bg-yellow-500 text-white' : 'bg-[#057DCD] text-white hover:bg-blue-500'}`}
         >
           {editing ? 'UPDATE' : 'ADD'}
         </button>
-          {editing && (
-            <button 
-              onClick={resetForm} 
-              className="bg-gray-500 text-white px-4 py-2 rounded-lg"
-            >
-              CANCEL
-            </button>
-          )}
-        </div>
+        {editing && (
+          <button 
+            onClick={resetForm} 
+            className="bg-gray-500 text-white px-4 py-2 rounded-lg"
+          >
+            CANCEL
+          </button>
+        )}
       </div>
     </div>
+  </div>
+
+      </div>
+      </div>
   );
 }

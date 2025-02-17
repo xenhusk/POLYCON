@@ -86,7 +86,6 @@ function AppointmentsCalendar() {
     const fetchCalendarData = async () => {
         const studentID = localStorage.getItem('studentID');
         if (!studentID) {
-            console.warn('studentID is null. Skipping calendar data fetch.');
             return;
         }
         const cacheKey = 'appointmentsCalendar';

@@ -1,51 +1,29 @@
 import React, { useEffect, useState } from 'react';
-import AppointmentItem from '../components/AppointmentItem'; // reuse design from appointments
-import { useSocket } from '../hooks/useSocket';
-import HistoryItem from '../components/HistoryItem';  // Add this import
+import { useQuery } from 'react-query';
+import HistoryItem from '../components/HistoryItem';
+import apiClient from '../utils/apiClient';
 
 function History() {
-  const [sessions, setSessions] = useState([]);
-  const [loading, setLoading] = useState(true);
-  const [error, setError] = useState(null);
   const role = localStorage.getItem('userRole')?.toLowerCase();
   const userID = role === 'faculty' ? localStorage.getItem('teacherID') : localStorage.getItem('studentID');
-  const socket = useSocket('http://localhost:5001');
-
-  const fetchHistory = async () => {
-    try {
-      const response = await fetch(`http://localhost:5001/consultation/get_history?role=${role}&userID=${userID}`);
-      const data = await response.json();
-      console.log('History:', data);
-      if (response.ok && Array.isArray(data)) {
-        // sort sessions by creation or scheduled time
-        const sorted = data.sort((a, b) => new Date(b.created_at) - new Date(a.created_at));
-        setSessions(sorted);
-      } else {
-        console.error('Error fetching history:', data.error);
+  
+  const { data: sessions = [], isLoading, error, refetch } = useQuery(
+    ['history', role, userID],
+    () => apiClient.consultations.getHistory(role, userID),
+    {
+      enabled: !!role && !!userID,
+      staleTime: 30000,
+      refetchOnWindowFocus: false,
+      select: (data) => {
+        if (!Array.isArray(data)) return [];
+        return data.sort((a, b) => new Date(b.created_at) - new Date(a.created_at));
       }
-    } catch (error) {
-      console.error('Error fetching history:', error);
-      setError(error.message);
-    } finally {
-      setLoading(false);
     }
-  };
+  );
 
-  useEffect(() => {
-    if (!userID) {
-      setError('User ID is missing');
-      setLoading(false);
-      return;
-    }
-    fetchHistory();
-  }, []);
-
-  useEffect(() => {
-    if (socket) {
-      socket.on('session_updated', fetchHistory);
-      return () => socket.off('session_updated');
-    }
-  }, [socket]);
+  if (!role || !userID) {
+    return <p className="text-center text-red-500">Missing user information</p>;
+  }
 
   return (
     <div className="h-screen overflow-hidden p-8 fade-in">
@@ -53,10 +31,22 @@ function History() {
         Session History
       </h2>
       <div className="bg-[#dceffa] rounded-xl p-6 shadow-sm h-[calc(100vh-8rem)] overflow-y-auto fade-in delay-200">
-        {loading ? (
-          <p>Loading history...</p>
+        {isLoading ? (
+          <div className="flex items-center justify-center h-full">
+            <div className="animate-pulse text-lg text-gray-600">
+              Fetching history...
+            </div>
+          </div>
         ) : error ? (
-          <p>Error: {error}</p>
+          <div className="text-red-500 text-center">
+            <p>Error loading history</p>
+            <button 
+              onClick={() => refetch()} 
+              className="mt-2 px-4 py-2 bg-blue-500 text-white rounded hover:bg-blue-600"
+            >
+              Try Again
+            </button>
+          </div>
         ) : sessions.length > 0 ? (
           <ul className="space-y-4">
             {sessions.map((session, index) => (
@@ -68,7 +58,15 @@ function History() {
             ))}
           </ul>
         ) : (
-          <p className="text-gray-500 italic">No session history available.</p>
+          <div className="text-center text-gray-500 italic">
+            <p>No session history available</p>
+            <button 
+              onClick={() => refetch()} 
+              className="mt-2 px-4 py-2 bg-blue-500 text-white rounded hover:bg-blue-600"
+            >
+              Refresh
+            </button>
+          </div>
         )}
       </div>
     </div>

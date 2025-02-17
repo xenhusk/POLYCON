@@ -24,6 +24,7 @@ export default function AddGrade() {
   const [filteredCourses, setFilteredCourses] = useState([]); // Filtered courses for predictive dropdown
   const [schoolYearFilter, setSchoolYearFilter] = useState(''); // School year filter input
   const [semesterFilter, setSemesterFilter] = useState(''); // Semester filter input
+  
 
   // NEW: States for filtering by student names (Google Docs style)
   const [filterStudentQuery, setFilterStudentQuery] = useState('');
@@ -549,46 +550,52 @@ export default function AddGrade() {
   {/* Scrollable Table Body */}
   <div className="max-h-80 overflow-y-scroll">
       <table className="w-full bg-white text-center">
-      <tbody>
-        {filteredGrades.length > 0 ? (
-          filteredGrades.map((grade) => (
-            <tr key={grade.gradeID} className="border-b hover:bg-gray-100 align-middle">
-              <td className="px-4 py-3 w-[150px] min-w-[120px]">{grade.studentID}</td>
-              <td className="px-4 py-3 w-[200px] min-w-[180px]">{grade.studentName}</td>
-              <td className="px-4 py-3 w-[350px] min-w-[200px]">{grade.courseName}</td>
-              <td className="px-4 py-3 w-[140px] min-w-[100px]">{grade.grade}</td>
-              <td className="px-4 py-3 w-[150px] min-w-[120px]">{grade.period}</td>
-              <td className="px-4 py-3 w-[180px] min-w-[150px]">{grade.school_year}</td>
-              <td className="px-4 py-3 w-[120px] min-w-[100px]">{grade.semester}</td>
-              <td className={`px-4 py-3 w-[160px] min-w-[140px] ${grade.remarks === 'PASSED' ? 'text-green-500' : 'text-red-500'}`}>
-                {grade.remarks}
-              </td>
-              {/* Icons in Actions Column */}
-              <td className="align-middle px-4 py-3 w-[100px] min-w-[80px] space-x-3">
-                <div className="flex items-center justify-center h-full space-x-3">
-                  <button onClick={() => handleEditGrade(grade)} className="mx-2 text-gray-500 hover:text-gray-700 inline-block">
-                    <EditIcon className="w-5 h-5 inline-block" />
-                  </button>
-                  <button onClick={() => handleDeleteGrade(grade?.id)} className="mx-2 text-gray-500 hover:text-gray-700 inline-block">
-                    <DeleteIcon className="w-5 h-5 inline-block" />
-                  </button>
-                </div>
-              </td>
-            </tr>
-          ))
-        ) : (
+        <tbody>
+        {grades.length === 0 ? (
           <tr>
-            <td colSpan="9" className="px-6 py-4 text-center text-gray-500">No grades found</td>
+            <td colSpan="9" className="px-6 py-4 text-center text-gray-500">Loading, please wait...</td>
           </tr>
+        ) : (
+          filteredGrades.length > 0 ? (
+            filteredGrades.map((grade) => (
+              <tr key={grade.gradeID} className="border-b hover:bg-gray-100 align-middle">
+                <td className="px-4 py-3 w-[150px] min-w-[120px]">{grade.studentID}</td>
+                <td className="px-4 py-3 w-[200px] min-w-[180px]">{grade.studentName}</td>
+                <td className="px-4 py-3 w-[350px] min-w-[200px]">{grade.courseName}</td>
+                <td className="px-4 py-3 w-[140px] min-w-[100px]">{grade.grade}</td>
+                <td className="px-4 py-3 w-[150px] min-w-[120px]">{grade.period}</td>
+                <td className="px-4 py-3 w-[180px] min-w-[150px]">{grade.school_year}</td>
+                <td className="px-4 py-3 w-[120px] min-w-[100px]">{grade.semester}</td>
+                <td className={`px-4 py-3 w-[160px] min-w-[140px] ${grade.remarks === 'PASSED' ? 'text-green-500' : 'text-red-500'}`}>
+                  {grade.remarks}
+                </td>
+                <td className="align-middle px-4 py-3 w-[100px] min-w-[80px] space-x-3">
+                  <div className="flex items-center justify-center h-full space-x-3">
+                    <button onClick={() => handleEditGrade(grade)} className="mx-2 text-gray-500 hover:text-gray-700 inline-block">
+                      <EditIcon className="w-5 h-5 inline-block" />
+                    </button>
+                    <button onClick={() => handleDeleteGrade(grade?.id)} className="mx-2 text-gray-500 hover:text-gray-700 inline-block">
+                      <DeleteIcon className="w-5 h-5 inline-block" />
+                    </button>
+                  </div>
+                </td>
+              </tr>
+            ))
+          ) : (
+            <tr>
+              <td colSpan="9" className="px-6 py-4 text-center text-gray-500">No grades found</td>
+            </tr>
+          )
         )}
       </tbody>
     </table>
   </div>
 </div>
+</div>
 
-
+<div className="fixed-content">
  {/* Add / Edit Grade Form */}
-<div className="mt-6 mr-6 ml-6 shadow-md rounded-lg p-2 bg-white">
+<div className="t-6 mr-6 ml-6 shadow-md rounded-lg p-2 bg-white">
   <div className="flex items-center justify-between space-x-4">
     {/* Student Name Input */}
     <div className="relative flex-grow">
@@ -687,8 +694,8 @@ export default function AddGrade() {
     )}
   </div>
 </div>
+</div>
 
-    </div>
     </div>
   );
 }

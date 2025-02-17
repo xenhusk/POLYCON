@@ -28,5 +28,3 @@ def create_notification():
         return jsonify({"message": "Notification created successfully."}), 201
     except Exception as e:
         return jsonify({"error": str(e)}), 500
-
-# ...register blueprint in your main app...
