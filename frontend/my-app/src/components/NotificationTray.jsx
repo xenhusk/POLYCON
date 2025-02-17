@@ -55,7 +55,6 @@ const NotificationTray = ({ isVisible, onClose, position }) => {
         {/* Footer */}
         <div className="sticky bottom-0 bg-white px-4 py-2 border-t border-gray-200">
           <button className="w-full text-sm text-blue-500 hover:text-blue-700">
-            View all notifications
           </button>
         </div>
       </div>

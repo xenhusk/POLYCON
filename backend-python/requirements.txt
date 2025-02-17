@@ -13,3 +13,5 @@ bcrypt
 setuptools
 flask-socketio
 eventlet
+Pillow
+gunicorn
