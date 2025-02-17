@@ -173,12 +173,12 @@ export default function Programs() {
         <div className="mt-4 shadow-md rounded-lg overflow-hidden">
           <div className="overflow-x-auto">
             <table className="w-full bg-white text-center">
-              <thead className="bg-gray-100 text-gray-700">
+              <thead className="bg-[#057DCD] text-white">
                 <tr className="border-b">
                   <th className="px-4 py-3 w-[150px] min-w-[120px]">ID</th>
                   <th className="px-4 py-3 w-[200px] min-w-[180px]">Program Name</th>
                   <th className="px-4 py-3 w-[200px] min-w-[180px]">Department</th>
-                  <th className="px-4 py-3 text-center">Actions</th>
+                  <th className="px-4 py-3 pr-4 text-center">Actions</th>
                 </tr>
               </thead>
             </table>
@@ -191,7 +191,7 @@ export default function Programs() {
                   filteredPrograms.map((program) => {
                     const department = departments.find(dept => dept.id === program.departmentID || dept.departmentID === program.departmentID);
                     return (
-                      <tr key={program.id} className="border-b hover:bg-gray-100 h-[50px] align-middle">
+                      <tr key={program.id} className="border-b hover:bg-[#DBF1FF] h-[50px] align-middle">
                         <td className="px-4 py-3 w-[150px] min-w-[120px]">{program.id}</td>
                         <td className="px-4 py-3 w-[200px] min-w-[180px]">{program.programName}</td>
                         <td className="px-4 py-3 w-[200px] min-w-[180px]">{department ? department.name || department.departmentName : 'Unknown'}</td>

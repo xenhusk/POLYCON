@@ -318,20 +318,20 @@ export default function Courses() {
         </div>
         <button 
           onClick={applyFilters} 
-          className="bg-[#057DCD] text-white px-6 py-2 rounded-lg shadow-md hover:bg-blue-600 transition"
+          className="bg-[#057DCD] text-white px-6 py-2 rounded-lg shadow-md hover:bg-[#0065A8] transition"
         >
           Search
         </button>
         <button 
           onClick={() => setShowFilters(!showFilters)} 
-          className="bg-[#057DCD] text-white p-3 rounded-full shadow-md flex items-center justify-center hover:bg-blue-600 transition"
+          className="bg-[#057DCD] text-white p-3 rounded-full shadow-md flex items-center justify-center hover:bg-[#0065A8] transition"
         >
           <FilterIcon className="w-5 h-5" />
         </button>
       </div>
 
       {showFilters && (
-        <div ref={filterRef} className="absolute right-[23rem] mt-2 mx-auto w-64 bg-[#057DCD] bg-opacity-95 text-white p-4 rounded-lg shadow-lg z-100">
+        <div ref={filterRef} className="absolute right-[23rem] mt-2 mx-auto w-64 bg-[#057DCD] bg-opacity-95 text-white p-4 rounded-lg shadow-lg z-10">
           <h3 className="text-xl font-bold">FILTERS</h3>
 
           {/* Department Filter */}
@@ -340,7 +340,7 @@ export default function Courses() {
             <select
               value={selectedDepartment}
               onChange={handleDepartmentFilterChange}
-              className="block w-full p-2 mt-1 border border-gray-300 text-black rounded"
+              className="block w-full p-2 mt-1 rounded-lg border-gray-300 text-black rounded"
             >
               <option value="">All Departments</option>
               {departments.map((dept) => (
@@ -357,7 +357,8 @@ export default function Courses() {
               <label className="font-semibold">Programs</label>
               <div className="mt-2">
                 {filteredPrograms.map((prog) => (
-                  <label key={prog.id} className="block">
+                  <div key={prog.id} className='mb-1'>
+                  <label className={`block p-2 rounded-lg transition-colors duration-200 ${filterSelectedPrograms.includes(prog.id) ? 'bg-white text-black' : 'hover:bg-white hover:text-black'}`}>
                     <input
                       type="checkbox"
                       value={prog.id}
@@ -367,6 +368,7 @@ export default function Courses() {
                     />
                     {prog.name}
                   </label>
+                  </div>
                 ))}
               </div>
             </div>
@@ -379,14 +381,14 @@ export default function Courses() {
     <div className="overflow-x-auto">
       <table className="w-full bg-white text-center table-fixed">
         {/* Fixed Table Header */}
-        <thead className="bg-[#057DCD] text-white top-0 z-10">
+        <thead className="bg-[#0065A8] text-white top-0 z-10">
           <tr className="border-b">
             <th className="py-3 ">ID</th>
             <th className=" py-3  ">Course Name</th>
-            <th className=" py-3  ">Credits</th>
-            <th className="py-3  ">Department</th>
-            <th className=" py-3 ">Program</th>
-            <th className=" py-3  text-center">Actions</th>
+            <th className=" py-3 pr-1">Credits</th>
+            <th className="py-3 pr-1 ">Department</th>
+            <th className=" py-3 pr-3">Program</th>
+            <th className=" py-3 pr-4 text-center">Actions</th>
           </tr>
         </thead>
       </table>
