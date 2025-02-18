@@ -2,12 +2,19 @@ import React, { useState, useEffect, useMemo, useCallback } from 'react';
 import { useQuery } from 'react-query';
 import AppointmentItem from '../components/AppointmentItem';
 import { useSocket } from '../hooks/useSocket';
-import apiClient, { queryClient } from '../utils/apiClient';
+
+// Fetch student appointments via React Query
+const fetchStudentAppointments = async () => {
+  const studentID = localStorage.getItem('studentID');
+  const res = await fetch(`http://localhost:5001/bookings/get_bookings?role=student&userID=${studentID}`);
+  if (!res.ok) throw new Error('Network response was not ok');
+  return res.json();
+};
 
 function StudentAppointments() {
-  const { data: bookings = [], refetch } = useQuery('studentAppointments', apiClient.bookings.getStudentBookings, {
-    staleTime: 30000,
-    refetchOnWindowFocus: false
+  const { data: bookings = [], refetch } = useQuery('studentAppointments', fetchStudentAppointments, {
+    staleTime: 30000, // 30 seconds caching
+    refetchOnWindowFocus: false,
   });
 
   const [appointments, setAppointments] = useState({ pending: [], upcoming: [] });
@@ -91,40 +98,56 @@ function StudentAppointments() {
   );
 }
 
+// Similarly, update TeacherAppointments to use useQuery
+const fetchTeacherAppointments = async () => {
+  const teacherID = localStorage.getItem('teacherID');
+  const res = await fetch(`http://localhost:5001/bookings/get_bookings?role=faculty&userID=${teacherID}`);
+  if (!res.ok) throw new Error('Network response was not ok');
+  return res.json();
+};
+
 function TeacherAppointments() {
-  const { data: appointments = [], refetch } = useQuery('teacherAppointments', apiClient.bookings.getTeacherBookings, {
+  const { data: appointments = [], refetch } = useQuery('teacherAppointments', fetchTeacherAppointments, {
     staleTime: 30000,
-    refetchOnWindowFocus: false
+    refetchOnWindowFocus: false,
   });
 
-  const [pending, setPending] = useState([]);
-  const [upcoming, setUpcoming] = useState([]);
+  const [sortedAppointments, setSortedAppointments] = useState({ pending: [], upcoming: [] });
   const [confirmInputs, setConfirmInputs] = useState({});
   const socket = useSocket('http://localhost:5001');
 
-  useEffect(() => {
+  // Memoize the sorted appointments
+  const sortedData = useMemo(() => {
     const upcomingApps = appointments
       .filter(app => app.status === 'confirmed')
       .sort((a, b) => new Date(a.schedule) - new Date(b.schedule));
+    
     const pendingApps = appointments
       .filter(app => app.status === 'pending')
       .sort((a, b) => new Date(a.created_at) - new Date(b.created_at));
-    setUpcoming(upcomingApps);
-    setPending(pendingApps);
+
+    return {
+      upcoming: upcomingApps,
+      pending: pendingApps
+    };
   }, [appointments]);
+
+  // Update state when memoized data changes
+  useEffect(() => {
+    setSortedAppointments(sortedData);
+  }, [sortedData]);
+
+  // Memoize the booking update handler
+  const handleBookingUpdate = useCallback(() => {
+    refetch();
+  }, [refetch]);
 
   useEffect(() => {
     if (socket) {
-      const handleBookingUpdate = (data) => {
-        console.log('Booking update received:', data);
-        // Refetch on any booking update, including creates
-        refetch();
-      };
-
       socket.on('booking_updated', handleBookingUpdate);
       return () => socket.off('booking_updated', handleBookingUpdate);
     }
-  }, [socket, refetch]);
+  }, [socket, handleBookingUpdate]);
 
   const handleConfirmClick = (bookingID) => {
     setConfirmInputs(prev => ({ ...prev, [bookingID]: { schedule: '', venue: '' } }));
@@ -135,7 +158,11 @@ function TeacherAppointments() {
       // Remove alert; instead, throw an error to be caught later.
       throw new Error("Schedule and venue are required to confirm the booking.");
     }
-    const response = await apiClient.bookings.confirmBooking({ bookingID, schedule, venue });
+    const response = await fetch('http://localhost:5001/bookings/confirm_booking', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ bookingID, schedule, venue }),
+    });
     if (!response.ok) {
       const result = await response.json();
       throw new Error(result.error || "Unknown error");
@@ -144,7 +171,11 @@ function TeacherAppointments() {
   }
 
   async function cancelBooking(bookingID) {
-    const response = await apiClient.bookings.cancelBooking({ bookingID });
+    const response = await fetch('http://localhost:5001/bookings/cancel_booking', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ bookingID }),
+    });
     if (!response.ok) {
       const result = await response.json();
       throw new Error(result.error || "Unknown error");
@@ -170,9 +201,9 @@ function TeacherAppointments() {
           Pending Appointments
         </h3>
         <div className="flex-1 overflow-y-auto min-h-0">
-          {pending.length > 0 ? (
+          {sortedAppointments.pending.length > 0 ? (
             <ul className="space-y-4 pr-2">
-              {pending.map(app => (
+              {sortedAppointments.pending.map(app => (
                 <AppointmentItem 
                   key={app.id}
                   appointment={app}
@@ -196,9 +227,9 @@ function TeacherAppointments() {
           Upcoming Appointments
         </h3>
         <div className="flex-1 overflow-y-auto min-h-0">
-          {upcoming.length > 0 ? (
+          {sortedAppointments.upcoming.length > 0 ? (
             <ul className="space-y-4 pr-2">
-              {upcoming.map(app => (
+              {sortedAppointments.upcoming.map(app => (
                 <AppointmentItem 
                   key={app.id}
                   appointment={app}
@@ -218,7 +249,14 @@ function TeacherAppointments() {
 }
 
 function Appointments() {
-  const [role] = useState(() => localStorage.getItem('userRole')?.toLowerCase() || '');
+  const [role, setRole] = useState(() => {
+    // Initialize role from localStorage immediately
+    return localStorage.getItem('userRole')?.toLowerCase() || '';
+  });
+
+  // Remove the role-setting effect that was causing multiple updates
+  // The role should now be stable from initial state
+
   if (!role) return <p>Loading...</p>;
   
   return (

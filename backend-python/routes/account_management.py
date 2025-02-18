@@ -12,6 +12,10 @@ def convert_references(value):
         return str(value.path)
     return value
 
+def generate_full_name(first_name, last_name):
+    """Concatenate first name and last name to create a fullName field."""
+    return f"{first_name.strip()} {last_name.strip()}"
+
 @acc_management_bp.route('/signup', methods=['POST'])
 def signup():
     try:
@@ -103,6 +107,7 @@ def signup():
             "ID": id_number,
             "firstName": first_name,
             "lastName": last_name,
+            "fullName": generate_full_name(first_name, last_name),  # NEW: fullName field
             "email": email,
             "password": hashed_password,
             "department": db.collection('departments').document(department_id),  # Firestore reference

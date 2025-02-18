@@ -253,15 +253,6 @@ function App() {
     }
   };
 
-  const handleLogout = () => {
-    localStorage.removeItem('userEmail');
-    localStorage.removeItem('userID');
-    localStorage.removeItem('teacherId'); // Ensure teacherId is removed
-    setUser(null);
-    setProfile(null);
-    setTeacherId(null);
-    navigate('/');
-  };
   // Clicking the profile placeholder now triggers the modal popup
   const handleProfilePictureClick = () => {
     setShowProfileModal(true);
@@ -294,19 +285,7 @@ function App() {
                 ? 'ml-64'
                 : 'ml-20'
               : ''}`}>
-              {/* Remove the header section below */}
-              {/*
-              {profile && (
-                <header className="bg-gray-100 p-4 flex justify-between items-center">
-                  <div onClick={handleProfilePictureClick} className="cursor-pointer flex items-center">
-                    ... header content ...
-                  </div>
-                  <button onClick={handleLogout} className="bg-red-500 text-white px-4 py-2 rounded">
-                    Logout
-                  </button>
-                </header>
-              )}
-              */}
+
 
               {/* New Profile Picture Modal */}
               {showProfileModal && (

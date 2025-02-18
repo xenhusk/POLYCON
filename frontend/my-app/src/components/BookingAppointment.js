@@ -38,12 +38,15 @@ function BookingAppointment({ closeModal, role: propRole }) {
   const [isTeacherInputFocused, setIsTeacherInputFocused] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
   const [message, setMessage] = useState({ type: '', content: '' });
+  const [isStudentSearchLoading, setIsStudentSearchLoading] = useState(false);
+  const [isTeacherSearchLoading, setIsTeacherSearchLoading] = useState(false);
 
   // Debounced search function
   const debouncedSearch = (term) => {
     if (searchTimeout.current) {
       clearTimeout(searchTimeout.current);
     }
+    setIsStudentSearchLoading(true);
     searchTimeout.current = setTimeout(async () => {
       try {
         const res = await fetch(`http://localhost:5001/search/students?query=${encodeURIComponent(term.toLowerCase())}&page=${page}`);
@@ -59,6 +62,8 @@ function BookingAppointment({ closeModal, role: propRole }) {
         console.error('Search error:', error);
         setStudentResults([]);
         setHasMore(false);
+      } finally {
+        setIsStudentSearchLoading(false);
       }
     }, 300); // Wait 300ms after user stops typing
   };
@@ -92,6 +97,7 @@ function BookingAppointment({ closeModal, role: propRole }) {
   useEffect(() => {
     const fetchTeachers = async () => {
       try {
+        setIsTeacherSearchLoading(true);
         const res = await fetch(`http://localhost:5001/search/teachers?query=${encodeURIComponent(teacherSearchTerm.toLowerCase())}`);
         const data = await res.json();
         if (data.results) {
@@ -102,6 +108,8 @@ function BookingAppointment({ closeModal, role: propRole }) {
       } catch (error) {
         console.error('Teacher search error:', error);
         setTeacherResults([]);
+      } finally {
+        setIsTeacherSearchLoading(false);
       }
     };
 
@@ -109,9 +117,11 @@ function BookingAppointment({ closeModal, role: propRole }) {
       clearTimeout(searchTimeout.current);
     }
     
-    searchTimeout.current = setTimeout(() => {
-      fetchTeachers();
-    }, 300);
+    if (teacherSearchTerm) {
+      searchTimeout.current = setTimeout(() => {
+        fetchTeachers();
+      }, 300);
+    }
 
     return () => {
       if (searchTimeout.current) {
@@ -250,26 +260,33 @@ function BookingAppointment({ closeModal, role: propRole }) {
                   className="flex-1 min-w-[120px] outline-none bg-transparent" />
               </div>
               {/* Student Search Results Dropdown */}
-              {isStudentInputFocused && studentResults.length > 0 && (
+              {isStudentInputFocused && (
                 <ul className="absolute z-20 w-full mt-1 bg-white border border-gray-200 rounded-lg shadow-lg max-h-60 overflow-y-auto">
-                  {studentResults
-                    .filter(student => !selectedStudents.some(s => s.id === student.id))
-                    .map(student => (
-                      <li key={student.id}
-                        onClick={() => {
-                          setSelectedStudents([...selectedStudents, student]);
-                          setSearchTerm('');
-                        }}
-                        className="px-4 py-2 hover:bg-gray-50 flex items-center gap-3 cursor-pointer">
-                        <img src={getProfilePictureUrl(student.profile_picture)}
-                          alt="Profile"
-                          className="w-8 h-8 rounded-full" />
-                        <div>
-                          <div className="font-medium">{student.firstName} {student.lastName}</div>
-                          <div className="text-sm text-gray-500">{student.program} • {student.year_section}</div>
-                        </div>
-                      </li>
-                    ))}
+                  {isStudentSearchLoading ? (
+                    <li className="px-4 py-2 text-center text-gray-500">Searching...</li>
+                  ) : studentResults.length === 0 ? (
+                    <li className="px-4 py-2 text-center text-gray-500">No students found</li>
+                  ) : (
+                    studentResults
+                      .filter(student => !selectedStudents.some(s => s.id === student.id))
+                      .map(student => (
+                        <li key={student.id}
+                          // Changed onClick to onMouseDown to ensure proper selection before onBlur fires.
+                          onMouseDown={() => {
+                            setSelectedStudents([...selectedStudents, student]);
+                            setSearchTerm('');
+                          }}
+                          className="px-4 py-2 hover:bg-gray-50 flex items-center gap-3 cursor-pointer">
+                          <img src={getProfilePictureUrl(student.profile_picture)}
+                            alt="Profile"
+                            className="w-8 h-8 rounded-full" />
+                          <div>
+                            <div className="font-medium">{student.firstName} {student.lastName}</div>
+                            <div className="text-sm text-gray-500">{student.program} • {student.year_section}</div>
+                          </div>
+                        </li>
+                      ))
+                  )}
                 </ul>
               )}
             </div>
@@ -337,26 +354,34 @@ function BookingAppointment({ closeModal, role: propRole }) {
               </div>
               
               {/* Teacher Search Results Dropdown */}
-              {isTeacherInputFocused && teacherResults.length > 0 && (
+              {isTeacherInputFocused && (
                 <ul className="absolute z-20 w-full mt-1 bg-white border border-gray-200 rounded-lg shadow-lg max-h-60 overflow-y-auto">
-                  {teacherResults.map(teacher => (
-                    <li key={teacher.id}
-                      onClick={() => {
-                        setSelectedTeacher(teacher.id);
-                        setSelectedTeacherName(`${teacher.firstName} ${teacher.lastName}`);
-                        setSelectedTeacherProfile(teacher.profile_picture);
-                        setTeacherSearchTerm('');
-                      }}
-                      className="px-4 py-2 hover:bg-gray-50 flex items-center gap-3 cursor-pointer">
-                      <img src={getProfilePictureUrl(teacher.profile_picture)}
-                        alt="Profile"
-                        className="w-8 h-8 rounded-full" />
-                      <div>
-                        <div className="font-medium">{teacher.firstName} {teacher.lastName}</div>
-                        <div className="text-sm text-gray-500">{teacher.department}</div>
-                      </div>
-                    </li>
-                  ))}
+                  {isTeacherSearchLoading ? (
+                    <li className="px-4 py-2 text-center text-gray-500">Searching...</li>
+                  ) : teacherResults.length === 0 ? (
+                    <li className="px-4 py-2 text-center text-gray-500">No teachers found</li>
+                  ) : (
+                    teacherResults.map(teacher => (
+                      <li key={teacher.id}
+                        // Changed onClick to onMouseDown to ensure proper selection before onBlur fires.
+                        onMouseDown={() => {
+                          setSelectedTeacher(teacher.id);
+                          setSelectedTeacherName(`${teacher.firstName} ${teacher.lastName}`);
+                          setSelectedTeacherProfile(teacher.profile_picture);
+                          setTeacherSearchTerm('');
+                          setIsTeacherInputFocused(false);  // NEW: Close dropdown after selection
+                        }}
+                        className="px-4 py-2 hover:bg-gray-50 flex items-center gap-3 cursor-pointer">
+                        <img src={getProfilePictureUrl(teacher.profile_picture)}
+                          alt="Profile"
+                          className="w-8 h-8 rounded-full" />
+                        <div>
+                          <div className="font-medium">{teacher.firstName} {teacher.lastName}</div>
+                          <div className="text-sm text-gray-500">{teacher.department}</div>
+                        </div>
+                      </li>
+                    ))
+                  )}
                 </ul>
               )}
             </div>
@@ -382,26 +407,33 @@ function BookingAppointment({ closeModal, role: propRole }) {
                   placeholder="Search students..."
                   className="flex-1 min-w-[120px] outline-none bg-transparent" />
               </div>
-              {isStudentInputFocused && studentResults.length > 0 && (
+              {isStudentInputFocused && (
                 <ul className="absolute z-20 w-full mt-1 bg-white border border-gray-200 rounded-lg shadow-lg max-h-60 overflow-y-auto">
-                  {studentResults
-                    .filter(student => !selectedStudents.some(s => s.id === student.id))
-                    .map(student => (
-                      <li key={student.id}
-                        onClick={() => {
-                          setSelectedStudents([...selectedStudents, student]);
-                          setSearchTerm('');
-                        }}
-                        className="px-4 py-2 hover:bg-gray-50 flex items-center gap-3 cursor-pointer">
-                        <img src={getProfilePictureUrl(student.profile_picture)}
-                          alt="Profile"
-                          className="w-8 h-8 rounded-full" />
-                        <div>
-                          <div className="font-medium">{student.firstName} {student.lastName}</div>
-                          <div className="text-sm text-gray-500">{student.program} • {student.year_section}</div>
-                        </div>
-                      </li>
-                    ))}
+                  {isStudentSearchLoading ? (
+                    <li className="px-4 py-2 text-center text-gray-500">Searching...</li>
+                  ) : studentResults.length === 0 ? (
+                    <li className="px-4 py-2 text-center text-gray-500">No students found</li>
+                  ) : (
+                    studentResults
+                      .filter(student => !selectedStudents.some(s => s.id === student.id))
+                      .map(student => (
+                        <li key={student.id}
+                          // Changed onClick to onMouseDown to ensure proper selection before onBlur fires.
+                          onMouseDown={() => {
+                            setSelectedStudents([...selectedStudents, student]);
+                            setSearchTerm('');
+                          }}
+                          className="px-4 py-2 hover:bg-gray-50 flex items-center gap-3 cursor-pointer">
+                          <img src={getProfilePictureUrl(student.profile_picture)}
+                            alt="Profile"
+                            className="w-8 h-8 rounded-full" />
+                          <div>
+                            <div className="font-medium">{student.firstName} {student.lastName}</div>
+                            <div className="text-sm text-gray-500">{student.program} • {student.year_section}</div>
+                          </div>
+                        </li>
+                      ))
+                  )}
                 </ul>
               )}
             </div>

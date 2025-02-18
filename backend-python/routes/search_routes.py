@@ -7,6 +7,10 @@ search_bp = Blueprint('search_routes', __name__)
 
 RESULTS_PER_PAGE = 5  # Number of results to return per request
 
+# NEW: Global in-memory caches
+teacher_cache = {}
+student_cache = {}
+
 def get_program_name(program_ref):
     """Get program name from program reference."""
     if isinstance(program_ref, DocumentReference):
@@ -38,6 +42,7 @@ def get_user_details(user_id):
             "email": user_data.get('email', ''),
             "firstName": user_data.get('firstName', ''),
             "lastName": user_data.get('lastName', ''),
+            "fullName": user_data.get('fullName') or f"{user_data.get('firstName', '').strip()} {user_data.get('lastName', '').strip()}",
             "profile_picture": user_data.get('profile_picture', 'https://avatar.iran.liara.run/public/boy?username=Ash'),
             "role": user_data.get('role', '')
         }
@@ -51,13 +56,19 @@ def search_teachers():
     page = int(request.args.get('page', 0))
     
     try:
-        teachers_ref = db.collection('faculty').stream()
-        results = []
-        
-        for doc in teachers_ref:
-            user_data = get_user_details(doc.id)
-            if user_data and (not query or query in f"{user_data['firstName']} {user_data['lastName']}".lower()):
-                results.append(user_data)
+        cache_key = f"teachers:{query}"
+        # Use cached results if available
+        if cache_key in teacher_cache:
+            results = teacher_cache[cache_key]
+        else:
+            teachers_ref = db.collection('faculty').stream()
+            results = []
+            
+            for doc in teachers_ref:
+                user_data = get_user_details(doc.id)
+                if user_data and (not query or query in f"{user_data['firstName']} {user_data['lastName']}".lower()):
+                    results.append(user_data)
+            teacher_cache[cache_key] = results
 
         paginated_results = results[page * RESULTS_PER_PAGE:(page + 1) * RESULTS_PER_PAGE]
         has_more = len(results) > (page + 1) * RESULTS_PER_PAGE
@@ -78,18 +89,26 @@ def search_students():
     page = int(request.args.get('page', 0))
     
     try:
-        students_ref = db.collection('students').stream()
-        results = []
+        cache_key = f"students:{query}"
+        # Use cached results if available
+        if cache_key in student_cache:
+            results = student_cache[cache_key]
+        else:
+            students_ref = db.collection('students').stream()
+            results = []
+
+    # todo: perform filtering on students collection instead of stream
         
-        for doc in students_ref:
-            user_data = get_user_details(doc.id)
-            if user_data and (not query or query in f"{user_data['firstName']} {user_data['lastName']}".lower()):
-                # Add additional student-specific info
-                student_doc = doc.to_dict()
-                user_data['year_section'] = student_doc.get('year_section', '')
-                program_ref = student_doc.get('program')
-                user_data['program'] = get_program_name(program_ref)
-                results.append(user_data)
+            for doc in students_ref:
+                user_data = get_user_details(doc.id)
+                if user_data and (not query or query in f"{user_data['firstName']} {user_data['lastName']}".lower()):
+                    # Add additional student-specific info
+                    student_doc = doc.to_dict()
+                    user_data['year_section'] = student_doc.get('year_section', '')
+                    program_ref = student_doc.get('program')
+                    user_data['program'] = get_program_name(program_ref)
+                    results.append(user_data)
+            student_cache[cache_key] = results
 
         paginated_results = results[page * RESULTS_PER_PAGE:(page + 1) * RESULTS_PER_PAGE]
         has_more = len(results) > (page + 1) * RESULTS_PER_PAGE

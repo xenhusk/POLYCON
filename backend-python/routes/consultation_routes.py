@@ -170,15 +170,6 @@ def store_consultation():
 
         consultation_ref.document(new_session_id).set(consultation_data)
 
-        # Emit a notification for the new consultation session
-        socketio.emit('notification', {
-            'message': 'New consultation session stored.',
-            'type': 'consultation',
-            'session_id': new_session_id,
-            'created_at': SERVER_TIMESTAMP,
-            'isRead': False  # NEW field for unread status
-        })
-
         # If a booking_id exists in the query parameters, delete the corresponding booking document.
         booking_id = request.args.get('booking_id')
         if booking_id:
@@ -242,14 +233,6 @@ def start_session():
 
         # Store consultation details in Firestore with custom document ID
         consultation_ref.document(new_session_id).set(consultation_data)
-
-        # Optionally emit a notification event when a session starts
-        socketio.emit('notification', {
-            'message': 'Consultation session started.',
-            'type': 'consultation',
-            'session_id': new_session_id,
-            'created_at': SERVER_TIMESTAMP
-        })
 
         return jsonify({
             "message": "Session started successfully",
@@ -414,31 +397,49 @@ def get_history():
         return jsonify(cache[cache_key]), 200
 
     sessions = []
-    page_limit = 10  # Adjust pagination limit if needed
     if role.lower() == 'faculty':
         teacher_ref = db.document(f"faculty/{user_id}")
-        query = db.collection('consultation_sessions')\
-                 .where('teacher_id', '==', teacher_ref)\
-                 .select(["session_id", "teacher_id", "student_ids", "session_date", "summary"])\
-                 .order_by('session_date', direction=firestore.Query.DESCENDING)\
-                 .limit(page_limit)
+        query = db.collection('consultation_sessions') \
+                 .where('teacher_id', '==', teacher_ref) \
+                 .order_by('session_date', direction=firestore.Query.DESCENDING) \
+                 .limit(10)
     elif role.lower() == 'student':
         student_ref = db.document(f"students/{user_id}")
-        query = db.collection('consultation_sessions')\
-                 .where('student_ids', 'array_contains', student_ref)\
-                 .select(["session_id", "teacher_id", "student_ids", "session_date", "summary"])\
-                 .order_by('session_date', direction=firestore.Query.DESCENDING)\
-                 .limit(page_limit)
+        query = db.collection('consultation_sessions') \
+                 .where('student_ids', 'array_contains', student_ref) \
+                 .order_by('session_date', direction=firestore.Query.DESCENDING) \
+                 .limit(10)
     else:
         return jsonify({"error": "Invalid role"}), 400
 
     for doc in query.stream():
         session = doc.to_dict()
         session["session_id"] = doc.id
-        # ...existing processing code...
+
+        # For teacher info, check type and wrap if needed.
+        if "teacher_id" in session:
+            teacher_field = session["teacher_id"]
+            teacher = fetch_user_details(db.document(teacher_field) if isinstance(teacher_field, str) else teacher_field, "faculty")
+            session["teacher"] = teacher
+        else:
+            session["teacher"] = {}
+
+        # Fetch detailed student info for each reference, wrapping if needed.
+        detailed_students = []
+        if "student_ids" in session and isinstance(session["student_ids"], list):
+            for student in session["student_ids"]:
+                student_ref = db.document(student) if isinstance(student, str) else student
+                detailed_students.append(fetch_user_details(student_ref, "students"))
+        session["info"] = detailed_students
+
+        # Replace missing or whitespace-only fields.
+        fields_to_check = ['action_taken', 'audio_url', 'concern', 'outcome', 'remarks', 'summary', 'transcription']
+        for field in fields_to_check:
+            if field not in session or (isinstance(session.get(field), str) and session[field].strip() == ""):
+                session[field] = "N/A"
+
         sessions.append(serialize_firestore_data(session))
 
     sessions.sort(key=lambda s: s.get("session_date") or "", reverse=True)
-    cache[cache_key] = sessions
+    cache[cache_key] = sessions  # Cache the results
     return jsonify(sessions), 200
-

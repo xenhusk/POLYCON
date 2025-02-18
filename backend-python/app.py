@@ -1,3 +1,7 @@
+import os
+if os.getenv("USE_EVENTLET", "false").lower() == "true":
+    import eventlet
+    eventlet.monkey_patch()
 
 from flask import Flask, request, jsonify
 from flask_cors import CORS
@@ -15,6 +19,7 @@ from routes.search_routes import search_bp  # NEW import for search routes
 from services.socket_service import init_socket
 from routes.notification_routes import notification_bp
 from services.socket_service import socketio  # Ensure socket service is imported
+from routes.migration import migration_bp  # NEW: import migration blueprint
 
 
 app = Flask(__name__)
@@ -57,6 +62,8 @@ app.register_blueprint(profile_bp, url_prefix='/profile')
 app.register_blueprint(hometeacher_routes_bp, url_prefix='/hometeacher')
 
 app.register_blueprint(program_bp, url_prefix='/program')
+
+app.register_blueprint(migration_bp, url_prefix='/migration')  # NEW: register migration endpoints
 
 @socketio.on('connect')
 def handle_connect():
