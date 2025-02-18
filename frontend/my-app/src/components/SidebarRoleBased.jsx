@@ -31,6 +31,7 @@ const SidebarRoleBased = () => {
       { icon: <FaTools size={24} />, text: 'Manage Users', link: '/admin' },
       { icon: <FaCog size={24} />, text: 'Manage Courses', link: '/courses' },
       { icon: <FaHome size={24} />, text: 'Dashboard', link: '/admin/dashboard' },
+      { icon: <FaUser size={24} />, text: 'Department', link: '/department' },
     ]
   };
 

@@ -6,6 +6,9 @@ if os.getenv("USE_EVENTLET", "false").lower() == "true":
 from flask import Flask, request, jsonify
 from flask_cors import CORS
 from flask_socketio import SocketIO, emit
+from pydub import AudioSegment
+import os
+from services.assemblyai_service import transcribe_audio_with_assemblyai
 from routes.consultation_routes import consultation_bp
 from routes.booking_routes import booking_bp
 from routes.account_management import acc_management_bp
@@ -21,6 +24,7 @@ from routes.notification_routes import notification_bp
 from services.socket_service import socketio  # Ensure socket service is imported
 from routes.migration import migration_bp  # NEW: import migration blueprint
 
+from routes.department_routes import department_bp  # <-- new import
 
 app = Flask(__name__)
 # Update CORS to allow WebSocket
@@ -28,23 +32,55 @@ CORS(app, resources={
     r"/*": {
         "origins": "*",
         "allow_headers": ["Content-Type"],
-        "methods": ["GET", "POST", "OPTIONS"]
+        "methods": ["GET", "POST", "PUT", "DELETE", "OPTIONS"]
     }
 })
 
 socketio = init_socket(app)  # Initialize socket with app
 
+UPLOAD_FOLDER = "uploads/"
+CONVERTED_FOLDER = "converted/"
+os.makedirs(UPLOAD_FOLDER, exist_ok=True)
+os.makedirs(CONVERTED_FOLDER, exist_ok=True)
 
 # Register blueprints
 app.register_blueprint(user_bp, url_prefix='/user')  # <-- new registration
 app.register_blueprint(booking_bp, url_prefix='/bookings')  # Remove the /bookings prefix
 app.register_blueprint(search_bp, url_prefix='/search')  # NEW registration for search endpoints
 
+def convert_audio(input_path):
+    output_path = os.path.join(CONVERTED_FOLDER, "converted_audio.wav")
+    audio = AudioSegment.from_file(input_path)
+    audio = audio.set_frame_rate(16000).set_channels(1).set_sample_width(2)
+    audio.export(output_path, format="wav")
+    return output_path
+
 @app.route('/')
 def home():
     return jsonify({"message": "POLYCON Python Backend is Running"})  # Adding root route for health check
 
-app.register_blueprint(notification_bp, url_prefix='/')
+@app.route('/consultation/transcribe', methods=['POST'])
+def transcribe():
+    try:
+        if 'audio' not in request.files:
+            return jsonify({"error": "Audio file is required"}), 400
+
+        audio_file = request.files['audio']
+        speaker_count = request.form.get('speaker_count', 1)  # Get speaker count (default to 1)
+
+        input_path = os.path.join(UPLOAD_FOLDER, audio_file.filename)
+        audio_file.save(input_path)
+
+        # Convert audio to 16kHz mono WAV
+        converted_audio_path = convert_audio(input_path)
+
+        # Perform transcription using AssemblyAI with speaker count
+        transcription = transcribe_audio_with_assemblyai(converted_audio_path, int(speaker_count))
+
+        return jsonify({"audioUrl": converted_audio_path, "transcription": transcription})
+    except Exception as e:
+        return jsonify({"error": str(e)}), 500    
+
 # Register the consultation routes as a blueprint
 app.register_blueprint(consultation_bp, url_prefix='/consultation')
 
@@ -64,6 +100,7 @@ app.register_blueprint(hometeacher_routes_bp, url_prefix='/hometeacher')
 app.register_blueprint(program_bp, url_prefix='/program')
 
 app.register_blueprint(migration_bp, url_prefix='/migration')  # NEW: register migration endpoints
+app.register_blueprint(department_bp, url_prefix='/department')  # <-- new registrations
 
 @socketio.on('connect')
 def handle_connect():
@@ -74,6 +111,6 @@ def handle_disconnect():
     print('Client disconnected')
 
 if __name__ == '__main__':
-    # Start the Socket.IO server along with Flask app
-    socketio.run(app, host='0.0.0.0', port=5001)
+    # Enable WebSocket support
+    socketio.run(app, debug=True, port=5001, allow_unsafe_werkzeug=True)
 

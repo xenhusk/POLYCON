@@ -3,6 +3,7 @@ import { useNavigate } from 'react-router-dom';
 import { ReactComponent as FilterIcon } from './icons/FilterAdd.svg';
 import { ReactComponent as EditIcon } from './icons/Edit.svg';
 import { ReactComponent as DeleteIcon } from './icons/delete.svg';
+import { motion, AnimatePresence } from 'framer-motion';
 
 export default function Courses() {
   const [courses, setCourses] = useState([]);
@@ -23,8 +24,37 @@ export default function Courses() {
   const [courseFilter, setCourseFilter] = useState(''); // Course filter input
   const [showProgramModal, setShowProgramModal] = useState(false);
   const [selectedDepartmentPrograms, setSelectedDepartmentPrograms] = useState([]);
+  const [showEditModal, setShowEditModal] = useState(false);
+  const [editCourse, setEditCourse] = useState(null);
   const filterRef = useRef(null);
   const modalRef = useRef(null);
+
+  // Add these animation variants before your component
+  const modalVariants = {
+    hidden: { 
+      opacity: 0,
+      scale: 0.95,
+      y: 20
+    },
+    visible: { 
+      opacity: 1,
+      scale: 1,
+      y: 0,
+      transition: {
+        type: "spring",
+        stiffness: 300,
+        damping: 30
+      }
+    },
+    exit: {
+      opacity: 0,
+      scale: 0.95,
+      y: 20,
+      transition: {
+        duration: 0.2
+      }
+    }
+  };
 
   useEffect(() => {
     fetchInitialData();
@@ -110,6 +140,64 @@ export default function Courses() {
     setShowProgramModal(false);
     setSelectedDepartmentPrograms([]);
   };
+  // Add this new function for handling edit save
+const handleEditSave = async () => {
+  if (!editCourse || !editCourse.courseID || !editCourse.courseName || 
+      !editCourse.credits || !department || !selectedPrograms.length) {
+    alert('All fields are required');
+    return;
+  }
+
+  try {
+    const response = await fetch(`http://localhost:5001/course/edit_course/${editCourse.courseID}`, {
+      method: 'PUT',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        courseID: editCourse.courseID,
+        courseName: editCourse.courseName,
+        credits: editCourse.credits,
+        department: department,
+        program: selectedPrograms
+      })
+    });
+
+    if (response.ok) {
+      // Convert department ID to name and program IDs to names
+      const departmentName = departments.find(d => d.id === department)?.name || department;
+      const programNames = selectedPrograms.map(progId => {
+        const program = programs.find(p => p.id === progId);
+        return program ? program.name : progId;
+      });
+
+      const updatedCourse = {
+        courseID: editCourse.courseID,
+        courseName: editCourse.courseName,
+        credits: editCourse.credits,
+        department: departmentName,
+        program: programNames
+      };
+
+      // Update the courses state
+      const updatedCourses = courses.map(course => 
+        course.courseID === editCourse.courseID ? updatedCourse : course
+      );
+
+      setCourses(updatedCourses);
+      setFilteredCourses(updatedCourses);
+      localStorage.setItem('courses', JSON.stringify(updatedCourses));
+      
+      alert('Course updated successfully');
+      setShowEditModal(false);
+      setEditCourse(null);
+      resetForm();
+    } else {
+      alert('Failed to update course');
+    }
+  } catch (error) {
+    console.error('Error updating course:', error);
+    alert('Error updating course');
+  }
+};
 
   const handleDepartmentFilterChange = (e) => {
     const selectedDeptName = e.target.value;
@@ -174,46 +262,55 @@ export default function Courses() {
   };
 
   const handleSaveCourse = async () => {
-    if (!courseID || !courseName || !credits || !department || selectedPrograms.length === 0) {
+    // Use different values based on editing mode
+    const cID = editing ? editCourse.courseID : courseID;
+    const cName = editing ? editCourse.courseName : courseName;
+    const cCredits = editing ? editCourse.credits : credits;
+    const cDepartment = department; // This should be set to the selected department id
+    const cPrograms = selectedPrograms; // Array of selected program ids
+  
+    // Debug log to check what values you have
+    console.log({ cID, cName, cCredits, cDepartment, cPrograms });
+  
+    if (!cID || !cName || !cCredits || !cDepartment || cPrograms.length === 0) {
       alert('All fields are required');
       return;
     }
+    
     try {
       const endpoint = editing 
-        ? `http://localhost:5001/course/edit_course/${courseID}` 
+        ? `http://localhost:5001/course/edit_course/${cID}` 
         : `http://localhost:5001/course/add_course`;
       const method = editing ? 'PUT' : 'POST';
-  
+    
       const response = await fetch(endpoint, {
         method,
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ courseID, courseName, credits, department, program: selectedPrograms })
+        body: JSON.stringify({ courseID: cID, courseName: cName, credits: cCredits, department: cDepartment, program: cPrograms })
       });
-  
+    
       if (response.ok) {
         alert(editing ? 'Course updated successfully' : 'Course added successfully');
-  
-        // **Convert department ID to department name**
-        const departmentName = departments.find(d => d.id === department)?.name || department;
-        
-        // **Convert program IDs to program names**
-        const programNames = selectedPrograms.map(progId => {
+    
+        // Convert department ID to department name and program IDs to names
+        const departmentName = departments.find(d => d.id === cDepartment)?.name || cDepartment;
+        const programNames = cPrograms.map(progId => {
           const program = programs.find(p => p.id === progId);
           return program ? program.name : progId;
         });
-  
+    
         const newCourse = { 
-          courseID, 
-          courseName, 
-          credits, 
-          department: departmentName,  // ✅ Store department as name
-          program: programNames  // ✅ Store program as names
+          courseID: cID, 
+          courseName: cName, 
+          credits: cCredits, 
+          department: departmentName,  // store department as name
+          program: programNames         // store programs as names
         };
-  
-        const updatedCourses = editing 
-          ? courses.map(course => course.courseID === courseID ? newCourse : course)
+    
+        const updatedCourses = editing
+          ? courses.map(course => course.courseID === cID ? newCourse : course)
           : [...courses, newCourse];
-  
+    
         setCourses(updatedCourses);
         setFilteredCourses(updatedCourses);
         localStorage.setItem('courses', JSON.stringify(updatedCourses));
@@ -225,29 +322,26 @@ export default function Courses() {
       console.error('Error saving course:', error);
     }
   };
-  
-
   const handleEdit = (course) => {
-    setCourseID(course.courseID);
-    setCourseName(course.courseName);
-    setCredits(course.credits);
-
-    // Find department ID from the selected course
-    const departmentId = departments.find(d => d.name === course.department)?.id || "";
-    setDepartment(departmentId);
-
-    // Filter programs based on selected department
-    const relatedPrograms = programs.filter(prog => prog.departmentId === departmentId);
-    setFilteredPrograms(relatedPrograms); // Set only relevant programs
-
-    // Select programs related to the course
-    const selectedProgramIds = relatedPrograms
-        .filter(p => course.program.includes(p.name))
-        .map(p => p.id);
-
-    setSelectedPrograms(selectedProgramIds);
-
-    setEditing(true);
+    setEditCourse({ ...course });
+    
+    // Convert department name to its ID for editing if needed
+    const deptObj = departments.find((d) => d.name === course.department);
+    if (deptObj) {
+      setDepartment(deptObj.id);
+      const relatedPrograms = programs.filter((prog) => prog.departmentID === deptObj.id);
+      setFilteredPrograms(relatedPrograms);
+      const selectedProgramIds = relatedPrograms
+        .filter((p) => course.program.includes(p.name))
+        .map((p) => p.id);
+      setSelectedPrograms(selectedProgramIds);
+    } else {
+      setDepartment('');
+      setFilteredPrograms([]);
+      setSelectedPrograms([]);
+    }
+    
+    setShowEditModal(true);
   };
 
   const handleDelete = async (courseID) => {
@@ -281,6 +375,7 @@ export default function Courses() {
     setSelectedPrograms([]);
     setFilteredPrograms([]);
     setEditing(false);
+    setShowEditModal(false); // Hide edit modal after reset
   };
 
   const applyFilters = () => {
@@ -318,77 +413,98 @@ export default function Courses() {
         </div>
         <button 
           onClick={applyFilters} 
-          className="bg-[#057DCD] text-white px-6 py-2 rounded-lg shadow-md hover:bg-[#0065A8] transition"
+          className="bg-[#057DCD] text-white px-6 py-2 rounded-lg shadow-md hover:bg-blue-600 transition"
         >
           Search
         </button>
         <button 
           onClick={() => setShowFilters(!showFilters)} 
-          className="bg-[#057DCD] text-white p-3 rounded-full shadow-md flex items-center justify-center hover:bg-[#0065A8] transition"
+          className="bg-[#057DCD] text-white p-3 rounded-full shadow-md flex items-center justify-center hover:bg-blue-600 transition"
         >
           <FilterIcon className="w-5 h-5" />
         </button>
       </div>
 
       {showFilters && (
-        <div ref={filterRef} className="absolute right-[23rem] mt-2 mx-auto w-64 bg-[#057DCD] bg-opacity-95 text-white p-4 rounded-lg shadow-lg z-10">
-          <h3 className="text-xl font-bold">FILTERS</h3>
+  <div ref={filterRef} className="absolute right-[23rem] mt-2 mx-auto w-80 bg-white rounded-xl shadow-2xl overflow-hidden z-40 bg-opacity-80">
+    {/* Header */}
+    <div className="bg-[#0065A8] px-6 py-4">
+      <h3 className="text-xl font-semibold text-white">FILTERS</h3>
+    </div>
 
-          {/* Department Filter */}
-          <div className="mt-4">
-            <label className="font-semibold">Department</label>
-            <select
-              value={selectedDepartment}
-              onChange={handleDepartmentFilterChange}
-              className="block w-full p-2 mt-1 rounded-lg border-gray-300 text-black rounded"
-            >
-              <option value="">All Departments</option>
-              {departments.map((dept) => (
-                <option key={dept.id} value={dept.name}>
-                  {dept.name}
-                </option>
-              ))}
-            </select>
-          </div>
+    {/* Filter Content */}
+    <div className="p-6 space-y-4 bg-opacity-80">
+      {/* Department Filter */}
+      <div>
+        <label className="block text-sm font-medium text-gray-700 mb-2 bg-opacity-80">
+          Department
+        </label>
+        <select
+          value={selectedDepartment}
+          onChange={handleDepartmentFilterChange}
+          className="w-full border-2 border-[#0065A8] rounded-lg px-3 py-2 text-gray-700
+                     focus:outline-none focus:ring-2 focus:ring-[#54BEFF]"
+        >
+          <option value="">All Departments</option>
+          {departments.map((dept) => (
+            <option key={dept.id} value={dept.name}>
+              {dept.name}
+            </option>
+          ))}
+        </select>
+      </div>
 
-          {/* Program Filter (Only show relevant programs for selected department) */}
-          {filteredPrograms.length > 0 && (
-            <div className="mt-4">
-              <label className="font-semibold">Programs</label>
-              <div className="mt-2">
-                {filteredPrograms.map((prog) => (
-                  <div key={prog.id} className='mb-1'>
-                  <label className={`block p-2 rounded-lg transition-colors duration-200 ${filterSelectedPrograms.includes(prog.id) ? 'bg-white text-black' : 'hover:bg-white hover:text-black'}`}>
-                    <input
-                      type="checkbox"
-                      value={prog.id}
-                      checked={filterSelectedPrograms.includes(prog.id)}
-                      onChange={() => handleProgramFilterChange(prog.id)}
-                      className="mr-2"
-                    />
+      {/* Programs Filter */}
+      {filteredPrograms.length > 0 && (
+        <div>
+          <label className="block text-sm font-medium text-gray-700 mb-2">
+            Programs
+          </label>
+          <div className="max-h-40 overflow-y-auto border-2 border-[#0065A8] rounded-lg">
+            {filteredPrograms.map((prog) => (
+              <div key={prog.id} className="px-2 py-1">
+                <label className={`flex items-center p-2 rounded-lg transition-colors duration-200
+                  ${filterSelectedPrograms.includes(prog.id) 
+                    ? 'bg-[#0065A8] text-white' 
+                    : 'hover:bg-[#54BEFF] text-white'
+                  }`}
+                >
+                  <input
+                    type="checkbox"
+                    value={prog.id}
+                    checked={filterSelectedPrograms.includes(prog.id)}
+                    onChange={() => handleProgramFilterChange(prog.id)}
+                      className="mr-3 h-4 w-4 accent-[#0065A8] border-gray-300 rounded 
+             checked:bg-[#0065A8] checked:hover:bg-[#54BEFF] "
+                  />
+                  <span className={filterSelectedPrograms.includes(prog.id) 
+                    ? 'text-white' 
+                    : 'text-gray-700'
+                  }>
                     {prog.name}
-                  </label>
-                  </div>
-                ))}
+                  </span>
+                </label>
               </div>
-            </div>
-          )}
+            ))}
+          </div>
         </div>
       )}
-
+    </div>
+  </div>
+)}
 <div className="flex justify-center w-full">
   <div className="mt-4 shadow-md rounded-lg overflow-hidden w-[70%] mx-auto">
     <div className="overflow-x-auto">
       <table className="w-full bg-white text-center table-fixed">
         {/* Fixed Table Header */}
-        <thead className="bg-[#0065A8] text-white top-0 z-10">
+        <thead className="bg-[#057DCD] text-white top-0 z-10">
           <tr className="border-b">
             <th className="py-3 ">ID</th>
             <th className=" py-3  ">Course Name</th>
-            <th className=" py-3 pr-1">Credits</th>
-            <th className="py-3 pr-1 ">Department</th>
-            <th className=" py-3 pr-3">Program</th>
-            <th className=" py-3 pr-4 text-center">Actions</th>
+            <th className=" py-3  ">Credits</th>
+            <th className="py-3  ">Department</th>
+            <th className=" py-3 ">Program</th>
+            <th className=" py-3  text-center">Actions</th>
           </tr>
         </thead>
       </table>
@@ -396,47 +512,47 @@ export default function Courses() {
       {/* Scrollable Table Body */}
       <div className="max-h-80 overflow-y-auto">
         <table className="w-full bg-white text-center table-fixed">
-          <tbody>
-            {courses.length === 0 ? (
-              <tr>
-                <td colSpan="6" className="px-6 py-4 text-center text-gray-500">
-                  Loading, please wait...
+        <tbody>
+          {courses.length === 0 ? (
+            <tr>
+              <td colSpan="6" className="px-6 py-4 text-center text-gray-500">
+                Loading, please wait...
+              </td>
+            </tr>
+          ) : filteredCourses.length > 0 ? (
+            filteredCourses.map((course) => (
+              <tr key={course.courseID} className="border-b hover:bg-[#DBF1FF] h-[50px] align-middle">
+                <td className="px-4 py-3">{course.courseID}</td>
+                <td className="px-4 py-3">{course.courseName}</td>
+                <td className="px-4 py-3">{course.credits}</td>
+                <td className="px-4 py-3">{course.department}</td>
+                <td className="px-4 py-3">{course.program.join(', ')}</td>
+                <td className="px-4 py-3 text-center">
+                  <div className="flex items-center justify-center space-x-3">
+                    <button
+                      onClick={() => handleEdit(course)}
+                      className="text-gray-500 hover:text-gray-700"
+                    >
+                      <EditIcon className="w-5 h-5" />
+                    </button>
+                    <button
+                      onClick={() => handleDelete(course.courseID)}
+                      className="text-gray-500 hover:text-gray-700"
+                    >
+                      <DeleteIcon className="w-5 h-5" />
+                    </button>
+                  </div>
                 </td>
               </tr>
-            ) : filteredCourses.length > 0 ? (
-              filteredCourses.map((course) => (
-                <tr key={course.courseID} className="border-b hover:bg-[#DBF1FF] h-[50px] align-middle">
-                  <td className="px-4 py-3">{course.courseID}</td>
-                  <td className="px-4 py-3">{course.courseName}</td>
-                  <td className="px-4 py-3">{course.credits}</td>
-                  <td className="px-4 py-3">{course.department}</td>
-                  <td className="px-4 py-3">{course.program.join(', ')}</td>
-                  <td className="px-4 py-3 text-center">
-                    <div className="flex items-center justify-center space-x-3">
-                      <button
-                        onClick={() => handleEdit(course)}
-                        className="text-gray-500 hover:text-gray-700"
-                      >
-                        <EditIcon className="w-5 h-5" />
-                      </button>
-                      <button
-                        onClick={() => handleDelete(course.courseID)}
-                        className="text-gray-500 hover:text-gray-700"
-                      >
-                        <DeleteIcon className="w-5 h-5" />
-                      </button>
-                    </div>
-                  </td>
-                </tr>
-              ))
-            ) : (
-              <tr>
-                <td colSpan="6" className="px-6 py-4 text-center text-gray-500">
-                  No courses found
-                </td>
-              </tr>
-            )}
-          </tbody>
+            ))
+          ) : (
+            <tr>
+              <td colSpan="6" className="px-6 py-4 text-center text-gray-500">
+                No courses found
+              </td>
+            </tr>
+          )}
+        </tbody>
         </table>
       </div>
     </div>
@@ -480,6 +596,7 @@ export default function Courses() {
         value={selectedDepartment}
         onChange={(e) => {
           setSelectedDepartment(e.target.value);
+          setDepartment(e.target.value); // Update department state for validation
           handleDepartmentClick(e.target.value);
         }}
         className="block p-2 outline-none focus:ring focus:ring-blue-500 focus:border-blue-500 text-black rounded-lg"
@@ -489,9 +606,8 @@ export default function Courses() {
           <option key={dept.id} value={dept.id}>{dept.name}</option>
         ))}
       </select>
-
-      {/* Program Modal */}
-      {showProgramModal && (
+           {/* Program Modal */}
+           {showProgramModal && (
         <div className="absolute right-[3.5rem] bottom-[4rem] mt-2 w-64 bg-blue-500 bg-opacity-95 text-white p-4 rounded-lg shadow-lg z-50">
           <div ref={modalRef}>
             <h3 className="text-xl font-bold mb-4">Programs</h3>
@@ -518,28 +634,149 @@ export default function Courses() {
           </div>
         </div>
       )}
+{showEditModal && editCourse && (
+  <AnimatePresence>
+    <div className="fixed inset-0 bg-black/50 backdrop-blur-sm flex items-center justify-center z-50 p-4">
+      <motion.div
+        variants={modalVariants}
+        initial="hidden"
+        animate="visible"
+        exit="exit"
+        className="bg-white rounded-xl shadow-2xl w-[40rem] overflow-hidden"
+        onClick={(e) => e.stopPropagation()}
+      >
+        {/* Modal Header */}
+        <div className="bg-[#0065A8] px-8 py-4 flex justify-between items-center">
+          <h2 className="text-xl font-semibold text-white">Edit Course</h2>
+          <button
+            onClick={() => { setShowEditModal(false); setEditCourse(null); }}
+            className="text-white hover:text-gray-200 transition-colors"
+          >
+            <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M6 18L18 6M6 6l12 12" />
+            </svg>
+          </button>
+        </div>
+
+      {/* Modal Body */}
+      <div className="p-8 mx-3 space-y-6 bg-white rounded-b-lg">
+
+        {/* Course Name */}
+        <div>
+          <label className="block text-sm font-medium text-gray-700 mb-2">
+            Course Name <span className="text-red-500">*</span>
+          </label>
+          <input
+            type="text"
+            value={editCourse.courseName}
+            onChange={(e) => setEditCourse({ ...editCourse, courseName: e.target.value })}
+            className="w-full border-2 border-[#0065A8] rounded-lg px-3 py-2 focus:outline-none focus:ring-2 focus:ring-[#54BEFF]"
+          />
+        </div>
+
+        {/* Credits */}
+        <div>
+          <label className="block text-sm font-medium text-gray-700 mb-2">
+            Credits <span className="text-red-500">*</span>
+          </label>
+          <input
+            type="text"
+            value={editCourse.credits}
+            onChange={(e) => setEditCourse({ ...editCourse, credits: e.target.value })}
+            className="w-full border-2 border-[#0065A8] rounded-lg px-3 py-2 focus:outline-none focus:ring-2 focus:ring-[#54BEFF]"
+          />
+        </div>
+
+        {/* Department */}
+        <div>
+          <label className="block text-sm font-medium text-gray-700 mb-2">
+            Department <span className="text-red-500">*</span>
+          </label>
+          <select
+            value={department}
+            onChange={(e) => {
+              const deptId = e.target.value;
+              setDepartment(deptId);
+              const deptProgs = programs.filter(prog => prog.departmentID === deptId);
+              setSelectedDepartmentPrograms(deptProgs);
+            }}
+            className="w-full border-2 border-[#0065A8] rounded-lg px-3 py-2 focus:outline-none focus:ring-2 focus:ring-[#54BEFF]"
+          >
+            <option value="">Select Department</option>
+            {departments.map((dept) => (
+              <option key={dept.id} value={dept.id}>{dept.name}</option>
+            ))}
+          </select>
+        </div>
+
+        {/* Programs */}
+        <div>
+          <label className="block text-sm font-medium text-gray-700 mb-2">
+            Programs <span className="text-red-500">*</span>
+          </label>
+<div className="max-h-40 overflow-y-auto border-2 border-[#0065A8] rounded-lg px-3 pt-2">
+  {selectedDepartmentPrograms.map((prog) => (
+    <div key={prog.id} className="mb-2">
+      <label 
+        className={`flex items-center p-2 rounded-lg transition-colors duration-200
+           ${selectedPrograms.includes(prog.id) 
+            ? 'bg-[#0065A8] text-white hover:bg-[#54BEFF]' 
+            : 'hover:bg-[#54BEFF] text-white'
+          }`}
+      >
+<input
+  type="checkbox"
+  value={prog.id}
+  checked={selectedPrograms.includes(prog.id)}
+  onChange={() => handleProgramChange(prog.id)}
+  className="mr-3 h-4 w-4 accent-[#0065A8] border-gray-300 rounded 
+             checked:bg-[#0065A8] checked:hover:bg-[#54BEFF] "
+/>
+        <span className={`${selectedPrograms.includes(prog.id) ? 'text-white' : 'text-gray-700'}`}>
+          {prog.name}
+        </span>
+      </label>
+    </div>
+  ))}
+</div>
+        </div>
+      </div>
+
+      {/* Buttons */}
+      <div className="px-6 py-4 flex justify-end space-x-4 bg-white rounded-b-lg">
+        <button
+          onClick={handleEditSave}
+          className="bg-[#0065A8] hover:bg-[#54BEFF] text-white px-4 py-2 rounded-lg transition-colors"
+        >
+          Save Changes
+        </button>
+        <button
+          onClick={() => { setShowEditModal(false); setEditCourse(null); }}
+          className="bg-gray-500 hover:bg-gray-600 text-white px-4 py-2 rounded-lg transition-colors"
+        >
+          Cancel
+        </button>
+      </div>
+  </motion.div>
+  </div>
+</AnimatePresence>
+
+)}
+
+
 
       {/* Submit and Cancel Buttons */}
       <div className="flex items-center space-x-2">
         <button 
           onClick={handleSaveCourse} 
-          className={`px-4 py-2 rounded-lg ${editing ? 'bg-yellow-500 text-white' : 'bg-[#057DCD] text-white hover:bg-blue-500'}`}
+          className={`px-4 py-2 rounded-lg bg-[#057DCD] text-white hover:bg-blue-500`}
         >
-          {editing ? 'UPDATE' : 'ADD'}
+          ADD
         </button>
-        {editing && (
-          <button 
-            onClick={resetForm} 
-            className="bg-gray-500 text-white px-4 py-2 rounded-lg"
-          >
-            CANCEL
-          </button>
-        )}
       </div>
     </div>
   </div>
-
-      </div>
+</div>
       </div>
   );
 }

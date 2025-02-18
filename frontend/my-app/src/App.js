@@ -17,6 +17,7 @@ import HomeTeacher from './components/HomeTeacher'; // added import
 import Programs from './components/Programs';
 import FinalDocument from './pages/finaldocument'; // add import for FinalDocument
 import History from './pages/History'; // add import for History
+import Departments from './components/Departments';
 
 import SidebarPreview from './components/SidebarPreview'; // Import the SidebarPreview component
 import Appointments from './pages/Appointments'; // Import the Appointments page
@@ -383,6 +384,7 @@ function App() {
                     <Route path="/programs" element={<Programs />} /> {/* Add this route */}
                     <Route path="/finaldocument" element={<FinalDocument />} /> {/* New route */}
                     <Route path="/history" element={<History />} /> {/* New route */}
+                    <Route path="/department" element={<Departments />} /> {/* New route */}
                   </Routes>
                 </motion.div>
               </AnimatePresence>

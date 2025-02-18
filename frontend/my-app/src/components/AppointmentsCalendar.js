@@ -235,7 +235,7 @@ function AppointmentsCalendar() {
 
     return (
         // UPDATED: Increase container maxWidth and update background if needed
-        <div className="bg-white p-4 rounded-lg shadow-lg" style={{ maxWidth: '1200px', margin: '0 auto', backgroundColor: '#fff' }}>
+        <div className="bg-white p-4 rounded-lg shadow-lg" style={{ maxWidth: '1200px', margin: '0 auto', backgroundColor: '#DDE8F2' }}>
             <Calendar
             localizer={localizer}
             events={events}
