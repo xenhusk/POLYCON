@@ -32,11 +32,11 @@ def add_department():
             return jsonify({"error": "Department name is required"}), 400
 
         # Fetch the last added department document to determine the next incremental ID
-        departments_ref = db.collection('departments').order_by("created_at", direction="DESCENDING").limit(1).stream()
+        departments_ref = db.collection('departments').order_by("departmentID", direction="DESCENDING").limit(1).stream()
         last_department = next(departments_ref, None)
 
         if last_department:
-            last_id = last_department.id
+            last_id = last_department.to_dict().get('departmentID', 'D00')
             if last_id.startswith("D"):
                 last_number = int(last_id[1:])
                 new_id = f"D{last_number + 1:02d}"  # Format as D01, D02, etc.
@@ -50,7 +50,6 @@ def add_department():
         department_ref.set({
             "departmentID": new_id,  # Store the document ID as a field
             "departmentName": department_name,
-
         })
 
         return jsonify({"message": "Department added successfully", "id": department_ref.id}), 201
