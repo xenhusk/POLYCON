@@ -1,4 +1,5 @@
 import React, { useState } from 'react';
+import { EyeOutlined, EyeInvisibleOutlined } from "@ant-design/icons";
 import { useNavigate } from 'react-router-dom';
 import logo from "./icons/DarkLogo.png";
 
@@ -7,6 +8,7 @@ const Login = ({ onLoginSuccess, onSwitchToSignup }) => {
   const [password, setPassword] = useState('');
   const [message, setMessage] = useState('');
   const [LoginClicked, setLoginClicked] = useState(false);
+  const [showPassword, setShowPassword] = useState(false);
   const navigate = useNavigate();
 
   const handleLoginSuccess = (data) => {
@@ -58,9 +60,18 @@ const Login = ({ onLoginSuccess, onSwitchToSignup }) => {
           </div>
           <div className="relative z-0 my-1">
             <input className="block px-1.5 my-2.5 mt-3 mx-auto w-full text-base text-gray-900 bg-transparent border-0 border-b-2 border-[#005B98] appearance-none dark:text-[#000000] dark:border-gray-600 dark:focus:border-blue-500 focus:outline-none focus:ring-0 focus:border-blue-600 peer"
-              type="password" name='password' id='Password' placeholder=" " value={password} onChange={(e) => setPassword(e.target.value)} required/>
+              type={showPassword ? "text" : "password"} name='password' id='Password' placeholder=" " value={password} onChange={(e) => setPassword(e.target.value)} required/>
             <label htmlFor="Password" className="absolute text-base text-gray-500 dark:text-gray-400 duration-300 transform -translate-y-6 scale-75 top-3 -z-10 origin-[0] peer-focus:start-[-1] peer-focus:text-blue-600 peer-focus:dark:text-blue-500 peer-placeholder-shown:scale-100 peer-placeholder-shown:translate-y-0 peer-focus:scale-75 peer-focus:-translate-y-6 rtl:peer-focus:translate-x-1/4 rtl:peer-focus:left-auto">
             Password</label>
+            {/* Show/Hide Icon */}
+            {password && (
+              <span
+                className="absolute right-[3%] top-3 cursor-pointer text-gray-600 hover:text-gray-800"
+                onClick={() => setShowPassword(!showPassword)}
+              >
+                {showPassword ? <EyeOutlined size={20} /> : <EyeInvisibleOutlined size={20} />}
+              </span>
+            )}
           </div>
             {message && <p className="text-center text-red-500 text-[0.9rem]">{message}</p>}
           <button 

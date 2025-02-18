@@ -1,4 +1,5 @@
 import React, { useState, useEffect } from 'react';
+import { EyeOutlined, EyeInvisibleOutlined } from "@ant-design/icons";
 import logo from "./icons/DarkLogo.png";
 
 const Signup = ({ onSwitchToLogin }) => {
@@ -9,6 +10,8 @@ const Signup = ({ onSwitchToLogin }) => {
   const [signupClicked, setSignupClicked] = useState(false);
   const [loginClicked, setLoginClicked] = useState(false);
   const [BackClicked, setBackClicked] = useState(false);
+  const [showPassword, setShowPassword] = useState(false);
+  const [showConfirmPassword, setShowConfirmPassword] = useState(false);
   const [formData, setFormData] = useState({
     idNumber: '',
     firstName: '',
@@ -177,9 +180,18 @@ const Signup = ({ onSwitchToLogin }) => {
 
             <div className="relative z-0">
               <input className="block py-1.5 px-1.5 my-2 mt-4 mx-auto w-full text-base text-gray-900 bg-transparent border-0 border-b-2 border-[#005B98] appearance-none dark:text-[#000000] dark:border-gray-600 dark:focus:border-blue-500 focus:outline-none focus:ring-0 focus:border-blue-600 peer"
-                type="password" id="Password" name="password" placeholder=" " value={formData.password} onChange={handleChange} required />
+                type={showPassword ? "text" : "password"} id="Password" name="password" placeholder=" " value={formData.password} onChange={handleChange} required />
               <label for="Password" class="absolute text-base text-gray-500 dark:text-gray-400 duration-300 transform -translate-y-6 scale-75 top-3 -z-10 origin-[0] peer-focus:start-0 peer-focus:text-blue-600 peer-focus:dark:text-blue-500 peer-placeholder-shown:scale-100 peer-placeholder-shown:translate-y-0 peer-focus:scale-75 peer-focus:-translate-y-6 rtl:peer-focus:translate-x-1/4 rtl:peer-focus:left-auto">
                 Password</label>
+              {/* Show/Hide Icon */}
+              {formData.password && (
+                <span
+                  className="absolute right-[3%] top-4 cursor-pointer text-gray-600 hover:text-gray-800"
+                  onClick={() => setShowPassword(!showPassword)}
+                >
+                  {showPassword ? <EyeOutlined size={20} /> : <EyeInvisibleOutlined size={20} />}
+                </span>
+              )}
             </div>
 
             <div className="relative z-0">
@@ -187,6 +199,15 @@ const Signup = ({ onSwitchToLogin }) => {
                 type="password" id="ConfirmPassword" name="confirmNewPassword" placeholder=" " value={formData.confirmNewPassword} onChange={handleChange} required />
               <label for="ConfirmPassword" class="absolute text-base text-gray-500 dark:text-gray-400 duration-300 transform -translate-y-6 scale-75 top-3 -z-10 origin-[0] peer-focus:start-0 peer-focus:text-blue-600 peer-focus:dark:text-blue-500 peer-placeholder-shown:scale-100 peer-placeholder-shown:translate-y-0 peer-focus:scale-75 peer-focus:-translate-y-6 rtl:peer-focus:translate-x-1/4 rtl:peer-focus:left-auto">
                 Confirm New Password</label>
+              {/* Show/Hide Icon */}
+              {formData.password && (
+                <span
+                  className="absolute right-[3%] top-4 cursor-pointer text-gray-600 hover:text-gray-800"
+                  onClick={() => setShowConfirmPassword(!showConfirmPassword)}
+                >
+                  {showConfirmPassword ? <EyeOutlined size={20} /> : <EyeInvisibleOutlined size={20} />}
+                </span>
+              )}
             </div>
 
             {/* error handling */}
