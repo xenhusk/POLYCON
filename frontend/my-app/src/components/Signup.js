@@ -143,7 +143,7 @@ const Signup = ({ onSwitchToLogin }) => {
 
   return (
     <div className="h-[80vh] w-full flex justify-center items-center font-poppins">
-      <div className="flex flex-col items-center w-full">
+      <div className="flex flex-col justify-center items-center w-full">
         {step === 1 ? (
           <div className={`w-[76%] mx-auto ${step === 1 ? 'slide-right' : 'slide-left'}`}>
             <img src={logo} alt="Logo" className="h-[130px] w-[130px] mx-auto"/>
@@ -196,7 +196,7 @@ const Signup = ({ onSwitchToLogin }) => {
 
             <div className="relative z-0">
               <input className="block py-1.5 px-1.5 my-2 mt-4 mx-auto w-full text-base text-gray-900 bg-transparent border-0 border-b-2 border-[#005B98] appearance-none dark:text-[#000000] dark:border-gray-600 dark:focus:border-blue-500 focus:outline-none focus:ring-0 focus:border-blue-600 peer"
-                type="password" id="ConfirmPassword" name="confirmNewPassword" placeholder=" " value={formData.confirmNewPassword} onChange={handleChange} required />
+                type={showConfirmPassword ? "text" : "password"} id="ConfirmPassword" name="confirmNewPassword" placeholder=" " value={formData.confirmNewPassword} onChange={handleChange} required />
               <label for="ConfirmPassword" class="absolute text-base text-gray-500 dark:text-gray-400 duration-300 transform -translate-y-6 scale-75 top-3 -z-10 origin-[0] peer-focus:start-0 peer-focus:text-blue-600 peer-focus:dark:text-blue-500 peer-placeholder-shown:scale-100 peer-placeholder-shown:translate-y-0 peer-focus:scale-75 peer-focus:-translate-y-6 rtl:peer-focus:translate-x-1/4 rtl:peer-focus:left-auto">
                 Confirm New Password</label>
               {/* Show/Hide Icon */}

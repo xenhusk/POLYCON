@@ -23,6 +23,7 @@ export default function AdminPortal() {
   const [CloseClicked, setCloseClicked] = useState(false);
   const [modalClosing, setModalClosing] = useState(false);
   const [showStudentFields, setShowStudentFields] = useState(false);
+  const [loading, setLoading] = useState(true);
 
   useEffect(() => {
     fetchAllUsers();
@@ -38,6 +39,7 @@ export default function AdminPortal() {
   }, [department, role]);
 
   const fetchAllUsers = async () => {
+    setLoading(true);
     try {
       const response = await fetch('http://localhost:5001/account/get_all_users');
       const data = await response.json();
@@ -50,6 +52,8 @@ export default function AdminPortal() {
     } catch (error) {
       console.error('Error fetching users:', error);
       setUserList([]);
+    } finally {
+      setLoading(false);
     }
   };
 
@@ -197,83 +201,127 @@ export default function AdminPortal() {
   return (
     <div className="w-full min-h-screen items-center">
       <header className="w-full max-w-[95%] bg-white rounded-br-[0.8rem] rounded-bl-[0.8rem] flex justify-center items-center mb-2">
-        <h2 className="text-2xl font-bold text-center py-8 text-gray-800">Manage Users</h2>
+        <h2 className="text-2xl font-bold text-center py-8 text-[#005B98]">Manage Users</h2>
       </header>
 
       <div className="flex justify-center items-start mb-3 h-[65vh]">
-        <div className="w-[93%] max-h-[65vh] overflow-x-auto overflow-y-auto rounded-lg shadow-lg bg-white">
-          <table className="min-w-full rounded-lg">
-            <thead className="sticky top-0 bg-white shadow-md z-20">
-              <tr>
-                <th className="py-3 px-6 border-b border-r text-white bg-[#057DCD]">ID Number</th>
-                <th className="py-3 px-6 border-b border-r text-white bg-[#057DCD]">Name</th>
-                <th className="py-3 px-6 border-b border-r text-white bg-[#057DCD]">Email</th>
-                <th className="py-3 px-6 border-b border-r text-white bg-[#057DCD]">Role</th>
-                <th className="py-3 px-6 border-b border-r text-white bg-[#057DCD]">Department</th>
-                <th className="py-3 px-6 border-b rounded-tr-[0.5rem] text-white bg-[#057DCD]">Controls</th>
-              </tr>
-            </thead>
-            <tbody className='z-10'>
-              {userList.map((u) => (
-                <tr key={u.ID} className="hover:bg-gray-100">
-                  <td className="py-2 px-4 border-b text-center">{u.ID}</td>
-                  <td className="py-2 px-4 border-b text-center">{u.firstName} {u.lastName}</td>
-                  <td className="py-2 px-4 border-b text-center">{u.email}</td>
-                  <td className="py-2 px-4 border-b text-center">{u.role}</td>
-                  <td className="py-2 px-4 border-b text-center">{u.department}</td>
-                  <td className="py-2 px-4 border-b text-center">
-                    <button
-                      className={`bg-[#FFC107] text-black px-2 py-2 m-1 text-sm rounded-lg transition-all duration-100 ease-in delay-100 hover:bg-[#FFA000] hover:text-black 
-                        ${EditClicked === u.ID ? "scale-90" : "scale-100"}`}
-                      onClick={() =>{ setEditClicked(u.ID); setTimeout(() => setEditClicked(null), 200); handleEditClick(u); }}>
-                      Edit
-                    </button>
-                    <button
-                      className={`bg-[#E53935] text-white px-2 py-2 m-1 text-sm rounded-lg transition-all duration-100 ease-in delay-100 hover:bg-[#D32F2F] hover:text-white 
-                        ${DeleteClicked === u.ID ? "scale-90" : "scale-100"}`}
-                      onClick={() =>{ setDeleteClicked(u.ID); setTimeout(() => setDeleteClicked(null), 200); handleDeleteUser(u.ID); }}>
-                      Delete
-                    </button>
-                  </td>
-                </tr>
-              ))}
-            </tbody>
-          </table>
+        <div className="w-[90%] max-h-[65vh] overflow-hidden rounded-lg shadow-lg bg-white">
+          <div className="overflow-x-auto">
+            <div className="relative">
+              {/* Table wrapper to control scrolling */}
+              <table className="w-full table-fixed items-center justify-center">
+                <thead className="sticky top-0 bg-[#057DCD] text-white shadow-md z-10 mr-2">
+                  <tr>
+                    <th className="py-3 px-6 overflow-hidden border-b">ID Number</th>
+                    <th className="py-3 px-6 overflow-hidden border-b">Name</th>
+                    <th className="py-3 px-6 overflow-hidden border-b">Email</th>
+                    <th className="py-3 px-6 overflow-hidden border-b">Role</th>
+                    <th className="py-3 px-6 overflow-hidden border-b">Department</th>
+                    <th className="py-3 px-6 overflow-hidden border-b">Controls</th>
+                  </tr>
+                </thead>
+              </table>
+
+              {/* Scrollable tbody */}
+              <div className="max-h-[50vh] overflow-y-auto">
+                <table className="w-full table-fixed border-collapse">
+                  <tbody>
+                    {loading ? (
+                      // 🚀 Show skeleton loader when loading
+                      Array.from({ length: 5 }).map((_, index) => (
+                        <tr key={index} className="animate-pulse">
+                          <td className="py-2 px-6 text-center">
+                            <div className="flex justify-center h-[8vh] items-center">
+                              <div className="h-5 w-20 bg-gray-200 rounded"></div>
+                            </div>
+                          </td>
+                          <td className="py-2 px-6 text-center">
+                            <div className="flex justify-center h-[8vh] items-center">
+                              <div className="h-5 w-28 bg-gray-200 rounded"></div>
+                            </div>
+                          </td>
+                          <td className="py-2 px-6 text-center">
+                            <div className="flex justify-center items-center">
+                              <div className="h-5 w-40 bg-gray-200 rounded"></div>
+                            </div>
+                          </td>
+                          <td className="py-2 px-6 pl-10 text-center">
+                            <div className="flex justify-center items-center">
+                              <div className="h-5 w-20 bg-gray-200 rounded"></div>
+                            </div>
+                          </td>
+                          <td className="py-2 px-6 pl-10 text-center">
+                            <div className="flex justify-center items-center">
+                              <div className="h-5 w-28 bg-gray-200 rounded"></div>
+                            </div>
+                          </td>
+                          <td className="py-2 pl-6 text-center">
+                            <div className="flex justify-center items-center space-x-2">
+                              <div className="h-8 w-16 bg-gray-300 rounded"></div>
+                              <div className="h-8 w-16 bg-gray-300 rounded"></div>
+                            </div>
+                          </td>
+                        </tr>
+                      ))
+                    ) : (
+                      // 🚀 Show actual data when loaded
+                      userList.map((u) => (
+                        <tr key={u.ID} className="border-b hover:bg-[#DBF1FF] transition-all duration-100 ease-in-out">
+                          <td className="py-2 px-6 overflow-hidden text-center">{u.ID}</td>
+                          <td className="py-2 px-6 overflow-hidden text-center">{u.firstName} {u.lastName}</td>
+                          <td className="py-2 px-6 overflow-hidden text-center">{u.email}</td>
+                          <td className="py-2 px-6 pl-10 overflow-hidden text-center">{u.role}</td>
+                          <td className="py-2 px-6 pl-10 overflow-hidden text-center">{u.department}</td>
+                          <td className="py-2 pl-6 overflow-hidden text-center">
+                            <button className="bg-[#FFC107] text-black px-2 py-2 m-1 text-sm rounded-lg hover:bg-[#FFA000]">
+                              Edit
+                            </button>
+                            <button className="bg-[#E53935] text-white px-2 py-2 m-1 text-sm rounded-lg hover:bg-[#D32F2F]">
+                              Delete
+                            </button>
+                          </td>
+                        </tr>
+                      ))
+                    )}
+                  </tbody>
+                </table>
+              </div>
+            </div>
+          </div>
         </div>
       </div>
 
-
       <div className="flex justify-center items-center mb-2">
-        <div className="w-[93%] h-[10vh]">
-          <div className="flex flex-row bg-white shadow-md p-1 rounded-lg justify-center items-center">
+        <div className="w-[90%] h-[10vh]">
+          <div className="flex flex-row bg-white shadow-md p-1 rounded-lg justify-between items-center">
             <input
               placeholder="ID Number"
               value={idNumber}
               onChange={(e) => setIdNumber(e.target.value)}
-              className="w-[13%] bg-transparent border-2 border-[#005B98] appearance-none dark:text-[#000000] dark:border-gray-600 dark:focus:border-blue-500 focus:outline-none focus:ring-0 focus:border-[#54BEFF] peer rounded-lg px-2 py-2 m-1"
+              className="w-[12%] bg-transparent border-2 border-white appearance-none dark:text-[#000000] dark:border-gray-600 dark:focus:border-blue-500 focus:outline-none focus:ring-0 focus:border-[#54BEFF] peer rounded-lg px-2 py-2 m-1"
             />
             <input
               placeholder="First Name"
               value={firstName}
               onChange={(e) => setFirstName(e.target.value)}
-              className="w-[13%] bg-transparent border-2 border-[#005B98] appearance-none dark:text-[#000000] dark:border-gray-600 dark:focus:border-blue-500 focus:outline-none focus:ring-0 focus:border-[#54BEFF] peer rounded-lg px-2 py-2 m-1"
+              className="w-[12%] bg-transparent border-2 border-white appearance-none dark:text-[#000000] dark:border-gray-600 dark:focus:border-blue-500 focus:outline-none focus:ring-0 focus:border-[#54BEFF] peer rounded-lg px-2 py-2 m-1"
             />
             <input
               placeholder="Last Name"
               value={lastName}
               onChange={(e) => setLastName(e.target.value)}
-              className="w-[13%] bg-transparent border-2 border-[#005B98] appearance-none dark:text-[#000000] dark:border-gray-600 dark:focus:border-blue-500 focus:outline-none focus:ring-0 focus:border-[#54BEFF] peer rounded-lg px-2 py-2 m-1"
+              className="w-[12%] bg-transparent border-2 border-white appearance-none dark:text-[#000000] dark:border-gray-600 dark:focus:border-blue-500 focus:outline-none focus:ring-0 focus:border-[#54BEFF] peer rounded-lg px-2 py-2 m-1"
             />
             <input
               placeholder="Email"
               value={email}
               onChange={(e) => setEmail(e.target.value)}
-              className="w-[20%] bg-transparent border-2 border-[#005B98] appearance-none dark:text-[#000000] dark:border-gray-600 dark:focus:border-blue-500 focus:outline-none focus:ring-0 focus:border-[#54BEFF] peer rounded-lg px-2 py-2 m-1"
+              className="w-[20%] bg-transparent border-2 border-white appearance-none dark:text-[#000000] dark:border-gray-600 dark:focus:border-blue-500 focus:outline-none focus:ring-0 focus:border-[#54BEFF] peer rounded-lg px-2 py-2 m-1"
             />
             <select
               value={role}
               onChange={handleRoleChange}
-              className="w-[12%] bg-transparent border-2 border-[#005B98] appearance-none dark:text-[#000000] dark:border-gray-600 dark:focus:border-blue-500 focus:outline-none focus:ring-0 focus:border-[#54BEFF] peer rounded-lg px-2 py-2 m-1"
+              className="w-[12%] bg-transparent border-2 border-white appearance-none dark:text-[#000000] dark:border-gray-600 dark:focus:border-blue-500 focus:outline-none focus:ring-0 focus:border-[#54BEFF] peer rounded-lg px-2 py-2 m-1"
             >
               <option value="">Select Role</option>
               <option value="faculty">Faculty</option>
@@ -283,7 +331,7 @@ export default function AdminPortal() {
             <select
               value={department}
               onChange={(e) => setDepartment(e.target.value)}
-              className="w-[12%] bg-transparent border-2 border-[#005B98] appearance-none dark:text-[#000000] dark:border-gray-600 dark:focus:border-blue-500 focus:outline-none focus:ring-0 focus:border-[#54BEFF] peer rounded-lg px-2 py-2 m-1"
+              className="w-[13%] bg-transparent border-2 border-white appearance-none dark:text-[#000000] dark:border-gray-600 dark:focus:border-blue-500 focus:outline-none focus:ring-0 focus:border-[#54BEFF] peer rounded-lg px-2 py-2 m-1"
             >
               <option value="">Select Department</option>
               {departments.map((dept) => (
@@ -302,7 +350,7 @@ export default function AdminPortal() {
                 <select
                   value={program}
                   onChange={(e) => setProgram(e.target.value)}
-                  className="w-[40%] bg-transparent border-2 border-[#005B98] appearance-none dark:text-[#000000] dark:border-gray-600 dark:focus:border-blue-500 focus:outline-none focus:ring-0 focus:border-[#54BEFF] peer rounded-lg px-2 py-2 m-1" 
+                  className="w-[40%] bg-transparent border-2 border-white appearance-none dark:text-[#000000] dark:border-gray-600 dark:focus:border-blue-500 focus:outline-none focus:ring-0 focus:border-[#54BEFF] peer rounded-lg px-2 py-2 m-1" 
                 >
                   <option value="">Select Program</option>
                   {programs.map((prog) => (
@@ -314,7 +362,7 @@ export default function AdminPortal() {
                 <select
                   value={sex}
                   onChange={(e) => setSex(e.target.value)}
-                  className="w-[40%] bg-transparent border-2 border-[#005B98] appearance-none dark:text-[#000000] dark:border-gray-600 dark:focus:border-blue-500 focus:outline-none focus:ring-0 focus:border-[#54BEFF] peer rounded-lg px-2 py-2 m-1"
+                  className="w-[40%] bg-transparent border-2 border-white appearance-none dark:text-[#000000] dark:border-gray-600 dark:focus:border-blue-500 focus:outline-none focus:ring-0 focus:border-[#54BEFF] peer rounded-lg px-2 py-2 m-1"
                 >
                   <option value="">Select Sex</option>
                   <option value="Male">Male</option>
@@ -324,7 +372,7 @@ export default function AdminPortal() {
                   placeholder="Year & Section"
                   value={yearSection}
                   onChange={(e) => setYearSection(e.target.value)}
-                  className="w-[40%] bg-transparent border-2 border-[#005B98] appearance-none dark:text-[#000000] dark:border-gray-600 dark:focus:border-blue-500 focus:outline-none focus:ring-0 focus:border-[#54BEFF] peer rounded-lg px-2 py-2 m-1"
+                  className="w-[40%] bg-transparent border-2 border-white appearance-none dark:text-[#000000] dark:border-gray-600 dark:focus:border-blue-500 focus:outline-none focus:ring-0 focus:border-[#54BEFF] peer rounded-lg px-2 py-2 m-1"
                 />
                 </>
               )}
