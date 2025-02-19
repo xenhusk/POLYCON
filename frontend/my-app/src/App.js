@@ -32,8 +32,9 @@ import Toast from './components/Toast'; // Add import for Toast
 import useNotifications from './hooks/useNotifications'; // Add import for useNotifications
 import { NotificationProvider } from './context/NotificationContext'; // Add import for NotificationProvider
 import PreLoader from './components/PreLoader'; // Add import for PreLoader
+import PagePreloader from './components/PagePreloader';
 
-const PreloaderTest = React.lazy(() => import('./components/PreloaderTest'));
+const PreloaderTest = React.lazy(() => import('./components/PagePreloader'));
 
 // Update the variants to only include fade in (no fade out)
 const getVariants = () => ({
@@ -149,6 +150,11 @@ function App() {
   const { toast, closeToast } = useNotifications();
   const [isLoading, setIsLoading] = useState(true);
   const [loadingProgress, setLoadingProgress] = useState(0);
+  // NEW state to control overlay visibility
+  const [showOverlay, setShowOverlay] = useState(true);
+  
+  // NEW: Create a ref to ensure preload runs only once
+  const preloadCalled = useRef(false);
 
   // List of routes that should not trigger role fetching
   const noRoleFetchPaths = ['/appointments', '/someOtherRolelessPage'];
@@ -221,74 +227,75 @@ function App() {
   }, []);
 
   useEffect(() => {
-    const loadingTime = 2500; // Reduced to 2.5 seconds to match animation cycle
-    let startTime = Date.now();
+    if (preloadCalled.current) return;
+    preloadCalled.current = true;
+    
+    const preloadAllData = async () => {
+      const userEmail = localStorage.getItem('userEmail');
+      const userRole = localStorage.getItem('userRole');
+      if (!userEmail || !userRole) return;
+      
+      const totalTasks = 5; // Increased count for 5 required fetches
+      let completedCount = 0;
+      const update = () => {
+        completedCount++;
+        const progress = Math.floor((completedCount / totalTasks) * 100);
+        setLoadingProgress(progress);
+        console.log(`Task completed: ${completedCount}/${totalTasks} (Progress: ${progress}%)`);
+      };
 
-    const simulateLoading = () => {
-      const elapsed = Date.now() - startTime;
-      const progress = Math.min((elapsed / loadingTime) * 100, 100);
-      setLoadingProgress(progress);
-
-      if (progress < 100) {
-        requestAnimationFrame(simulateLoading);
-      }
+      const tasks = [
+        fetch(`http://localhost:5001/user/get_user?email=${userEmail}`)
+          .then(res => res.json())
+          .then(data => { update(); return data; })
+          .catch(err => { console.error(err); update(); }),
+        // NEW: Use the new efficient bookings route:
+        fetch(`http://localhost:5001/bookings/get_bookings?role=${userRole}&userID=${localStorage.getItem('userID')}&status=confirmed`)
+          .then(res => res.json())
+          .then(data => { update(); return data; })
+          .catch(err => { console.error(err); update(); }),
+        // NEW: Use the new grades route:
+        fetch(`http://localhost:5001/grade/get_student_grades?studentID=${localStorage.getItem('studentID')}&schoolYear=&semester=&period=`)
+          .then(res => res.json())
+          .then(data => { update(); return data; })
+          .catch(err => { console.error(err); update(); }),
+        fetch(`http://localhost:5001/course/get_courses`)
+          .then(res => res.json())
+          .then(data => { update(); return data; })
+          .catch(err => { console.error(err); update(); }),
+        // NEW: Preload consultation history
+        fetch(`http://localhost:5001/consultation/get_history?role=${userRole}&userID=${localStorage.getItem('userID')}`)
+          .then(res => res.json())
+          .then(data => { update(); return data; })
+          .catch(err => { console.error(err); update(); })
+      ];
+      
+      await Promise.all(tasks);
     };
 
-    const initializeApp = async () => {
-      try {
-        await preloadAllData();
-        const elapsed = Date.now() - startTime;
-        
-        if (elapsed < loadingTime) {
-          await new Promise(resolve => setTimeout(resolve, loadingTime - elapsed));
-        }
-      } finally {
-        setIsLoading(false);
-      }
-    };
-
-    simulateLoading();
-    initializeApp();
+    (async () => {
+      await preloadAllData();
+      setIsLoading(false);
+    })();
   }, []);
 
-  const preloadAllData = async () => {
-    const userEmail = localStorage.getItem('userEmail');
-    const userRole = localStorage.getItem('userRole');
-
-    if (!userEmail) return;
-
-    try {
-      // Fetch all necessary data in parallel
-      const [
-        userDetailsResponse,
-        appointmentsResponse,
-        gradesResponse,
-        coursesResponse
-      ] = await Promise.all([
-        fetch(`http://localhost:5001/user/get_user?email=${userEmail}`),
-        fetch(`http://localhost:5001/bookings/get_${userRole}_bookings?${userRole}ID=${localStorage.getItem(`${userRole}ID`)}`),
-        fetch(`http://localhost:5001/grade/get_grades?studentID=${localStorage.getItem('studentID')}`),
-        fetch(`http://localhost:5001/course/get_courses`)
-      ]);
-
-      const [userDetails, appointments, grades, courses] = await Promise.all([
-        userDetailsResponse.json(),
-        appointmentsResponse.json(),
-        gradesResponse.json(),
-        coursesResponse.json()
-      ]);
-
-      return {
-        userDetails,
-        appointments,
-        grades,
-        courses
-      };
-    } catch (error) {
-      console.error('Error preloading data:', error);
-      return null;
+  // NEW effect for overlay fade-out
+  useEffect(() => {
+    if (!isLoading && profile) {
+      // When loading completes, initiate fade-out transition
+      setTimeout(() => {
+        setShowOverlay(false);
+      }, 500); // 500ms fade-out duration
     }
-  };
+  }, [isLoading, profile]);
+
+  // NEW: Effect to disable scrollbar while preloader is active
+  useEffect(() => {
+    document.body.style.overflow = isLoading || !profile ? "hidden" : "auto";
+    return () => {
+      document.body.style.overflow = "auto";
+    };
+  }, [isLoading, profile]);
 
   // Clicking the profile placeholder now triggers the modal popup
   const handleProfilePictureClick = () => {
@@ -303,10 +310,6 @@ function App() {
       setModalStep('crop');
     }
   };
-
-  if (isLoading) {
-    return <PreLoader progress={loadingProgress} />;
-  }
 
   return (
     <NotificationProvider>
@@ -453,6 +456,29 @@ function App() {
         isVisible={toast.visible || false}
         onClose={closeToast}
       />
+
+      {/* NEW: Show preloader overlay only when authenticated, not on Session or Final Document pages */}
+      { localStorage.getItem('userEmail') &&
+        !location.pathname.includes('/session') &&
+        !location.pathname.includes('/finaldocument') &&
+        (isLoading || !profile || showOverlay) && (
+          <div style={{
+            position: 'fixed',
+            top: 0,
+            left: 0,
+            width: '100%',
+            height: '100%',
+            background: 'rgba(255,255,255,0.8)',
+            zIndex: 9999,
+            display: 'flex',
+            alignItems: 'center',
+            justifyContent: 'center',
+            transition: 'opacity 0.5s ease',
+            opacity: isLoading || !profile ? 1 : 0
+          }}>
+            <PreLoader progress={loadingProgress} />
+          </div>
+      )}
     </NotificationProvider>
   );
 }
