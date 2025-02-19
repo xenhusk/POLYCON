@@ -1,4 +1,4 @@
-import React, { useEffect, useState, useRef, useCallback } from 'react';
+import React, { useEffect, useState, useRef, useCallback, Suspense } from 'react';
 import { Routes, Route, useNavigate, useLocation, Navigate } from 'react-router-dom';
 import BookingStudent from './components/BookingStudent';
 import BookingTeacher from './components/BookingTeacher';
@@ -31,6 +31,9 @@ import NotificationTray from './components/NotificationTray';  // NEW import
 import Toast from './components/Toast'; // Add import for Toast
 import useNotifications from './hooks/useNotifications'; // Add import for useNotifications
 import { NotificationProvider } from './context/NotificationContext'; // Add import for NotificationProvider
+import PreLoader from './components/PreLoader'; // Add import for PreLoader
+
+const PreloaderTest = React.lazy(() => import('./components/PreloaderTest'));
 
 // Update the variants to only include fade in (no fade out)
 const getVariants = () => ({
@@ -144,6 +147,8 @@ function App() {
   const [sidebarExpanded, setSidebarExpanded] = useState(false);
   const [showNotifications, setShowNotifications] = useState(false);  // NEW state
   const { toast, closeToast } = useNotifications();
+  const [isLoading, setIsLoading] = useState(true);
+  const [loadingProgress, setLoadingProgress] = useState(0);
 
   // List of routes that should not trigger role fetching
   const noRoleFetchPaths = ['/appointments', '/someOtherRolelessPage'];
@@ -215,6 +220,37 @@ function App() {
     }
   }, []);
 
+  useEffect(() => {
+    const loadingTime = 2500; // Reduced to 2.5 seconds to match animation cycle
+    let startTime = Date.now();
+
+    const simulateLoading = () => {
+      const elapsed = Date.now() - startTime;
+      const progress = Math.min((elapsed / loadingTime) * 100, 100);
+      setLoadingProgress(progress);
+
+      if (progress < 100) {
+        requestAnimationFrame(simulateLoading);
+      }
+    };
+
+    const initializeApp = async () => {
+      try {
+        await preloadAllData();
+        const elapsed = Date.now() - startTime;
+        
+        if (elapsed < loadingTime) {
+          await new Promise(resolve => setTimeout(resolve, loadingTime - elapsed));
+        }
+      } finally {
+        setIsLoading(false);
+      }
+    };
+
+    simulateLoading();
+    initializeApp();
+  }, []);
+
   const preloadAllData = async () => {
     const userEmail = localStorage.getItem('userEmail');
     const userRole = localStorage.getItem('userRole');
@@ -267,6 +303,10 @@ function App() {
       setModalStep('crop');
     }
   };
+
+  if (isLoading) {
+    return <PreLoader progress={loadingProgress} />;
+  }
 
   return (
     <NotificationProvider>
@@ -338,54 +378,57 @@ function App() {
                   transition={{ duration: 0.5 }}
                   className="flex-1 flex flex-col"
                 >
-                  <Routes>
-                    {/* Public home route with redirect for logged-in users */}
-                    <Route path="/" element={
-                      localStorage.getItem('userEmail') ?
-                        <Navigate to="/dashboard" /> :
-                        <Home />
-                    } />
+                  <Suspense fallback={<div>Loading test...</div>}>
+                    <Routes>
+                      {/* Public home route with redirect for logged-in users */}
+                      <Route path="/" element={
+                        localStorage.getItem('userEmail') ?
+                          <Navigate to="/dashboard" /> :
+                          <Home />
+                      } />
 
-                    {/* Auth routes with redirects */}
-                    <Route path="/login" element={
-                      !localStorage.getItem('userEmail') ?
-                        <Login onLoginSuccess={setUser} /> :
-                        <Navigate to="/dashboard" />
-                    } />
-                    <Route path="/signup" element={
-                      !localStorage.getItem('userEmail') ?
-                        <Signup /> :
-                        <Navigate to="/dashboard" />
-                    } />
+                      {/* Auth routes with redirects */}
+                      <Route path="/login" element={
+                        !localStorage.getItem('userEmail') ?
+                          <Login onLoginSuccess={setUser} /> :
+                          <Navigate to="/dashboard" />
+                      } />
+                      <Route path="/signup" element={
+                        !localStorage.getItem('userEmail') ?
+                          <Signup /> :
+                          <Navigate to="/dashboard" />
+                      } />
 
-                    {/* Protected dashboard route */}
-                    <Route path="/dashboard" element={
-                      localStorage.getItem('userEmail') ?
-                        <UserHome /> :
-                        <Navigate to="/" />
-                    } />
+                      {/* Protected dashboard route */}
+                      <Route path="/dashboard" element={
+                        localStorage.getItem('userEmail') ?
+                          <UserHome /> :
+                          <Navigate to="/" />
+                      } />
 
-                    {/* Protected routes */}
-                    <Route path="/booking-student" element={
-                      localStorage.getItem('userEmail') ?
-                        <BookingStudent /> :
-                        <Navigate to="/login" replace />
-                    } />
-                    <Route path="/booking-teacher" element={<BookingTeacher />} />
-                    <Route path="/session" element={<Session />} />
-                    <Route path="/admin" element={<AdminPortal />} />
-                    <Route path="/courses" element={<Courses />} />
-                    <Route path="/addgrade" element={<AddGrade />} />
-                    <Route path="/appointments-calendar" element={<AppointmentsCalendar />} />
-                    <Route path="/sidebar-preview" element={<SidebarPreview />} /> {/* Add this route */}
-                    <Route path="/appointments" element={<Appointments />} /> {/* Add this route */}
-                    <Route path="/home-teacher" element={<HomeTeacher />} /> {/* Add this route */}
-                    <Route path="/gradeview" element={<GradeViewer />} /> {/* Add this route */}
-                    <Route path="/programs" element={<Programs />} /> {/* Add this route */}
-                    <Route path="/finaldocument" element={<FinalDocument />} /> {/* New route */}
-                    <Route path="/history" element={<History />} /> {/* New route */}
-                    <Route path="/department" element={<Departments />} /> {/* New route */}
-                  </Routes>
+                      {/* Protected routes */}
+                      <Route path="/booking-student" element={
+                        localStorage.getItem('userEmail') ?
+                          <BookingStudent /> :
+                          <Navigate to="/login" replace />
+                      } />
+                      <Route path="/booking-teacher" element={<BookingTeacher />} />
+                      <Route path="/session" element={<Session />} />
+                      <Route path="/admin" element={<AdminPortal />} />
+                      <Route path="/courses" element={<Courses />} />
+                      <Route path="/addgrade" element={<AddGrade />} />
+                      <Route path="/appointments-calendar" element={<AppointmentsCalendar />} />
+                      <Route path="/sidebar-preview" element={<SidebarPreview />} /> {/* Add this route */}
+                      <Route path="/appointments" element={<Appointments />} /> {/* Add this route */}
+                      <Route path="/home-teacher" element={<HomeTeacher />} /> {/* Add this route */}
+                      <Route path="/gradeview" element={<GradeViewer />} /> {/* Add this route */}
+                      <Route path="/programs" element={<Programs />} /> {/* Add this route */}
+                      <Route path="/finaldocument" element={<FinalDocument />} /> {/* New route */}
+                      <Route path="/history" element={<History />} /> {/* New route */}
+                      <Route path="/department" element={<Departments />} /> {/* New route */}
+                      <Route path="/preloader-test" element={<PreloaderTest />} /> {/* Add this line */}
+                    </Routes>
+                  </Suspense>
                 </motion.div>
               </AnimatePresence>
             </div>

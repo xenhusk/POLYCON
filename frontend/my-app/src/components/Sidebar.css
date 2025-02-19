@@ -101,8 +101,8 @@
 
 /* Define the "sidebar" class with the desired border radius */
 .sidebar {
-  border-top-right-radius: 40px;
-  border-bottom-right-radius: 40px;
+  border-top-right-radius: 20px;
+  border-bottom-right-radius: 20px;
   /* ...existing styles... */
 }
 

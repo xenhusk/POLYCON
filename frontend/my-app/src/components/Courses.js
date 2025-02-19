@@ -28,6 +28,10 @@ export default function Courses() {
   const [editCourse, setEditCourse] = useState(null);
   const filterRef = useRef(null);
   const modalRef = useRef(null);
+  const [isLoading, setIsLoading] = useState(false);
+  const [message, setMessage] = useState({ type: '', content: '' });
+  const [isAddLoading, setIsAddLoading] = useState(false);
+  const [isEditLoading, setIsEditLoading] = useState(false);
 
   // Add these animation variants before your component
   const modalVariants = {
@@ -48,10 +52,10 @@ export default function Courses() {
     },
     exit: {
       opacity: 0,
-      scale: 0.95,
+      scale: 0.8,  // Changed scale for stronger exit effect
       y: 20,
       transition: {
-        duration: 0.2
+        duration: 0.3  // Extended duration for smoother fade
       }
     }
   };
@@ -144,10 +148,11 @@ export default function Courses() {
 const handleEditSave = async () => {
   if (!editCourse || !editCourse.courseID || !editCourse.courseName || 
       !editCourse.credits || !department || !selectedPrograms.length) {
-    alert('All fields are required');
+    setMessage({ type: 'error', content: 'All fields are required' });
     return;
   }
 
+  setIsEditLoading(true);
   try {
     const response = await fetch(`http://localhost:5001/course/edit_course/${editCourse.courseID}`, {
       method: 'PUT',
@@ -186,16 +191,21 @@ const handleEditSave = async () => {
       setFilteredCourses(updatedCourses);
       localStorage.setItem('courses', JSON.stringify(updatedCourses));
       
-      alert('Course updated successfully');
-      setShowEditModal(false);
-      setEditCourse(null);
-      resetForm();
+      setMessage({ type: 'success', content: 'Course updated successfully!' });
+      setTimeout(() => {
+        setShowEditModal(false);
+        setEditCourse(null);
+        resetForm();
+        setMessage({ type: '', content: '' });
+      }, 2000);
     } else {
-      alert('Failed to update course');
+      setMessage({ type: 'error', content: 'Failed to update course' });
     }
   } catch (error) {
     console.error('Error updating course:', error);
-    alert('Error updating course');
+    setMessage({ type: 'error', content: 'Error updating course' });
+  } finally {
+    setIsEditLoading(false);
   }
 };
 
@@ -273,10 +283,11 @@ const handleEditSave = async () => {
     console.log({ cID, cName, cCredits, cDepartment, cPrograms });
   
     if (!cID || !cName || !cCredits || !cDepartment || cPrograms.length === 0) {
-      alert('All fields are required');
+      setMessage({ type: 'error', content: 'All fields are required' });
       return;
     }
     
+    setIsAddLoading(true);
     try {
       const endpoint = editing 
         ? `http://localhost:5001/course/edit_course/${cID}` 
@@ -290,8 +301,8 @@ const handleEditSave = async () => {
       });
     
       if (response.ok) {
-        alert(editing ? 'Course updated successfully' : 'Course added successfully');
-    
+        setMessage({ type: 'success', content: editing ? 'Course updated successfully!' : 'Course added successfully!' });
+        
         // Convert department ID to department name and program IDs to names
         const departmentName = departments.find(d => d.id === cDepartment)?.name || cDepartment;
         const programNames = cPrograms.map(progId => {
@@ -314,12 +325,18 @@ const handleEditSave = async () => {
         setCourses(updatedCourses);
         setFilteredCourses(updatedCourses);
         localStorage.setItem('courses', JSON.stringify(updatedCourses));
-        resetForm();
+        setTimeout(() => {
+          setMessage({ type: '', content: '' });
+          resetForm();
+        }, 2000);
       } else {
-        alert('Failed to save course');
+        setMessage({ type: 'error', content: 'Failed to save course. Please try again.' });
       }
     } catch (error) {
       console.error('Error saving course:', error);
+      setMessage({ type: 'error', content: 'Network error. Please try again.' });
+    } finally {
+      setIsAddLoading(false);
     }
   };
   const handleEdit = (course) => {
@@ -348,22 +365,30 @@ const handleEditSave = async () => {
     const confirmDelete = window.confirm("Are you sure you want to delete this course?");
     if (!confirmDelete) return;
 
+    setIsLoading(true);
     try {
       const response = await fetch(`http://localhost:5001/course/delete_course/${courseID}`, {
         method: 'DELETE',
       });
 
       if (response.ok) {
-        alert('Course deleted successfully');
+        setMessage({ type: 'success', content: 'Course deleted successfully!' });
         const updatedCourses = courses.filter(course => course.courseID !== courseID);
         setCourses(updatedCourses);
         setFilteredCourses(updatedCourses);
         localStorage.setItem('courses', JSON.stringify(updatedCourses));
+        
+        setTimeout(() => {
+          setMessage({ type: '', content: '' });
+        }, 2000);
       } else {
-        alert('Failed to delete course');
+        setMessage({ type: 'error', content: 'Failed to delete course. Please try again.' });
       }
     } catch (error) {
       console.error('Error deleting course:', error);
+      setMessage({ type: 'error', content: 'Network error. Please try again.' });
+    } finally {
+      setIsLoading(false);
     }
   };
 
@@ -399,7 +424,28 @@ const handleEditSave = async () => {
 
   return (
     <div className=" items-center mx-auto p-6 bg-white">
-      <h2 className="text-2xl mt-10 font-bold text-center text-gray-800">Courses</h2>
+      {/* Global Message display – show only when NOT editing */}
+      {!showEditModal && message.content && (
+        <div className={`fixed top-5 right-5 p-4 rounded-lg shadow-lg z-50 ${
+          message.type === 'success' ? 'bg-green-100 text-green-700' : 'bg-red-100 text-red-700'
+        }`}>
+          {message.content}
+        </div>
+      )}
+
+      {/* Loading overlay */}
+      {isLoading && (
+        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
+          <div className="bg-white p-4 rounded-lg flex items-center space-x-3">
+            <svg className="animate-spin h-5 w-5 text-blue-500" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+              <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
+              <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+            </svg>
+            <span>Processing...</span>
+          </div>
+        </div>
+      )}
+      <h2 className="text-3xl mt-10 font-bold text-center text-[#0065A8] pb-5">Courses</h2>
 
       <div className="flex items-center justify-center space-x-2 w-full mt-4">
         <div className="relative w-[400px] border border-gray-300 rounded-lg px-3 py-2 shadow-md flex flex-wrap items-center min-h-[42px]">
@@ -493,20 +539,21 @@ const handleEditSave = async () => {
   </div>
 )}
 <div className="flex justify-center w-full">
-  <div className="mt-4 shadow-md rounded-lg overflow-hidden w-[70%] mx-auto">
+  <div className="mt-4 shadow-md rounded-lg overflow-hidden w-[90%] mx-auto">
     <div className="overflow-x-auto">
       <table className="w-full bg-white text-center table-fixed">
         {/* Fixed Table Header */}
         <thead className="bg-[#057DCD] text-white top-0 z-10">
           <tr className="border-b">
-            <th className="py-3 ">ID</th>
-            <th className=" py-3  ">Course Name</th>
-            <th className=" py-3  ">Credits</th>
-            <th className="py-3  ">Department</th>
-            <th className=" py-3 ">Program</th>
-            <th className=" py-3  text-center">Actions</th>
+            <th className="px-4 py-3">ID</th>
+            <th className="px-4 py-3">Course Name</th>
+            <th className="px-4 py-3">Credits</th>
+            <th className="px-4 py-3">Department</th>
+            <th className="px-4 py-3">Program</th>
+            <th className="pr-5">Actions</th>
           </tr>
         </thead>
+
       </table>
       
       {/* Scrollable Table Body */}
@@ -724,31 +771,54 @@ const handleEditSave = async () => {
             : 'hover:bg-[#54BEFF] text-white'
           }`}
       >
-<input
-  type="checkbox"
-  value={prog.id}
-  checked={selectedPrograms.includes(prog.id)}
-  onChange={() => handleProgramChange(prog.id)}
-  className="mr-3 h-4 w-4 accent-[#0065A8] border-gray-300 rounded 
-             checked:bg-[#0065A8] checked:hover:bg-[#54BEFF] "
-/>
-        <span className={`${selectedPrograms.includes(prog.id) ? 'text-white' : 'text-gray-700'}`}>
-          {prog.name}
-        </span>
-      </label>
-    </div>
-  ))}
-</div>
+        <input
+          type="checkbox"
+          value={prog.id}
+          checked={selectedPrograms.includes(prog.id)}
+          onChange={() => handleProgramChange(prog.id)}
+          className="mr-3 h-4 w-4 accent-[#0065A8] border-gray-300 rounded 
+                    checked:bg-[#0065A8] checked:hover:bg-[#54BEFF] "
+        />
+              <span className={`${selectedPrograms.includes(prog.id) ? 'text-white' : 'text-gray-700'}`}>
+                {prog.name}
+              </span>
+            </label>
+          </div>
+        ))}
+      </div>
         </div>
       </div>
+
+      
+        {/* NEW: Message display inside modal */}
+        {message.content && (
+          <div className={`mt-2 mx-4 p-3 rounded-lg ${
+            message.type === 'success' ? 'bg-green-100 text-green-700' : 'bg-red-100 text-red-700'
+          }`}>
+            {message.content}
+          </div>
+        )}
 
       {/* Buttons */}
       <div className="px-6 py-4 flex justify-end space-x-4 bg-white rounded-b-lg">
         <button
           onClick={handleEditSave}
-          className="bg-[#0065A8] hover:bg-[#54BEFF] text-white px-4 py-2 rounded-lg transition-colors"
+          disabled={isEditLoading}
+          className={`bg-[#0065A8] hover:bg-[#54BEFF] text-white px-4 py-2 rounded-lg transition-colors
+            ${isEditLoading ? 'opacity-50 cursor-not-allowed' : ''} 
+            flex items-center space-x-2`}
         >
-          Save Changes
+          {isEditLoading ? (
+            <>
+              <svg className="animate-spin h-5 w-5 text-white" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+                <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
+                <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+              </svg>
+              <span>Saving...</span>
+            </>
+          ) : (
+            <span>Save Changes</span>
+          )}
         </button>
         <button
           onClick={() => { setShowEditModal(false); setEditCourse(null); }}
@@ -769,9 +839,22 @@ const handleEditSave = async () => {
       <div className="flex items-center space-x-2">
         <button 
           onClick={handleSaveCourse} 
-          className={`px-4 py-2 rounded-lg bg-[#057DCD] text-white hover:bg-blue-500`}
+          disabled={isAddLoading}
+          className={`px-8 py-2 rounded-lg bg-[#057DCD] text-white hover:bg-blue-500 
+            ${isAddLoading ? 'opacity-50 cursor-not-allowed' : ''} 
+            flex items-center space-x-2`}
         >
-          ADD
+          {isAddLoading ? (
+            <>
+              <svg className="animate-spin h-5 w-5 text-white" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+                <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
+                <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+              </svg>
+              <span>Adding...</span>
+            </>
+          ) : (
+            <span>ADD</span>
+          )}
         </button>
       </div>
     </div>

@@ -45,3 +45,113 @@
   50% { opacity: 0.5; }
   100% { opacity: 1; }
 }
+
+.preloader-container {
+  width: 100%;
+  height: 100vh;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  background: #0065A8;
+  flex-direction: column;
+}
+
+.logo-container {
+  position: relative;
+  width: 300px;  /* Changed from 375px */
+  height: 300px; /* Changed from 375px */
+  transform-origin: center center;
+}
+
+.shape {
+  position: absolute;
+  opacity: 0;
+  transform-origin: center center;
+}
+
+.white-shape {
+  width: 100%;
+  height: 100%;
+  animation: fadeInOut 2.5s infinite;
+}
+
+.blue-triangle {
+  width: 100%;
+  height: 100%;
+  animation: fadeInOut 2.5s infinite 0.07s;
+}
+
+.center-blue {
+  width: 100%;
+  height: 100%;
+  animation: fadeInOut 2.5s infinite 0.14s;
+}
+
+.small-square {
+  width: 100%;
+  height: 100%;
+  animation: fadeInOut 2.5s infinite 0.21s;
+}
+
+.bottom-square {
+  width: 100%;
+  height: 100%;
+  animation: fadeInOut 2.5s infinite 0.28s;
+}
+
+@keyframes fadeInOut {
+  0% {
+    opacity: 0;
+    transform: scale(0);
+  }
+  5% {  /* Quick entrance - 0.125s */
+    opacity: 1;
+    transform: scale(1);
+  }
+  45% {  /* Hold complete image - 1s */
+    opacity: 1;
+    transform: scale(1);
+  }
+  50% {  /* Start staggered exit */
+    opacity: 1;
+    transform: scale(1);
+  }
+  55% {  /* Quick exit - 0.125s */
+    opacity: 0;
+    transform: scale(0);
+  }
+  100% {
+    opacity: 0;
+    transform: scale(0);
+  }
+}
+
+.preloader-overlay {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background-color: #0065A8;
+  z-index: 9999;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  flex-direction: column;
+}
+
+.loading-bar-container {
+  width: 200px;
+  height: 6px;  /* Increased from 4px */
+  background: rgba(255, 255, 255, 0.2);
+  border-radius: 3px;  /* Increased from 2px */
+  margin-top: 20px;
+  overflow: hidden;
+}
+
+.loading-bar {
+  height: 100%;
+  background: #ffffff;
+  border-radius: 3px;  /* Increased from 2px */
+  transition: width 0.2s ease-in-out;  /* Made transition faster */
+}

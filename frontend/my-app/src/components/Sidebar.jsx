@@ -307,10 +307,10 @@ const Sidebar = ({ onExpandChange }) => {
       {userRole === 'admin' && (
         <ul className="mt-2 space-y-3"> {/* Changed from mt-6 to mt-2 */}
           {renderMenuItem("dashboard", HomeIcon, "Home")}
-          {renderMenuItem("add_users", UserAdd, "Manage Users")}
-          {renderMenuItem("course", CourseAdd, "Manage Courses")}
-          {renderMenuItem("program", ProgramAdd, "Manage Programs")}
-          {renderMenuItem("department", DepartmentAdd, "Manage Departments")}
+          {renderMenuItem("add_users", UserAdd, "Users")}
+          {renderMenuItem("course", CourseAdd, "Courses")}
+          {renderMenuItem("program", ProgramAdd, "Programs")}
+          {renderMenuItem("department", DepartmentAdd, "Departments")}
         </ul>
       )}
 

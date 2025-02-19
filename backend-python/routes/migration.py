@@ -24,3 +24,4 @@ def migrate_fullname():
         return jsonify({"message": "Migration completed", "updated": updated_count}), 200
     except Exception as e:
         return jsonify({"error": str(e)}), 500
+

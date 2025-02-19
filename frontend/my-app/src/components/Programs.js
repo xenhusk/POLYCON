@@ -10,6 +10,12 @@ export default function Programs() {
   const [filteredPrograms, setFilteredPrograms] = useState([]);
   const [editing, setEditing] = useState(false);
   const [programFilter, setProgramFilter] = useState(''); // Program filter input
+  const [isLoading, setIsLoading] = useState(false);
+  const [isAddLoading, setIsAddLoading] = useState(false);
+  const [message, setMessage] = useState({ type: '', content: '' });
+  const [showDeleteModal, setShowDeleteModal] = useState(false);
+  const [programToDelete, setProgramToDelete] = useState(null);
+  const [isDeleteLoading, setIsDeleteLoading] = useState(false);
 
   useEffect(() => {
     fetchInitialData();
@@ -38,7 +44,12 @@ export default function Programs() {
 
         setPrograms(programsData || []);
         setFilteredPrograms(programsData || []);
-        setDepartments(departmentsData.map(dept => ({ id: dept.id, name: dept.name || dept.departmentName })));
+        setDepartments(
+          departmentsData.map(dept => ({
+            id: dept.id,
+            name: dept.name || dept.departmentName
+          }))
+        );
 
         localStorage.setItem('programs', JSON.stringify(programsData));
         localStorage.setItem('departments', JSON.stringify(departmentsData));
@@ -62,62 +73,77 @@ export default function Programs() {
 
   const handleAddProgram = async () => {
     if (!programName || !selectedDepartment) {
-      alert('All fields are required');
+      setMessage({ type: 'error', content: 'All fields are required' });
       return;
     }
 
-    // Generate new program ID
-    const newProgramID = `P${String(programs.length + 1).padStart(2, '0')}`;
+    setIsAddLoading(true);
+    try {
+      const newProgramID = `P${String(programs.length + 1).padStart(2, '0')}`;
+      const response = await fetch('http://localhost:5001/program/add_program', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ id: newProgramID, programName, departmentID: selectedDepartment })
+      });
 
-    const response = await fetch('http://localhost:5001/program/add_program', {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ id: newProgramID, programName, departmentID: selectedDepartment })
-    });
-
-    if (response.ok) {
-      alert('Program added successfully');
-      const newProgram = { id: newProgramID, programName, departmentID: selectedDepartment };
-      const updatedPrograms = [...programs, newProgram];
-      setPrograms(updatedPrograms);
-      setFilteredPrograms(updatedPrograms);
-      localStorage.setItem('programs', JSON.stringify(updatedPrograms));
-      resetForm();
-    } else {
-      alert('Failed to add program');
+      if (response.ok) {
+        const newProgram = { id: newProgramID, programName, departmentID: selectedDepartment };
+        const updatedPrograms = [...programs, newProgram];
+        setPrograms(updatedPrograms);
+        setFilteredPrograms(updatedPrograms);
+        localStorage.setItem('programs', JSON.stringify(updatedPrograms));
+        setMessage({ type: 'success', content: 'Program added successfully!' });
+        setTimeout(() => {
+          resetForm();
+          setMessage({ type: '', content: '' });
+        }, 2000);
+      } else {
+        setMessage({ type: 'error', content: 'Failed to add program' });
+      }
+    } catch (error) {
+      console.error('Error adding program:', error);
+      setMessage({ type: 'error', content: 'Network error. Please try again.' });
+    } finally {
+      setIsAddLoading(false);
     }
   };
 
-  const handleEdit = program => {
+  const handleEdit = (program) => {
     setProgramName(program.programName);
     setSelectedDepartment(program.departmentID);
     setEditing(true);
   };
 
-  const handleDelete = async (programId) => {
-    const confirmDelete = window.confirm("Are you sure you want to delete this program?");
-    if (!confirmDelete) return;
-  
+  const handleDelete = (programId) => {
+    setProgramToDelete(programId);
+    setShowDeleteModal(true);
+  };
+
+  const confirmDelete = async () => {
+    setIsDeleteLoading(true);
     try {
-      const response = await fetch(`http://localhost:5001/program/delete_program/${programId}`, {
+      const response = await fetch(`http://localhost:5001/program/delete_program/${programToDelete}`, {
         method: 'DELETE',
-        headers: { 
-          'Content-Type': 'application/json'
-        }
+        headers: { 'Content-Type': 'application/json' }
       });
-  
+
       if (response.ok) {
-        alert('Program deleted successfully');
-        setPrograms(programs.filter(program => program.id !== programId));
-        setFilteredPrograms(filteredPrograms.filter(program => program.id !== programId));
-        localStorage.setItem('programs', JSON.stringify(programs.filter(program => program.id !== programId)));
+        const updatedPrograms = programs.filter(program => program.id !== programToDelete);
+        setPrograms(updatedPrograms);
+        setFilteredPrograms(updatedPrograms);
+        localStorage.setItem('programs', JSON.stringify(updatedPrograms));
+        setMessage({ type: 'success', content: 'Program deleted successfully!' });
+        setShowDeleteModal(false);
+        setProgramToDelete(null);
       } else {
         const errorMessage = await response.json();
-        alert(`Failed to delete program: ${errorMessage.error}`);
+        setMessage({ type: 'error', content: errorMessage.error || 'Failed to delete program' });
       }
     } catch (error) {
       console.error('Error deleting program:', error);
-      alert('An error occurred while deleting the program.');
+      setMessage({ type: 'error', content: 'Network error. Please try again.' });
+    } finally {
+      setIsDeleteLoading(false);
     }
   };
 
@@ -147,9 +173,31 @@ export default function Programs() {
   };
 
   return (
-    <div className="max-w-9xl mx-auto p-6 bg-white">
-      <div className="max-w-9xl mx-auto p-4 bg-white mt-6">
-        <h2 className="text-2xl font-bold text-center text-gray-800 mb-4">Programs</h2>
+    <div className="mx-auto p-6 bg-white">
+      {/* Message display */}
+      {message.content && (
+        <div className={`fixed top-5 right-5 p-4 rounded-lg shadow-lg z-50 ${
+          message.type === 'success' ? 'bg-green-100 text-green-700' : 'bg-red-100 text-red-700'
+        }`}>
+          {message.content}
+        </div>
+      )}
+
+      {/* Loading overlay */}
+      {isLoading && (
+        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
+          <div className="bg-white p-4 rounded-lg flex items-center space-x-3">
+            <svg className="animate-spin h-5 w-5 text-blue-500" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+              <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
+              <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+            </svg>
+            <span>Processing...</span>
+          </div>
+        </div>
+      )}
+
+      <div className="mx-auto p-4 bg-white mt-6">
+        <h2 className="text-3xl font-bold text-center text-[#0065A8] pb-5 mb-4">Programs</h2>
         <div className="mt-4">
           <div className="flex items-center justify-center space-x-2 w-full">
             <div className="relative w-[400px] border border-gray-300 rounded-lg px-3 py-2 shadow-md flex flex-wrap items-center min-h-[42px]">
@@ -158,7 +206,7 @@ export default function Programs() {
                 value={programFilter}
                 onChange={handleProgramFilterChange}
                 placeholder="Search by Program Name"
-                className="border-none focus:ring-0 outline-none w-[100%]"
+                className="border-none focus:ring-0 outline-none w-full"
               />
             </div>
             <button 
@@ -170,31 +218,38 @@ export default function Programs() {
           </div>
         </div>
 
-        <div className="mt-4 shadow-md rounded-lg overflow-hidden">
+        {/* Table Container with 90% width */}
+        <div className="mt-4 shadow-md rounded-lg overflow-hidden w-[90%] mx-auto">
           <div className="overflow-x-auto">
-            <table className="w-full bg-white text-center">
-              <thead className="bg-[#057DCD] text-white">
-                <tr className="border-b">
-                  <th className="px-4 py-3 w-[150px] min-w-[120px]">ID</th>
-                  <th className="px-4 py-3 w-[200px] min-w-[180px]">Program Name</th>
-                  <th className="px-4 py-3 w-[200px] min-w-[180px]">Department</th>
-                  <th className="px-4 py-3 pr-4 text-center">Actions</th>
+            <table className="w-full bg-white text-center table-fixed">
+              <thead className="bg-[#057DCD] text-white sticky top-0 z-10">
+                <tr className="border-b align-middle">
+                  <th className="px-4 py-3">ID</th>
+                  <th className="px-4 py-3">Program Name</th>
+                  <th className="px-4 py-3 pl-2">Department</th>
+                  <th className="pr-5">Actions</th>
+                
                 </tr>
               </thead>
             </table>
           </div>
-
           <div className="max-h-80 overflow-y-scroll">
-            <table className="w-full bg-white text-center">
+            <table className="w-full bg-white text-center table-fixed">
               <tbody>
                 {filteredPrograms.length > 0 ? (
                   filteredPrograms.map((program) => {
-                    const department = departments.find(dept => dept.id === program.departmentID || dept.departmentID === program.departmentID);
+                    const department = departments.find(
+                      (dept) =>
+                        dept.id === program.departmentID ||
+                        dept.departmentID === program.departmentID
+                    );
                     return (
                       <tr key={program.id} className="border-b hover:bg-[#DBF1FF] h-[50px] align-middle">
-                        <td className="px-4 py-3 w-[150px] min-w-[120px]">{program.id}</td>
-                        <td className="px-4 py-3 w-[200px] min-w-[180px]">{program.programName}</td>
-                        <td className="px-4 py-3 w-[200px] min-w-[180px]">{department ? department.name || department.departmentName : 'Unknown'}</td>
+                        <td className="px-4 py-3">{program.id}</td>
+                        <td className="px-4 py-3">{program.programName}</td>
+                        <td className="px-4 py-3">
+                          {department ? (department.name || department.departmentName) : 'Unknown'}
+                        </td>
                         <td className="px-4 py-3 flex justify-center space-x-3 align-middle">
                           <button onClick={() => handleEdit(program)} className="text-gray-500 hover:text-gray-700">
                             <EditIcon className="w-5 h-5" />
@@ -208,7 +263,9 @@ export default function Programs() {
                   })
                 ) : (
                   <tr>
-                    <td colSpan="4" className="px-6 py-4 text-center text-gray-500">No programs found</td>
+                    <td colSpan="4" className="px-6 py-4 text-center text-gray-500">
+                      No programs found
+                    </td>
                   </tr>
                 )}
               </tbody>
@@ -216,7 +273,7 @@ export default function Programs() {
           </div>
         </div>
 
-        <div className="mt-6 mr-20 ml-20 shadow-md rounded-lg p-2 bg-white">
+        <div className="mt-6 mx-auto w-[50%] shadow-md rounded-lg p-1 bg-white">
           <div className="flex items-center justify-between space-x-4">
             <input 
               type="text" 
@@ -232,14 +289,30 @@ export default function Programs() {
             >
               <option value="">Select Department</option>
               {departments.map((dept) => (
-                <option key={dept.id} value={dept.id}>{dept.name || dept.departmentName}</option>
+                <option key={dept.id} value={dept.id}>
+                  {dept.name || dept.departmentName}
+                </option>
               ))}
             </select>
             <button 
               onClick={handleAddProgram} 
-              className={`px-4 py-2 rounded-lg text-white shadow-md ${editing ? 'bg-yellow-500' : 'bg-blue-500 hover:bg-blue-600 transition duration-300'}`}
+              disabled={isAddLoading}
+              className={`px-8 py-2 rounded-lg text-white shadow-md ${
+                editing ? 'bg-yellow-500' : 'bg-blue-500 hover:bg-blue-600'
+              } ${isAddLoading ? 'opacity-50 cursor-not-allowed' : ''} 
+              flex items-center space-x-2`}
             >
-              {editing ? "Update" : "Add"}
+              {isAddLoading ? (
+                <>
+                  <svg className="animate-spin h-5 w-5 text-white" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+                    <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
+                    <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+                  </svg>
+                  <span>{editing ? 'Updating...' : 'Adding...'}</span>
+                </>
+              ) : (
+                <span>{editing ? 'Update' : 'Add'}</span>
+              )}
             </button>
             {editing && (
               <button 
@@ -252,6 +325,45 @@ export default function Programs() {
           </div>
         </div>
       </div>
+      {showDeleteModal && (
+        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
+          <div className="bg-white rounded-lg p-6 w-96">
+            <h3 className="text-xl font-semibold mb-4">Confirm Delete</h3>
+            <p className="text-gray-700 mb-6">Are you sure you want to delete this program? This action cannot be undone.</p>
+            <div className="flex justify-end space-x-3">
+              <button
+                onClick={() => {
+                  setShowDeleteModal(false);
+                  setProgramToDelete(null);
+                }}
+                disabled={isDeleteLoading}
+                className="px-4 py-2 rounded-lg bg-gray-300 hover:bg-gray-400 transition-colors"
+              >
+                Cancel
+              </button>
+              <button
+                onClick={confirmDelete}
+                disabled={isDeleteLoading}
+                className={`px-4 py-2 rounded-lg bg-red-500 text-white hover:bg-red-600 transition-colors
+                  ${isDeleteLoading ? 'opacity-50 cursor-not-allowed' : ''} 
+                  flex items-center space-x-2`}
+              >
+                {isDeleteLoading ? (
+                  <>
+                    <svg className="animate-spin h-5 w-5 text-white" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+                      <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
+                      <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+                    </svg>
+                    <span>Deleting...</span>
+                  </>
+                ) : (
+                  <span>Delete</span>
+                )}
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 }

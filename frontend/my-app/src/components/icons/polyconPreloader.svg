@@ -1,0 +1,175 @@
+<svg xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink" width="500" zoomAndPan="magnify" viewBox="0 0 375 374.999991" height="500" preserveAspectRatio="xMidYMid meet" version="1.0">
+    <defs>
+        <clipPath id="d1f4fc9383">
+            <path d="M 191 85 L 307 85 L 307 213 L 191 213 Z M 191 85 " clip-rule="nonzero"/>
+        </clipPath>
+        <clipPath id="5b5069f6c1">
+            <path d="M 67.679688 124.972656 L 67.679688 250.027344 C 67.679688 291.449219 101.257812 325.027344 142.679688 325.027344 L 232.320312 325.027344 C 273.742188 325.027344 307.320312 291.449219 307.320312 250.027344 L 307.320312 124.972656 C 307.320312 83.550781 273.742188 49.972656 232.320312 49.972656 L 142.679688 49.972656 C 101.257812 49.972656 67.679688 83.550781 67.679688 124.972656 Z M 67.679688 124.972656 " clip-rule="nonzero"/>
+        </clipPath>
+        <clipPath id="4a137dbada">
+            <path d="M 67.679688 50 L 307.679688 50 L 307.679688 325 L 67.679688 325 Z M 67.679688 50 " clip-rule="nonzero"/>
+        </clipPath>
+        <clipPath id="ef9b66aba3">
+            <path d="M 67.679688 124.972656 L 67.679688 250.027344 C 67.679688 291.449219 101.257812 325.027344 142.679688 325.027344 L 232.320312 325.027344 C 273.742188 325.027344 307.320312 291.449219 307.320312 250.027344 L 307.320312 124.972656 C 307.320312 83.550781 273.742188 49.972656 232.320312 49.972656 L 142.679688 49.972656 C 101.257812 49.972656 67.679688 83.550781 67.679688 124.972656 Z M 67.679688 124.972656 " clip-rule="nonzero"/>
+        </clipPath>
+        <clipPath id="b35b4d60d8">
+            <path d="M 176 144.699219 L 241.492188 144.699219 L 241.492188 230.199219 L 176 230.199219 Z M 176 144.699219 " clip-rule="nonzero"/>
+        </clipPath>
+        <clipPath id="1337ca396d">
+            <path d="M 133.492188 166 L 155 166 L 155 188 L 133.492188 188 Z M 133.492188 166 " clip-rule="nonzero"/>
+        </clipPath>
+        <clipPath id="f4eaef63ca">
+            <path d="M 154 208 L 177 208 L 177 230.199219 L 154 230.199219 Z M 154 208 " clip-rule="nonzero"/>
+        </clipPath>
+    </defs>
+    
+    <!-- White shape -->
+    <g clip-path="url(#4a137dbada)">
+        <g clip-path="url(#ef9b66aba3)">
+            <path fill="#ffffff" d="M 185.863281 50.109375 L 185.863281 50.667969 L 67.675781 120.230469 L 68.160156 120.511719 L 69.308594 257.644531 L 69.789062 257.371094 L 189.128906 324.9375 L 189.128906 324.386719 L 307.316406 254.816406 L 306.835938 254.539062 L 306.253906 184.949219 L 189.359375 255.949219 L 129.171875 223.347656 L 127.308594 154.921875 C 157.667969 137.230469 195.867188 112.867188 241.898438 81.835938 Z">
+                <animateTransform
+                    attributeName="transform"
+                    type="scale"
+                    dur="2s"
+                    values="0,0;1,1;1,1;0,0"
+                    keyTimes="0;0.3;0.7;1"
+                    repeatCount="indefinite"
+                    calcMode="spline"
+                    keySplines="0.5 0 0.5 1;0 0 0 0;0.5 0 0.5 1"
+                    additive="sum"
+                    begin="0s"
+                >
+                </animateTransform>
+                <animateTransform
+                    attributeName="transform"
+                    type="translate"
+                    values="187.5,187.5;0,0;0,0;187.5,187.5"
+                    dur="2s"
+                    keyTimes="0;0.3;0.7;1"
+                    repeatCount="indefinite"
+                    calcMode="spline"
+                    keySplines="0.5 0 0.5 1;0 0 0 0;0.5 0 0.5 1"
+                    additive="sum"
+                />
+            </path>
+        </g>
+    </g>
+
+    <!-- Blue triangle shape -->
+    <g clip-path="url(#d1f4fc9383)">
+        <g clip-path="url(#5b5069f6c1)">
+            <path fill="#54beff" d="M 248.570312 85.617188 L 191.996094 122.824219 L 245.824219 151.699219 L 245.550781 151.855469 L 247.449219 212.535156 L 306.1875 177.011719 L 305.683594 117.402344 L 305.203125 117.679688 L 248.570312 85.617188">
+                <animateTransform
+                    attributeName="transform"
+                    type="scale"
+                    dur="2s"
+                    values="0,0;1,1;1,1;0,0"
+                    keyTimes="0;0.3;0.7;1"
+                    repeatCount="indefinite"
+                    calcMode="spline"
+                    keySplines="0.5 0 0.5 1;0 0 0 0;0.5 0 0.5 1"
+                    additive="sum"
+                    begin="0.2s"
+                />
+                <animateTransform
+                    attributeName="transform"
+                    type="translate"
+                    values="248,149;0,0;0,0;248,149"
+                    dur="2s"
+                    keyTimes="0;0.3;0.7;1"
+                    repeatCount="indefinite"
+                    calcMode="spline"
+                    keySplines="0.5 0 0.5 1;0 0 0 0;0.5 0 0.5 1"
+                    additive="sum"
+                />
+            </path>
+        </g>
+    </g>
+
+    <!-- Center blue shape -->
+    <g clip-path="url(#b35b4d60d8)">
+        <path fill="#54beff" d="M 181.660156 144.699219 L 212.234375 144.699219 C 224 144.699219 233.632812 154.324219 233.632812 166.097656 L 233.632812 170.28125 L 241.480469 185.683594 L 233.796875 187.496094 L 233.796875 204.007812 C 233.796875 206.695312 231.597656 208.894531 228.910156 208.894531 L 224.363281 208.894531 C 221.667969 208.894531 219.414062 210.914062 219.066406 213.527344 C 219.097656 213.757812 219.113281 214 219.113281 214.246094 L 219.113281 224.941406 C 219.113281 227.882812 216.703125 230.292969 213.761719 230.292969 L 203.058594 230.292969 C 200.113281 230.292969 197.707031 227.882812 197.707031 224.941406 L 197.707031 214.238281 C 197.707031 211.320312 195.335938 208.925781 192.425781 208.886719 L 181.660156 208.886719 C 178.714844 208.886719 176.308594 206.476562 176.308594 203.535156 L 176.308594 192.839844 C 176.308594 189.898438 178.714844 187.488281 181.660156 187.488281 L 192.355469 187.488281 C 195.296875 187.488281 197.707031 185.078125 197.707031 182.136719 L 197.707031 171.441406 C 197.707031 168.5 195.296875 166.089844 192.355469 166.089844 L 181.660156 166.089844 C 178.714844 166.089844 176.308594 163.679688 176.308594 160.738281 L 176.308594 150.050781 C 176.316406 147.109375 178.722656 144.699219 181.660156 144.699219 Z">
+            <animateTransform
+                attributeName="transform"
+                type="scale"
+                dur="2s"
+                values="0,0;1,1;1,1;0,0"
+                keyTimes="0;0.3;0.7;1"
+                repeatCount="indefinite"
+                calcMode="spline"
+                keySplines="0.5 0 0.5 1;0 0 0 0;0.5 0 0.5 1"
+                additive="sum"
+                begin="0.4s"
+            />
+            <animateTransform
+                attributeName="transform"
+                type="translate"
+                values="208.75,187.5;0,0;0,0;208.75,187.5"
+                dur="2s"
+                keyTimes="0;0.3;0.7;1"
+                repeatCount="indefinite"
+                calcMode="spline"
+                keySplines="0.5 0 0.5 1;0 0 0 0;0.5 0 0.5 1"
+                additive="sum"
+            />
+        </path>
+    </g>
+
+    <!-- Small blue square -->
+    <g clip-path="url(#1337ca396d)">
+        <path fill="#54beff" d="M 149.566406 166.097656 L 138.871094 166.097656 C 135.925781 166.097656 133.519531 168.507812 133.519531 171.449219 L 133.519531 182.144531 C 133.519531 185.085938 135.925781 187.496094 138.871094 187.496094 L 149.566406 187.496094 C 152.507812 187.496094 154.917969 185.085938 154.917969 182.144531 L 154.917969 171.449219 C 154.917969 168.507812 152.507812 166.097656 149.566406 166.097656 Z">
+            <animateTransform
+                attributeName="transform"
+                type="scale"
+                dur="2s"
+                values="0,0;1,1;1,1;0,0"
+                keyTimes="0;0.3;0.7;1"
+                repeatCount="indefinite"
+                calcMode="spline"
+                keySplines="0.5 0 0.5 1;0 0 0 0;0.5 0 0.5 1"
+                additive="sum"
+                begin="0.6s"
+            />
+            <animateTransform
+                attributeName="transform"
+                type="translate"
+                values="144.25,176.75;0,0;0,0;144.25,176.75"
+                dur="2s"
+                keyTimes="0;0.3;0.7;1"
+                repeatCount="indefinite"
+                calcMode="spline"
+                keySplines="0.5 0 0.5 1;0 0 0 0;0.5 0 0.5 1"
+                additive="sum"
+            />
+        </path>
+    </g>
+
+    <!-- Bottom blue square -->
+    <g clip-path="url(#f4eaef63ca)">
+        <path fill="#54beff" d="M 160.269531 208.886719 L 170.964844 208.886719 C 173.90625 208.886719 176.316406 211.296875 176.316406 214.238281 L 176.316406 224.933594 C 176.316406 227.875 173.90625 230.285156 170.964844 230.285156 L 160.269531 230.285156 C 157.324219 230.285156 154.917969 227.875 154.917969 224.933594 L 154.917969 214.238281 C 154.917969 211.296875 157.324219 208.886719 160.269531 208.886719 Z">
+            <animateTransform
+                attributeName="transform"
+                type="scale"
+                dur="2s"
+                values="0,0;1,1;1,1;0,0"
+                keyTimes="0;0.3;0.7;1"
+                repeatCount="indefinite"
+                calcMode="spline"
+                keySplines="0.5 0 0.5 1;0 0 0 0;0.5 0 0.5 1"
+                additive="sum"
+                begin="0.8s"
+            />
+            <animateTransform
+                attributeName="transform"
+                type="translate"
+                values="165.5,219.5;0,0;0,0;165.5,219.5"
+                dur="2s"
+                keyTimes="0;0.3;0.7;1"
+                repeatCount="indefinite"
+                calcMode="spline"
+                keySplines="0.5 0 0.5 1;0 0 0 0;0.5 0 0.5 1"
+                additive="sum"
+            />
+        </path>
+    </g>
+</svg>

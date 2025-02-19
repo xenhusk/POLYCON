@@ -78,12 +78,12 @@ def transcribe():
         # Upload the converted file to Google Cloud Storage and get the public URL
         audio_url, _ = upload_audio(converted_path)
 
-        # Clean up temporary files
+        # # Clean up temporary files
         os.remove(raw_path)
         os.remove(converted_path)
 
         # Transcribe the audio using AssemblyAI (which should handle longer files)
-        transcription = transcribe_audio_with_assemblyai(audio_url, speaker_count)
+        transcription = transcribe_audio_with_assemblyai(converted_path, speaker_count)
 
         # Process the transcription with Gemini to identify roles
         processed_transcription = identify_roles_in_transcription(transcription)
@@ -191,9 +191,10 @@ def store_consultation():
                     })
             except Exception as del_err:
                 print(f"❌ Failed to delete booking {booking_id}: {del_err}")
-
+                
+        # Return a valid JSON response after successful processing.
         return jsonify({"session_id": new_session_id}), 200
-
+    
     except Exception as e:
         print("🚨 ERROR in store_consultation:", e)
         return jsonify({"error": "Failed to store consultation session."}), 500
