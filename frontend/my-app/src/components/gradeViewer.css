@@ -1,0 +1,25 @@
+table {
+    border-collapse: separate;
+    border-spacing: 0;
+    border-radius: 0.378rem;      
+}
+thead tr:first-child th:first-child {
+    border-top-left-radius: 0.7rem;;
+}
+thead tr:first-child th:last-child {
+    border-top-right-radius: 0.7rem;
+}
+tbody tr:last-child td:first-child {
+    border-bottom-left-radius: 0.7rem;
+}
+tbody tr:last-child td:last-child {
+    border-bottom-right-radius: 0.7rem;
+}
+tbody td, thead th {
+    border-color: #54BEFF;
+}
+tbody td{
+    overflow-y: auto;
+}
+
+  

@@ -9,22 +9,29 @@ export default function Departments() {
   const [editing, setEditing] = useState(false);
   const [filteredDepartments, setFilteredDepartments] = useState([]);
   const [departmentFilter, setDepartmentFilter] = useState('');
+  const [isLoadingDepartment, setIsLoadingDepartment] = useState(true);//preloader
   const filterRef = useRef(null);
-  const [isLoading, setIsLoading] = useState(false);
   const [isAddLoading, setIsAddLoading] = useState(false);
   const [message, setMessage] = useState({ type: '', content: '' });
   const [showDeleteModal, setShowDeleteModal] = useState(false);
   const [departmentToDelete, setDepartmentToDelete] = useState(null);
   const [isDeleteLoading, setIsDeleteLoading] = useState(false);
+  const [isFiltering, setIsFiltering] = useState(false);
+  const [AddClicked, setAddClicked] = useState(false);
+  const [DeleteClicked, setDeleteClicked] = useState(false);
+  const [EditClicked, setEditClicked] = useState(false);
+  const [SearchClicked, setSearchClicked] = useState(false);
+  const [CancelClicked, setCancelClicked] = useState(false);
 
   useEffect(() => {
     fetchInitialData();
   }, []);
 
   const fetchInitialData = async () => {
+    setIsLoadingDepartment(true);  // Use the setter function here
     try {
       const cachedDepartments = localStorage.getItem('departments');
-
+  
       if (cachedDepartments) {
         const departmentsData = JSON.parse(cachedDepartments);
         console.log("Cached Departments:", departmentsData); // Debug log
@@ -34,15 +41,17 @@ export default function Departments() {
         const response = await fetch('http://localhost:5001/department/get_departments');
         const departmentsData = await response.json();
         console.log("Fetched Departments:", departmentsData); // Debug log
-
+  
         setDepartments(departmentsData);
         setFilteredDepartments(departmentsData);
         localStorage.setItem('departments', JSON.stringify(departmentsData));
       }
     } catch (error) {
       console.error('Error fetching initial data:', error);
+    } finally {
+      setIsLoadingDepartment(false);  // Use the setter function here too
     }
-  };
+  };  
 
   const handleDepartmentFilterChange = (e) => {
     const input = e.target.value;
@@ -51,16 +60,20 @@ export default function Departments() {
   };
 
   const applyFilters = (input) => {
-    let filtered = departments;
+    setIsFiltering(true);
 
-    // Filter by department name
-    if (input) {
-      filtered = filtered.filter((department) =>
-        department.name.toLowerCase().includes(input.toLowerCase())
-      );
-    }
+    setTimeout(() => {
+      let filtered = departments;
 
-    setFilteredDepartments(filtered);
+      // Filter by department name
+      if (input) {
+        filtered = filtered.filter((department) =>
+          department.name.toLowerCase().includes(input.toLowerCase())
+        );
+      }
+      setFilteredDepartments(filtered);
+      setIsFiltering(false);
+    }, 500);
   };
 
   const handleSaveDepartment = async () => {
@@ -165,19 +178,6 @@ export default function Departments() {
         </div>
       )}
 
-      {/* Loading overlay */}
-      {isLoading && (
-        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
-          <div className="bg-white p-4 rounded-lg flex items-center space-x-3">
-            <svg className="animate-spin h-5 w-5 text-blue-500" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
-              <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
-              <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
-            </svg>
-            <span>Processing...</span>
-          </div>
-        </div>
-      )}
-
       <h2 className="text-3xl mt-10 font-bold text-center text-[#0065A8] pb-5">Departments</h2>
 
       <div className="flex items-center justify-center space-x-2 w-full mt-4">
@@ -190,9 +190,13 @@ export default function Departments() {
             className="border-none focus:ring-0 outline-none w-[100%]"
           />
         </div>
-        <button 
-          onClick={() => applyFilters(departmentFilter)} 
-          className="bg-[#057DCD] text-white px-6 py-2 rounded-lg shadow-md hover:bg-blue-600 transition"
+        <button
+          className={`bg-[#057DCD] text-white px-6 py-2 rounded-lg shadow-md hover:bg-blue-600 transition 
+            ${SearchClicked ? "scale-90" : "scale-100"}`}
+          onClick={() => {
+            setSearchClicked(true);
+            setTimeout(() => setSearchClicked(false), 300);
+            applyFilters(departmentFilter);}}
         >
           Search
         </button>
@@ -216,13 +220,25 @@ export default function Departments() {
             <div className="max-h-80 overflow-y-auto">
               <table className="w-full bg-white text-center table-fixed">
                 <tbody>
-                  {departments.length === 0 ? (
-                    <tr>
-                      <td colSpan="3" className="px-6 py-4 text-center text-gray-500">
-                        Loading, please wait...
+                {(isLoadingDepartment || isFiltering) ? (
+                  // 🚀 Loading Skeleton with Pulse Animation
+                  Array.from({ length: 5 }).map((_, index) => (
+                    <tr key={index} className="animate-pulse border-b h-[50px] align-middle">
+                      <td className="px-4 py-3">
+                        <div className="h-4 w-20 bg-gray-200 rounded mx-auto"></div>
+                      </td>
+                      <td className="px-4 py-3">
+                        <div className="h-4 w-32 bg-gray-200 rounded mx-auto"></div>
+                      </td>
+                      <td className="px-4 py-3 text-center">
+                        <div className="flex items-center justify-center space-x-3">
+                          <div className="h-6 w-6 bg-gray-200 rounded-full"></div>
+                          <div className="h-6 w-6 bg-gray-200 rounded-full"></div>
+                        </div>
                       </td>
                     </tr>
-                  ) : filteredDepartments.length > 0 ? (
+                  ))
+                ) : filteredDepartments.length > 0 ? (
                     filteredDepartments.map((department) => (
                       <tr key={department.id} className="border-b hover:bg-[#DBF1FF] h-[50px] align-middle">
                         <td className="px-4 py-3">{department.id}</td>
@@ -230,14 +246,22 @@ export default function Departments() {
                         <td className="px-4 py-3 text-center">
                           <div className="flex items-center justify-center space-x-3">
                             <button
-                              onClick={() => handleEdit(department)}
-                              className="text-gray-500 hover:text-gray-700"
+                              className={`text-gray-500 hover:text-gray-700 ${
+                                EditClicked ? "scale-90" : "scale-100"}`}
+                              onClick={() => {
+                                setEditClicked(true);
+                                setTimeout(() => setEditClicked(false), 300);
+                                handleEdit(department);}}
                             >
                               <EditIcon className="w-5 h-5" />
                             </button>
                             <button
-                              onClick={() => handleDelete(department.id)}
-                              className="text-gray-500 hover:text-gray-700"
+                              className={`text-gray-500 hover:text-gray-700 ${
+                                DeleteClicked ? "scale-90" : "scale-100"}`}
+                              onClick={() => { setDeleteClicked(true);
+                                setTimeout(() => setDeleteClicked(false), 300);
+                                handleDelete(department.id);
+                                }}
                             >
                               <DeleteIcon className="w-5 h-5" />
                             </button>
@@ -274,11 +298,15 @@ export default function Departments() {
             {/* Submit and Cancel Buttons */}
             <div className="flex items-center space-x-2">
               <button 
-                onClick={handleSaveDepartment}
+                onClick={() => {
+                  setAddClicked(true);
+                  setTimeout(() => setAddClicked(false), 300);
+                  handleSaveDepartment();}}
                 disabled={isAddLoading}
                 className={`px-8 py-2 rounded-lg text-white ${
-                  editing ? 'bg-yellow-500' : 'bg-[#057DCD] hover:bg-blue-500'
-                } ${isAddLoading ? 'opacity-50 cursor-not-allowed' : ''} 
+                  editing ? 'bg-[#057DCD] hover:bg-blue-500' : 'bg-[#057DCD] hover:bg-blue-500'
+                } ${isAddLoading ? 'opacity-50 cursor-not-allowed' : ''}
+                 ${AddClicked ? "scale-90" : "scale-100"}  
                 flex items-center space-x-2`}
               >
                 {isAddLoading ? (
@@ -295,7 +323,10 @@ export default function Departments() {
               </button>
               {editing && (
                 <button 
-                  onClick={resetForm} 
+                  onClick={() => {
+                    setAddClicked(true);
+                    setTimeout(() => setAddClicked(false), 300);
+                    resetForm();}}
                   className="bg-gray-500 text-white px-4 py-2 rounded-lg"
                 >
                   CANCEL
@@ -314,18 +345,29 @@ export default function Departments() {
             <div className="flex justify-end space-x-3">
               <button
                 onClick={() => {
-                  setShowDeleteModal(false);
-                  setDepartmentToDelete(null);
+                  setCancelClicked(true); 
+                  setTimeout(() => { setCancelClicked(false); setShowDeleteModal(false); 
+                    setTimeout(() => setDepartmentToDelete(null), 
+                    500);
+                  }, 200);
                 }}
                 disabled={isDeleteLoading}
-                className="px-4 py-2 rounded-lg bg-gray-300 hover:bg-gray-400 transition-colors"
+                className={`px-4 py-2 rounded-lg bg-gray-300 hover:bg-gray-400 transition-colors
+                  ${CancelClicked ? "scale-90" : "scale-100"}`}
               >
                 Cancel
               </button>
               <button
-                onClick={confirmDelete}
+                onClick={() => {
+                  setDeleteClicked(true); 
+                  setTimeout(() => { setDeleteClicked(false);
+                    setTimeout(() => confirmDelete(), 
+                    500);
+                  }, 200);
+                }}
                 disabled={isDeleteLoading}
                 className={`px-4 py-2 rounded-lg bg-red-500 text-white hover:bg-red-600 transition-colors
+                  ${DeleteClicked ? "scale-90" : "scale-100"}
                   ${isDeleteLoading ? 'opacity-50 cursor-not-allowed' : ''} 
                   flex items-center space-x-2`}
               >

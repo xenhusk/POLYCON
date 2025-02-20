@@ -1,4 +1,5 @@
 import React, { useState, useEffect } from "react";
+import "./gradeViewer.css";
 
 const GradeViewer = () => {
   const [grades, setGrades] = useState([]);
@@ -81,7 +82,7 @@ const GradeViewer = () => {
           <option value="Pre-Final">Pre-Final</option>
           <option value="Final">Final</option>
         </select>
-{/* 
+        {/* 
         <button
           className="bg-blue-500 text-white px-4 py-2 rounded-lg hover:bg-blue-600"
           onClick={fetchGrades}
@@ -94,46 +95,87 @@ const GradeViewer = () => {
       {error && <p className="text-red-500">{error}</p>}
 
       {/* Loading State */}
-      {loading && <p>Loading grades...</p>}
+      {loading && (
+        <div className="overflow-x-auto">
+          <table className="min-w-full table-fixed">
+            <thead className="bg-[#0065A8] text-white">
+              <tr>
+                <th className="border p-2">Subject Code</th>
+                <th className="border p-2">Subject Name</th>
+                <th className="border p-2">Credit</th>
+                <th className="border p-2">Instructor</th>
+                <th className="border p-2">Grade</th>
+                <th className="border p-2">Remarks</th>
+              </tr>
+            </thead>
+            <tbody>
+              {Array.from({ length: 5 }).map((_, index) => (
+                <tr key={index} className="animate-pulse">
+                  <td className="border p-2">
+                    <div className="h-4 bg-gray-200 rounded w-24 mx-auto"></div>
+                  </td>
+                  <td className="border p-2">
+                    <div className="h-4 bg-gray-200 rounded w-40 mx-auto"></div>
+                  </td>
+                  <td className="border p-2">
+                    <div className="h-4 bg-gray-200 rounded w-10 mx-auto"></div>
+                  </td>
+                  <td className="border p-2">
+                    <div className="h-4 bg-gray-200 rounded w-32 mx-auto"></div>
+                  </td>
+                  <td className="border p-2">
+                    <div className="h-4 bg-gray-200 rounded w-16 mx-auto"></div>
+                  </td>
+                  <td className="border p-2">
+                    <div className="h-4 bg-gray-200 rounded w-24 mx-auto"></div>
+                  </td>
+                </tr>
+              ))}
+            </tbody>
+          </table>
+        </div>
+      )}
 
       {/* Grades Table */}
       {!loading && grades.length > 0 && (
-        <table className="min-w-full border border-gray-300">
-          <thead>
-            <tr className="bg-gray-100">
-              <th className="border p-2">Subject Code</th>
-              <th className="border p-2">Subject Name</th>
-              <th className="border p-2">Credit</th>
-              <th className="border p-2">Instructor</th>
-              <th className="border p-2">Grade</th>
-              <th className="border p-2">Remarks</th>
-            </tr>
-          </thead>
-          <tbody>
-            {grades.map((grade) => (
-              <tr key={grade.id} className="text-center">
-                <td className="border p-2">{grade.courseID}</td>
-                <td className="border p-2">{grade.courseName}</td>
-                <td className="border p-2">3.0</td>
-                <td className="border p-2">{grade.facultyName}</td>
-                <td className="border p-2">{grade.grade}</td>
-                <td className="border p-2">
-                  <span
-                    className={`px-2 py-1 text-white text-sm rounded-md ${
-                      grade.remarks === "PASSED"
-                        ? "bg-green-500"
-                        : grade.remarks === "FAILED"
-                        ? "bg-red-500"
-                        : "bg-gray-400"
-                    }`}
-                  >
-                    {grade.remarks || "NOT ENCODED"}
-                  </span>
-                </td>
+        <div className="overflow-x-auto">
+          <table className="min-w-full table-fixed">
+            <thead className="bg-[#0065A8] text-white">
+              <tr>
+                <th className="border p-2">Subject Code</th>
+                <th className="border p-2">Subject Name</th>
+                <th className="border p-2">Credit</th>
+                <th className="border p-2">Instructor</th>
+                <th className="border p-2">Grade</th>
+                <th className="border p-2">Remarks</th>
               </tr>
-            ))}
-          </tbody>
-        </table>
+            </thead>
+            <tbody>
+              {grades.map((grade) => (
+                <tr key={grade.id} className="text-center"> 
+                  <td className="border p-2">{grade.courseID}</td>
+                  <td className="border p-2">{grade.courseName}</td>
+                  <td className="border p-2">3.0</td>
+                  <td className="border p-2">{grade.facultyName}</td>
+                  <td className="border p-2">{grade.grade}</td>
+                  <td className="border p-2">
+                    <span
+                      className={`px-2 py-1 text-white text-sm rounded-md ${
+                        grade.remarks === "PASSED"
+                          ? "bg-green-500"
+                          : grade.remarks === "FAILED"
+                          ? "bg-red-500"
+                          : "bg-gray-400"
+                      }`}
+                    >
+                      {grade.remarks || "NOT ENCODED"}
+                    </span>
+                  </td>
+                </tr>
+              ))}
+            </tbody>
+          </table>
+        </div>
       )}
 
       {/* No Grades Message */}

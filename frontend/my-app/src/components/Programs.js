@@ -9,19 +9,26 @@ export default function Programs() {
   const [selectedDepartment, setSelectedDepartment] = useState('');
   const [filteredPrograms, setFilteredPrograms] = useState([]);
   const [editing, setEditing] = useState(false);
+  const [isLoadingPrograms, setIsLoadingPrograms] = useState(true);//preloader
   const [programFilter, setProgramFilter] = useState(''); // Program filter input
-  const [isLoading, setIsLoading] = useState(false);
   const [isAddLoading, setIsAddLoading] = useState(false);
   const [message, setMessage] = useState({ type: '', content: '' });
   const [showDeleteModal, setShowDeleteModal] = useState(false);
   const [programToDelete, setProgramToDelete] = useState(null);
   const [isDeleteLoading, setIsDeleteLoading] = useState(false);
+  const [isFiltering, setIsFiltering] = useState(false); // Loading state for filtering
+  const [AddClicked, setAddClicked] = useState(false);
+  const [DeleteClicked, setDeleteClicked] = useState(false);
+  const [EditClicked, setEditClicked] = useState(false);
+  const [SearchClicked, setSearchClicked] = useState(false);
+  const [CancelClicked, setCancelClicked] = useState(false);
 
   useEffect(() => {
     fetchInitialData();
   }, []);
 
   const fetchInitialData = async () => {
+    setIsLoadingPrograms(true);
     try {
       const cachedPrograms = localStorage.getItem('programs');
       const cachedDepartments = localStorage.getItem('departments');
@@ -56,6 +63,8 @@ export default function Programs() {
       }
     } catch (error) {
       console.error('Error fetching initial data:', error);
+    } finally {
+      setIsLoadingPrograms(false);
     }
   };
 
@@ -154,16 +163,20 @@ export default function Programs() {
   };
 
   const applyFilters = () => {
-    let filtered = programs;
+    setIsFiltering(true);
 
-    // Filter by program name
-    if (programFilter) {
-      filtered = filtered.filter((program) =>
-        program.programName.toLowerCase().includes(programFilter.toLowerCase())
-      );
-    }
+    setTimeout(() => {
+      let filtered = programs;
 
-    setFilteredPrograms(filtered);
+      // Filter by program name
+      if (programFilter) {
+        filtered = filtered.filter((program) =>
+          program.programName.toLowerCase().includes(programFilter.toLowerCase())
+        );
+      }
+      setFilteredPrograms(filtered);
+      setIsFiltering(false);
+    }, 300); 
   };
 
   const handleProgramFilterChange = (e) => {
@@ -183,19 +196,6 @@ export default function Programs() {
         </div>
       )}
 
-      {/* Loading overlay */}
-      {isLoading && (
-        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
-          <div className="bg-white p-4 rounded-lg flex items-center space-x-3">
-            <svg className="animate-spin h-5 w-5 text-blue-500" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
-              <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
-              <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
-            </svg>
-            <span>Processing...</span>
-          </div>
-        </div>
-      )}
-
       <div className="mx-auto p-4 bg-white mt-6">
         <h2 className="text-3xl font-bold text-center text-[#0065A8] pb-5 mb-4">Programs</h2>
         <div className="mt-4">
@@ -210,8 +210,12 @@ export default function Programs() {
               />
             </div>
             <button 
-              onClick={applyFilters} 
-              className="bg-blue-500 text-white px-6 py-2 rounded-lg shadow-md hover:bg-blue-600 transition"
+              className={`bg-[#057DCD] text-white px-6 py-2 rounded-lg shadow-md hover:bg-blue-600 transition 
+                ${SearchClicked ? "scale-90" : "scale-100"}`}
+              onClick={() => {
+                setSearchClicked(true);
+                setTimeout(() => setSearchClicked(false), 300);
+                applyFilters();}}
             >
               Search
             </button>
@@ -236,7 +240,28 @@ export default function Programs() {
           <div className="max-h-80 overflow-y-scroll">
             <table className="w-full bg-white text-center table-fixed">
               <tbody>
-                {filteredPrograms.length > 0 ? (
+              {(isLoadingPrograms || isFiltering) ? (
+                // 🚀 Loading Skeleton with Pulse Animation
+                Array.from({ length: 5 }).map((_, index) => (
+                  <tr key={index} className="animate-pulse border-b h-[50px] align-middle">
+                    <td className="px-4 py-3">
+                      <div className="h-4 w-20 bg-gray-200 rounded mx-auto"></div>
+                    </td>
+                    <td className="px-4 py-3">
+                      <div className="h-4 w-32 bg-gray-200 rounded mx-auto"></div>
+                    </td>
+                    <td className="px-4 py-3">
+                      <div className="h-4 w-32 bg-gray-200 rounded mx-auto"></div>
+                    </td>
+                    <td className="px-4 py-3 text-center">
+                      <div className="flex items-center justify-center space-x-3">
+                        <div className="h-6 w-6 bg-gray-200 rounded-full"></div>
+                        <div className="h-6 w-6 bg-gray-200 rounded-full"></div>
+                      </div>
+                    </td>
+                  </tr>
+                ))
+              ) : filteredPrograms.length > 0 ? (
                   filteredPrograms.map((program) => {
                     const department = departments.find(
                       (dept) =>
@@ -251,10 +276,24 @@ export default function Programs() {
                           {department ? (department.name || department.departmentName) : 'Unknown'}
                         </td>
                         <td className="px-4 py-3 flex justify-center space-x-3 align-middle">
-                          <button onClick={() => handleEdit(program)} className="text-gray-500 hover:text-gray-700">
+                          <button
+                          className={`text-gray-500 hover:text-gray-700 ${
+                            EditClicked ? "scale-90" : "scale-100"}`}
+                          onClick={() => {
+                            setEditClicked(true);
+                            setTimeout(() => setEditClicked(false), 300);
+                            handleEdit(program);}}
+                          >
                             <EditIcon className="w-5 h-5" />
                           </button>
-                          <button onClick={() => handleDelete(program.id)} className="text-gray-500 hover:text-gray-700">
+                          <button
+                            className={`text-gray-500 hover:text-gray-700 ${
+                              DeleteClicked ? "scale-90" : "scale-100"}`}
+                            onClick={() => { setDeleteClicked(true);
+                              setTimeout(() => setDeleteClicked(false), 300);
+                              handleDelete(program.id);
+                              }}
+                          >
                             <DeleteIcon className="w-5 h-5" />
                           </button>
                         </td>
@@ -295,11 +334,15 @@ export default function Programs() {
               ))}
             </select>
             <button 
-              onClick={handleAddProgram} 
+              onClick={() => {
+                setAddClicked(true);
+                setTimeout(() => setAddClicked(false), 300);
+                handleAddProgram();}}
               disabled={isAddLoading}
               className={`px-8 py-2 rounded-lg text-white shadow-md ${
-                editing ? 'bg-yellow-500' : 'bg-blue-500 hover:bg-blue-600'
+                editing ? 'bg-[#057DCD] hover:bg-blue-600' : 'bg-blue-500 hover:bg-blue-600'
               } ${isAddLoading ? 'opacity-50 cursor-not-allowed' : ''} 
+                ${AddClicked ? "scale-90" : "scale-100"}
               flex items-center space-x-2`}
             >
               {isAddLoading ? (
@@ -311,12 +354,15 @@ export default function Programs() {
                   <span>{editing ? 'Updating...' : 'Adding...'}</span>
                 </>
               ) : (
-                <span>{editing ? 'Update' : 'Add'}</span>
+                <span>{editing ? 'Update' : 'ADD'}</span>
               )}
             </button>
             {editing && (
-              <button 
-                onClick={resetForm} 
+              <button
+                onClick={() => {
+                  setEditClicked(true);
+                  setTimeout(() => setEditClicked(false), 300);
+                  resetForm();}}
                 className="bg-gray-500 hover:bg-gray-600 text-white px-4 py-2 rounded shadow-md transition duration-300"
               >
                 Cancel
@@ -332,19 +378,27 @@ export default function Programs() {
             <p className="text-gray-700 mb-6">Are you sure you want to delete this program? This action cannot be undone.</p>
             <div className="flex justify-end space-x-3">
               <button
-                onClick={() => {
-                  setShowDeleteModal(false);
-                  setProgramToDelete(null);
-                }}
+              onClick={() => {
+                setCancelClicked(true); 
+                setTimeout(() => { setCancelClicked(false); setShowDeleteModal(false); 
+                  setTimeout(() => setProgramToDelete(null), 
+                  500);
+                }, 200);
+              }}
                 disabled={isDeleteLoading}
-                className="px-4 py-2 rounded-lg bg-gray-300 hover:bg-gray-400 transition-colors"
+                className={`px-4 py-2 rounded-lg bg-gray-300 hover:bg-gray-400 transition-colors 
+                  ${CancelClicked ? 'scale-90' : 'scale-100'}`}
               >
                 Cancel
               </button>
               <button
-                onClick={confirmDelete}
+                onClick={() => {
+                  setEditClicked(true);
+                  setTimeout(() => setEditClicked(false), 300);
+                  confirmDelete();}}
                 disabled={isDeleteLoading}
                 className={`px-4 py-2 rounded-lg bg-red-500 text-white hover:bg-red-600 transition-colors
+                  ${DeleteClicked ? 'scale-90' : 'scale-100'}
                   ${isDeleteLoading ? 'opacity-50 cursor-not-allowed' : ''} 
                   flex items-center space-x-2`}
               >

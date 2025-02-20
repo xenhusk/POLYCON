@@ -40,6 +40,8 @@ function BookingAppointment({ closeModal, role: propRole }) {
   const [message, setMessage] = useState({ type: '', content: '' });
   const [isStudentSearchLoading, setIsStudentSearchLoading] = useState(false);
   const [isTeacherSearchLoading, setIsTeacherSearchLoading] = useState(false);
+  const [isFellowStudentSearchLoading, setIsFellowStudentSearchLoading] = useState(false);
+
 
   // Debounced search function
   const debouncedSearch = (term) => {
@@ -65,16 +67,19 @@ function BookingAppointment({ closeModal, role: propRole }) {
       } finally {
         setIsStudentSearchLoading(false);
       }
-    }, 300); // Wait 300ms after user stops typing
+    }, 200); 
   };
+  
 
   // Handle search input change (unchanged logic)
   const handleSearchChange = (e) => {
     const value = e.target.value;
     setSearchTerm(value);
     setPage(0); // Reset pagination when search term changes
+    setIsStudentSearchLoading(true); 
     debouncedSearch(value);
   };
+  
 
   // Load more results when scrolling
   const loadMore = () => {
@@ -120,7 +125,7 @@ function BookingAppointment({ closeModal, role: propRole }) {
     if (teacherSearchTerm) {
       searchTimeout.current = setTimeout(() => {
         fetchTeachers();
-      }, 300);
+      }, 200);
     }
 
     return () => {
@@ -263,7 +268,16 @@ function BookingAppointment({ closeModal, role: propRole }) {
               {isStudentInputFocused && (
                 <ul className="absolute z-20 w-full mt-1 bg-white border border-gray-200 rounded-lg shadow-lg max-h-60 overflow-y-auto">
                   {isStudentSearchLoading ? (
-                    <li className="px-4 py-2 text-center text-gray-500">Searching...</li>
+                    // 🚀 Loading Skeleton for Student Search
+                    Array.from({ length: 3 }).map((_, index) => (
+                      <li key={index} className="px-4 py-2 flex items-center gap-3 animate-pulse">
+                        <div className="w-8 h-8 bg-gray-200 rounded-full"></div>
+                        <div className="flex flex-col">
+                          <div className="w-32 h-4 bg-gray-200 rounded"></div>
+                          <div className="w-24 h-3 bg-gray-100 rounded mt-1"></div>
+                        </div>
+                      </li>
+                    ))
                   ) : studentResults.length === 0 ? (
                     <li className="px-4 py-2 text-center text-gray-500">No students found</li>
                   ) : (
@@ -271,7 +285,6 @@ function BookingAppointment({ closeModal, role: propRole }) {
                       .filter(student => !selectedStudents.some(s => s.id === student.id))
                       .map(student => (
                         <li key={student.id}
-                          // Changed onClick to onMouseDown to ensure proper selection before onBlur fires.
                           onMouseDown={() => {
                             setSelectedStudents([...selectedStudents, student]);
                             setSearchTerm('');
@@ -357,19 +370,27 @@ function BookingAppointment({ closeModal, role: propRole }) {
               {isTeacherInputFocused && (
                 <ul className="absolute z-20 w-full mt-1 bg-white border border-gray-200 rounded-lg shadow-lg max-h-60 overflow-y-auto">
                   {isTeacherSearchLoading ? (
-                    <li className="px-4 py-2 text-center text-gray-500">Searching...</li>
+                    // 🚀 Loading Skeleton for Teacher Search
+                    Array.from({ length: 3 }).map((_, index) => (
+                      <li key={index} className="px-4 py-2 flex items-center gap-3 animate-pulse">
+                        <div className="w-8 h-8 bg-gray-200 rounded-full"></div>
+                        <div className="flex flex-col">
+                          <div className="w-32 h-4 bg-gray-200 rounded"></div>
+                          <div className="w-24 h-3 bg-gray-100 rounded mt-1"></div>
+                        </div>
+                      </li>
+                    ))
                   ) : teacherResults.length === 0 ? (
                     <li className="px-4 py-2 text-center text-gray-500">No teachers found</li>
                   ) : (
                     teacherResults.map(teacher => (
                       <li key={teacher.id}
-                        // Changed onClick to onMouseDown to ensure proper selection before onBlur fires.
                         onMouseDown={() => {
                           setSelectedTeacher(teacher.id);
                           setSelectedTeacherName(`${teacher.firstName} ${teacher.lastName}`);
                           setSelectedTeacherProfile(teacher.profile_picture);
                           setTeacherSearchTerm('');
-                          setIsTeacherInputFocused(false);  // NEW: Close dropdown after selection
+                          setIsTeacherInputFocused(false);
                         }}
                         className="px-4 py-2 hover:bg-gray-50 flex items-center gap-3 cursor-pointer">
                         <img src={getProfilePictureUrl(teacher.profile_picture)}
@@ -401,16 +422,32 @@ function BookingAppointment({ closeModal, role: propRole }) {
                 ))}
                 <input type="text"
                   value={searchTerm}
-                  onChange={handleSearchChange}
+                  onChange={(e) => {
+                    setSearchTerm(e.target.value);
+                    setIsFellowStudentSearchLoading(true); // 🚀 Trigger loading when typing starts
+                    setPage(0); // Reset pagination when search term changes
+                    debouncedSearch(e.target.value);
+                  }}
                   onFocus={() => setIsStudentInputFocused(true)}
                   onBlur={() => setTimeout(() => setIsStudentInputFocused(false), 200)}
-                  placeholder="Search students..."
+                  placeholder="Search fellow students..."
                   className="flex-1 min-w-[120px] outline-none bg-transparent" />
               </div>
+
+              {/* Fellow Student Search Results Dropdown */}
               {isStudentInputFocused && (
                 <ul className="absolute z-20 w-full mt-1 bg-white border border-gray-200 rounded-lg shadow-lg max-h-60 overflow-y-auto">
-                  {isStudentSearchLoading ? (
-                    <li className="px-4 py-2 text-center text-gray-500">Searching...</li>
+                  {isFellowStudentSearchLoading ? (
+                    // 🚀 Loading Skeleton for Fellow Students
+                    Array.from({ length: 3 }).map((_, index) => (
+                      <li key={index} className="px-4 py-2 flex items-center gap-3 animate-pulse">
+                        <div className="w-8 h-8 bg-gray-200 rounded-full"></div>
+                        <div className="flex flex-col">
+                          <div className="w-32 h-4 bg-gray-200 rounded"></div>
+                          <div className="w-24 h-3 bg-gray-100 rounded mt-1"></div>
+                        </div>
+                      </li>
+                    ))
                   ) : studentResults.length === 0 ? (
                     <li className="px-4 py-2 text-center text-gray-500">No students found</li>
                   ) : (
@@ -418,7 +455,6 @@ function BookingAppointment({ closeModal, role: propRole }) {
                       .filter(student => !selectedStudents.some(s => s.id === student.id))
                       .map(student => (
                         <li key={student.id}
-                          // Changed onClick to onMouseDown to ensure proper selection before onBlur fires.
                           onMouseDown={() => {
                             setSelectedStudents([...selectedStudents, student]);
                             setSearchTerm('');
