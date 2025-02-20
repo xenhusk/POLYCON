@@ -18,6 +18,7 @@ import Programs from './components/Programs';
 import FinalDocument from './pages/finaldocument'; // add import for FinalDocument
 import History from './pages/History'; // add import for History
 import Departments from './components/Departments';
+import HomeAdmin from './components/HomeAdmin'; // Update import name and path
 
 import SidebarPreview from './components/SidebarPreview'; // Import the SidebarPreview component
 import Appointments from './pages/Appointments'; // Import the Appointments page
@@ -430,6 +431,7 @@ function App() {
                       <Route path="/history" element={<History />} /> {/* New route */}
                       <Route path="/department" element={<Departments />} /> {/* New route */}
                       <Route path="/preloader-test" element={<PreloaderTest />} /> {/* Add this line */}
+                      <Route path="/homeadmin" element={<HomeAdmin />} /> 
                     </Routes>
                   </Suspense>
                 </motion.div>

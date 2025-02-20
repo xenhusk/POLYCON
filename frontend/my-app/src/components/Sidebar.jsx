@@ -158,7 +158,7 @@ const Sidebar = ({ onExpandChange }) => {
       past: '/history'
     },
     admin: {
-      dashboard: '/home',
+      homeadmin: '/homeadmin',
       add_users: '/admin',
       course: '/courses',
       program: '/programs',
@@ -306,7 +306,7 @@ const Sidebar = ({ onExpandChange }) => {
 
       {userRole === 'admin' && (
         <ul className="mt-2 space-y-3"> {/* Changed from mt-6 to mt-2 */}
-          {renderMenuItem("dashboard", HomeIcon, "Home")}
+          {renderMenuItem("homeadmin", HomeIcon, "Home")}
           {renderMenuItem("add_users", UserAdd, "Users")}
           {renderMenuItem("course", CourseAdd, "Courses")}
           {renderMenuItem("program", ProgramAdd, "Programs")}
