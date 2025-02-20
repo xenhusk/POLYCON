@@ -19,8 +19,9 @@ const Login = ({ onLoginSuccess, onSwitchToSignup }) => {
     } else if (data.role === 'faculty') {
       localStorage.setItem('teacherID', data.teacherId);
     }
+    // Propagate login state to App, which must update loggedIn.
     onLoginSuccess(data);
-    navigate('/'); // Redirect to Home instead of role-specific pages
+    navigate('/');
   };
 
   const handleSubmit = async (e) => {

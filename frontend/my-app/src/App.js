@@ -153,9 +153,8 @@ function App() {
   const [loadingProgress, setLoadingProgress] = useState(0);
   // NEW state to control overlay visibility
   const [showOverlay, setShowOverlay] = useState(true);
-  
-  // NEW: Create a ref to ensure preload runs only once
-  const preloadCalled = useRef(false);
+  // NEW: Initialize loggedIn based on localStorage.
+  const [loggedIn, setLoggedIn] = useState(!!localStorage.getItem('userEmail'));
 
   // List of routes that should not trigger role fetching
   const noRoleFetchPaths = ['/appointments', '/someOtherRolelessPage'];
@@ -227,59 +226,6 @@ function App() {
     }
   }, []);
 
-  useEffect(() => {
-    if (preloadCalled.current) return;
-    preloadCalled.current = true;
-    
-    const preloadAllData = async () => {
-      const userEmail = localStorage.getItem('userEmail');
-      const userRole = localStorage.getItem('userRole');
-      if (!userEmail || !userRole) return;
-      
-      const totalTasks = 5; // Increased count for 5 required fetches
-      let completedCount = 0;
-      const update = () => {
-        completedCount++;
-        const progress = Math.floor((completedCount / totalTasks) * 100);
-        setLoadingProgress(progress);
-        console.log(`Task completed: ${completedCount}/${totalTasks} (Progress: ${progress}%)`);
-      };
-
-      const tasks = [
-        fetch(`http://localhost:5001/user/get_user?email=${userEmail}`)
-          .then(res => res.json())
-          .then(data => { update(); return data; })
-          .catch(err => { console.error(err); update(); }),
-        // NEW: Use the new efficient bookings route:
-        fetch(`http://localhost:5001/bookings/get_bookings?role=${userRole}&userID=${localStorage.getItem('userID')}&status=confirmed`)
-          .then(res => res.json())
-          .then(data => { update(); return data; })
-          .catch(err => { console.error(err); update(); }),
-        // NEW: Use the new grades route:
-        fetch(`http://localhost:5001/grade/get_student_grades?studentID=${localStorage.getItem('studentID')}&schoolYear=&semester=&period=`)
-          .then(res => res.json())
-          .then(data => { update(); return data; })
-          .catch(err => { console.error(err); update(); }),
-        fetch(`http://localhost:5001/course/get_courses`)
-          .then(res => res.json())
-          .then(data => { update(); return data; })
-          .catch(err => { console.error(err); update(); }),
-        // NEW: Preload consultation history
-        fetch(`http://localhost:5001/consultation/get_history?role=${userRole}&userID=${localStorage.getItem('userID')}`)
-          .then(res => res.json())
-          .then(data => { update(); return data; })
-          .catch(err => { console.error(err); update(); })
-      ];
-      
-      await Promise.all(tasks);
-    };
-
-    (async () => {
-      await preloadAllData();
-      setIsLoading(false);
-    })();
-  }, []);
-
   // NEW effect for overlay fade-out
   useEffect(() => {
     if (!isLoading && profile) {
@@ -311,6 +257,63 @@ function App() {
       setModalStep('crop');
     }
   };
+
+  // Update the preload effect to run when either loggedIn or user changes.
+  useEffect(() => {
+    // Remove the early return that skipped if (!user).
+    if (!loggedIn) {
+      setIsLoading(false);
+      return;
+    }
+    const userEmail = localStorage.getItem('userEmail');
+    const userRole = localStorage.getItem('userRole');
+    if (!userEmail || !userRole) {
+      setIsLoading(false);
+      return;
+    }
+    setIsLoading(true);
+    setShowOverlay(true);
+    const preloadAllData = async () => {
+      const totalTasks = 5;
+      let completedCount = 0;
+      const update = () => {
+        completedCount++;
+        const progress = Math.floor((completedCount / totalTasks) * 100);
+        setLoadingProgress(progress);
+        console.log(`Task completed: ${completedCount}/${totalTasks} (Progress: ${progress}%)`);
+      };
+
+      const tasks = [
+        fetch(`http://localhost:5001/user/get_user?email=${userEmail}`)
+          .then(res => res.json())
+          .then(data => { update(); return data; })
+          .catch(err => { console.error(err); update(); }),
+        fetch(`http://localhost:5001/bookings/get_bookings?role=${userRole}&userID=${localStorage.getItem('userID')}&status=confirmed`)
+          .then(res => res.json())
+          .then(data => { update(); return data; })
+          .catch(err => { console.error(err); update(); }),
+        fetch(`http://localhost:5001/grade/get_student_grades?studentID=${localStorage.getItem('studentID')}&schoolYear=&semester=&period=`)
+          .then(res => res.json())
+          .then(data => { update(); return data; })
+          .catch(err => { console.error(err); update(); }),
+        fetch(`http://localhost:5001/course/get_courses`)
+          .then(res => res.json())
+          .then(data => { update(); return data; })
+          .catch(err => { console.error(err); update(); }),
+        fetch(`http://localhost:5001/consultation/get_history?role=${userRole}&userID=${localStorage.getItem('userID')}`)
+          .then(res => res.json())
+          .then(data => { update(); return data; })
+          .catch(err => { console.error(err); update(); })
+      ];
+      
+      await Promise.all(tasks);
+    };
+
+    (async () => {
+      await preloadAllData();
+      setIsLoading(false);
+    })();
+  }, [loggedIn, user]);
 
   return (
     <NotificationProvider>
@@ -394,7 +397,7 @@ function App() {
                       {/* Auth routes with redirects */}
                       <Route path="/login" element={
                         !localStorage.getItem('userEmail') ?
-                          <Login onLoginSuccess={setUser} /> :
+                          <Login onLoginSuccess={(data) => { setUser(data); setLoggedIn(true); }} /> :
                           <Navigate to="/dashboard" />
                       } />
                       <Route path="/signup" element={
