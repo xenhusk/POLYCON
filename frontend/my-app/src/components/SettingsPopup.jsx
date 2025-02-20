@@ -2,7 +2,7 @@ import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import PasswordResetModal from './PasswordResetModal';
 
-const SettingsPopup = ({ isVisible, onClose, position, userEmail }) => {
+const SettingsPopup = ({ isVisible, onClose, position, userEmail, onLogout }) => {
   const navigate = useNavigate();
   const [showPasswordModal, setShowPasswordModal] = useState(false);
   
@@ -10,17 +10,14 @@ const SettingsPopup = ({ isVisible, onClose, position, userEmail }) => {
   const effectiveEmail = userEmail || localStorage.getItem('userEmail');
 
   const handleLogout = () => {
-    // Clear all localStorage items
-    localStorage.clear();
-    
-    // Close the settings popup
+    // Clear localStorage and update global logout state if needed
+    localStorage.clear();    
     onClose();
-    
-    // Navigate to home page
+    if (typeof onLogout === 'function') {
+      onLogout();
+    }
     navigate('/');
-    
-    // Force a page refresh to clear any remaining state
-    window.location.reload();
+    // Removed window.location.reload();
   };
 
   const handleChangePassword = async (currentPassword) => {
