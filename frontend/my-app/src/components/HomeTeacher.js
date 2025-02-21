@@ -1,12 +1,14 @@
 import { useEffect, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { LineChart, Line, XAxis, YAxis, Tooltip, Legend, ResponsiveContainer, CartesianGrid } from 'recharts';
+import EnrollmentModal from './EnrollmentModal';
 
 const HomeTeacher = () => {
     const [teacherId, setTeacherId] = useState(null);
     const [stats, setStats] = useState({ total_hours: "0.00", total_consultations: 0, unique_students: 0 });
     const [consultationData, setConsultationData] = useState([]);
     const [consultationHoursData, setConsultationHoursData] = useState([]);
+    const [showEnrollmentModal, setShowEnrollmentModal] = useState(false);
     const navigate = useNavigate();
 
     useEffect(() => {
@@ -172,6 +174,35 @@ const HomeTeacher = () => {
                 </ResponsiveContainer>
             </div>
         </div>
+
+        {/* Add Enrollment Button */}
+        <div className="mb-4">
+            <button
+                onClick={() => setShowEnrollmentModal(true)}
+                className="bg-[#0065A8] hover:bg-[#54BEFF] text-white px-4 py-2 rounded-lg transition-colors"
+            >
+                Enroll Students
+            </button>
+        </div>
+
+        {/* Render Enrollment Modal */}
+        {showEnrollmentModal && (
+            <div className="fixed inset-0 bg-black bg-opacity-50 flex justify-center items-center z-50">
+                <div className="bg-white p-6 rounded-lg shadow-lg w-[500px]">
+                    <div className="flex justify-between items-center mb-4">
+                        <h2 className="text-xl font-bold">Enroll Students</h2>
+                        <button 
+                            onClick={() => setShowEnrollmentModal(false)}
+                            className="text-gray-500 hover:text-gray-700"
+                        >
+                            ×
+                        </button>
+                    </div>
+                    <EnrollmentModal closeModal={() => setShowEnrollmentModal(false)} />
+                </div>
+            </div>
+        )}
+
         </div>
     );
 };

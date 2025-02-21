@@ -22,6 +22,7 @@ from services.socket_service import socketio  # Ensure socket service is importe
 from routes.migration import migration_bp  # NEW: import migration blueprint
 from routes.homeadmin_routes import homeadmin_routes_bp  # <-- new import
 from routes.department_routes import department_bp  # <-- new import
+from routes.semester_routes import semester_routes  # new import for semester endpoints
 
 app = Flask(__name__)
 # Update CORS to allow WebSocket
@@ -67,6 +68,7 @@ app.register_blueprint(program_bp, url_prefix='/program')
 app.register_blueprint(migration_bp, url_prefix='/migration')  # NEW: register migration endpoints
 app.register_blueprint(department_bp, url_prefix='/department')  # <-- new registrations
 app.register_blueprint(homeadmin_routes_bp, url_prefix='/homeadmin')
+app.register_blueprint(semester_routes, url_prefix='/semester')  # new registration for semester endpoints
 
 @socketio.on('connect')
 def handle_connect():

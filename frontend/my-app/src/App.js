@@ -34,6 +34,7 @@ import useNotifications from './hooks/useNotifications'; // Add import for useNo
 import { NotificationProvider } from './context/NotificationContext'; // Add import for NotificationProvider
 import PreLoader from './components/PreLoader'; // Add import for PreLoader
 import PagePreloader from './components/PagePreloader';
+import EnrollmentTestPage from './pages/EnrollmentTestPage'; // new import for testing enrollment modal
 
 const PreloaderTest = React.lazy(() => import('./components/PagePreloader'));
 
@@ -203,6 +204,8 @@ function App() {
                   profile_picture: data.profile_picture || 'https://via.placeholder.com/100'
                 });
               } else if (role === 'student') {
+                // Store enrollment status from user details
+                localStorage.setItem('isEnrolled', data.isEnrolled ? "true" : "false");
                 setProfile({
                   name: `${data.firstName} ${data.lastName}`,
                   id: data.id,
@@ -435,6 +438,7 @@ function App() {
                       <Route path="/department" element={<Departments />} /> {/* New route */}
                       <Route path="/preloader-test" element={<PreloaderTest />} /> {/* Add this line */}
                       <Route path="/homeadmin" element={<HomeAdmin />} /> 
+                      <Route path="/enrollment-test" element={<EnrollmentTestPage />} /> {/* new test route */}
                     </Routes>
                   </Suspense>
                 </motion.div>

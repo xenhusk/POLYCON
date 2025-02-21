@@ -57,6 +57,17 @@ def get_user():
             if dept_doc.exists:
                 department_data = dept_doc.to_dict()
                 user_data['department'] = department_data.get('departmentName', 'Unknown Department')
+
+        # If the user role is student, retrieve "isEnrolled" field from the students collection.
+        if user_data.get('role') == 'student':
+            # Use the document ID from the user document if available.
+            student_doc = db.collection('students').document(doc.id).get()
+            if student_doc.exists:
+                student_data = student_doc.to_dict()
+                user_data['isEnrolled'] = student_data.get('isEnrolled', False)
+            else:
+                user_data['isEnrolled'] = False
+
         user_data = {key: convert_references(value) for key, value in user_data.items()}
         return jsonify(user_data), 200
     except Exception as e:
