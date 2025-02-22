@@ -19,6 +19,7 @@ import FinalDocument from './pages/finaldocument'; // add import for FinalDocume
 import History from './pages/History'; // add import for History
 import Departments from './components/Departments';
 import HomeAdmin from './components/HomeAdmin'; // Update import name and path
+import SemesterManagement from './components/SemesterManagement'; // Update import name and path
 
 import SidebarPreview from './components/SidebarPreview'; // Import the SidebarPreview component
 import Appointments from './pages/Appointments'; // Import the Appointments page
@@ -439,6 +440,7 @@ function App() {
                       <Route path="/preloader-test" element={<PreloaderTest />} /> {/* Add this line */}
                       <Route path="/homeadmin" element={<HomeAdmin />} /> 
                       <Route path="/enrollment-test" element={<EnrollmentTestPage />} /> {/* new test route */}
+                      <Route path="/semester-management" element={<SemesterManagement />} /> {/* Update this line */}
                     </Routes>
                   </Suspense>
                 </motion.div>

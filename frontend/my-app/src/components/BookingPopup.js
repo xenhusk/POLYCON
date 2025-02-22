@@ -39,16 +39,20 @@ const modalVariants = {
 
 const BookingPopup = () => {
   const [showModal, setShowModal] = useState(false);
-  const userRole = localStorage.getItem('userRole');
+  const userRole = localStorage.getItem('userRole');  
+  const isActive = localStorage.getItem('isActive');   // "true" or "false"
   const isEnrolled = localStorage.getItem('isEnrolled'); // "true" or "false"
   const location = useLocation();
 
-  // Disable the popup if a student is not enrolled
+  // For faculty: only show popup if isActive === "true"
+  if (userRole === 'faculty' && isActive === 'false') {
+    return null;
+  }
+  // For students: only show popup if isEnrolled is "true"
   if (userRole === 'student' && isEnrolled === 'false') {
     return null;
   }
-
-  // Don't render on session pages or for non-faculty/student users
+  // Hide popup on session pages or if role is not faculty/student.
   if (location.pathname.includes('/session') || !['faculty', 'student'].includes(userRole)) {
     return null;
   }

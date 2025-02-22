@@ -1,5 +1,6 @@
 from flask import Blueprint, request, jsonify
 from services.firebase_service import db  # import Firestore client
+import datetime
 
 semester_routes = Blueprint('semester_routes', __name__)
 
@@ -42,7 +43,104 @@ def end_semester():
     
     # Get all students and update their "isEnrolled" field to False
     students = db.collection("students").get()
+    for student in students:    
+        student.reference.update({"isEnrolled": False})
+    
+    # Update all teachers (faculty) to isActive: False
+    teachers = db.collection("faculty").get()
+    for teacher in teachers:
+        teacher.reference.update({"isActive": False})
+    
+    return jsonify({"message": "Semester ended and students unenrolled"}), 200
+
+@semester_routes.route('/end/schedule', methods=['POST'])
+def schedule_end_semester():
+    data = request.get_json()
+    semester_id = data.get('semester_id')
+    end_date_str = data.get('endDate')
+    if not semester_id or not end_date_str:
+        return jsonify({"error": "Missing semester_id or endDate"}), 400
+    
+    try:
+        # Parse provided end date
+        scheduled_end = datetime.datetime.strptime(end_date_str, "%Y-%m-%d")
+        now = datetime.datetime.now()
+    except Exception as e:
+        return jsonify({"error": "Invalid date format. Use YYYY-MM-DD"}), 400
+
+    # Retrieve the semester document
+    semester_ref = db.collection("semesters").document(semester_id)
+    semester_doc = semester_ref.get()
+    if not semester_doc.exists:
+        return jsonify({"error": "Semester not found"}), 404
+
+    # Update only the endDate and unenroll students
+    semester_ref.update({"endDate": end_date_str})
+    
+    # Update students to unenrolled
+    students = db.collection("students").get()
     for student in students:
         student.reference.update({"isEnrolled": False})
     
-    return jsonify({"message": "Semester ended and students unenrolled"}), 200
+    # If scheduled end is today or past, update teachers immediately.
+    if scheduled_end <= now:
+        teachers = db.collection("faculty").get()
+        for teacher in teachers:
+            teacher.reference.update({"isActive": False})
+    # Otherwise, leave teachers active until the scheduled date.
+    
+    return jsonify({"message": f"Semester scheduled to end on {end_date_str}"}), 200
+
+# New endpoints for teacher functionality
+
+@semester_routes.route('/teachers', methods=['GET'])
+def get_teachers():
+    # Retrieve all teacher records from the faculty collection.
+    faculties = db.collection("faculty").get()
+    teachers = []
+    for faculty in faculties:
+        faculty_data = faculty.to_dict()
+        # Use the "user" collection as specified.
+        user_doc = db.collection("user").document(faculty.id).get()
+        if user_doc.exists:
+            user_data = user_doc.to_dict()
+            # The "department" field is now a Firestore reference.
+            department_ref = user_data.get("department")
+            dept_name = ""
+            if department_ref is not None:
+                # Check if the field is a DocumentReference and extract its ID.
+                department_id = department_ref.id if hasattr(department_ref, "id") else str(department_ref).split("/")[-1]
+                department_doc = db.collection("departments").document(department_id).get()
+                if department_doc.exists:
+                    dept_name = department_doc.to_dict().get("departmentName", "")
+            teachers.append({
+                "ID": faculty.id,
+                "fullName": user_data.get("fullName", ""),
+                "department": dept_name,
+                "isActive": faculty_data.get("isActive", False)
+            })
+    return jsonify(teachers), 200
+
+@semester_routes.route('/teacher/activate', methods=['POST'])
+def activate_teacher():
+    data = request.get_json()
+    teacher_id = data.get("teacherId")
+    if not teacher_id:
+        return jsonify({"error": "teacherId missing"}), 400
+    faculty_ref = db.collection("faculty").document(teacher_id)
+    if not faculty_ref.get().exists:
+        return jsonify({"error": "Teacher not found"}), 404
+    faculty_ref.update({"isActive": True})
+    return jsonify({"message": "Teacher activated"}), 200
+
+@semester_routes.route('/teacher/activate-all', methods=['POST'])
+def activate_all_teachers():
+    try:
+        # Get all faculty documents
+        teachers = db.collection("faculty").get()
+        # Update each teacher's isActive status to True
+        for teacher in teachers:
+            teacher.reference.update({"isActive": True})
+        return jsonify({"message": "All teachers activated successfully"}), 200
+    except Exception as e:
+        return jsonify({"error": f"Failed to activate teachers: {str(e)}"}), 500
