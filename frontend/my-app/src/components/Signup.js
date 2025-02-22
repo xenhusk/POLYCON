@@ -216,7 +216,14 @@ const Signup = ({ onSwitchToLogin }) => {
             <button 
               className={`bg-[#057DCD] text-white w-[100%] h-[44.59px] rounded-lg my-2 mx-auto transition-all ease-in  hover:bg-[#54BEFF] animate-modal-slide
               ${NextClicked ? "scale-90" : "scale-100"}`} 
-              onClick={ ()=>{ setNextClicked(true); setTimeout(()=> setNextClicked(false), 150); handleNext();}}>
+              onClick={() => {
+                setNextClicked(true);
+                setTimeout(() => { setNextClicked(false);
+                  setTimeout(() => handleNext(), 
+                  500);
+                 }, 200)
+              }}             
+            >
                 Next</button>
             <div className="border-t-2 border-[#005B98] w-[90%] my-2 mx-auto border-opacity-50">
               <p className="text-center font-light text-[0.9rem] mx-auto my-2 text-opacity-50">

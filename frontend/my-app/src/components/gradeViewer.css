@@ -15,8 +15,8 @@ tbody tr:last-child td:first-child {
 tbody tr:last-child td:last-child {
     border-bottom-right-radius: 0.7rem;
 }
-tbody td, thead th {
-    border-color: #54BEFF;
+thead th {
+    border-color: #0065A8;
 }
 tbody td{
     overflow-y: auto;

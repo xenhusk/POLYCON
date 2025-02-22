@@ -36,6 +36,7 @@ export default function Courses() {
   const [isEditLoading, setIsEditLoading] = useState(false);
   const [isCourseLoading, setIsCourseLoading] = useState(false);
   const [isFiltering, setIsFiltering] = useState(false);
+  const [FilterClicked, setFilterClicked] = useState(false);
   const [SearchClicked, setSearchClicked] = useState(false);
   const [AddClicked, setAddClicked] = useState(false);
   const [CancelClicked, setCancelClicked] = useState(false);
@@ -568,8 +569,11 @@ export default function Courses() {
           Search
         </button>
         <button
-          onClick={() => setShowFilters(!showFilters)}
-          className="bg-[#057DCD] text-white p-3 rounded-full shadow-md flex items-center justify-center hover:bg-blue-600 transition"
+          onClick={() => {setFilterClicked(true); 
+            setTimeout(() => setFilterClicked(false), 300); 
+            setShowFilters(!showFilters);}}
+          className={`bg-blue-500 text-white p-3 rounded-full shadow-md flex items-center justify-center hover:bg-blue-600 transition
+            ${FilterClicked ? "scale-90" : "scale-100"}`}
         >
           <FilterIcon className="w-5 h-5" />
         </button>
@@ -735,8 +739,7 @@ export default function Courses() {
                                 DeleteClicked ? "scale-90" : "scale-100"}`}
                               onClick={() => { setDeleteClicked(true);
                                 setTimeout(() => setDeleteClicked(false), 300);
-                                handleDelete(course.courseID);
-                                }}
+                                handleDelete(course.courseID);}}
                             >
                               <DeleteIcon className="w-5 h-5" />
                             </button>
@@ -995,7 +998,9 @@ export default function Courses() {
                     <div className="px-6 py-4 flex justify-end space-x-4 bg-white rounded-b-lg">
                       <button
                         onClick={() => {
-                          setSaveClicked(true); setTimeout(() => {setSaveClicked(false); setTimeout(() => { handleEditSave();
+                          setSaveClicked(true); 
+                          setTimeout(() => {setSaveClicked(false); 
+                            setTimeout(() => { handleEditSave();
                             }, 500);
                           }, 200);
                         }}
@@ -1035,7 +1040,9 @@ export default function Courses() {
                       </button>
                       <button
                         onClick={() => {
-                          setCancelClicked(true); setTimeout(() => { setCancelClicked(false); setShowEditModal(false); setTimeout(() => setEditCourse(null), 
+                          setCancelClicked(true); 
+                          setTimeout(() => { setCancelClicked(false); 
+                            setTimeout(() => setEditCourse(null), 
                             500);
                           }, 200);
                         }}
