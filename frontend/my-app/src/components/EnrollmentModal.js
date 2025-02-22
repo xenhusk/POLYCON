@@ -1,4 +1,5 @@
 import React, { useState, useEffect, useRef } from 'react';
+import { getProfilePictureUrl } from '../utils/utils';
 
 function EnrollmentModal({ closeModal }) {
   const [searchTerm, setSearchTerm] = useState('');
@@ -71,88 +72,120 @@ function EnrollmentModal({ closeModal }) {
   }, []);
 
   return (
-    <div className="fixed inset-0 flex items-center justify-center bg-black bg-opacity-50 z-50">
-      <div className="bg-white p-6 rounded-lg shadow-lg w-96">
-        <h2 className="text-xl font-bold mb-4">Enroll Students</h2>
-        <div className="relative mb-4">
-          <input
-            type="text"
-            value={searchTerm}
-            onChange={handleSearchChange}
-            onFocus={() => setIsInputFocused(true)}
-            onBlur={() => setTimeout(() => setIsInputFocused(false), 200)}
-            placeholder="Search students..."
-            className="w-full border border-gray-300 rounded p-2 focus:outline-none focus:ring"
-          />
+    <div className="p-4">
+      {/* Student Selection Input */}
+      <div className="relative">
+        <label className="block text-sm font-medium text-gray-700 mb-2">
+          Students <span className="text-red-500">*</span>
+        </label>
+        <div className="relative">
+          <div className="min-h-[45px] flex flex-wrap items-center gap-2 border-2 border-[#00D1B2] rounded-lg px-3 py-2 focus-within:ring-2 focus-within:ring-[#00F7D4]">
+            {selectedStudents.map(student => (
+              <div key={student.id} 
+                className="bg-[#00D1B2] text-white px-2 py-1 rounded-full flex items-center gap-2 text-sm">
+                <img src={getProfilePictureUrl(student.profile_picture)} 
+                  alt="Profile" 
+                  className="w-5 h-5 rounded-full" />
+                <span>{student.firstName} {student.lastName}</span>
+                <button onClick={() => setSelectedStudents(selectedStudents.filter(s => s.id !== student.id))}
+                  className="hover:text-red-300 transition-colors">
+                  ×
+                </button>
+              </div>
+            ))}
+            <input type="text"
+              value={searchTerm}
+              onChange={handleSearchChange}
+              onFocus={() => setIsInputFocused(true)}
+              onBlur={() => setTimeout(() => setIsInputFocused(false), 200)}
+              placeholder="Search students..."
+              className="flex-1 min-w-[120px] outline-none bg-transparent" />
+          </div>
+
+          {/* Updated Student Search Results Dropdown */}
           {isInputFocused && (
-            <ul className="absolute z-10 w-full bg-white border border-gray-200 mt-1 rounded max-h-60 overflow-y-auto">
-              {isSearchLoading ? (
-                <li className="p-2 text-center">Loading...</li>
-              ) : studentResults.length === 0 ? (
-                <li className="p-2 text-center text-gray-500">No students found</li>
-              ) : (
-                studentResults
-                  .filter(student => !selectedStudents.some(s => s.id === student.id))
-                  .map(student => (
-                    <li
-                      key={student.id}
-                      className="p-2 hover:bg-gray-100 cursor-pointer"
-                      onMouseDown={() => {
-                        setSelectedStudents([...selectedStudents, student]);
-                        setSearchTerm('');
-                      }}
-                    >
-                      {student.firstName} {student.lastName}
+            <div className="absolute left-0 right-0 mt-1 z-50">
+              <ul className="bg-white border border-gray-200 rounded-lg shadow-lg max-h-[300px] overflow-y-auto">
+                {isSearchLoading ? (
+                  Array.from({ length: 3 }).map((_, index) => (
+                    <li key={index} className="px-4 py-2 flex items-center gap-3 animate-pulse">
+                      <div className="w-8 h-8 bg-gray-200 rounded-full"></div>
+                      <div className="flex flex-col">
+                        <div className="w-32 h-4 bg-gray-200 rounded"></div>
+                        <div className="w-24 h-3 bg-gray-100 rounded mt-1"></div>
+                      </div>
                     </li>
                   ))
-              )}
-            </ul>
-          )}
-        </div>
-        <div className="mb-4">
-          {selectedStudents.length > 0 && (
-            <div className="flex flex-wrap gap-2">
-              {selectedStudents.map(student => (
-                <div key={student.id} className="bg-blue-500 text-white px-2 py-1 rounded flex items-center">
-                  <span>
-                    {student.firstName} {student.lastName}
-                  </span>
-                  <button
-                    onClick={() =>
-                      setSelectedStudents(selectedStudents.filter(s => s.id !== student.id))
-                    }
-                    className="ml-2"
-                  >
-                    ×
-                  </button>
-                </div>
-              ))}
+                ) : studentResults
+                    .filter(student => 
+                      // Filter out already selected students AND already enrolled students
+                      !selectedStudents.some(s => s.id === student.id) && 
+                      !student.isEnrolled
+                    )
+                    .length === 0 ? (
+                  <li className="px-4 py-2 text-center text-gray-500">
+                    {studentResults.length === 0 ? "No students found" : "No available students to add"}
+                  </li>
+                ) : (
+                  studentResults
+                    .filter(student => 
+                      // Filter out already selected students AND already enrolled students
+                      !selectedStudents.some(s => s.id === student.id) && 
+                      !student.isEnrolled
+                    )
+                    .map(student => (
+                      <li key={student.id}
+                        className="px-4 py-2 hover:bg-gray-50 flex items-center gap-3 cursor-pointer"
+                        onMouseDown={() => {
+                          setSelectedStudents([...selectedStudents, student]);
+                          setSearchTerm('');
+                        }}>
+                        <img src={getProfilePictureUrl(student.profile_picture)}
+                          alt="Profile"
+                          className="w-8 h-8 rounded-full" />
+                        <div>
+                          <div className="font-medium">{student.firstName} {student.lastName}</div>
+                          <div className="text-sm text-gray-500">{student.program} • {student.year_section}</div>
+                        </div>
+                      </li>
+                    ))
+                )}
+              </ul>
             </div>
           )}
         </div>
-        {message.content && (
-          <div
-            className={`mb-4 p-2 rounded ${
-              message.type === 'success'
-                ? 'bg-green-100 text-green-700'
-                : 'bg-red-100 text-red-700'
-            }`}
-          >
-            {message.content}
-          </div>
-        )}
-        <div className="flex justify-end space-x-2">
-          <button onClick={closeModal} className="bg-gray-300 text-black px-4 py-2 rounded">
-            Cancel
-          </button>
-          <button
-            onClick={submitEnrollment}
-            disabled={isLoading}
-            className={`bg-blue-500 text-white px-4 py-2 rounded ${isLoading && 'opacity-50'}`}
-          >
-            {isLoading ? 'Processing...' : 'Enroll Students'}
-          </button>
+      </div>
+
+      {/* Message display */}
+      {message.content && (
+        <div className={`mt-4 p-3 rounded-lg ${
+          message.type === 'success' ? 'bg-green-100 text-green-700' : 'bg-red-100 text-red-700'
+        }`}>
+          {message.content}
         </div>
+      )}
+
+      {/* Submit Button */}
+      <div className="mt-6 flex justify-end gap-2">
+        <button 
+          onClick={closeModal} 
+          className="px-4 py-2 text-gray-700 bg-gray-100 rounded-lg hover:bg-gray-200 transition-colors">
+          Cancel
+        </button>
+        <button
+          onClick={submitEnrollment}
+          disabled={isLoading}
+          className={`px-4 py-2 bg-[#00D1B2] hover:bg-[#00F7D4] text-white rounded-lg transition-colors flex items-center gap-2
+            ${isLoading ? 'opacity-50 cursor-not-allowed' : ''}`}
+        >
+          {isLoading && (
+            <svg className="animate-spin h-5 w-5" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+              <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
+              <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+            </svg>
+          )}
+          {isLoading ? 'Processing...' : 'Enroll Students'}
+        </button>
       </div>
     </div>
   );

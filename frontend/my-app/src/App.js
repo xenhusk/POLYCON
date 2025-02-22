@@ -33,8 +33,8 @@ import Toast from './components/Toast'; // Add import for Toast
 import useNotifications from './hooks/useNotifications'; // Add import for useNotifications
 import { NotificationProvider } from './context/NotificationContext'; // Add import for NotificationProvider
 import PreLoader from './components/PreLoader'; // Add import for PreLoader
-import PagePreloader from './components/PagePreloader';
 import EnrollmentTestPage from './pages/EnrollmentTestPage'; // new import for testing enrollment modal
+import EnrollmentPopup from './components/EnrollmentPopup';
 
 const PreloaderTest = React.lazy(() => import('./components/PagePreloader'));
 
@@ -453,9 +453,14 @@ function App() {
               position={{ top: '50px', left: 'calc(100% - 320px)' }}  // adjust as needed
             />
           )}
-          {/* Only show BookingPopup if not on session or finaldocument page */}
+          {/* Only show BookingPopup and EnrollmentPopup if not on session or finaldocument page */}
           {!location.pathname.includes('/session') &&
-            !location.pathname.includes('/finaldocument') && <BookingPopup />}
+            !location.pathname.includes('/finaldocument') && (
+              <>
+                <BookingPopup />
+                {userRole === 'faculty' && <EnrollmentPopup />} {/* Only show for faculty */}
+              </>
+            )}
         </PreloadProvider>
       </div>
 
