@@ -1,5 +1,7 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import { format } from 'date-fns';
+import { motion, AnimatePresence } from 'framer-motion'; // NEW: import motion and AnimatePresence from framer-motion
+import { ReactComponent as FilterIcon } from './icons/FilterAdd.svg';
 
 const SemesterManagement = () => {
   const [schoolYear, setSchoolYear] = useState('');
@@ -10,6 +12,12 @@ const SemesterManagement = () => {
   const [error, setError] = useState('');
   const [teachers, setTeachers] = useState([]);
   const [isActivatingAll, setIsActivatingAll] = useState(false);
+  const [teacherSearchTerm, setTeacherSearchTerm] = useState('');
+  const [teacherResults, setTeacherResults] = useState([]);
+  const [isTeacherInputFocused, setIsTeacherInputFocused] = useState(false);
+  const teacherSearchTimeout = useRef(null);
+  const [selectedDepartmentFilter, setSelectedDepartmentFilter] = useState('');
+  const [showDepartmentModal, setShowDepartmentModal] = useState(false);
 
   useEffect(() => {
     fetch('http://localhost:5001/semester/teachers')
@@ -53,11 +61,16 @@ const SemesterManagement = () => {
           semester: semester
         }),
       });
-      if (!response.ok) throw new Error('Failed to start semester');
+      
       const data = await response.json();
+      if (!response.ok) {
+        setError(data.error || `Failed to start semester. School year ${fullSchoolYear} already exists.`);
+        return;
+      }
+      
       setCurrentSemester(data.semester_id);
     } catch (err) {
-      setError('Failed to start semester');
+      setError(`Failed to start semester. School year ${fullSchoolYear} already exists.`);
     }
   };
 
@@ -174,31 +187,134 @@ const SemesterManagement = () => {
     }
   };
 
+  // NEW: Debounced teacher search function
+  const debouncedTeacherSearch = (term) => {
+    if (teacherSearchTimeout.current) clearTimeout(teacherSearchTimeout.current);
+    teacherSearchTimeout.current = setTimeout(async () => {
+      try {
+        const res = await fetch(`http://localhost:5001/semester/teacher/search?query=${encodeURIComponent(term)}`);
+        const data = await res.json();
+        setTeacherResults(data || []);
+      } catch (error) {
+        console.error('Teacher search error:', error);
+      }
+    }, 200);
+  };
+
+  // NEW: Handle teacher search input change
+  const handleTeacherSearchChange = (e) => {
+    const value = e.target.value;
+    setTeacherSearchTerm(value);
+    if (value.trim() !== '') {
+      debouncedTeacherSearch(value);
+    } else {
+      setTeacherResults([]);
+    }
+  };
+
+  // Compute distinct departments from the teacher list (assumes teacher.department is a string)
+  const distinctDepartments = Array.from(
+    new Set(teachers.map(teacher => teacher.department).filter(dep => dep))
+  );
+
   return (
     <div className="p-6">
+      {/* Error/Success Message Toast */}
+      {error && (
+        <div className="fixed top-5 right-5 p-4 rounded-lg shadow-lg z-50 bg-red-100 text-red-700">
+          {error}
+        </div>
+      )}
+
       <h2 className="text-2xl font-bold text-[#0065A8] mb-6">Semester Management</h2>
-      
+
       <div className="flex gap-6">
-        {/* Left side - Teacher List */}
+        {/* Left side - Teacher List (filtered if teacherSearchTerm is set) */}
         <div className="w-2/3">
           <div className="flex justify-between items-center mb-4">
-            <h3 className="text-xl font-semibold text-gray-800">Teacher List</h3>
-            <button
-              onClick={handleActivateAll}
-              disabled={isActivatingAll || teachers.every(t => t.isActive)}
-              className={`bg-green-500 text-white px-4 py-2 rounded-lg hover:bg-green-600 transition-colors
-                ${(isActivatingAll || teachers.every(t => t.isActive)) ? 'opacity-50 cursor-not-allowed' : ''}`}
-            >
-              {isActivatingAll ? (
-                <div className="flex items-center space-x-2">
-                  <svg className="animate-spin h-5 w-5 text-white" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
-                    <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
-                    <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
-                  </svg>
-                  <span>Activating...</span>
-                </div>
-              ) : 'Activate All Teachers'}
-            </button>
+            {/* Left: Title */}
+            <h3 className="text-xl font-semibold text-gray-800 w-1/4">Teacher List</h3>
+
+            {/* Center: Search and Filter Controls */}
+            <div className="flex items-center justify-center gap-2 w-2/4">
+              <input 
+                type="text"
+                value={teacherSearchTerm}
+                onChange={handleTeacherSearchChange}
+                placeholder="Search teacher by name..."
+                className="w-64 border border-gray-300 shadow-md rounded-lg px-3 py-2 focus:outline-none focus:ring-2 focus:ring-[#54BEFF]"
+              />
+              <div className="relative">
+                <button 
+                  onClick={() => setShowDepartmentModal(!showDepartmentModal)}
+                  className={`p-3 rounded-full bg-[#057DCD] hover:bg-[#0065A8] shadow-md transition-colors
+                    ${showDepartmentModal ? 'bg-[#0065A8]' : ''}`}
+                  title="Filter by Department"
+                >
+                  <FilterIcon className="w-5 h-5 text-white" />
+                </button>
+
+                {/* Keep existing modal code here */}
+                {showDepartmentModal && (
+                  <div className="absolute top-full mt-2 right-0 w-64 bg-white rounded-lg shadow-lg z-50">
+                    <motion.div 
+                      variants={{
+                        hidden: { opacity: 0, scale: 0.95, y: 10 },
+                        visible: { opacity: 1, scale: 1, y: 0, transition: { type: "spring", stiffness: 300, damping: 30 } },
+                        exit: { opacity: 0, scale: 0.95, y: 10, transition: { duration: 0.2 } }
+                      }}
+                      initial="hidden"
+                      animate="visible"
+                      exit="exit"
+                      className="absolute top-full mt-2 right-0 w-64 bg-white rounded-lg shadow-lg z-50 bg-opacity-90"
+                    >
+                      <div className="overflow-hidden rounded-lg">
+                        <div className="bg-[#0065A8] px-4 py-3 ">
+                          <h3 className="text-lg font-semibold text-white">Select Department</h3>
+                        </div>
+                        <div className="p-4">
+                          <ul className="space-y-2">
+                            {distinctDepartments.map((dep, index) => (
+                              <li 
+                                key={index}
+                                onClick={() => {
+                                  setSelectedDepartmentFilter(dep);
+                                  setShowDepartmentModal(false);
+                                }}
+                                className="cursor-pointer hover:bg-blue-100 px-3 py-2 rounded"
+                              >
+                                {dep}
+                              </li>
+                            ))}
+                            <li
+                              onClick={() => {
+                                setSelectedDepartmentFilter("");
+                                setShowDepartmentModal(false);
+                              }}
+                              className="cursor-pointer hover:bg-blue-100 px-3 py-2 rounded"
+                            >
+                              All Departments
+                            </li>
+                          </ul>
+                        </div>
+                      </div>
+                    </motion.div>
+                  </div>
+                )}
+              </div>
+            </div>
+
+            {/* Right: Activate All Button */}
+            <div className="w-1/4 flex justify-end">
+              <button
+                onClick={handleActivateAll}
+                disabled={isActivatingAll || teachers.every(t => t.isActive)}
+                className={`bg-green-500 text-white px-4 py-2 rounded-lg hover:bg-green-600 transition-colors
+                  ${(isActivatingAll || teachers.every(t => t.isActive)) ? 'opacity-50 cursor-not-allowed' : ''}`}
+              >
+                {isActivatingAll ? 'Activating...' : 'Activate All Teachers'}
+              </button>
+            </div>
           </div>
 
           <div className="shadow-md rounded-lg overflow-hidden">
@@ -212,7 +328,14 @@ const SemesterManagement = () => {
                 </tr>
               </thead>
               <tbody>
-                {teachers.map(teacher => (
+                {teachers
+                  .filter(teacher => 
+                    (teacherSearchTerm.trim() === "" ||
+                     teacher.fullName.toLowerCase().includes(teacherSearchTerm.toLowerCase())) &&
+                    (selectedDepartmentFilter === "" ||
+                     teacher.department === selectedDepartmentFilter)
+                  )
+                  .map(teacher => (
                   <tr key={teacher.ID} className="border-b hover:bg-[#DBF1FF]">
                     <td className="py-3 px-4 text-center">{teacher.ID}</td>
                     <td className="py-3 px-4 text-center">{teacher.fullName}</td>
@@ -280,9 +403,6 @@ const SemesterManagement = () => {
                   className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500"
                 />
               </div>
-            )}
-            {error && (
-              <div className="text-red-500 text-sm">{error}</div>
             )}
             <div className="pt-4 flex flex-col gap-2">
               {!currentSemester ? (

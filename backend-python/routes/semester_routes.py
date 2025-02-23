@@ -11,7 +11,18 @@ def start_semester():
     school_year = data.get('school_year')  # e.g., "2024-2025"
     semester_val = data.get('semester')      # e.g., "1st" or "2nd"
     
-    # Count existing semesters using a Firestore query
+    # Check if this school year AND semester combination already exists
+    existing_semesters = (db.collection("semesters")
+        .where("school_year", "==", school_year)
+        .where("semester", "==", semester_val)
+        .stream())
+    
+    if len(list(existing_semesters)) > 0:
+        return jsonify({
+            "error": f"Failed to start semester. {semester_val} semester of school year {school_year} already exists."
+        }), 400
+    
+    # If no duplicate found, proceed with creating new semester
     semesters = db.collection("semesters").get()
     count = len(semesters) + 1
     document_id = f"semester{count:04d}"
