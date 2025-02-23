@@ -232,30 +232,31 @@ const SemesterManagement = () => {
         {/* Left side - Teacher List (filtered if teacherSearchTerm is set) */}
         <div className="w-2/3">
           <div className="flex justify-between items-center mb-4">
-            <h3 className="text-xl font-semibold text-gray-800">Teacher List</h3>
-            <div className="flex gap-4 items-center">
-              <div className="flex gap-2 items-center relative">
-                {/* Teacher Search Field */}
-                <input 
-                  type="text"
-                  value={teacherSearchTerm}
-                  onChange={handleTeacherSearchChange}
-                  placeholder="Search teacher by name..."
-                  className="border border-gray-300 shadow-md rounded-lg px-2 py-1 focus:outline-none focus:ring-2 focus:ring-[#54BEFF]"
-                />
-                {/* Department Filter Icon Button - Updated onClick to toggle */}
+            {/* Left: Title */}
+            <h3 className="text-xl font-semibold text-gray-800 w-1/4">Teacher List</h3>
+
+            {/* Center: Search and Filter Controls */}
+            <div className="flex items-center justify-center gap-2 w-2/4">
+              <input 
+                type="text"
+                value={teacherSearchTerm}
+                onChange={handleTeacherSearchChange}
+                placeholder="Search teacher by name..."
+                className="w-64 border border-gray-300 shadow-md rounded-lg px-3 py-2 focus:outline-none focus:ring-2 focus:ring-[#54BEFF]"
+              />
+              <div className="relative">
                 <button 
                   onClick={() => setShowDepartmentModal(!showDepartmentModal)}
-                  className={`p-2 rounded-full bg-[#057DCD] hover:bg-[#0065A8] shadow-md transition-colors
+                  className={`p-3 rounded-full bg-[#057DCD] hover:bg-[#0065A8] shadow-md transition-colors
                     ${showDepartmentModal ? 'bg-[#0065A8]' : ''}`}
                   title="Filter by Department"
                 >
                   <FilterIcon className="w-5 h-5 text-white" />
                 </button>
-                
-                {/* AnimatePresence for smooth animation when closing */}
-                <AnimatePresence>
-                  {showDepartmentModal && (
+
+                {/* Keep existing modal code here */}
+                {showDepartmentModal && (
+                  <div className="absolute top-full mt-2 right-0 w-64 bg-white rounded-lg shadow-lg z-50">
                     <motion.div 
                       variants={{
                         hidden: { opacity: 0, scale: 0.95, y: 10 },
@@ -298,9 +299,13 @@ const SemesterManagement = () => {
                         </div>
                       </div>
                     </motion.div>
-                  )}
-                </AnimatePresence>
+                  </div>
+                )}
               </div>
+            </div>
+
+            {/* Right: Activate All Button */}
+            <div className="w-1/4 flex justify-end">
               <button
                 onClick={handleActivateAll}
                 disabled={isActivatingAll || teachers.every(t => t.isActive)}
