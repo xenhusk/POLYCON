@@ -67,6 +67,14 @@ def get_user():
                 user_data['isEnrolled'] = student_data.get('isEnrolled', False)
             else:
                 user_data['isEnrolled'] = False
+        elif user_data.get('role') == 'faculty':
+            # Add faculty isActive status
+            faculty_doc = db.collection('faculty').document(doc.id).get()
+            if faculty_doc.exists:
+                faculty_data = faculty_doc.to_dict()
+                user_data['isActive'] = faculty_data.get('isActive', False)
+            else:
+                user_data['isActive'] = False
 
         user_data = {key: convert_references(value) for key, value in user_data.items()}
         return jsonify(user_data), 200

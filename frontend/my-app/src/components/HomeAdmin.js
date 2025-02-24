@@ -12,9 +12,10 @@ import {
 } from 'recharts';
 
 const HomeAdmin = () => {
-  const [stats, setStats] = useState({ total_hours: "0.00", total_consultations: 0, unique_students: 0 });
+  const [stats, setStats] = useState({ total_hours: "0.00", total_consultations: 0, students_enrolled: 0 });
   const [consultationData, setConsultationData] = useState([]);
   const [consultationHoursData, setConsultationHoursData] = useState([]);
+  const [latestSemester, setLatestSemester] = useState(null); // NEW state for latest semester
   const navigate = useNavigate();
 
   // Compute current month info for labels if desired
@@ -22,15 +23,16 @@ const HomeAdmin = () => {
   const monthName = now.toLocaleString('default', { month: 'long' });
 
   useEffect(() => {
-    // Now fetch the entire collection without filtering by month/year
+    // Fetch stats (which now includes latestSemester data)
     fetch(`http://localhost:5001/homeadmin/stats`)
       .then(res => res.json())
       .then(data => {
         setStats({
           total_hours: data.total_hours ? data.total_hours.toFixed(2) : "0.00",
           total_consultations: data.total_consultations || 0,
-          unique_students: data.unique_students || 0
+          students_enrolled: data.students_enrolled || 0
         });
+        setLatestSemester(data.latestSemester); // Use latestSemester from stats response
       })
       .catch(err => console.error("Error fetching stats:", err));
 
@@ -82,9 +84,12 @@ const HomeAdmin = () => {
         </div>
         <div className="flex-1 bg-[#00D1B2] text-white rounded-lg shadow-lg px-6 py-4">
           <div className="flex flex-col">
-            <p className="text-sm mb-2 text-left">Unique Students Consulted ({monthName}):</p>
+            {/* NEW: Use latestSemester data in the label if available */}
+            <p className="text-sm mb-2 text-left">
+              Enrolled Student {latestSemester ? `(${latestSemester.semester} Semester, ${latestSemester.school_year})` : ""}
+            </p>
             <div className="flex items-baseline gap-2 justify-center">
-              <span className="text-7xl font-bold">{stats.unique_students}</span>
+              <span className="text-7xl font-bold">{stats.students_enrolled}</span>
               <span className="text-lg">Students</span>
             </div>
           </div>

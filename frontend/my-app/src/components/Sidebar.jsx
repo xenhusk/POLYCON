@@ -14,6 +14,7 @@ import { ReactComponent as UserAdd } from './icons/user-add.svg';
 import { ReactComponent as CourseAdd } from './icons/CourseAdd.svg'; 
 import { ReactComponent as ProgramAdd } from './icons/Code.svg'; // NEW: import profile icon
 import { ReactComponent as DepartmentAdd } from './icons/Briefcase.svg';
+import { ReactComponent as SemesterAdd } from './icons/Timer.svg';
 import logo from './icons/logo2.png';
 // Import missing icons from react-icons/fa
 import { FaHome, FaGraduationCap, FaClipboardList, FaUser, FaUsers, FaCog } from 'react-icons/fa'; // Added FaUsers, FaCog
@@ -159,6 +160,7 @@ const Sidebar = ({ onExpandChange }) => {
     },
     admin: {
       homeadmin: '/homeadmin',
+      semester: '/semester-management',
       add_users: '/admin',
       course: '/courses',
       program: '/programs',
@@ -256,7 +258,7 @@ const Sidebar = ({ onExpandChange }) => {
 
   return (
     <div 
-      className={`sidebar fixed top-0 left-0 bg-[#0065A8] h-screen p-5 pt-8 z-40 transition-all duration-300 ${
+      className={`sidebar fixed top-0 left-0 bg-[#057DCD] h-screen p-5 pt-8 z-40 transition-all duration-300 ${
         isFrozen || isOpen ? 'w-64' : 'w-20'
       }`}
       onMouseEnter={() => !isFrozen && setIsOpen(true)}
@@ -307,6 +309,7 @@ const Sidebar = ({ onExpandChange }) => {
       {userRole === 'admin' && (
         <ul className="mt-2 space-y-3"> {/* Changed from mt-6 to mt-2 */}
           {renderMenuItem("homeadmin", HomeIcon, "Home")}
+          {renderMenuItem("semester", SemesterAdd, "Semesters")}
           {renderMenuItem("add_users", UserAdd, "Users")}
           {renderMenuItem("course", CourseAdd, "Courses")}
           {renderMenuItem("program", ProgramAdd, "Programs")}

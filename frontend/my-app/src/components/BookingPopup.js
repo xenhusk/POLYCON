@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { useLocation } from 'react-router-dom';
 import { motion, AnimatePresence } from 'framer-motion';
 import BookingAppointment from './BookingAppointment';
@@ -39,23 +39,42 @@ const modalVariants = {
 
 const BookingPopup = () => {
   const [showModal, setShowModal] = useState(false);
+  const [teacherActive, setTeacherActive] = useState(null);
   const userRole = localStorage.getItem('userRole');
-  const isEnrolled = localStorage.getItem('isEnrolled'); // "true" or "false"
   const location = useLocation();
+  const email = localStorage.getItem('userEmail');
+  const isEnrolled = localStorage.getItem('isEnrolled');
 
-  // Disable the popup if a student is not enrolled
-  if (userRole === 'student' && isEnrolled === 'false') {
+  // For teachers, fetch isActive from user_routes endpoint.
+  useEffect(() => {
+    if (userRole === 'faculty' && email) {
+      fetch(`http://localhost:5001/user/get_user?email=${encodeURIComponent(email)}`)
+        .then(res => res.json())
+        .then(data => {
+          setTeacherActive(data.isActive);
+        })
+        .catch(err => {
+          console.error("Error fetching user isActive:", err);
+          setTeacherActive(false);
+        });
+    }
+  }, [userRole, email]);
+
+  // For faculty, show popup only if isActive is true.
+  if (userRole === 'faculty' && teacherActive !== true) {
+    console.log('Faculty not active, hiding booking popup');
     return null;
   }
-
-  // Don't render on session pages or for non-faculty/student users
+  // For students, rely on isEnrolled flag.
+  if (userRole === 'student' && isEnrolled !== 'true') {
+    return null;
+  }
+  // Also disable on session pages or if userRole is not faculty/student.
   if (location.pathname.includes('/session') || !['faculty', 'student'].includes(userRole)) {
     return null;
   }
 
-  const handleCloseModal = () => {
-    setShowModal(false);
-  };
+  const handleCloseModal = () => setShowModal(false);
 
   return (
     <>
