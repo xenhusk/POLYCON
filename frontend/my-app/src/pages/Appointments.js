@@ -6,13 +6,15 @@ import { useSocket } from '../hooks/useSocket';
 // Fetch student appointments via React Query
 const fetchStudentAppointments = async () => {
   const studentID = localStorage.getItem('studentID');
+  // Artificial 2-second delay:
+  await new Promise((resolve) => setTimeout(resolve, 2000));
   const res = await fetch(`http://localhost:5001/bookings/get_bookings?role=student&userID=${studentID}`);
   if (!res.ok) throw new Error('Network response was not ok');
   return res.json();
 };
 
 function StudentAppointments() {
-  const { data: bookings = [], refetch } = useQuery('studentAppointments', fetchStudentAppointments, {
+  const { data: bookings = [], refetch, isLoading } = useQuery('studentAppointments', fetchStudentAppointments, {
     staleTime: 30000, // 30 seconds caching
     refetchOnWindowFocus: false,
   });
@@ -61,12 +63,58 @@ function StudentAppointments() {
 
   return (
     <div className="grid grid-cols-2 gap-5 h-full">
+      {/* Pending Appointments Section */}
       <section className="bg-white rounded-xl shadow-sm p-6 flex flex-col max-h-[80vh]">
         <h3 className="text-xl font-semibold mb-4 text-[#0065A8] border-b-2 border-[#54BEFF] pb-2 sticky top-0 bg-white z-10">
           Pending Appointments
         </h3>
         <div className="flex-1 overflow-y-auto min-h-0">
-          {appointments.pending.length > 0 ? (
+          {isLoading ? (
+            <ul className="space-y-4 pr-2">
+              {Array.from({ length: 5 }).map((_, index) => (
+                 <li key={index} className="bg-white rounded-lg shadow-md p-6 my-4 border-l-4 border-[#0065A8] hover:shadow-lg transition-shadow flex flex-col fade-in delay-300 animate-pulse">
+                 {/* Teacher Section Skeleton */}
+                 <div className="mb-4 fade-in delay-100">
+                    <p className="text-[#0065A8] font-semibold mb-2">Teacher</p>
+                    <div className="flex items-center">
+                      <div className="w-12 h-12 bg-gray-200 rounded-full mr-3 border-2 border-[#54BEFF]"></div>
+                      <div className="h-4 bg-gray-300 rounded w-40"></div>
+                    </div>
+                  </div>
+                  {/* Student(s) Section Skeleton */}
+                  <div className="mt-4 fade-in delay-200">
+                    <p className="text-[#0065A8] font-semibold mb-2">Student(s)</p>
+                    <div className="flex flex-wrap items-center gap-3">
+                      {Array.from({ length: 3 }).map((_, index) => (
+                        <div key={index} className="flex items-center bg-gray-50 rounded-full px-3 py-1">
+                          <div className="w-8 h-8 bg-gray-200 rounded-full mr-2 border-2 border-[#54BEFF]"></div>
+                          <div className="h-3 bg-gray-300 rounded w-20"></div>
+                        </div>
+                      ))}
+                    </div>
+                  </div>
+                  {/* Details Section Skeleton */}
+                  <div className="grid grid-cols-2 gap-4 mt-4 fade-in delay-300">
+                    <div>
+                      <div className="text-[#0065A8] font-semibold mb-2">Created at</div>
+                      <div className="h-3 bg-gray-200 rounded w-24"></div>
+                    </div>
+                  </div>
+                  {/* Action Buttons Skeleton */}
+                  <div className="mt-6 -mx-6 -mb-6 flex">
+                    {/* Start Session Button Placeholder */}
+                    <div className="flex-1 bg-[#0065A8] text-white transition-colors rounded-bl-lg rounded-br-none flex items-center justify-center gap-2">
+                      <div className="h-4 bg-gray-300 rounded w-24"></div>
+                    </div>
+                    {/* Cancel Button Placeholder */}
+                    <div className="flex-1 bg-[#54BEFF] text-white transition-colors rounded-br-lg rounded-bl-none flex items-center justify-center gap-2">
+                      <div className="h-4 bg-gray-300 rounded w-24"></div>
+                    </div>
+                  </div>
+                </li>
+              ))}
+            </ul>
+          ) : appointments?.pending?.length > 0 ? (
             <ul className="space-y-4 pr-2">
               {appointments.pending.map(app => (
                 <AppointmentItem key={app.id} appointment={app} role="student" />
@@ -78,12 +126,66 @@ function StudentAppointments() {
         </div>
       </section>
 
+      {/* Upcoming Appointments Section */}
       <section className="bg-white rounded-xl shadow-sm p-6 flex flex-col max-h-[80vh]">
         <h3 className="text-xl font-semibold mb-4 text-[#0065A8] border-b-2 border-[#54BEFF] pb-2 sticky top-0 bg-white z-10">
           Upcoming Appointments
         </h3>
         <div className="flex-1 overflow-y-auto min-h-0">
-          {appointments.upcoming.length > 0 ? (
+          {isLoading ? (
+            <ul className="space-y-4 pr-2">
+              {Array.from({ length: 5 }).map((_, index) => (
+                <li key={index} className="bg-white rounded-lg shadow-md p-6 my-4 border-l-4 border-[#0065A8] hover:shadow-lg transition-shadow flex flex-col fade-in delay-300 animate-pulse">
+                 {/* Teacher Section Skeleton */}
+                 <div className="mb-4 fade-in delay-100">
+                    <p className="text-[#0065A8] font-semibold mb-2">Teacher</p>
+                    <div className="flex items-center">
+                      <div className="w-12 h-12 bg-gray-200 rounded-full mr-3 border-2 border-[#54BEFF]"></div>
+                      <div className="h-4 bg-gray-300 rounded w-40"></div>
+                    </div>
+                  </div>
+                  {/* Student(s) Section Skeleton */}
+                  <div className="mt-4 fade-in delay-200">
+                    <p className="text-[#0065A8] font-semibold mb-2">Student(s)</p>
+                    <div className="flex flex-wrap items-center gap-3">
+                      {Array.from({ length: 3 }).map((_, index) => (
+                        <div key={index} className="flex items-center bg-gray-50 rounded-full px-3 py-1">
+                          <div className="w-8 h-8 bg-gray-200 rounded-full mr-2 border-2 border-[#54BEFF]"></div>
+                          <div className="h-3 bg-gray-300 rounded w-20"></div>
+                        </div>
+                      ))}
+                    </div>
+                  </div>
+                  {/* Details Section Skeleton */}
+                  <div className="grid grid-cols-2 gap-4 mt-4 fade-in delay-300">
+                    <div>
+                      <div className="text-[#0065A8] font-semibold mb-2">Created at</div>
+                      <div className="h-3 bg-gray-200 rounded w-24"></div>
+                    </div>
+                    <div>
+                      <div className="text-[#0065A8] font-semibold mb-2">Schedule</div>
+                      <div className="h-3 bg-gray-200 rounded w-24"></div>
+                    </div>
+                    <div>
+                      <div className="text-[#0065A8] font-semibold mb-2">Venue</div>
+                      <div className="h-3 bg-gray-200 rounded w-24"></div>
+                    </div>
+                  </div>
+                  {/* Action Buttons Skeleton */}
+                  <div className="mt-6 -mx-6 -mb-6 flex">
+                    {/* Start Session Button Placeholder */}
+                    <div className="flex-1 bg-[#0065A8] text-white transition-colors rounded-bl-lg rounded-br-none flex items-center justify-center gap-2">
+                      <div className="h-4 bg-gray-300 rounded w-24"></div>
+                    </div>
+                    {/* Cancel Button Placeholder */}
+                    <div className="flex-1 bg-[#54BEFF] text-white transition-colors rounded-br-lg rounded-bl-none flex items-center justify-center gap-2">
+                      <div className="h-4 bg-gray-300 rounded w-24"></div>
+                    </div>
+                  </div>
+                </li>
+              ))}
+            </ul>
+          ) : appointments?.upcoming?.length > 0 ? (
             <ul className="space-y-4 pr-2">
               {appointments.upcoming.map(app => (
                 <AppointmentItem key={app.id} appointment={app} role="student" />
@@ -98,7 +200,7 @@ function StudentAppointments() {
   );
 }
 
-// Similarly, update TeacherAppointments to use useQuery
+// Fetch teacher appointments via React Query
 const fetchTeacherAppointments = async () => {
   const teacherID = localStorage.getItem('teacherID');
   const res = await fetch(`http://localhost:5001/bookings/get_bookings?role=faculty&userID=${teacherID}`);
@@ -107,7 +209,7 @@ const fetchTeacherAppointments = async () => {
 };
 
 function TeacherAppointments() {
-  const { data: appointments = [], refetch } = useQuery('teacherAppointments', fetchTeacherAppointments, {
+  const { data: appointments = [], refetch, isLoading } = useQuery('teacherAppointments', fetchTeacherAppointments, {
     staleTime: 30000,
     refetchOnWindowFocus: false,
   });
@@ -132,12 +234,10 @@ function TeacherAppointments() {
     };
   }, [appointments]);
 
-  // Update state when memoized data changes
   useEffect(() => {
     setSortedAppointments(sortedData);
   }, [sortedData]);
 
-  // Memoize the booking update handler
   const handleBookingUpdate = useCallback(() => {
     refetch();
   }, [refetch]);
@@ -155,7 +255,6 @@ function TeacherAppointments() {
 
   async function confirmBooking(bookingID, schedule, venue) {
     if (!schedule || !venue) {
-      // Remove alert; instead, throw an error to be caught later.
       throw new Error("Schedule and venue are required to confirm the booking.");
     }
     const response = await fetch('http://localhost:5001/bookings/confirm_booking', {
@@ -167,7 +266,6 @@ function TeacherAppointments() {
       const result = await response.json();
       throw new Error(result.error || "Unknown error");
     }
-    // On success no alert will be shown.
   }
 
   async function cancelBooking(bookingID) {
@@ -180,13 +278,11 @@ function TeacherAppointments() {
       const result = await response.json();
       throw new Error(result.error || "Unknown error");
     }
-    // On success, no alert is shown.
   }
 
   async function startSession(appointment) {
     const teacherID = localStorage.getItem('teacherID');
-    // Remove the prefix since it's already in the correct format
-    const studentIDs = appointment.info.map(student => student.ID); // Changed from student.id
+    const studentIDs = appointment.info.map(student => student.ID);
     const teacherInfo = appointment.teacher ? encodeURIComponent(JSON.stringify(appointment.teacher)) : '';
     const studentInfo = appointment.info ? encodeURIComponent(JSON.stringify(appointment.info)) : '';
     const venue = appointment.venue ? encodeURIComponent(appointment.venue) : '';
@@ -201,7 +297,52 @@ function TeacherAppointments() {
           Pending Appointments
         </h3>
         <div className="flex-1 overflow-y-auto min-h-0">
-          {sortedAppointments.pending.length > 0 ? (
+          {isLoading ? (
+            <ul className="space-y-4 pr-2">
+              {Array.from({ length: 5 }).map((_, index) => (
+                <li key={index} className="bg-white rounded-lg shadow-md p-6 my-4 border-l-4 border-[#0065A8] hover:shadow-lg transition-shadow flex flex-col fade-in delay-300 animate-pulse">
+                  {/* Teacher Section Skeleton */}
+                  <div className="mb-4 fade-in delay-100">
+                    <p className="text-[#0065A8] font-semibold mb-2">Teacher</p>
+                    <div className="flex items-center">
+                      <div className="w-12 h-12 bg-gray-200 rounded-full mr-3 border-2 border-[#54BEFF]"></div>
+                      <div className="h-4 bg-gray-300 rounded w-40"></div>
+                    </div>
+                  </div>
+                  {/* Student(s) Section Skeleton */}
+                  <div className="mt-4 fade-in delay-200">
+                    <p className="text-[#0065A8] font-semibold mb-2">Student(s)</p>
+                    <div className="flex flex-wrap items-center gap-3">
+                      {Array.from({ length: 3 }).map((_, index) => (
+                        <div key={index} className="flex items-center bg-gray-50 rounded-full px-3 py-1">
+                          <div className="w-8 h-8 bg-gray-200 rounded-full mr-2 border-2 border-[#54BEFF]"></div>
+                          <div className="h-3 bg-gray-300 rounded w-20"></div>
+                        </div>
+                      ))}
+                    </div>
+                  </div>
+                  {/* Details Section Skeleton */}
+                  <div className="grid grid-cols-2 gap-4 mt-4 fade-in delay-300">
+                    <div>
+                      <div className="text-[#0065A8] font-semibold mb-2">Created at</div>
+                      <div className="h-3 bg-gray-200 rounded w-24"></div>
+                    </div>
+                  </div>
+                  {/* Action Buttons Skeleton */}
+                  <div className="mt-6 -mx-6 -mb-6 flex">
+                    {/* Start Session Button Placeholder */}
+                    <div className="flex-1 bg-[#0065A8] text-white py-5 transition-colors rounded-bl-lg rounded-br-none flex items-center justify-center gap-2">
+                      <div className="h-4 bg-gray-300 rounded w-24"></div>
+                    </div>
+                    {/* Cancel Button Placeholder */}
+                    <div className="flex-1 bg-[#54BEFF] text-white py-5 transition-colors rounded-br-lg rounded-bl-none flex items-center justify-center gap-2">
+                      <div className="h-4 bg-gray-300 rounded w-24"></div>
+                    </div>
+                  </div>
+                </li>
+              ))}
+            </ul>
+          ) : sortedAppointments?.pending?.length > 0 ? (
             <ul className="space-y-4 pr-2">
               {sortedAppointments.pending.map(app => (
                 <AppointmentItem 
@@ -227,8 +368,61 @@ function TeacherAppointments() {
           Upcoming Appointments
         </h3>
         <div className="flex-1 overflow-y-auto min-h-0">
-          {sortedAppointments.upcoming.length > 0 ? (
+          {isLoading ? (
             <ul className="space-y-4 pr-2">
+              {Array.from({ length: 5 }).map((_, index) => (
+                <li key={index} className="bg-white rounded-lg shadow-md p-6 my-4 border-l-4 border-[#0065A8] hover:shadow-lg transition-shadow flex flex-col fade-in delay-300 animate-pulse">
+                  {/* Teacher Section Skeleton */}
+                  <div className="mb-4 fade-in delay-100">
+                    <p className="text-[#0065A8] font-semibold mb-2">Teacher</p>
+                    <div className="flex items-center">
+                      <div className="w-12 h-12 bg-gray-200 rounded-full mr-3 border-2 border-[#54BEFF]"></div>
+                      <div className="h-4 bg-gray-300 rounded w-40"></div>
+                    </div>
+                  </div>
+                  {/* Student(s) Section Skeleton */}
+                  <div className="mt-4 fade-in delay-200">
+                    <p className="text-[#0065A8] font-semibold mb-2">Student(s)</p>
+                    <div className="flex flex-wrap items-center gap-3">
+                      {Array.from({ length: 3 }).map((_, index) => (
+                        <div key={index} className="flex items-center bg-gray-50 rounded-full px-3 py-1">
+                          <div className="w-8 h-8 bg-gray-200 rounded-full mr-2 border-2 border-[#54BEFF]"></div>
+                          <div className="h-3 bg-gray-300 rounded w-20"></div>
+                        </div>
+                      ))}
+                    </div>
+                  </div>
+                  {/* Details Section Skeleton */}
+                  <div className="grid grid-cols-2 gap-4 mt-4 fade-in delay-300">
+                    <div>
+                      <div className="text-[#0065A8] font-semibold mb-2">Created at</div>
+                      <div className="h-3 bg-gray-200 rounded w-24"></div>
+                    </div>
+                    <div>
+                      <div className="text-[#0065A8] font-semibold mb-2">Schedule</div>
+                      <div className="h-3 bg-gray-200 rounded w-24"></div>
+                    </div>
+                    <div>
+                      <div className="text-[#0065A8] font-semibold mb-2">Venue</div>
+                      <div className="h-3 bg-gray-200 rounded w-24"></div>
+                    </div>
+                  </div>
+                  {/* Action Buttons Skeleton */}
+                  <div className="mt-6 -mx-6 -mb-6 flex">
+                    {/* Start Session Button Placeholder */}
+                    <div className="flex-1 bg-[#0065A8] text-white py-5 transition-colors rounded-bl-lg rounded-br-none flex items-center justify-center gap-2">
+                      <div className="h-4 bg-gray-300 rounded w-24"></div>
+                    </div>
+                    {/* Cancel Button Placeholder */}
+                    <div className="flex-1 bg-[#54BEFF] text-white py-5 transition-colors rounded-br-lg rounded-bl-none flex items-center justify-center gap-2">
+                      <div className="h-4 bg-gray-300 rounded w-24"></div>
+                    </div>
+                  </div>
+                </li>
+              ))}
+            </ul>
+          ) : sortedAppointments?.upcoming?.length > 0 ? (
+            <ul className="">
               {sortedAppointments.upcoming.map(app => (
                 <AppointmentItem 
                   key={app.id}
@@ -242,6 +436,7 @@ function TeacherAppointments() {
           ) : (
             <p className="text-gray-500 italic">No upcoming appointments</p>
           )}
+   
         </div>
       </section>
     </div>
@@ -250,12 +445,8 @@ function TeacherAppointments() {
 
 function Appointments() {
   const [role, setRole] = useState(() => {
-    // Initialize role from localStorage immediately
     return localStorage.getItem('userRole')?.toLowerCase() || '';
   });
-
-  // Remove the role-setting effect that was causing multiple updates
-  // The role should now be stable from initial state
 
   if (!role) return <p>Loading...</p>;
   
