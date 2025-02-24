@@ -155,3 +155,49 @@ def activate_all_teachers():
         return jsonify({"message": "All teachers activated successfully"}), 200
     except Exception as e:
         return jsonify({"error": f"Failed to activate teachers: {str(e)}"}), 500
+
+@semester_routes.route('/latest', methods=['GET'])
+def get_latest_semester():
+    try:
+        semesters = list(db.collection("semesters").get())
+        if not semesters:
+            return jsonify({"error": "No semesters found"}), 404
+
+        # Parse startDate assuming "YYYY-MM-DD" format.
+        def parse_date(doc):
+            data = doc.to_dict()
+            sd = data.get("startDate")
+            try:
+                return datetime.datetime.strptime(sd, "%Y-%m-%d")
+            except Exception:
+                return datetime.datetime.min
+
+        # Sort descending by startDate.
+        semesters.sort(key=lambda d: parse_date(d), reverse=True)
+
+        # Prefer the one with "2nd" semester if available.
+        latest = next((doc for doc in semesters if doc.to_dict().get("semester") == "2nd"), semesters[0])
+        data = latest.to_dict()
+        return jsonify({
+            "semester": data.get("semester", ""),
+            "school_year": data.get("school_year", "")
+        }), 200
+    except Exception as e:
+        return jsonify({"error": str(e)}), 500
+
+@semester_routes.route('/delete_duplicate', methods=['POST'])
+def delete_duplicate_semester():
+    data = request.get_json()
+    school_year = data.get('school_year')
+    semester_val = data.get('semester')
+    if not school_year or not semester_val:
+        return jsonify({"error": "Missing parameters"}), 400
+    duplicates = list(db.collection("semesters")
+                      .where("school_year", "==", school_year)
+                      .where("semester", "==", semester_val)
+                      .stream())
+    if not duplicates:
+        return jsonify({"error": "No duplicate semester found"}), 404
+    for dup in duplicates:
+        dup.reference.delete()
+    return jsonify({"message": "Duplicate semester(s) deleted"}), 200

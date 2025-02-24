@@ -20,21 +20,50 @@ const SemesterManagement = () => {
   const [showDepartmentModal, setShowDepartmentModal] = useState(false);
 
   useEffect(() => {
+    // Try to get data from localStorage first
+    const cachedTeachers = localStorage.getItem('teachers');
+    if (cachedTeachers) {
+      setTeachers(JSON.parse(cachedTeachers));
+    }
+
+    // Fetch fresh data from the server
     fetch('http://localhost:5001/semester/teachers')
       .then(res => res.json())
-      .then(data => setTeachers(data))
+      .then(data => {
+        setTeachers(data);
+        // Cache the fresh data
+        localStorage.setItem('teachers', JSON.stringify(data));
+      })
       .catch(err => console.error('Failed to load teachers', err));
   }, []);
 
+  useEffect(() => {
+    if (error) {
+      console.log("Error set:", error);
+      // Clear error after 5 seconds for demonstration purposes
+      const timer = setTimeout(() => setError(''), 5000);
+      return () => clearTimeout(timer);
+    }
+  }, [error]);
+
   const validateSchoolYear = (input) => {
     const regex = /^\d{2}-\d{2}$/;
+    const errorElement = document.querySelector('.fixed.top-5.right-5');
     if (!regex.test(input)) {
       setError('School year must be in format XX-XX');
+      if (errorElement) {
+        errorElement.classList.replace('bg-red-100', 'bg-yellow-100');
+        errorElement.classList.replace('text-red-700', 'text-yellow-700');
+      }
       return false;
     }
     const [start, end] = input.split('-').map(Number);
     if (end !== start + 1) {
       setError('Second year must be one year after the first');
+      if (errorElement) {
+        errorElement.classList.replace('bg-red-100', 'bg-yellow-100');
+        errorElement.classList.replace('text-red-700', 'text-yellow-700');
+      }
       return false;
     }
     setError('');
@@ -48,6 +77,20 @@ const SemesterManagement = () => {
   };
 
   const handleStartSemester = async () => {
+    // Validation: ensure School Year is provided
+    if (!schoolYear) {
+      setError("Please fill in the School Year");
+      return;
+    }
+    if (!startDate) {
+      setError("Please select a Start Date");
+      return;
+    }
+    if (!semester) {
+      setError("Please select a Semester");
+      return;
+    }
+    
     if (!validateSchoolYear(schoolYear)) return;
     const formattedDate = format(new Date(startDate), 'yyyy-MM-dd');
     const fullSchoolYear = `20${schoolYear.split('-')[0]}-20${schoolYear.split('-')[1]}`;
@@ -69,8 +112,9 @@ const SemesterManagement = () => {
       }
       
       setCurrentSemester(data.semester_id);
+      setError("Semester started successfully!");
     } catch (err) {
-      setError(`Failed to start semester. School year ${fullSchoolYear} already exists.`);
+      setError(`Failed to start semester: ${err}`);
     }
   };
 
@@ -149,6 +193,32 @@ const SemesterManagement = () => {
     }
   };
 
+  // New function to delete duplicate semester from the database.
+  const handleDeleteDuplicate = async () => {
+    const fullSchoolYear = `20${schoolYear.split('-')[0]}-20${schoolYear.split('-')[1]}`;
+    try {
+      const res = await fetch('http://localhost:5001/semester/delete_duplicate', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          school_year: fullSchoolYear,
+          semester: semester
+        })
+      });
+      const data = await res.json();
+      if (!res.ok) {
+        setError(data.error || "Failed to delete duplicate semester");
+      } else {
+        setError("Duplicate semester deleted. You can now start a new semester.");
+        document.querySelector('.fixed.top-5.right-5').classList.replace('bg-red-100', 'bg-green-100');
+        document.querySelector('.fixed.top-5.right-5').classList.replace('text-red-700', 'text-green-700');
+      }
+    } catch (err) {
+      setError(`Deletion error: ${err}`);
+    }
+  };
+
+  // Update cache when activating a single teacher
   const handleActivate = async (teacherId) => {
     try {
       const response = await fetch('http://localhost:5001/semester/teacher/activate', {
@@ -157,16 +227,19 @@ const SemesterManagement = () => {
         body: JSON.stringify({ teacherId })
       });
       if (!response.ok) throw new Error('Activation failed');
-      setTeachers(prev =>
-        prev.map(teacher =>
-          teacher.ID === teacherId ? { ...teacher, isActive: true } : teacher
-        )
+      
+      const updatedTeachers = teachers.map(teacher =>
+        teacher.ID === teacherId ? { ...teacher, isActive: true } : teacher
       );
+      setTeachers(updatedTeachers);
+      // Update cache
+      localStorage.setItem('teachers', JSON.stringify(updatedTeachers));
     } catch (err) {
       setError('Failed to activate teacher');
     }
   };
 
+  // Update cache when activating all teachers
   const handleActivateAll = async () => {
     setIsActivatingAll(true);
     try {
@@ -176,10 +249,10 @@ const SemesterManagement = () => {
       });
       if (!response.ok) throw new Error('Failed to activate all teachers');
       
-      // Update local state to reflect all teachers as active
-      setTeachers(prevTeachers =>
-        prevTeachers.map(teacher => ({ ...teacher, isActive: true }))
-      );
+      const updatedTeachers = teachers.map(teacher => ({ ...teacher, isActive: true }));
+      setTeachers(updatedTeachers);
+      // Update cache
+      localStorage.setItem('teachers', JSON.stringify(updatedTeachers));
     } catch (err) {
       setError('Failed to activate all teachers');
     } finally {
@@ -219,14 +292,24 @@ const SemesterManagement = () => {
 
   return (
     <div className="p-6">
-      {/* Error/Success Message Toast */}
+      {/* Error/Success Message Toast - Updated with dynamic colors */}
       {error && (
-        <div className="fixed top-5 right-5 p-4 rounded-lg shadow-lg z-50 bg-red-100 text-red-700">
+        <div className={`fixed top-5 right-5 p-4 rounded-lg shadow-lg z-50 
+          ${error.includes("successfully") ? "bg-green-100 text-green-700" : "bg-red-100 text-red-700"}`}>
           {error}
+          {/* Render Delete Duplicate button if error indicates duplicate */}
+          {error.includes("already exists") && (
+            <button
+              onClick={handleDeleteDuplicate}
+              className="ml-4 bg-red-500 text-white px-3 py-1 rounded-lg hover:bg-red-600"
+            >
+              Delete Duplicate?
+            </button>
+          )}
         </div>
       )}
 
-      <h2 className="text-2xl font-bold text-[#0065A8] mb-6">Semester Management</h2>
+      <h2 className="text-3xl font-bold text-[#0065A8] pt-10 pb-4 mb-6 text-center">Semester Management</h2>
 
       <div className="flex gap-6">
         {/* Left side - Teacher List (filtered if teacherSearchTerm is set) */}
@@ -370,7 +453,7 @@ const SemesterManagement = () => {
                 placeholder="23-24"
                 value={schoolYear}
                 onChange={handleSchoolYearChange}
-                className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500"
+                className="mt-1 block w-full px-4 py-2 rounded-md border-gray-300 shadow-sm focus:outline-none focus:ring-2 focus:ring-[#54BEFF]"
               />
             </div>
             <div>
@@ -378,9 +461,9 @@ const SemesterManagement = () => {
               <select
                 value={semester}
                 onChange={(e) => setSemester(e.target.value)}
-                className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500"
+                className="mt-1 block w-full rounded-md border-gray-300 px-3 py-2 shadow-sm focus:outline-none focus:ring-2 focus:ring-[#54BEFF]"
               >
-                <option value="1st">1st Semester</option>
+                <option className="p-4" value="1st">1st Semester</option>
                 <option value="2nd">2nd Semester</option>
               </select>
             </div>
@@ -390,7 +473,7 @@ const SemesterManagement = () => {
                 type="date"
                 value={startDate}
                 onChange={(e) => setStartDate(e.target.value)}
-                className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500"
+                className="mt-1 block w-full rounded-md px-3 py-2 border-gray-300 shadow-sm focus:outline-none focus:ring-2 focus:ring-[#54BEFF]"
               />
             </div>
             {currentSemester && (
@@ -400,7 +483,7 @@ const SemesterManagement = () => {
                   type="date"
                   value={endDate}
                   onChange={(e) => setEndDate(e.target.value)}
-                  className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500"
+                  className="mt-1 block w-full rounded-md border-gray-300 shadow-sm px-3 py-2 focus:outline-none focus:ring-2 focus:ring-[#54BEFF]"
                 />
               </div>
             )}
@@ -408,7 +491,7 @@ const SemesterManagement = () => {
               {!currentSemester ? (
                 <button
                   onClick={handleStartSemester}
-                  className="w-full bg-blue-500 text-white px-4 py-2 rounded hover:bg-blue-600"
+                  className="w-full bg-[#057DCD] text-white px-4 py-2 rounded-lg hover:bg-[#54BEFF]"
                   disabled={!schoolYear || !startDate}
                 >
                   Start Semester
@@ -417,14 +500,14 @@ const SemesterManagement = () => {
                 <>
                   <button
                     onClick={handleEndSemesterScheduled}
-                    className="w-full bg-red-500 text-white px-4 py-2 rounded hover:bg-red-600"
+                    className="w-full bg-red-500 text-white px-4 py-2 rounded-lg hover:bg-red-600"
                     disabled={!endDate}
                   >
                     End Semester on Selected Date
                   </button>
                   <button
                     onClick={handleEndSemesterNow}
-                    className="w-full bg-red-600 text-white px-4 py-2 rounded hover:bg-red-700"
+                    className="w-full bg-red-600 text-white px-4 py-2 rounded-lg hover:bg-red-700"
                   >
                     End Semester Now
                   </button>
