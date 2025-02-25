@@ -677,7 +677,7 @@ export default function AddGrade() {
                         <div className="h-4 bg-gray-200 rounded mx-auto w-32"></div>
                       </td>
                       <td className="px-4 py-3 w-[140px]">
-                        <div className="h-4 bg-gray-200 rounded mx-auto w-10"></div>
+                        <div className="h-4 bg-gray-200 rounded mx-auto w-12"></div>
                       </td>
                       <td className="px-4 py-3 w-[150px]">
                         <div className="h-4 bg-gray-200 rounded mx-auto w-16"></div>
