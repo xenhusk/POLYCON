@@ -32,7 +32,13 @@ const Sidebar = ({ onExpandChange }) => {
   // NEW: state for profile picture URL
   const [profilePicture, setProfilePicture] = useState('');
   const [userDetails, setUserDetails] = useState(null);
-  const [activeItem, setActiveItem] = useState('dashboard'); // Home is default
+  const [activeItem, setActiveItem] = useState(() => {
+    const role = localStorage.getItem('userRole');
+    if (role === 'admin') {
+      return 'homeadmin'; // Set default active item for admin
+    }
+    return 'dashboard'; // Default for other roles
+  });
   const [profile, setProfile] = useState(null);
   const [showUploadModal, setShowUploadModal] = useState(false);
   const [isFrozen, setIsFrozen] = useState(false);
@@ -168,20 +174,41 @@ const Sidebar = ({ onExpandChange }) => {
     }
   };
 
-  // Update the path matching useEffect
+  // Add this new useEffect for initial admin navigation
+  useEffect(() => {
+    if (userRole === 'admin' && location.pathname === '/') {
+      navigate('/homeadmin');
+    }
+  }, [userRole, location.pathname, navigate]);
+
+  // Update the path matching useEffect to preserve active state on reload
   useEffect(() => {
     const currentPath = location.pathname;
     const userMenuPaths = menuPaths[userRole] || {};
     
-    // Find matching menu item by comparing paths
-    const activeMenuItem = Object.entries(userMenuPaths).find(
-      ([_, path]) => path === currentPath
-    );
-
-    if (activeMenuItem) {
-      setActiveItem(activeMenuItem[0]);
+    // Special handling for admin paths
+    if (userRole === 'admin') {
+      if (currentPath === '/') {
+        setActiveItem('homeadmin');
+      } else {
+        // Find matching menu item by comparing paths
+        const activeMenuItem = Object.entries(userMenuPaths).find(
+          ([_, path]) => path === currentPath
+        );
+        if (activeMenuItem) {
+          setActiveItem(activeMenuItem[0]);
+        }
+      }
+    } else {
+      // Handle non-admin paths as before
+      const activeMenuItem = Object.entries(userMenuPaths).find(
+        ([_, path]) => path === currentPath
+      );
+      if (activeMenuItem) {
+        setActiveItem(activeMenuItem[0]);
+      }
     }
-  }, [location.pathname, userRole, menuPaths]);
+  }, [location.pathname, userRole]);
 
   // Helper to render a menu item with an icon and a label that fades in
   const renderMenuItem = (id, IconComponent, label) => (
@@ -309,11 +336,11 @@ const Sidebar = ({ onExpandChange }) => {
       {userRole === 'admin' && (
         <ul className="mt-2 space-y-3"> {/* Changed from mt-6 to mt-2 */}
           {renderMenuItem("homeadmin", HomeIcon, "Home")}
-          {renderMenuItem("semester", SemesterAdd, "Semesters")}
           {renderMenuItem("add_users", UserAdd, "Users")}
           {renderMenuItem("course", CourseAdd, "Courses")}
           {renderMenuItem("program", ProgramAdd, "Programs")}
           {renderMenuItem("department", DepartmentAdd, "Departments")}
+          {renderMenuItem("semester", SemesterAdd, "Semesters")}
         </ul>
       )}
 

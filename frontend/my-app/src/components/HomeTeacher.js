@@ -90,7 +90,7 @@ const HomeTeacher = () => {
                     </div>
                 </div>
 
-                <div className="flex-1 bg-[#fc5353] text-white rounded-lg shadow-lg px-6 py-4">
+                <div className="flex-1 bg-[#fc6969] text-white rounded-lg shadow-lg px-6 py-4">
                     <div className="flex flex-col">
                         <p className="text-sm mb-2 text-left">Total Number of Consultation Hours:</p>
                         <div className="flex items-baseline gap-2 justify-center">

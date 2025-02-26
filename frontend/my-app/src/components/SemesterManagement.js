@@ -18,6 +18,28 @@ const SemesterManagement = () => {
   const teacherSearchTimeout = useRef(null);
   const [selectedDepartmentFilter, setSelectedDepartmentFilter] = useState('');
   const [showDepartmentModal, setShowDepartmentModal] = useState(false);
+  const [latestSemester, setLatestSemester] = useState(null);
+  const [canEndSemester, setCanEndSemester] = useState(false); // Add new state for checking if we can show the end semester button
+
+  // NEW: function to fetch latest (active) semester
+  const fetchLatestSemester = async () => {
+    try {
+      const response = await fetch('http://localhost:5001/semester/latest');
+      if(response.ok) {
+        const data = await response.json();
+        setLatestSemester(data);
+        // Use the canEnd flag from backend
+        setCanEndSemester(data.canEnd);
+      }
+    } catch (error) {
+      console.error('Failed to fetch latest semester:', error);
+      setCanEndSemester(false);
+    }
+  };
+
+  useEffect(() => {
+    fetchLatestSemester();
+  }, []);
 
   useEffect(() => {
     // Try to get data from localStorage first
@@ -113,6 +135,8 @@ const SemesterManagement = () => {
       
       setCurrentSemester(data.semester_id);
       setError("Semester started successfully!");
+      // NEW: refresh the latest active semester display
+      fetchLatestSemester();
     } catch (err) {
       setError(`Failed to start semester: ${err}`);
     }
@@ -140,31 +164,45 @@ const SemesterManagement = () => {
     }
   };
 
-  // NEW: Add function to end semester immediately (using current date)
+  // Modified handleEndSemesterNow function
   const handleEndSemesterNow = async () => {
-    if (!currentSemester) return;
+    if (!latestSemester) return;
+    
     try {
       const currentDate = format(new Date(), 'yyyy-MM-dd');
       const response = await fetch('http://localhost:5001/semester/end', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
-          semester_id: currentSemester,
+          semester_id: latestSemester.id, // Use the latest semester's ID
           endDate: currentDate
         }),
       });
+      
       if (!response.ok) throw new Error('Failed to end semester now');
+      
+      // Clear form fields
+      setSchoolYear('');
+      setSemester('1st');
+      setStartDate('');
+      setEndDate('');
       setCurrentSemester(null);
+      setCanEndSemester(false); // Hide the button
+      setError("Semester ended successfully!"); // Add success message
+      
+      // Refresh data
+      fetchLatestSemester();
       const teachersResponse = await fetch('http://localhost:5001/semester/teachers');
-      if (!teachersResponse.ok) throw new Error('Failed to fetch teachers');
-      const teachersData = await teachersResponse.json();
-      setTeachers(teachersData);
+      if (teachersResponse.ok) {
+        const teachersData = await teachersResponse.json();
+        setTeachers(teachersData);
+      }
     } catch (err) {
       setError('Failed to end semester now');
     }
   };
 
-  // NEW: Function to end semester using selected date without immediately deactivating teachers if in future
+  // Modified handleEndSemesterScheduled function
   const handleEndSemesterScheduled = async () => {
     if (!currentSemester || !endDate) return;
     try {
@@ -178,16 +216,21 @@ const SemesterManagement = () => {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
-          semester_id: currentSemester,
+          semester_id: latestSemester?.id || currentSemester, // Use latestSemester.id if available
           endDate: format(new Date(endDate), 'yyyy-MM-dd')
         }),
       });
       if (!response.ok) throw new Error('Failed to end semester');
       setCurrentSemester(null);
+      setError("Semester end date scheduled successfully!");
+      
+      // Refresh data
+      fetchLatestSemester(); // This will update the latest semester and button visibility
       const teachersResponse = await fetch('http://localhost:5001/semester/teachers');
-      if (!teachersResponse.ok) throw new Error('Failed to fetch teachers');
-      const teachersData = await teachersResponse.json();
-      setTeachers(teachersData);
+      if (teachersResponse.ok) {
+        const teachersData = await teachersResponse.json();
+        setTeachers(teachersData);
+      }
     } catch (err) {
       setError('Failed to end semester');
     }
@@ -290,8 +333,14 @@ const SemesterManagement = () => {
     new Set(teachers.map(teacher => teacher.department).filter(dep => dep))
   );
 
+  // Add new helper function to determine if inputs should be disabled
+  const shouldDisableInputs = () => {
+    return latestSemester && canEndSemester;
+  };
+
   return (
     <div className="p-6">
+    
       {/* Error/Success Message Toast - Updated with dynamic colors */}
       {error && (
         <div className={`fixed top-5 right-5 p-4 rounded-lg shadow-lg z-50 
@@ -444,8 +493,28 @@ const SemesterManagement = () => {
 
         {/* Right side - Semester Management */}
         <div className="w-1/3 bg-white p-6 rounded-lg shadow-md">
-          <h3 className="text-xl font-semibold text-gray-800 mb-6">Start/End Semester</h3>
-          <div className="space-y-4">
+          {/* Modified: Header with End Current Semester button and hover tooltip */}
+          <div className="flex justify-between items-center mb-6">
+            <h3 className="text-xl font-semibold text-gray-800">Start/End Semester</h3>
+            {latestSemester && canEndSemester && (
+              <div className="relative group">
+                <button
+                  onClick={handleEndSemesterNow}
+                  className="bg-red-600 text-white px-4 py-2 rounded-lg hover:bg-red-700"
+                >
+                  End Current Semester
+                </button>
+                {/* Tooltip */}
+                <div className="absolute right-0 mt-2 mr-[.5rem] w-48 bg-gray-800 text-white text-sm rounded-lg p-2 opacity-0 group-hover:opacity-100 transition-opacity duration-200 z-10">
+                  <p>Current Semester: <span className="font-semibold">{latestSemester.semester}</span></p>
+                  <p>School Year: <span className="font-semibold">{latestSemester.school_year}</span></p>
+                </div>
+              </div>
+            )}
+          </div>
+          
+          {/* ...existing form fields for starting/ending semester... */}
+          <div className={`space-y-4 ${shouldDisableInputs() ? 'opacity-50' : ''}`}>
             <div>
               <label className="block text-sm font-medium text-gray-700">School Year (20XX-20XX)</label>
               <input
@@ -453,6 +522,7 @@ const SemesterManagement = () => {
                 placeholder="23-24"
                 value={schoolYear}
                 onChange={handleSchoolYearChange}
+                disabled={shouldDisableInputs()}
                 className="mt-1 block w-full px-4 py-2 rounded-md border-gray-300 shadow-sm focus:outline-none focus:ring-2 focus:ring-[#54BEFF]"
               />
             </div>
@@ -461,6 +531,7 @@ const SemesterManagement = () => {
               <select
                 value={semester}
                 onChange={(e) => setSemester(e.target.value)}
+                disabled={shouldDisableInputs()}
                 className="mt-1 block w-full rounded-md border-gray-300 px-3 py-2 shadow-sm focus:outline-none focus:ring-2 focus:ring-[#54BEFF]"
               >
                 <option className="p-4" value="1st">1st Semester</option>
@@ -473,6 +544,7 @@ const SemesterManagement = () => {
                 type="date"
                 value={startDate}
                 onChange={(e) => setStartDate(e.target.value)}
+                disabled={shouldDisableInputs()}
                 className="mt-1 block w-full rounded-md px-3 py-2 border-gray-300 shadow-sm focus:outline-none focus:ring-2 focus:ring-[#54BEFF]"
               />
             </div>
