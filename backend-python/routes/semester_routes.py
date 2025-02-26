@@ -1,6 +1,7 @@
 from flask import Blueprint, request, jsonify
 from services.firebase_service import db  # import Firestore client
 import datetime
+from datetime import datetime
 
 semester_routes = Blueprint('semester_routes', __name__)
 
@@ -11,7 +12,7 @@ def start_semester():
     school_year = data.get('school_year')  # e.g., "2024-2025"
     semester_val = data.get('semester')      # e.g., "1st" or "2nd"
     
-    # Check if this school year AND semester combination already exists
+    # Duplicate check: if this school year AND semester combination already exists
     existing_semesters = (db.collection("semesters")
         .where("school_year", "==", school_year)
         .where("semester", "==", semester_val)
@@ -21,7 +22,33 @@ def start_semester():
         return jsonify({
             "error": f"Failed to start semester. {semester_val} semester of school year {school_year} already exists."
         }), 400
-    
+
+    # Additional check: do not allow starting a new semester if the current active semester
+    # (with null endDate) is still ongoing and the new input is not valid compared to it.
+    active_semesters = list(db.collection("semesters").where("endDate", "==", None).stream())
+    if active_semesters:
+        # Assuming only one active semester should exist. Here we take the latest active.
+        active_sem = active_semesters[-1].to_dict()
+        active_school_year = active_sem.get("school_year")
+        active_semester = active_sem.get("semester")
+        
+        # If active semester is the "2nd" semester, no new semester can be started in the same school_year.
+        if active_semester == "2nd" and school_year == active_school_year:
+            return jsonify({
+                "error": f"Cannot start new semester. The {active_semester} semester for {active_school_year} is still active."
+            }), 400
+        # If active semester is "1st", then only a "2nd" semester in the same school_year is acceptable.
+        if active_semester == "1st":
+            if school_year == active_school_year and semester_val != "2nd":
+                return jsonify({
+                    "error": f"Invalid semester. After the 1st semester of {active_school_year}, only the 2nd semester can be started."
+                }), 400
+            # Also, if the input school_year is less than or equal to the active's school_year, block it.
+            if school_year <= active_school_year and semester_val not in ["2nd"]:
+                return jsonify({
+                    "error": f"Invalid school year or semester. Please end the active semester before starting a new one."
+                }), 400
+
     # If no duplicate found, proceed with creating new semester
     semesters = db.collection("semesters").get()
     count = len(semesters) + 1
@@ -43,8 +70,16 @@ def end_semester():
     semester_id = data.get('semester_id')
     end_date = data.get('endDate')
     
-    # Retrieve the semester document
-    semester_ref = db.collection("semesters").document(semester_id)
+    if semester_id == 'latest':
+        # Get the latest active semester
+        semesters = db.collection("semesters").where("endDate", "==", None).get()
+        semester_list = list(semesters)
+        if not semester_list:
+            return jsonify({"error": "No active semester found"}), 404
+        semester_ref = semester_list[-1].reference
+    else:
+        semester_ref = db.collection("semesters").document(semester_id)
+    
     semester_doc = semester_ref.get()
     if not semester_doc.exists:
         return jsonify({"error": "Semester not found"}), 404
@@ -159,29 +194,52 @@ def activate_all_teachers():
 @semester_routes.route('/latest', methods=['GET'])
 def get_latest_semester():
     try:
-        semesters = list(db.collection("semesters").get())
+        # Get all semesters
+        semesters = db.collection("semesters").get()
         if not semesters:
             return jsonify({"error": "No semesters found"}), 404
 
-        # Parse startDate assuming "YYYY-MM-DD" format.
-        def parse_date(doc):
-            data = doc.to_dict()
-            sd = data.get("startDate")
-            try:
-                return datetime.datetime.strptime(sd, "%Y-%m-%d")
-            except Exception:
-                return datetime.datetime.min
+        semester_list = []
+        current_date = datetime.now()
+        current_date_str = current_date.strftime('%Y-%m-%d')
+        
+        for sem in semesters:
+            data = sem.to_dict()
+            start_date = data.get('startDate')
+            end_date = data.get('endDate')
+            
+            # Check for active or scheduled-to-end semesters
+            if start_date:
+                
+                # Check if semester is either:
+                # 1. Active (no end date) and has started
+                # 2. Has an end date in the future
+                can_end = False
+                if end_date is None:
+                    can_end = True
+                elif end_date > current_date_str:
+                    can_end = True
+                
+                semester_list.append({
+                    'id': sem.id,
+                    'school_year': data.get('school_year'),
+                    'semester': data.get('semester'),
+                    'startDate': start_date,
+                    'endDate': end_date,
+                    'canEnd': can_end
+                })
 
-        # Sort descending by startDate.
-        semesters.sort(key=lambda d: parse_date(d), reverse=True)
+        if not semester_list:
+            return jsonify({"error": "No active semester found"}), 404
 
-        # Prefer the one with "2nd" semester if available.
-        latest = next((doc for doc in semesters if doc.to_dict().get("semester") == "2nd"), semesters[0])
-        data = latest.to_dict()
-        return jsonify({
-            "semester": data.get("semester", ""),
-            "school_year": data.get("school_year", "")
-        }), 200
+        # Sort by school year and semester (2nd semester comes after 1st)
+        latest = max(semester_list, key=lambda x: (
+            x['school_year'],
+            '2' if x['semester'] == '2nd' else '1'
+        ))
+
+        return jsonify(latest), 200
+
     except Exception as e:
         return jsonify({"error": str(e)}), 500
 

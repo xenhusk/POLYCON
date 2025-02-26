@@ -319,6 +319,14 @@ function App() {
     })();
   }, [loggedIn, user]);
 
+  // Add this effect to handle admin redirects
+  useEffect(() => {
+    const userRole = localStorage.getItem('userRole');
+    if (userRole === 'admin' && window.location.pathname === '/') {
+      navigate('/homeadmin');
+    }
+  }, []);
+
   return (
     <NotificationProvider>
       <div className={location.pathname.includes('/session') ? '' : 'flex min-h-screen'}>

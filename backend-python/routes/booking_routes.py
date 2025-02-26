@@ -172,8 +172,11 @@ def get_bookings():
                 query = query.where('status', '==', status)
             else:
                 query = query.where('status', 'in', ['pending', 'confirmed'])
+        elif role.lower() == 'admin':
+            # For admin, fetch all bookings with status pending or confirmed
+            query = db.collection('bookings').where('status', 'in', ['pending', 'confirmed'])
         else:
-            return jsonify({"error": "Invalid role. Must be 'faculty' or 'student'."}), 400
+            return jsonify({"error": "Invalid role. Must be 'faculty', 'student' or 'admin'."}), 400
 
         bookings_ref = query.stream()
         bookings = []
@@ -497,3 +500,66 @@ def get_stdinfo(user_data):
     except Exception as e:
         print(f"Failed to fetch std info: {str(e)}")
         return {}
+
+@booking_bp.route('/get_all_bookings_admin', methods=['GET'])
+def get_all_bookings_admin():
+    try:
+        bookings_ref = db.collection('bookings')
+        query = bookings_ref.where('status', 'in', ['pending', 'confirmed'])
+        bookings_stream = query.stream()
+        
+        bookings = []
+        for doc in bookings_stream:
+            data = doc.to_dict()
+            data['id'] = doc.id
+
+            # Get teacher name
+            teacher_ref = data.get('teacherID')
+            if teacher_ref:
+                user_doc = db.collection('user').document(teacher_ref.id).get()
+                if user_doc.exists:
+                    teacher_data = user_doc.to_dict()
+                    data['teacherName'] = f"{teacher_data.get('firstName', '')} {teacher_data.get('lastName', '')}"
+                else:
+                    faculty_doc = teacher_ref.get()
+                    if faculty_doc.exists:
+                        faculty_data = faculty_doc.to_dict()
+                        data['teacherName'] = f"{faculty_data.get('firstName', '')} {faculty_data.get('lastName', '')}"
+                    else:
+                        data['teacherName'] = "Unknown Teacher"
+            else:
+                data['teacherName'] = "Unknown Teacher"
+
+            # Get student names
+            student_refs = data.get('studentID', [])
+            student_names = []
+            for student_ref in student_refs:
+                if student_ref:
+                    user_doc = db.collection('user').document(student_ref.id).get()
+                    if user_doc.exists:
+                        student_data = user_doc.to_dict()
+                        student_name = f"{student_data.get('firstName', '')} {student_data.get('lastName', '')}"
+                        student_names.append(student_name)
+
+            # Format student names for display
+            if student_names:
+                if len(student_names) == 1:
+                    data['studentDisplay'] = student_names[0]
+                elif len(student_names) == 2:
+                    data['studentDisplay'] = f"{student_names[0]} and {student_names[1]}"
+                else:
+                    data['studentDisplay'] = f"{student_names[0]} and {len(student_names)-1} others"
+            else:
+                data['studentDisplay'] = "Unknown Student(s)"
+
+            # Create a formatted title for the calendar event
+            data['title'] = f"{data['teacherName']} with {data['studentDisplay']}"
+
+            # Convert all remaining DocumentReferences to strings
+            data = convert_references(data)
+            bookings.append(data)
+            
+        return jsonify(bookings), 200
+    except Exception as e:
+        print(f"Error in /get_all_bookings_admin: {e}")
+        return jsonify({"error": str(e)}), 500
