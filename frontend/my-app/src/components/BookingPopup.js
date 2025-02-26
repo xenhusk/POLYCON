@@ -40,6 +40,7 @@ const modalVariants = {
 const BookingPopup = () => {
   const [showModal, setShowModal] = useState(false);
   const [teacherActive, setTeacherActive] = useState(null);
+  const [BookIconClicked, setBookIconClicked] = useState(false);
   const userRole = localStorage.getItem('userRole');
   const location = useLocation();
   const email = localStorage.getItem('userEmail');
@@ -60,6 +61,11 @@ const BookingPopup = () => {
     }
   }, [userRole, email]);
 
+  // Disable on session pages or if userRole is not faculty/student.
+  if (location.pathname.includes('/session') || !['faculty', 'student'].includes(userRole)) {
+    return null;
+  }
+
   // For faculty, show popup only if isActive is true.
   if (userRole === 'faculty' && teacherActive !== true) {
     console.log('Faculty not active, hiding booking popup');
@@ -69,10 +75,6 @@ const BookingPopup = () => {
   if (userRole === 'student' && isEnrolled !== 'true') {
     return null;
   }
-  // Also disable on session pages or if userRole is not faculty/student.
-  if (location.pathname.includes('/session') || !['faculty', 'student'].includes(userRole)) {
-    return null;
-  }
 
   const handleCloseModal = () => setShowModal(false);
 
@@ -80,10 +82,14 @@ const BookingPopup = () => {
     <>
       {/* Floating Action Button */}
       <button
-        onClick={() => setShowModal(true)}
-        className="fixed bottom-8 right-8 w-14 h-14 rounded-full bg-[#0065A8] hover:bg-[#54BEFF] 
+        onClick = {() => {setBookIconClicked(true);
+          setTimeout(() => setBookIconClicked(false), 200) 
+          setShowModal(true)
+        }}
+        className={`fixed bottom-8 right-8 w-14 h-14 rounded-full bg-[#0065A8] hover:bg-[#54BEFF] 
                    flex items-center justify-center shadow-lg transform hover:scale-110 
-                   transition-all duration-300 ease-in-out z-50"
+                   transition-all duration-300 ease-in-out z-50
+                   ${BookIconClicked ? "scale-90" : "scale-100"}`}
         title="Book Appointment"
       >
         <BookIcon />
@@ -106,18 +112,10 @@ const BookingPopup = () => {
                 <h2 className="text-xl font-semibold text-white">
                   {userRole === 'faculty' ? 'Book Appointment' : 'Request Appointment'}
                 </h2>
-                <button
-                  onClick={handleCloseModal}
-                  className="text-white hover:text-gray-200 transition-colors"
-                >
-                  <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M6 18L18 6M6 6l12 12" />
-                  </svg>
-                </button>
               </div>
 
               {/* Modal Content */}
-              <div className="p-6">
+              <div className="pt-6 pr-6 pl-6">
                 <BookingAppointment 
                   closeModal={handleCloseModal}
                   role={userRole}

@@ -36,6 +36,7 @@ const EnrollmentPopup = () => {
   const userRole = localStorage.getItem('userRole');
   const location = useLocation();
   const email = localStorage.getItem('userEmail');
+  const [EnrollmentClicked, setEnrollmentClicked] = useState(false);
 
   useEffect(() => {
     if (userRole === 'faculty' && email) {
@@ -62,10 +63,15 @@ const EnrollmentPopup = () => {
     <>
       {/* Floating Action Button - Updated z-index to be lower than modal overlay */}
       <button
-        onClick={() => setShowModal(true)}
-        className="fixed bottom-24 right-8 w-14 h-14 rounded-full bg-[#00D1B2] hover:bg-[#00F7D4] 
-                   flex items-center justify-center shadow-lg transform hover:scale-110 
-                   transition-all duration-300 ease-in-out z-[45]" // Changed from z-50 to z-45
+        onClick = {() => {setEnrollmentClicked(true);
+          setTimeout(() => setEnrollmentClicked(false), 200) 
+          setShowModal(true)
+        }}
+    className={`fixed bottom-24 right-8 w-14 h-14 rounded-full bg-[#00D1B2] hover:bg-[#00F7D4] 
+                flex items-center justify-center shadow-lg transform hover:scale-110 
+                transition-all duration-300 ease-in-out z-[45]
+                ${EnrollmentClicked ? "scale-90" : "scale-100"}
+                `} 
         title="Enroll Students"
       >
         <EnrollmentIcon />
@@ -86,6 +92,14 @@ const EnrollmentPopup = () => {
               {/* Modal Header */}
               <div className="bg-[#00D1B2] px-6 py-4 flex justify-between items-center">
                 <h2 className="text-xl font-semibold text-white">Enroll Students</h2>
+                <button
+                  onClick={setShowModal}
+                  className="text-white hover:text-gray-200 transition-colors"
+                >
+                  <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M6 18L18 6M6 6l12 12" />
+                  </svg>
+                </button>
               </div>
 
               {/* Modal Content */}
