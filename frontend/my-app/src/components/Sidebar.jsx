@@ -14,6 +14,7 @@ import { ReactComponent as UserAdd } from './icons/user-add.svg';
 import { ReactComponent as CourseAdd } from './icons/CourseAdd.svg'; 
 import { ReactComponent as ProgramAdd } from './icons/Code.svg'; // NEW: import profile icon
 import { ReactComponent as DepartmentAdd } from './icons/Briefcase.svg';
+import { ReactComponent as SemesterAdd } from './icons/Timer.svg';
 import logo from './icons/logo2.png';
 // Import missing icons from react-icons/fa
 import { FaHome, FaGraduationCap, FaClipboardList, FaUser, FaUsers, FaCog } from 'react-icons/fa'; // Added FaUsers, FaCog
@@ -31,7 +32,13 @@ const Sidebar = ({ onExpandChange }) => {
   // NEW: state for profile picture URL
   const [profilePicture, setProfilePicture] = useState('');
   const [userDetails, setUserDetails] = useState(null);
-  const [activeItem, setActiveItem] = useState('dashboard'); // Home is default
+  const [activeItem, setActiveItem] = useState(() => {
+    const role = localStorage.getItem('userRole');
+    if (role === 'admin') {
+      return 'homeadmin'; // Set default active item for admin
+    }
+    return 'dashboard'; // Default for other roles
+  });
   const [profile, setProfile] = useState(null);
   const [showUploadModal, setShowUploadModal] = useState(false);
   const [isFrozen, setIsFrozen] = useState(false);
@@ -159,6 +166,7 @@ const Sidebar = ({ onExpandChange }) => {
     },
     admin: {
       homeadmin: '/homeadmin',
+      semester: '/semester-management',
       add_users: '/admin',
       course: '/courses',
       program: '/programs',
@@ -166,20 +174,41 @@ const Sidebar = ({ onExpandChange }) => {
     }
   };
 
-  // Update the path matching useEffect
+  // Add this new useEffect for initial admin navigation
+  useEffect(() => {
+    if (userRole === 'admin' && location.pathname === '/') {
+      navigate('/homeadmin');
+    }
+  }, [userRole, location.pathname, navigate]);
+
+  // Update the path matching useEffect to preserve active state on reload
   useEffect(() => {
     const currentPath = location.pathname;
     const userMenuPaths = menuPaths[userRole] || {};
     
-    // Find matching menu item by comparing paths
-    const activeMenuItem = Object.entries(userMenuPaths).find(
-      ([_, path]) => path === currentPath
-    );
-
-    if (activeMenuItem) {
-      setActiveItem(activeMenuItem[0]);
+    // Special handling for admin paths
+    if (userRole === 'admin') {
+      if (currentPath === '/') {
+        setActiveItem('homeadmin');
+      } else {
+        // Find matching menu item by comparing paths
+        const activeMenuItem = Object.entries(userMenuPaths).find(
+          ([_, path]) => path === currentPath
+        );
+        if (activeMenuItem) {
+          setActiveItem(activeMenuItem[0]);
+        }
+      }
+    } else {
+      // Handle non-admin paths as before
+      const activeMenuItem = Object.entries(userMenuPaths).find(
+        ([_, path]) => path === currentPath
+      );
+      if (activeMenuItem) {
+        setActiveItem(activeMenuItem[0]);
+      }
     }
-  }, [location.pathname, userRole, menuPaths]);
+  }, [location.pathname, userRole]);
 
   // Helper to render a menu item with an icon and a label that fades in
   const renderMenuItem = (id, IconComponent, label) => (
@@ -256,7 +285,7 @@ const Sidebar = ({ onExpandChange }) => {
 
   return (
     <div 
-      className={`sidebar fixed top-0 left-0 bg-[#0065A8] h-screen p-5 pt-8 z-40 transition-all duration-300 ${
+      className={`sidebar fixed top-0 left-0 bg-[#057DCD] h-screen p-5 pt-8 z-40 transition-all duration-300 ${
         isFrozen || isOpen ? 'w-64' : 'w-20'
       }`}
       onMouseEnter={() => !isFrozen && setIsOpen(true)}
@@ -311,6 +340,7 @@ const Sidebar = ({ onExpandChange }) => {
           {renderMenuItem("course", CourseAdd, "Courses")}
           {renderMenuItem("program", ProgramAdd, "Programs")}
           {renderMenuItem("department", DepartmentAdd, "Departments")}
+          {renderMenuItem("semester", SemesterAdd, "Semesters")}
         </ul>
       )}
 

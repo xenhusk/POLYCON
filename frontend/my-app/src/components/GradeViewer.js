@@ -96,49 +96,49 @@ const GradeViewer = () => {
 
       {/* Loading State */}
       {loading && (
-        <div className="overflow-x-auto">
-          <table className="min-w-full table-fixed">
-            <thead className="bg-[#0065A8] text-white">
-              <tr>
-                <th className="border p-2">Subject Code</th>
-                <th className="border p-2">Subject Name</th>
-                <th className="border p-2">Credit</th>
-                <th className="border p-2">Instructor</th>
-                <th className="border p-2">Grade</th>
-                <th className="border p-2">Remarks</th>
-              </tr>
-            </thead>
-            <tbody>
-              {Array.from({ length: 5 }).map((_, index) => (
-                <tr key={index} className="animate-pulse">
-                  <td className="border p-2">
-                    <div className="h-4 bg-gray-200 rounded w-24 mx-auto"></div>
-                  </td>
-                  <td className="border p-2">
-                    <div className="h-4 bg-gray-200 rounded w-40 mx-auto"></div>
-                  </td>
-                  <td className="border p-2">
-                    <div className="h-4 bg-gray-200 rounded w-10 mx-auto"></div>
-                  </td>
-                  <td className="border p-2">
-                    <div className="h-4 bg-gray-200 rounded w-32 mx-auto"></div>
-                  </td>
-                  <td className="border p-2">
-                    <div className="h-4 bg-gray-200 rounded w-16 mx-auto"></div>
-                  </td>
-                  <td className="border p-2">
-                    <div className="h-4 bg-gray-200 rounded w-24 mx-auto"></div>
-                  </td>
+        <div className="mt-4 shadow-lg overflow-hidden rounded-lg">
+            <table className="min-w-full table-fixed">
+              <thead className="bg-[#0065A8] text-white">
+                <tr>
+                  <th className="border p-2">Subject Code</th>
+                  <th className="border p-2">Subject Name</th>
+                  <th className="border p-2">Credit</th>
+                  <th className="border p-2">Instructor</th>
+                  <th className="border p-2">Grade</th>
+                  <th className="border p-2">Remarks</th>
                 </tr>
-              ))}
-            </tbody>
-          </table>
+              </thead>
+              <tbody>
+                {Array.from({ length: 5 }).map((_, index) => (
+                  <tr key={index} className="border-b hover:bg-gray-100 align-middle animate-pulse">
+                    <td className="px-4 py-3">
+                      <div className="h-4 bg-gray-200 rounded w-24 mx-auto"></div>
+                    </td>
+                    <td className="px-4 py-3">
+                      <div className="h-4 bg-gray-200 rounded w-40 mx-auto"></div>
+                    </td>
+                    <td className="px-4 py-3">
+                      <div className="h-4 bg-gray-200 rounded w-10 mx-auto"></div>
+                    </td>
+                    <td className="px-4 py-3">
+                      <div className="h-4 bg-gray-200 rounded w-32 mx-auto"></div>
+                    </td>
+                    <td className="px-4 py-3">
+                      <div className="h-4 bg-gray-200 rounded w-16 mx-auto"></div>
+                    </td>
+                    <td className="px-4 py-3">
+                      <div className="h-4 bg-gray-200 rounded w-24 mx-auto"></div>
+                    </td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
         </div>
       )}
 
       {/* Grades Table */}
       {!loading && grades.length > 0 && (
-        <div className="overflow-x-auto">
+        <div className="overflow-x-auto shadow-lg overflow-hidden">
           <table className="min-w-full table-fixed">
             <thead className="bg-[#0065A8] text-white">
               <tr>
@@ -152,13 +152,13 @@ const GradeViewer = () => {
             </thead>
             <tbody>
               {grades.map((grade) => (
-                <tr key={grade.id} className="text-center"> 
-                  <td className="border p-2">{grade.courseID}</td>
-                  <td className="border p-2">{grade.courseName}</td>
-                  <td className="border p-2">3.0</td>
-                  <td className="border p-2">{grade.facultyName}</td>
-                  <td className="border p-2">{grade.grade}</td>
-                  <td className="border p-2">
+                <tr key={grade.id} className="border-b hover:bg-gray-100 align-middle text-center"> 
+                  <td className="px-4 py-3">{grade.courseID}</td>
+                  <td className="px-4 py-3">{grade.courseName}</td>
+                  <td className="px-4 py-3">3.0</td>
+                  <td className="px-4 py-3">{grade.facultyName}</td>
+                  <td className="px-4 py-3">{grade.grade}</td>
+                  <td className="px-4 py-3">
                     <span
                       className={`px-2 py-1 text-white text-sm rounded-md ${
                         grade.remarks === "PASSED"

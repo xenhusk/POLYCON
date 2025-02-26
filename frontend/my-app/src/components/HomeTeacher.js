@@ -90,7 +90,7 @@ const HomeTeacher = () => {
                     </div>
                 </div>
 
-                <div className="flex-1 bg-[#FF7171] text-white rounded-lg shadow-lg px-6 py-4">
+                <div className="flex-1 bg-[#fc6969] text-white rounded-lg shadow-lg px-6 py-4">
                     <div className="flex flex-col">
                         <p className="text-sm mb-2 text-left">Total Number of Consultation Hours:</p>
                         <div className="flex items-baseline gap-2 justify-center">
@@ -175,15 +175,6 @@ const HomeTeacher = () => {
             </div>
         </div>
 
-        {/* Add Enrollment Button */}
-        <div className="mb-4">
-            <button
-                onClick={() => setShowEnrollmentModal(true)}
-                className="bg-[#0065A8] hover:bg-[#54BEFF] text-white px-4 py-2 rounded-lg transition-colors"
-            >
-                Enroll Students
-            </button>
-        </div>
 
         {/* Render Enrollment Modal */}
         {showEnrollmentModal && (

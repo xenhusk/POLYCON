@@ -19,6 +19,7 @@ import FinalDocument from './pages/finaldocument'; // add import for FinalDocume
 import History from './pages/History'; // add import for History
 import Departments from './components/Departments';
 import HomeAdmin from './components/HomeAdmin'; // Update import name and path
+import SemesterManagement from './components/SemesterManagement'; // Update import name and path
 
 import SidebarPreview from './components/SidebarPreview'; // Import the SidebarPreview component
 import Appointments from './pages/Appointments'; // Import the Appointments page
@@ -33,8 +34,8 @@ import Toast from './components/Toast'; // Add import for Toast
 import useNotifications from './hooks/useNotifications'; // Add import for useNotifications
 import { NotificationProvider } from './context/NotificationContext'; // Add import for NotificationProvider
 import PreLoader from './components/PreLoader'; // Add import for PreLoader
-import PagePreloader from './components/PagePreloader';
 import EnrollmentTestPage from './pages/EnrollmentTestPage'; // new import for testing enrollment modal
+import EnrollmentPopup from './components/EnrollmentPopup';
 
 const PreloaderTest = React.lazy(() => import('./components/PagePreloader'));
 
@@ -318,6 +319,14 @@ function App() {
     })();
   }, [loggedIn, user]);
 
+  // Add this effect to handle admin redirects
+  useEffect(() => {
+    const userRole = localStorage.getItem('userRole');
+    if (userRole === 'admin' && window.location.pathname === '/') {
+      navigate('/homeadmin');
+    }
+  }, []);
+
   return (
     <NotificationProvider>
       <div className={location.pathname.includes('/session') ? '' : 'flex min-h-screen'}>
@@ -439,6 +448,7 @@ function App() {
                       <Route path="/preloader-test" element={<PreloaderTest />} /> {/* Add this line */}
                       <Route path="/homeadmin" element={<HomeAdmin />} /> 
                       <Route path="/enrollment-test" element={<EnrollmentTestPage />} /> {/* new test route */}
+                      <Route path="/semester-management" element={<SemesterManagement />} /> {/* Update this line */}
                     </Routes>
                   </Suspense>
                 </motion.div>
@@ -453,9 +463,14 @@ function App() {
               position={{ top: '50px', left: 'calc(100% - 320px)' }}  // adjust as needed
             />
           )}
-          {/* Only show BookingPopup if not on session or finaldocument page */}
+          {/* Only show BookingPopup and EnrollmentPopup if not on session or finaldocument page */}
           {!location.pathname.includes('/session') &&
-            !location.pathname.includes('/finaldocument') && <BookingPopup />}
+            !location.pathname.includes('/finaldocument') && (
+              <>
+                <BookingPopup />
+                {userRole === 'faculty' && <EnrollmentPopup />} {/* Only show for faculty */}
+              </>
+            )}
         </PreloadProvider>
       </div>
 

@@ -107,6 +107,8 @@ def search_students():
                     user_data['year_section'] = student_doc.get('year_section', '')
                     program_ref = student_doc.get('program')
                     user_data['program'] = get_program_name(program_ref)
+                    # NEW: Include isEnrolled field
+                    user_data['isEnrolled'] = student_doc.get('isEnrolled', False)
                     results.append(user_data)
             student_cache[cache_key] = results
 
