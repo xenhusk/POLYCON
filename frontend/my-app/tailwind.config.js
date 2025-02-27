@@ -15,6 +15,7 @@ module.exports = {
         'modal-slideL': 'modalSlideLeft 0.3s ease-in-out',
         'modal-slideR': 'modalSlideRight 0.3s ease-in-out',
         'modal-slideD': 'modalSlideDown 0.3s ease-in-out',
+        slideUp: 'slideUp 0.5s ease-out forwards',
       },
       keyframes: {
         modalFadeOut: {
@@ -36,6 +37,10 @@ module.exports = {
         modalSlideDown: {
           '0%': { transform: 'translateY(20px)', opacity: 0 },
           '100%': { transform: 'translateY(0)', opacity: 1 },
+        },
+        slideUp: {
+          '0%': { transform: 'translateY(100px)', opacity: '0' },
+          '100%': { transform: 'translateY(0)', opacity: '1' },
         },
       }
     },
