@@ -20,6 +20,11 @@ const SemesterManagement = () => {
   const [showDepartmentModal, setShowDepartmentModal] = useState(false);
   const [latestSemester, setLatestSemester] = useState(null);
   const [canEndSemester, setCanEndSemester] = useState(false); // Add new state for checking if we can show the end semester button
+  // Add new loading states
+  const [isStartingSemester, setIsStartingSemester] = useState(false);
+  const [isEndingSemester, setIsEndingSemester] = useState(false);
+  const [isSchedulingEnd, setIsSchedulingEnd] = useState(false);
+  const [isActivatingTeacher, setIsActivatingTeacher] = useState(null); // Will store teacher ID
 
   // NEW: function to fetch latest (active) semester
   const fetchLatestSemester = async () => {
@@ -99,21 +104,29 @@ const SemesterManagement = () => {
   };
 
   const handleStartSemester = async () => {
+    if (isStartingSemester) return;
+    setIsStartingSemester(true);
     // Validation: ensure School Year is provided
     if (!schoolYear) {
       setError("Please fill in the School Year");
+      setIsStartingSemester(false);
       return;
     }
     if (!startDate) {
       setError("Please select a Start Date");
+      setIsStartingSemester(false);
       return;
     }
     if (!semester) {
       setError("Please select a Semester");
+      setIsStartingSemester(false);
       return;
     }
     
-    if (!validateSchoolYear(schoolYear)) return;
+    if (!validateSchoolYear(schoolYear)) {
+      setIsStartingSemester(false);
+      return;
+    }
     const formattedDate = format(new Date(startDate), 'yyyy-MM-dd');
     const fullSchoolYear = `20${schoolYear.split('-')[0]}-20${schoolYear.split('-')[1]}`;
     try {
@@ -130,6 +143,7 @@ const SemesterManagement = () => {
       const data = await response.json();
       if (!response.ok) {
         setError(data.error || `Failed to start semester. School year ${fullSchoolYear} already exists.`);
+        setIsStartingSemester(false);
         return;
       }
       
@@ -139,6 +153,8 @@ const SemesterManagement = () => {
       fetchLatestSemester();
     } catch (err) {
       setError(`Failed to start semester: ${err}`);
+    } finally {
+      setIsStartingSemester(false);
     }
   };
 
@@ -164,76 +180,140 @@ const SemesterManagement = () => {
     }
   };
 
-  // Modified handleEndSemesterNow function
+  // Modified handleEndSemesterNow function with confirmation
   const handleEndSemesterNow = async () => {
     if (!latestSemester) return;
     
-    try {
-      const currentDate = format(new Date(), 'yyyy-MM-dd');
-      const response = await fetch('http://localhost:5001/semester/end', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          semester_id: latestSemester.id, // Use the latest semester's ID
-          endDate: currentDate
-        }),
-      });
-      
-      if (!response.ok) throw new Error('Failed to end semester now');
-      
-      // Clear form fields
-      setSchoolYear('');
-      setSemester('1st');
-      setStartDate('');
-      setEndDate('');
-      setCurrentSemester(null);
-      setCanEndSemester(false); // Hide the button
-      setError("Semester ended successfully!"); // Add success message
-      
-      // Refresh data
-      fetchLatestSemester();
-      const teachersResponse = await fetch('http://localhost:5001/semester/teachers');
-      if (teachersResponse.ok) {
-        const teachersData = await teachersResponse.json();
-        setTeachers(teachersData);
-      }
-    } catch (err) {
-      setError('Failed to end semester now');
-    }
+    // Show confirmation toast instead of window.confirm
+    setError(
+      <div className="flex items-center justify-between">
+        <span>Are you sure you want to end the current semester? This cannot be undone. </span>
+        <div className="flex gap-2">
+          <button
+            onClick={async () => {
+              setIsEndingSemester(true); // Only set loading when confirmed
+              try {
+                const currentDate = format(new Date(), 'yyyy-MM-dd');
+                const response = await fetch('http://localhost:5001/semester/end', {
+                  method: 'POST',
+                  headers: { 'Content-Type': 'application/json' },
+                  body: JSON.stringify({
+                    semester_id: latestSemester.id,
+                    endDate: currentDate
+                  }),
+                });
+                
+                if (!response.ok) throw new Error('Failed to end semester');
+                
+                setSchoolYear('');
+                setSemester('1st');
+                setStartDate('');
+                setEndDate('');
+                setCurrentSemester(null);
+                setCanEndSemester(false);
+                setError("Semester ended successfully!");
+                fetchLatestSemester();
+              } catch (err) {
+                setError('Failed to end semester now');
+              } finally {
+                setIsEndingSemester(false);
+              }
+            }}
+            className="bg-red-500 text-white px-3 ml-2 py-1 rounded hover:bg-red-600"
+            disabled={isEndingSemester}
+          >
+            {isEndingSemester ? 'Ending...' : 'Confirm'}
+          </button>
+          <button
+            onClick={() => setError('')}
+            className="bg-gray-500 text-white px-3 py-1 rounded hover:bg-gray-600"
+          >
+            Cancel
+          </button>
+        </div>
+      </div>
+    );
   };
 
-  // Modified handleEndSemesterScheduled function
+  // Modified handleEndSemesterScheduled function with extra logging for debugging
   const handleEndSemesterScheduled = async () => {
-    if (!currentSemester || !endDate) return;
-    try {
-      const selectedDate = new Date(endDate);
-      const today = new Date();
-      const endpoint = selectedDate > today 
-        ? 'http://localhost:5001/semester/end/schedule'
-        : 'http://localhost:5001/semester/end';  // Fallback for past/now dates
-      
-      const response = await fetch(endpoint, {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          semester_id: latestSemester?.id || currentSemester, // Use latestSemester.id if available
-          endDate: format(new Date(endDate), 'yyyy-MM-dd')
-        }),
-      });
-      if (!response.ok) throw new Error('Failed to end semester');
-      setCurrentSemester(null);
-      setError("Semester end date scheduled successfully!");
-      
-      // Refresh data
-      fetchLatestSemester(); // This will update the latest semester and button visibility
-      const teachersResponse = await fetch('http://localhost:5001/semester/teachers');
-      if (teachersResponse.ok) {
-        const teachersData = await teachersResponse.json();
-        setTeachers(teachersData);
-      }
-    } catch (err) {
-      setError('Failed to end semester');
+    const selectedEndDate = new Date(endDate);
+    
+    // Validate end date
+    const validationError = validateEndDate(endDate, latestSemester.startDate);
+    if (validationError) {
+      setError(validationError);
+      setIsSchedulingEnd(false);
+      return;
     }
+
+    console.log("DEBUG: handleEndSemesterScheduled triggered, endDate:", endDate);
+    if (!(latestSemester || currentSemester) || !endDate) {
+      setIsSchedulingEnd(false);
+      return;
+    }
+
+    const formattedDate = format(selectedEndDate, 'MMMM dd, yyyy');
+    const now = new Date();
+    const confirmationMessage =
+      selectedEndDate <= now
+        ? `This will end the semester immediately and deactivate teachers (scheduled end date: ${formattedDate}). Confirm?`
+        : `Schedule semester to end on ${formattedDate}? Teachers and Students will remain active until that day.`;
+
+    // Show confirmation toast
+    setError(
+      <div className="flex items-center justify-between">
+        <span>{confirmationMessage}</span>
+        <div className="flex gap-2">
+          <button
+            onClick={async () => {
+              setIsSchedulingEnd(true); // Only set loading when confirmed
+              try {
+                const endpoint =
+                  selectedEndDate > now
+                    ? 'http://localhost:5001/semester/end/schedule'
+                    : 'http://localhost:5001/semester/end';
+                // Changed key from end_date to endDate for consistency with the database field
+                const payload = {
+                  semester_id: latestSemester?.id || currentSemester,
+                  endDate: format(new Date(endDate), 'yyyy-MM-dd')
+                };
+                console.log("DEBUG: Scheduling payload:", payload);
+                const response = await fetch(endpoint, {
+                  method: 'POST',
+                  headers: { 'Content-Type': 'application/json' },
+                  body: JSON.stringify(payload)
+                });
+                console.log("DEBUG: Response status:", response.status);
+                const responseText = await response.text();
+                console.log("DEBUG: Response text:", responseText);
+                if (!response.ok) {
+                  throw new Error(JSON.parse(responseText).message || 'Failed to schedule semester end');
+                }
+                setCurrentSemester(null);
+                setError("Semester end date scheduled successfully!");
+                fetchLatestSemester();
+              } catch (err) {
+                console.error("DEBUG: Error in scheduling semester end:", err);
+                setError(`Failed to schedule semester end: ${err.message}`);
+              } finally {
+                setIsSchedulingEnd(false);
+              }
+            }}
+            className="bg-red-500 text-white px-3 py-1 ml-3 rounded hover:bg-red-600"
+            disabled={isSchedulingEnd}
+          >
+            {isSchedulingEnd ? 'Scheduling...' : 'Confirm'}
+          </button>
+          <button
+            onClick={() => setError('')}
+            className="bg-gray-500 text-white px-3 py-1 rounded hover:bg-gray-600"
+          >
+            Cancel
+          </button>
+        </div>
+      </div>
+    );
   };
 
   // New function to delete duplicate semester from the database.
@@ -263,6 +343,8 @@ const SemesterManagement = () => {
 
   // Update cache when activating a single teacher
   const handleActivate = async (teacherId) => {
+    if (isActivatingTeacher === teacherId) return;
+    setIsActivatingTeacher(teacherId);
     try {
       const response = await fetch('http://localhost:5001/semester/teacher/activate', {
         method: 'POST',
@@ -279,6 +361,8 @@ const SemesterManagement = () => {
       localStorage.setItem('teachers', JSON.stringify(updatedTeachers));
     } catch (err) {
       setError('Failed to activate teacher');
+    } finally {
+      setIsActivatingTeacher(null);
     }
   };
 
@@ -338,16 +422,44 @@ const SemesterManagement = () => {
     return latestSemester && canEndSemester;
   };
 
+  // Add these helper functions
+  const getTodayString = () => {
+    return new Date().toISOString().split('T')[0];
+  };
+
+  const validateEndDate = (selectedDate, startDate) => {
+    const selectedDateObj = new Date(selectedDate);
+    const startDateObj = new Date(startDate);
+    const todayObj = new Date();
+    
+    // Reset time portions for accurate date comparison
+    selectedDateObj.setHours(0, 0, 0, 0);
+    startDateObj.setHours(0, 0, 0, 0);
+    todayObj.setHours(0, 0, 0, 0);
+
+    if (selectedDateObj < startDateObj) {
+      return "End date cannot be earlier than the start date";
+    }
+    
+    if (selectedDateObj < todayObj) {
+      return "End date cannot be earlier than today";
+    }
+
+    return null; // null means validation passed
+  };
+
   return (
     <div className="p-6">
     
       {/* Error/Success Message Toast - Updated with dynamic colors */}
       {error && (
         <div className={`fixed top-5 right-5 p-4 rounded-lg shadow-lg z-50 
-          ${error.includes("successfully") ? "bg-green-100 text-green-700" : "bg-red-100 text-red-700"}`}>
+          ${typeof error === 'string' && error.toLowerCase().includes("successfully") 
+            ? "bg-green-100 text-green-700" 
+            : "bg-red-100 text-red-700"}`}>
           {error}
           {/* Render Delete Duplicate button if error indicates duplicate */}
-          {error.includes("already exists") && (
+          {typeof error === 'string' && error.includes("already exists") && (
             <button
               onClick={handleDeleteDuplicate}
               className="ml-4 bg-red-500 text-white px-3 py-1 rounded-lg hover:bg-red-600"
@@ -468,7 +580,7 @@ const SemesterManagement = () => {
                      teacher.department === selectedDepartmentFilter)
                   )
                   .map(teacher => (
-                  <tr key={teacher.ID} className="border-b hover:bg-[#DBF1FF]">
+                  <tr key={teacher.ID} className="border-b hover:bg-[#edf8ff]">
                     <td className="py-3 px-4 text-center">{teacher.ID}</td>
                     <td className="py-3 px-4 text-center">{teacher.fullName}</td>
                     <td className="py-3 px-4 text-center">{teacher.department}</td>
@@ -478,9 +590,10 @@ const SemesterManagement = () => {
                       ) : (
                         <button
                           onClick={() => handleActivate(teacher.ID)}
-                          className="bg-green-500 text-white px-3 py-1 rounded hover:bg-green-600 transition-colors"
+                          className="bg-green-500 text-white px-3 py-1 rounded hover:bg-green-600 transition-colors disabled:opacity-50"
+                          disabled={isActivatingTeacher === teacher.ID}
                         >
-                          Activate
+                          {isActivatingTeacher === teacher.ID ? 'Activating...' : 'Activate'}
                         </button>
                       )}
                     </td>
@@ -493,100 +606,143 @@ const SemesterManagement = () => {
 
         {/* Right side - Semester Management */}
         <div className="w-1/3 bg-white p-6 rounded-lg shadow-md">
-          {/* Modified: Header with End Current Semester button and hover tooltip */}
-          <div className="flex justify-between items-center mb-6">
-            <h3 className="text-xl font-semibold text-gray-800">Start/End Semester</h3>
-            {latestSemester && canEndSemester && (
-              <div className="relative group">
-                <button
-                  onClick={handleEndSemesterNow}
-                  className="bg-red-600 text-white px-4 py-2 rounded-lg hover:bg-red-700"
-                >
-                  End Current Semester
-                </button>
-                {/* Tooltip */}
-                <div className="absolute right-0 mt-2 mr-[.5rem] w-48 bg-gray-800 text-white text-sm rounded-lg p-2 opacity-0 group-hover:opacity-100 transition-opacity duration-200 z-10">
-                  <p>Current Semester: <span className="font-semibold">{latestSemester.semester}</span></p>
-                  <p>School Year: <span className="font-semibold">{latestSemester.school_year}</span></p>
+          <div className="mb-6">
+            <h3 className="text-xl font-semibold text-gray-800">
+              {latestSemester && canEndSemester ? 'Current Semester' : 'Start New Semester'}
+            </h3>
+          </div>
+
+          {/* Current Semester Display */}
+          {latestSemester && canEndSemester ? (
+            <div className="space-y-4">
+              <div className="bg-[#edf8ff] p-4 rounded-lg">
+                <div className="flex justify-between items-center">
+                  <div className="space-y-2">
+                    <p className="text-lg font-medium">
+                      Semester: {latestSemester.semester} Semester
+                    </p>
+                    <p className="text-gray-600">
+                      School Year: {latestSemester.school_year}
+                    </p>
+                    <p className="text-gray-600">
+                      Start Date: {new Date(latestSemester.startDate).toLocaleDateString()}
+                    </p>
+                    {/* Add end date display if it exists */}
+                    {latestSemester.endDate && (
+                      <p className="text-gray-600">
+                        End Date: {new Date(latestSemester.endDate).toLocaleDateString()}
+                      </p>
+                    )}
+                  </div>
                 </div>
               </div>
-            )}
-          </div>
-          
-          {/* ...existing form fields for starting/ending semester... */}
-          <div className={`space-y-4 ${shouldDisableInputs() ? 'opacity-50' : ''}`}>
-            <div>
-              <label className="block text-sm font-medium text-gray-700">School Year (20XX-20XX)</label>
-              <input
-                type="text"
-                placeholder="23-24"
-                value={schoolYear}
-                onChange={handleSchoolYearChange}
-                disabled={shouldDisableInputs()}
-                className="mt-1 block w-full px-4 py-2 rounded-md border-gray-300 shadow-sm focus:outline-none focus:ring-2 focus:ring-[#54BEFF]"
-              />
-            </div>
-            <div>
-              <label className="block text-sm font-medium text-gray-700">Semester</label>
-              <select
-                value={semester}
-                onChange={(e) => setSemester(e.target.value)}
-                disabled={shouldDisableInputs()}
-                className="mt-1 block w-full rounded-md border-gray-300 px-3 py-2 shadow-sm focus:outline-none focus:ring-2 focus:ring-[#54BEFF]"
-              >
-                <option className="p-4" value="1st">1st Semester</option>
-                <option value="2nd">2nd Semester</option>
-              </select>
-            </div>
-            <div>
-              <label className="block text-sm font-medium text-gray-700">Start Date</label>
-              <input
-                type="date"
-                value={startDate}
-                onChange={(e) => setStartDate(e.target.value)}
-                disabled={shouldDisableInputs()}
-                className="mt-1 block w-full rounded-md px-3 py-2 border-gray-300 shadow-sm focus:outline-none focus:ring-2 focus:ring-[#54BEFF]"
-              />
-            </div>
-            {currentSemester && (
               <div>
-                <label className="block text-sm font-medium text-gray-700">End Date</label>
+                <button
+                  onClick={handleEndSemesterNow}
+                  className="w-full bg-red-600 text-white px-4 py-2 mb-4 rounded-lg hover:bg-[#FF7171] disabled:opacity-50"
+                  disabled={isEndingSemester}
+                >
+                  {isEndingSemester ? 'Ending...' : 'End Semester Now'}
+                </button>
+                <label className="block text-sm font-medium text-gray-700 mb-2">
+                  Schedule End Date (Optional)
+                </label>
                 <input
                   type="date"
                   value={endDate}
                   onChange={(e) => setEndDate(e.target.value)}
-                  className="mt-1 block w-full rounded-md border-gray-300 shadow-sm px-3 py-2 focus:outline-none focus:ring-2 focus:ring-[#54BEFF]"
+                  min={new Date(Math.max(
+                    new Date(latestSemester?.startDate).getTime(),
+                    new Date(getTodayString()).getTime()
+                  )).toISOString().split('T')[0]}
+                  className="w-full rounded-md border-gray-300 shadow-sm px-3 py-2 focus:outline-none focus:ring-2 focus:ring-[#54BEFF] mb-4"
+                />
+                <button
+                  onClick={handleEndSemesterScheduled}
+                  className="w-full bg-red-600 text-white px-4 py-2 rounded-lg hover:bg-[#FF7171] mb-2 disabled:opacity-50"
+                  disabled={isSchedulingEnd || !endDate}
+                >
+                  {isSchedulingEnd ? 'Scheduling...' : 'Schedule End Date'}
+                </button>
+              </div>
+            </div>
+          ) : (
+            /* Start New Semester Form */
+            <div className="space-y-4">
+              {/* ...existing form fields for starting semester... */}
+              <div>
+                <label className="block text-sm font-medium text-gray-700">School Year (20XX-20XX)</label>
+                <input
+                  type="text"
+                  placeholder="23-24"
+                  value={schoolYear}
+                  onChange={handleSchoolYearChange}
+                  className="mt-1 block w-full px-4 py-2 rounded-md border-gray-300 shadow-sm focus:outline-none focus:ring-2 focus:ring-[#54BEFF]"
                 />
               </div>
-            )}
-            <div className="pt-4 flex flex-col gap-2">
-              {!currentSemester ? (
-                <button
-                  onClick={handleStartSemester}
-                  className="w-full bg-[#057DCD] text-white px-4 py-2 rounded-lg hover:bg-[#54BEFF]"
-                  disabled={!schoolYear || !startDate}
+              {/* ...rest of the start semester form fields... */}
+              <div>
+                <label className="block text-sm font-medium text-gray-700">Semester</label>
+                <select
+                  value={semester}
+                  onChange={(e) => setSemester(e.target.value)}
+                  disabled={shouldDisableInputs()}
+                  className="mt-1 block w-full rounded-md border-gray-300 px-3 py-2 shadow-sm focus:outline-none focus:ring-2 focus:ring-[#54BEFF]"
                 >
-                  Start Semester
-                </button>
-              ) : (
-                <>
-                  <button
-                    onClick={handleEndSemesterScheduled}
-                    className="w-full bg-red-500 text-white px-4 py-2 rounded-lg hover:bg-red-600"
-                    disabled={!endDate}
-                  >
-                    End Semester on Selected Date
-                  </button>
-                  <button
-                    onClick={handleEndSemesterNow}
-                    className="w-full bg-red-600 text-white px-4 py-2 rounded-lg hover:bg-red-700"
-                  >
-                    End Semester Now
-                  </button>
-                </>
+                  <option className="p-4" value="1st">1st Semester</option>
+                  <option value="2nd">2nd Semester</option>
+                </select>
+              </div>
+              <div>
+                <label className="block text-sm font-medium text-gray-700">Start Date</label>
+                <input
+                  type="date"
+                  value={startDate}
+                  onChange={(e) => setStartDate(e.target.value)}
+                  min={getTodayString()} // Prevents selecting dates before today
+                  disabled={shouldDisableInputs()}
+                  className="mt-1 block w-full rounded-md px-3 py-2 border-gray-300 shadow-sm focus:outline-none focus:ring-2 focus:ring-[#54BEFF]"
+                />
+              </div>
+              {currentSemester && (
+                <div>
+                  <label className="block text-sm font-medium text-gray-700">End Date</label>
+                  <input
+                    type="date"
+                    value={endDate}
+                    onChange={(e) => setEndDate(e.target.value)}
+                    className="mt-1 block w-full rounded-md border-gray-300 shadow-sm px-3 py-2 focus:outline-none focus:ring-2 focus:ring-[#54BEFF]"
+                  />
+                </div>
               )}
+              <div className="pt-4 flex flex-col gap-2">
+                {!currentSemester ? (
+                  <button
+                    onClick={handleStartSemester}
+                    className="w-full bg-[#057DCD] text-white px-4 py-2 rounded-lg hover:bg-[#54BEFF] disabled:opacity-50"
+                    disabled={!schoolYear || !startDate || isStartingSemester}
+                  >
+                    {isStartingSemester ? 'Starting...' : 'Start Semester'}
+                  </button>
+                ) : (
+                  <>
+                    <button
+                      onClick={handleEndSemesterScheduled}
+                      className="w-full bg-red-500 text-white px-4 py-2 rounded-lg hover:bg-red-600"
+                    >
+                      End Semester on Selected Date
+                    </button>
+                    <button
+                      onClick={handleEndSemesterNow}
+                      className="w-full bg-red-600 text-white px-4 py-2 rounded-lg hover:bg-red-700"
+                    >
+                      End Semester Now
+                    </button>
+                  </>
+                )}
+              </div>
             </div>
-          </div>
+          )}
         </div>
       </div>
     </div>

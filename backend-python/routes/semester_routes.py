@@ -108,10 +108,10 @@ def schedule_end_semester():
         return jsonify({"error": "Missing semester_id or endDate"}), 400
     
     try:
-        # Parse provided end date
-        scheduled_end = datetime.datetime.strptime(end_date_str, "%Y-%m-%d")
-        now = datetime.datetime.now()
-    except Exception as e:
+        # Use the imported datetime class for parsing
+        scheduled_end = datetime.strptime(end_date_str, "%Y-%m-%d")
+        now = datetime.now()
+    except ValueError:
         return jsonify({"error": "Invalid date format. Use YYYY-MM-DD"}), 400
 
     # Retrieve the semester document
