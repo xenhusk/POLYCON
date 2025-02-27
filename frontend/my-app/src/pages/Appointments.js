@@ -62,9 +62,11 @@ function StudentAppointments() {
   }, [socket, refetch]);
 
   return (
-    <div className="grid grid-cols-2 gap-5 h-full">
+    <div className="grid grid-cols-1 sm:grid-cols-1 md:grid-cols-2 lg:grid-cols-2 gap-5 h-full">
       {/* Pending Appointments Section */}
-      <section className="bg-white rounded-xl shadow-sm p-6 flex flex-col max-h-[80vh]">
+      <section className="bg-white rounded-xl shadow-sm p-4 sm:p-5 md:p-6 flex flex-col 
+                      max-h-[70vh] sm:max-h-[75vh] md:max-h-[80vh] 
+                      order-1 md:order-none">
         <h3 className="text-xl font-semibold mb-4 text-[#0065A8] border-b-2 border-[#54BEFF] pb-2 sticky top-0 bg-white z-10">
           Pending Appointments
         </h3>
@@ -77,7 +79,7 @@ function StudentAppointments() {
                  <div className="mb-4 fade-in delay-100">
                     <p className="text-[#0065A8] font-semibold mb-2">Teacher</p>
                     <div className="flex items-center">
-                      <div className="w-12 h-12 bg-gray-200 rounded-full mr-3 border-2 border-[#54BEFF]"></div>
+                      <div className="w-8 sm:w-10 md:w-12 h-8 sm:h-10 md:h-12 bg-gray-200 rounded-full mr-3 border-2 border-[#54BEFF]"></div>
                       <div className="h-4 bg-gray-300 rounded w-40"></div>
                     </div>
                   </div>
@@ -87,7 +89,7 @@ function StudentAppointments() {
                     <div className="flex flex-wrap items-center gap-3">
                       {Array.from({ length: 3 }).map((_, index) => (
                         <div key={index} className="flex items-center bg-gray-50 rounded-full px-3 py-1">
-                          <div className="w-8 h-8 bg-gray-200 rounded-full mr-2 border-2 border-[#54BEFF]"></div>
+                          <div className="w-8 sm:w-10 md:w-12 h-8 sm:h-10 md:h-12 bg-gray-200 rounded-full mr-2 border-2 border-[#54BEFF]"></div>
                           <div className="h-3 bg-gray-300 rounded w-20"></div>
                         </div>
                       ))}
@@ -127,7 +129,9 @@ function StudentAppointments() {
       </section>
 
       {/* Upcoming Appointments Section */}
-      <section className="bg-white rounded-xl shadow-sm p-6 flex flex-col max-h-[80vh]">
+      <section className="bg-white rounded-xl shadow-sm p-4 sm:p-5 md:p-6 flex flex-col 
+                      max-h-[70vh] sm:max-h-[75vh] md:max-h-[80vh] 
+                      order-2 md:order-none">
         <h3 className="text-xl font-semibold mb-4 text-[#0065A8] border-b-2 border-[#54BEFF] pb-2 sticky top-0 bg-white z-10">
           Upcoming Appointments
         </h3>
@@ -140,7 +144,7 @@ function StudentAppointments() {
                  <div className="mb-4 fade-in delay-100">
                     <p className="text-[#0065A8] font-semibold mb-2">Teacher</p>
                     <div className="flex items-center">
-                      <div className="w-12 h-12 bg-gray-200 rounded-full mr-3 border-2 border-[#54BEFF]"></div>
+                      <div className="w-8 sm:w-10 md:w-12 h-8 sm:h-10 md:h-12 bg-gray-200 rounded-full mr-3 border-2 border-[#54BEFF]"></div>
                       <div className="h-4 bg-gray-300 rounded w-40"></div>
                     </div>
                   </div>
@@ -150,7 +154,7 @@ function StudentAppointments() {
                     <div className="flex flex-wrap items-center gap-3">
                       {Array.from({ length: 3 }).map((_, index) => (
                         <div key={index} className="flex items-center bg-gray-50 rounded-full px-3 py-1">
-                          <div className="w-8 h-8 bg-gray-200 rounded-full mr-2 border-2 border-[#54BEFF]"></div>
+                          <div className="w-8 sm:w-10 md:w-12 h-8 sm:h-10 md:h-12 bg-gray-200 rounded-full mr-2 border-2 border-[#54BEFF]"></div>
                           <div className="h-3 bg-gray-300 rounded w-20"></div>
                         </div>
                       ))}
@@ -291,9 +295,9 @@ function TeacherAppointments() {
   }
 
   return (
-    <div className="grid grid-cols-2 gap-5 h-full">
-      <section className="bg-white rounded-xl shadow-sm p-6 flex flex-col max-h-[77vh]">
-        <h3 className="text-xl font-semibold mb-4 text-[#0065A8] border-b-2 border-[#54BEFF] pb-2 sticky top-0 bg-white z-10">
+    <div className="grid grid-cols-1 sm:grid-cols-1 md:grid-cols-1 lg:grid-cols-2 gap-5 h-full">
+      <section className="bg-white rounded-xl shadow-sm p-6 flex flex-col max-h-[77vh] order-1 md:order-none">
+        <h3 className="text-xl font-semibold mb-4 text-[#0065A8] border-b-2 border-[#54BEFF] pb-2 top-0 bg-white z-10">
           Pending Appointments
         </h3>
         <div className="flex-1 overflow-y-auto min-h-0">
@@ -305,7 +309,7 @@ function TeacherAppointments() {
                   <div className="mb-4 fade-in delay-100">
                     <p className="text-[#0065A8] font-semibold mb-2">Teacher</p>
                     <div className="flex items-center">
-                      <div className="w-12 h-12 bg-gray-200 rounded-full mr-3 border-2 border-[#54BEFF]"></div>
+                      <div className="w-8 sm:w-10 md:w-12 h-8 sm:h-10 md:h-12 bg-gray-200 rounded-full mr-3 border-2 border-[#54BEFF]"></div>
                       <div className="h-4 bg-gray-300 rounded w-40"></div>
                     </div>
                   </div>
@@ -315,7 +319,7 @@ function TeacherAppointments() {
                     <div className="flex flex-wrap items-center gap-3">
                       {Array.from({ length: 3 }).map((_, index) => (
                         <div key={index} className="flex items-center bg-gray-50 rounded-full px-3 py-1">
-                          <div className="w-8 h-8 bg-gray-200 rounded-full mr-2 border-2 border-[#54BEFF]"></div>
+                          <div className="w-8 sm:w-10 md:w-12 h-8 sm:h-10 md:h-12 bg-gray-200 rounded-full mr-2 border-2 border-[#54BEFF]"></div>
                           <div className="h-3 bg-gray-300 rounded w-20"></div>
                         </div>
                       ))}
@@ -363,7 +367,7 @@ function TeacherAppointments() {
         </div>
       </section>
 
-      <section className="bg-white rounded-xl shadow-sm p-6 flex flex-col max-h-[77vh]">
+      <section className="bg-white rounded-xl shadow-sm p-6 flex flex-col max-h-[77vh] order-2 md:order-none">
         <h3 className="text-xl font-semibold mb-4 text-[#0065A8] border-b-2 border-[#54BEFF] pb-2 sticky top-0 bg-white z-10">
           Upcoming Appointments
         </h3>
@@ -376,7 +380,7 @@ function TeacherAppointments() {
                   <div className="mb-4 fade-in delay-100">
                     <p className="text-[#0065A8] font-semibold mb-2">Teacher</p>
                     <div className="flex items-center">
-                      <div className="w-12 h-12 bg-gray-200 rounded-full mr-3 border-2 border-[#54BEFF]"></div>
+                      <div className="w-8 sm:w-10 md:w-12 h-8 sm:h-10 md:h-12 bg-gray-200 rounded-full mr-3 border-2 border-[#54BEFF]"></div>
                       <div className="h-4 bg-gray-300 rounded w-40"></div>
                     </div>
                   </div>
@@ -386,7 +390,7 @@ function TeacherAppointments() {
                     <div className="flex flex-wrap items-center gap-3">
                       {Array.from({ length: 3 }).map((_, index) => (
                         <div key={index} className="flex items-center bg-gray-50 rounded-full px-3 py-1">
-                          <div className="w-8 h-8 bg-gray-200 rounded-full mr-2 border-2 border-[#54BEFF]"></div>
+                          <div className="w-8 sm:w-10 md:w-12 h-8 sm:h-10 md:h-12 bg-gray-200 rounded-full mr-2 border-2 border-[#54BEFF]"></div>
                           <div className="h-3 bg-gray-300 rounded w-20"></div>
                         </div>
                       ))}
@@ -451,11 +455,21 @@ function Appointments() {
   if (!role) return <p>Loading...</p>;
   
   return (
-    <div className="h-screen overflow-hidden p-8">
-      <h2 className="text-3xl font-bold mb-8 text-center text-[#0065A8]">Appointments</h2>
-      <div className="bg-[#dceffa] rounded-xl p-6 shadow-sm h-[calc(100vh-8rem)]">
-        {role === 'student' ? <StudentAppointments /> : role === 'faculty' ? <TeacherAppointments /> : <p>No appointments available for your role.</p>}
-      </div>
+    <div className="min-h-screen overflow-hidden p-4 sm:p-6 md:p-7">
+        <h2 className="text-2xl sm:text-3xl font-bold mb-4 sm:mb-6 md:mb-8 
+                      text-center text-[#0065A8]">
+          Appointments
+        </h2>
+        <div className="bg-[#dceffa] rounded-xl p-4 sm:p-5 md:p-6 shadow-sm overflow-y-auto transparent-scroll
+                        h-[calc(100vh-6rem)] sm:h-[calc(100vh-7rem)] md:h-[calc(100vh-8rem)]">
+          {role === 'student' ? (
+            <StudentAppointments />
+          ) : role === 'faculty' ? (
+            <TeacherAppointments />
+          ) : (
+            <p>No appointments available for your role.</p>
+          )}
+        </div>
     </div>
   );
 }
