@@ -5,6 +5,10 @@ import EnrollmentModal from './EnrollmentModal';
 
 const HomeTeacher = () => {
     const [teacherId, setTeacherId] = useState(null);
+    const [semesters, setSemesters] = useState([]);
+    const [selectedSemester, setSelectedSemester] = useState(null);
+    const [selectedSchoolYear, setSelectedSchoolYear] = useState(null);
+    const [showFilters, setShowFilters] = useState(false);
     const [stats, setStats] = useState({ total_hours: "0.00", total_consultations: 0, unique_students: 0 });
     const [consultationData, setConsultationData] = useState([]);
     const [consultationHoursData, setConsultationHoursData] = useState([]);
@@ -12,6 +16,17 @@ const HomeTeacher = () => {
     const navigate = useNavigate();
 
     useEffect(() => {
+        fetch('http://localhost:5001/homeadmin/semesters')
+            .then(res => res.json())
+            .then(data => {
+                setSemesters(data);
+                if (data.length > 0) {
+                    setSelectedSemester(data[0].semester);
+                    setSelectedSchoolYear(data[0].school_year);
+                }
+            })
+            .catch(err => console.error("Error fetching semesters:", err));
+
         const storedTeacherID = localStorage.getItem('teacherID');
         if (storedTeacherID) {
             setTeacherId(storedTeacherID);
@@ -31,11 +46,15 @@ const HomeTeacher = () => {
     }, []);
 
     useEffect(() => {
-        if (!teacherId) {
-            return;
-        }
+        if (!teacherId || !selectedSemester || !selectedSchoolYear) return;
 
-        fetch(`http://localhost:5001/hometeacher/stats?teacher_id=${teacherId}`)
+        const params = new URLSearchParams({
+            teacher_id: teacherId,
+            semester: selectedSemester,
+            school_year: selectedSchoolYear
+        });
+
+        fetch(`http://localhost:5001/hometeacher/stats?${params}`)
             .then(response => response.json())
             .then(data => {
                 console.log("API Response:", data);
@@ -47,7 +66,7 @@ const HomeTeacher = () => {
             })
             .catch(error => console.error("Error fetching stats:", error));
 
-            fetch(`http://localhost:5001/hometeacher/consultations_by_date?teacher_id=${teacherId}`)
+        fetch(`http://localhost:5001/hometeacher/consultations_by_date?${params}`)
             .then(response => response.json())
             .then(data => {
                 console.log("Consultation Data:", data);
@@ -68,15 +87,81 @@ const HomeTeacher = () => {
                 setConsultationHoursData(formattedHours);
             })
             .catch(error => console.error("Error fetching consultation data:", error));
-    }, [teacherId]);
+    }, [teacherId, selectedSemester, selectedSchoolYear]);
 
     const handleBookingClick = () => {
         navigate('/booking-teacher');
     };
 
     return (
-       <div className="flex flex-col items-center w-full">
-            <h1 className="text-2xl sm:text-3xl font-bold text-[#0065A8] mb-4 sm:mb-6 px-4">Home</h1>
+        <div className="flex flex-col items-center min-h-screen p-6 relative">
+            <h1 className="text-3xl font-bold text-[#0065A8] mb-6">Dashboard</h1>
+
+            {/* Settings gear icon in top right */}
+            <div className="absolute top-6 right-6">
+                <button 
+                    onClick={() => setShowFilters(!showFilters)}
+                    className="bg-white p-2 rounded-full shadow-md hover:shadow-lg transition-all duration-300 focus:outline-none"
+                    aria-label="Toggle filters"
+                >
+                    <svg 
+                        className={`w-6 h-6 text-[#0065A8] transition-transform duration-500 ${showFilters ? 'transform -rotate-180' : ''}`}
+                        fill="currentColor" 
+                        viewBox="0 0 20 20" 
+                        xmlns="http://www.w3.org/2000/svg"
+                    >
+                        <path
+                            fillRule="evenodd"
+                            d="M11.49 3.17c-.38-1.56-2.6-1.56-2.98 0a1.532 1.532 0 01-2.286.948c-1.372-.836-2.942.734-2.106 2.106.54.886.061 2.042-.947 2.287-1.561.379-1.561 2.6 0 2.978a1.532 1.532 0 01.947 2.287c-.836 1.372.734 2.942 2.106 2.106a1.532 1.532 0 012.287.947c.379 1.561 2.6 1.561 2.978 0a1.533 1.533 0 012.287-.947c1.372.836 2.942-.734 2.106-2.106a1.533 1.533 0 01.947-2.287c1.561-.379 1.561-2.6 0-2.978a1.532 1.532 0 01-.947-2.287c.836-1.372-.734-2.942-2.106-2.106a1.532 1.532 0 01-2.287-.947zM10 13a3 3 0 100-6 3 3 0 000 6z"
+                            clipRule="evenodd"
+                        />
+                    </svg>
+                </button>
+            </div>
+
+            {/* Slide-in filter panel */}
+            <div 
+                className={`fixed top-20 right-6 bg-white shadow-xl rounded-lg border border-gray-200 z-10 transition-all duration-500 transform ${
+                    showFilters ? 'translate-x-0 opacity-100' : 'translate-x-full opacity-0'
+                } p-4 w-80`}
+            >
+                <h3 className="text-lg font-semibold text-[#0065A8] mb-4">Filter Data</h3>
+                <div className="space-y-4">
+                    <div>
+                        <label className="block text-sm font-medium text-gray-700 mb-1">Semester</label>
+                        <select
+                            value={selectedSemester || ''}
+                            onChange={(e) => setSelectedSemester(e.target.value)}
+                            className="w-full px-4 py-2 border border-[#0065A8] bg-white text-[#0065A8] font-medium rounded-lg focus:outline-none focus:ring-2 focus:ring-[#0088FF] focus:border-transparent appearance-none bg-[url('data:image/svg+xml;charset=US-ASCII,%3Csvg%20xmlns%3D%22http%3A%2F%2Fwww.w3.org%2F2000%2Fsvg%22%20width%3D%2224%22%20height%3D%2224%22%20viewBox%3D%220%200%2024%2024%22%3E%3Cpath%20fill%3D%22%230065A8%22%20d%3D%22M7%2010l5%205%205-5z%22%2F%3E%3C%2Fsvg%3E')] bg-no-repeat bg-[length:24px] [background-position:right_0.5rem_center] pr-10"
+                        >
+                            <option value="">Select Semester</option>
+                            {Array.from(new Set(semesters.map(s => s.semester))).map(sem => (
+                                <option key={sem} value={sem}>{sem} Semester</option>
+                            ))}
+                        </select>
+                    </div>
+                    <div>
+                        <label className="block text-sm font-medium text-gray-700 mb-1">School Year</label>
+                        <select
+                            value={selectedSchoolYear || ''}
+                            onChange={(e) => setSelectedSchoolYear(e.target.value)}
+                            className="w-full px-4 py-2 border border-[#0065A8] bg-white text-[#0065A8] font-medium rounded-lg focus:outline-none focus:ring-2 focus:ring-[#0088FF] focus:border-transparent appearance-none bg-[url('data:image/svg+xml;charset=US-ASCII,%3Csvg%20xmlns%3D%22http%3A%2F%2Fwww.w3.org%2F2000%2Fsvg%22%20width%3D%2224%22%20height%3D%2224%22%20viewBox%3D%220%200%2024%2024%22%3E%3Cpath%20fill%3D%22%230065A8%22%20d%3D%22M7%2010l5%205%205-5z%22%2F%3E%3C%2Fsvg%3E')] bg-no-repeat bg-[length:24px] [background-position:right_0.5rem_center] pr-10"
+                        >
+                            <option value="">Select School Year</option>
+                            {Array.from(new Set(semesters.map(s => s.school_year))).map(year => (
+                                <option key={year} value={year}>{year}</option>
+                            ))}
+                        </select>
+                    </div>
+                    <div className="pt-2">
+                        <p className="text-sm text-gray-500">
+                            {selectedSemester && selectedSchoolYear 
+                                ? `Viewing data for ${selectedSemester} Semester, ${selectedSchoolYear}` 
+                                : "Select filters to view specific data"}
+                        </p>
+                    </div>
+                </div>
+            </div>
 
             {/* Stats Section - Now responsive */}
             <div className="flex flex-col sm:flex-row gap-4 w-full px-4 sm:px-6 lg:px-10 pb-0">

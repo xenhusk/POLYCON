@@ -310,7 +310,7 @@ const HomeAdmin = () => {
       </div>
 
       {/* Graphs */}
-      <div className="grid grid-cols-2 gap-6 p-10">
+      <div className="grid grid-cols-2 w-full gap-6 p-10">
         <div className="bg-white p-10 rounded-lg shadow-lg">
           <h2 className="text-xl font-semibold text-[#0065A8] text-center mb-4">Consultations Over Time</h2>
           <ResponsiveContainer width="105%" height={300}>
