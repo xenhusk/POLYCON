@@ -88,7 +88,11 @@ const CustomToolbar = ({ label, onNavigate, onView, view, views }) => {
 };
 
 const HomeAdmin = () => {
-  const [stats, setStats] = useState({ total_hours: "0.00", total_consultations: 0, students_enrolled: 0 });
+  // Add new state for semesters and selected semester
+  const [semesters, setSemesters] = useState([]);
+  const [selectedSemester, setSelectedSemester] = useState(null);
+  const [selectedSchoolYear, setSelectedSchoolYear] = useState(null);
+  const [stats, setStats] = useState({ total_hours: "0.00", total_consultations: 0, unique_students: 0 });
   const [consultationData, setConsultationData] = useState([]);
   const [consultationHoursData, setConsultationHoursData] = useState([]);
   const [adminEvents, setAdminEvents] = useState([]);
@@ -97,24 +101,53 @@ const HomeAdmin = () => {
   const navigate = useNavigate();
 
   // Compute current month info for labels if desired
-  const now = new Date();
-  const monthName = now.toLocaleString('default', { month: 'long' });
+  const getSemesterLabel = () => {
+    if (selectedSemester && selectedSchoolYear) {
+      return `${selectedSemester} Semester, ${selectedSchoolYear}`;
+    }
+    return "No semester selected";
+  };
 
   useEffect(() => {
-    // Fetch stats (which now includes latestSemester data)
-    fetch(`http://localhost:5001/homeadmin/stats`)
+    // Fetch available semesters
+    fetch('http://localhost:5001/homeadmin/semesters')
+      .then(res => res.json())
+      .then(data => {
+        setSemesters(data);
+        if (data.length > 0) {
+          setSelectedSemester(data[0].semester);
+          setSelectedSchoolYear(data[0].school_year);
+        }
+      })
+      .catch(err => console.error("Error fetching semesters:", err));
+  }, []);
+
+  useEffect(() => {
+    if (selectedSemester && selectedSchoolYear) {
+      fetchStats();
+    }
+  }, [selectedSemester, selectedSchoolYear]);
+
+  const fetchStats = () => {
+    const params = new URLSearchParams({
+      semester: selectedSemester,
+      school_year: selectedSchoolYear
+    });
+
+    // Fetch stats with semester filter
+    fetch(`http://localhost:5001/homeadmin/stats?${params}`)
       .then(res => res.json())
       .then(data => {
         setStats({
           total_hours: data.total_hours ? data.total_hours.toFixed(2) : "0.00",
           total_consultations: data.total_consultations || 0,
-          students_enrolled: data.students_enrolled || 0
+          unique_students: data.unique_students || 0
         });
-        setLatestSemester(data.latestSemester); // Use latestSemester from stats response
       })
       .catch(err => console.error("Error fetching stats:", err));
 
-    fetch(`http://localhost:5001/homeadmin/consultations_by_date`)
+    // Fetch consultation data with semester filter
+    fetch(`http://localhost:5001/homeadmin/consultations_by_date?${params}`)
       .then(res => res.json())
       .then(data => {
         const consultationsArr = Object.entries(data.consultations || {})
@@ -134,7 +167,7 @@ const HomeAdmin = () => {
         setConsultationHoursData(hoursArr);
       })
       .catch(err => console.error("Error fetching consultation data:", err));
-  }, []); // Run once on mount
+  };
 
   useEffect(() => {
     fetch(`http://localhost:5001/bookings/get_all_bookings_admin`)
@@ -178,11 +211,35 @@ const HomeAdmin = () => {
     <div className="flex flex-col items-center min-h-screen p-6">
       <h1 className="text-3xl font-bold text-[#0065A8] mb-6">Admin Dashboard</h1>
       
+      {/* Update Semester Filter Dropdowns styling */}
+      <div className="w-full flex justify-center gap-4 mb-6">
+        <select
+          value={selectedSemester || ''}
+          onChange={(e) => setSelectedSemester(e.target.value)}
+          className="px-4 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 w-48"
+        >
+          <option value="">Select Semester</option>
+          {Array.from(new Set(semesters.map(s => s.semester))).map(sem => (
+            <option key={sem} value={sem}>{sem} Semester</option>
+          ))}
+        </select>
+        <select
+          value={selectedSchoolYear || ''}
+          onChange={(e) => setSelectedSchoolYear(e.target.value)}
+          className="px-4 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 w-48"
+        >
+          <option value="">Select School Year</option>
+          {Array.from(new Set(semesters.map(s => s.school_year))).map(year => (
+            <option key={year} value={year}>{year}</option>
+          ))}
+        </select>
+      </div>
+
       {/* Stats Section */}
-      <div className="flex gap-4 w-full p-10 pb-0">
+      <div className="flex gap-4 w-full pb-0">
         <div className="flex-1 bg-[#0088FF] text-white rounded-lg shadow-lg px-6 py-4">
           <div className="flex flex-col">
-            <p className="text-sm mb-2 text-left">Total Consultations ({monthName}):</p>
+            <p className="text-sm mb-2 text-left">Total Consultations ({getSemesterLabel()}):</p>
             <div className="flex items-baseline gap-2 justify-center">
               <span className="text-7xl font-bold">{stats.total_consultations}</span>
               <span className="text-lg">Consultations</span>
@@ -191,7 +248,7 @@ const HomeAdmin = () => {
         </div>
         <div className="flex-1 bg-[#FF7171] text-white rounded-lg shadow-lg px-6 py-4">
           <div className="flex flex-col">
-            <p className="text-sm mb-2 text-left">Total Consultation Hours ({monthName}):</p>
+            <p className="text-sm mb-2 text-left">Total Consultation Hours ({getSemesterLabel()}):</p>
             <div className="flex items-baseline gap-2 justify-center">
               <span className="text-7xl font-bold">{stats.total_hours}</span>
               <span className="text-lg">Hours</span>
@@ -200,12 +257,9 @@ const HomeAdmin = () => {
         </div>
         <div className="flex-1 bg-[#00D1B2] text-white rounded-lg shadow-lg px-6 py-4">
           <div className="flex flex-col">
-            {/* NEW: Use latestSemester data in the label if available */}
-            <p className="text-sm mb-2 text-left">
-              Enrolled Student {latestSemester ? `(${latestSemester.semester} Semester, ${latestSemester.school_year})` : ""}
-            </p>
+            <p className="text-sm mb-2 text-left">Total Number of Students Consulted:</p>
             <div className="flex items-baseline gap-2 justify-center">
-              <span className="text-7xl font-bold">{stats.students_enrolled}</span>
+              <span className="text-7xl font-bold">{stats.unique_students}</span>
               <span className="text-lg">Students</span>
             </div>
           </div>

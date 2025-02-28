@@ -1,37 +1,59 @@
 from flask import Blueprint, request, jsonify
-from datetime import datetime, timedelta, timezone  # Add timezone here
+from datetime import datetime, timedelta, timezone
 from firebase_admin import firestore
 
 homeadmin_routes_bp = Blueprint('homeadmin_routes', __name__)
 db = firestore.client()
 
+@homeadmin_routes_bp.route('/semesters', methods=['GET'])
+def get_semesters():
+    try:
+        semesters_ref = db.collection('semesters')
+        semesters = semesters_ref.order_by('school_year', direction=firestore.Query.DESCENDING).stream()
+        
+        semester_list = []
+        for doc in semesters:
+            data = doc.to_dict()
+            semester_list.append({
+                'id': doc.id,
+                'semester': data.get('semester'),
+                'school_year': data.get('school_year'),
+                'startDate': data.get('startDate'),
+                'endDate': data.get('endDate')
+            })
+        
+        return jsonify(semester_list), 200
+    except Exception as e:
+        return jsonify({"error": str(e)}), 500
+
 @homeadmin_routes_bp.route('/stats', methods=['GET'])
 def get_homeadmin_stats():
     try:
-        # Use provided month/year, or default to current month and year
-        month_str = request.args.get('month')
-        year_str = request.args.get('year')
-        if not (month_str and year_str):
-            now = datetime.now(timezone.utc)  # Use timezone from the import
-            month_str = str(now.month)
-            year_str = str(now.year)
+        semester = request.args.get('semester')
+        school_year = request.args.get('school_year')
         
-        month = int(month_str)
-        year = int(year_str)
-        start_date = datetime(year, month, 1)
-        if month == 12:
-            end_date = datetime(year + 1, 1, 1)
-        else:
-            end_date = datetime(year, month + 1, 1)
-        
-        # Existing consultation stats work remains unchanged:
         consultations_ref = db.collection('consultation_sessions')
-        query = consultations_ref.where('session_date', '>=', start_date).where('session_date', '<', end_date)
+        query = consultations_ref
+
+        if semester and school_year:
+            # Get semester dates from semesters collection
+            semester_ref = db.collection('semesters').where('semester', '==', semester).where('school_year', '==', school_year).limit(1).get()
+            if not semester_ref:
+                return jsonify({"error": "Semester not found"}), 404
+            
+            semester_data = semester_ref[0].to_dict()
+            start_date = datetime.strptime(semester_data['startDate'], '%Y-%m-%d')
+            end_date = datetime.strptime(semester_data['endDate'], '%Y-%m-%d')
+            
+            query = query.where('session_date', '>=', start_date).where('session_date', '<=', end_date)
+
         consultations = query.stream()
 
         total_seconds = 0
         total_consultations = 0
+        total_students = 0  # NEW: count every student entry
 
+        # Process each consultation session; count each consultation regardless of duration errors.
         for doc in consultations:
             data = doc.to_dict()
             total_consultations += 1
@@ -41,37 +63,15 @@ def get_homeadmin_stats():
                 total_seconds += hh * 3600 + mm * 60 + ss
             except Exception as e:
                 print(f"Skipping duration error: {duration}")
-
+            students = data.get('student_ids', [])
+            total_students += len(students)  # count each consultation's student entries
+        
         total_hours = round(total_seconds / 3600, 2)
-        
-        # NEW: Query latest semester details from the semesters collection.
-        semesters_docs = list(db.collection("semesters").get())
-        if semesters_docs:
-            def parse_date(doc):
-                data = doc.to_dict()
-                sd = data.get("startDate")
-                try:
-                    return datetime.strptime(sd, "%Y-%m-%d")
-                except Exception:
-                    return datetime.min
-            semesters_docs.sort(key=lambda d: parse_date(d), reverse=True)
-            latest = next((doc for doc in semesters_docs if doc.to_dict().get("semester") == "2nd"), semesters_docs[0])
-            latest_semester_data = latest.to_dict()
-        else:
-            latest_semester_data = {"semester": "", "school_year": ""}
-        
-        # New: Count all enrolled students (students where isEnrolled is True)
-        enrolled_students = list(db.collection("students").where("isEnrolled", "==", True).stream())
-        enrolled_count = len(enrolled_students)
 
         return jsonify({
             'total_hours': total_hours,
             'total_consultations': total_consultations,
-            'students_enrolled': enrolled_count,
-            'latestSemester': {
-                "semester": latest_semester_data.get("semester", ""),
-                "school_year": latest_semester_data.get("school_year", "")
-            }
+            'unique_students': total_students  # now counting every student occurrence
         }), 200
     except Exception as e:
         print(f"Error in homeadmin/stats: {e}")
@@ -81,23 +81,25 @@ def get_homeadmin_stats():
 @homeadmin_routes_bp.route('/consultations_by_date', methods=['GET'])
 def get_consultations_by_date():
     try:
-        month_str = request.args.get('month')
-        year_str = request.args.get('year')
+        semester = request.args.get('semester')
+        school_year = request.args.get('school_year')
         consultations_ref = db.collection('consultation_sessions')
         
-        # If month/year parameters exist, limit query; else, get all consultations
-        if month_str and year_str:
-            month = int(month_str)
-            year = int(year_str)
-            start_date = datetime(year, month, 1)
-            if month == 12:
-                end_date = datetime(year + 1, 1, 1)
-            else:
-                end_date = datetime(year, month + 1, 1)
-            query = consultations_ref.where('session_date', '>=', start_date).where('session_date', '<', end_date)
-            consultations = query.stream()
-        else:
-            consultations = consultations_ref.stream()
+        query = consultations_ref
+
+        if semester and school_year:
+            # Get semester dates from semesters collection
+            semester_ref = db.collection('semesters').where('semester', '==', semester).where('school_year', '==', school_year).limit(1).get()
+            if not semester_ref:
+                return jsonify({"error": "Semester not found"}), 404
+            
+            semester_data = semester_ref[0].to_dict()
+            start_date = datetime.strptime(semester_data['startDate'], '%Y-%m-%d')
+            end_date = datetime.strptime(semester_data['endDate'], '%Y-%m-%d')
+            
+            query = query.where('session_date', '>=', start_date).where('session_date', '<=', end_date)
+
+        consultations = query.stream()
 
         consultations_data = {}
         duration_data = {}
