@@ -90,7 +90,7 @@ const BookingPopup = () => {
           setTimeout(() => setBookIconClicked(false), 200) 
           setShowModal(true)
         }}
-        className={`fixed bottom-8 right-8 w-14 h-14 rounded-full bg-[#0088FF] hover:bg-[#54BEFF] 
+        className={`fixed bottom-8 right-8 w-14 h-14 rounded-full bg-[#397de2] hover:bg-[#54BEFF] 
                    flex items-center justify-center shadow-lg transform hover:scale-110 
                    transition-all duration-300 ease-in-out z-50
                    ${BookIconClicked ? "scale-90" : "scale-100"}`}
@@ -112,7 +112,7 @@ const BookingPopup = () => {
               onClick={(e) => e.stopPropagation()}
             >
               {/* Modal Header */}
-              <div className="bg-[#0088FF] px-6 py-4 flex justify-between items-center">
+              <div className="bg-[#397de2] px-6 py-4 flex justify-between items-center">
                 <h2 className="text-xl font-semibold text-white">
                   {userRole === 'faculty' ? 'Book Appointment' : 'Request Appointment'}
                 </h2>

@@ -80,7 +80,7 @@ const HomeTeacher = () => {
 
             {/* Stats Section - Reordered stats */}
             <div className="flex gap-4 w-full p-10 pb-0">
-                <div className="flex-1 bg-[#0088FF] text-white rounded-lg shadow-lg px-6 py-4">
+                <div className="flex-1 bg-[#397de2] text-white rounded-lg shadow-lg px-6 py-4">
                     <div className="flex flex-col">
                         <p className="text-sm mb-2 text-left">Total Number of Consultations:</p>
                         <div className="flex items-baseline gap-2 justify-center">
@@ -114,7 +114,7 @@ const HomeTeacher = () => {
             <div className="grid grid-cols-2 gap-6 p-10">
             {/* Consultation Graph */}
             <div className="bg-white p-10 rounded-lg shadow-lg">
-                <h2 className="text-xl font-semibold text-blue-500 text-center mb-4">Consultations Over Time</h2>
+                <h2 className="text-xl font-semibold text-[#397de2] text-center mb-4">Consultations Over Time</h2>
                 <ResponsiveContainer width="105%" height={300}>
                     <LineChart data={consultationData}>
                         <CartesianGrid vertical={false} stroke="#D3D3D3" />
@@ -134,14 +134,14 @@ const HomeTeacher = () => {
                         />
                         <Tooltip />
                         <Legend align="left" wrapperStyle={{ textAlign: 'left', marginTop: '20px', marginBottom: '-20px'}} />
-                        <Line type="monotone" dataKey="consultations" stroke="#3B82F6" strokeWidth={3} name="Consultations" />
+                        <Line type="monotone" dataKey="consultations" stroke="#397de2" strokeWidth={3} name="Consultations" />
                     </LineChart>
                 </ResponsiveContainer>
             </div>
 
             {/* Consultation Hours Graph */}
             <div className="bg-white p-10 rounded-lg shadow-lg">
-                <h2 className="text-xl font-semibold text-red-500 text-center mb-4">Consultation Hours Over Time</h2>
+                <h2 className="text-xl font-semibold text-[#fc6969] text-center mb-4">Consultation Hours Over Time</h2>
                 <ResponsiveContainer width="105%" height={300}>
                     <LineChart data={consultationHoursData}>
                         <CartesianGrid vertical={false} stroke="#D3D3D3" />
@@ -169,7 +169,7 @@ const HomeTeacher = () => {
                           }}
                         />
                         <Legend align="left" wrapperStyle={{ textAlign: 'left', marginTop: '20px', marginBottom: '-20px'}} />
-                        <Line type="monotone" dataKey="consultation_hours" stroke="#EF4444" strokeWidth={3} name="Consultation Hours" />
+                        <Line type="monotone" dataKey="consultation_hours" stroke="#fc6969" strokeWidth={3} name="Consultation Hours" />
                     </LineChart>
                 </ResponsiveContainer>
             </div>
