@@ -110,7 +110,7 @@
 
 .rbc-agenda-table thead > tr > th:nth-child(3),
 .rbc-agenda-table tbody > tr > td:nth-child(3) {
-  flex: 41.5%;
+  flex: 41%;
   text-align: center;
   border-radius: 0.378rem;
   outline: none;
@@ -132,7 +132,7 @@
 /* Adjust column width */
 .rbc-agenda-view th:first-child,
 .rbc-agenda-view td:first-child {
-    width: 19.2%; /* Date column */
+    width: 19.3%; /* Date column */
 }
 
 .rbc-agenda-view th:nth-child(2),
