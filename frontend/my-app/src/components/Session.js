@@ -423,7 +423,7 @@ const Session = () => {
                     </div>
                     <div className="text-center sm:text-left">
                       <p className="text-lg font-semibold">{teacherInfo.teacherName}</p>
-                      <p className="font-small text-[#7ec9fb]">{teacherInfo.department} {teacherInfo.role}</p>
+                      <p className="font-small text-[#98d6ff]">{teacherInfo.department} {teacherInfo.role}</p>
                     </div>
                   </>
                 ) : (
@@ -433,7 +433,7 @@ const Session = () => {
 
               {/* Students Info Card - Updated height */}
               <div className="bg-[#057DCD] text-white p-4 rounded-lg shadow-lg flex-1 min-h-[300px] overflow-y-auto fade-in delay-300"> {/* Added min-h-[300px] and overflow-y-auto */}
-                <p className="font-medium text-center mb-2">Student/s</p>
+                <p className="font-semibold text-center mb-2">Student/s</p>
                 {studentInfo ? (
                   <ul className="space-y-2">
                     {Array.isArray(studentInfo)

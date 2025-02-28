@@ -9,14 +9,29 @@ hometeacher_routes_bp = Blueprint('hometeacher_routes', __name__)
 def get_hometeacher_stats():
     try:
         teacher_ref = request.args.get('teacher_id')
+        semester = request.args.get('semester')
+        school_year = request.args.get('school_year')
+
         if not teacher_ref:
             return jsonify({'error': 'Teacher ID reference is required'}), 400
 
-        # Convert teacher_id to a Firestore document reference
         teacher_doc_ref = db.document(f'faculty/{teacher_ref}')
-
         consultations_ref = db.collection('consultation_sessions')
-        consultations = consultations_ref.where('teacher_id', '==', teacher_doc_ref).stream()
+        query = consultations_ref.where('teacher_id', '==', teacher_doc_ref)
+
+        if semester and school_year:
+            # Get semester dates from semesters collection
+            semester_ref = db.collection('semesters').where('semester', '==', semester).where('school_year', '==', school_year).limit(1).get()
+            if not semester_ref:
+                return jsonify({"error": "Semester not found"}), 404
+            
+            semester_data = semester_ref[0].to_dict()
+            start_date = datetime.strptime(semester_data['startDate'], '%Y-%m-%d')
+            end_date = datetime.strptime(semester_data['endDate'], '%Y-%m-%d')
+            
+            query = query.where('session_date', '>=', start_date).where('session_date', '<=', end_date)
+
+        consultations = query.stream()
 
         total_seconds = 0
         total_consultations = 0
@@ -58,14 +73,29 @@ def get_hometeacher_stats():
 def get_consultations_by_date():
     try:
         teacher_ref = request.args.get('teacher_id')
+        semester = request.args.get('semester')
+        school_year = request.args.get('school_year')
+
         if not teacher_ref:
             return jsonify({'error': 'Teacher ID reference is required'}), 400
 
         teacher_doc_ref = db.document(f'faculty/{teacher_ref}')
         consultations_ref = db.collection('consultation_sessions')
+        query = consultations_ref.where('teacher_id', '==', teacher_doc_ref)
 
-        # Get consultations for this teacher
-        consultations = consultations_ref.where('teacher_id', '==', teacher_doc_ref).stream()
+        if semester and school_year:
+            # Get semester dates from semesters collection
+            semester_ref = db.collection('semesters').where('semester', '==', semester).where('school_year', '==', school_year).limit(1).get()
+            if not semester_ref:
+                return jsonify({"error": "Semester not found"}), 404
+            
+            semester_data = semester_ref[0].to_dict()
+            start_date = datetime.strptime(semester_data['startDate'], '%Y-%m-%d')
+            end_date = datetime.strptime(semester_data['endDate'], '%Y-%m-%d')
+            
+            query = query.where('session_date', '>=', start_date).where('session_date', '<=', end_date)
+
+        consultations = query.stream()
 
         consultation_data = {}
         duration_data = {}

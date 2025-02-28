@@ -1,13 +1,13 @@
 /* Custom Calendar Styles */
 .rbc-calendar {
-  background-color: #DDE8F2;
+  background-color: #ffffff;
   border-radius: 8px;
   padding: 16px;
 }
 
 .rbc-header {
   padding: 10px;
-  background-color: #0469A3;
+  background-color: #0088FF;
   color: #f8f9fa;
   font-weight: 600;
 }
@@ -17,7 +17,7 @@
 }
 
 .rbc-event {
-  background-color: #4A90E2 !important;
+  background-color: #00a78e !important;
   border: none !important;
   border-radius: 4px !important;
   transition: transform 0.2s ease;
@@ -84,6 +84,10 @@
   outline: none;
 }
 
+.rbc-agenda-view thead tr{
+  background: none !important;
+}
+
 .rbc-agenda-table tbody {
   width: 100% !important;
   outline: none;
@@ -148,12 +152,12 @@
 .rbc-month-view{
     border-radius: 8px;
     overflow: hidden;
-    border-color: #A6BCD0;
+    border-color: #ddd;
     /* box-shadow: 0px 4px 6px rgba(0, 0, 0, 0.2); */
 }
 
 .rbc-day-bg.rbc-off-range-bg{
-    background-color: #C2D3E1 !important;  
+    background-color: #c2d3e157 !important;  
 }
 
 .rbc-row-bg, .rbc-row-content, .rbc-day-bg{
@@ -164,12 +168,21 @@
     color: rgba(0,71,118,1) !important;
 }
 
+.rbc-date-cell.rbc-now {
+  font-weight: bold;
+}
+
+.rbc-date-cell.rbc-now .rbc-button-link{
+    color: #ffffff !important;
+}
+
 .rbc-date-cell.rbc-off-range .rbc-button-link{
     color: #84919a !important;
 }
 
 .rbc-day-bg.rbc-today{
-    background-color: #7BBCEB !important;
+    background-color: #00D1B2 !important;
+    border-radius: 12px;
 }
 
 /* NEW: Override grid line colors in week/day view */
@@ -182,7 +195,7 @@
 /* If needed, adjust the month view grid lines */
 .rbc-month-row,
 .rbc-month-row + .rbc-month-row {
-  border-color: #A6BCD0 !important;
+  border-color: #ddd !important;
 }
 
 .rbc-month-row,
@@ -202,7 +215,7 @@
   text-align: center !important;
   height: 100% !important;
   padding-bottom: 1 !important;
-  border-color: #A6BCD0 !important;
+  border-color: #057DCD !important;
   background-color: #057DCD !important;
   /* background-color: #0469A3 !important; */
   width: 14%;
@@ -223,6 +236,10 @@
     border-radius: 0.378rem;
     overflow: hidden;
     /* box-shadow: 0px 4px 6px rgba(0, 0, 0, 0.2); */
+}
+
+.rbc-day-bg + .rbc-day-bg {
+  border-left: 1px solid #ddd !important;
 }
 
 .rbc-time-header.rbc-overflowing{
@@ -278,10 +295,89 @@
 
 .rbc-agenda-view td,
 .rbc-agenda-view th {
-    border: 1px solid #ddd !important;
+    border: none !important;
     text-align: left;
 }
 
 .rbc-current-time-indicator{
    height: 2px !important;
+}
+
+/* Enhanced mobile responsiveness */
+@media (max-width: 640px) {
+  .rbc-calendar {
+    font-size: 12px;
+  }
+
+  .rbc-toolbar {
+    flex-direction: column;
+    align-items: start;
+    padding: 5px !important;
+  }
+  
+  .rbc-toolbar-label {
+    margin: 8px 0;
+    font-size: 14px;
+  }
+  
+  .rbc-header {
+    padding: 4px !important;
+  }
+  
+  .rbc-button-link {
+    padding: 2px !important;
+    font-size: 12px;
+  }
+  
+  .rbc-event {
+    padding: 2px !important;
+    font-size: 10px !important;
+  }
+  
+  .rbc-agenda-view table.rbc-agenda-table {
+    font-size: 10px !important;
+  }
+  
+  .rbc-agenda-view table.rbc-agenda-table thead > tr > th {
+    padding: 2px !important;
+  }
+  
+  .rbc-agenda-view table.rbc-agenda-table tbody > tr > td {
+    padding: 2px !important;
+  }
+  
+  /* Force single column toolbar on tiny screens */
+  @media (max-width: 360px) {
+    .rbc-toolbar {
+      flex-wrap: wrap;
+      justify-content: center;
+    }
+    
+    .rbc-toolbar > span {
+      margin: 2px 0;
+    }
+  }
+}
+
+/* Custom styles for our calendar container */
+.calendar-container {
+  width: 100%;
+  min-height: 300px; /* Minimum height for the calendar */
+  max-height: 80vh; /* Limit maximum height */
+}
+
+/* Optimize month view for small screens */
+@media (max-width: 480px) {
+  .rbc-month-view {
+    height: auto !important;
+  }
+  
+  .rbc-month-row {
+    min-height: 80px !important;
+  }
+  
+  /* Reduce date cell padding */
+  .rbc-date-cell {
+    padding: 2px !important;
+  }
 }
