@@ -2,6 +2,8 @@ import React, { useState, useEffect, useMemo, useCallback } from 'react';
 import { useQuery } from 'react-query';
 import AppointmentItem from '../components/AppointmentItem';
 import { useSocket } from '../hooks/useSocket';
+import './Appointments.css';
+
 
 // Fetch student appointments via React Query
 const fetchStudentAppointments = async () => {
@@ -70,7 +72,7 @@ function StudentAppointments() {
         <h3 className="text-xl font-semibold mb-4 text-[#0065A8] border-b-2 border-[#54BEFF] pb-2 sticky top-0 bg-white z-10">
           Pending Appointments
         </h3>
-        <div className="flex-1 overflow-y-auto min-h-0">
+        <div className="flex-1 overflow-y-auto min-h-0 Appointments-scroll">
           {isLoading ? (
             <ul className="space-y-4 pr-2">
               {Array.from({ length: 5 }).map((_, index) => (
@@ -135,7 +137,7 @@ function StudentAppointments() {
         <h3 className="text-xl font-semibold mb-4 text-[#0065A8] border-b-2 border-[#54BEFF] pb-2 sticky top-0 bg-white z-10">
           Upcoming Appointments
         </h3>
-        <div className="flex-1 overflow-y-auto min-h-0">
+        <div className="flex-1 overflow-y-auto min-h-0 Appointments-scroll">
           {isLoading ? (
             <ul className="space-y-4 pr-2">
               {Array.from({ length: 5 }).map((_, index) => (

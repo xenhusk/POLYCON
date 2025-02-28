@@ -12,8 +12,8 @@ html, body {
 
 /* Width and height of the scrollbar */
 ::-webkit-scrollbar {
-  width: 12px; 
-  height: 12px; 
+  width: 8px; 
+  height: 8px; 
 }
 
 /* Track of the scrollbar */
@@ -24,9 +24,9 @@ html, body {
 
 /* Handle of the scrollbar */
 ::-webkit-scrollbar-thumb {
-  background-color: #0065A8; 
+  background-color: #057DCD; 
   border-radius: 10px; 
-  border: 3px solid #0065A8;
+  border: 3px solid #057DCD;
 }
 
 /* Handle on hover */

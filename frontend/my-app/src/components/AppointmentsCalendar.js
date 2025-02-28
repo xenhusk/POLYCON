@@ -242,8 +242,8 @@ function AppointmentsCalendar() {
             startAccessor="start"
             endAccessor="end"
             // UPDATED: Increase calendar height from 500 to 700
-            style={{ height: 700 }}
-            views={['month', 'week', 'day', 'agenda']} // Re-enable all views
+            style={{ height: 700}}
+            views={['month', 'agenda']}
             formats={{
                 // Disable the default time range formatter so that it doesn’t output “start - end”
                 eventTimeRangeFormat: () => ""

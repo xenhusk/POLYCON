@@ -378,7 +378,7 @@ const Session = () => {
       <div className="relative z-10 backdrop-blur-sm bg-white/5 fade-in">
         <div className="max-w-6xl w-full grid grid-cols-7 gap-6">
           {/* Left Section: Adviser Notes */}
-          <div className="col-span-5 bg-[#0065A8] p-6 rounded-lg shadow-lg fade-in delay-100">
+          <div className="col-span-5 bg-[#057DCD] p-6 rounded-lg shadow-lg fade-in delay-100">
             <label className="block text-white text-lg mb-2">Concern</label>
             <textarea
               className="w-full p-3 rounded-md mb-4 focus:outline-none focus:ring-2 focus:ring-blue-400"
@@ -409,7 +409,7 @@ const Session = () => {
           <div className="col-span-2 flex flex-col justify-between h-full"> {/* Added h-full */}
             <div className="space-y-4 flex-1"> {/* Added flex-1 */}
               {/* Teacher Info Card */}
-              <div className="flex flex-col gap-2 p-3 sm:flex-row sm:items-center sm:gap-2 sm:py-5 bg-[#0065A8] text-white rounded-lg shadow-lg fade-in delay-200">
+              <div className="flex flex-col gap-2 p-3 sm:flex-row sm:items-center sm:gap-2 sm:py-5 bg-[#057DCD] text-white rounded-lg shadow-lg fade-in delay-200">
                 {teacherInfo ? (
                   <>
                     <div className="rounded-full p-1 bg-[#54BEFF]">
@@ -423,7 +423,7 @@ const Session = () => {
                     </div>
                     <div className="text-center sm:text-left">
                       <p className="text-lg font-semibold">{teacherInfo.teacherName}</p>
-                      <p className="font-small text-gray-300">{teacherInfo.department} {teacherInfo.role}</p>
+                      <p className="font-small text-[#7ec9fb]">{teacherInfo.department} {teacherInfo.role}</p>
                     </div>
                   </>
                 ) : (
@@ -432,7 +432,7 @@ const Session = () => {
               </div>
 
               {/* Students Info Card - Updated height */}
-              <div className="bg-[#0065A8] text-white p-4 rounded-lg shadow-lg flex-1 min-h-[300px] overflow-y-auto fade-in delay-300"> {/* Added min-h-[300px] and overflow-y-auto */}
+              <div className="bg-[#057DCD] text-white p-4 rounded-lg shadow-lg flex-1 min-h-[300px] overflow-y-auto fade-in delay-300"> {/* Added min-h-[300px] and overflow-y-auto */}
                 <p className="font-medium text-center mb-2">Student/s</p>
                 {studentInfo ? (
                   <ul className="space-y-2">
@@ -443,7 +443,7 @@ const Session = () => {
                               <img
                                 src={student.profile_picture}
                                 alt="Student"
-                                className="w-10 h-10 rounded-full mr-2"
+                                className="w-10 h-10 rounded-full mr-2 border-2 border-[#ffffff]"
                               />
                             )}
                             {student.firstName} {student.lastName}
@@ -491,7 +491,7 @@ const Session = () => {
               <button
                 onClick={finishSession}
                 disabled={processing}
-                className="w-full bg-[#0065A8] text-white py-3 rounded-lg shadow-md hover:hover:bg-[#54BEFF] duration-300ms ease-in-out"
+                className="w-full bg-[#057DCD] text-white py-3 rounded-lg shadow-md hover:hover:bg-[#54BEFF] duration-300ms ease-in-out"
               >
                 Finalize Consultation
               </button>

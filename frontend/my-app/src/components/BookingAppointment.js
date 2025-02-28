@@ -285,11 +285,11 @@ function BookingAppointment({ closeModal, role: propRole }) {
               <label className="block text-sm font-medium text-gray-700 mb-2">
                 Students <span className="text-red-500">*</span>
               </label>
-              <div className="min-h-[45px] flex flex-wrap items-center gap-2 border-2 border-[#0065A8] rounded-lg px-3 py-2 focus-within:ring-2 focus-within:ring-[#54BEFF]">
+              <div className="min-h-[45px] flex flex-wrap items-center gap-2 border-2 border-[#0088FF] rounded-lg px-3 py-2 focus-within:ring-2 focus-within:ring-[#54BEFF]">
                 {selectedStudents.map((student) => (
                   <div
                     key={student.id}
-                    className="bg-[#0065A8] text-white px-2 py-1 rounded-full flex items-center gap-2 text-sm"
+                    className="bg-[#0088FF] text-white px-2 py-1 rounded-full flex items-center gap-2 text-sm"
                   >
                     <img
                       src={getProfilePictureUrl(student.profile_picture)}
@@ -388,7 +388,7 @@ function BookingAppointment({ closeModal, role: propRole }) {
                 type="datetime-local"
                 value={schedule}
                 onChange={(e) => setSchedule(e.target.value)}
-                className="w-full border-2 border-[#0065A8] rounded-lg px-3 py-2 focus:outline-none focus:ring-2 focus:ring-[#54BEFF]"
+                className="w-full border-2 border-[#0088FF] rounded-lg px-3 py-2 focus:outline-none focus:ring-2 focus:ring-[#54BEFF]"
               />
             </div>
 
@@ -402,7 +402,7 @@ function BookingAppointment({ closeModal, role: propRole }) {
                 value={venue}
                 onChange={(e) => setVenue(e.target.value)}
                 placeholder="Enter venue (e.g., Room 101)"
-                className="w-full border-2 border-[#0065A8] rounded-lg px-3 py-2 focus:outline-none focus:ring-2 focus:ring-[#54BEFF]"
+                className="w-full border-2 border-[#0088FF] rounded-lg px-3 py-2 focus:outline-none focus:ring-2 focus:ring-[#54BEFF]"
               />
             </div>
           </div>
@@ -416,9 +416,9 @@ function BookingAppointment({ closeModal, role: propRole }) {
               <label className="block text-sm font-medium text-gray-700 mb-2">
                 Teacher <span className="text-red-500">*</span>
               </label>
-              <div className="min-h-[45px] flex items-center gap-2 border-2 border-[#0065A8] rounded-lg px-3 py-2 focus-within:ring-2 focus-within:ring-[#54BEFF]">
+              <div className="min-h-[45px] flex items-center gap-2 border-2 border-[#0088FF] rounded-lg px-3 py-2 focus-within:ring-2 focus-within:ring-[#54BEFF]">
                 {selectedTeacher && !teacherSearchTerm ? (
-                  <div className="bg-[#0065A8] text-white px-2 py-1 rounded-full flex items-center gap-2 text-sm">
+                  <div className="bg-[#0088FF] text-white px-2 py-1 rounded-full flex items-center gap-2 text-sm">
                     <img
                       src={getProfilePictureUrl(selectedTeacherProfile)}
                       alt="Teacher"
@@ -517,11 +517,11 @@ function BookingAppointment({ closeModal, role: propRole }) {
               <label className="block text-sm font-medium text-gray-700 mb-2">
                 Fellow Students (Optional)
               </label>
-              <div className="min-h-[45px] flex flex-wrap items-center gap-2 border-2 border-[#0065A8] rounded-lg px-3 py-2 focus-within:ring-2 focus-within:ring-[#54BEFF]">
+              <div className="min-h-[45px] flex flex-wrap items-center gap-2 border-2 border-[#0088FF] rounded-lg px-3 py-2 focus-within:ring-2 focus-within:ring-[#54BEFF]">
                 {selectedStudents.map((student) => (
                   <div
                     key={student.id}
-                    className="bg-[#0065A8] text-white px-2 py-1 rounded-full flex items-center gap-2 text-sm"
+                    className="bg-[#0088FF] text-white px-2 py-1 rounded-full flex items-center gap-2 text-sm"
                   >
                     <img
                       src={getProfilePictureUrl(student.profile_picture)}
@@ -657,7 +657,7 @@ function BookingAppointment({ closeModal, role: propRole }) {
                 isBookingOverQuota() || isLoading
                   ? "opacity-50 cursor-not-allowed"
                   : ""
-              } bg-[#0065A8] hover:bg-[#54BEFF] text-white flex-1 py-4 rounded-bl-lg justify-center transition-colors flex items-center
+              } bg-[#0088FF] hover:bg-[#54BEFF] text-white flex-1 py-4 rounded-bl-lg justify-center transition-colors flex items-center
               ${SubmitBookingClicked ? "scale-90" : "scale-100"}`}
             >
               {isLoading ? (

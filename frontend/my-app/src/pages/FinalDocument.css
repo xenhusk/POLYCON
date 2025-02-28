@@ -1,10 +1,10 @@
 .final-document-scroll::-webkit-scrollbar {
-  width: 12px !important;
-  height: 12px !important;
+  width: 10px !important;
+  height: 10px !important;
 }
 
 .final-document-scroll::-webkit-scrollbar-track {
-  background: #003e68 !important;
+  background: #01568e !important;
   border-radius: 10px !important;
 }
 

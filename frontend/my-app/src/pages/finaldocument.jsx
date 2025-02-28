@@ -175,11 +175,11 @@ const FinalDocument = () => {
         <div className="flex h-full items-center justify-center">Loading...</div>
       ) : (
         <div className="relative z-10 h-full p-8 flex flex-col">
-          <h1 className="text-3xl font-bold text-[#0065A8] mb-6 text-center fade-in delay-100">Final Document</h1>
+          <h1 className="text-3xl font-bold text-[#057DCD] mb-6 text-center fade-in delay-100">Final Document</h1>
           <div className="flex gap-8 flex-1 overflow-hidden mb-6">
             <div className="w-1/2 flex flex-col">
               {/* Left Column: Displaying Summary, Transcription, etc. */}
-              <div className="flex-1 bg-[#0065A8] rounded-lg p-6 overflow-hidden flex flex-col fade-in delay-200">
+              <div className="flex-1 bg-[#057DCD] rounded-lg p-6 overflow-hidden flex flex-col fade-in delay-200">
                 <div className="flex-1 overflow-y-auto pr-4 final-document-scroll">
                   <section className="mb-6">
                     <h2 className="text-xl font-semibold text-white mb-2">Summary</h2>
@@ -230,7 +230,7 @@ const FinalDocument = () => {
                     <div className="mb-4 flex justify-end space-x-2">
                       <button
                         onClick={() => zoomOut()}
-                        className="bg-[#0065A8] text-white px-3 py-1 rounded-lg hover:bg-[#54BEFF]"
+                        className="bg-[#057DCD] text-white px-3 py-1 rounded-lg hover:bg-[#54BEFF]"
                       >
                         -
                       </button>
@@ -239,13 +239,13 @@ const FinalDocument = () => {
                           resetTransform();
                           setTimeout(() => resetTransform(), 50);
                         }}
-                        className="bg-[#0065A8] text-white px-3 py-1 rounded-lg hover:bg-[#54BEFF]"
+                        className="bg-[#057DCD] text-white px-3 py-1 rounded-lg hover:bg-[#54BEFF]"
                       >
                         Reset
                       </button>
                       <button
                         onClick={() => zoomIn()}
-                        className="bg-[#0065A8] text-white px-3 py-1 rounded-lg hover:bg-[#54BEFF]"
+                        className="bg-[#057DCD] text-white px-3 py-1 rounded-lg hover:bg-[#54BEFF]"
                       >
                         +
                       </button>
@@ -288,7 +288,7 @@ const FinalDocument = () => {
             <div>     
               <button
                 onClick={handlePrint}
-                className="bg-[#0065A8] hover:bg-[#54BEFF] text-white px-4 py-2 rounded-lg transition-colors fade-in delay-200"
+                className="bg-[#057DCD] hover:bg-[#54BEFF] text-white px-4 py-2 rounded-lg transition-colors fade-in delay-200"
               >
                 Print/Save Document
               </button>
