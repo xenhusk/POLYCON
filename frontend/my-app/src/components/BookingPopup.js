@@ -102,7 +102,7 @@ const BookingPopup = () => {
         }}
         className={`fixed ${buttonPosition} ${buttonSize} rounded-full bg-[#397de2] hover:bg-[#54BEFF] 
                    flex items-center justify-center shadow-lg transform hover:scale-110 
-                   transition-all duration-300 ease-in-out z-50
+                   transition-all duration-300 ease-in-out z-45
                    ${BookIconClicked ? "scale-90" : "scale-100"}`}
         title="Book Appointment"
       >

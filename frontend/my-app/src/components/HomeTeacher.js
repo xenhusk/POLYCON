@@ -186,10 +186,13 @@ const HomeTeacher = () => {
             </div>
 
             {/* Stats Section - Now responsive */}
+            {/* Stats Section Header */}
+            <h2 className="text-2xl font-semibold text-[#0065A8] mb-4 w-full text-center sm:text-left px-4 sm:px-6 lg:px-10">
+                Consultation Stats
+            </h2>
             <div className="flex flex-col sm:flex-row gap-4 w-full px-4 sm:px-6 lg:px-10 pb-0">
                 <div className="flex-1 bg-[#397de2] text-white rounded-lg shadow-lg px-4 sm:px-6 py-4">
                     <div className="flex flex-col">
-                        <p className="text-sm mb-2 text-left">Total Number of Consultations:</p>
                         <div className="flex items-baseline gap-2 justify-center">
                             <span className="text-4xl sm:text-5xl lg:text-7xl font-bold">{stats.total_consultations}</span>
                             <span className="text-base sm:text-lg">Consultations</span>
@@ -199,7 +202,6 @@ const HomeTeacher = () => {
 
                 <div className="flex-1 bg-[#fc6969] text-white rounded-lg shadow-lg px-4 sm:px-6 py-4">
                     <div className="flex flex-col">
-                        <p className="text-sm mb-2 text-left">Total Number of Consultation Hours:</p>
                         <div className="flex items-baseline gap-2 justify-center">
                             <span className="text-4xl sm:text-5xl lg:text-7xl font-bold">{stats.total_hours}</span>
                             <span className="text-base sm:text-lg">Hours</span>
@@ -209,7 +211,6 @@ const HomeTeacher = () => {
 
                 <div className="flex-1 bg-[#00D1B2] text-white rounded-lg shadow-lg px-4 sm:px-6 py-4">
                     <div className="flex flex-col">
-                        <p className="text-sm mb-2 text-left">Total Number of Students Consulted:</p>
                         <div className="flex items-baseline gap-2 justify-center">
                             <span className="text-4xl sm:text-5xl lg:text-7xl font-bold">{stats.unique_students}</span>
                             <span className="text-base sm:text-lg">Students</span>
