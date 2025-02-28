@@ -14,7 +14,8 @@
   color: white;
   font-size: 0.9rem;
   line-height: 1.5rem;
-  transition: opacity 0.2s ease-in-out;
+  transition: all 0.3s ease-in-out;
+  pointer-events: none; /* Prevent label from capturing clicks */
 }
 
 /* New hover effect for sidebar items */
@@ -22,6 +23,17 @@
   padding: 0.5rem;
   border-radius: 0.375rem;
   transition: background-color 0.2s ease-in-out, color 0.2s ease-in-out;
+  position: relative;
+  z-index: 20; /* Ensure menu item is clickable */
+}
+
+/* Improve sidebar item specificity to ensure proper highlighting */
+.sidebar-item {
+  padding: 0.5rem;
+  border-radius: 0.375rem;
+  transition: background-color 0.2s ease-in-out, color 0.2s ease-in-out;
+  position: relative;
+  z-index: 20;
 }
 
 .sidebar-item:hover {
@@ -77,8 +89,37 @@
 
 /* NEW: Pointer styles */
 .pointer-icon {
-  /* Settings here are complemented by inline styles; adjust if needed */
-  z-index: 10;
+  z-index: 999 !important;
+  pointer-events: none !important;
+  position: absolute !important;
+  display: block !important;
+  opacity: 1 !important;
+}
+
+/* Improve pointer visibility and positioning */
+.pointer-icon {
+  z-index: 100;
+  pointer-events: none !important;
+  position: absolute;
+}
+
+.desktop-pointer {
+  animation: none; 
+  transform-origin: center right;
+  position: absolute !important;
+  display: block !important;
+  opacity: 1 !important;
+  pointer-events: none !important;
+  transition: top 0.3s cubic-bezier(0.4, 0, 0.2, 1) !important; /* Smooth transition */
+}
+
+/* Mobile pointer should be clickable */
+.mobile-pointer-icon {
+  z-index: 999;
+  cursor: pointer;
+  animation: pulse 2s infinite ease-in-out;
+  filter: drop-shadow(0 0 5px rgba(255, 255, 255, 0.7));
+  pointer-events: all !important;
 }
 
 /* Add new specific active state styles with higher specificity */
@@ -101,9 +142,75 @@
 
 /* Define the "sidebar" class with the desired border radius */
 .sidebar {
+  position: fixed;
   border-top-right-radius: 20px;
   border-bottom-right-radius: 20px;
-  /* ...existing styles... */
+  overflow: visible !important; /* Changed from hidden to visible to allow pointer outside */
+  box-shadow: 0 0 15px rgba(0, 0, 0, 0.3);
+  z-index: 40;
+}
+
+/* Fix for clickable elements at the bottom of sidebar */
+.no-hover-item {
+  z-index: 30;
+  position: relative;
+  cursor: pointer !important;
+}
+
+/* Mobile sidebar specific styles */
+@media (max-width: 768px) {
+  .sidebar {
+    box-shadow: 0 0 20px rgba(0, 0, 0, 0.4);
+  }
+  
+  .pointer-icon {
+    cursor: pointer;
+    animation: pulse 2s infinite ease-in-out;
+    filter: drop-shadow(0 0 5px rgba(255, 255, 255, 0.7));
+  }
+  
+  .pointer-icon:hover {
+    filter: drop-shadow(0 0 4px rgba(255, 255, 255, 0.5));
+  }
+  
+  /* Fix for profile section on mobile */
+  .sidebar-label, .no-hover-item {
+    opacity: 1 !important;
+    pointer-events: auto;
+  }
+}
+
+/* Force pointer to be visible on larger screens */
+@media (min-width: 769px) {
+  .desktop-pointer {
+    display: block !important;
+    opacity: 1 !important;
+    animation: subtle-bounce 3s infinite ease-in-out;
+  }
+  
+  /* Make the pointer movement smoother on hover */
+  .sidebar:hover .desktop-pointer {
+    transition: top 0.4s cubic-bezier(0.34, 1.56, 0.64, 1) !important; /* Slightly bouncy transition on hover */
+  }
+}
+
+/* Make the pointer more visible with a subtle animation */
+@keyframes pulse {
+  0% { transform: translateY(-50%) scale(1); }
+  50% { transform: translateY(-50%) scale(1.05); }
+  100% { transform: translateY(-50%) scale(1); }
+}
+
+/* Enhanced animation for the pointer icon */
+@keyframes subtle-bounce {
+  0%, 100% { transform: translateY(330%) scale(1); }
+  50% { transform: translateY(330%) scale(1.03); }
+}
+
+/* Ensure pointer SVG fills properly */
+.pointer-icon svg,
+.mobile-pointer-icon svg {
+  fill: #057DCD !important;
 }
 
 /* Keep other existing styles */

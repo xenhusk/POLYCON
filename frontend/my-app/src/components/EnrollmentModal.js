@@ -13,6 +13,7 @@ function EnrollmentModal({ closeModal }) {
   const [CancelClicked, setCancelClicked] = useState(false);
   const searchTimeout = useRef(null);
   const teacherID = localStorage.getItem("teacherID");
+  const [isMobile, setIsMobile] = useState(window.innerWidth < 640);
 
   const debouncedSearch = (term) => {
     if (searchTimeout.current) clearTimeout(searchTimeout.current);
@@ -89,26 +90,35 @@ function EnrollmentModal({ closeModal }) {
     };
   }, []);
 
+  useEffect(() => {
+    const handleResize = () => {
+      setIsMobile(window.innerWidth < 640);
+    };
+    
+    window.addEventListener('resize', handleResize);
+    return () => window.removeEventListener('resize', handleResize);
+  }, []);
+
   return (
-    <div className="pt-4 pr-4 pl-4 h-[30vh]">
-      {/* Student Selection Input */}
-      <div className="relative">
-        <label className="block text-sm font-medium text-gray-700 mb-2">
+    <div className="pt-2 sm:pt-4 px-2 sm:px-4 h-[30vh] flex flex-col">
+      {/* Student Selection Input - Responsive */}
+      <div className="relative flex-grow">
+        <label className="block text-sm font-medium text-gray-700 mb-1 sm:mb-2">
           Students <span className="text-red-500">*</span>
         </label>
         <div className="relative">
-          <div className="min-h-[45px] flex flex-wrap items-center gap-2 border-2 border-[#00D1B2] rounded-lg px-3 py-2 focus-within:ring-2 focus-within:ring-[#00F7D4]">
+          <div className="min-h-[45px] flex flex-wrap items-center gap-1 sm:gap-2 border-2 border-[#00D1B2] rounded-lg px-2 sm:px-3 py-2 focus-within:ring-2 focus-within:ring-[#00F7D4]">
             {selectedStudents.map((student) => (
               <div
                 key={student.id}
-                className="bg-[#00D1B2] text-white px-2 py-1 rounded-full flex items-center gap-2 text-sm"
+                className="bg-[#00D1B2] text-white px-1 sm:px-2 py-1 rounded-full flex items-center gap-1 sm:gap-2 text-xs sm:text-sm mb-1"
               >
                 <img
                   src={getProfilePictureUrl(student.profile_picture)}
                   alt="Profile"
-                  className="w-5 h-5 rounded-full"
+                  className="w-4 h-4 sm:w-5 sm:h-5 rounded-full"
                 />
-                <span>
+                <span className="max-w-[100px] sm:max-w-full truncate">
                   {student.firstName} {student.lastName}
                 </span>
                 <button
@@ -129,35 +139,34 @@ function EnrollmentModal({ closeModal }) {
               onChange={handleSearchChange}
               onFocus={() => setIsInputFocused(true)}
               onBlur={() => setTimeout(() => setIsInputFocused(false), 200)}
-              placeholder="Search students..."
-              className="flex-1 min-w-[120px] outline-none bg-transparent"
+              placeholder={isMobile ? "Search..." : "Search students..."}
+              className="flex-1 min-w-[80px] outline-none bg-transparent text-sm"
             />
           </div>
 
-          {/* Updated Student Search Results Dropdown */}
+          {/* Student Search Results Dropdown - Responsive */}
           {isInputFocused && (
             <div className="absolute left-0 right-0 mt-1 z-50">
-              <ul className="bg-white border border-gray-200 rounded-lg shadow-lg max-h-[18vh] overflow-y-auto">
+              <ul className="bg-white border border-gray-200 rounded-lg shadow-lg max-h-[30vh] sm:max-h-[18vh] overflow-y-auto">
                 {isSearchLoading ? (
                   Array.from({ length: 3 }).map((_, index) => (
                     <li
                       key={index}
-                      className="px-4 py-2 flex items-center gap-3 animate-pulse"
+                      className="px-2 sm:px-4 py-2 flex items-center gap-2 sm:gap-3 animate-pulse"
                     >
-                      <div className="w-8 h-8 bg-gray-200 rounded-full"></div>
+                      <div className="w-6 h-6 sm:w-8 sm:h-8 bg-gray-200 rounded-full"></div>
                       <div className="flex flex-col">
-                        <div className="w-32 h-4 bg-gray-200 rounded"></div>
-                        <div className="w-24 h-3 bg-gray-100 rounded mt-1"></div>
+                        <div className="w-24 sm:w-32 h-3 sm:h-4 bg-gray-200 rounded"></div>
+                        <div className="w-16 sm:w-24 h-2 sm:h-3 bg-gray-100 rounded mt-1"></div>
                       </div>
                     </li>
                   ))
                 ) : studentResults.filter(
                     (student) =>
-                      // Filter out already selected students AND already enrolled students
                       !selectedStudents.some((s) => s.id === student.id) &&
                       !student.isEnrolled
                   ).length === 0 ? (
-                  <li className="px-4 py-2 text-center text-gray-500">
+                  <li className="px-2 sm:px-4 py-2 text-center text-gray-500 text-xs sm:text-sm">
                     {studentResults.length === 0
                       ? "No students found"
                       : "No available students to add"}
@@ -166,14 +175,13 @@ function EnrollmentModal({ closeModal }) {
                   studentResults
                     .filter(
                       (student) =>
-                        // Filter out already selected students AND already enrolled students
                         !selectedStudents.some((s) => s.id === student.id) &&
                         !student.isEnrolled
                     )
                     .map((student) => (
                       <li
                         key={student.id}
-                        className="px-4 py-2 hover:bg-gray-50 flex items-center gap-3 cursor-pointer"
+                        className="px-2 sm:px-4 py-2 hover:bg-gray-50 flex items-center gap-2 sm:gap-3 cursor-pointer"
                         onMouseDown={() => {
                           setSelectedStudents([...selectedStudents, student]);
                           setSearchTerm("");
@@ -182,13 +190,13 @@ function EnrollmentModal({ closeModal }) {
                         <img
                           src={getProfilePictureUrl(student.profile_picture)}
                           alt="Profile"
-                          className="w-8 h-8 rounded-full"
+                          className="w-6 h-6 sm:w-8 sm:h-8 rounded-full"
                         />
                         <div>
-                          <div className="font-medium">
+                          <div className="font-medium text-xs sm:text-sm">
                             {student.firstName} {student.lastName}
                           </div>
-                          <div className="text-sm text-gray-500">
+                          <div className="text-xs text-gray-500">
                             {student.program} • {student.year_section}
                           </div>
                         </div>
@@ -201,12 +209,12 @@ function EnrollmentModal({ closeModal }) {
         </div>
       </div>
 
-      <div className="relative h-[18.9vh]">
-        {/* Message display */}
-        <div className="mt-4">
+      <div className="relative mt-2">
+        {/* Message display - Responsive */}
+        <div className="mb-2 sm:mb-3">
           {message.content && (
             <div
-              className={`p-3 rounded-lg ${
+              className={`p-2 sm:p-3 rounded-lg text-xs sm:text-sm ${
                 message.type === "success"
                   ? "bg-green-100 text-green-700"
                   : "bg-red-100 text-red-700"
@@ -217,8 +225,8 @@ function EnrollmentModal({ closeModal }) {
           )}
         </div>
 
-        {/* Button container positioned at the bottom */}
-        <div className="absolute bottom-[0vh] left-[0%] right-[0%] -mx-10">
+        {/* Button container - Updated positioning to eliminate gap */}
+        <div className="absolute -bottom-1 left-0 right-0 -mx-10">
           <div className="flex">
             <button
               onClick={() => {
@@ -228,13 +236,13 @@ function EnrollmentModal({ closeModal }) {
                 }, 200);
               }}
               disabled={isLoading}
-              className={`flex-1 py-4 bg-[#00D1B2] hover:bg-[#00F7D4] text-white text-center justify-center rounded-bl-lg transition-colors flex items-center gap-2
-              ${EnrollClicked ? "scale-90" : "scale-100"}
+              className={`flex-1 py-3 sm:py-6 bg-[#00D1B2] hover:bg-[#00F7D4] text-white text-center justify-center rounded-bl-lg transition-colors flex items-center gap-2 text-xs sm:text-sm
+              ${EnrollClicked ? "scale-95" : "scale-100"}
               ${isLoading ? "opacity-50 cursor-not-allowed" : ""}`}
             >
               {isLoading && (
                 <svg
-                  className="animate-spin h-5 w-5 text-white"
+                  className="animate-spin h-4 w-4 sm:h-5 sm:w-5 text-white"
                   xmlns="http://www.w3.org/2000/svg"
                   fill="none"
                   viewBox="0 0 24 24"
@@ -264,9 +272,8 @@ function EnrollmentModal({ closeModal }) {
                   setTimeout(() => closeModal(), 500);
                 }, 200);
               }}
-              className={`flex-1 py-4 text-gray-700 bg-gray-100 rounded-br-lg hover:bg-gray-200 transition-colors
-                ${CancelClicked ? "scale-90" : "scale-100"}
-                `}
+              className={`flex-1 py-3 sm:py-6 text-gray-700 bg-gray-100 rounded-br-lg hover:bg-gray-200 transition-colors text-xs sm:text-sm
+                ${CancelClicked ? "scale-95" : "scale-100"}`}
             >
               Cancel
             </button>

@@ -48,11 +48,74 @@ const Sidebar = ({ onExpandChange }) => {
   const [showNotifications, setShowNotifications] = useState(false);
   const [notificationPosition, setNotificationPosition] = useState({ top: 0, left: 0 });
   const bellButtonRef = useRef(null);
-  const [pointerPosition, setPointerPosition] = useState(0); // NEW pointer state
-  const menuItemRefs = useRef({}); // NEW ref for menu items
+  const [pointerPosition, setPointerPosition] = useState(0);
+  const [pointerVisible, setPointerVisible] = useState(true); // Force pointer to be visible initially (not controlled by state)
+  const menuItemRefs = useRef({});
+  const pointerRef = useRef(null); // Add ref for the pointer element
   const navigate = useNavigate();
   const { notifications } = useContext(NotificationContext); // Change this line to use context
   const unreadCount = notifications?.filter(n => !n.isRead)?.length || 0; // Add null check
+
+  // Add new state for mobile sidebar visibility
+  const [isMobile, setIsMobile] = useState(false);
+  const [mobileOpen, setMobileOpen] = useState(false);
+  const sidebarRef = useRef(null);
+  
+  // Add the missing isMounted ref
+  const isMounted = useRef(true);
+  
+  // Add cleanup effect for isMounted
+  useEffect(() => {
+    return () => {
+      isMounted.current = false;
+    };
+  }, []);
+  
+  // Function to check if screen is mobile size
+  useEffect(() => {
+    const checkScreenSize = () => {
+      setIsMobile(window.innerWidth <= 768); // Consider screens <= 768px as mobile
+    };
+    
+    // Initial check
+    checkScreenSize();
+    
+    // Add event listener for window resize
+    window.addEventListener('resize', checkScreenSize);
+    
+    // Cleanup function
+    return () => window.removeEventListener('resize', checkScreenSize);
+  }, []);
+  
+  // Handle clicks outside sidebar to close it on mobile
+  useEffect(() => {
+    const handleClickOutside = (event) => {
+      if (isMobile && mobileOpen && sidebarRef.current && !sidebarRef.current.contains(event.target)) {
+        setMobileOpen(false);
+      }
+    };
+    
+    document.addEventListener('mousedown', handleClickOutside);
+    return () => {
+      document.removeEventListener('mousedown', handleClickOutside);
+    };
+  }, [isMobile, mobileOpen]);
+  
+  // Toggle sidebar on pointer click for mobile
+  const handlePointerClick = () => {
+    if (isMobile) {
+      setMobileOpen(!mobileOpen);
+    }
+  };
+  
+  // Notify parent when sidebar state changes
+  useEffect(() => {
+    if (isMobile) {
+      onExpandChange?.(mobileOpen);
+    } else {
+      onExpandChange?.(isOpen || isFrozen);
+    }
+  }, [isOpen, isFrozen, mobileOpen, isMobile, onExpandChange]);
 
   useEffect(() => {
     const userEmail = localStorage.getItem('userEmail');
@@ -219,6 +282,7 @@ const Sidebar = ({ onExpandChange }) => {
       }`}
       onClick={() => {
         setActiveItem(id);
+        if (isMobile) setMobileOpen(false); // Close sidebar on item click in mobile
         const path = menuPaths[userRole]?.[id];
         if (path) {
           navigate(path);
@@ -230,21 +294,62 @@ const Sidebar = ({ onExpandChange }) => {
           activeItem === id ? 'active-icon' : ''
         }`} />
       </div>
-      <span className={`sidebar-label transition-opacity duration-200 ${
-        isOpen ? "opacity-100" : "opacity-0"
+      <span className={`sidebar-label ${
+        ((isOpen && !isMobile) || mobileOpen) ? "opacity-100" : "opacity-0"
       } ${activeItem === id ? 'active-label' : ''}`}>
         {label}
       </span>
     </li>
   );
 
-  // NEW: Update pointer position whenever activeItem or userRole changes
+  // NEW: Update pointer position calculation for desktop screens
   useEffect(() => {
-    const ref = menuItemRefs.current[activeItem];
-    if (ref) {
-      setPointerPosition(ref.offsetTop + ref.offsetHeight / 2);
+    if (isMobile) return;
+
+    // Don't wait, calculate immediately
+    const updatePointerPosition = () => {
+      const activeMenuItem = menuItemRefs.current[activeItem];
+      if (activeMenuItem && sidebarRef.current) {
+        // Simple calculation based on offset from top
+        const position = activeMenuItem.offsetTop + (activeMenuItem.offsetHeight / 2);
+        setPointerPosition(position);
+        setPointerVisible(true);
+        
+        console.log("Desktop pointer updated:", {
+          activeItem,
+          position,
+          element: activeMenuItem
+        });
+      }
+    };
+    
+    // Run immediately after render
+    updatePointerPosition();
+    
+    // Also add a small delay to catch any layout shifts
+    const timer = setTimeout(updatePointerPosition, 100);
+    return () => clearTimeout(timer);
+  }, [activeItem, isMobile]);
+
+  // Add resize observer for more accurate pointer positioning
+  useEffect(() => {
+    if (isMobile) return;
+    
+    const resizeObserver = new ResizeObserver(() => {
+      const ref = menuItemRefs.current[activeItem];
+      if (ref) {
+        const pos = ref.offsetTop + (ref.offsetHeight / 2);
+        setPointerPosition(pos);
+      }
+    });
+    
+    // Observe the entire sidebar to detect any size changes
+    if (sidebarRef.current) {
+      resizeObserver.observe(sidebarRef.current);
     }
-  }, [activeItem, userRole]);
+    
+    return () => resizeObserver.disconnect();
+  }, [activeItem, isMobile]);
 
   const handleModalClose = () => {
     // Keep sidebar expanded for a moment after modal closes
@@ -278,157 +383,197 @@ const Sidebar = ({ onExpandChange }) => {
     setShowNotifications(!showNotifications);
   };
 
-  useEffect(() => {
-    // Notify parent component when sidebar expansion state changes
-    onExpandChange?.(isOpen || isFrozen);
-  }, [isOpen, isFrozen, onExpandChange]);
-
   return (
-    <div 
-      className={`sidebar fixed top-0 left-0 bg-[#057DCD] h-screen p-5 pt-8 z-40 transition-all duration-300 ${
-        isFrozen || isOpen ? 'w-64' : 'w-20'
-      }`}
-      onMouseEnter={() => !isFrozen && setIsOpen(true)}
-      onMouseLeave={() => !isFrozen && setIsOpen(false)}
-    >
-      {/* NEW: Render the pointer element */}
+    <>
+      {/* MOBILE: Standalone pointer when sidebar is closed */}
+      {isMobile && !mobileOpen && (
+        <div 
+          className="fixed top-0 left-0 h-screen z-40 flex items-center cursor-pointer"
+          style={{ width: '30px' }}
+          onClick={handlePointerClick}
+        >
+          <div 
+            className="mobile-pointer-icon" 
+            style={{ 
+              position: 'absolute', 
+              right: '-7px',
+              pointerEvents: 'all' 
+            }}
+          >
+            <PointerIcon width="48" height="48" className="fill-current text-[#057DCD]" />
+          </div>
+        </div>
+      )}
+      
+      {/* Main sidebar */}
       <div 
-        className="pointer-icon" 
-        style={{
-          position: 'absolute',
-          right: '-1.7rem', // adjust horizontal offset as needed
-          top: pointerPosition,
-          transform: 'translateY(-50%)',
-          transition: 'top 0.3s ease'
-        }}
+        ref={sidebarRef}
+        className={`sidebar fixed top-0 left-0 bg-[#057DCD] h-screen p-5 pt-8 z-40 transition-all duration-300 ${
+          isMobile 
+            ? mobileOpen ? 'translate-x-0 w-64' : '-translate-x-full' 
+            : (isFrozen || isOpen) ? 'w-64' : 'w-20'
+        }`}
+        onMouseEnter={() => !isFrozen && !isMobile && setIsOpen(true)}
+        onMouseLeave={() => !isFrozen && !isMobile && setIsOpen(false)}
       >
-        <PointerIcon width="48" height="48" /> {/* Increased size */}
-      </div>
-
-      {/* Return to original logo placement but with fixed size */}
-      <div className="flex items-center mb-10">
-        <div className="w-20 min-w-[5rem] -ml-5">
-          <img src={logo} alt="Logo" className="w-full" />
-        </div>
-        <div className={`transition-all duration-300 ${isOpen ? 'opacity-100' : 'opacity-0'}`}>
-          <h1 className="text-white font-bold text-xl">Polycon</h1>
-        </div>
-      </div>
-
-      {userRole === 'student' && (
-        <ul className="mt-2 space-y-3"> {/* Changed from mt-6 to mt-2 */}
-          {renderMenuItem("dashboard", HomeIcon, "Home")}
-          {renderMenuItem("appointments", UpcomingIcon, "Appointments")}
-          {renderMenuItem("past", PastIcon, "History")}
-          {renderMenuItem("grades", GradesIcon, "Grades")}
-        </ul>
-      )}
-
-      {userRole === 'faculty' && (
-        <ul className="mt-2 space-y-3"> {/* Changed from mt-6 to mt-2 */}
-          {renderMenuItem("dashboard", HomeIcon, "Home")}
-          {renderMenuItem("appointments", UpcomingIcon, "Appointments")}
-          {renderMenuItem("past", PastIcon, "History")}
-          {renderMenuItem("classRecord", ClassRecorderIcon, "Class Record")}
-        </ul>
-      )}
-
-      {userRole === 'admin' && (
-        <ul className="mt-2 space-y-3"> {/* Changed from mt-6 to mt-2 */}
-          {renderMenuItem("homeadmin", HomeIcon, "Home")}
-          {renderMenuItem("add_users", UserAdd, "Users")}
-          {renderMenuItem("course", CourseAdd, "Courses")}
-          {renderMenuItem("program", ProgramAdd, "Programs")}
-          {renderMenuItem("department", DepartmentAdd, "Departments")}
-          {renderMenuItem("semester", SemesterAdd, "Semesters")}
-        </ul>
-      )}
-
-      {/* Bell and Settings container */}
-      <div className="absolute bottom-32 left-0 pl-7">
-        <ul className="flex flex-col items-center space-y-4">
-          <li 
-            ref={bellButtonRef}
-            onClick={handleBellClick}
-            className={`no-hover-item relative h-8 flex items-center cursor-pointer transition-opacity duration-300 ${isOpen ? 'opacity-100' : 'opacity-0'}`}
+        {/* DESKTOP: Modified to add smooth transition */}
+        {!isMobile && (
+          <div 
+            className="pointer-icon desktop-pointer"
+            style={{
+              position: 'absolute',
+              right: '-20px',
+              top: `${pointerPosition}px`,
+              transform: 'translateY(330%)',
+              transition: 'top 0.3s cubic-bezier(0.4, 0, 0.2, 1)', // Added smooth transition
+              zIndex: 999,
+              pointerEvents: 'none',
+            }}
           >
-            <BellIcon className="w-6 h-6 bell-icon -mr-2" />
-            {unreadCount > 0 && (
-              <span className="absolute -top-0 -right-2 h-3 w-3 bg-red-500 rounded-full"></span>
-            )}
-          </li>
-          <li 
-            ref={settingsButtonRef}
-            onClick={handleSettingsClick}
-            className={`no-hover-item relative h-8 flex items-center cursor-pointer transition-opacity duration-300 ${isOpen ? 'opacity-100' : 'opacity-0'}`}
+            <PointerIcon 
+              width="40" 
+              height="40" 
+              className="fill-current text-[#057DCD]" 
+            />
+          </div>
+        )}
+
+        {/* For mobile: Add close button in the sidebar */}
+        {isMobile && mobileOpen && (
+          <button 
+            className="absolute top-4 right-4 text-white z-50"
+            onClick={() => setMobileOpen(false)}
           >
-            <SettingsIcon className="w-6 h-6 justify -mr-2" />
-          </li>
-        </ul>
+            <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+              <line x1="18" y1="6" x2="6" y2="18"></line>
+              <line x1="6" y1="6" x2="18" y2="18"></line>
+            </svg>
+          </button>
+        )}
+
+        {/* Rest of the sidebar content */}
+        {/* ...existing logo and menu items... */}
+        <div className="flex items-center mb-10">
+          <div className="w-20 min-w-[5rem] -ml-5">
+            <img src={logo} alt="Logo" className="w-full" />
+          </div>
+          <div className={`transition-opacity duration-300 ${((isOpen && !isMobile) || mobileOpen) ? 'opacity-100' : 'opacity-0'}`}>
+            <h1 className="text-white font-bold text-xl">Polycon</h1>
+          </div>
+        </div>
+
+        {userRole === 'student' && (
+          <ul className="mt-2 space-y-3 relative">
+            {renderMenuItem("dashboard", HomeIcon, "Home")}
+            {renderMenuItem("appointments", UpcomingIcon, "Appointments")}
+            {renderMenuItem("past", PastIcon, "History")}
+            {renderMenuItem("grades", GradesIcon, "Grades")}
+          </ul>
+        )}
+
+        {userRole === 'faculty' && (
+          <ul className="mt-2 space-y-3 relative"> {/* Changed from mt-6 to mt-2 */}
+            {renderMenuItem("dashboard", HomeIcon, "Home")}
+            {renderMenuItem("appointments", UpcomingIcon, "Appointments")}
+            {renderMenuItem("past", PastIcon, "History")}
+            {renderMenuItem("classRecord", ClassRecorderIcon, "Class Record")}
+          </ul>
+        )}
+
+        {userRole === 'admin' && (
+          <ul className="mt-2 space-y-3 relative"> {/* Changed from mt-6 to mt-2 */}
+            {renderMenuItem("homeadmin", HomeIcon, "Home")}
+            {renderMenuItem("add_users", UserAdd, "Users")}
+            {renderMenuItem("course", CourseAdd, "Courses")}
+            {renderMenuItem("program", ProgramAdd, "Programs")}
+            {renderMenuItem("department", DepartmentAdd, "Departments")}
+            {renderMenuItem("semester", SemesterAdd, "Semesters")}
+          </ul>
+        )}
+
+        {/* Bell and Settings container - Fix clickability and opacity issues */}
+        <div className="absolute bottom-32 left-0 pl-7 z-50">
+          <ul className="flex flex-col items-center space-y-4">
+            <li 
+              ref={bellButtonRef}
+              onClick={handleBellClick}
+              className={`no-hover-item relative h-8 flex items-center cursor-pointer ${((isOpen && !isMobile) || mobileOpen) ? 'opacity-100' : 'opacity-0'}`}
+            >
+              <BellIcon className="w-6 h-6 bell-icon -mr-2" />
+              {unreadCount > 0 && (
+                <span className="absolute -top-0 -right-2 h-3 w-3 bg-red-500 rounded-full"></span>
+              )}
+            </li>
+            <li 
+              ref={settingsButtonRef}
+              onClick={handleSettingsClick}
+              className={`no-hover-item relative h-8 flex items-center cursor-pointer ${((isOpen && !isMobile) || mobileOpen) ? 'opacity-100' : 'opacity-0'}`}
+            >
+              <SettingsIcon className="w-6 h-6 justify -mr-2" />
+            </li>
+          </ul>
+        </div>
+
+        {/* Profile photo and user info container - Fix clickability and visibility */}
+        <div className="absolute bottom-10 left-0 pl-3 w-full pr-2 z-50">
+          <div className="flex items-center space-x-2">
+            <div className="flex-shrink-0">
+              <div 
+                className="rounded-full p-1 bg-[#54BEFF] relative group cursor-pointer"
+                onClick={() => {
+                  setShowUploadModal(true);
+                  setIsFrozen(true);
+                }}
+              >
+                <div className="rounded-full p-1 bg-white">
+                  <div className="relative">
+                    <img 
+                      src={userDetails?.profile_picture || profilePicture || 'https://via.placeholder.com/100'} 
+                      alt="Profile" 
+                      className="rounded-full w-10 h-10"  
+                    />
+                    <div className="absolute inset-0 bg-black bg-opacity-50 rounded-full opacity-0 group-hover:opacity-100 flex items-center justify-center transition-opacity duration-200">
+                      <span className="text-white text-xs">Edit</span>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </div>
+            <div className={`flex-grow min-w-0 ${((isOpen && !isMobile) || mobileOpen) ? "opacity-100" : "opacity-0"}`}>
+              {userDetails && (
+                <>
+                  <p className="text-white text-sm font-semibold truncate">
+                    {userDetails.firstName} {userDetails.lastName}
+                  </p>
+                  <p className="text-gray-200 text-xs truncate">
+                    {userDetails.ID}
+                  </p>
+                  <p className="text-gray-200 text-xs truncate">
+                    {userRole === 'student' ? 
+                      `${userDetails.program || ''} ${userDetails.year_section || ''}` :
+                      userRole === 'faculty' ? 
+                        userDetails.department || 'Loading...' :
+                        'Admin'}
+                  </p>
+                </>
+              )}
+            </div>
+          </div>
+        </div>
       </div>
 
-      {/* Notification Tray */}
+      {/* Notification and Settings popups */}
       <NotificationTray 
         isVisible={showNotifications} 
         onClose={() => setShowNotifications(false)}
         position={notificationPosition}
       />
 
-      {/* Settings Popup */}
       <SettingsPopup 
         isVisible={showSettings} 
         onClose={() => setShowSettings(false)}
         position={settingsPosition}
       />
-
-      {/* Profile photo and user info container */}
-      <div className="absolute bottom-10 left-0 pl-3 w-full pr-2">
-        <div className="flex items-center space-x-2">
-          <div className="flex-shrink-0">
-            <div 
-              className="rounded-full p-1 bg-[#54BEFF] relative group cursor-pointer"
-              onClick={() => {
-                setShowUploadModal(true);
-                setIsFrozen(true);
-              }}
-            >
-              <div className="rounded-full p-1 bg-white">
-                <div className="relative">
-                  <img 
-                    src={userDetails?.profile_picture || profilePicture || 'https://via.placeholder.com/100'} 
-                    alt="Profile" 
-                    className="rounded-full w-10 h-10"  
-                  />
-                  <div className="absolute inset-0 bg-black bg-opacity-50 rounded-full opacity-0 group-hover:opacity-100 flex items-center justify-center transition-opacity duration-200">
-                    <span className="text-white text-xs">Edit</span>
-                  </div>
-                </div>
-              </div>
-            </div>
-          </div>
-          <div className={`flex-grow min-w-0 transform transition-all duration-300 ${
-            isOpen ? "opacity-100 translate-x-0" : "opacity-0 -translate-x-4"
-          }`}>
-            {userDetails && (
-              <>
-                <p className="text-white text-sm font-semibold truncate transition-opacity duration-300">
-                  {userDetails.firstName} {userDetails.lastName}
-                </p>
-                <p className="text-gray-200 text-xs truncate transition-opacity duration-300">
-                  {userDetails.ID}
-                </p>
-                <p className="text-gray-200 text-xs truncate transition-opacity duration-300">
-                  {userRole === 'student' ? 
-                    `${userDetails.program || ''} ${userDetails.year_section || ''}` :
-                    userRole === 'faculty' ? 
-                      userDetails.department || 'Loading...' :
-                      'Admin'}
-                </p>
-              </>
-            )}
-          </div>
-        </div>
-      </div>
 
       {/* Photo Upload Modal */}
       {showUploadModal && (
@@ -445,8 +590,9 @@ const Sidebar = ({ onExpandChange }) => {
           </div>
         </div>
       )}
-    </div>
+    </>
   );
 };
 
 export default Sidebar;
+

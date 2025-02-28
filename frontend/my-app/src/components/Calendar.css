@@ -302,3 +302,82 @@
 .rbc-current-time-indicator{
    height: 2px !important;
 }
+
+/* Enhanced mobile responsiveness */
+@media (max-width: 640px) {
+  .rbc-calendar {
+    font-size: 12px;
+  }
+
+  .rbc-toolbar {
+    flex-direction: column;
+    align-items: start;
+    padding: 5px !important;
+  }
+  
+  .rbc-toolbar-label {
+    margin: 8px 0;
+    font-size: 14px;
+  }
+  
+  .rbc-header {
+    padding: 4px !important;
+  }
+  
+  .rbc-button-link {
+    padding: 2px !important;
+    font-size: 12px;
+  }
+  
+  .rbc-event {
+    padding: 2px !important;
+    font-size: 10px !important;
+  }
+  
+  .rbc-agenda-view table.rbc-agenda-table {
+    font-size: 10px !important;
+  }
+  
+  .rbc-agenda-view table.rbc-agenda-table thead > tr > th {
+    padding: 2px !important;
+  }
+  
+  .rbc-agenda-view table.rbc-agenda-table tbody > tr > td {
+    padding: 2px !important;
+  }
+  
+  /* Force single column toolbar on tiny screens */
+  @media (max-width: 360px) {
+    .rbc-toolbar {
+      flex-wrap: wrap;
+      justify-content: center;
+    }
+    
+    .rbc-toolbar > span {
+      margin: 2px 0;
+    }
+  }
+}
+
+/* Custom styles for our calendar container */
+.calendar-container {
+  width: 100%;
+  min-height: 300px; /* Minimum height for the calendar */
+  max-height: 80vh; /* Limit maximum height */
+}
+
+/* Optimize month view for small screens */
+@media (max-width: 480px) {
+  .rbc-month-view {
+    height: auto !important;
+  }
+  
+  .rbc-month-row {
+    min-height: 80px !important;
+  }
+  
+  /* Reduce date cell padding */
+  .rbc-date-cell {
+    padding: 2px !important;
+  }
+}

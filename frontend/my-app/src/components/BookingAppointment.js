@@ -11,6 +11,19 @@ function BookingAppointment({ closeModal, role: propRole }) {
   const navigate = useNavigate();
   const location = useLocation();
 
+  // Add mobile detection
+  const [isMobile, setIsMobile] = useState(window.innerWidth < 640);
+  
+  // Add resize listener for responsive behavior
+  useEffect(() => {
+    const handleResize = () => {
+      setIsMobile(window.innerWidth < 640);
+    };
+    
+    window.addEventListener('resize', handleResize);
+    return () => window.removeEventListener('resize', handleResize);
+  }, []);
+
   // Replace full lists with search result state
   const [searchTerm, setSearchTerm] = useState("");
   // --- Modified: selectedStudents now holds full student objects ---
@@ -275,28 +288,28 @@ function BookingAppointment({ closeModal, role: propRole }) {
   }
 
   return (
-    <div className="pt-4 pr-4 pl-4">
+    <div className="pt-2 sm:pt-4 px-2 sm:px-4">
       {role === "faculty" ? (
         <>
-          {/* Teacher's Form */}
-          <div className="space-y-6">
+          {/* Teacher's Form - Made Responsive */}
+          <div className="space-y-4 sm:space-y-6">
             {/* Student Selection */}
             <div className="relative">
-              <label className="block text-sm font-medium text-gray-700 mb-2">
+              <label className="block text-sm font-medium text-gray-700 mb-1 sm:mb-2">
                 Students <span className="text-red-500">*</span>
               </label>
-              <div className="min-h-[45px] flex flex-wrap items-center gap-2 border-2 border-[#397de2] rounded-lg px-3 py-2 focus-within:ring-2 focus-within:ring-[#54BEFF]">
+              <div className="min-h-[45px] flex flex-wrap items-center gap-1 sm:gap-2 border-2 border-[#397de2] rounded-lg px-2 sm:px-3 py-2 focus-within:ring-2 focus-within:ring-[#54BEFF]">
                 {selectedStudents.map((student) => (
                   <div
                     key={student.id}
-                    className="bg-[#397de2] text-white px-2 py-1 rounded-full flex items-center gap-2 text-sm"
+                    className="bg-[#397de2] text-white px-1 sm:px-2 py-1 rounded-full flex items-center gap-1 sm:gap-2 text-xs sm:text-sm mb-1"
                   >
                     <img
                       src={getProfilePictureUrl(student.profile_picture)}
                       alt="Profile"
-                      className="w-5 h-5 rounded-full"
+                      className="w-4 h-4 sm:w-5 sm:h-5 rounded-full"
                     />
-                    <span>
+                    <span className="max-w-[100px] sm:max-w-full truncate">
                       {student.firstName} {student.lastName}
                     </span>
                     <button
@@ -319,29 +332,28 @@ function BookingAppointment({ closeModal, role: propRole }) {
                   onBlur={() =>
                     setTimeout(() => setIsStudentInputFocused(false), 200)
                   }
-                  placeholder="Search students..."
-                  className="flex-1 min-w-[120px] outline-none bg-transparent"
+                  placeholder={isMobile ? "Search..." : "Search students..."}
+                  className="flex-1 min-w-[80px] outline-none bg-transparent text-sm"
                 />
               </div>
-              {/* Student Search Results Dropdown */}
+              {/* Student Search Results Dropdown - Made Responsive */}
               {isStudentInputFocused && (
-                <ul className="absolute z-20 w-full mt-1 bg-white border border-gray-200 rounded-lg shadow-lg max-h-60 overflow-y-auto">
+                <ul className="absolute z-20 w-full mt-1 bg-white border border-gray-200 rounded-lg shadow-lg max-h-40 sm:max-h-60 overflow-y-auto">
                   {isStudentSearchLoading ? (
-                    // 🚀 Loading Skeleton for Student Search
                     Array.from({ length: 3 }).map((_, index) => (
                       <li
                         key={index}
-                        className="px-4 py-2 flex items-center gap-3 animate-pulse"
+                        className="px-2 sm:px-4 py-2 flex items-center gap-2 sm:gap-3 animate-pulse"
                       >
-                        <div className="w-8 h-8 bg-gray-200 rounded-full"></div>
+                        <div className="w-6 h-6 sm:w-8 sm:h-8 bg-gray-200 rounded-full"></div>
                         <div className="flex flex-col">
-                          <div className="w-32 h-4 bg-gray-200 rounded"></div>
-                          <div className="w-24 h-3 bg-gray-100 rounded mt-1"></div>
+                          <div className="w-24 sm:w-32 h-3 sm:h-4 bg-gray-200 rounded"></div>
+                          <div className="w-16 sm:w-24 h-2 sm:h-3 bg-gray-100 rounded mt-1"></div>
                         </div>
                       </li>
                     ))
                   ) : studentResults.length === 0 ? (
-                    <li className="px-4 py-2 text-center text-gray-500">
+                    <li className="px-2 sm:px-4 py-2 text-center text-gray-500 text-xs sm:text-sm">
                       No students found
                     </li>
                   ) : (
@@ -357,18 +369,18 @@ function BookingAppointment({ closeModal, role: propRole }) {
                             setSelectedStudents([...selectedStudents, student]);
                             setSearchTerm("");
                           }}
-                          className="px-4 py-2 hover:bg-gray-50 flex items-center gap-3 cursor-pointer"
+                          className="px-2 sm:px-4 py-2 hover:bg-gray-50 flex items-center gap-2 sm:gap-3 cursor-pointer"
                         >
                           <img
                             src={getProfilePictureUrl(student.profile_picture)}
                             alt="Profile"
-                            className="w-8 h-8 rounded-full"
+                            className="w-6 h-6 sm:w-8 sm:h-8 rounded-full"
                           />
                           <div>
-                            <div className="font-medium">
+                            <div className="font-medium text-xs sm:text-sm">
                               {student.firstName} {student.lastName}
                             </div>
-                            <div className="text-sm text-gray-500">
+                            <div className="text-xs text-gray-500">
                               {student.program} • {student.year_section}
                             </div>
                           </div>
@@ -379,52 +391,52 @@ function BookingAppointment({ closeModal, role: propRole }) {
               )}
             </div>
 
-            {/* Schedule Selection */}
+            {/* Schedule Selection - Made Responsive */}
             <div>
-              <label className="block text-sm font-medium text-gray-700 mb-2">
+              <label className="block text-sm font-medium text-gray-700 mb-1 sm:mb-2">
                 Schedule <span className="text-red-500">*</span>
               </label>
               <input
                 type="datetime-local"
                 value={schedule}
                 onChange={(e) => setSchedule(e.target.value)}
-                className="w-full border-2 border-[#397de2] rounded-lg px-3 py-2 focus:outline-none focus:ring-2 focus:ring-[#54BEFF]"
+                className="w-full border-2 border-[#397de2] rounded-lg px-2 sm:px-3 py-2 sm:py-2 text-sm sm:text-base focus:outline-none focus:ring-2 focus:ring-[#54BEFF]"
               />
             </div>
 
-            {/* Venue Input */}
+            {/* Venue Input - Made Responsive */}
             <div>
-              <label className="block text-sm font-medium text-gray-700 mb-2">
+              <label className="block text-sm font-medium text-gray-700 mb-1 sm:mb-2">
                 Venue <span className="text-red-500">*</span>
               </label>
               <input
                 type="text"
                 value={venue}
                 onChange={(e) => setVenue(e.target.value)}
-                placeholder="Enter venue (e.g., Room 101)"
-                className="w-full border-2 border-[#397de2] rounded-lg px-3 py-2 focus:outline-none focus:ring-2 focus:ring-[#54BEFF]"
+                placeholder={isMobile ? "Room number" : "Enter venue (e.g., Room 101)"}
+                className="w-full border-2 border-[#397de2] rounded-lg px-2 sm:px-3 py-2 sm:py-2 text-sm sm:text-base focus:outline-none focus:ring-2 focus:ring-[#54BEFF]"
               />
             </div>
           </div>
         </>
       ) : (
         <>
-          {/* Student's Form */}
-          <div className="space-y-6">
+          {/* Student's Form - Made Responsive */}
+          <div className="space-y-4 sm:space-y-6">
             {/* Teacher Selection */}
             <div className="relative">
-              <label className="block text-sm font-medium text-gray-700 mb-2">
+              <label className="block text-sm font-medium text-gray-700 mb-1 sm:mb-2">
                 Teacher <span className="text-red-500">*</span>
               </label>
-              <div className="min-h-[45px] flex items-center gap-2 border-2 border-[#397de2] rounded-lg px-3 py-2 focus-within:ring-2 focus-within:ring-[#54BEFF]">
+              <div className="min-h-[45px] flex items-center gap-1 sm:gap-2 border-2 border-[#397de2] rounded-lg px-2 sm:px-3 py-2 focus-within:ring-2 focus-within:ring-[#54BEFF]">
                 {selectedTeacher && !teacherSearchTerm ? (
-                  <div className="bg-[#397de2] text-white px-2 py-1 rounded-full flex items-center gap-2 text-sm">
+                  <div className="bg-[#397de2] text-white px-2 py-1 rounded-full flex items-center gap-2 text-xs sm:text-sm">
                     <img
                       src={getProfilePictureUrl(selectedTeacherProfile)}
                       alt="Teacher"
-                      className="w-5 h-5 rounded-full"
+                      className="w-4 h-4 sm:w-5 sm:h-5 rounded-full"
                     />
-                    <span>{selectedTeacherName}</span>
+                    <span className="max-w-[120px] sm:max-w-full truncate">{selectedTeacherName}</span>
                     <button
                       onClick={() => {
                         setSelectedTeacher("");
@@ -450,31 +462,30 @@ function BookingAppointment({ closeModal, role: propRole }) {
                     onBlur={() =>
                       setTimeout(() => setIsTeacherInputFocused(false), 200)
                     }
-                    placeholder="Search for a teacher..."
-                    className="flex-1 outline-none bg-transparent"
+                    placeholder={isMobile ? "Search..." : "Search for a teacher..."}
+                    className="flex-1 outline-none bg-transparent text-sm"
                   />
                 )}
               </div>
 
-              {/* Teacher Search Results Dropdown */}
+              {/* Teacher Search Results Dropdown - Made Responsive */}
               {isTeacherInputFocused && (
-                <ul className="absolute z-20 w-full mt-1 bg-white border border-gray-200 rounded-lg shadow-lg max-h-60 overflow-y-auto">
+                <ul className="absolute z-20 w-full mt-1 bg-white border border-gray-200 rounded-lg shadow-lg max-h-40 sm:max-h-60 overflow-y-auto">
                   {isTeacherSearchLoading ? (
-                    // 🚀 Loading Skeleton for Teacher Search
                     Array.from({ length: 3 }).map((_, index) => (
                       <li
                         key={index}
-                        className="px-4 py-2 flex items-center gap-3 animate-pulse"
+                        className="px-2 sm:px-4 py-2 flex items-center gap-2 sm:gap-3 animate-pulse"
                       >
-                        <div className="w-8 h-8 bg-gray-200 rounded-full"></div>
+                        <div className="w-6 h-6 sm:w-8 sm:h-8 bg-gray-200 rounded-full"></div>
                         <div className="flex flex-col">
-                          <div className="w-32 h-4 bg-gray-200 rounded"></div>
-                          <div className="w-24 h-3 bg-gray-100 rounded mt-1"></div>
+                          <div className="w-24 sm:w-32 h-3 sm:h-4 bg-gray-200 rounded"></div>
+                          <div className="w-16 sm:w-24 h-2 sm:h-3 bg-gray-100 rounded mt-1"></div>
                         </div>
                       </li>
                     ))
                   ) : teacherResults.length === 0 ? (
-                    <li className="px-4 py-2 text-center text-gray-500">
+                    <li className="px-2 sm:px-4 py-2 text-center text-gray-500 text-xs sm:text-sm">
                       No teachers found
                     </li>
                   ) : (
@@ -490,18 +501,18 @@ function BookingAppointment({ closeModal, role: propRole }) {
                           setTeacherSearchTerm("");
                           setIsTeacherInputFocused(false);
                         }}
-                        className="px-4 py-2 hover:bg-gray-50 flex items-center gap-3 cursor-pointer"
+                        className="px-2 sm:px-4 py-2 hover:bg-gray-50 flex items-center gap-2 sm:gap-3 cursor-pointer"
                       >
                         <img
                           src={getProfilePictureUrl(teacher.profile_picture)}
                           alt="Profile"
-                          className="w-8 h-8 rounded-full"
+                          className="w-6 h-6 sm:w-8 sm:h-8 rounded-full"
                         />
                         <div>
-                          <div className="font-medium">
+                          <div className="font-medium text-xs sm:text-sm">
                             {teacher.firstName} {teacher.lastName}
                           </div>
-                          <div className="text-sm text-gray-500">
+                          <div className="text-xs text-gray-500">
                             {teacher.department}
                           </div>
                         </div>
@@ -512,23 +523,23 @@ function BookingAppointment({ closeModal, role: propRole }) {
               )}
             </div>
 
-            {/* Fellow Students Selection (Optional) */}
+            {/* Fellow Students Selection (Optional) - Made Responsive */}
             <div className="relative">
-              <label className="block text-sm font-medium text-gray-700 mb-2">
+              <label className="block text-sm font-medium text-gray-700 mb-1 sm:mb-2">
                 Fellow Students (Optional)
               </label>
-              <div className="min-h-[45px] flex flex-wrap items-center gap-2 border-2 border-[#397de2] rounded-lg px-3 py-2 focus-within:ring-2 focus-within:ring-[#54BEFF]">
+              <div className="min-h-[45px] flex flex-wrap items-center gap-1 sm:gap-2 border-2 border-[#397de2] rounded-lg px-2 sm:px-3 py-2 focus-within:ring-2 focus-within:ring-[#54BEFF]">
                 {selectedStudents.map((student) => (
                   <div
                     key={student.id}
-                    className="bg-[#397de2] text-white px-2 py-1 rounded-full flex items-center gap-2 text-sm"
+                    className="bg-[#397de2] text-white px-1 sm:px-2 py-1 rounded-full flex items-center gap-1 sm:gap-2 text-xs sm:text-sm mb-1"
                   >
                     <img
                       src={getProfilePictureUrl(student.profile_picture)}
                       alt="Profile"
-                      className="w-5 h-5 rounded-full"
+                      className="w-4 h-4 sm:w-5 sm:h-5 rounded-full"
                     />
-                    <span>
+                    <span className="max-w-[100px] sm:max-w-full truncate">
                       {student.firstName} {student.lastName}
                     </span>
                     <button
@@ -556,30 +567,30 @@ function BookingAppointment({ closeModal, role: propRole }) {
                   onBlur={() =>
                     setTimeout(() => setIsStudentInputFocused(false), 200)
                   }
-                  placeholder="Search fellow students..."
-                  className="flex-1 min-w-[120px] outline-none bg-transparent"
+                  placeholder={isMobile ? "Search..." : "Search fellow students..."}
+                  className="flex-1 min-w-[80px] outline-none bg-transparent text-sm"
                 />
               </div>
 
-              {/* Fellow Student Search Results Dropdown */}
+              {/* Fellow Student Search Results Dropdown - Made Responsive */}
               {isStudentInputFocused && (
-                <ul className="absolute z-20 w-full mt-1 bg-white border border-gray-200 rounded-lg shadow-lg max-h-60 overflow-y-auto">
+                <ul className="absolute z-20 w-full mt-1 bg-white border border-gray-200 rounded-lg shadow-lg max-h-40 sm:max-h-60 overflow-y-auto">
                   {isFellowStudentSearchLoading ? (
                     // 🚀 Loading Skeleton for Fellow Students
                     Array.from({ length: 3 }).map((_, index) => (
                       <li
                         key={index}
-                        className="px-4 py-2 flex items-center gap-3 animate-pulse"
+                        className="px-2 sm:px-4 py-2 flex items-center gap-2 sm:gap-3 animate-pulse"
                       >
-                        <div className="w-8 h-8 bg-gray-200 rounded-full"></div>
+                        <div className="w-6 h-6 sm:w-8 sm:h-8 bg-gray-200 rounded-full"></div>
                         <div className="flex flex-col">
-                          <div className="w-32 h-4 bg-gray-200 rounded"></div>
-                          <div className="w-24 h-3 bg-gray-100 rounded mt-1"></div>
+                          <div className="w-24 sm:w-32 h-3 sm:h-4 bg-gray-200 rounded"></div>
+                          <div className="w-16 sm:w-24 h-2 sm:h-3 bg-gray-100 rounded mt-1"></div>
                         </div>
                       </li>
                     ))
                   ) : studentResults.length === 0 ? (
-                    <li className="px-4 py-2 text-center text-gray-500">
+                    <li className="px-2 sm:px-4 py-2 text-center text-gray-500 text-xs sm:text-sm">
                       No students found
                     </li>
                   ) : (
@@ -595,18 +606,18 @@ function BookingAppointment({ closeModal, role: propRole }) {
                             setSelectedStudents([...selectedStudents, student]);
                             setSearchTerm("");
                           }}
-                          className="px-4 py-2 hover:bg-gray-50 flex items-center gap-3 cursor-pointer"
+                          className="px-2 sm:px-4 py-2 hover:bg-gray-50 flex items-center gap-2 sm:gap-3 cursor-pointer"
                         >
                           <img
                             src={getProfilePictureUrl(student.profile_picture)}
                             alt="Profile"
-                            className="w-8 h-8 rounded-full"
+                            className="w-6 h-6 sm:w-8 sm:h-8 rounded-full"
                           />
                           <div>
-                            <div className="font-medium">
+                            <div className="font-medium text-xs sm:text-sm">
                               {student.firstName} {student.lastName}
                             </div>
-                            <div className="text-sm text-gray-500">
+                            <div className="text-xs text-gray-500">
                               {student.program} • {student.year_section}
                             </div>
                           </div>
@@ -620,10 +631,10 @@ function BookingAppointment({ closeModal, role: propRole }) {
         </>
       )}
 
-      {/* Message display */}
+      {/* Message display - Made Responsive */}
       {message.content && (
         <div
-          className={`mt-4 p-3 rounded-lg ${
+          className={`mt-3 sm:mt-4 p-2 sm:p-3 rounded-lg text-xs sm:text-sm ${
             message.type === "success"
               ? "bg-green-100 text-green-700"
               : "bg-red-100 text-red-700"
@@ -633,11 +644,11 @@ function BookingAppointment({ closeModal, role: propRole }) {
         </div>
       )}
 
-      {/* Submit Button */}
+      {/* Submit Button - Made Taller */}
       <div className="relative h-[10vh]">
-        <div className="mt-2 p-3">
+        <div className="mt-2 p-2 sm:p-3">
           {isBookingOverQuota() && (
-            <div className="text-red-500 rounded-lg">
+            <div className="text-red-500 text-xs sm:text-sm rounded-lg">
               Warning: You have exceeded the maximum number of 4 students per
               consultation.
             </div>
@@ -657,13 +668,13 @@ function BookingAppointment({ closeModal, role: propRole }) {
                 isBookingOverQuota() || isLoading
                   ? "opacity-50 cursor-not-allowed"
                   : ""
-              } bg-[#397de2] hover:bg-[#54BEFF] text-white flex-1 py-4 rounded-bl-lg justify-center transition-colors flex items-center
-              ${SubmitBookingClicked ? "scale-90" : "scale-100"}`}
+              } bg-[#397de2] hover:bg-[#54BEFF] text-white flex-1 py-3 sm:py-6 rounded-bl-lg justify-center transition-colors flex items-center text-xs sm:text-sm
+              ${SubmitBookingClicked ? "scale-100" : "scale-100"}`}
             >
               {isLoading ? (
                 <>
                   <svg
-                    className="animate-spin h-5 w-5 text-white"
+                    className="animate-spin h-4 w-4 sm:h-5 sm:w-5 text-white"
                     xmlns="http://www.w3.org/2000/svg"
                     fill="none"
                     viewBox="0 0 24 24"
@@ -682,7 +693,7 @@ function BookingAppointment({ closeModal, role: propRole }) {
                       d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"
                     ></path>
                   </svg>
-                  <span>Processing...</span>
+                  <span className="ml-2">Processing...</span>
                 </>
               ) : (
                 <span>
@@ -699,9 +710,8 @@ function BookingAppointment({ closeModal, role: propRole }) {
                   setTimeout(() => closeModal(), 500);
                 }, 200);
               }}
-              className={`flex-1 py-4 text-gray-700 bg-gray-100 rounded-br-lg hover:bg-gray-200 transition-colors
-                    ${CancelClicked ? "scale-90" : "scale-100"}
-                    `}
+              className={`flex-1 py-3 sm:py-6 text-gray-700 bg-gray-100 rounded-br-lg hover:bg-gray-200 transition-colors text-xs sm:text-sm
+                ${CancelClicked ? "scale-100" : "scale-100"}`}
             >
               Cancel
             </button>

@@ -338,13 +338,15 @@ function App() {
                 <Sidebar onExpandChange={setSidebarExpanded} />
               )}
 
-            <div className={`flex-1 flex flex-col transition-all duration-300 ease-in-out ${localStorage.getItem('userEmail') &&
-              !location.pathname.includes('/session') &&
+            <div className={`flex-1 flex flex-col transition-all duration-300 ease-in-out ${
+              localStorage.getItem('userEmail') && 
+              !location.pathname.includes('/session') && 
               !location.pathname.includes('/finaldocument')
-              ? sidebarExpanded
-                ? 'ml-64'
-                : 'ml-20'
-              : ''}`}>
+                ? sidebarExpanded
+                  ? 'md:ml-64' // Only apply margin on medium screens and above
+                  : 'md:ml-20' 
+                : ''
+            }`}>
 
 
               {/* New Profile Picture Modal */}
