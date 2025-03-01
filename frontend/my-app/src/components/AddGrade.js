@@ -39,13 +39,32 @@ export default function AddGrade() {
   const [CancelClicked, setCancelClicked] = useState(false);
   const [EditClicked, setEditClicked] = useState(false);
   const [DeleteClicked, setDeleteClicked] = useState(false);
+  const [message, setMessage] = useState({ type: "", content: "" }); // Add this new state
 
   useEffect(() => {
     const storedTeacherID = localStorage.getItem("teacherID");
     if (storedTeacherID) {
-      setFacultyID(storedTeacherID); // Set the facultyID dynamically
+      setFacultyID(storedTeacherID);
     }
-    fetchInitialData();
+
+    // Add this new fetch for latest semester defaults
+    const fetchLatestSemester = async () => {
+      try {
+        const response = await fetch('http://localhost:5001/semester/get_latest_filter');
+        if (response.ok) {
+          const data = await response.json();
+          setSchoolYear(data.school_year);
+          setSemester(data.semester);
+          // Also set the filter values
+          setSchoolYearFilter(data.school_year);
+          setSemesterFilter(data.semester);
+        }
+      } catch (error) {
+        console.error('Error fetching latest semester:', error);
+      }
+    };
+
+    Promise.all([fetchInitialData(), fetchLatestSemester()]);
   }, []);
 
   useEffect(() => {
@@ -59,50 +78,83 @@ export default function AddGrade() {
   const [uniqueSchoolYears, setUniqueSchoolYears] = useState([]);
 
   const fetchInitialData = async () => {
-    setIsLoading(true);  // Use the setter function here
+    setIsLoading(true);
     try {
+      // First get the latest semester info
+      const latestSemesterResponse = await fetch('http://localhost:5001/semester/get_latest_filter');
+      const latestSemesterData = await latestSemesterResponse.json();
+      
+      // Set both form and filter values
+      setSchoolYear(latestSemesterData.school_year);
+      setSemester(latestSemesterData.semester);
+      setSchoolYearFilter(latestSemesterData.school_year);
+      setSemesterFilter(latestSemesterData.semester);
+
       const cachedStudents = localStorage.getItem("students");
-      const cachedGrades = localStorage.getItem("grades");
       const cachedCourses = localStorage.getItem("courses");
 
-      if (cachedStudents && cachedGrades && cachedCourses) {
+      // Fetch ALL grades for this teacher without semester filter
+      const gradesUrl = new URL('http://localhost:5001/grade/get_grades');
+      gradesUrl.searchParams.append('facultyID', localStorage.getItem("teacherID"));
+
+      let gradesData; // Declare gradesData here
+
+      if (cachedStudents && cachedCourses) {
         setStudents(JSON.parse(cachedStudents));
-        setGrades(JSON.parse(cachedGrades));
-        setFilteredGrades(JSON.parse(cachedGrades));
         setCourses(JSON.parse(cachedCourses));
+        
+        // Fetch all grades
+        const gradesResponse = await fetch(gradesUrl);
+        gradesData = await gradesResponse.json(); // Assign to gradesData
+        
+        // Store all grades
+        setGrades(Array.isArray(gradesData) ? gradesData : []);
+        
+        // Filter to show only latest semester grades initially
+        const filteredGradesData = (Array.isArray(gradesData) ? gradesData : []).filter(grade => 
+          grade.school_year === latestSemesterData.school_year && 
+          grade.semester === latestSemesterData.semester
+        );
+        
+        setFilteredGrades(filteredGradesData);
       } else {
-        const [studentsResponse, gradesResponse, coursesResponse] =
-          await Promise.all([
-            fetch("http://localhost:5001/grade/get_students"),
-            fetch(
-              `http://localhost:5001/grade/get_grades?facultyID=${localStorage.getItem(
-                "teacherID"
-              )}`
-            ),
-            fetch(
-              `http://localhost:5001/course/get_courses?facultyID=${localStorage.getItem(
-                "teacherID"
-              )}`
-            ),
-          ]);
+        const [studentsResponse, gradesResponse, coursesResponse] = await Promise.all([
+          fetch("http://localhost:5001/grade/get_students"),
+          fetch(gradesUrl),
+          fetch(`http://localhost:5001/course/get_courses?facultyID=${localStorage.getItem("teacherID")}`)
+        ]);
 
         const studentsData = await studentsResponse.json();
-        const gradesData = await gradesResponse.json();
+        gradesData = await gradesResponse.json(); // Assign to gradesData
         const coursesData = await coursesResponse.json();
 
         setStudents(Array.isArray(studentsData) ? studentsData : []);
+        
+        // Store all grades
         setGrades(Array.isArray(gradesData) ? gradesData : []);
-        setFilteredGrades(Array.isArray(gradesData) ? gradesData : []);
-        setCourses(
-          Array.isArray(coursesData.courses) ? coursesData.courses : []
+        
+        // Filter to show only latest semester grades initially
+        const filteredGradesData = (Array.isArray(gradesData) ? gradesData : []).filter(grade => 
+          grade.school_year === latestSemesterData.school_year && 
+          grade.semester === latestSemesterData.semester
         );
+        
+        setFilteredGrades(filteredGradesData);
+        setCourses(Array.isArray(coursesData.courses) ? coursesData.courses : []);
 
+        // Update cache
         localStorage.setItem("students", JSON.stringify(studentsData));
-        localStorage.setItem("grades", JSON.stringify(gradesData));
+        localStorage.setItem("grades", JSON.stringify(gradesData)); // Cache all grades
         localStorage.setItem("courses", JSON.stringify(coursesData.courses));
       }
+
+      // Move this after we have gradesData
+      const uniqueYears = [...new Set((Array.isArray(gradesData) ? gradesData : []).map(grade => grade.school_year))];
+      setUniqueSchoolYears(uniqueYears);
+
     } catch (error) {
       console.error("Error fetching initial data:", error);
+      setMessage({ type: "error", content: "Error loading grades" });
     } finally {
       setIsLoading(false);
     }
@@ -130,34 +182,53 @@ export default function AddGrade() {
   };
 
   const handleDeleteGrade = async (gradeDocID) => {
-    if (!gradeDocID || !window.confirm("Are you sure you want to delete this grade?")) {
-      return;
-    }
-  
-    try {
-      const response = await fetch("http://localhost:5001/grade/delete_grade", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ gradeID: gradeDocID }),
-      });
-  
-      if (response.ok) {
-        // Update local state immediately
-        setGrades(prevGrades => 
-          prevGrades.filter(grade => grade.id !== gradeDocID)
-        );
-        setFilteredGrades(prevFiltered => 
-          prevFiltered.filter(grade => grade.id !== gradeDocID)
-        );
-  
-        alert("✅ Grade deleted successfully");
-      } else {
-        const result = await response.json();
-        alert("❌ Failed to delete grade: " + result.error);
-      }
-    } catch (error) {
-      console.error("Error deleting grade:", error);
-    }
+    setMessage({
+      type: "error",
+      content: (
+        <div className="flex items-center justify-between">
+          <span>Are you sure you want to delete this grade?</span>
+          <div className="flex gap-2">
+            <button
+              onClick={async () => {
+                try {
+                  const response = await fetch("http://localhost:5001/grade/delete_grade", {
+                    method: "POST",
+                    headers: { "Content-Type": "application/json" },
+                    body: JSON.stringify({ gradeID: gradeDocID }),
+                  });
+            
+                  if (response.ok) {
+                    setGrades(prevGrades => 
+                      prevGrades.filter(grade => grade.id !== gradeDocID)
+                    );
+                    setFilteredGrades(prevFiltered => 
+                      prevFiltered.filter(grade => grade.id !== gradeDocID)
+                    );
+                    setMessage({ type: "success", content: "Grade deleted successfully" });
+                  } else {
+                    const result = await response.json();
+                    setMessage({ type: "error", content: "Failed to delete grade: " + result.error });
+                  }
+                } catch (error) {
+                  console.error("Error deleting grade:", error);
+                  setMessage({ type: "error", content: "Error deleting grade" });
+                }
+                setTimeout(() => setMessage({ type: "", content: "" }), 3000);
+              }}
+              className="bg-red-500 text-white px-3 py-1 rounded hover:bg-red-600"
+            >
+              Delete
+            </button>
+            <button
+              onClick={() => setMessage({ type: "", content: "" })}
+              className="bg-gray-500 text-white px-3 py-1 rounded hover:bg-gray-600"
+            >
+              Cancel
+            </button>
+          </div>
+        </div>
+      )
+    });
   };
 
   const handleEditGrade = (grade) => {
@@ -186,7 +257,8 @@ export default function AddGrade() {
 
   const handleUpdateGrade = async () => {
     if (!selectedGradeID) {
-      alert("No grade selected for update");
+      setMessage({ type: "error", content: "No grade selected for update" });
+      setTimeout(() => setMessage({ type: "", content: "" }), 3000);
       return;
     }
   
@@ -230,14 +302,16 @@ export default function AddGrade() {
   
         // Reset form and selected grade
         handleCancelEdit();
-        alert("✅ Grade updated successfully");
+        setMessage({ type: "success", content: "Grade updated successfully" });
       } else {
         const result = await response.json();
-        alert("❌ Failed to update grade: " + result.error);
+        setMessage({ type: "error", content: "Failed to update grade: " + result.error });
       }
     } catch (error) {
       console.error("❌ Error updating grade:", error);
+      setMessage({ type: "error", content: "Error updating grade" });
     }
+    setTimeout(() => setMessage({ type: "", content: "" }), 3000);
   };
 
   const handleSchoolYearChange = (e) => {
@@ -272,7 +346,8 @@ export default function AddGrade() {
 
   const handleSubmitGrade = async () => {
     if (!studentID || !courseID || !grade || !period || !schoolYear || !semester || !facultyID) {
-      alert("All fields are required");
+      setMessage({ type: "error", content: "All fields are required" });
+      setTimeout(() => setMessage({ type: "", content: "" }), 3000);
       return;
     }
   
@@ -322,13 +397,15 @@ export default function AddGrade() {
         setSchoolYear("2024-2025");
         setSemester("");
   
-        alert("✅ Grade added successfully");
+        setMessage({ type: "success", content: "Grade added successfully" });
       } else {
-        alert("❌ Failed to add grade: " + result.error);
+        setMessage({ type: "error", content: "Failed to add grade: " + result.error });
       }
     } catch (error) {
       console.error("❌ Error adding grade:", error);
+      setMessage({ type: "error", content: "Error adding grade" });
     }
+    setTimeout(() => setMessage({ type: "", content: "" }), 3000);
   };
 
   // Filter Handlers
@@ -363,18 +440,6 @@ export default function AddGrade() {
       setFilteredGrades(filtered);
       return updatedPeriods;
     });
-  };
-
-  const handleCourseFilterChange = (e) => {
-    const input = e.target.value;
-    setCourseFilter(input);
-    applyFilters(
-      selectedPeriods,
-      input,
-      schoolYearFilter,
-      semesterFilter,
-      selectedFilterStudents
-    );
   };
 
   const handleSchoolYearFilterChange = (e) => {
@@ -535,8 +600,25 @@ export default function AddGrade() {
     setFilteredGrades(grades); // Reset to show all grades
   };
 
+  const handleCourseFilterChange = (e) => {
+    const input = e.target.value;
+    setCourseFilter(input);
+    applyFilters();
+  };
+
   return (
     <div className="max-w-9xl mx-auto p-6 bg-white fade-in">
+      {/* Updated toast message display */}
+      {message.content && (
+        <div className={`fixed top-5 right-5 p-4 rounded-lg shadow-lg z-50 ${
+          message.type === "success" 
+            ? "bg-green-100 text-green-700" 
+            : "bg-red-100 text-red-700"
+        }`}>
+          {message.content}
+        </div>
+      )}
+
       <div className="max-w-9xl mx-auto p-4 bg-white mt-6">
         <h2 className="text-3xl font-bold text-center text-[#0065A8] mb-4 fade-in delay-100">
           {selectedGradeID ? "Edit Grade" : "Add Grade"}
