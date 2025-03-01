@@ -237,7 +237,7 @@ function EnrollmentModal({ closeModal }) {
               }}
               disabled={isLoading}
               className={`flex-1 py-3 sm:py-6 bg-[#00D1B2] hover:bg-[#00F7D4] text-white text-center justify-center rounded-bl-lg transition-colors flex items-center gap-2 text-xs sm:text-sm
-              ${EnrollClicked ? "scale-95" : "scale-100"}
+              ${EnrollClicked ? "scale-100" : "scale-100"}
               ${isLoading ? "opacity-50 cursor-not-allowed" : ""}`}
             >
               {isLoading && (
@@ -273,7 +273,7 @@ function EnrollmentModal({ closeModal }) {
                 }, 200);
               }}
               className={`flex-1 py-3 sm:py-6 text-gray-700 bg-gray-100 rounded-br-lg hover:bg-gray-200 transition-colors text-xs sm:text-sm
-                ${CancelClicked ? "scale-95" : "scale-100"}`}
+                ${CancelClicked ? "scale-100" : "scale-100"}`}
             >
               Cancel
             </button>

@@ -131,7 +131,7 @@ const BookingPopup = () => {
               </div>
 
               {/* Modal Content */}
-              <div className="p-4 pb-0 sm:p-6">
+              <div style={{ paddingBottom: "0px" }} className="p-4 sm:p-6">
                 <BookingAppointment 
                   closeModal={handleCloseModal}
                   role={userRole}

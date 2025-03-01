@@ -21,18 +21,19 @@ const Toast = ({ message, isVisible, onClose }) => {
           animate={{ x: 0, opacity: 1 }}
           exit={{ x: 100, opacity: 0 }}
           transition={{ type: "spring", stiffness: 100 }}
-          className="fixed top-4 right-4 bg-blue-600 text-white rounded-lg shadow-lg p-4 z-[9999] min-w-[300px] flex items-center gap-3"
+          className="fixed sm:top-4 sm:right-4 bottom-4 right-2 left-2 sm:left-auto bg-blue-600 text-white rounded-lg shadow-lg p-3 sm:p-4 z-[9999] sm:min-w-[300px] sm:max-w-md w-auto flex items-center gap-2 sm:gap-3"
           style={{ pointerEvents: 'auto' }} // Ensure clickable
         >
           <div className="flex-shrink-0">
             {/* Your icon here */}
           </div>
-          <div className="flex-1 mr-2">
-            <p className="text-sm font-medium">{message}</p>
+          <div className="flex-1 mr-1 sm:mr-2">
+            <p className="text-xs sm:text-sm font-medium break-words">{message}</p>
           </div>
           <button 
             onClick={onClose}
             className="flex-shrink-0 hover:text-gray-200"
+            aria-label="Close notification"
           >
             {/* Your close button icon here */}
           </button>
