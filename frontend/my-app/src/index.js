@@ -1,5 +1,6 @@
-import React from 'react';
-import ReactDOM from 'react-dom/client';
+// Add logging to monitor React renders
+import { StrictMode } from 'react';
+import { createRoot } from 'react-dom/client';
 import './index.css';
 import App from './App';
 import { BrowserRouter } from 'react-router-dom';
@@ -7,8 +8,15 @@ import { QueryClient, QueryClientProvider } from 'react-query';
 import { DataPrefetchProvider } from './context/DataPrefetchContext';
 import { ensureUserIdPersistence, recoverUserIds } from './utils/persistUtils';
 
-// Create a client
-const queryClient = new QueryClient();
+// Create the query client ONCE, outside of render function
+const queryClient = new QueryClient({
+  defaultOptions: {
+    queries: {
+      refetchOnWindowFocus: false,
+      retry: 1,
+    },
+  },
+});
 
 // Immediately run ID persistence checks when the app loads
 ensureUserIdPersistence();
@@ -28,9 +36,17 @@ ensureUserIdPersistence();
   }
 })();
 
-const root = ReactDOM.createRoot(document.getElementById('root'));
+// Add to debug duplicate renders
+console.log('Initializing React app...');
+
+const root = createRoot(document.getElementById('root'));
+
+// Log when rendering happens
+console.log('Rendering React app...');
+
 root.render(
-  <React.StrictMode>
+  // Remove StrictMode during development to prevent double rendering/effects
+  // <StrictMode>
     <BrowserRouter>
       <QueryClientProvider client={queryClient}>
         <DataPrefetchProvider>
@@ -38,5 +54,5 @@ root.render(
         </DataPrefetchProvider>
       </QueryClientProvider>
     </BrowserRouter>
-  </React.StrictMode>
+  // </StrictMode>
 );

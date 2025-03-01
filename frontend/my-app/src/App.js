@@ -42,6 +42,8 @@ import { usePrefetch } from './context/DataPrefetchContext';
 import NetworkMonitor from './components/NetworkMonitor';
 import { getUserIdentifiers } from "./utils/userUtils"; // Add import for getUserIdentifiers
 import { ensureUserIdPersistence, recoverUserIds } from "./utils/persistUtils";
+import NotificationPermissionRequest from './components/NotificationPermissionRequest'; // Add this import
+import NotificationTester from './components/NotificationTester'; // Add this import
 
 const PreloaderTest = React.lazy(() => import('./components/PagePreloader'));
 
@@ -772,6 +774,7 @@ function App() {
                       <Route path="/homeadmin" element={<HomeAdmin />} /> 
                       <Route path="/enrollment-test" element={<EnrollmentTestPage />} /> {/* new test route */}
                       <Route path="/semester-management" element={<SemesterManagement />} /> {/* Update this line */}
+                      <Route path="/notification-test" element={<NotificationTester />} /> {/* Add this new route */}
                     </Routes>
                   </Suspense>
                 </motion.div>
@@ -795,6 +798,7 @@ function App() {
                 </>
               )}
           </div>
+          <NotificationPermissionRequest /> {/* Add this near the end, before the closing tags */}
         </PreloadProvider>
       
         {/* Toast positioned outside the Router */}
