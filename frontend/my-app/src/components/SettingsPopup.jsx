@@ -82,9 +82,9 @@ const SettingsPopup = ({ isVisible, onClose, position, userEmail, onLogout }) =>
 
   return (
     <>
-      {/* SINGLE backdrop - Shown for either modal */}
+      {/* Backdrop - only apply darkening and blur on mobile */}
       <div 
-        className="fixed inset-0 bg-black bg-opacity-60 backdrop-blur-sm z-[999]"
+        className={`fixed inset-0 z-[999] ${isMobile ? "bg-black bg-opacity-60 backdrop-blur-sm" : ""}`}
         onClick={showPasswordModal ? handleClosePasswordModal : onClose}
         style={{position: 'fixed', top: 0, left: 0, right: 0, bottom: 0}}
       />

@@ -1,10 +1,11 @@
-import React, { useContext, useEffect, useState } from 'react';
+import React, { useContext, useEffect, useState, useRef } from 'react';
 import { NotificationContext } from '../context/NotificationContext';
 
 const NotificationTray = ({ isVisible, onClose, position }) => {
   const { notifications, markAllAsRead } = useContext(NotificationContext);
   const unreadCount = notifications?.filter(n => !n.isRead)?.length || 0;
   const [isMobile, setIsMobile] = useState(window.innerWidth < 640);
+  const trayRef = useRef(null);
 
   // Handle responsive behavior
   useEffect(() => {
@@ -24,6 +25,38 @@ const NotificationTray = ({ isVisible, onClose, position }) => {
       document.body.style.overflow = '';
     };
   }, [isVisible]);
+
+  // Adjust positioning for desktop to prevent overflow
+  useEffect(() => {
+    if (!isMobile && isVisible && trayRef.current) {
+      const tray = trayRef.current;
+      const viewportHeight = window.innerHeight;
+      const viewportWidth = window.innerWidth;
+      
+      // Calculate if tray would overflow the viewport
+      const overflow = {
+        bottom: position.top + tray.offsetHeight > viewportHeight,
+        right: position.left + tray.offsetWidth > viewportWidth
+      };
+      
+      // Adjust position if necessary
+      if (overflow.bottom) {
+        tray.style.top = 'auto';
+        tray.style.bottom = '10px';
+      } else {
+        tray.style.top = `${position.top}px`;
+        tray.style.bottom = 'auto';
+      }
+      
+      if (overflow.right) {
+        tray.style.left = 'auto';
+        tray.style.right = '10px';
+      } else {
+        tray.style.left = `${position.left}px`;
+        tray.style.right = 'auto';
+      }
+    }
+  }, [isVisible, position, isMobile]);
 
   // Format notification message if type is booking
   const formatMessage = (notification) => {
@@ -59,40 +92,40 @@ const NotificationTray = ({ isVisible, onClose, position }) => {
 
   return (
     <>
-      {/* Enhanced Backdrop - Full screen with blur effect and higher z-index */}
+      {/* Backdrop - only apply darkening and blur on mobile */}
       <div 
-        className="fixed inset-0 bg-black bg-opacity-60 backdrop-blur-sm z-[999]" 
+        className={`fixed inset-0 z-[999] ${isMobile ? "bg-black bg-opacity-60 backdrop-blur-sm" : ""}`}
         onClick={onClose}
         style={{position: 'fixed', top: 0, left: 0, right: 0, bottom: 0}}
       />
       
       {/* Notification Tray - Full screen on mobile, positioned on desktop */}
       <div 
+        ref={trayRef}
         className={`
           ${isMobile 
             ? "fixed inset-0 z-[1000] flex flex-col" 
-            : "absolute bg-white rounded-lg shadow-lg z-[1000] w-72 sm:w-80"
+            : "fixed bg-white rounded-lg shadow-xl z-[1000] w-80 lg:w-96"
           }
         `}
         style={!isMobile ? { 
-          top: position.top, 
-          left: position.left, 
-          maxHeight: '400px' 
+          maxHeight: '80vh',
+          boxShadow: '0 10px 25px -5px rgba(0, 0, 0, 0.1), 0 10px 10px -5px rgba(0, 0, 0, 0.04)'
         } : {}}
       >
         <div className={`
           ${isMobile 
             ? "flex flex-col h-full bg-white" 
-            : ""
+            : "flex flex-col max-h-[80vh] bg-white rounded-lg overflow-hidden"
           }`}
         >
           {/* Header */}
-          <div className="sticky top-0 bg-white px-3 sm:px-4 py-3 border-b border-gray-200 z-10">
-            <div className="flex justify-between items-center">
-              <h3 className="text-base sm:text-lg font-semibold text-gray-800">Notifications</h3>
+          <div className="sticky top-0 bg-white px-4 py-3 border-b border-gray-200 z-10 flex justify-between items-center">
+            <h3 className="text-base sm:text-lg font-semibold text-gray-800">Notifications</h3>
+            <div className="flex items-center">
               {unreadCount > 0 && (
                 <span 
-                  className="text-xs sm:text-sm text-blue-500 cursor-pointer hover:text-blue-700"
+                  className="text-xs sm:text-sm text-blue-500 cursor-pointer hover:text-blue-700 mr-3"
                   onClick={(e) => {
                     e.stopPropagation();
                     markAllAsRead();
@@ -101,10 +134,19 @@ const NotificationTray = ({ isVisible, onClose, position }) => {
                   Mark all as read
                 </span>
               )}
-              {isMobile && (
+              {isMobile ? (
                 <button 
                   onClick={onClose}
-                  className="ml-2 p-1 text-gray-500 hover:text-gray-700"
+                  className="p-1 text-gray-500 hover:text-gray-700"
+                >
+                  <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+                  </svg>
+                </button>
+              ) : (
+                <button 
+                  onClick={onClose}
+                  className="p-1 text-gray-500 hover:text-gray-700"
                 >
                   <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
@@ -119,7 +161,7 @@ const NotificationTray = ({ isVisible, onClose, position }) => {
             overflow-y-auto 
             ${isMobile 
               ? "flex-grow" 
-              : "max-h-[calc(400px-56px)]"
+              : "flex-grow"
             }
           `}>
             {notifications && notifications.length > 0 ? (
