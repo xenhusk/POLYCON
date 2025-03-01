@@ -2,6 +2,7 @@ from flask import Blueprint, request, jsonify
 from services.firebase_service import db  # import Firestore client
 import datetime
 from datetime import datetime
+from google.cloud import firestore  # Add this import
 
 semester_routes = Blueprint('semester_routes', __name__)
 
@@ -259,3 +260,26 @@ def delete_duplicate_semester():
     for dup in duplicates:
         dup.reference.delete()
     return jsonify({"message": "Duplicate semester(s) deleted"}), 200
+
+@semester_routes.route('/get_latest_filter', methods=['GET'])
+def get_latest_filter():
+    try:
+        # Get all semesters ordered by school year and semester in descending order
+        semesters_ref = db.collection('semesters').order_by('school_year', direction=firestore.Query.DESCENDING).limit(1).stream()
+        semesters = list(semesters_ref)
+        
+        if not semesters:
+            return jsonify({
+                "school_year": "2024-2025",  # Default values if no semesters found
+                "semester": "1st"
+            }), 200
+        
+        latest = semesters[0].to_dict()
+        return jsonify({
+            "school_year": latest.get('school_year', "2024-2025"),
+            "semester": latest.get('semester', "1st")
+        }), 200
+        
+    except Exception as e:
+        print(f"Error getting latest filter: {str(e)}")
+        return jsonify({"error": str(e)}), 500

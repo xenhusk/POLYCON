@@ -20,15 +20,22 @@ function EnrollmentModal({ closeModal }) {
     setIsSearchLoading(true);
     searchTimeout.current = setTimeout(async () => {
       try {
+        // Use the new enrollment_students endpoint instead of the regular students endpoint
         const res = await fetch(
-          `http://localhost:5001/search/students?query=${encodeURIComponent(
+          `http://localhost:5001/search/enrollment_students?query=${encodeURIComponent(
             term.toLowerCase()
           )}`
         );
         const data = await res.json();
-        setStudentResults(data.results || []);
+        if (data.error) {
+          console.error("Search error:", data.error);
+          setStudentResults([]);
+        } else {
+          setStudentResults(data.results || []);
+        }
       } catch (error) {
         console.error("Search error:", error);
+        setStudentResults([]);
       } finally {
         setIsSearchLoading(false);
       }
@@ -197,7 +204,7 @@ function EnrollmentModal({ closeModal }) {
                             {student.firstName} {student.lastName}
                           </div>
                           <div className="text-xs text-gray-500">
-                            {student.program} • {student.year_section}
+                            {student.programName || 'Unknown Program'} • {student.year_section || 'Unknown Section'}
                           </div>
                         </div>
                       </li>

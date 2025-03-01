@@ -1,25 +1,58 @@
-import patchResizeObserver from './utils/resizeObserverPatch';
-import './patches/resizeObserverPatch';
-import React from 'react';
+// Add logging to monitor React renders
+import { StrictMode } from 'react';
 import { createRoot } from 'react-dom/client';
 import './index.css';
 import App from './App';
-import { BrowserRouter as Router } from 'react-router-dom';
+import { BrowserRouter } from 'react-router-dom';
 import { QueryClient, QueryClientProvider } from 'react-query';
+import { DataPrefetchProvider } from './context/DataPrefetchContext';
+import { ensureUserIdPersistence, recoverUserIds } from './utils/persistUtils';
 
-// Apply the patch before rendering
-patchResizeObserver();
+// Create the query client ONCE, outside of render function
+const queryClient = new QueryClient({
+  defaultOptions: {
+    queries: {
+      refetchOnWindowFocus: false,
+      retry: 1,
+    },
+  },
+});
 
-const queryClient = new QueryClient();
-const container = document.getElementById('root');
-const root = createRoot(container);
+// Immediately run ID persistence checks when the app loads
+ensureUserIdPersistence();
+
+// Try to recover missing IDs if needed
+(async () => {
+  const needsRecovery = 
+    localStorage.getItem('isAuthenticated') === 'true' && 
+    (!localStorage.getItem('userId') || 
+     !localStorage.getItem('studentID') || 
+     !localStorage.getItem('teacherID'));
+  
+  if (needsRecovery) {
+    console.log("Missing user IDs detected, attempting recovery...");
+    await recoverUserIds();
+    ensureUserIdPersistence();
+  }
+})();
+
+// Add to debug duplicate renders
+console.log('Initializing React app...');
+
+const root = createRoot(document.getElementById('root'));
+
+// Log when rendering happens
+console.log('Rendering React app...');
 
 root.render(
-  <React.StrictMode>
-    <Router>
+  // Remove StrictMode during development to prevent double rendering/effects
+  // <StrictMode>
+    <BrowserRouter>
       <QueryClientProvider client={queryClient}>
-        <App />
+        <DataPrefetchProvider>
+          <App />
+        </DataPrefetchProvider>
       </QueryClientProvider>
-    </Router>
-  </React.StrictMode>
+    </BrowserRouter>
+  // </StrictMode>
 );

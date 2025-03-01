@@ -2,6 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { useLocation } from 'react-router-dom';
 import { motion, AnimatePresence } from 'framer-motion';
 import BookingAppointment from './BookingAppointment';
+import { isStudentEnrolled } from "../utils/enrollmentUtils";
 
 // Restore original calendar icon
 const BookIcon = () => (
@@ -58,7 +59,10 @@ const BookingPopup = () => {
     }
     
     if (userRole === 'student') {
-      setShouldRender(isEnrolled === 'true');
+      // Use function from enrollmentUtils.js to check enrollment
+      const enrolled = isStudentEnrolled();
+      console.log(`BookingPopup: Student enrollment check - ${enrolled}`);
+      setShouldRender(enrolled);
       return;
     }
     
@@ -76,6 +80,25 @@ const BookingPopup = () => {
         });
     }
   }, [userRole, email, isEnrolled, location.pathname]);
+
+  // Add this effect to fetch enrollment status if not already set
+  useEffect(() => {
+    // If we're a student and enrollment status isn't set, fetch it
+    if (userRole === 'student' && localStorage.getItem('isEnrolled') === null) {
+      const studentId = localStorage.getItem('studentID') || localStorage.getItem('studentId');
+      if (studentId) {
+        console.log("BookingPopup: Fetching missing enrollment status");
+        import("../utils/enrollmentUtils")
+          .then(module => {
+            module.fetchAndStoreEnrollmentStatus(studentId)
+              .then(enrolled => {
+                console.log("BookingPopup: Updated enrollment status -", enrolled);
+                setShouldRender(enrolled);
+              });
+          });
+      }
+    }
+  }, [userRole]);
 
   const handleCloseModal = () => {
     setShowModal(false);

@@ -1,15 +1,30 @@
 import React, { useState, useEffect, useRef } from "react";
 import { useNavigate, useLocation } from "react-router-dom";
 import { getProfilePictureUrl } from "../utils/utils";
+import { getUserIdentifiers, validateUserForOperation } from "../utils/userUtils";
 import { useQueryClient } from "react-query";
-import { motion } from "framer-motion"; // Add this import
+import { motion } from "framer-motion";
 
 function BookingAppointment({ closeModal, role: propRole }) {
   const queryClient = useQueryClient();
-  // Determine role setup
-  const role = propRole || localStorage.getItem("userRole") || "student";
+  // Get user identification from the utility function
+  const { userId, studentId, teacherId, role: userRole } = getUserIdentifiers();
+  // Determine role setup - prefer props, then use the utility result
+  const role = propRole || userRole || "student";
   const navigate = useNavigate();
   const location = useLocation();
+
+  // IMMEDIATE FIX: Fix case inconsistency with studentId/studentID
+  useEffect(() => {
+    // This specifically fixes the issue you're seeing
+    if (role === "student") {
+      const lowercaseId = localStorage.getItem("studentId");
+      if (lowercaseId && !localStorage.getItem("studentID")) {
+        localStorage.setItem("studentID", lowercaseId);
+        console.log("BookingAppointment: Fixed case inconsistency - copied studentId to studentID");
+      }
+    }
+  }, [role]);
 
   // Add mobile detection
   const [isMobile, setIsMobile] = useState(window.innerWidth < 640);
@@ -39,13 +54,14 @@ function BookingAppointment({ closeModal, role: propRole }) {
   // Additional teacher states
   const [schedule, setSchedule] = useState("");
   const [venue, setVenue] = useState("");
-  const [teacherID, setTeacherID] = useState(
-    localStorage.getItem("teacherID") || ""
-  );
+  const [teacherID, setTeacherID] = useState(teacherId || "");
 
-  // Student-specific state
+  // Student-specific state - FIXED: Check both casing variations
   const [studentID, setStudentID] = useState(
-    localStorage.getItem("studentID") || ""
+    studentId || 
+    localStorage.getItem("studentID") || 
+    localStorage.getItem("studentId") || 
+    ""
   );
 
   const [page, setPage] = useState(0);
@@ -60,22 +76,61 @@ function BookingAppointment({ closeModal, role: propRole }) {
   const [isFellowStudentSearchLoading, setIsFellowStudentSearchLoading] = useState(false);
   const [SubmitBookingClicked, setSubmitBookingClicked] = useState(false);
   const [CancelClicked, setCancelClicked] = useState(false);
+  const [enrollmentMessage, setEnrollmentMessage] = useState("");
+
+  // Check for ID validation issues on component mount with specific error for studentID case issue
+  useEffect(() => {
+    const { isValid, errorMessage } = validateUserForOperation("booking");
+    if (!isValid) {
+      setMessage({
+        type: "error",
+        content: errorMessage
+      });
+      
+      // Special handling for student case issue
+      if (role === "student" && localStorage.getItem("studentId") && !localStorage.getItem("studentID")) {
+        localStorage.setItem("studentID", localStorage.getItem("studentId"));
+        console.log("Fixed studentID case inconsistency during validation");
+      }
+    }
+  }, []);
 
   // Debounced search function
   const debouncedSearch = (term) => {
     if (searchTimeout.current) {
       clearTimeout(searchTimeout.current);
     }
+    
+    // Set both loading states to ensure UI shows loading properly
     setIsStudentSearchLoading(true);
+    setIsFellowStudentSearchLoading(true);
+    setEnrollmentMessage("");
+    
     searchTimeout.current = setTimeout(async () => {
       try {
+        console.log(`Fetching students for search term: "${term}"`);
         const res = await fetch(
           `http://localhost:5001/search/students?query=${encodeURIComponent(
             term.toLowerCase()
           )}&page=${page}`
         );
         const data = await res.json();
-        if (data.results) {
+        
+        console.log("Student search response:", data);
+        
+        if (data.error) {
+          console.error("Search error:", data.error);
+          setEnrollmentMessage("Error fetching students. Please try again.");
+          setStudentResults([]);
+          setHasMore(false);
+        } else if (data.results) {
+          // Log search results for debugging
+          console.log(`Found ${data.results.length} students matching "${term}"`);
+          
+          if (data.results.length === 0 && term.length > 2) {
+            setEnrollmentMessage("No enrolled students found matching your search.");
+          }
+          
           setStudentResults(
             page === 0 ? data.results : [...studentResults, ...data.results]
           );
@@ -88,8 +143,11 @@ function BookingAppointment({ closeModal, role: propRole }) {
         console.error("Search error:", error);
         setStudentResults([]);
         setHasMore(false);
+        setEnrollmentMessage("Network error. Please try again.");
       } finally {
+        // Clear both loading states
         setIsStudentSearchLoading(false);
+        setIsFellowStudentSearchLoading(false);
       }
     }, 200);
   };
@@ -168,7 +226,47 @@ function BookingAppointment({ closeModal, role: propRole }) {
     return role === "student" ? selectedCount + 1 > 4 : selectedCount > 4;
   };
 
+  // Validation function to check for enrolled students in selection
+  const validateStudentSelection = (students) => {
+    return students.every(student => student.isEnrolled !== false);
+  };
+
   async function submitBooking() {
+    // Add specific logging for this issue
+    if (role === "student") {
+      console.log("Student booking attempt with IDs:", {
+        studentId: localStorage.getItem("studentId"),
+        studentID: localStorage.getItem("studentID"),
+        componentStateID: studentID
+      });
+      
+      // Final failsafe fix
+      if (!studentID && localStorage.getItem("studentId")) {
+        const id = localStorage.getItem("studentId");
+        setStudentID(id); // Now this will work correctly
+        console.log("Last-minute fix: Setting studentID from studentId:", id);
+      }
+    }
+    
+    // First validate user IDs
+    const { isValid, errorMessage } = validateUserForOperation("booking");
+    if (!isValid) {
+      setMessage({
+        type: "error",
+        content: errorMessage
+      });
+      return;
+    }
+    
+    // Check if all selected students are enrolled
+    if (!validateStudentSelection(selectedStudents)) {
+      setMessage({
+        type: "error",
+        content: "Some selected students are not enrolled. Please remove them before proceeding."
+      });
+      return;
+    }
+    
     if (role === "faculty") {
       // Validate required fields: teacherID, at least one student, schedule, and venue must be provided.
       if (!teacherID || selectedStudents.length === 0 || !schedule || !venue) {
@@ -238,16 +336,30 @@ function BookingAppointment({ closeModal, role: propRole }) {
       }
 
       setIsLoading(true);
+      
+      // Create array of student IDs for the booking payload
+      const studentIDsArray = [studentID];
+      
+      // Only add fellow students if any are selected
+      if (selectedStudents.length > 0) {
+        // Log selected students for debugging
+        console.log("Selected fellow students:", selectedStudents);
+        // Get all fellow student IDs and add them to the array
+        const fellowStudentIds = selectedStudents.map(s => s.id);
+        studentIDsArray.push(...fellowStudentIds);
+      }
+      
       // Build payload with required keys.
       const bookingData = {
         teacherID: selectedTeacher,
-        // --- Modified: include studentID plus IDs from selected student objects ---
-        studentIDs: [studentID, ...selectedStudents.map((s) => s.id)],
+        studentIDs: studentIDsArray,
         schedule: "",
         venue: "",
         createdBy: studentID,
       };
-      console.log("Student bookingData:", bookingData);
+      
+      console.log("Student booking payload:", bookingData);
+      
       try {
         const response = await fetch(
           "http://localhost:5001/bookings/create_booking",
@@ -287,16 +399,27 @@ function BookingAppointment({ closeModal, role: propRole }) {
     }
   }
 
+  // Add this function to show enrollment messages without Material UI
+  const renderEnrollmentMessage = () => {
+    if (!enrollmentMessage) return null;
+    
+    return (
+      <div className="mt-1 text-sm text-amber-600">
+        {enrollmentMessage}
+      </div>
+    );
+  };
+
   return (
     <div className="pt-2 sm:pt-4 px-2 sm:px-4">
       {role === "faculty" ? (
         <>
           {/* Teacher's Form - Made Responsive */}
-          <div className="space-y-4 sm:space-y-6">
+          <div className="space-y-4 sm:space-y-6 mb-12">
             {/* Student Selection */}
             <div className="relative">
               <label className="block text-sm font-medium text-gray-700 mb-1 sm:mb-2">
-                Students <span className="text-red-500">*</span>
+                Students <span className="text-red-500">*</span> <span className="text-xs text-gray-500">(Only enrolled students can be added)</span>
               </label>
               <div className="min-h-[45px] flex flex-wrap items-center gap-1 sm:gap-2 border-2 border-[#397de2] rounded-lg px-2 sm:px-3 py-2 focus-within:ring-2 focus-within:ring-[#54BEFF]">
                 {selectedStudents.map((student) => (
@@ -381,7 +504,7 @@ function BookingAppointment({ closeModal, role: propRole }) {
                               {student.firstName} {student.lastName}
                             </div>
                             <div className="text-xs text-gray-500">
-                              {student.program} • {student.year_section}
+                              {student.programName || 'Unknown Program'} • {student.year_section || 'Unknown Section'}
                             </div>
                           </div>
                         </li>
@@ -389,6 +512,8 @@ function BookingAppointment({ closeModal, role: propRole }) {
                   )}
                 </ul>
               )}
+              {/* Add enrollment message display */}
+              {renderEnrollmentMessage()}
             </div>
 
             {/* Schedule Selection - Made Responsive */}
@@ -422,7 +547,7 @@ function BookingAppointment({ closeModal, role: propRole }) {
       ) : (
         <>
           {/* Student's Form - Made Responsive */}
-          <div className="space-y-4 sm:space-y-6">
+          <div className="space-y-4 sm:space-y-6 mb-12">
             {/* Teacher Selection */}
             <div className="relative">
               <label className="block text-sm font-medium text-gray-700 mb-1 sm:mb-2">
@@ -526,7 +651,7 @@ function BookingAppointment({ closeModal, role: propRole }) {
             {/* Fellow Students Selection (Optional) - Made Responsive */}
             <div className="relative">
               <label className="block text-sm font-medium text-gray-700 mb-1 sm:mb-2">
-                Fellow Students (Optional)
+                Fellow Students (Optional) <span className="text-xs text-gray-500">(Only enrolled students can be added)</span>
               </label>
               <div className="min-h-[45px] flex flex-wrap items-center gap-1 sm:gap-2 border-2 border-[#397de2] rounded-lg px-2 sm:px-3 py-2 focus-within:ring-2 focus-within:ring-[#54BEFF]">
                 {selectedStudents.map((student) => (
@@ -559,11 +684,17 @@ function BookingAppointment({ closeModal, role: propRole }) {
                   value={searchTerm}
                   onChange={(e) => {
                     setSearchTerm(e.target.value);
-                    setIsFellowStudentSearchLoading(true); // 🚀 Trigger loading when typing starts
+                    setIsFellowStudentSearchLoading(true);
                     setPage(0); // Reset pagination when search term changes
                     debouncedSearch(e.target.value);
                   }}
-                  onFocus={() => setIsStudentInputFocused(true)}
+                  onFocus={() => {
+                    setIsStudentInputFocused(true);
+                    // If we have a search term but no results yet, trigger the search again
+                    if (searchTerm && studentResults.length === 0) {
+                      debouncedSearch(searchTerm);
+                    }
+                  }}
                   onBlur={() =>
                     setTimeout(() => setIsStudentInputFocused(false), 200)
                   }
@@ -573,7 +704,7 @@ function BookingAppointment({ closeModal, role: propRole }) {
               </div>
 
               {/* Fellow Student Search Results Dropdown - Made Responsive */}
-              {isStudentInputFocused && (
+              {isStudentInputFocused && role === "student" && (
                 <ul className="absolute z-20 w-full mt-1 bg-white border border-gray-200 rounded-lg shadow-lg max-h-40 sm:max-h-60 overflow-y-auto">
                   {isFellowStudentSearchLoading ? (
                     // 🚀 Loading Skeleton for Fellow Students
@@ -597,12 +728,16 @@ function BookingAppointment({ closeModal, role: propRole }) {
                     studentResults
                       .filter(
                         (student) =>
+                          // Add filter to exclude the current student from results
+                          student.id !== studentID && 
                           !selectedStudents.some((s) => s.id === student.id)
                       )
                       .map((student) => (
                         <li
                           key={student.id}
                           onMouseDown={() => {
+                            // Log selected student for debugging
+                            console.log("Adding fellow student:", student);
                             setSelectedStudents([...selectedStudents, student]);
                             setSearchTerm("");
                           }}
@@ -618,7 +753,7 @@ function BookingAppointment({ closeModal, role: propRole }) {
                               {student.firstName} {student.lastName}
                             </div>
                             <div className="text-xs text-gray-500">
-                              {student.program} • {student.year_section}
+                              {student.programName || 'Unknown Program'} • {student.year_section || 'Unknown Section'}
                             </div>
                           </div>
                         </li>
@@ -626,6 +761,8 @@ function BookingAppointment({ closeModal, role: propRole }) {
                   )}
                 </ul>
               )}
+              {/* Add enrollment message display */}
+              {renderEnrollmentMessage()}
             </div>
           </div>
         </>

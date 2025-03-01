@@ -183,7 +183,7 @@ def get_bookings():
 
         # Build teacher lookup concurrently.
         teacher_lookup_cache = get_cache('teacher_lookup')
-        if teacher_lookup_cache:
+        if (teacher_lookup_cache):
             teacher_lookup = teacher_lookup_cache
         else:
             faculty_docs = list(db.collection('faculty').stream())
@@ -260,15 +260,28 @@ def create_booking():
     try:
         data = request.get_json()
 
-        # Extract request data.
-        creator_id = data.get('createdBy')  # Could be a teacher or student ID
+        # Extract request data
+        creator_id = data.get('createdBy')
         student_ids = data.get('studentIDs', [])
         teacher_id = data.get('teacherID')
         schedule = data.get('schedule', "")
         venue = data.get('venue', "")
 
+        # Basic validation
         if not creator_id or not teacher_id or not student_ids:
             return jsonify({"error": "Missing required fields: createdBy, teacherID, studentIDs"}), 400
+
+        # Verify all students are enrolled
+        unenrolled_students = []
+        for student_id in student_ids:
+            student_doc = db.collection('students').document(student_id).get()
+            if not student_doc.exists or not student_doc.to_dict().get('isEnrolled', False):
+                unenrolled_students.append(student_id)
+        
+        if unenrolled_students:
+            return jsonify({
+                "error": f"Cannot book with unenrolled students: {', '.join(unenrolled_students)}"
+            }), 400
 
         # Fetch the user document to verify role.
         user_ref = db.collection('user').document(creator_id).get()
@@ -323,9 +336,7 @@ def create_booking():
         student_refs = [db.document(f"students/{student}") for student in student_ids]
         students_display = format_student_names(student_refs)
 
-        # Emit raw notification payload for front-end personalization.
-        # The payload includes creatorRole and creatorName so that the front end
-        # can determine which personalized message to display.
+        # Emit notification with targeting information
         notification_payload = {
             'action': 'create',
             'bookingID': new_booking_id,
@@ -336,7 +347,36 @@ def create_booking():
             'schedule': schedule,
             'venue': venue
         }
-        socketio.emit('notification', notification_payload)
+        
+        # Add targeting info for each recipient - this is key for filtering notifications
+        if user_role == 'student':
+            # If student created it, notify the teacher
+            teacher_user = db.collection('user').document(teacher_id).get().to_dict()
+            notification_payload['targetEmail'] = teacher_user.get('email')
+            notification_payload['targetTeacherId'] = teacher_id
+            socketio.emit('notification', notification_payload)
+            
+            # Also notify the requesting student
+            student_notification = notification_payload.copy()
+            student_notification['targetEmail'] = user_data.get('email')
+            student_notification['targetStudentId'] = creator_id
+            socketio.emit('notification', student_notification)
+        else:
+            # If teacher created it, notify all students
+            for student_id in student_ids:
+                student_user = db.collection('user').document(student_id).get()
+                if student_user.exists:
+                    student_data = student_user.to_dict()
+                    student_notification = notification_payload.copy()
+                    student_notification['targetEmail'] = student_data.get('email')
+                    student_notification['targetStudentId'] = student_id
+                    socketio.emit('notification', student_notification)
+            
+            # Also send a notification to the teacher who created it
+            teacher_notification = notification_payload.copy()
+            teacher_notification['targetEmail'] = user_data.get('email')
+            teacher_notification['targetTeacherId'] = teacher_id
+            socketio.emit('notification', teacher_notification)
 
         # Emit booking_updated event for realtime appointment updates.
         socketio.emit('booking_updated', {
@@ -346,7 +386,14 @@ def create_booking():
             'studentIDs': student_ids
         })
 
-        return jsonify({"message": "Booking request created successfully!", "status": booking_data['status'], "bookingID": new_booking_id}), 201
+        # FIXED: Don't include the booking_data in the response since it contains DocumentReference objects
+        # Instead, use plain strings
+        status_str = "confirmed" if user_role == "faculty" else "pending"
+        return jsonify({
+            "message": "Booking request created successfully!", 
+            "status": status_str, 
+            "bookingID": new_booking_id
+        }), 201
 
     except Exception as e:
         return jsonify({"error": f"Failed to create booking: {str(e)}"}), 500
@@ -371,26 +418,34 @@ def confirm_booking():
         teacher_ref = booking_data.get('teacherID')
         teacher_id = teacher_ref.id if teacher_ref else None
         
-        # Fetch teacher name robustly.
+        # Fetch teacher info
         teacher_doc = db.collection('user').document(teacher_id).get() if teacher_id else None
-        if teacher_doc is None or not teacher_doc.exists:
-            teacher_doc = db.collection('faculty').document(teacher_id).get() if teacher_id else None
-        teacher_name = "Unknown Teacher"
+        teacher_data = None
         if teacher_doc and teacher_doc.exists:
             teacher_data = teacher_doc.to_dict()
             teacher_name = f"{teacher_data.get('firstName', '').strip()} {teacher_data.get('lastName', '').strip()}"
-            if not teacher_name.strip():
+        else:
+            teacher_doc = db.collection('faculty').document(teacher_id).get() if teacher_id else None
+            if teacher_doc and teacher_doc.exists:
+                teacher_data = teacher_doc.to_dict()
+                teacher_name = f"{teacher_data.get('firstName', '').strip()} {teacher_data.get('lastName', '').strip()}"
+            else:
                 teacher_name = "Unknown Teacher"
+                
+        if not teacher_name.strip():
+            teacher_name = "Unknown Teacher"
 
         student_refs = booking_data.get('studentID', [])
         student_ids = [ref.id for ref in student_refs] if student_refs else []
 
+        # Update booking status in database
         booking_ref.update({
             "status": "confirmed",
             "schedule": schedule,
             "venue": venue
         })
 
+        # General booking update event - separate from notification
         socketio.emit('booking_updated', {
             'action': 'confirm',
             'bookingID': booking_id,
@@ -398,10 +453,10 @@ def confirm_booking():
             'studentIDs': student_ids
         })
 
-        # Format student names.
+        # Format student names for display
         students_display = format_student_names(student_refs)
 
-        # Emit raw notification payload for confirmation.
+        # Base notification payload
         notification_payload = {
             'action': 'confirm',
             'bookingID': booking_id,
@@ -410,7 +465,26 @@ def confirm_booking():
             'schedule': schedule,
             'venue': venue
         }
-        socketio.emit('notification', notification_payload)
+
+        # Send a targeted notification to the teacher
+        if teacher_data and teacher_data.get('email'):
+            teacher_notification = notification_payload.copy()
+            teacher_notification['targetEmail'] = teacher_data.get('email')
+            teacher_notification['targetTeacherId'] = teacher_id
+            socketio.emit('notification', teacher_notification)
+
+        # Send targeted notifications to each student
+        for student_ref in student_refs:
+            student_id = student_ref.id
+            student_doc = db.collection('user').document(student_id).get()
+            if student_doc.exists:
+                student_data = student_doc.to_dict()
+                student_email = student_data.get('email')
+                if student_email:
+                    student_notification = notification_payload.copy()
+                    student_notification['targetEmail'] = student_email
+                    student_notification['targetStudentId'] = student_id
+                    socketio.emit('notification', student_notification)
 
         _cache.clear()
         return jsonify({"message": "Booking confirmed successfully"}), 200
@@ -436,16 +510,22 @@ def cancel_booking():
         teacher_ref = booking_data.get('teacherID')
         teacher_id = teacher_ref.id if teacher_ref else None
 
-        # Fetch teacher name robustly.
+        # Fetch teacher info
         teacher_doc = db.collection('user').document(teacher_id).get() if teacher_id else None
-        if teacher_doc is None or not teacher_doc.exists:
-            teacher_doc = db.collection('faculty').document(teacher_id).get() if teacher_id else None
-        teacher_name = "Unknown Teacher"
+        teacher_data = None
         if teacher_doc and teacher_doc.exists:
             teacher_data = teacher_doc.to_dict()
             teacher_name = f"{teacher_data.get('firstName', '').strip()} {teacher_data.get('lastName', '').strip()}"
-            if not teacher_name.strip():
+        else:
+            teacher_doc = db.collection('faculty').document(teacher_id).get() if teacher_id else None
+            if teacher_doc and teacher_doc.exists:
+                teacher_data = teacher_doc.to_dict()
+                teacher_name = f"{teacher_data.get('firstName', '').strip()} {teacher_data.get('lastName', '').strip()}"
+            else:
                 teacher_name = "Unknown Teacher"
+                
+        if not teacher_name.strip():
+            teacher_name = "Unknown Teacher"
 
         student_refs = booking_data.get('studentID', [])
         student_ids = [ref.id for ref in student_refs] if student_refs else []
@@ -454,6 +534,7 @@ def cancel_booking():
             "status": "canceled"
         })
 
+        # General booking update event
         socketio.emit('booking_updated', {
             'action': 'cancel',
             'bookingID': booking_id,
@@ -461,17 +542,38 @@ def cancel_booking():
             'studentIDs': student_ids
         })
 
-        # Format student names.
+        # Format student names for display
         students_display = format_student_names(student_refs)
 
-        # Emit raw cancellation notification payload.
+        # Base notification payload
         notification_payload = {
             'action': 'cancel',
             'bookingID': booking_id,
             'teacherName': teacher_name,
-            'studentNames': students_display
+            'studentNames': students_display,
+            'schedule': booking_data.get('schedule', ''),  # Include existing schedule
+            'venue': booking_data.get('venue', '')         # Include existing venue
         }
-        socketio.emit('notification', notification_payload)
+
+        # Send targeted notification to the teacher
+        if teacher_data and teacher_data.get('email'):
+            teacher_notification = notification_payload.copy()
+            teacher_notification['targetEmail'] = teacher_data.get('email')
+            teacher_notification['targetTeacherId'] = teacher_id
+            socketio.emit('notification', teacher_notification)
+
+        # Send targeted notifications to each student
+        for student_ref in student_refs:
+            student_id = student_ref.id
+            student_doc = db.collection('user').document(student_id).get()
+            if student_doc.exists:
+                student_data = student_doc.to_dict()
+                student_email = student_data.get('email')
+                if student_email:
+                    student_notification = notification_payload.copy()
+                    student_notification['targetEmail'] = student_email
+                    student_notification['targetStudentId'] = student_id
+                    socketio.emit('notification', student_notification)
 
         _cache.clear()
         return jsonify({"message": "Booking canceled successfully"}), 200
