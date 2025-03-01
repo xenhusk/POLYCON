@@ -1,10 +1,9 @@
 from flask import Blueprint, request, jsonify
 from services.firebase_service import db
 from google.cloud.firestore import SERVER_TIMESTAMP, DocumentReference
-from services.socket_service import socketio  # NEW import for notifications
+
 
 grade_bp = Blueprint('grade', __name__)
-
 @grade_bp.route('/get_grades', methods=['GET'])
 def get_grades():
     try:
@@ -118,13 +117,6 @@ def add_grade():
             "created_at": SERVER_TIMESTAMP
         })
 
-        # Emit a notification for the new grade
-        socketio.emit('notification', {
-            'message': 'New grade posted for a student.',
-            'type': 'grade',
-            'created_at': SERVER_TIMESTAMP
-        })
-
         return jsonify({"message": "Grade added successfully", "gradeID": new_id}), 201
 
     except Exception as e:
@@ -165,13 +157,6 @@ def edit_grade():
             "school_year": school_year,
             "semester": semester,
             "updated_at": SERVER_TIMESTAMP
-        })
-
-        # Emit a notification for grade update
-        socketio.emit('notification', {
-            'message': 'Grade updated successfully.',
-            'type': 'grade',
-            'updated_at': SERVER_TIMESTAMP
         })
 
         return jsonify({"message": "Grade updated successfully"}), 200
@@ -276,19 +261,12 @@ def delete_grade():
         # Delete the document
         grade_ref.delete()
 
-        # Emit a notification for grade deletion
-        socketio.emit('notification', {
-            'message': 'Grade deleted successfully.',
-            'type': 'grade',
-            'deleted_gradeID': grade_id,
-            'deleted_at': SERVER_TIMESTAMP
-        })
-
         return jsonify({"message": f"Grade {grade_id} deleted successfully"}), 200
 
     except Exception as e:
         print(f"Error in delete_grade: {e}")
         return jsonify({"error": str(e)}), 500
+
 
 @grade_bp.route('/get_student_grades', methods=['GET'])
 def get_student_grades():
