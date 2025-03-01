@@ -12,6 +12,30 @@ const GradeViewer = () => {
   const studentID = localStorage.getItem("studentID"); // Fetch student ID from localStorage
 
   useEffect(() => {
+    const fetchLatestFilter = async () => {
+      try {
+        const response = await fetch('http://localhost:5001/semester/get_latest_filter');
+        if (response.ok) {
+          const data = await response.json();
+          setSchoolYear(data.school_year);
+          setSemester(data.semester);
+        }
+      } catch (error) {
+        console.error('Error fetching latest filter:', error);
+      }
+    };
+
+    fetchLatestFilter();
+    if (!studentID) {
+      setError("Student ID not found. Please log in again.");
+      setLoading(false);
+      return;
+    }
+
+    fetchGrades();
+  }, [studentID]);
+
+  useEffect(() => {
     if (!studentID) {
       setError("Student ID not found. Please log in again.");
       setLoading(false);
