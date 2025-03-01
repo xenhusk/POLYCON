@@ -1,6 +1,7 @@
 import React, { useEffect, useState } from 'react';
 import { ReactComponent as EditIcon } from './icons/Edit.svg';
 import { ReactComponent as DeleteIcon } from './icons/delete.svg';
+import './transitions.css';
 
 export default function Programs() {
   const [programs, setPrograms] = useState([]);
@@ -186,7 +187,7 @@ export default function Programs() {
   };
 
   return (
-    <div className="mx-auto p-6 bg-white">
+    <div className="mx-auto p-6 bg-white fade-in">
       {/* Message display */}
       {message.content && (
         <div className={`fixed top-5 right-5 p-4 rounded-lg shadow-lg z-50 ${
@@ -197,8 +198,8 @@ export default function Programs() {
       )}
 
       <div className="mx-auto p-4 bg-white mt-6">
-        <h2 className="text-3xl font-bold text-center text-[#0065A8] pb-5 mb-4">Programs</h2>
-        <div className="mt-4">
+        <h2 className="text-3xl font-bold text-center text-[#0065A8] pb-5 mb-4 fade-in delay-100">Programs</h2>
+        <div className="mt-4 fade-in delay-200">
           <div className="flex items-center justify-center space-x-2 w-full">
             <div className="relative w-[400px] border border-gray-300 rounded-lg px-3 py-2 shadow-md flex flex-wrap items-center min-h-[42px]">
               <input 
@@ -210,7 +211,7 @@ export default function Programs() {
               />
             </div>
             <button 
-              className={`bg-[#057DCD] text-white px-6 py-2 rounded-lg shadow-md hover:bg-blue-600 transition 
+              className={`bg-[#057DCD] text-white px-6 py-2 rounded-lg shadow-md hover:bg-[#54BEFF] transition 
                 ${SearchClicked ? "scale-90" : "scale-100"}`}
               onClick={() => {
                 setSearchClicked(true);
@@ -223,7 +224,7 @@ export default function Programs() {
         </div>
 
         {/* Table Container with 90% width */}
-        <div className="mt-4 shadow-md rounded-lg overflow-hidden w-[90%] mx-auto">
+        <div className="mt-4 shadow-md rounded-lg overflow-hidden w-[90%] mx-auto fade-in delay-300">
           <div className="overflow-x-auto">
             <table className="w-full bg-white text-center table-fixed">
               <thead className="bg-[#057DCD] text-white sticky top-0 z-10">
@@ -340,7 +341,7 @@ export default function Programs() {
                 handleAddProgram();}}
               disabled={isAddLoading}
               className={`px-8 py-2 rounded-lg text-white shadow-md ${
-                editing ? 'bg-[#057DCD] hover:bg-blue-600' : 'bg-blue-500 hover:bg-blue-600'
+                editing ? 'bg-[#057DCD] hover:bg-[#54BEFF]' : 'bg-[#057DCD] hover:bg-[#54BEFF]'
               } ${isAddLoading ? 'opacity-50 cursor-not-allowed' : ''} 
                 ${AddClicked ? "scale-90" : "scale-100"}
               flex items-center space-x-2`}

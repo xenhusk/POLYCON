@@ -3,6 +3,7 @@ import { ReactComponent as DeleteIcon } from "./icons/delete.svg";
 import { ReactComponent as EditIcon } from "./icons/Edit.svg";
 import { ReactComponent as FilterIcon } from "./icons/FilterAdd.svg";
 import { ReactComponent as RedoIcon } from "./icons/redo.svg"; // Add this import
+import './transitions.css';
 
 export default function AddGrade() {
   const [studentID, setStudentID] = useState("");
@@ -535,14 +536,14 @@ export default function AddGrade() {
   };
 
   return (
-    <div className="max-w-9xl mx-auto p-6 bg-white">
+    <div className="max-w-9xl mx-auto p-6 bg-white fade-in">
       <div className="max-w-9xl mx-auto p-4 bg-white mt-6">
-        <h2 className="text-3xl font-bold text-center text-[#0065A8] mb-4">
+        <h2 className="text-3xl font-bold text-center text-[#0065A8] mb-4 fade-in delay-100">
           {selectedGradeID ? "Edit Grade" : "Add Grade"}
         </h2>
 
         {/* Search and Filter Section */}
-        <div className="mt-4">
+        <div className="mt-4 fade-in delay-200">
           <div className="flex items-center justify-center space-x-2 w-full">
             {/* Search Input Container */}
             <div className="relative border border-gray-300 rounded-lg px-3 py-2 shadow-md flex flex-wrap items-center min-h-[42px]">
@@ -713,7 +714,7 @@ export default function AddGrade() {
         </div>
 
         {/* Table Section */}
-        <div className="mt-4 shadow-md overflow-hidden rounded-lg">
+        <div className="mt-4 shadow-md overflow-hidden rounded-lg fade-in delay-300">
           {/* Table Header */}
           <div className="overflow-x-auto">
             <table className="w-full bg-white text-center">

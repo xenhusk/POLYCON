@@ -1,6 +1,7 @@
 import React, { useEffect, useState, useRef } from 'react';
 import { ReactComponent as EditIcon } from './icons/Edit.svg';
 import { ReactComponent as DeleteIcon } from './icons/delete.svg';
+import './transitions.css';
 
 export default function Departments() {
   const [departments, setDepartments] = useState([]);
@@ -168,7 +169,7 @@ export default function Departments() {
   };
 
   return (
-    <div className="items-center mx-auto p-6 bg-white">
+    <div className="items-center mx-auto p-6 bg-white fade-in">
       {/* Message display */}
       {message.content && (
         <div className={`fixed top-5 right-5 p-4 rounded-lg shadow-lg z-50 ${
@@ -178,9 +179,9 @@ export default function Departments() {
         </div>
       )}
 
-      <h2 className="text-3xl mt-10 font-bold text-center text-[#0065A8] pb-5">Departments</h2>
+      <h2 className="text-3xl mt-10 font-bold text-center text-[#0065A8] pb-5 fade-in delay-100">Departments</h2>
 
-      <div className="flex items-center justify-center space-x-2 w-full mt-4">
+      <div className="flex items-center justify-center space-x-2 w-full mt-4 fade-in delay-200">
         <div className="relative w-[400px] border border-gray-300 rounded-lg px-3 py-2 shadow-md flex flex-wrap items-center min-h-[42px]">
           <input 
             type="text"
@@ -191,7 +192,7 @@ export default function Departments() {
           />
         </div>
         <button
-          className={`bg-[#057DCD] text-white px-6 py-2 rounded-lg shadow-md hover:bg-blue-600 transition 
+          className={`bg-[#057DCD] text-white px-6 py-2 rounded-lg shadow-md hover:bg-[#54BEFF] transition 
             ${SearchClicked ? "scale-90" : "scale-100"}`}
           onClick={() => {
             setSearchClicked(true);
@@ -202,7 +203,7 @@ export default function Departments() {
         </button>
       </div>
 
-      <div className="flex justify-center w-full">
+      <div className="flex justify-center w-full fade-in delay-300">
         <div className="mt-4 shadow-md rounded-lg overflow-hidden w-[90%] mx-auto">
           <div className="overflow-x-auto">
             <table className="w-full bg-white text-center table-fixed">
@@ -304,7 +305,7 @@ export default function Departments() {
                   handleSaveDepartment();}}
                 disabled={isAddLoading}
                 className={`px-8 py-2 rounded-lg text-white ${
-                  editing ? 'bg-[#057DCD] hover:bg-blue-500' : 'bg-[#057DCD] hover:bg-blue-500'
+                  editing ? 'bg-[#057DCD] hover:bg-[#54BEFF]' : 'bg-[#057DCD] hover:bg-[#54BEFF]'
                 } ${isAddLoading ? 'opacity-50 cursor-not-allowed' : ''}
                  ${AddClicked ? "scale-90" : "scale-100"}  
                 flex items-center space-x-2`}

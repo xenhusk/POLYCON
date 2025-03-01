@@ -2,6 +2,7 @@ import React, { useState, useEffect, useRef } from 'react';
 import { format } from 'date-fns';
 import { motion, AnimatePresence } from 'framer-motion'; // NEW: import motion and AnimatePresence from framer-motion
 import { ReactComponent as FilterIcon } from './icons/FilterAdd.svg';
+import './transitions.css'; // Import the transitions CSS
 
 const SemesterManagement = () => {
   const [schoolYear, setSchoolYear] = useState('');
@@ -449,7 +450,7 @@ const SemesterManagement = () => {
   };
 
   return (
-    <div className="p-6">
+    <div className="p-6 fade-in">
     
       {/* Error/Success Message Toast - Updated with dynamic colors */}
       {error && (
@@ -470,11 +471,13 @@ const SemesterManagement = () => {
         </div>
       )}
 
-      <h2 className="text-3xl font-bold text-[#0065A8] pt-10 pb-4 mb-6 text-center">Semester Management</h2>
+      <h2 className="text-3xl font-bold text-[#0065A8] pt-10 pb-4 mb-6 text-center fade-in delay-100">
+        Semester Management
+      </h2>
 
-      <div className="flex gap-6">
+      <div className="flex gap-6 fade-in delay-200">
         {/* Left side - Teacher List (filtered if teacherSearchTerm is set) */}
-        <div className="w-2/3">
+        <div className="w-2/3 fade-in delay-300">
           <div className="flex justify-between items-center mb-4">
             {/* Left: Title */}
             <h3 className="text-xl font-semibold text-gray-800 w-1/4">Teacher List</h3>
@@ -605,7 +608,7 @@ const SemesterManagement = () => {
         </div>
 
         {/* Right side - Semester Management */}
-        <div className="w-1/3 bg-white p-6 rounded-lg shadow-md">
+        <div className="w-1/3 bg-white p-6 rounded-lg shadow-md fade-in delay-300">
           <div className="mb-6">
             <h3 className="text-xl font-semibold text-gray-800">
               {latestSemester && canEndSemester ? 'Current Semester' : 'Start New Semester'}

@@ -4,6 +4,7 @@ import { ReactComponent as FilterIcon } from "./icons/FilterAdd.svg";
 import { ReactComponent as EditIcon } from "./icons/Edit.svg";
 import { ReactComponent as DeleteIcon } from "./icons/delete.svg";
 import { motion, AnimatePresence } from "framer-motion";
+import './transitions.css';
 
 export default function Courses() {
   const [courses, setCourses] = useState([]);
@@ -502,53 +503,53 @@ export default function Courses() {
   };
 
   return (
-    <div className=" items-center mx-auto p-6 bg-white">
-      {/* Global Message display – show only when NOT editing */}
-      {!showEditModal && message.content && (
-        <div
-          className={`fixed top-5 right-5 p-4 rounded-lg shadow-lg z-50 ${
-            message.type === "success"
-              ? "bg-green-100 text-green-700"
-              : "bg-red-100 text-red-700"
-          }`}
-        >
-          {message.content}
-        </div>
-      )}
-
-      {/* Loading overlay
-      {isLoading && (
-        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
-          <div className="bg-white p-4 rounded-lg flex items-center space-x-3">
-            <svg
-              className="animate-spin h-5 w-5 text-blue-500"
-              xmlns="http://www.w3.org/2000/svg"
-              fill="none"
-              viewBox="0 0 24 24"
-            >
-              <circle
-                className="opacity-25"
-                cx="12"
-                cy="12"
-                r="10"
-                stroke="currentColor"
-                strokeWidth="4"
-              ></circle>
-              <path
-                className="opacity-75"
-                fill="currentColor"
-                d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"
-              ></path>
-            </svg>
-            <span>Processing...</span>
-          </div>
-        </div>
-      )} */}
-      <h2 className="text-3xl mt-10 font-bold text-center text-[#0065A8] pb-5">
+    <div className="items-center mx-auto p-6 bg-white fade-in">
+      <h2 className="text-3xl mt-10 font-bold text-center text-[#0065A8] pb-5 fade-in delay-100">
         Courses
       </h2>
 
-      <div className="flex items-center justify-center space-x-2 w-full mt-4">
+      <div className="flex items-center justify-center space-x-2 w-full mt-4 fade-in delay-200">
+        {/* Global Message display – show only when NOT editing */}
+        {!showEditModal && message.content && (
+          <div
+            className={`fixed top-5 right-5 p-4 rounded-lg shadow-lg z-50 ${
+              message.type === "success"
+                ? "bg-green-100 text-green-700"
+                : "bg-red-100 text-red-700"
+            }`}
+          >
+            {message.content}
+          </div>
+        )}
+
+        {/* Loading overlay
+        {isLoading && (
+          <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
+            <div className="bg-white p-4 rounded-lg flex items-center space-x-3">
+              <svg
+                className="animate-spin h-5 w-5 text-blue-500"
+                xmlns="http://www.w3.org/2000/svg"
+                fill="none"
+                viewBox="0 0 24 24"
+              >
+                <circle
+                  className="opacity-25"
+                  cx="12"
+                  cy="12"
+                  r="10"
+                  stroke="currentColor"
+                  strokeWidth="4"
+                ></circle>
+                <path
+                  className="opacity-75"
+                  fill="currentColor"
+                  d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"
+                ></path>
+              </svg>
+              <span>Processing...</span>
+            </div>
+          </div>
+        )} */}
         <div className="relative w-[400px] border border-gray-300 rounded-lg px-3 py-2 shadow-md flex flex-wrap items-center min-h-[42px]">
           <input
             type="text"
@@ -559,7 +560,7 @@ export default function Courses() {
           />
         </div>
         <button 
-          className={`bg-[#057DCD] text-white px-6 py-2 rounded-lg shadow-md hover:bg-blue-600 transition 
+          className={`bg-[#057DCD] text-white px-6 py-2 rounded-lg shadow-md hover:bg-[#54BEFF] transition 
             ${SearchClicked ? "scale-90" : "scale-100"}`}
           onClick={() => {
             setSearchClicked(true);
@@ -572,7 +573,7 @@ export default function Courses() {
           onClick={() => {setFilterClicked(true); 
             setTimeout(() => setFilterClicked(false), 300); 
             setShowFilters(!showFilters);}}
-          className={`bg-blue-500 text-white p-3 rounded-full shadow-md flex items-center justify-center hover:bg-blue-600 transition
+          className={`bg-[#057DCD] text-white p-3 rounded-full shadow-md flex items-center justify-center hover:bg-[#54BEFF] transition
             ${FilterClicked ? "scale-90" : "scale-100"}`}
         >
           <FilterIcon className="w-5 h-5" />
@@ -652,7 +653,7 @@ export default function Courses() {
           </div>
         </div>
       )}
-      <div className="flex justify-center w-full">
+      <div className="flex justify-center w-full fade-in delay-300">
         <div className="mt-4 shadow-md rounded-lg overflow-hidden w-[90%] mx-auto">
           <div className="overflow-x-auto">
             <table className="w-full bg-white text-center table-fixed">
@@ -1067,7 +1068,7 @@ export default function Courses() {
                   setTimeout(() => setAddClicked(false), 300);
                   handleSaveCourse();}}
                 disabled={isAddLoading}
-                className={`w-full px-10 py-2 rounded-lg bg-[#057DCD] text-white hover:bg-blue-500 
+                className={`w-full px-10 py-2 rounded-lg bg-[#057DCD] text-white hover:bg-[#54BEFF]
                 ${isAddLoading ? "opacity-50 cursor-not-allowed" : ""} 
                 ${AddClicked ? "scale-90" : "scale-100"} 
                 flex items-center space-x-2`}
