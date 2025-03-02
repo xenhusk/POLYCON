@@ -1,7 +1,8 @@
-import { useState, useEffect, useRef } from 'react';
+import { useState, useEffect, useRef, useCallback, useContext } from 'react';
 import io from 'socket.io-client';
 import notificationSound from '../components/audio/notification.mp3';
-import { showNotification, areNotificationsEnabled } from '../utils/notificationUtils';
+import { showNotification, areNotificationsEnabled, fixNotificationPreferences } from '../utils/notificationUtils';
+import { NotificationContext } from '../context/NotificationContext';
 
 const SOCKET_SERVER_URL = "http://localhost:5001";
 
@@ -15,9 +16,49 @@ const formatSchedule = (schedule) => {
   });
 };
 
+// Add this global notification tracker outside the hook to ensure it persists across renders
+const alreadyDisplayedNotifications = new Set();
+
 const useNotifications = () => {
-  const [notifications, setNotifications] = useState([]);
+  const { addNotification, notifications, setNotifications } = useContext(NotificationContext);
   const [toast, setToast] = useState({ visible: false, message: '' });
+  
+  /**
+   * Show a toast notification
+   * @param {string} message - Message to display
+   * @param {Object} data - Additional notification data
+   */
+  const showToast = useCallback((message, data = {}) => {
+    // First pass the notification to the central system if it's a real notification
+    if (data.action && addNotification) {
+      addNotification({
+        message,
+        ...data,
+        id: data.id || `toast-${Date.now()}`
+      });
+    }
+    
+    // Then set it as toast
+    setToast({ 
+      visible: true, 
+      message, 
+      data  // Include all data
+    });
+  }, [addNotification]);
+  
+  /**
+   * Close the toast notification
+   */
+  const closeToast = useCallback(() => {
+    setToast(prev => ({ ...prev, visible: false }));
+  }, []);
+
+  // Fix notification preferences at the beginning
+  useEffect(() => {
+    // Fix notification preferences when the hook loads
+    fixNotificationPreferences();
+  }, []);
+
   const [notificationsEnabled, setNotificationsEnabled] = useState(
     areNotificationsEnabled()
   );
@@ -25,6 +66,7 @@ const useNotifications = () => {
   const notificationRef = useRef(null);
   const socketRef = useRef(null);
 
+  // Add a critical check to ensure the socket is properly established
   useEffect(() => {
     // Get all current user identifiers from localStorage
     const currentUserEmail = localStorage.getItem('userEmail');
@@ -40,7 +82,7 @@ const useNotifications = () => {
       console.log('Cleaning up previous socket connection');
       socketRef.current.disconnect();
     }
-
+  
     console.log("Notification system initialized with user IDs:", {
       email: currentUserEmail,
       userId: currentUserId,
@@ -48,29 +90,48 @@ const useNotifications = () => {
       studentId: currentStudentId,
       role: currentRole
     });
-
-    // Create a new socket and store it in the ref
+  
+    // Create a new socket with better connection options
     socketRef.current = io(SOCKET_SERVER_URL, {
       reconnection: true,
       reconnectionDelay: 1000,
-      reconnectionAttempts: 10
+      reconnectionAttempts: 5,
+      timeout: 10000 // Increase timeout to 10 seconds
     });
-
+  
     socketRef.current.on('connect', () => {
-      console.log('Socket connected for notifications');
+      console.log('⚡ Socket connected for notifications');
     });
-
+  
     socketRef.current.on('disconnect', () => {
-      console.log('Socket disconnected for notifications');
+      console.log('🔌 Socket disconnected for notifications');
     });
-
+  
     socketRef.current.on('connect_error', (error) => {
-      console.error('Socket connection error:', error);
+      console.error('🚨 Socket connection error:', error);
     });
+  
+    socketRef.current.on('error', (error) => {
+      console.error('🚨 Socket error:', error);
+    });
+  
+    // Add a manual ping to verify socket connection
+    const pingInterval = setInterval(() => {
+      if (socketRef.current && socketRef.current.connected) {
+        console.log('🔄 Socket connection verified');
+      } else {
+        console.warn('⚠️ Socket not connected - attempting reconnection...');
+        if (socketRef.current) {
+          socketRef.current.connect();
+        }
+      }
+    }, 60000); // Check every minute
     
+    // Add notification handler code
     socketRef.current.on('notification', (data) => {
-      console.log('Notification received:', data);
+      console.log('📬 Notification received:', data);
       
+      // Rest of your notification handling code...
       // Generate a unique key for this notification based on content
       const notificationKey = `${data.action}_${data.bookingID || ''}_${data.teacherId || data.teacherID || ''}_${data.targetStudentId || ''}`;
       
@@ -119,10 +180,12 @@ const useNotifications = () => {
       // Process notification and show it...
       processNotification(data, currentRole);
     });
-
+  
     // Cleanup on unmount
     return () => {
-      console.log('Cleaning up notification socket');
+      console.log('Cleaning up notification socket and intervals');
+      clearInterval(pingInterval);
+      
       if (socketRef.current) {
         socketRef.current.off('notification');
         socketRef.current.disconnect();
@@ -130,19 +193,46 @@ const useNotifications = () => {
     };
   }, []);
 
-  // Create a separate function to process notifications to make the code cleaner
+  // Update the processNotification function to use more reliable deduplication
   const processNotification = (data, currentRole) => {
+    console.log(`⚠️ Processing notification: ${data.action}`, {
+      bookingID: data.bookingID,
+      action: data.action
+    });
+  
+    // Create a stable unique ID for deduplication based on several properties
+    const notificationUniqueId = `${data.action}_${data.bookingID || ''}_${Date.now().toString().slice(0, -3)}`;
+    
+    // Check if we've already shown this notification based on content
+    if (alreadyDisplayedNotifications.has(notificationUniqueId)) {
+      console.log('🚫 Duplicate notification detected and blocked:', notificationUniqueId);
+      return; // Skip processing entirely for duplicates
+    }
+    
+    // Add this notification to our tracking set
+    alreadyDisplayedNotifications.add(notificationUniqueId);
+    
+    // Remove from tracking set after 5 seconds to prevent memory issues
+    setTimeout(() => {
+      alreadyDisplayedNotifications.delete(notificationUniqueId);
+    }, 5000);
+  
+    // Play notification sound
     try {
-      console.log("Playing notification sound");
+      console.log("🔊 Playing notification sound");
       new Audio(notificationSound).play();
     } catch (err) {
       console.error("Error playing notification sound:", err);
     }
-
-    // Compose appropriate message based on action and role
+  
+    // Fix notification preferences
+    fixNotificationPreferences();
+  
+    // Generate notification content
     let composedMessage = "";
-    let notificationTitle = ""; 
+    let notificationTitle = "";
     
+    // Compose appropriate message based on action and role
     if (data.action === 'create') {
       // FIXED: Distinguish between student-created and teacher-created bookings
       if (currentRole === 'faculty') {
@@ -230,47 +320,33 @@ const useNotifications = () => {
       notificationTitle = "New Notification";
       composedMessage = data.message || "New notification";
     }
-    
+  
     const composedNotification = { 
       ...data, 
       message: composedMessage, 
       id: Date.now(),
       isRead: false
     };
-
-    // Show browser notification - use a separate function to ensure it only happens once
-    if (areNotificationsEnabled()) {
-      // Save the notification to a ref to prevent duplicate showings
-      if (notificationRef.current === notificationTitle + composedMessage) {
-        console.log("Duplicate notification detected, not showing browser notification");
-      } else {
-        notificationRef.current = notificationTitle + composedMessage;
-        
-        console.log(`Showing browser notification: ${notificationTitle}`);
-        showNotification(notificationTitle, {
-          body: composedMessage,
-          icon: '/polyconLogo.png',
-          requireInteraction: true
-        });
-        
-        // Clear the ref after 5 seconds
-        setTimeout(() => {
-          notificationRef.current = null;
-        }, 5000);
-      }
-    }
-
+  
+    // Show only ONE browser notification with better tracking
+    console.log('🔔 Showing browser notification:', notificationTitle);
+    showNotification(notificationTitle, {
+      body: composedMessage,
+      icon: '/polyconLogo.png',
+      requireInteraction: true,
+      tag: notificationUniqueId // Use tag to prevent duplicate notifications
+    });
+  
     // Update the UI with the notification
-    setNotifications(prev => [composedNotification, ...prev]);
     setToast({ visible: true, message: composedMessage });
   };
 
-  const closeToast = () => {
-    setToast({ visible: false, message: '' });
-  };
-
   const markAllAsRead = () => {
-    setNotifications(prev => prev.map(n => ({ ...n, isRead: true })));
+    if (setNotifications) {
+      setNotifications(prev => prev.map(n => ({ ...n, isRead: true })));
+    } else {
+      console.error("setNotifications function is not available from NotificationContext");
+    }
   };
 
   return { 
@@ -279,7 +355,8 @@ const useNotifications = () => {
     toast, 
     closeToast,
     notificationsEnabled, 
-    setNotificationsEnabled 
+    setNotificationsEnabled,
+    showToast
   };
 };
 

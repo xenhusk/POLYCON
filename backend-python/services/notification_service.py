@@ -1,56 +1,126 @@
 import logging
-from flask_socketio import SocketIO
+from flask_socketio import emit
 from services.firebase_service import db
+from google.cloud import firestore
 import datetime
 import pytz
 
 # Configure logging
 logging.basicConfig(level=logging.INFO)
-logger = logging.getLogger("notification_service")
+logger = logging.getLogger(__name__)
 
-# Initialize SocketIO instance to be imported by app.py
-socketio = SocketIO(cors_allowed_origins="*")
-
-def send_notification(data):
+def send_notification(notification_data):
     """
-    Send notification to clients via Socket.IO and store in Firestore.
+    Send a notification via Socket.IO
     
     Args:
-        data: Dictionary containing notification data
+        notification_data (dict): Data for the notification
     """
     try:
-        # Add timestamp if not present
-        if "timestamp" not in data:
-            data["timestamp"] = datetime.datetime.now(pytz.UTC).isoformat()
+        # Add a timestamp if not present - using an ISO string instead of SERVER_TIMESTAMP
+        if 'timestamp' not in notification_data:
+            notification_data['timestamp'] = datetime.datetime.now(pytz.UTC).isoformat()
             
-        # Log notification being sent
-        target_info = ""
-        if "targetEmail" in data:
-            target_info += f"email: {data['targetEmail']} "
-        if "targetUserId" in data:
-            target_info += f"userId: {data['targetUserId']} "
-        if "targetTeacherId" in data:
-            target_info += f"teacherId: {data['targetTeacherId']} "
-        if "targetStudentId" in data:
-            target_info += f"studentId: {data['targetStudentId']} "
-        if "targetRole" in data:
-            target_info += f"role: {data['targetRole']} "
+        # For reminder notifications, get additional data if needed
+        if notification_data['action'].startswith('reminder_') and 'bookingID' in notification_data and notification_data['bookingID'] != 'test-booking-123':
+            # Only fetch booking data for real bookings, not test ones
+            booking_data = get_booking_data(notification_data['bookingID'])
             
-        logger.info(f"Sending notification: action={data.get('action')}, type={data.get('type')}, to {target_info}")
+            # Fix: Check if booking_data is valid
+            if booking_data and isinstance(booking_data, dict):
+                # Merge additional booking info into the notification
+                notification_data.update({
+                    'schedule': booking_data.get('schedule', ''),
+                    'venue': booking_data.get('venue', '')
+                })
         
-        # Store notification in Firestore
-        notification_data = {**data}
-        notification_data["createdAt"] = datetime.datetime.now(pytz.UTC)
+        # Get targeted email and ID for logging
+        target_email = notification_data.get('targetEmail', 'no-email')
+        teacher_id = notification_data.get('targetTeacherId', None)
+        student_id = notification_data.get('targetStudentId', None)
         
-        # Try to add the notification to Firestore
-        doc_ref = db.collection("notifications").add(notification_data)
-        logger.debug(f"Notification stored in Firestore with ID: {doc_ref.id}")
+        # Log notification attempt
+        logger.info(f"Sending notification: action={notification_data['action']}, type={notification_data.get('type', 'standard')}, to email: {target_email} "
+                    f"teacherId: {teacher_id if teacher_id else 'N/A'} "
+                    f"studentId: {student_id if student_id else 'N/A'}")
+        
+        # Ensure we have a valid action
+        if not notification_data.get('action'):
+            logger.error("Missing required action in notification data")
+            return
+            
+        # Convert any non-serializable values before sending
+        sanitized_data = sanitize_for_socket(notification_data)
         
         # Emit the notification via Socket.IO
-        socketio.emit('notification', data)
+        emit('notification', sanitized_data, namespace='/', broadcast=True)
         
-        logger.info(f"Notification emitted via socket.io: {data.get('action', 'unknown')} - {data.get('message', 'no message')}")
-        return True
     except Exception as e:
         logger.error(f"Error sending notification: {str(e)}")
-        return False
+
+def sanitize_for_socket(data):
+    """
+    Convert any non-serializable Firestore types to serializable values for Socket.IO
+    """
+    if isinstance(data, dict):
+        return {k: sanitize_for_socket(v) for k, v in data.items()}
+    elif isinstance(data, list):
+        return [sanitize_for_socket(item) for item in data]
+    # Check for SERVER_TIMESTAMP sentinel value by checking for _sentinel_name attribute
+    elif hasattr(data, '_sentinel_name') and getattr(data, '_sentinel_name', None) == 'SERVER_TIMESTAMP':
+        # Handle SERVER_TIMESTAMP sentinel
+        return datetime.datetime.now(pytz.UTC).isoformat()
+    elif isinstance(data, datetime.datetime):
+        return data.isoformat()
+    elif isinstance(data, firestore.DocumentReference):
+        return str(data.path)
+    else:
+        return data
+
+def get_booking_data(booking_id):
+    """
+    Get booking data from Firestore
+    
+    Args:
+        booking_id (str): ID of the booking
+    
+    Returns:
+        dict: Booking data or None if not found
+    """
+    try:
+        # Get booking document from Firestore
+        booking_doc = db.collection('bookings').document(booking_id).get()
+        
+        if not booking_doc.exists:
+            logger.warning(f"Booking {booking_id} not found")
+            return None
+            
+        # Get booking data and add the ID
+        booking_data = booking_doc.to_dict()
+        booking_data['id'] = booking_doc.id
+        
+        return booking_data
+        
+    except Exception as e:
+        logger.error(f"Error fetching booking data: {str(e)}")
+        return None
+        
+def save_notification(notification_data):
+    """
+    Save notification to database (optional)
+    
+    Args:
+        notification_data (dict): Notification data to save
+    """
+    try:
+        # Create a copy to avoid modifying the original
+        db_notification = notification_data.copy()
+        
+        # Remove socket.io specific fields
+        db_notification.pop('forceNotification', None)
+        
+        # Add to Firestore
+        db.collection('notifications').add(db_notification)
+        
+    except Exception as e:
+        logger.error(f"Error saving notification: {str(e)}")
