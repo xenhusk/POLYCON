@@ -399,21 +399,27 @@ export default function Courses() {
   const handleEdit = (course) => {
     setEditCourse({ ...course });
 
-    // Convert department name to its ID for editing if needed
+    // Convert department name to its ID for editing
     const deptObj = departments.find((d) => d.name === course.department);
     if (deptObj) {
       setDepartment(deptObj.id);
-      const relatedPrograms = programs.filter(
+      
+      // Get all programs for this department
+      const departmentPrograms = programs.filter(
         (prog) => prog.departmentID === deptObj.id
       );
-      setFilteredPrograms(relatedPrograms);
-      const selectedProgramIds = relatedPrograms
-        .filter((p) => course.program.includes(p.name))
-        .map((p) => p.id);
+      setFilteredPrograms(departmentPrograms);
+      setSelectedDepartmentPrograms(departmentPrograms);
+
+      // Find and set the IDs of programs that are already selected
+      const selectedProgramIds = departmentPrograms
+        .filter((prog) => course.program.includes(prog.name))
+        .map((prog) => prog.id);
       setSelectedPrograms(selectedProgramIds);
     } else {
       setDepartment("");
       setFilteredPrograms([]);
+      setSelectedDepartmentPrograms([]);
       setSelectedPrograms([]);
     }
 
