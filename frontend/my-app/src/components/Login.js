@@ -10,6 +10,7 @@ const Login = ({ onLoginSuccess, onSwitchToSignup }) => {
   const [password, setPassword] = useState('');
   const [message, setMessage] = useState('');
   const [LoginClicked, setLoginClicked] = useState(false);
+  const [SignupClicked, setSignupClicked] = useState(false);
   const [showPassword, setShowPassword] = useState(false);
   const navigate = useNavigate();
 
@@ -102,8 +103,8 @@ const Login = ({ onLoginSuccess, onSwitchToSignup }) => {
   };
 
   return (
-      <div className="w-[100%] h-[80vh] flex justify-center items-center font-poppins">
-        <form onSubmit={handleLogin} className="flex flex-col w-[76%] max-w-md sm:max-w-lg md:max-w-xl mx-auto">
+      <div className="w-[100%] h-full flex justify-center items-center font-poppins">
+        <form onSubmit={handleLogin} className="flex flex-col w-[90%] md:w-[80%] lg:w-[76%] mx-auto">
           <img src={logo} alt="Logo" className="h-[130px] w-[130px] mx-auto"/>
           <h2 className="text-center text-lg font-bold text-[#005B98]">Login</h2>
           <div className="relative z-0 my-1">
@@ -129,15 +130,26 @@ const Login = ({ onLoginSuccess, onSwitchToSignup }) => {
           </div>
             {message && <p className="text-center text-red-500 text-[0.9rem]">{message}</p>}
           <button 
-            onClick={() => { setLoginClicked(true); setTimeout(() => setLoginClicked(false), 150)}}
+            onClick={() => { setLoginClicked(true); 
+              setTimeout(() => setLoginClicked(false), 150)}}
             type="submit" className={`bg-[#057DCD] text-white w-full h-[44.59px] rounded-lg my-2 mx-auto shadow-md hover:bg-[#54BEFF]
             ${LoginClicked ? "scale-90" : "scale-100"}`}>
               Login
           </button>
           <div className="border-t-2 border-[#005B98] w-[90%] my-2 mx-auto border-opacity-50">
             <p className="text-center font-light text-[0.9rem] mx-auto my-2 text-opacity-50">
-              Don't have an account? <button onClick={(e) => {e.preventDefault(); onSwitchToSignup();}} 
-              className="text-[#005B98] focus:outline-none hover:underline">Sign up</button>
+              Don't have an account? 
+              <button 
+                onClick={(e) => { setSignupClicked(true);
+                  setTimeout(() => { setSignupClicked(true); 
+                    setTimeout(() => e.preventDefault(), onSwitchToSignup()
+                    , 500);
+                  }, 200);
+                }} 
+                className={`text-[#005B98] focus:outline-none hover:underline
+                ${SignupClicked ? "scale-90" : "scale-100"}`}
+              >
+              Sign up</button>
             </p>
           </div>
         </form>

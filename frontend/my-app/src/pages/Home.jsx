@@ -11,6 +11,7 @@ import Signup from "../components/Signup";
 
 const Home = () => {
   const [animateSection, setAnimateSection] = useState(null);
+  const [XClicked, setXClicked] = useState(null);
 
   // New handler for section navigation
   const handleSectionNavigation = (sectionId) => {
@@ -248,7 +249,7 @@ const Home = () => {
           onClick={closeModal}
         >
           <div
-            className={`bg-white p-2 rounded-[20px] shadow-lg w-[40%] h-[93vh] relative overflow-hidden 
+            className={`bg-white p-2 rounded-[20px] shadow-lg w-[80%] h-[73vh] md:w-[60%] md:h-[83vh] lg:w-[50%] lg:h-[90vh] relative overflow-hidden 
             ${
               showLoginModal || showSignupModal ? "modal-enter" : "modal-exit"
             }`}
@@ -256,13 +257,15 @@ const Home = () => {
           >
             {/* Close button */}
             <button
-              className="absolute top-8 right-7 z-50"
-              onClick={(e) => {
-                e.stopPropagation();
-                closeModal();
+              className={`absolute top-8 right-7 z-50`}
+              onClick={(e) => { setXClicked(true);
+                setTimeout(() => { setXClicked(false);
+                  setTimeout(() => e.preventDefault(), closeModal(), 
+                  500);
+                }, 200)
               }}
             >
-              <svg
+              <svg 
                 className="w-6 h-6 text-gray-500 hover:text-[#000000]"
                 aria-hidden="true"
                 xmlns="http://www.w3.org/2000/svg"
@@ -289,7 +292,7 @@ const Home = () => {
             >
               {showLoginModal && (
                 <div
-                  className={`absolute w-full ${
+                  className={`absolute w-full h-full justify-center items-center ${
                     showSignupModal ? "-translate-x-full" : "translate-x-0"
                   } transition-transform duration-300`}
                 >
@@ -303,7 +306,7 @@ const Home = () => {
 
               {showSignupModal && (
                 <div
-                  className={`absolute w-full ${
+                  className={`absolute w-full h-full ${
                     showLoginModal ? "translate-x-full" : "translate-x-0"
                   } transition-transform duration-300`}
                 >
@@ -350,10 +353,10 @@ const Nav = ({
                        absolute bottom-0 right-0 left-0 
                        flex justify-between items-center 
                        h-[10vh] md:h-[12vh] lg:h-[15vh] w-full 
-                       bg-[#057DCD] px-1 md:px-6 lg:px-8"
+                       bg-[#057DCD] px-2.5 md:px-6 lg:px-8"
         >
           {/* Logo */}
-          <a href="#Body" className="flex-shrink-0 relative z-50">
+          <a href="#Body" className="flex-shrink-0">
             <img src={logo} alt="Logo"
               className="h-[80px] w-[80px] md:h-[100px] md:w-[100px] lg:h-[130px] lg:w-[130px] 
                           object-contain transition-all duration-300"
@@ -463,19 +466,20 @@ const Nav = ({
         </div>
 
         {/* Mobile Menu */}
-        <div className={`${isMenuOpen ? 'block' : 'hidden'} md:hidden overflow-hidden transition-all duration-300 z-30`}>
+        <div className={`${isMenuOpen ? 'block' : 'hidden'} md:hidden overflow-hidden transition-all duration-300`}>
           <div className="flex flex-col items-center py-9 px-6">
             <ul className="flex flex-row justify-end items-center gap-2 w-full mr-5">
               <li>
                 <button
                   onClick={() => {
                     setContactClicked(true);
-                    setTimeout(() => setContactClicked(false), 200);
-                    handleSectionNavigation("Contact");
-                    setIsMenuOpen(false);
+                    setTimeout(() => { setContactClicked(false); 
+                      setTimeout(() => handleSectionNavigation("Contact"), setIsMenuOpen(false), 
+                      300);
+                    }, 100);
                   }}
                   className={`text-xs text-white font-medium focus:outline-none relative group 
-                           ${ContactClicked ? "scale-75" : "scale-100"}`}
+                           ${ContactClicked ? "scale-90" : "scale-100"}`}
                 >
                   Contact
                   <span className="block absolute bottom-0 left-0 w-0 h-[2px] bg-white transition-all duration-300 
@@ -486,12 +490,13 @@ const Nav = ({
                 <button
                   onClick={() => {
                     setAboutClicked(true);
-                    setTimeout(() => setAboutClicked(false), 200);
-                    handleSectionNavigation("About");
-                    setIsMenuOpen(false);
+                    setTimeout(() => {setAboutClicked(false); 
+                      setTimeout(() => handleSectionNavigation("About"), setIsMenuOpen(false),
+                      300);
+                    }, 100);
                   }}
                   className={`text-xs text-white font-medium focus:outline-none relative group 
-                           ${AboutClicked ? "scale-75" : "scale-100"}`}
+                           ${AboutClicked ? "scale-90" : "scale-100"}`}
                 >
                   About
                   <span className="block absolute bottom-0 left-0 w-0 h-[2px] bg-white transition-all duration-300 
@@ -502,9 +507,11 @@ const Nav = ({
                 <button
                   onClick={() => {
                     setLoginClicked(true);
-                    setTimeout(() => setLoginClicked(false), 300);
-                    handleLoginClick();
-                    setIsMenuOpen(false);
+                    setTimeout(() => { 
+                      setTimeout(() => {
+                        setLoginClicked(false); handleLoginClick(); setIsMenuOpen(false);
+                      }, 100); 
+                    }, 50);
                   }}
                   className={`bg-white text-base text-[#057DCD] w-[6rem] h-[35px] 
                            rounded-[50px] font-semibold transition-all duration-100 ease-in delay-50 
@@ -519,12 +526,16 @@ const Nav = ({
                 <button
                   onClick={() => {
                     setSignUpClicked(true);
-                    setTimeout(() => setSignUpClicked(false), 300);
+                    setTimeout(() => { 
+                      setTimeout(() => {
+                        setSignUpClicked(false); handleSignupClick(); setIsMenuOpen(false);
+                      }, 500);
+                    }, 200);
                     handleSignupClick();
                     setIsMenuOpen(false);
                   }}
                   className={`bg-white text-base text-[#057DCD] w-[6rem] h-[35px] 
-                           rounded-[50px] font-semibold transition-all duration-100 ease-in delay-50 
+                           rounded-[50px] font-semibold transition-all duration-100 ease-in delay-100 
                            hover:bg-[#54BEFF] hover:text-white ${
                              SignUpClicked ? "scale-90" : "scale-100"
                            }`}
