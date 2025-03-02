@@ -2,6 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { EyeOutlined, EyeInvisibleOutlined } from "@ant-design/icons";
 import logo from "./icons/DarkLogo.png";
 
+
 const Signup = ({ onSwitchToLogin }) => {
   const [step, setStep] = useState(1);
   const [departments, setDepartments] = useState([]);
@@ -142,10 +143,10 @@ const Signup = ({ onSwitchToLogin }) => {
 };
 
   return (
-    <div className="h-[80vh] w-full flex justify-center items-center font-poppins">
+    <div className="h-full w-full flex justify-center items-center font-poppins">
       <div className="flex flex-col justify-center items-center w-full">
         {step === 1 ? (
-          <div className={`w-[76%] mx-auto ${step === 1 ? 'slide-right' : 'slide-left'}`}>
+          <div className={`w-[90%] md:[80%] lg:w-[76%] mx-auto ${step === 1 ? 'slide-right' : 'slide-left'}`}>
             <img src={logo} alt="Logo" className="h-[130px] w-[130px] mx-auto"/>
             <h2 className="text-center text-lg font-bold text-[#005B98] my-2">Registration Form</h2>
             <div className='flex justify-between gap-4'>
@@ -227,9 +228,18 @@ const Signup = ({ onSwitchToLogin }) => {
                 Next</button>
             <div className="border-t-2 border-[#005B98] w-[90%] my-2 mx-auto border-opacity-50">
               <p className="text-center font-light text-[0.9rem] mx-auto my-2 text-opacity-50">
-                Don't have an account? <button onClick={(e) => {setLoginClicked(true); setTimeout(()=> setLoginClicked(false), 150);e.preventDefault();onSwitchToLogin();}} 
-                  className={`text-[#005B98] focus:outline-none hover:underline ${loginClicked ? "scale-75" : "scale-100"}`}>
-                    Login</button>
+                Don't have an account? 
+                <button 
+                  onClick={(e) => {setLoginClicked(true); 
+                    setTimeout(()=> { setLoginClicked(false);
+                      setTimeout(() => e.preventDefault(), onSwitchToLogin()
+                      , 500)
+                    }, 150);
+                  }} 
+                  className={`text-[#005B98] focus:outline-none hover:underline 
+                    ${loginClicked ? "scale-90" : "scale-100"}`}
+                >
+                  Login</button>
               </p>
             </div>
           </div>
@@ -248,7 +258,7 @@ const Signup = ({ onSwitchToLogin }) => {
                   </button>
                 </div>
               )}
-              <div className="w-full max-w-[75%] mx-auto animate-modal-slideL">
+              <div className="w-[90%] md:w-[80%] lg:w-[76%] mx-auto animate-modal-slideL">
                 <img src={logo} alt="Logo" className="h-[130px] w-[130px] mx-auto"/>
                 <h2 className="text-center text-lg font-bold text-[#005B98]">Personal Information</h2>
                 <div class="relative z-0">
@@ -310,8 +320,16 @@ const Signup = ({ onSwitchToLogin }) => {
                   onClick={()=>{ setSignupClicked(true); setTimeout(()=> setSignupClicked(false), 150); handleSubmit();}}>Sign Up</button>
                 <div className="border-t-2 border-[#005B98] w-[90%] my-2 mx-auto border-opacity-50">
                   <p className="text-center font-light text-[0.9rem] mx-auto my-2 text-opacity-50">
-                    Don't have an account? <button onClick={(e) => { setLoginClicked(true); setTimeout(()=> setLoginClicked(false), 200); e.preventDefault();onSwitchToLogin();}} 
-                  className={`text-[#005B98] focus:outline-none hover:underline ${loginClicked ? "scale-75" : "scale-100"}`}>
+                    Don't have an account? 
+                    <button 
+                      onClick={(e) => {setLoginClicked(true); 
+                        setTimeout(()=> { setLoginClicked(false);
+                          setTimeout(() => e.preventDefault(), onSwitchToLogin()
+                          , 500)
+                        }, 150);
+                      }}  
+                      className={`text-[#005B98] focus:outline-none hover:underline 
+                      ${loginClicked ? "scale-90" : "scale-100"}`}>
                     Login</button>
                   </p>
                 </div>

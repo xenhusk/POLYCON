@@ -4,6 +4,7 @@ import { ReactComponent as FilterIcon } from "./icons/FilterAdd.svg";
 import { ReactComponent as EditIcon } from "./icons/Edit.svg";
 import { ReactComponent as DeleteIcon } from "./icons/delete.svg";
 import { motion, AnimatePresence } from "framer-motion";
+import { ReactComponent as RedoIcon } from './icons/redo.svg'; // Add this import
 import './transitions.css';
 
 export default function Courses() {
@@ -92,10 +93,7 @@ export default function Courses() {
   useEffect(() => {
     const handleClickOutside = (event) => {
       if (filterRef.current && !filterRef.current.contains(event.target)) {
-        setShowFilters(false);
-        setSelectedDepartment("");
-        setFilteredPrograms([]);
-        setFilteredCourses(courses);
+        setShowFilters(false); // Only hide the filter panel, don't reset filters
       }
     };
 
@@ -103,7 +101,7 @@ export default function Courses() {
     return () => {
       document.removeEventListener("mousedown", handleClickOutside);
     };
-  }, [filterRef, courses]);
+  }, [filterRef]); // Remove dependencies that reset filters
 
   const fetchInitialData = async () => {
     setIsCourseLoading(true);
@@ -401,21 +399,27 @@ export default function Courses() {
   const handleEdit = (course) => {
     setEditCourse({ ...course });
 
-    // Convert department name to its ID for editing if needed
+    // Convert department name to its ID for editing
     const deptObj = departments.find((d) => d.name === course.department);
     if (deptObj) {
       setDepartment(deptObj.id);
-      const relatedPrograms = programs.filter(
+      
+      // Get all programs for this department
+      const departmentPrograms = programs.filter(
         (prog) => prog.departmentID === deptObj.id
       );
-      setFilteredPrograms(relatedPrograms);
-      const selectedProgramIds = relatedPrograms
-        .filter((p) => course.program.includes(p.name))
-        .map((p) => p.id);
+      setFilteredPrograms(departmentPrograms);
+      setSelectedDepartmentPrograms(departmentPrograms);
+
+      // Find and set the IDs of programs that are already selected
+      const selectedProgramIds = departmentPrograms
+        .filter((prog) => course.program.includes(prog.name))
+        .map((prog) => prog.id);
       setSelectedPrograms(selectedProgramIds);
     } else {
       setDepartment("");
       setFilteredPrograms([]);
+      setSelectedDepartmentPrograms([]);
       setSelectedPrograms([]);
     }
 
@@ -423,50 +427,54 @@ export default function Courses() {
   };
 
   const handleDelete = async (courseID) => {
-    const confirmDelete = window.confirm(
-      "Are you sure you want to delete this course?"
-    );
-    if (!confirmDelete) return;
+    // Replace window.confirm with custom message
+    setMessage({
+      type: "error",
+      content: (
+        <div className="flex items-center justify-between">
+          <span>Are you sure you want to delete this course?</span>
+          <div className="flex gap-2">
+            <button
+              onClick={async () => {
+                try {
+                  const response = await fetch(
+                    `http://localhost:5001/course/delete_course/${courseID}`,
+                    {
+                      method: "DELETE",
+                    }
+                  );
 
-    setIsLoading(true);
-    try {
-      const response = await fetch(
-        `http://localhost:5001/course/delete_course/${courseID}`,
-        {
-          method: "DELETE",
-        }
-      );
-
-      if (response.ok) {
-        setMessage({
-          type: "success",
-          content: "Course deleted successfully!",
-        });
-        const updatedCourses = courses.filter(
-          (course) => course.courseID !== courseID
-        );
-        setCourses(updatedCourses);
-        setFilteredCourses(updatedCourses);
-        localStorage.setItem("courses", JSON.stringify(updatedCourses));
-
-        setTimeout(() => {
-          setMessage({ type: "", content: "" });
-        }, 2000);
-      } else {
-        setMessage({
-          type: "error",
-          content: "Failed to delete course. Please try again.",
-        });
-      }
-    } catch (error) {
-      console.error("Error deleting course:", error);
-      setMessage({
-        type: "error",
-        content: "Network error. Please try again.",
-      });
-    } finally {
-      setIsLoading(false);
-    }
+                  if (response.ok) {
+                    const updatedCourses = courses.filter(
+                      (course) => course.courseID !== courseID
+                    );
+                    setCourses(updatedCourses);
+                    setFilteredCourses(updatedCourses);
+                    localStorage.setItem("courses", JSON.stringify(updatedCourses));
+                    setMessage({ type: "success", content: "Course deleted successfully" });
+                  } else {
+                    setMessage({ type: "error", content: "Failed to delete course" });
+                  }
+                } catch (error) {
+                  console.error("Error deleting course:", error);
+                  setMessage({ type: "error", content: "Error deleting course" });
+                }
+                setTimeout(() => setMessage({ type: "", content: "" }), 3000);
+              }}
+              className="bg-red-500 text-white px-3 py-1 ml-3 rounded hover:bg-red-600"
+            >
+              Delete
+            </button>
+            <button
+              onClick={() => setMessage({ type: "", content: "" })}
+              className="bg-gray-500 text-white px-3 py-1 rounded hover:bg-gray-600"
+            >
+              Cancel
+            </button>
+          </div>
+        </div>
+      ),
+    });
   };
 
   const resetForm = () => {
@@ -502,25 +510,35 @@ export default function Courses() {
     applyFilters();
   };
 
+  // Add new reset filters function
+  const handleResetFilters = () => {
+    setSelectedDepartment("");
+    setFilterSelectedPrograms([]);
+    setFilteredPrograms([]);
+    setFilteredCourses(courses);
+  };
+
   return (
-    <div className="items-center mx-auto p-6 bg-white fade-in">
+    <div className="flex flex-col min-h-screen items-center mx-auto p-6 bg-white fade-in ">
+      {/* Global Message display - Position in upper left */}
+      {message.content && (
+        <div
+          className={`fixed top-5 right-5 p-4 rounded-lg shadow-lg z-50 ${
+            message.type === "success"
+              ? "bg-green-100 text-green-700"
+              : "bg-red-100 text-red-700"
+          }`}
+        >
+          {message.content}
+        </div>
+      )}
+
       <h2 className="text-3xl mt-10 font-bold text-center text-[#0065A8] pb-5 fade-in delay-100">
         Courses
       </h2>
 
       <div className="flex items-center justify-center space-x-2 w-full mt-4 fade-in delay-200">
-        {/* Global Message display – show only when NOT editing */}
-        {!showEditModal && message.content && (
-          <div
-            className={`fixed top-5 right-5 p-4 rounded-lg shadow-lg z-50 ${
-              message.type === "success"
-                ? "bg-green-100 text-green-700"
-                : "bg-red-100 text-red-700"
-            }`}
-          >
-            {message.content}
-          </div>
-        )}
+        {/* Global Message display - Modified position to upper left */}
 
         {/* Loading overlay
         {isLoading && (
@@ -583,11 +601,18 @@ export default function Courses() {
       {showFilters && (
         <div
           ref={filterRef}
-          className="absolute right-[23rem] mt-2 mx-auto w-80 bg-white rounded-xl shadow-2xl overflow-hidden z-40 bg-opacity-80"
+          className="absolute right-[21rem] top-[12rem] mx-auto w-80 bg-white rounded-xl shadow-2xl overflow-hidden z-40 bg-opacity-80"
         >
-          {/* Header */}
-          <div className="bg-[#0065A8] px-6 py-4">
+          {/* Header with Reset Button */}
+          <div className="bg-[#0065A8] px-6 py-4 flex justify-between items-center">
             <h3 className="text-xl font-semibold text-white">FILTERS</h3>
+            <button
+              onClick={handleResetFilters}
+              className="text-white hover:text-gray-200 transition-transform hover:scale-110"
+              title="Reset filters"
+            >
+              <RedoIcon className="w-5 h-5" />
+            </button>
           </div>
 
           {/* Filter Content */}
@@ -613,40 +638,40 @@ export default function Courses() {
             </div>
 
             {/* Programs Filter */}
-            {filteredPrograms.length > 0 && (
+            {selectedDepartment && (
               <div>
                 <label className="block text-sm font-medium text-gray-700 mb-2">
                   Programs
                 </label>
                 <div className="max-h-40 overflow-y-auto border-2 border-[#0065A8] rounded-lg">
-                  {filteredPrograms.map((prog) => (
-                    <div key={prog.id} className="px-2 py-1">
-                      <label
-                        className={`flex items-center p-2 rounded-lg transition-colors duration-200
-                        ${filterSelectedPrograms.includes(prog.id)
+                  {filteredPrograms.length > 0 ? (
+                    filteredPrograms.map((prog) => (
+                      <div key={prog.id} className="px-2 py-1">
+                        <label className={`flex items-center p-2 rounded-lg transition-colors duration-200
+                          ${filterSelectedPrograms.includes(prog.id)
                             ? "bg-[#0065A8] text-white"
-                            : "hover:bg-[#54BEFF] text-white"
-                        }`}
-                      >
-                        <input
-                          type="checkbox"
-                          value={prog.id}
-                          checked={filterSelectedPrograms.includes(prog.id)}
-                          onChange={() => handleProgramFilterChange(prog.id)}
-                          className="mr-3 h-4 w-4 accent-[#0065A8] border-gray-300 rounded 
-                          checked:bg-[#0065A8] checked:hover:bg-[#54BEFF] "
-                        />
-                        <span
-                          className={filterSelectedPrograms.includes(prog.id)
-                              ? "text-white"
-                              : "text-gray-700"
-                          }
+                            : "hover:bg-[#54BEFF] hover:text-white"}`}
                         >
-                          {prog.name}
-                        </span>
-                      </label>
-                    </div>
-                  ))}
+                          <input
+                            type="checkbox"
+                            value={prog.id}
+                            checked={filterSelectedPrograms.includes(prog.id)}
+                            onChange={() => handleProgramFilterChange(prog.id)}
+                            className="mr-3 h-4 w-4 accent-[#0065A8] border-gray-300 rounded
+                            checked:bg-[#0065A8] checked:hover:bg-[#54BEFF]"
+                          />
+                          <span className={filterSelectedPrograms.includes(prog.id)
+                            ? "text-white"
+                            : "text-gray-700"}
+                          >
+                            {prog.name}
+                          </span>
+                        </label>
+                      </div>
+                    ))
+                  ) : (
+                    <div className="px-4 py-3 text-gray-500 text-center">No programs found</div>
+                  )}
                 </div>
               </div>
             )}
@@ -721,7 +746,10 @@ export default function Courses() {
                         <td className="px-4 py-3">{course.credits}</td>
                         <td className="px-4 py-3">{course.department}</td>
                         <td className="px-4 py-3">
-                          {course.program.join(", ")}
+                          {course.program && course.program.length > 0 
+                            ? course.program.join(", ")
+                            : <span className="text-gray-500">No programs</span>
+                          }
                         </td>
                         <td className="px-4 py-3 text-center">
                           <div className="flex items-center justify-center space-x-3">
@@ -810,32 +838,44 @@ export default function Courses() {
                 </option>
               ))}
             </select>
-            {/* Program Modal */}
+            {/* Program Modal - Updated Styles */}
             {showProgramModal && (
-              <div className="absolute right-[3.5rem] bottom-[4rem] mt-2 w-64 bg-blue-500 bg-opacity-95 text-white p-4 rounded-lg shadow-lg z-50">
+              <div className="absolute right-[7.7rem] bottom-[4rem] mt-2 w-64 rounded-xl shadow-2xl overflow-hidden z-50">
                 <div ref={modalRef}>
-                  <h3 className="text-xl font-bold mb-4">Programs</h3>
-                  <div className="max-h-60 overflow-y-auto">
-                    {selectedDepartmentPrograms.map((prog) => (
-                      <div key={prog.id} className="mb-1">
-                        <label
-                          className={`block p-2 rounded-lg transition-colors duration-200 ${
-                            selectedPrograms.includes(prog.id)
-                              ? "bg-white text-black"
-                              : "hover:bg-white hover:text-black"
-                          }`}
-                        >
-                          <input
-                            type="checkbox"
-                            value={prog.id}
-                            checked={selectedPrograms.includes(prog.id)}
-                            onChange={() => handleProgramChange(prog.id)}
-                            className="mr-2"
-                          />
-                          {prog.name}
-                        </label>
-                      </div>
-                    ))}
+                  {/* Header matching filter style */}
+                  <div className="bg-[#0065A8] px-6 py-4">
+                    <h3 className="text-xl font-semibold text-white">Programs</h3>
+                  </div>
+                  
+                  {/* Content matching filter style */}
+                  <div className="bg-white p-6 space-y-4">
+                    <div className="max-h-60 overflow-y-auto border-2 border-[#0065A8] rounded-lg">
+                      {selectedDepartmentPrograms.length > 0 ? (
+                        selectedDepartmentPrograms.map((prog) => (
+                          <div key={prog.id} className="px-2 py-1">
+                            <label className={`flex items-center p-2 rounded-lg transition-colors duration-200
+                              ${selectedPrograms.includes(prog.id) 
+                                ? "bg-[#0065A8] text-white" 
+                                : "hover:bg-[#54BEFF] hover:text-white"}`}
+                            >
+                              <input
+                                type="checkbox"
+                                value={prog.id}
+                                checked={selectedPrograms.includes(prog.id)}
+                                onChange={() => handleProgramChange(prog.id)}
+                                className="mr-3 h-4 w-4 accent-[#0065A8] border-gray-300 rounded
+                                checked:bg-[#0065A8] checked:hover:bg-[#54BEFF]"
+                              />
+                              <span className={selectedPrograms.includes(prog.id) ? "text-white" : "text-gray-700"}>
+                                {prog.name}
+                              </span>
+                            </label>
+                          </div>
+                        ))
+                      ) : (
+                        <div className="px-4 py-3 text-gray-500 text-center">No programs found</div>
+                      )}
+                    </div>
                   </div>
                 </div>
               </div>
@@ -982,7 +1022,7 @@ export default function Courses() {
                       </div>
                     </div>
 
-                    {/* NEW: Message display inside modal */}
+                    {/* NEW: Message display inside modal - Also moved to left */}
                     {message.content && (
                       <div
                         className={`mt-2 mx-4 p-3 rounded-lg ${
