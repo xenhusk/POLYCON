@@ -36,6 +36,14 @@ import { NotificationProvider } from './context/NotificationContext'; // Add imp
 import PreLoader from './components/PreLoader'; // Add import for PreLoader
 import EnrollmentTestPage from './pages/EnrollmentTestPage'; // new import for testing enrollment modal
 import EnrollmentPopup from './components/EnrollmentPopup';
+import { useQueryClient } from 'react-query';
+import { useFetchWithCache } from './hooks/useFetchWithCache';
+import { usePrefetch } from './context/DataPrefetchContext';
+import NetworkMonitor from './components/NetworkMonitor';
+import { getUserIdentifiers } from "./utils/userUtils"; // Add import for getUserIdentifiers
+import { ensureUserIdPersistence, recoverUserIds } from "./utils/persistUtils";
+import NotificationPermissionRequest from './components/NotificationPermissionRequest'; // Add this import
+import NotificationTester from './components/NotificationTester'; // Add this import
 
 const PreloaderTest = React.lazy(() => import('./components/PagePreloader'));
 
@@ -142,6 +150,48 @@ function InlineProfilePictureUploader({ initialFile, onClose }) {
 }
 
 function App() {
+  // Run ID persistence check and recovery when App loads
+  useEffect(() => {
+    const runRecovery = async () => {
+      ensureUserIdPersistence();
+      
+      const needsRecovery = 
+        localStorage.getItem('isAuthenticated') === 'true' && 
+        (!localStorage.getItem('userId') || 
+         !localStorage.getItem('studentID') || 
+         !localStorage.getItem('teacherID'));
+      
+      if (needsRecovery) {
+        console.log("App detected missing IDs, running recovery...");
+        const recovered = await recoverUserIds();
+        if (recovered) {
+          console.log("Recovery successful, reloading app state...");
+          // Force a state update to re-render with recovered IDs
+          setLoggedIn(!!localStorage.getItem('userEmail'));
+          ensureUserIdPersistence();
+        }
+      }
+    };
+    
+    runRecovery();
+  }, []);
+
+  // Run ID persistence check immediately when App loads
+  useEffect(() => {
+    ensureUserIdPersistence();
+    console.log("App mounted - localStorage state:", {
+      userEmail: localStorage.getItem('userEmail'),
+      userId: localStorage.getItem('userId'),
+      userID: localStorage.getItem('userID'),
+      studentId: localStorage.getItem('studentId'),
+      studentID: localStorage.getItem('studentID'),
+      teacherId: localStorage.getItem('teacherId'),
+      teacherID: localStorage.getItem('teacherID'),
+      isAuthenticated: localStorage.getItem('isAuthenticated'),
+      userRole: localStorage.getItem('userRole'),
+    });
+  }, []);
+
   const [user, setUser] = useState(null);
   const [profile, setProfile] = useState(null);
   const [teacherId, setTeacherId] = useState(localStorage.getItem("teacherId") || null);
@@ -157,6 +207,7 @@ function App() {
   const [showOverlay, setShowOverlay] = useState(true);
   // NEW: Initialize loggedIn based on localStorage.
   const [loggedIn, setLoggedIn] = useState(!!localStorage.getItem('userEmail'));
+  const [preloadAttempted, setPreloadAttempted] = useState(false); // Track if preload was attempted
 
   // List of routes that should not trigger role fetching
   const noRoleFetchPaths = ['/appointments', '/someOtherRolelessPage'];
@@ -167,6 +218,99 @@ function App() {
   const [modalStep, setModalStep] = useState('upload'); // 'upload' or 'crop'
   const [modalSelectedFile, setModalSelectedFile] = useState(null);
   const fileInputRef = useRef(null); // remains for other uses if needed
+
+  // Access React Query client for manual operations
+  const queryClient = useQueryClient();
+  const { prefetchStatus, triggerPrefetch } = usePrefetch();
+  
+  // Use cached data fetching for user role
+  const storedEmail = localStorage.getItem('userEmail');
+  const { data: userRoleData } = useFetchWithCache(
+    ['userRole', storedEmail], 
+    storedEmail ? `http://localhost:5001/account/get_user_role?email=${storedEmail}` : null,
+    {
+      enabled: !!storedEmail && !noRoleFetchPaths.includes(location.pathname),
+      onSuccess: (data) => setUserRole(data.role)
+    }
+  );
+  
+  // Use cached data fetching for user details
+  const { data: userData } = useFetchWithCache(
+    ['userData', storedEmail],
+    storedEmail ? `http://localhost:5001/user/get_user?email=${storedEmail}` : null,
+    {
+      enabled: !!storedEmail,
+      onSuccess: (data) => {
+        if (data) {
+          // Log full response to see what comes back
+          console.log("User data fetched:", data);
+          if (data.id && data.id !== "undefined") {
+            localStorage.setItem('userID', data.id);
+            localStorage.setItem('userId', data.id);
+          } else {
+            console.error("Fetched user data has no valid id:", data);
+          }
+          
+          const role = userRoleData?.role || localStorage.getItem('userRole');
+          if (role === 'student') {
+            if (data.id && data.id !== "undefined") {
+              localStorage.setItem('studentID', data.id);
+              localStorage.setItem('studentId', data.id);
+            } else {
+              console.error("Fetched student data has no valid id:", data);
+            }
+            setProfile({
+              name: `${data.firstName} ${data.lastName}`,
+              id: data.id,
+              role: 'Student',
+              program: data.program || 'Unknown Program',
+              year_section: data.year_section || 'Unknown Year/Section',
+              profile_picture: data.profile_picture || 'https://via.placeholder.com/100'
+            });
+          } else if (role === 'faculty') {
+            if (data.id && data.id !== "undefined") {
+              localStorage.setItem('teacherID', data.id);
+              localStorage.setItem('teacherId', data.id);
+              localStorage.setItem('facultyID', data.id);
+            } else {
+              console.error("Fetched faculty data has no valid id:", data);
+            }
+            setProfile({
+              name: `${data.firstName} ${data.lastName}`,
+              id: data.id || data.idNumber,
+              role: 'Teacher',
+              department: data.department,
+              profile_picture: data.profile_picture || 'https://via.placeholder.com/100'
+            });
+          } else if (role) {
+            setProfile({
+              name: `${data.firstName} ${data.lastName}`,
+              id: data.id || data.idNumber,
+              role: role.charAt(0).toUpperCase() + role.slice(1),
+              profile_picture: data.profile_picture || 'https://via.placeholder.com/100'
+            });
+          }
+          
+          // Ensure persistence after user data is loaded
+          ensureUserIdPersistence();
+        }
+      }
+    }
+  );
+  
+  // Use prefetch status for loading indicator
+  useEffect(() => {
+    if (prefetchStatus.isPrefetching) {
+      setLoadingProgress(prefetchStatus.progress);
+      setIsLoading(true);
+    } else if (prefetchStatus.completed === prefetchStatus.total && prefetchStatus.total > 0) {
+      setLoadingProgress(100);
+      setTimeout(() => {
+        setIsLoading(false);
+        setShowOverlay(false);
+      }, 500);
+    }
+  }, [prefetchStatus]);
 
   useEffect(() => {
     // Only fetch role if current pathname is not in noRoleFetchPaths
@@ -262,62 +406,195 @@ function App() {
     }
   };
 
-  // Update the preload effect to run when either loggedIn or user changes.
+  // Update the preload effect with better error handling and state management
   useEffect(() => {
-    // Remove the early return that skipped if (!user).
+    // Set body overflow to hidden when preloader is active
+    
+    // Don't attempt preload if not logged in
     if (!loggedIn) {
       setIsLoading(false);
+      setShowOverlay(false);
+      document.body.style.overflow = "auto";
       return;
     }
+
     const userEmail = localStorage.getItem('userEmail');
     const userRole = localStorage.getItem('userRole');
+    
+    // Exit preload if no user credentials
     if (!userEmail || !userRole) {
       setIsLoading(false);
+      setShowOverlay(false);
+      document.body.style.overflow = "auto";
       return;
     }
+
+    const userId = localStorage.getItem('userID');
+    const studentId = localStorage.getItem('studentID');
+
+    // Start preloading
     setIsLoading(true);
     setShowOverlay(true);
+    setPreloadAttempted(true);
+    
     const preloadAllData = async () => {
-      const totalTasks = 5;
+      const totalTasks = 6; // Increased number of tasks to include enrollment status
       let completedCount = 0;
-      const update = () => {
+      
+      // Helper function to update progress bar
+      const update = (taskName) => {
         completedCount++;
         const progress = Math.floor((completedCount / totalTasks) * 100);
         setLoadingProgress(progress);
-        console.log(`Task completed: ${completedCount}/${totalTasks} (Progress: ${progress}%)`);
+        console.log(`Preloaded: ${taskName} (${completedCount}/${totalTasks})`);
       };
 
-      const tasks = [
-        fetch(`http://localhost:5001/user/get_user?email=${userEmail}`)
-          .then(res => res.json())
-          .then(data => { update(); return data; })
-          .catch(err => { console.error(err); update(); }),
-        fetch(`http://localhost:5001/bookings/get_bookings?role=${userRole}&userID=${localStorage.getItem('userID')}&status=confirmed`)
-          .then(res => res.json())
-          .then(data => { update(); return data; })
-          .catch(err => { console.error(err); update(); }),
-        fetch(`http://localhost:5001/grade/get_student_grades?studentID=${localStorage.getItem('studentID')}&schoolYear=&semester=&period=`)
-          .then(res => res.json())
-          .then(data => { update(); return data; })
-          .catch(err => { console.error(err); update(); }),
-        fetch(`http://localhost:5001/course/get_courses`)
-          .then(res => res.json())
-          .then(data => { update(); return data; })
-          .catch(err => { console.error(err); update(); }),
-        fetch(`http://localhost:5001/consultation/get_history?role=${userRole}&userID=${localStorage.getItem('userID')}`)
-          .then(res => res.json())
-          .then(data => { update(); return data; })
-          .catch(err => { console.error(err); update(); })
-      ];
-      
-      await Promise.all(tasks);
+      try {
+        // Instead of using direct fetch calls, use React Query prefetch capabilities
+        const tasks = [
+          // Task 1: Prefetch user data and store in query cache
+          queryClient.prefetchQuery({
+            queryKey: ['userData', userEmail],
+            queryFn: async () => {
+              const res = await fetch(`http://localhost:5001/user/get_user?email=${userEmail}`);
+              if (!res.ok) throw new Error('Failed to fetch user data');
+              const data = await res.json();
+              return data;
+            },
+            staleTime: 1000 * 60 * 5, // Consider data fresh for 5 minutes
+          }).then(() => update('user data')),
+          
+          // Task 2: Prefetch bookings if we have userID
+          userId ? 
+            queryClient.prefetchQuery({
+              queryKey: ['bookings', userRole, userId, 'confirmed'],
+              queryFn: async () => {
+                const res = await fetch(`http://localhost:5001/bookings/get_bookings?role=${userRole}&userID=${userId}&status=confirmed`);
+                if (!res.ok) throw new Error('Failed to fetch bookings');
+                return res.json();
+              },
+              staleTime: 1000 * 60 * 2, // Consider data fresh for 2 minutes
+            }).then(() => update('bookings'))
+            : Promise.resolve().then(() => update('bookings (skipped)')),
+          
+          // Task 3: Prefetch grades if we have studentID
+          studentId ? 
+            queryClient.prefetchQuery({
+              queryKey: ['grades', studentId],
+              queryFn: async () => {
+                const res = await fetch(`http://localhost:5001/grade/get_student_grades?studentID=${studentId}&schoolYear=&semester=&period=`);
+                if (!res.ok) throw new Error('Failed to fetch grades');
+                return res.json();
+              },
+              staleTime: 1000 * 60 * 5, // Consider data fresh for 5 minutes
+            }).then(() => update('grades'))
+            : Promise.resolve().then(() => update('grades (skipped)')),
+          
+          // Task 4: Prefetch courses
+          queryClient.prefetchQuery({
+            queryKey: ['courses'],
+            queryFn: async () => {
+              const res = await fetch(`http://localhost:5001/course/get_courses`);
+              if (!res.ok) throw new Error('Failed to fetch courses');
+              return res.json();
+            },
+            staleTime: 1000 * 60 * 10, // Consider data fresh for 10 minutes
+          }).then(() => update('courses')),
+          
+          // Task 5: Prefetch consultation history if we have userID
+          userId ? 
+            queryClient.prefetchQuery({
+              queryKey: ['consultation-history', userRole, userId],
+              queryFn: async () => {
+                const res = await fetch(`http://localhost:5001/consultation/get_history?role=${userRole}&userID=${userId}`);
+                if (!res.ok) throw new Error('Failed to fetch consultation history');
+                return res.json();
+              },
+              staleTime: 1000 * 60 * 5, // Consider data fresh for 5 minutes
+            }).then(() => update('consultation history'))
+            : Promise.resolve().then(() => update('consultation history (skipped)')),
+            
+          // Task 6: NEW - Prefetch enrollment status for students
+          userRole === 'student' && studentId ? 
+            queryClient.prefetchQuery({
+              queryKey: ['enrollment-status', studentId],
+              queryFn: async () => {
+                const res = await fetch(`http://localhost:5001/enrollment/status?studentID=${studentId}`);
+                if (!res.ok) throw new Error('Failed to fetch enrollment status');
+                const data = await res.json();
+                // Store enrollment status in localStorage for quick access
+                if (typeof data.isEnrolled === 'boolean') {
+                  localStorage.setItem('isEnrolled', data.isEnrolled.toString());
+                }
+                return data;
+              },
+              staleTime: 1000 * 60 * 10, // Consider data fresh for 10 minutes
+            }).then(() => update('enrollment status'))
+            : Promise.resolve().then(() => update('enrollment status (skipped)'))
+        ];
+        
+        // Execute all tasks in parallel with proper error handling
+        await Promise.allSettled(tasks);
+        
+        // Force a cache update for search results to ensure they respect enrollment status
+        if (userRole === 'faculty' || userRole === 'admin') {
+          queryClient.invalidateQueries({ queryKey: ['students'] });
+        }
+        
+      } catch (error) {
+        console.error("Error during preload:", error);
+      } finally {
+        // Ensure the loading state completes, even if there were errors
+        setLoadingProgress(100);
+        
+        setTimeout(() => {
+          setIsLoading(false);
+          setShowOverlay(false);
+          document.body.style.overflow = "auto";
+        }, 500);
+      }
     };
 
-    (async () => {
-      await preloadAllData();
-      setIsLoading(false);
-    })();
-  }, [loggedIn, user]);
+    preloadAllData();
+    
+    // Return function to cleanup when component unmounts
+    return () => {
+      document.body.style.overflow = "auto";
+    };
+  }, [loggedIn]); // Remove user dependency since we use loggedIn state
+  
+  // Manual cleanup effect to prevent stuck preloader
+  useEffect(() => {
+    // If preloader is shown for more than 10 seconds, force hide it
+    let timeoutId;
+    
+    if (isLoading) {
+      timeoutId = setTimeout(() => {
+        console.log("Preloader safety timeout triggered");
+        setIsLoading(false);
+        setShowOverlay(false);
+        document.body.style.overflow = "auto";
+      }, 10000); // 10-second safety timeout
+    }
+    
+    return () => {
+      if (timeoutId) clearTimeout(timeoutId);
+    };
+  }, [isLoading]);
+
+  // Handle login success to properly trigger preload
+  const handleLoginSuccess = (data) => {
+    setUser(data);
+    setLoggedIn(true);
+    setIsLoading(true);
+    setShowOverlay(true);
+    setPreloadAttempted(false); // Reset for a fresh preload
+    
+    // Small delay before triggering prefetch
+    setTimeout(() => {
+      triggerPrefetch();
+    }, 500);
+  };
 
   // Add this effect to handle admin redirects
   useEffect(() => {
@@ -327,16 +604,63 @@ function App() {
     }
   }, []);
 
+  // Check for missing user IDs when the app starts
+  useEffect(() => {
+    // Get current user identifiers
+    const { userId, studentId, teacherId, role } = getUserIdentifiers();
+    
+    // If the user is logged in but missing role-specific IDs, fix them
+    if (userId && localStorage.getItem("isAuthenticated") === "true") {
+      if (role === "student" && !studentId) {
+        localStorage.setItem("studentID", userId);
+        console.log("Fixed missing studentID by using userId:", userId);
+      }
+      
+      if (role === "faculty" && !teacherId) {
+        localStorage.setItem("teacherID", userId);
+        console.log("Fixed missing teacherID by using userId:", userId);
+      }
+    }
+  }, []);
+
+  // Add this effect to help debug sidebar visibility
+  useEffect(() => {
+    // Log the conditions that control sidebar visibility
+    const userEmail = localStorage.getItem('userEmail');
+    const currentPath = location.pathname;
+    const shouldShowSidebar = userEmail && 
+      !currentPath.includes('/session') && 
+      !currentPath.includes('/finaldocument');
+    
+    console.log("Sidebar visibility check:", {
+      userEmail,
+      currentPath,
+      shouldShowSidebar,
+      sessionCheck: !currentPath.includes('/session'),
+      docCheck: !currentPath.includes('/finaldocument')
+    });
+  }, [location.pathname]);
+
   return (
     <NotificationProvider>
       <div className={location.pathname.includes('/session') ? '' : 'flex min-h-screen'}>
         <PreloadProvider>
           <div className="app-container flex flex-1">
-            {localStorage.getItem('userEmail') &&
-              !location.pathname.includes('/session') &&
-              !location.pathname.includes('/finaldocument') && (
+            {/* Add debugging info to sidebar rendering logic */}
+            {(() => {
+              const userEmail = localStorage.getItem('userEmail');
+              const shouldShowSidebar = userEmail && 
+                !location.pathname.includes('/session') && 
+                !location.pathname.includes('/finaldocument');
+              
+              console.log("Sidebar render attempt:", { userEmail, shouldShowSidebar });
+              
+              return shouldShowSidebar ? (
                 <Sidebar onExpandChange={setSidebarExpanded} />
-              )}
+              ) : (
+                <div className="hidden">Sidebar hidden - Email: {userEmail || 'none'}</div>
+              );
+            })()}
 
             <div className={`flex-1 flex flex-col transition-all duration-300 ease-in-out ${
               localStorage.getItem('userEmail') && 
@@ -347,7 +671,6 @@ function App() {
                   : 'md:ml-20' 
                 : ''
             }`}>
-
 
               {/* New Profile Picture Modal */}
               {showProfileModal && (
@@ -411,7 +734,7 @@ function App() {
                       {/* Auth routes with redirects */}
                       <Route path="/login" element={
                         !localStorage.getItem('userEmail') ?
-                          <Login onLoginSuccess={(data) => { setUser(data); setLoggedIn(true); }} /> :
+                          <Login onLoginSuccess={handleLoginSuccess} /> :
                           <Navigate to="/dashboard" />
                       } />
                       <Route path="/signup" element={
@@ -451,60 +774,67 @@ function App() {
                       <Route path="/homeadmin" element={<HomeAdmin />} /> 
                       <Route path="/enrollment-test" element={<EnrollmentTestPage />} /> {/* new test route */}
                       <Route path="/semester-management" element={<SemesterManagement />} /> {/* Update this line */}
+                      <Route path="/notification-test" element={<NotificationTester />} /> {/* Add this new route */}
                     </Routes>
                   </Suspense>
                 </motion.div>
               </AnimatePresence>
             </div>
-          </div>
-          {/* Render NotificationTray */}
-          {showNotifications && (
-            <NotificationTray
-              isVisible={showNotifications}
-              onClose={() => setShowNotifications(false)}
-              position={{ top: '50px', left: 'calc(100% - 320px)' }}  // adjust as needed
-            />
-          )}
-          {/* Only show BookingPopup and EnrollmentPopup if not on session or finaldocument page */}
-          {!location.pathname.includes('/session') &&
-            !location.pathname.includes('/finaldocument') && (
-              <>
-                <BookingPopup />
-                {userRole === 'faculty' && <EnrollmentPopup />} {/* Only show for faculty */}
-              </>
+          
+            {/* Render NotificationTray */}
+            {showNotifications && (
+              <NotificationTray
+                isVisible={showNotifications}
+                onClose={() => setShowNotifications(false)}
+                position={{ top: '50px', left: 'calc(100% - 320px)' }}  // adjust as needed
+              />
             )}
-        </PreloadProvider>
-      </div>
-
-      {/* Toast positioned outside the Router */}
-      <Toast
-        message={toast.message || ''}
-        isVisible={toast.visible || false}
-        onClose={closeToast}
-      />
-
-      {/* NEW: Show preloader overlay only when authenticated, not on Session or Final Document pages */}
-      { localStorage.getItem('userEmail') &&
-        !location.pathname.includes('/session') &&
-        !location.pathname.includes('/finaldocument') &&
-        (isLoading || !profile || showOverlay) && (
-          <div style={{
-            position: 'fixed',
-            top: 0,
-            left: 0,
-            width: '100%',
-            height: '100%',
-            background: 'rgba(255,255,255,0.8)',
-            zIndex: 9999,
-            display: 'flex',
-            alignItems: 'center',
-            justifyContent: 'center',
-            transition: 'opacity 0.5s ease',
-            opacity: isLoading || !profile ? 1 : 0
-          }}>
-            <PreLoader progress={loadingProgress} />
+            {/* Only show BookingPopup and EnrollmentPopup if not on session or finaldocument page */}
+            {!location.pathname.includes('/session') &&
+              !location.pathname.includes('/finaldocument') && (
+                <>
+                  <BookingPopup />
+                  {userRole === 'faculty' && <EnrollmentPopup />} {/* Only show for faculty */}
+                </>
+              )}
           </div>
-      )}
+          <NotificationPermissionRequest /> {/* Add this near the end, before the closing tags */}
+        </PreloadProvider>
+      
+        {/* Toast positioned outside the Router */}
+        <Toast
+          message={toast.message || ''}
+          isVisible={toast.visible || false}
+          onClose={closeToast}
+        />
+
+        {/* NEW: Show preloader overlay only when authenticated, not on Session or Final Document pages */}
+        { localStorage.getItem('userEmail') &&
+          !location.pathname.includes('/session') &&
+          !location.pathname.includes('/finaldocument') &&
+          (isLoading || !profile || showOverlay) && (
+            <div style={{
+              position: 'fixed',
+              top: 0,
+              left: 0,
+              width: '100%',
+              height: '100%',
+              background: 'rgba(255,255,255,0.8)',
+              zIndex: 9999,
+              display: 'flex',
+              alignItems: 'center',
+              justifyContent: 'center',
+              transition: 'opacity 0.5s ease',
+              opacity: isLoading || !profile ? 1 : 0
+            }}>
+              <PreLoader progress={loadingProgress} />
+            </div>
+          )
+        }
+        
+        {/* Network Monitor with toggle button */}
+        <NetworkMonitor visible={true} />
+      </div>
     </NotificationProvider>
   );
 }

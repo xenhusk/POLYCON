@@ -2,55 +2,109 @@ import React, { useState } from 'react';
 import { EyeOutlined, EyeInvisibleOutlined } from "@ant-design/icons";
 import { useNavigate } from 'react-router-dom';
 import logo from "./icons/DarkLogo.png";
+import { storeUserAuth } from "../utils/authUtils";
+import { fetchAndStoreEnrollmentStatus } from "../utils/enrollmentUtils";
 
 const Login = ({ onLoginSuccess, onSwitchToSignup }) => {
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [message, setMessage] = useState('');
   const [LoginClicked, setLoginClicked] = useState(false);
+  const [SignupClicked, setSignupClicked] = useState(false);
   const [showPassword, setShowPassword] = useState(false);
   const navigate = useNavigate();
 
-  const handleLoginSuccess = (data) => {
-    localStorage.setItem('userEmail', data.email);
-    localStorage.setItem('userRole', data.role);
-    if (data.role === 'student') {
-      localStorage.setItem('studentID', data.studentId);
-    } else if (data.role === 'faculty') {
-      localStorage.setItem('teacherID', data.teacherId);
+  const handleLogin = async (e) => {
+    e.preventDefault();
+    setMessage('');
+    setLoginClicked(true);
+
+    try {
+      console.log("Sending login request to:", "http://localhost:5001/account/login");
+      
+      const response = await fetch("http://localhost:5001/account/login", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({ email, password }),
+      });
+
+      console.log("Login response status:", response.status);
+      
+      const data = await response.json();
+      console.log("Login response data:", data);
+
+      if (response.ok) {
+        console.log("Login successful:", data);
+        
+        // Explicitly set userEmail in localStorage - CRITICAL for sidebar
+        localStorage.setItem("userEmail", email);
+        
+        // Store authentication data
+        storeUserAuth(data, data.role);
+        
+        // IMPORTANT: Immediately fetch enrollment status for students
+        if (data.role === 'student') {
+          const studentId = data.studentId || data.userId || data.id;
+          if (studentId) {
+            // Fetch and store enrollment status
+            await fetchAndStoreEnrollmentStatus(studentId);
+          }
+        }
+        
+        // Verify localStorage values after auth storage
+        setTimeout(() => {
+          console.log("Verification - localStorage values after login:", {
+            userEmail: localStorage.getItem("userEmail"),
+            userId: localStorage.getItem("userId"),
+            role: localStorage.getItem("userRole"),
+            isAuthenticated: localStorage.getItem("isAuthenticated"),
+            isEnrolled: localStorage.getItem("isEnrolled") // Check if enrollment status is set
+          });
+        }, 100);
+
+        // Call the onLoginSuccess prop if it exists
+        if (onLoginSuccess) {
+          onLoginSuccess(data);
+        }
+        
+        // Navigate based on role
+        switch (data.role) {
+          case "admin":
+            // Admin-specific navigation path
+            navigate("/homeadmin");
+            break;
+            
+          case "faculty":
+            // Faculty-specific dashboard could be added here if needed
+            navigate("/dashboard");
+            break;
+            
+          case "student":
+            // Student-specific dashboard could be added here if needed
+            navigate("/dashboard");
+            break;
+            
+          default:
+            // Default fallback
+            navigate("/dashboard");
+            break;
+        }
+      } else {
+        setMessage(data.error || "Login failed. Please try again.");
+      }
+    } catch (error) {
+      console.error("Login error:", error);
+      setMessage(`Network error: ${error.message}. Please try again.`);
+    } finally {
+      setLoginClicked(false);
     }
-    // Propagate login state to App, which must update loggedIn.
-    onLoginSuccess(data);
-    navigate('/');
   };
 
-  const handleSubmit = async (e) => {
-    e.preventDefault();
-    try {
-        const response = await fetch('http://localhost:5001/account/login', {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({ email, password }),
-        });
-
-        const data = await response.json();
-
-        if (response.ok) {
-            setMessage(`Welcome ${data.firstName} ${data.lastName}`);
-            localStorage.setItem('userEmail', data.email);
-            handleLoginSuccess(data);
-        } else {
-            setMessage(data.error || 'Login failed. Please check your credentials.');
-        }
-    } catch (error) {
-        setMessage('Login failed. Please try again later.');
-    }
-};
-
-
   return (
-      <div className="w-[100%] h-[80vh] flex justify-center items-center font-poppins">
-        <form onSubmit={handleSubmit} className="flex flex-col w-[76%] max-w-md sm:max-w-lg md:max-w-xl mx-auto">
+      <div className="w-[100%] h-full flex justify-center items-center font-poppins">
+        <form onSubmit={handleLogin} className="flex flex-col w-[90%] md:w-[80%] lg:w-[76%] mx-auto">
           <img src={logo} alt="Logo" className="h-[130px] w-[130px] mx-auto"/>
           <h2 className="text-center text-lg font-bold text-[#005B98]">Login</h2>
           <div className="relative z-0 my-1">
@@ -76,15 +130,26 @@ const Login = ({ onLoginSuccess, onSwitchToSignup }) => {
           </div>
             {message && <p className="text-center text-red-500 text-[0.9rem]">{message}</p>}
           <button 
-            onClick={() => { setLoginClicked(true); setTimeout(() => setLoginClicked(false), 150)}}
+            onClick={() => { setLoginClicked(true); 
+              setTimeout(() => setLoginClicked(false), 150)}}
             type="submit" className={`bg-[#057DCD] text-white w-full h-[44.59px] rounded-lg my-2 mx-auto shadow-md hover:bg-[#54BEFF]
             ${LoginClicked ? "scale-90" : "scale-100"}`}>
               Login
           </button>
           <div className="border-t-2 border-[#005B98] w-[90%] my-2 mx-auto border-opacity-50">
             <p className="text-center font-light text-[0.9rem] mx-auto my-2 text-opacity-50">
-              Don't have an account? <button onClick={(e) => {e.preventDefault(); onSwitchToSignup();}} 
-              className="text-[#005B98] focus:outline-none hover:underline">Sign up</button>
+              Don't have an account? 
+              <button 
+                onClick={(e) => { setSignupClicked(true);
+                  setTimeout(() => { setSignupClicked(true); 
+                    setTimeout(() => e.preventDefault(), onSwitchToSignup()
+                    , 500);
+                  }, 200);
+                }} 
+                className={`text-[#005B98] focus:outline-none hover:underline
+                ${SignupClicked ? "scale-90" : "scale-100"}`}
+              >
+              Sign up</button>
             </p>
           </div>
         </form>
