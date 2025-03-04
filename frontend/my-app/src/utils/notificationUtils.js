@@ -308,3 +308,49 @@ fixNotificationPreferences();
 
 // Call the debug function when the file loads
 debugNotificationPermissionStatus();
+
+/**
+ * Play a notification sound with error handling for browser restrictions
+ * @returns {boolean} Whether the sound played successfully
+ */
+export const playNotificationSound = async (soundUrl) => {
+  try {
+    const audio = new Audio(soundUrl);
+    
+    // Set volume
+    audio.volume = 0.5;
+    
+    // First check if audio can play
+    const canPlay = document.documentElement.hasAttribute('data-user-interacted');
+    
+    if (!canPlay) {
+      console.log('Cannot play notification sound - user has not interacted with the page yet');
+      return false;
+    }
+    
+    // We can use the play promise to detect failures
+    try {
+      await audio.play();
+      return true;
+    } catch (playError) {
+      console.warn('Failed to play notification sound:', playError.message);
+      return false;
+    }
+  } catch (error) {
+    console.error('Error setting up audio:', error);
+    return false;
+  }
+};
+
+// Add event listeners to track user interaction
+if (typeof document !== 'undefined') {
+  const markUserInteraction = () => {
+    document.documentElement.setAttribute('data-user-interacted', 'true');
+    console.log('User interaction detected - audio can now play');
+  };
+  
+  // Common interaction events
+  document.addEventListener('click', markUserInteraction);
+  document.addEventListener('keydown', markUserInteraction);
+  document.addEventListener('touchstart', markUserInteraction);
+}

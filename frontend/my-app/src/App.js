@@ -44,6 +44,7 @@ import { getUserIdentifiers } from "./utils/userUtils"; // Add import for getUse
 import { ensureUserIdPersistence, recoverUserIds } from "./utils/persistUtils";
 import NotificationPermissionRequest from './components/NotificationPermissionRequest'; // Add this import
 import NotificationTester from './components/NotificationTester'; // Add this import
+import NotificationDebugger from './components/NotificationDebugger'; // Add this import
 
 const PreloaderTest = React.lazy(() => import('./components/PagePreloader'));
 
@@ -652,6 +653,13 @@ function App() {
     });
   }, [location.pathname]);
 
+  // Add a hook to track and debug toast visibility
+  useEffect(() => {
+    if (toast?.visible) {
+      console.log("Toast is now visible with message:", toast.message);
+    }
+  }, [toast?.visible, toast?.message]);
+
   return (
     <NotificationProvider data-notification-provider="true">
       <div className={location.pathname.includes('/session') ? '' : 'flex min-h-screen'}>
@@ -846,9 +854,12 @@ function App() {
         
         {/* Network Monitor with toggle button */}
         <NetworkMonitor visible={true} />
-      </div>
-    </NotificationProvider>
-  );
-}
-
-export default App;
+        
+        {/* REMOVE OR MODIFY THIS LINE - you can either:
+            1. Comment it out entirely: */}
+        {/* {process.env.NODE_ENV === 'development' && <NotificationDebugger />} */}tificationProvider>
+        
+        {/* OR 2. Set it to always be hidden: */}
+        {false && <NotificationDebugger />}
+        
+        {/* OR 3. Pass a prop to make it start hidden: */}        {process.env.NODE_ENV === 'development' && <NotificationDebugger startHidden={true} />}      </div>    </NotificationProvider>  );}export default App;

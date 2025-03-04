@@ -1,7 +1,7 @@
 import { useState, useEffect, useRef, useCallback, useContext } from 'react';
 import io from 'socket.io-client';
 import notificationSound from '../components/audio/notification.mp3';
-import { showNotification, areNotificationsEnabled, fixNotificationPreferences } from '../utils/notificationUtils';
+import { showNotification, areNotificationsEnabled, fixNotificationPreferences, playNotificationSound } from '../utils/notificationUtils';
 import { NotificationContext } from '../context/NotificationContext';
 
 const SOCKET_SERVER_URL = "http://localhost:5001";
@@ -20,7 +20,8 @@ const formatSchedule = (schedule) => {
 const alreadyDisplayedNotifications = new Set();
 
 const useNotifications = () => {
-  const { addNotification, notifications, setNotifications } = useContext(NotificationContext);
+  // IMPORTANT: Properly destructure from context to access addNotification
+  const { addNotification, notifications, setNotifications, markAllAsRead } = useContext(NotificationContext);
   const [toast, setToast] = useState({ visible: false, message: '' });
   
   /**
@@ -29,13 +30,20 @@ const useNotifications = () => {
    * @param {Object} data - Additional notification data
    */
   const showToast = useCallback((message, data = {}) => {
+    // Create a notification object
+    const notificationData = {
+      message,
+      ...data,
+      id: data.id || `toast-${Date.now()}`,
+      created_at: new Date().toISOString() // Add timestamp
+    };
+    
     // First pass the notification to the central system if it's a real notification
-    if (data.action && addNotification) {
-      addNotification({
-        message,
-        ...data,
-        id: data.id || `toast-${Date.now()}`
-      });
+    if (addNotification) {
+      console.log("Adding notification to context from showToast:", notificationData);
+      addNotification(notificationData);
+    } else {
+      console.warn("addNotification is not available in context");
     }
     
     // Then set it as toast
@@ -65,6 +73,23 @@ const useNotifications = () => {
   const [recentNotifications, setRecentNotifications] = useState({});
   const notificationRef = useRef(null);
   const socketRef = useRef(null);
+
+  // Debug logged in user info
+  useEffect(() => {
+    const currentUserEmail = localStorage.getItem('userEmail');
+    const currentUserId = localStorage.getItem('userId');
+    const currentTeacherId = localStorage.getItem('teacherId') || localStorage.getItem('teacherID');
+    const currentStudentId = localStorage.getItem('studentId') || localStorage.getItem('studentID');
+    const currentRole = localStorage.getItem('userRole');
+    
+    console.log("useNotifications: Current user info", {
+      email: currentUserEmail,
+      userId: currentUserId,
+      teacherId: currentTeacherId,
+      studentId: currentStudentId,
+      role: currentRole
+    });
+  }, []);
 
   // Add a critical check to ensure the socket is properly established
   useEffect(() => {
@@ -191,10 +216,10 @@ const useNotifications = () => {
         socketRef.current.disconnect();
       }
     };
-  }, []);
+  }, [recentNotifications]); // Add dependency to recentNotifications
 
-  // Update the processNotification function to use more reliable deduplication
-  const processNotification = (data, currentRole) => {
+  // Update the processNotification function to handle audio errors better
+  const processNotification = useCallback((data, currentRole) => {
     console.log(`⚠️ Processing notification: ${data.action}`, {
       bookingID: data.bookingID,
       action: data.action
@@ -217,13 +242,10 @@ const useNotifications = () => {
       alreadyDisplayedNotifications.delete(notificationUniqueId);
     }, 5000);
   
-    // Play notification sound
-    try {
-      console.log("🔊 Playing notification sound");
-      new Audio(notificationSound).play();
-    } catch (err) {
-      console.error("Error playing notification sound:", err);
-    }
+    // Try to play notification sound, but don't block on it
+    playNotificationSound(notificationSound).catch(err => {
+      console.log('Non-critical error playing notification sound:', err);
+    });
   
     // Fix notification preferences
     fixNotificationPreferences();
@@ -321,11 +343,22 @@ const useNotifications = () => {
       composedMessage = data.message || "New notification";
     }
   
+    // Create a well-formed notification object with ALL required fields
     const composedNotification = { 
-      ...data, 
-      message: composedMessage, 
-      id: Date.now(),
-      isRead: false
+      id: `notification-${Date.now()}`,
+      type: 'booking',
+      action: data.action,
+      bookingID: data.bookingID,
+      message: composedMessage,
+      teacherName: data.teacherName || "",
+      studentNames: data.studentNames || "",
+      venue: data.venue || "",
+      schedule: data.schedule || "",
+      created_at: new Date().toISOString(),
+      createdAt: new Date().toISOString(),
+      isRead: false,
+      // Preserve any other useful fields from original data
+      ...data
     };
   
     // Show only ONE browser notification with better tracking
@@ -337,21 +370,49 @@ const useNotifications = () => {
       tag: notificationUniqueId // Use tag to prevent duplicate notifications
     });
   
-    // Update the UI with the notification
-    setToast({ visible: true, message: composedMessage });
-  };
+    // Always set toast message to ensure it shows
+    console.log("Setting toast visible with message:", composedMessage);
+    setToast({ 
+      visible: true, 
+      message: composedMessage,
+      data: composedNotification
+    });
 
-  const markAllAsRead = () => {
-    if (setNotifications) {
-      setNotifications(prev => prev.map(n => ({ ...n, isRead: true })));
+    // Add the notification to the context
+    if (addNotification) {
+      console.log("Adding notification to context from processNotification:", composedNotification);
+      
+      // CRITICAL FIX: Ensure this notification gets into localStorage ASAP
+      try {
+        // Get current notifications from localStorage
+        const existingNotificationsJSON = localStorage.getItem('notifications');
+        const existingNotifications = existingNotificationsJSON 
+          ? JSON.parse(existingNotificationsJSON) 
+          : [];
+        
+        // Add new notification at beginning
+        const updatedNotifications = [
+          composedNotification, 
+          ...(Array.isArray(existingNotifications) ? existingNotifications : [])
+        ];
+        
+        // Save back to localStorage
+        localStorage.setItem('notifications', JSON.stringify(updatedNotifications));
+        console.log("Directly saved notification to localStorage");
+      } catch (err) {
+        console.error("Error directly saving to localStorage:", err);
+      }
+      
+      // Also add via context
+      addNotification(composedNotification);
     } else {
-      console.error("setNotifications function is not available from NotificationContext");
+      console.warn("addNotification is not available in context");
     }
-  };
+  }, [addNotification]);
 
   return { 
     notifications, 
-    markAllAsRead, 
+    markAllAsRead, // Pass through from context, don't redefine
     toast, 
     closeToast,
     notificationsEnabled, 
