@@ -2,6 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import AppointmentsCalendar from '../components/AppointmentsCalendar';
 import HomeTeacher from '../components/HomeTeacher';
+import HomeStudent from '../components/HomeStudent';  // Add this import
 
 function Home() {
   const [userRole, setUserRole] = useState('');
@@ -47,6 +48,8 @@ function Home() {
         </div>
       </div>
 
+
+
       <div className="w-full px-1 sm:px-3 py-1 sm:py-3 lg:py-4 flex-grow">
         {userRole === 'faculty' ? (
           <div className="space-y-2 sm:space-y-4">
@@ -86,6 +89,7 @@ function Home() {
           </div>
         ) : (
           <div className="space-y-2">
+            <HomeStudent />  {/* Add HomeStudent component */}
             {isMobile ? (
               /* Mobile view for students - Calendar hidden with message */
               <div className="w-full">

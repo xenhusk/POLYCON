@@ -7,6 +7,7 @@ import { BrowserRouter } from 'react-router-dom';
 import { QueryClient, QueryClientProvider } from 'react-query';
 import { DataPrefetchProvider } from './context/DataPrefetchContext';
 import { ensureUserIdPersistence, recoverUserIds } from './utils/persistUtils';
+import { NotificationProvider } from './context/NotificationContext';
 
 // Create the query client ONCE, outside of render function
 const queryClient = new QueryClient({
@@ -50,7 +51,9 @@ root.render(
     <BrowserRouter>
       <QueryClientProvider client={queryClient}>
         <DataPrefetchProvider>
-          <App />
+          <NotificationProvider>
+            <App />
+          </NotificationProvider>
         </DataPrefetchProvider>
       </QueryClientProvider>
     </BrowserRouter>

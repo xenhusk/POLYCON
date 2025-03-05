@@ -1,85 +1,81 @@
-import React, { useState, useEffect } from 'react';
-import { 
-  areBrowserNotificationsSupported, 
-  hasNotificationPermission, 
-  requestNotificationPermission 
-} from '../utils/notificationUtils';
-import { motion } from 'framer-motion';
+import React, { useEffect, useState } from 'react';
+import { requestNotificationPermission, areBrowserNotificationsSupported, fixNotificationPreferences } from '../utils/notificationUtils';
 
-const NotificationPermissionRequest = ({ onClose }) => {
-  const [showRequest, setShowRequest] = useState(false);
+const NotificationPermissionRequest = () => {
+  const [showPrompt, setShowPrompt] = useState(false);
 
   useEffect(() => {
-    // Check if we should show notification permission request
-    const shouldShowRequest = () => {
-      // Don't show if browser doesn't support notifications
-      if (!areBrowserNotificationsSupported()) return false;
+    // Create a debugging logger function for notification permissions
+    const logNotificationState = () => {
+      const permission = 'Notification' in window ? Notification.permission : 'API not supported';
+      const enabled = localStorage.getItem('notificationsEnabled') === 'true';
       
-      // Don't show if permission already granted
-      if (hasNotificationPermission()) return false;
-      
-      // Don't show if user has explicitly declined before
-      if (localStorage.getItem('notificationRequestDismissed') === 'true') return false;
-      
-      // Don't show if user has previously denied via browser
-      if (Notification.permission === 'denied') return false;
-      
-      return true;
+      console.log('📱 Notification permission state:', {
+        browserPermission: permission,
+        localStorageEnabled: enabled,
+        dismissed: localStorage.getItem('notificationRequestDismissed') === 'true'
+      });
     };
-
-    // Set initial state
-    setShowRequest(shouldShowRequest());
+    
+    // Log current state and fix any inconsistencies
+    logNotificationState();
+    fixNotificationPreferences();
+    
+    const checkPermissions = async () => {
+      if (!areBrowserNotificationsSupported()) return;
+      
+      const permission = Notification.permission;
+      const dismissed = localStorage.getItem('notificationRequestDismissed') === 'true';
+      
+      if (permission !== 'granted' && permission !== 'denied' && !dismissed) {
+        setShowPrompt(true);
+      } else if (permission === 'granted') {
+        localStorage.setItem('notificationsEnabled', 'true');
+        console.log('📱 Permission is already granted, updated localStorage');
+      }
+    };
+    
+    // Add a small delay to let other components initialize
+    setTimeout(checkPermissions, 1000);
   }, []);
 
-  const handleRequestPermission = async () => {
-    const permission = await requestNotificationPermission();
-    
-    if (permission === 'granted') {
-      // Show a test notification
-      new Notification('Notifications enabled!', {
-        body: 'You will now receive notifications from POLYCON.',
-        icon: '/favicon.ico'
-      });
+  const handleAllow = async () => {
+    const result = await requestNotificationPermission();
+    setShowPrompt(false);
+    if (result === 'granted') {
+      // Force update localStorage to make sure it's correct
+      localStorage.setItem('notificationsEnabled', 'true');
     }
-    
-    setShowRequest(false);
-    if (onClose) onClose();
   };
 
   const handleDismiss = () => {
     localStorage.setItem('notificationRequestDismissed', 'true');
-    setShowRequest(false);
-    if (onClose) onClose();
+    setShowPrompt(false);
   };
 
-  if (!showRequest) return null;
+  if (!showPrompt) return null;
 
   return (
-    <motion.div
-      initial={{ opacity: 0, y: 20 }}
-      animate={{ opacity: 1, y: 0 }}
-      exit={{ opacity: 0, y: 20 }}
-      className="fixed bottom-4 right-4 left-4 md:left-auto md:w-80 bg-white rounded-lg shadow-lg p-4 z-50"
-    >
-      <h3 className="text-lg font-semibold mb-2">Enable Notifications</h3>
-      <p className="text-gray-600 text-sm mb-4">
-        Get notified about new appointments, confirmations, and other important updates.
+    <div className="fixed bottom-4 right-4 bg-white p-4 rounded-lg shadow-lg z-50 max-w-sm">
+      <h3 className="font-medium text-lg text-gray-800">Enable Notifications</h3>
+      <p className="text-gray-600 mb-3">
+        Get notified about upcoming appointments and important updates.
       </p>
-      <div className="flex space-x-2">
-        <button
-          onClick={handleRequestPermission}
-          className="bg-blue-500 text-white px-4 py-2 rounded-md text-sm hover:bg-blue-600"
-        >
-          Enable
-        </button>
+      <div className="flex justify-end space-x-2">
         <button
           onClick={handleDismiss}
-          className="bg-gray-200 text-gray-700 px-4 py-2 rounded-md text-sm hover:bg-gray-300"
+          className="px-3 py-1 text-gray-600 hover:text-gray-800"
         >
           Not Now
         </button>
+        <button
+          onClick={handleAllow}
+          className="px-3 py-1 bg-blue-500 text-white rounded hover:bg-blue-600"
+        >
+          Allow Notifications
+        </button>
       </div>
-    </motion.div>
+    </div>
   );
 };
 
