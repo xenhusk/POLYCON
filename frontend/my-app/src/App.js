@@ -45,6 +45,7 @@ import { getUserIdentifiers } from "./utils/userUtils"; // Add import for getUse
 import { ensureUserIdPersistence, recoverUserIds } from "./utils/persistUtils";
 import NotificationPermissionRequest from './components/NotificationPermissionRequest'; // Add this import
 import NotificationTester from './components/NotificationTester'; // Add this import
+import NotificationDebugger from './components/NotificationDebugger'; // Add this import
 
 const PreloaderTest = React.lazy(() => import('./components/PagePreloader'));
 
@@ -191,6 +192,17 @@ function App() {
       isAuthenticated: localStorage.getItem('isAuthenticated'),
       userRole: localStorage.getItem('userRole'),
     });
+  }, []);
+
+  // Add this check at the beginning of the App component function
+  useEffect(() => {
+    // Check if we have any duplicate notification providers or hooks
+    const notificationElements = document.querySelectorAll('[data-notification-provider="true"]');
+    if (notificationElements.length > 1) {
+      console.error(`⚠️ Detected ${notificationElements.length} notification providers! This will cause duplicate notifications.`);
+    } else {
+      console.log('✅ Notification provider check passed: No duplicates found.');
+    }
   }, []);
 
   const [user, setUser] = useState(null);
@@ -642,8 +654,15 @@ function App() {
     });
   }, [location.pathname]);
 
+  // Add a hook to track and debug toast visibility
+  useEffect(() => {
+    if (toast?.visible) {
+      console.log("Toast is now visible with message:", toast.message);
+    }
+  }, [toast?.visible, toast?.message]);
+
   return (
-    <NotificationProvider>
+    <NotificationProvider data-notification-provider="true">
       <div className={location.pathname.includes('/session') ? '' : 'flex min-h-screen'}>
         <PreloadProvider>
           <div className="app-container flex flex-1">
@@ -808,6 +827,7 @@ function App() {
           message={toast.message || ''}
           isVisible={toast.visible || false}
           onClose={closeToast}
+          data={toast.data}  // Pass the full notification data to Toast
         />
 
         {/* NEW: Show preloader overlay only when authenticated, not on Session or Final Document pages */}
@@ -836,9 +856,12 @@ function App() {
         
         {/* Network Monitor with toggle button */}
         <NetworkMonitor visible={true} />
-      </div>
-    </NotificationProvider>
-  );
-}
-
-export default App;
+        
+        {/* REMOVE OR MODIFY THIS LINE - you can either:
+            1. Comment it out entirely: */}
+        {/* {process.env.NODE_ENV === 'development' && <NotificationDebugger />} */}
+        
+        {/* OR 2. Set it to always be hidden: */}
+        {false && <NotificationDebugger />}
+        
+        {/* OR 3. Pass a prop to make it start hidden: */}        {process.env.NODE_ENV === 'development' && <NotificationDebugger startHidden={true} />}      </div>    </NotificationProvider>  );}export default App;

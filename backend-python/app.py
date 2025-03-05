@@ -25,8 +25,12 @@ from routes.department_routes import department_bp  # <-- new import
 from routes.semester_routes import semester_routes  # new import for semester endpoints
 from routes.enrollment_routes import enrollment_bp  # new import for enrollment endpoints
 from routes.homestudent_routes import homestudent_routes_bp #
-from services.scheduler_service import initialize_scheduler
+from services.scheduler_service import initialize_scheduler, check_appointments_1h, check_appointments_24h
 from routes.reminder_routes import reminder_bp
+import logging
+import atexit
+import threading
+import time
 
 def create_app():
     app = Flask(__name__)
@@ -75,6 +79,76 @@ def create_app():
     app.register_blueprint(semester_routes, url_prefix='/semester')  # new registration for semester endpoints
     app.register_blueprint(enrollment_bp, url_prefix='/enrollment')  # This should match the frontend fetch URL
     app.register_blueprint(homestudent_routes_bp, url_prefix='/homestudent')  # <-- new registration
+
+    # Configure root logger
+    logging.basicConfig(level=logging.INFO, 
+                       format='%(asctime)s [%(levelname)s] %(name)s: %(message)s')
+    logger = logging.getLogger("app")
+
+    try:
+        # Initialize the scheduler
+        logger.info("Initializing appointment reminder scheduler...")
+        scheduler = initialize_scheduler()
+        logger.info("Scheduler initialized successfully")
+        
+        # Register a function to stop the scheduler when the app exits
+        atexit.register(lambda: scheduler.shutdown(wait=False))
+        
+        # Run an initial check to make sure everything is working
+        logger.info("Running initial check for upcoming appointments...")
+        threading.Thread(target=check_appointments_1h).start()
+        
+        # Add a health check thread to keep the scheduler alive
+        def scheduler_health_check():
+            while True:
+                # Log scheduler status every 5 minutes
+                time.sleep(300)  # 5 minutes
+                if not scheduler.running:
+                    logger.error("Scheduler stopped running! Attempting to restart...")
+                    initialize_scheduler()
+                else:
+                    logger.info("Scheduler health check: Running normally")
+                    
+                # Check how many jobs are scheduled
+                jobs = scheduler.get_jobs()
+                logger.info(f"Active scheduled jobs: {len(jobs)}")
+                for job in jobs:
+                    logger.info(f"Job: {job.id}, Next run: {job.next_run_time}")
+        
+        # Start the health check thread
+        health_check_thread = threading.Thread(target=scheduler_health_check, daemon=True)
+        health_check_thread.start()
+        logger.info("Scheduler health check thread started")
+        
+    except Exception as e:
+        logger.error(f"Error initializing scheduler: {str(e)}")
+        # Don't let scheduler issues prevent app from starting
+
+    # Add a scheduler status endpoint
+    @app.route('/scheduler/status', methods=['GET'])
+    def scheduler_status():
+        try:
+            is_running = scheduler.running
+            jobs = scheduler.get_jobs()
+            job_info = []
+            
+            for job in jobs:
+                job_info.append({
+                    'id': job.id,
+                    'next_run': str(job.next_run_time),
+                    'function': job.func.__name__,
+                    'interval': job.trigger.interval.total_seconds()
+                })
+                
+            return jsonify({
+                'running': is_running,
+                'jobs': job_info,
+                'server_time': datetime.datetime.now().isoformat()
+            }), 200
+        except Exception as e:
+            return jsonify({
+                'error': f"Error checking scheduler status: {str(e)}"
+            }), 500
 
     # Initialize the scheduler for appointment reminders
     if not app.config.get('TESTING', False):
