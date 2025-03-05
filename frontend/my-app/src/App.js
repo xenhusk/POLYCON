@@ -20,7 +20,6 @@ import History from './pages/History'; // add import for History
 import Departments from './components/Departments';
 import HomeAdmin from './components/HomeAdmin'; // Update import name and path
 import SemesterManagement from './components/SemesterManagement'; // Update import name and path
-import HomeStudent from './components/HomeStudent';
 
 import SidebarPreview from './components/SidebarPreview'; // Import the SidebarPreview component
 import Appointments from './pages/Appointments'; // Import the Appointments page
@@ -46,7 +45,6 @@ import { ensureUserIdPersistence, recoverUserIds } from "./utils/persistUtils";
 import NotificationPermissionRequest from './components/NotificationPermissionRequest'; // Add this import
 import NotificationTester from './components/NotificationTester'; // Add this import
 import NotificationDebugger from './components/NotificationDebugger'; // Add this import
-
 const PreloaderTest = React.lazy(() => import('./components/PagePreloader'));
 
 // Update the variants to only include fade in (no fade out)
@@ -661,6 +659,8 @@ function App() {
     }
   }, [toast?.visible, toast?.message]);
 
+  const showDebugger = false; // Set this to false to hide the debugger
+
   return (
     <NotificationProvider data-notification-provider="true">
       <div className={location.pathname.includes('/session') ? '' : 'flex min-h-screen'}>
@@ -795,7 +795,6 @@ function App() {
                       <Route path="/enrollment-test" element={<EnrollmentTestPage />} /> {/* new test route */}
                       <Route path="/semester-management" element={<SemesterManagement />} /> {/* Update this line */}
                       <Route path="/notification-test" element={<NotificationTester />} /> {/* Add this new route */}
-                      <Route path="/homestudent" element={<HomeStudent />} /> 
                     </Routes>
                   </Suspense>
                 </motion.div>
@@ -864,4 +863,11 @@ function App() {
         {/* OR 2. Set it to always be hidden: */}
         {false && <NotificationDebugger />}
         
-        {/* OR 3. Pass a prop to make it start hidden: */}        {process.env.NODE_ENV === 'development' && <NotificationDebugger startHidden={true} />}      </div>    </NotificationProvider>  );}export default App;
+        {/* OR 3. Pass a prop to make it start hidden: */}
+        {showDebugger && process.env.NODE_ENV === 'development' && <NotificationDebugger />}
+      </div>
+    </NotificationProvider>
+  );
+}
+
+export default App;
