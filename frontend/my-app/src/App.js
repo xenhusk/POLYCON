@@ -20,6 +20,7 @@ import History from './pages/History'; // add import for History
 import Departments from './components/Departments';
 import HomeAdmin from './components/HomeAdmin'; // Update import name and path
 import SemesterManagement from './components/SemesterManagement'; // Update import name and path
+import HomeStudent from './components/HomeStudent';
 
 import SidebarPreview from './components/SidebarPreview'; // Import the SidebarPreview component
 import Appointments from './pages/Appointments'; // Import the Appointments page
@@ -775,6 +776,7 @@ function App() {
                       <Route path="/enrollment-test" element={<EnrollmentTestPage />} /> {/* new test route */}
                       <Route path="/semester-management" element={<SemesterManagement />} /> {/* Update this line */}
                       <Route path="/notification-test" element={<NotificationTester />} /> {/* Add this new route */}
+                      <Route path="/homestudent" element={<HomeStudent />} /> 
                     </Routes>
                   </Suspense>
                 </motion.div>

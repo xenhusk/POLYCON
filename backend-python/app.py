@@ -24,6 +24,7 @@ from routes.homeadmin_routes import homeadmin_routes_bp  # <-- new import
 from routes.department_routes import department_bp  # <-- new import
 from routes.semester_routes import semester_routes  # new import for semester endpoints
 from routes.enrollment_routes import enrollment_bp  # new import for enrollment endpoints
+from routes.homestudent_routes import homestudent_routes_bp #
 from services.scheduler_service import initialize_scheduler
 from routes.reminder_routes import reminder_bp
 
@@ -73,6 +74,7 @@ def create_app():
     app.register_blueprint(homeadmin_routes_bp, url_prefix='/homeadmin')
     app.register_blueprint(semester_routes, url_prefix='/semester')  # new registration for semester endpoints
     app.register_blueprint(enrollment_bp, url_prefix='/enrollment')  # This should match the frontend fetch URL
+    app.register_blueprint(homestudent_routes_bp, url_prefix='/homestudent')  # <-- new registration
 
     # Initialize the scheduler for appointment reminders
     if not app.config.get('TESTING', False):
