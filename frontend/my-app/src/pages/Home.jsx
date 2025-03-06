@@ -78,9 +78,8 @@ const Home = () => {
       {/* Contact */}
       <section
         id="Contact"
-        className={`flex flex-col lg:flex-row w-full justify-between items-center ${
-          animateSection === "Contact" ? "animate-gentle" : ""
-        }`}
+        className={`flex flex-col lg:flex-row w-full justify-between items-center ${animateSection === "Contact" ? "animate-gentle" : ""
+          }`}
       >
         <div className="w-full h-screen sm:min-h-[90vh] md:h-[70vh] lg:h-[80vh] relative overflow-hidden bg-[#057DCD]">
           <h1 className="w-[90%] font-bold text-[40px] text-[#ffffff] my-[1rem] mx-auto">
@@ -249,14 +248,13 @@ const Home = () => {
       {/* Modals */}
       {showLoginModal || showSignupModal ? (
         <div
-          className="fixed inset-0 bg-black bg-opacity-60 flex items-center justify-center animate-modal-fade"
+          className="fixed inset-0 bg-black bg-opacity-60 flex items-center justify-center animate-modal-fade z-50"
           onClick={closeModal}
         >
           <div
-            className={`bg-white p-2 rounded-[20px] shadow-lg w-[80%] h-[73vh] md:w-[60%] md:h-[83vh] lg:w-[50%] lg:h-[90vh] relative overflow-hidden 
-            ${
-              showLoginModal || showSignupModal ? "modal-enter" : "modal-exit"
-            }`}
+            className={`bg-white p-2 rounded-[20px] shadow-lg w-[90%] h-[78vh] md:w-[65%] md:h-[88vh] lg:w-[50%] lg:h-[92vh] relative overflow-hidden p-4
+            ${showLoginModal || showSignupModal ? "modal-enter" : "modal-exit"
+              }`}
             onClick={(e) => e.stopPropagation()}
           >
             {/* Close button */}
@@ -291,15 +289,13 @@ const Home = () => {
 
             {/* Login/Signup content */}
             <div
-              className={`relative h-full ${
-                showSignupModal ? "slide-left" : ""
-              }`}
+              className={`relative h-full ${showSignupModal ? "slide-left" : ""
+                }`}
             >
               {showLoginModal && (
                 <div
-                  className={`absolute w-full h-full justify-center items-center ${
-                    showSignupModal ? "-translate-x-full" : "translate-x-0"
-                  } transition-transform duration-300`}
+                  className={`absolute w-full h-full justify-center items-center ${showSignupModal ? "-translate-x-full" : "translate-x-0"
+                    } transition-transform duration-300`}
                 >
                   <Login
                     onLoginSuccess={closeModal}
@@ -311,9 +307,8 @@ const Home = () => {
 
               {showSignupModal && (
                 <div
-                  className={`absolute w-full h-full ${
-                    showLoginModal ? "translate-x-full" : "translate-x-0"
-                  } transition-transform duration-300`}
+                  className={`absolute w-full h-full ${showLoginModal ? "translate-x-full" : "translate-x-0"
+                    } transition-transform duration-300`}
                 >
                   <Signup
                     onSwitchToLogin={switchToLogin}
@@ -375,10 +370,10 @@ const Nav = ({
           {/* Mobile Menu Button */}
           <button
             onClick={toggleMenu}
-            className="md:hidden flex items-center justify-center mr-1"
+            className="md:hidden flex items-center justify-center"
           >
             <svg
-              className="w-6 h-6 text-white transition-transform duration-200"
+              className="w-8 h-8 text-white transition-transform duration-200 delay-100 ease-in-out"
               fill="none"
               viewBox="0 0 24 24"
               stroke="currentColor"
@@ -395,7 +390,7 @@ const Nav = ({
                   strokeLinecap="round"
                   strokeLinejoin="round"
                   strokeWidth={2.5}
-                  d="M4 6h16M4 12h16M4 18h16"
+                  d="M9 5l7 7-7 7"
                 />
               )}
             </svg>
@@ -447,9 +442,8 @@ const Nav = ({
                   }}
                   className={`bg-white text-base lg:text-xl text-[#057DCD] w-[6rem] lg:w-[8rem] h-[45px] lg:h-[55px] 
                            rounded-[50px] font-semibold transition-all duration-100 ease-in delay-50 
-                           hover:bg-[#54BEFF] hover:text-white ${
-                             LoginClicked ? "scale-90" : "scale-100"
-                           }`}
+                           hover:bg-[#54BEFF] hover:text-white ${LoginClicked ? "scale-90" : "scale-100"
+                    }`}
                 >
                   Login
                 </button>
@@ -463,9 +457,8 @@ const Nav = ({
                   }}
                   className={`bg-white text-base lg:text-xl text-[#057DCD] w-[6rem] lg:w-[8rem] h-[45px] lg:h-[55px] 
                            rounded-[50px] font-semibold transition-all duration-100 ease-in delay-50 
-                           hover:bg-[#54BEFF] hover:text-white ${
-                             SignUpClicked ? "scale-90" : "scale-100"
-                           }`}
+                           hover:bg-[#54BEFF] hover:text-white ${SignUpClicked ? "scale-90" : "scale-100"
+                    }`}
                 >
                   Sign Up
                 </button>
@@ -476,9 +469,8 @@ const Nav = ({
 
         {/* Mobile Menu */}
         <div
-          className={`fixed top-0 left-0 w-full h-screen bg-[#057DCD] transform transition-transform duration-300 ease-in-out ${
-            isMenuOpen ? "translate-x-0" : "-translate-x-full"
-          } z-40 md:hidden`}
+          className={`fixed top-0 left-0 w-full h-screen bg-[#057DCD] transform transition-transform duration-300 ease-in-out ${isMenuOpen ? "translate-x-0" : "-translate-x-full"
+            } z-40 md:hidden`}
         >
           <button onClick={toggleMenu} className="absolute top-14 right-5 z-50">
             <svg
@@ -549,9 +541,8 @@ const Nav = ({
                   }}
                   className={`bg-white text-base text-[#057DCD] w-[12rem] h-[45px] 
                            rounded-[50px] font-semibold transition-all duration-100 ease-in delay-50 
-                           hover:bg-[#54BEFF] hover:text-white ${
-                             LoginClicked ? "scale-90" : "scale-100"
-                           }`}
+                           hover:bg-[#54BEFF] hover:text-white ${LoginClicked ? "scale-90" : "scale-100"
+                    }`}
                 >
                   Login
                 </button>
@@ -568,9 +559,8 @@ const Nav = ({
                   }}
                   className={`bg-white text-base text-[#057DCD] w-[12rem] h-[45px] 
                            rounded-[50px] font-semibold transition-all duration-100 ease-in delay-50 
-                           hover:bg-[#54BEFF] hover:text-white ${
-                             SignUpClicked ? "scale-90" : "scale-100"
-                           }`}
+                           hover:bg-[#54BEFF] hover:text-white ${SignUpClicked ? "scale-90" : "scale-100"
+                    }`}
                 >
                   Sign Up
                 </button>
@@ -634,9 +624,8 @@ const Body = () => {
             <img
               src={images[currentImage]}
               alt="Consultation Image"
-              className={`absolute top-0 left-0 h-full w-full object-fill transition-opacity duration-1000 ease-in-out ${
-                isFading ? "opacity-0" : "opacity-100"
-              }`}
+              className={`absolute top-0 left-0 h-full w-full object-fill transition-opacity duration-1000 ease-in-out ${isFading ? "opacity-0" : "opacity-100"
+                }`}
             />
             <div className="absolute inset-0 bg-gradient-to-b from-white to-[#005B98] opacity-50"></div>
           </div>
@@ -666,12 +655,11 @@ const About = ({ animateSection }) => {
   return (
     <section
       id="About"
-      className={`flex w-full justify-between items-center ${
-        animateSection === "About" ? "animate-gentle" : ""
-      }`}
+      className={`flex w-full justify-between items-center ${animateSection === "About" ? "animate-gentle" : ""
+        }`}
     >
       <div className="w-full h-screen sm:h-[95vh] md:h-[94vh] relative overflow-hidden items-center text-center">
-        
+
         {/* Header */}
         <h1 className="font-bold text-2xl md:text-3xl lg:text-4xl text-[#057DCD] text-center mt-2 md:mt-8 mb-1 md:mb-4">
           About
@@ -682,19 +670,19 @@ const About = ({ animateSection }) => {
         <div className="rounded-[25px] bg-[#057DCD] h-[25vh] w-[12%] justify-end hidden md:block absolute top-[82%] left-[92%] rotate-[20deg]"></div>
 
         <div className="absolute right-0 left-0 flex flex-col md:flex-row justify-between items-center px-4 md:px-5 h-[92vh] sm:h-[85vh] md:h-[75vh] lg:h-[82vh]">
-          
+
           {/* Decorative elements */}
           <div className="rounded-[15px] bg-[#54BEFF] h-[7vh] w-[16%] md:w-[10%] lg:w-[8%] absolute bottom-[41.2vh] md:bottom-[10vh] left-[-3%] md:left-[54%] lg:left-[52%] right-0 rotate-[15deg]"></div>
-          <div className="rounded-[25px] bg-[#057DCD] h-[14vh] md:h-[20vh] lg:h-[12vh] w-[36%] md:w-[36%] lg:w-[32%] justify-end absolute bottom-[-10vh] md:bottom-[-20vh] lg:bottom-[-5vh] left-[80%] md:left-[43%] right-0 rotate-[172deg]"></div> 
+          <div className="rounded-[25px] bg-[#057DCD] h-[14vh] md:h-[20vh] lg:h-[12vh] w-[36%] md:w-[36%] lg:w-[32%] justify-end absolute bottom-[-10vh] md:bottom-[-20vh] lg:bottom-[-5vh] left-[80%] md:left-[43%] right-0 rotate-[172deg]"></div>
 
           {/* Content Container */}
           <div className="w-full flex justify-center md:justify-end md:w-full mt-4 md:mt-0 md:mb-14 lg:mb-10">
             <div className="w-[90%] md:w-[45%] min-h-[40vh] md:h-[50vh] lg:h-[55vh] lg:mr-5 flex-col text-justify items-center justify-center space-y-2">
-              
+
               <h3 className="font-medium text-base md:text-lg lg:text-2xl text-center w-full mb-2 md:mb-4">
                 POLYCON (Consultation System)
               </h3>
-              
+
               <p className="text-[0.73rem] md:text-sm lg:text-base leading-relaxed w-full">
                 We are a group of passionate individuals dedicated to creating
                 innovative solutions that address real-world challenges. POLYCON
@@ -707,7 +695,7 @@ const About = ({ animateSection }) => {
                 Together, as the Develorant group, we are 3rd-year Bachelor of
                 Science in Computer Science students at STI West Negros
                 University.
-                <br /> 
+                <br />
                 <br className="hidden lg:block" />
                 POLYCON reflects our belief in the potential of technology to
                 bridge gaps and improve lives. Thank you for supporting our
@@ -725,8 +713,7 @@ const About = ({ animateSection }) => {
                 h-[45vh] w-[90%]
                 md:h-[72vh] md:w-[96%] 
                 lg:h-[78vh] lg:w-[92%] 
-                rounded-[25px] object-cover transition-opacity duration-1000 ease-in-out ${
-                  isFading ? "opacity-0" : "opacity-100"
+                rounded-[25px] object-cover transition-opacity duration-1000 ease-in-out ${isFading ? "opacity-0" : "opacity-100"
                 }`}
             />
             <div

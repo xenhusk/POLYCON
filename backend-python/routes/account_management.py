@@ -157,9 +157,10 @@ def login():
             error_message = str(e)
             if "EMAIL_NOT_FOUND" in error_message:
                 return jsonify({"error": "The email address is not registered."}), 401
-            if "INVALID_PASSWORD" in error_message:
-                return jsonify({"error": "The password is incorrect."}), 401
-            return jsonify({"error": "An error occurred during login."}), 401
+            elif "INVALID_PASSWORD" in error_message:
+                return jsonify({"error": "The password is incorrect. Forgot Password?"}), 401
+            else:
+                return jsonify({"error": "Invalid email or password."}), 401
         except Exception as e:
             print("Error during Firebase authentication:", str(e))  # Debugging log
             return jsonify({"error": "Invalid email or password"}), 401

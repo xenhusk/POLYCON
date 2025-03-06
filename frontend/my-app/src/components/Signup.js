@@ -147,42 +147,42 @@ const Signup = ({ onSwitchToLogin }) => {
       <div className="flex flex-col justify-center items-center w-full">
         {step === 1 ? (
           <div className={`w-[90%] md:[80%] lg:w-[76%] mx-auto ${step === 1 ? 'slide-right' : 'slide-left'}`}>
-            <img src={logo} alt="Logo" className="h-[130px] w-[130px] mx-auto"/>
-            <h2 className="text-center text-lg font-bold text-[#005B98] my-2">Registration Form</h2>
+            <img src={logo} alt="Logo" className="h-[100px] w-[100px] md:h-[130px] md:w-[130px] mx-auto"/>
+            <h2 className="text-center text-sm md:text-base md:text-lg font-bold text-[#005B98] my-2">Registration Form</h2>
             <div className='flex justify-between gap-4'>
               <div className="relative z-0">
-                <input className="block py-1 px-1.5 my-2 mx-auto w-full text-base text-gray-900 bg-transparent border-0 border-b-2 border-[#005B98] appearance-none dark:text-[#000000] dark:border-gray-600 dark:focus:border-blue-500 focus:outline-none focus:ring-0 focus:border-blue-600 peer"  
+                <input className="block py-1 px-1.5 my-2 mx-auto w-full text-sm md:text-base text-gray-900 bg-transparent border-0 border-b-2 border-[#005B98] appearance-none dark:text-[#000000] dark:border-gray-600 dark:focus:border-blue-500 focus:outline-none focus:ring-0 focus:border-blue-600 peer"  
                   type="text" name="firstName" placeholder=" " value={formData.firstName} onChange={handleChange} required />
-                <label for="firstName" class="absolute text-base text-gray-500 dark:text-gray-400 duration-300 transform -translate-y-6 scale-75 top-4 -z-10 origin-[0] peer-focus:start-0 peer-focus:text-blue-600 peer-focus:dark:text-blue-500 peer-placeholder-shown:scale-100 peer-placeholder-shown:translate-y-0 peer-focus:scale-75 peer-focus:-translate-y-6 rtl:peer-focus:translate-x-1/4 rtl:peer-focus:left-auto">
+                <label for="firstName" class="absolute text-sm md:text-base text-gray-500 dark:text-gray-400 duration-300 transform -translate-y-6 scale-75 top-4 -z-10 origin-[0] peer-focus:start-0 peer-focus:text-blue-600 peer-focus:dark:text-blue-500 peer-placeholder-shown:scale-100 peer-placeholder-shown:translate-y-0 peer-focus:scale-75 peer-focus:-translate-y-6 rtl:peer-focus:translate-x-1/4 rtl:peer-focus:left-auto">
                   First Name</label>
               </div>
 
               <div className="relative z-0">
-                <input className="block py-1 px-1.5 my-2 mx-auto w-full text-base text-gray-900 bg-transparent border-0 border-b-2 border-[#005B98] appearance-none dark:text-[#000000] dark:border-gray-600 dark:focus:border-blue-500 focus:outline-none focus:ring-0 focus:border-blue-600 peer" 
+                <input className="block py-1 px-1.5 my-2 mx-auto w-full text-sm md:text-base text-gray-900 bg-transparent border-0 border-b-2 border-[#005B98] appearance-none dark:text-[#000000] dark:border-gray-600 dark:focus:border-blue-500 focus:outline-none focus:ring-0 focus:border-blue-600 peer" 
                   type="text" name="lastName" placeholder=" " value={formData.lastName} onChange={handleChange} required />
-                <label for="lastName" class="absolute text-base text-gray-500 dark:text-gray-400 duration-300 transform -translate-y-6 scale-75 top-4 -z-10 origin-[0] peer-focus:start-0 peer-focus:text-blue-600 peer-focus:dark:text-blue-500 peer-placeholder-shown:scale-100 peer-placeholder-shown:translate-y-0 peer-focus:scale-75 peer-focus:-translate-y-6 rtl:peer-focus:translate-x-1/4 rtl:peer-focus:left-auto">
+                <label for="lastName" class="absolute text-sm md:text-base text-gray-500 dark:text-gray-400 duration-300 transform -translate-y-6 scale-75 top-4 -z-10 origin-[0] peer-focus:start-0 peer-focus:text-blue-600 peer-focus:dark:text-blue-500 peer-placeholder-shown:scale-100 peer-placeholder-shown:translate-y-0 peer-focus:scale-75 peer-focus:-translate-y-6 rtl:peer-focus:translate-x-1/4 rtl:peer-focus:left-auto">
                   Last Name</label>
               </div>
             </div>
 
             <div className="relative z-0">
-              <input className="block py-1.5 px-1.5 my-2.5 mx-auto w-full text-base text-gray-900 bg-transparent border-0 border-b-2 border-[#005B98] appearance-none dark:text-[#000000] dark:border-gray-600 dark:focus:border-blue-500 focus:outline-none focus:ring-0 focus:border-blue-600 peer" 
+              <input className="block py-1.5 px-1.5 my-2.5 mx-auto w-full text-sm md:text-base text-gray-900 bg-transparent border-0 border-b-2 border-[#005B98] appearance-none dark:text-[#000000] dark:border-gray-600 dark:focus:border-blue-500 focus:outline-none focus:ring-0 focus:border-blue-600 peer" 
                 type="text" name="idNumber" placeholder=" " value={formData.idNumber} onChange={handleChange} required />
-              <label for="IDNumber" class="absolute text-base text-gray-500 dark:text-gray-400 duration-300 transform -translate-y-6 scale-75 top-3 -z-10 origin-[0] peer-focus:start-0 peer-focus:text-blue-600 peer-focus:dark:text-blue-500 peer-placeholder-shown:scale-100 peer-placeholder-shown:translate-y-0 peer-focus:scale-75 peer-focus:-translate-y-6 rtl:peer-focus:translate-x-1/4 rtl:peer-focus:left-auto">
+              <label for="IDNumber" class="absolute text-sm md:text-base text-gray-500 dark:text-gray-400 duration-300 transform -translate-y-6 scale-75 top-3 -z-10 origin-[0] peer-focus:start-0 peer-focus:text-blue-600 peer-focus:dark:text-blue-500 peer-placeholder-shown:scale-100 peer-placeholder-shown:translate-y-0 peer-focus:scale-75 peer-focus:-translate-y-6 rtl:peer-focus:translate-x-1/4 rtl:peer-focus:left-auto">
                 ID Number</label>
             </div>
 
             <div className="relative z-0">
-              <input className="block py-1.5 px-1.5 my-2.5 mt-4 mx-auto w-full text-base text-gray-900 bg-transparent border-0 border-b-2 border-[#005B98] appearance-none dark:text-[#000000] dark:border-gray-600 dark:focus:border-blue-500 focus:outline-none focus:ring-0 focus:border-blue-600 peer"
+              <input className="block py-1.5 px-1.5 my-2.5 mt-4 mx-auto w-full text-sm md:text-base text-gray-900 bg-transparent border-0 border-b-2 border-[#005B98] appearance-none dark:text-[#000000] dark:border-gray-600 dark:focus:border-blue-500 focus:outline-none focus:ring-0 focus:border-blue-600 peer"
                 type="text" id="email" name="email" placeholder=" " value={formData.email} onChange={handleChange} required />
-              <label for="Email" class="absolute text-base text-gray-500 dark:text-gray-400 duration-300 transform -translate-y-6 scale-75 top-3 -z-10 origin-[0] peer-focus:start-0 peer-focus:text-blue-600 peer-focus:dark:text-blue-500 peer-placeholder-shown:scale-100 peer-placeholder-shown:translate-y-0 peer-focus:scale-75 peer-focus:-translate-y-6 rtl:peer-focus:translate-x-1/4 rtl:peer-focus:left-auto">
+              <label for="Email" class="absolute text-sm md:text-base text-gray-500 dark:text-gray-400 duration-300 transform -translate-y-6 scale-75 top-3 -z-10 origin-[0] peer-focus:start-0 peer-focus:text-blue-600 peer-focus:dark:text-blue-500 peer-placeholder-shown:scale-100 peer-placeholder-shown:translate-y-0 peer-focus:scale-75 peer-focus:-translate-y-6 rtl:peer-focus:translate-x-1/4 rtl:peer-focus:left-auto">
                 Email</label>
             </div>
 
             <div className="relative z-0">
-              <input className="block py-1.5 px-1.5 my-2 mt-4 mx-auto w-full text-base text-gray-900 bg-transparent border-0 border-b-2 border-[#005B98] appearance-none dark:text-[#000000] dark:border-gray-600 dark:focus:border-blue-500 focus:outline-none focus:ring-0 focus:border-blue-600 peer"
+              <input className="block py-1.5 px-1.5 my-2 mt-4 mx-auto w-full text-sm md:text-base text-gray-900 bg-transparent border-0 border-b-2 border-[#005B98] appearance-none dark:text-[#000000] dark:border-gray-600 dark:focus:border-blue-500 focus:outline-none focus:ring-0 focus:border-blue-600 peer"
                 type={showPassword ? "text" : "password"} id="Password" name="password" placeholder=" " value={formData.password} onChange={handleChange} required />
-              <label for="Password" class="absolute text-base text-gray-500 dark:text-gray-400 duration-300 transform -translate-y-6 scale-75 top-3 -z-10 origin-[0] peer-focus:start-0 peer-focus:text-blue-600 peer-focus:dark:text-blue-500 peer-placeholder-shown:scale-100 peer-placeholder-shown:translate-y-0 peer-focus:scale-75 peer-focus:-translate-y-6 rtl:peer-focus:translate-x-1/4 rtl:peer-focus:left-auto">
+              <label for="Password" class="absolute text-sm md:text-base text-gray-500 dark:text-gray-400 duration-300 transform -translate-y-6 scale-75 top-3 -z-10 origin-[0] peer-focus:start-0 peer-focus:text-blue-600 peer-focus:dark:text-blue-500 peer-placeholder-shown:scale-100 peer-placeholder-shown:translate-y-0 peer-focus:scale-75 peer-focus:-translate-y-6 rtl:peer-focus:translate-x-1/4 rtl:peer-focus:left-auto">
                 Password</label>
               {/* Show/Hide Icon */}
               {formData.password && (
@@ -196,9 +196,9 @@ const Signup = ({ onSwitchToLogin }) => {
             </div>
 
             <div className="relative z-0">
-              <input className="block py-1.5 px-1.5 my-2 mt-4 mx-auto w-full text-base text-gray-900 bg-transparent border-0 border-b-2 border-[#005B98] appearance-none dark:text-[#000000] dark:border-gray-600 dark:focus:border-blue-500 focus:outline-none focus:ring-0 focus:border-blue-600 peer"
+              <input className="block py-1.5 px-1.5 my-2 mt-4 mx-auto w-full text-sm md:text-base text-gray-900 bg-transparent border-0 border-b-2 border-[#005B98] appearance-none dark:text-[#000000] dark:border-gray-600 dark:focus:border-blue-500 focus:outline-none focus:ring-0 focus:border-blue-600 peer"
                 type={showConfirmPassword ? "text" : "password"} id="ConfirmPassword" name="confirmNewPassword" placeholder=" " value={formData.confirmNewPassword} onChange={handleChange} required />
-              <label for="ConfirmPassword" class="absolute text-base text-gray-500 dark:text-gray-400 duration-300 transform -translate-y-6 scale-75 top-3 -z-10 origin-[0] peer-focus:start-0 peer-focus:text-blue-600 peer-focus:dark:text-blue-500 peer-placeholder-shown:scale-100 peer-placeholder-shown:translate-y-0 peer-focus:scale-75 peer-focus:-translate-y-6 rtl:peer-focus:translate-x-1/4 rtl:peer-focus:left-auto">
+              <label for="ConfirmPassword" class="absolute text-sm md:text-base text-gray-500 dark:text-gray-400 duration-300 transform -translate-y-6 scale-75 top-3 -z-10 origin-[0] peer-focus:start-0 peer-focus:text-blue-600 peer-focus:dark:text-blue-500 peer-placeholder-shown:scale-100 peer-placeholder-shown:translate-y-0 peer-focus:scale-75 peer-focus:-translate-y-6 rtl:peer-focus:translate-x-1/4 rtl:peer-focus:left-auto">
                 Confirm New Password</label>
               {/* Show/Hide Icon */}
               {formData.password && (
@@ -212,7 +212,7 @@ const Signup = ({ onSwitchToLogin }) => {
             </div>
 
             {/* error handling */}
-            {errorMessage && <p className="text-center text-red-500 text-[0.9rem]">{errorMessage}</p>}
+            {errorMessage && <p className="text-center text-red-500 text-[0.8rem] md:text-[0.9rem]">{errorMessage}</p>}
             
             <button 
               className={`bg-[#057DCD] text-white w-[100%] h-[44.59px] rounded-lg my-2 mx-auto transition-all ease-in  hover:bg-[#54BEFF] animate-modal-slide
@@ -225,9 +225,10 @@ const Signup = ({ onSwitchToLogin }) => {
                  }, 200)
               }}             
             >
-                Next</button>
+              Next
+            </button>
             <div className="border-t-2 border-[#005B98] w-[90%] my-2 mx-auto border-opacity-50">
-              <p className="text-center font-light text-[0.9rem] mx-auto my-2 text-opacity-50">
+              <p className="text-center font-light text-[0.8rem] md:text-[0.9rem] mx-auto my-2 text-opacity-50">
                 Don't have an account? 
                 <button 
                   onClick={(e) => {setLoginClicked(true); 
@@ -236,7 +237,7 @@ const Signup = ({ onSwitchToLogin }) => {
                       , 500)
                     }, 150);
                   }} 
-                  className={`text-[#005B98] focus:outline-none hover:underline 
+                  className={`text-[#005B98] ml-1 focus:outline-none hover:underline 
                     ${loginClicked ? "scale-90" : "scale-100"}`}
                 >
                   Login</button>
@@ -262,7 +263,7 @@ const Signup = ({ onSwitchToLogin }) => {
                 <img src={logo} alt="Logo" className="h-[130px] w-[130px] mx-auto"/>
                 <h2 className="text-center text-lg font-bold text-[#005B98]">Personal Information</h2>
                 <div class="relative z-0">
-                  <select className="block py-1.5 px-1.5 my-2 mt-4 mx-auto w-full text-base text-gray-900 bg-transparent border-0 border-b-2 border-[#005B98] appearance-none dark:text-[#000000] dark:border-gray-600 dark:focus:border-blue-500 focus:outline-none focus:ring-0 focus:border-blue-600 peer"
+                  <select className="block py-1.5 px-1.5 my-2 mt-4 mx-auto w-full text-sm md:text-base text-gray-900 bg-transparent border-0 border-b-2 border-[#005B98] appearance-none dark:text-[#000000] dark:border-gray-600 dark:focus:border-blue-500 focus:outline-none focus:ring-0 focus:border-blue-600 peer"
                     name="department" id="Department" value={formData.department} onChange={handleChange} required>
                     <option value="" hidden>Select Department</option>
 
@@ -272,13 +273,13 @@ const Signup = ({ onSwitchToLogin }) => {
                   
                   ))}
                   </select>
-                  <label for="Department" class="absolute text-base text-gray-500 dark:text-gray-400 duration-300 transform -translate-y-6 scale-75 top-3 -z-10 origin-[0] peer-focus:start-0 peer-focus:text-blue-600 peer-focus:dark:text-blue-500 peer-placeholder-shown:scale-100 peer-placeholder-shown:translate-y-0 peer-focus:scale-75 peer-focus:-translate-y-6 rtl:peer-focus:translate-x-1/4 rtl:peer-focus:left-auto">
+                  <label for="Department" class="absolute text-sm md:text-base text-gray-500 dark:text-gray-400 duration-300 transform -translate-y-6 scale-75 top-3 -z-10 origin-[0] peer-focus:start-0 peer-focus:text-blue-600 peer-focus:dark:text-blue-500 peer-placeholder-shown:scale-100 peer-placeholder-shown:translate-y-0 peer-focus:scale-75 peer-focus:-translate-y-6 rtl:peer-focus:translate-x-1/4 rtl:peer-focus:left-auto">
                     Department</label>
                 </div>
 
                 {formData.department && (
                   <div class="relative z-0">
-                    <select className="block py-1.5 px-1.5 my-2 mt-4 mx-auto w-full text-base text-gray-900 bg-transparent border-0 border-b-2 border-[#005B98] appearance-none dark:text-[#000000] dark:border-gray-600 dark:focus:border-blue-500 focus:outline-none focus:ring-0 focus:border-blue-600 peer"
+                    <select className="block py-1.5 px-1.5 my-2 mt-4 mx-auto w-full text-sm md:text-base text-gray-900 bg-transparent border-0 border-b-2 border-[#005B98] appearance-none dark:text-[#000000] dark:border-gray-600 dark:focus:border-blue-500 focus:outline-none focus:ring-0 focus:border-blue-600 peer"
                       name="program" id="Program" value={formData.program} onChange={handleChange} required disabled={!formData.department}>
                     <option value="" hidden>Select Program</option>
 
@@ -288,38 +289,41 @@ const Signup = ({ onSwitchToLogin }) => {
 
                   ))}
                     </select>
-                    <label for="Program" class="absolute text-base text-gray-500 dark:text-gray-400 duration-300 transform -translate-y-6 scale-75 top-3 -z-10 origin-[0] peer-focus:start-0 peer-focus:text-blue-600 peer-focus:dark:text-blue-500 peer-placeholder-shown:scale-100 peer-placeholder-shown:translate-y-0 peer-focus:scale-75 peer-focus:-translate-y-6 rtl:peer-focus:translate-x-1/4 rtl:peer-focus:left-auto">
+                    <label for="Program" class="absolute text-sm md:text-base text-gray-500 dark:text-gray-400 duration-300 transform -translate-y-6 scale-75 top-3 -z-10 origin-[0] peer-focus:start-0 peer-focus:text-blue-600 peer-focus:dark:text-blue-500 peer-placeholder-shown:scale-100 peer-placeholder-shown:translate-y-0 peer-focus:scale-75 peer-focus:-translate-y-6 rtl:peer-focus:translate-x-1/4 rtl:peer-focus:left-auto">
                       Program</label>
                   </div>
                 )}
 
                 <div class="relative z-0">
-                  <input className="block py-1.5 px-1.5 my-2 mt-4 mx-auto w-full text-base text-gray-900 bg-transparent border-0 border-b-2 border-[#005B98] appearance-none dark:text-[#000000] dark:border-gray-600 dark:focus:border-blue-500 focus:outline-none focus:ring-0 focus:border-blue-600 peer"
+                  <input className="block py-1.5 px-1.5 my-2 mt-4 mx-auto w-full text-sm md:text-base text-gray-900 bg-transparent border-0 border-b-2 border-[#005B98] appearance-none dark:text-[#000000] dark:border-gray-600 dark:focus:border-blue-500 focus:outline-none focus:ring-0 focus:border-blue-600 peer"
                     type="text" name="year_section" placeholder=" " value={formData.year_section} onChange={handleChange} required />
-                  <label for="year_section" class="absolute text-base text-gray-500 dark:text-gray-400 duration-300 transform -translate-y-6 scale-75 top-3 -z-10 origin-[0] peer-focus:start-0 peer-focus:text-blue-600 peer-focus:dark:text-blue-500 peer-placeholder-shown:scale-100 peer-placeholder-shown:translate-y-0 peer-focus:scale-75 peer-focus:-translate-y-6 rtl:peer-focus:translate-x-1/4 rtl:peer-focus:left-auto">
+                  <label for="year_section" class="absolute text-sm md:text-base text-gray-500 dark:text-gray-400 duration-300 transform -translate-y-6 scale-75 top-3 -z-10 origin-[0] peer-focus:start-0 peer-focus:text-blue-600 peer-focus:dark:text-blue-500 peer-placeholder-shown:scale-100 peer-placeholder-shown:translate-y-0 peer-focus:scale-75 peer-focus:-translate-y-6 rtl:peer-focus:translate-x-1/4 rtl:peer-focus:left-auto">
                     Year & Section</label>
                 </div>
 
                 <div class="relative z-0">
-                  <select className="block py-1.5 px-1.5 my-2 mt-4 mx-auto w-full text-base text-gray-900 bg-transparent border-0 border-b-2 border-[#005B98] appearance-none dark:text-[#000000] dark:border-gray-600 dark:focus:border-blue-500 focus:outline-none focus:ring-0 focus:border-blue-600 peer"
+                  <select className="block py-1.5 px-1.5 my-2 mt-4 mx-auto w-full text-sm md:text-base text-gray-900 bg-transparent border-0 border-b-2 border-[#005B98] appearance-none dark:text-[#000000] dark:border-gray-600 dark:focus:border-blue-500 focus:outline-none focus:ring-0 focus:border-blue-600 peer"
                     name="sex" id='sex' value={formData.sex} onChange={handleChange} required>
                     <option value="" hidden>Select Sex</option>
                     <option value="Male">Male</option>
                     <option value="Female">Female</option>
                   </select>
-                  <label for="sex" class="absolute text-base text-gray-500 dark:text-gray-400 duration-300 transform -translate-y-6 scale-75 top-3 -z-10 origin-[0] peer-focus:start-0 peer-focus:text-blue-600 peer-focus:dark:text-blue-500 peer-placeholder-shown:scale-100 peer-placeholder-shown:translate-y-0 peer-focus:scale-75 peer-focus:-translate-y-6 rtl:peer-focus:translate-x-1/4 rtl:peer-focus:left-auto">
+                  <label for="sex" class="absolute text-sm md:text-base text-gray-500 dark:text-gray-400 duration-300 transform -translate-y-6 scale-75 top-3 -z-10 origin-[0] peer-focus:start-0 peer-focus:text-blue-600 peer-focus:dark:text-blue-500 peer-placeholder-shown:scale-100 peer-placeholder-shown:translate-y-0 peer-focus:scale-75 peer-focus:-translate-y-6 rtl:peer-focus:translate-x-1/4 rtl:peer-focus:left-auto">
                     Gender</label>
                 </div>
 
                 {/* error handling */}
-                {errorMessage && <p className="text-center text-red-500 text-[0.9rem]">{errorMessage}</p>}
+                {errorMessage && <p className="text-center text-red-500 text-[0.8rem] md:text-[0.9rem]">{errorMessage}</p>}
                 
                 <button 
                   className={`bg-[#057DCD] text-white w-[100%] h-[44.59px] rounded-lg my-2 mx-auto transition-all ease-in hover:bg-[#54BEFF]
                     ${signupClicked ? "scale-90" : "scale-100"}`} 
-                  onClick={()=>{ setSignupClicked(true); setTimeout(()=> setSignupClicked(false), 150); handleSubmit();}}>Sign Up</button>
+                  onClick={()=>{ setSignupClicked(true); setTimeout(()=> setSignupClicked(false), 150); handleSubmit();}}
+                >
+                  Sign Up
+                </button>
                 <div className="border-t-2 border-[#005B98] w-[90%] my-2 mx-auto border-opacity-50">
-                  <p className="text-center font-light text-[0.9rem] mx-auto my-2 text-opacity-50">
+                  <p className="text-center font-light text-[0.8rem] md:text-[0.9rem] mx-auto my-2 text-opacity-50">
                     Don't have an account? 
                     <button 
                       onClick={(e) => {setLoginClicked(true); 
@@ -328,7 +332,7 @@ const Signup = ({ onSwitchToLogin }) => {
                           , 500)
                         }, 150);
                       }}  
-                      className={`text-[#005B98] focus:outline-none hover:underline 
+                      className={`text-[#005B98] ml-1 focus:outline-none hover:underline 
                       ${loginClicked ? "scale-90" : "scale-100"}`}>
                     Login</button>
                   </p>
