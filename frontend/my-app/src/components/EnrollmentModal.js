@@ -107,7 +107,7 @@ function EnrollmentModal({ closeModal }) {
   }, []);
 
   return (
-    <div className="pt-2 sm:pt-4 px-2 sm:px-4 h-[30vh] flex flex-col">
+    <div className="pt-2 sm:pt-4 px-2 md:px-4 h-44 md:h-52 flex flex-col">
       {/* Student Selection Input - Responsive */}
       <div className="relative flex-grow">
         <label className="block text-sm font-medium text-gray-700 mb-1 sm:mb-2">
@@ -154,9 +154,9 @@ function EnrollmentModal({ closeModal }) {
           {/* Student Search Results Dropdown - Responsive */}
           {isInputFocused && (
             <div className="absolute left-0 right-0 mt-1 z-50">
-              <ul className="bg-white border border-gray-200 rounded-lg shadow-lg max-h-[30vh] sm:max-h-[18vh] overflow-y-auto">
+              <ul className="bg-white border border-gray-200 rounded-lg shadow-lg max-h-20 sm:max-h-20 md:max-h-28 overflow-y-auto z-50">
                 {isSearchLoading ? (
-                  Array.from({ length: 3 }).map((_, index) => (
+                  Array.from({ length: 2}).map((_, index) => (
                     <li
                       key={index}
                       className="px-2 sm:px-4 py-2 flex items-center gap-2 sm:gap-3 animate-pulse"
@@ -173,7 +173,7 @@ function EnrollmentModal({ closeModal }) {
                       !selectedStudents.some((s) => s.id === student.id) &&
                       !student.isEnrolled
                   ).length === 0 ? (
-                  <li className="px-2 sm:px-4 py-2 text-center text-gray-500 text-xs sm:text-sm">
+                  <li className="px-2 sm:px-4 py-2 text-center text-gray-500 text-xs sm:text-sm z-50">
                     {studentResults.length === 0
                       ? "No students found"
                       : "No available students to add"}
@@ -218,7 +218,7 @@ function EnrollmentModal({ closeModal }) {
 
       <div className="relative mt-2">
         {/* Message display - Responsive */}
-        <div className="mb-2 sm:mb-3">
+        <div className="mb-[6.5vh] md:mb-[9vh]">
           {message.content && (
             <div
               className={`p-2 sm:p-3 rounded-lg text-xs sm:text-sm ${
@@ -243,7 +243,7 @@ function EnrollmentModal({ closeModal }) {
                 }, 200);
               }}
               disabled={isLoading}
-              className={`flex-1 py-3 sm:py-6 bg-[#00D1B2] hover:bg-[#00F7D4] text-white text-center justify-center rounded-bl-lg transition-colors flex items-center gap-2 text-xs sm:text-sm
+              className={`flex-1 py-4 sm:py-6 md:py-4 bg-[#00D1B2] hover:bg-[#00F7D4] text-white text-center justify-center rounded-bl-lg transition-colors flex items-center gap-2 text-xs sm:text-sm
               ${EnrollClicked ? "scale-100" : "scale-100"}
               ${isLoading ? "opacity-50 cursor-not-allowed" : ""}`}
             >
@@ -279,7 +279,7 @@ function EnrollmentModal({ closeModal }) {
                   setTimeout(() => closeModal(), 500);
                 }, 200);
               }}
-              className={`flex-1 py-3 sm:py-6 text-gray-700 bg-gray-100 rounded-br-lg hover:bg-gray-200 transition-colors text-xs sm:text-sm
+              className={`flex-1 py-4 sm:py-6 md:py-4 text-gray-700 bg-gray-100 rounded-br-lg hover:bg-gray-200 transition-colors text-xs sm:text-sm
                 ${CancelClicked ? "scale-100" : "scale-100"}`}
             >
               Cancel

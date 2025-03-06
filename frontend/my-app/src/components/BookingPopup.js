@@ -143,11 +143,11 @@ const BookingPopup = () => {
               initial="hidden"
               animate="visible"
               exit="exit"
-              className="bg-white rounded-xl shadow-2xl w-full max-w-2xl overflow-hidden max-h-[90vh] overflow-y-auto"
+              className="bg-white rounded-xl shadow-2xl w-full max-w-2xl overflow-hidden h-90 md:max-h-[90vh] overflow-y-auto"
               onClick={(e) => e.stopPropagation()}
             >
               {/* Modal Header */}
-              <div className="bg-[#397de2] px-4 sm:px-6 py-3 sm:py-4 flex justify-between items-center sticky top-0 z-10">
+              <div className="bg-[#397de2] px-4 sm:px-6 py-3 sm:py-6 md:py-4 flex justify-between items-center sticky top-0 z-10">
                 <h2 className="text-lg sm:text-xl font-semibold text-white">
                   {userRole === 'faculty' ? 'Book Appointment' : 'Request Appointment'}
                 </h2>

@@ -84,7 +84,7 @@ function StudentAppointments() {
         <div className="flex-1 overflow-y-auto min-h-0 Appointments-scroll">
           {isLoading ? (
             <ul className="space-y-4 pr-2">
-              {Array.from({ length: 5 }).map((_, index) => (
+              {Array.from({ length: 1 }).map((_, index) => (
                 <li
                   key={index}
                   className="bg-white rounded-lg shadow-md p-6 my-4 border-l-4 border-[#0065A8] hover:shadow-lg transition-shadow flex flex-col fade-in delay-300 animate-pulse"
@@ -123,17 +123,6 @@ function StudentAppointments() {
                       <div className="h-3 bg-gray-200 rounded w-24"></div>
                     </div>
                   </div>
-                  {/* Action Buttons Skeleton */}
-                  <div className="mt-6 -mx-6 -mb-6 flex">
-                    {/* Start Session Button Placeholder */}
-                    <div className="flex-1 bg-[#0065A8] text-white transition-colors rounded-bl-lg rounded-br-none flex items-center justify-center gap-2">
-                      <div className="h-4 bg-gray-300 rounded w-24"></div>
-                    </div>
-                    {/* Cancel Button Placeholder */}
-                    <div className="flex-1 bg-[#54BEFF] text-white transition-colors rounded-br-lg rounded-bl-none flex items-center justify-center gap-2">
-                      <div className="h-4 bg-gray-300 rounded w-24"></div>
-                    </div>
-                  </div>
                 </li>
               ))}
             </ul>
@@ -161,7 +150,7 @@ function StudentAppointments() {
         <div className="flex-1 overflow-y-auto min-h-0 Appointments-scroll">
           {isLoading ? (
             <ul className="space-y-4 pr-2">
-              {Array.from({ length: 5 }).map((_, index) => (
+              {Array.from({ length: 1 }).map((_, index) => (
                 <li
                   key={index}
                   className="bg-white rounded-lg shadow-md p-6 my-4 border-l-4 border-[#0065A8] hover:shadow-lg transition-shadow flex flex-col fade-in delay-300 animate-pulse"
@@ -210,17 +199,6 @@ function StudentAppointments() {
                         Venue
                       </div>
                       <div className="h-3 bg-gray-200 rounded w-24"></div>
-                    </div>
-                  </div>
-                  {/* Action Buttons Skeleton */}
-                  <div className="mt-6 -mx-6 -mb-6 flex">
-                    {/* Start Session Button Placeholder */}
-                    <div className="flex-1 bg-[#0065A8] text-white transition-colors rounded-bl-lg rounded-br-none flex items-center justify-center gap-2">
-                      <div className="h-4 bg-gray-300 rounded w-24"></div>
-                    </div>
-                    {/* Cancel Button Placeholder */}
-                    <div className="flex-1 bg-[#54BEFF] text-white transition-colors rounded-br-lg rounded-bl-none flex items-center justify-center gap-2">
-                      <div className="h-4 bg-gray-300 rounded w-24"></div>
                     </div>
                   </div>
                 </li>

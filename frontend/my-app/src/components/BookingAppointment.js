@@ -415,7 +415,7 @@ function BookingAppointment({ closeModal, role: propRole }) {
       {role === "faculty" ? (
         <>
           {/* Teacher's Form - Made Responsive */}
-          <div className="space-y-4 sm:space-y-6 mb-12">
+          <div className="space-y-4 sm:space-y-6 mb-8">
             {/* Student Selection */}
             <div className="relative">
               <label className="block text-sm font-medium text-gray-700 mb-1 sm:mb-2">
@@ -771,7 +771,7 @@ function BookingAppointment({ closeModal, role: propRole }) {
       {/* Message display - Made Responsive */}
       {message.content && (
         <div
-          className={`mt-3 sm:mt-4 p-2 sm:p-3 rounded-lg text-xs sm:text-sm ${
+          className={` p-2 sm:p-3 rounded-lg text-xs sm:text-sm ${
             message.type === "success"
               ? "bg-green-100 text-green-700"
               : "bg-red-100 text-red-700"
@@ -782,7 +782,7 @@ function BookingAppointment({ closeModal, role: propRole }) {
       )}
 
       {/* Submit Button - Made Taller */}
-      <div className="relative h-[10vh]">
+      <div className="relative h-[6vh] md:h-[8vh]">
         <div className="mt-2 p-2 sm:p-3">
           {isBookingOverQuota() && (
             <div className="text-red-500 text-xs sm:text-sm rounded-lg">
@@ -805,7 +805,7 @@ function BookingAppointment({ closeModal, role: propRole }) {
                 isBookingOverQuota() || isLoading
                   ? "opacity-50 cursor-not-allowed"
                   : ""
-              } bg-[#397de2] hover:bg-[#54BEFF] text-white flex-1 py-3 sm:py-6 rounded-bl-lg justify-center transition-colors flex items-center text-xs sm:text-sm
+              } bg-[#397de2] hover:bg-[#54BEFF] text-white flex-1 py-4 sm:py-6 md:py-4 rounded-bl-lg justify-center transition-colors flex items-center text-xs sm:text-sm
               ${SubmitBookingClicked ? "scale-100" : "scale-100"}`}
             >
               {isLoading ? (
@@ -847,7 +847,7 @@ function BookingAppointment({ closeModal, role: propRole }) {
                   setTimeout(() => closeModal(), 500);
                 }, 200);
               }}
-              className={`flex-1 py-3 sm:py-6 text-gray-700 bg-gray-100 rounded-br-lg hover:bg-gray-200 transition-colors text-xs sm:text-sm
+              className={`flex-1 py-4 sm:py-6 md:py-4 text-gray-700 bg-gray-100 rounded-br-lg hover:bg-gray-200 transition-colors text-xs sm:text-sm
                 ${CancelClicked ? "scale-100" : "scale-100"}`}
             >
               Cancel

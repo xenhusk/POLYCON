@@ -134,7 +134,7 @@ function AppointmentItem({ appointment, role, onStartSession, onCancel, onConfir
       )}
 
       {role === 'faculty' && (
-        <div className="mt-6 -mx-6 flex">
+        <div className="mt-6 -mx-6 flex absol">
           {!confirmInputs || !confirmInputs[appointment.id] ? (
             <>
               {typeof onStartSession === 'function' ? (
@@ -238,7 +238,7 @@ function AppointmentItem({ appointment, role, onStartSession, onCancel, onConfir
               )}
             </>
           ) : (
-            <div className="w-full px-6 pb-6">
+            <div className="w-full px-6">
               <div className="flex flex-col gap-3">
                 <input 
                   type="datetime-local" 
