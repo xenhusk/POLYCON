@@ -24,7 +24,7 @@ const ForgotPassword = ({ onClose }) => {
     }
 
     try {
-      const response = await fetch("http://localhost:5001/account/reset-password", {
+      const response = await fetch("http://localhost:5001/account/reset_password_with_email", {
         method: "POST",
         headers: {
           "Content-Type": "application/json",

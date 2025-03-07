@@ -252,7 +252,7 @@ const Home = () => {
           onClick={closeModal}
         >
           <div
-            className={`bg-white p-2 rounded-[20px] shadow-lg w-[90%] h-[78vh] md:w-[65%] md:h-[88vh] lg:w-[50%] lg:h-[92vh] relative overflow-hidden p-4
+            className={`bg-white p-2 rounded-[20px] shadow-lg w-[90%] h-[88vh] md:w-[65%] md:h-[90vh] lg:w-[50%] lg:h-[94vh] relative overflow-hidden
             ${showLoginModal || showSignupModal ? "modal-enter" : "modal-exit"
               }`}
             onClick={(e) => e.stopPropagation()}
