@@ -23,12 +23,27 @@ def transcribe_audio_with_assemblyai(file_path, speaker_count):
     for utterance in transcript.utterances:
         transcription_result += f"Speaker {utterance.speaker}: {utterance.text}\n"
 
-    transcription_result += "\nSentiment Analysis:\n"
+    # Format sentiment analysis results as text
+    sentiment_text = "\nSentiment Analysis:\n"
     for sentiment_result in transcript.sentiment_analysis:
-        transcription_result += f"Text: {sentiment_result.text}\n"
-        transcription_result += f"Sentiment: {sentiment_result.sentiment}\n"
-        transcription_result += f"Confidence: {sentiment_result.confidence}\n"
-        transcription_result += f"Timestamp: {sentiment_result.start} - {sentiment_result.end}\n\n"
-
-    return transcription_result
-
+        sentiment_text += f"Text: {sentiment_result.text}\n"
+        sentiment_text += f"Sentiment: {sentiment_result.sentiment}\n"
+        sentiment_text += f"Confidence: {sentiment_result.confidence}\n"
+        sentiment_text += f"Timestamp: {sentiment_result.start} - {sentiment_result.end}\n\n"
+    
+    # Return both formatted text and raw sentiment analysis data
+    return {
+        "transcription_text": transcription_result,
+        "sentiment_text": sentiment_text,
+        "full_text": transcription_result + sentiment_text,
+        "raw_sentiment_analysis": [
+            {
+                "text": result.text,
+                "sentiment": result.sentiment,
+                "confidence": result.confidence,
+                "start": result.start,
+                "end": result.end
+            }
+            for result in transcript.sentiment_analysis
+        ]
+    }

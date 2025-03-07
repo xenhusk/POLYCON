@@ -11,6 +11,8 @@ from cachetools import TTLCache  # NEW import for caching
 from google.cloud import firestore  # NEW import for query ordering
 from services.socket_service import socketio  # Add this import at the top
 from services.assemblyai_service import transcribe_audio_with_assemblyai
+from services.consultation_quality_service import calculate_consultation_quality
+
 consultation_bp = Blueprint('consultation', __name__)
 
 cache = TTLCache(maxsize=100, ttl=60)  # Cache up to 100 items for 60 seconds
@@ -78,19 +80,56 @@ def transcribe():
         # Upload the converted file to Google Cloud Storage and get the public URL
         audio_url, _ = upload_audio(converted_path)
 
-        # # Clean up temporary files
+        # Transcribe the audio using AssemblyAI
+        transcription_data = transcribe_audio_with_assemblyai(converted_path, speaker_count)
+        
+        # Calculate consultation quality
+        duration = float(request.form.get('duration', 0)) if 'duration' in request.form else None
+        quality_score, quality_metrics = calculate_consultation_quality(
+            transcription_data["raw_sentiment_analysis"],
+            transcription_data["transcription_text"],
+            duration
+        )
+
+        # Clean up temporary files
         os.remove(raw_path)
         os.remove(converted_path)
 
-        # Transcribe the audio using AssemblyAI (which should handle longer files)
-        transcription = transcribe_audio_with_assemblyai(converted_path, speaker_count)
-
         # Process the transcription with Gemini to identify roles
-        processed_transcription = identify_roles_in_transcription(transcription)
+        processed_transcription = identify_roles_in_transcription(transcription_data["full_text"])
 
         return jsonify({
             "audioUrl": audio_url,
-            "transcription": processed_transcription
+            "transcription": processed_transcription,
+            "quality_score": quality_score,
+            "quality_metrics": quality_metrics,
+            "raw_sentiment_analysis": transcription_data["raw_sentiment_analysis"]
+        })
+    except Exception as e:
+        return jsonify({"error": str(e)}), 500
+
+
+# Add a new route for consultation quality analysis
+@consultation_bp.route('/analyze_quality', methods=['POST'])
+def analyze_quality():
+    try:
+        data = request.json
+        sentiment_results = data.get('sentiment_analysis')
+        transcription = data.get('transcription')
+        duration = data.get('duration')
+        
+        if not sentiment_results:
+            return jsonify({"error": "Sentiment analysis data is required"}), 400
+        
+        quality_score, quality_metrics = calculate_consultation_quality(
+            sentiment_results,
+            transcription,
+            duration
+        )
+        
+        return jsonify({
+            "quality_score": quality_score,
+            "quality_metrics": quality_metrics
         })
     except Exception as e:
         return jsonify({"error": str(e)}), 500
@@ -114,19 +153,30 @@ def summarize():
 def store_consultation():
     try:
         data = request.json
-        print("Received data:", data)  # Add this debug log
+        print("Received data:", data)
 
-        # Validate required fields (transcription is now optional)
+        # Validate required fields
         required_fields = ["teacher_id", "student_ids", "summary", "concern", "action_taken", "outcome"]
         for field in required_fields:
             if not data.get(field):
-                print(f"Missing field: {field}, value: {data.get(field)}")  # Add this debug log
+                print(f"Missing field: {field}, value: {data.get(field)}")
                 return jsonify({"error": f"Missing required field: {field}"}), 400
 
         # Set defaults when optional data is missing
         transcription = data.get('transcription') or "No transcription"
         audio_url = data.get('audio_file_path') or "No audio recorded"
         venue = data.get('venue', "Unknown Venue")
+        
+        # Get quality score if provided or calculate it
+        quality_score = data.get('quality_score')
+        quality_metrics = data.get('quality_metrics', {})
+        
+        if not quality_score and data.get('raw_sentiment_analysis'):
+            quality_score, quality_metrics = calculate_consultation_quality(
+                data.get('raw_sentiment_analysis'),
+                transcription,
+                data.get('duration')
+            )
 
         # Format teacher reference
         teacher_id = data.get('teacher_id')
@@ -165,24 +215,24 @@ def store_consultation():
             "remarks": data.get('remarks', "No remarks"),
             "duration": data.get('duration'),
             "venue": venue,
+            "quality_score": quality_score or 0.0,
+            "quality_metrics": quality_metrics,
             "session_date": firestore.SERVER_TIMESTAMP
         }
 
         consultation_ref.document(new_session_id).set(consultation_data)
 
-        # If a booking_id exists in the query parameters, delete the corresponding booking document.
+        # Handle booking deletion if booking_id exists
         booking_id = request.args.get('booking_id')
-        if booking_id:
+        if (booking_id):
             try:
-                print(f"🔍 Debug - Attempting to delete booking: {booking_id}")  # Add debug log
+                print(f"🔍 Debug - Attempting to delete booking: {booking_id}")
                 booking_ref = db.collection('bookings').document(booking_id)
-                # Get booking data before deleting for socket event
                 booking_doc = booking_ref.get()
                 if booking_doc.exists:
                     booking_data = booking_doc.to_dict()
                     booking_ref.delete()
                     print(f"✅ Booking {booking_id} deleted successfully")
-                    # Emit socket event with booking details
                     socketio.emit('booking_updated', {
                         'action': 'delete',
                         'bookingID': booking_id,
@@ -192,13 +242,75 @@ def store_consultation():
             except Exception as del_err:
                 print(f"❌ Failed to delete booking {booking_id}: {del_err}")
                 
-        # Return a valid JSON response after successful processing.
         return jsonify({"session_id": new_session_id}), 200
     
     except Exception as e:
         print("🚨 ERROR in store_consultation:", e)
         return jsonify({"error": "Failed to store consultation session."}), 500
-
+    
+@consultation_bp.route('/consultation_progress_analysis', methods=['POST'])
+def consultation_progress_analysis():
+    try:
+        data = request.json
+        
+        # Get required inputs
+        grades = data.get('grades', {})
+        consultation_quality_score = data.get('consultation_quality_score', 0)
+        academic_events = data.get('academic_events', [])
+        
+        # Define Constants and Weights
+        MAX_IMPROVEMENT = 100
+        w1 = 0.5
+        w2 = 0.3
+        w3 = 0.2
+        
+        # Define Rating Thresholds
+        threshold_high = 0.8
+        threshold_mid = 0.6
+        threshold_low = 0.4
+        
+        # Process 1: Compute Grade Improvement
+        prelim = grades.get('prelim', 0)
+        finals = grades.get('finals', 0)
+        grade_improvement = finals - prelim
+        normalized_grade_improvement = grade_improvement / MAX_IMPROVEMENT
+        
+        # Process 2: Compute Academic Event Factor (optional)
+        event_factor = 0
+        if academic_events:
+            total_event_weight = sum(event.get('student_weight', 0) for event in academic_events)
+            event_factor = total_event_weight / len(academic_events)
+        
+        # Process 3: Combine the Metrics into an Overall Score
+        overall_score = (w1 * normalized_grade_improvement) + \
+                         (w2 * consultation_quality_score) + \
+                         (w3 * event_factor)
+        
+        # Process 4: Determine Overall Progress Rating
+        if overall_score >= threshold_high:
+            rating = "Excellent"
+        elif overall_score >= threshold_mid:
+            rating = "Good"
+        elif overall_score >= threshold_low:
+            rating = "Average"
+        else:
+            rating = "Needs Improvement"
+        
+        # Output: Analysis Report
+        result = {
+            "grade_improvement": grade_improvement,
+            "normalized_grade_improvement": normalized_grade_improvement,
+            "consultation_qualitative_score": consultation_quality_score,
+            "academic_event_factor": event_factor,
+            "overall_score": overall_score,
+            "progress_rating": rating
+        }
+        
+        return jsonify(result), 200
+    
+    except Exception as e:
+        return jsonify({"error": str(e)}), 500
+    
 @consultation_bp.route('/start_session', methods=['POST'])
 def start_session():
     try:
@@ -288,9 +400,13 @@ def get_session():
         if not session_details.exists:
             return jsonify({"error": "Session not found"}), 404
 
-        return jsonify(session_details.to_dict()), 200
+        # Serialize the Firestore data to make it JSON-serializable
+        session_data = session_details.to_dict()
+        serialized_data = serialize_firestore_data(session_data)
+        return jsonify(serialized_data), 200
 
     except Exception as e:
+        print(f"Error in get_session: {str(e)}")  # Add debug logging
         return jsonify({"error": str(e)}), 500
 
 @consultation_bp.route('/get_final_document', methods=['GET'])

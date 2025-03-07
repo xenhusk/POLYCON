@@ -394,5 +394,23 @@ def reset_password():
 
     except Exception as e:
         return jsonify({"error": str(e)}), 500
+    
+@acc_management_bp.route('/reset_password_with_email', methods=['POST'])
+def reset_password_with_email():
+    try:
+        data = request.json
+        email = data.get('email')
+        if not email:
+            return jsonify({"error": "Email is required"}), 400
+
+        # Send password reset email using Firebase service
+        try:
+            auth_pyrebase.send_password_reset_email(email)
+            return jsonify({"message": "Password reset email sent"}), 200
+        except Exception as e:
+            return jsonify({"error": str(e)}), 500
+
+    except Exception as e:
+        return jsonify({"error": str(e)}), 500
 
 

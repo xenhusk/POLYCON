@@ -1,4 +1,5 @@
 import os
+import datetime
 if os.getenv("USE_EVENTLET", "false").lower() == "true":
     import eventlet
     eventlet.monkey_patch()
@@ -27,6 +28,7 @@ from routes.enrollment_routes import enrollment_bp  # new import for enrollment 
 from routes.homestudent_routes import homestudent_routes_bp #
 from services.scheduler_service import initialize_scheduler, check_appointments_1h, check_appointments_24h
 from routes.reminder_routes import reminder_bp
+from routes.comparative_analysis_routes import comparative_bp  # new import for comparative analysis
 import logging
 import atexit
 import threading
@@ -79,6 +81,7 @@ def create_app():
     app.register_blueprint(semester_routes, url_prefix='/semester')  # new registration for semester endpoints
     app.register_blueprint(enrollment_bp, url_prefix='/enrollment')  # This should match the frontend fetch URL
     app.register_blueprint(homestudent_routes_bp, url_prefix='/homestudent')  # <-- new registration
+    app.register_blueprint(comparative_bp, url_prefix='/comparative')  # new blueprint registration
 
     # Configure root logger
     logging.basicConfig(level=logging.INFO, 
