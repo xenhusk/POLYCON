@@ -366,74 +366,78 @@ const Session = () => {
   };
 
   return (
-    <div className="relative min-h-screen p-10 flex justify-center items-center font-poppins">
+    <div className="relative min-h-screen p-3 sm:p-6 md:p-8 lg:p-10 flex justify-center items-center font-poppins">
       <AnimatedBackground />
       {processing && (
         <div className="fixed top-0 left-0 w-full h-full bg-black bg-opacity-50 flex items-center justify-center z-50">
-          <div className="text-white text-2xl">
+          <div className="text-white text-xl sm:text-2xl">
             Processing Consultation...
           </div>
         </div>
       )}
-      <div className="relative z-10 backdrop-blur-sm bg-white/5 fade-in">
-        <div className="max-w-6xl w-full grid grid-cols-7 gap-6">
+      <div className="relative z-10 backdrop-blur-sm bg-white/5 fade-in w-full">
+        <div className="max-w-6xl w-full mx-auto flex flex-col md:grid md:grid-cols-7 gap-4 lg:gap-6">
           {/* Left Section: Adviser Notes */}
-          <div className="col-span-5 bg-[#057DCD] p-6 rounded-lg shadow-lg fade-in delay-100">
-            <label className="block text-white text-lg mb-2">Concern</label>
+          <div className="md:col-span-5 bg-[#057DCD] p-3 sm:p-4 md:p-6 rounded-lg shadow-lg fade-in delay-100">
+            <label className="block text-white text-base sm:text-lg mb-1 sm:mb-2">Concern</label>
             <textarea
-              className="w-full p-3 rounded-md mb-4 focus:outline-none focus:ring-2 focus:ring-blue-400"
+              className="w-full p-2 sm:p-3 rounded-md mb-3 sm:mb-4 focus:outline-none focus:ring-2 focus:ring-blue-400 text-sm sm:text-base"
+              rows="3"
               value={concern}
               onChange={(e) => setConcern(e.target.value)}
             />
-            <label className="block text-white text-lg mb-2">Action Taken</label>
+            <label className="block text-white text-base sm:text-lg mb-1 sm:mb-2">Action Taken</label>
             <textarea
-              className="w-full p-3 rounded-md mb-4 focus:outline-none focus:ring-2 focus:ring-blue-400"
+              className="w-full p-2 sm:p-3 rounded-md mb-3 sm:mb-4 focus:outline-none focus:ring-2 focus:ring-blue-400 text-sm sm:text-base"
+              rows="3"
               value={action_taken}
               onChange={(e) => setActionTaken(e.target.value)}
             />
-            <label className="block text-white text-lg mb-2">Outcome</label>
+            <label className="block text-white text-base sm:text-lg mb-1 sm:mb-2">Outcome</label>
             <textarea
-              className="w-full p-3 rounded-md mb-4 focus:outline-none focus:ring-2 focus:ring-blue-400"
+              className="w-full p-2 sm:p-3 rounded-md mb-3 sm:mb-4 focus:outline-none focus:ring-2 focus:ring-blue-400 text-sm sm:text-base"
+              rows="3"
               value={outcome}
               onChange={(e) => setOutcome(e.target.value)}
             />
-            <label className="block text-white text-lg mb-2">Remarks</label>
+            <label className="block text-white text-base sm:text-lg mb-1 sm:mb-2">Remarks</label>
             <textarea
-              className="w-full p-3 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-400"
+              className="w-full p-2 sm:p-3 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-400 text-sm sm:text-base"
+              rows="3"
               value={remarks}
               onChange={(e) => setRemarks(e.target.value)}
             />
           </div>
 
           {/* Right Section: Teacher & Student Info, Recording & Finalize */}
-          <div className="col-span-2 flex flex-col justify-between h-full"> {/* Added h-full */}
-            <div className="space-y-4 flex-1"> {/* Added flex-1 */}
+          <div className="md:col-span-2 flex flex-col justify-between h-full"> 
+            <div className="space-y-3 sm:space-y-4 flex-1"> 
               {/* Teacher Info Card */}
-              <div className="flex flex-col gap-2 p-3 sm:flex-row sm:items-center sm:gap-2 sm:py-5 bg-[#057DCD] text-white rounded-lg shadow-lg fade-in delay-200">
+              <div className="flex flex-row items-center gap-2 py-2 sm:py-3 px-3 lg:px-4 bg-[#057DCD] text-white rounded-lg shadow-lg fade-in delay-200">
                 {teacherInfo ? (
                   <>
                     <div className="rounded-full p-1 bg-[#54BEFF]">
                       <div className="rounded-full p-1 bg-white">
                         <img
-                          className="w-12 h-12 rounded-full"
+                          className="w-8 h-8 sm:w-10 sm:h-10 md:w-12 md:h-12 rounded-full"
                           src={teacherInfo.profile_picture}
                           alt="Teacher"
                         />
                       </div>
                     </div>
-                    <div className="text-center sm:text-left">
-                      <p className="text-lg font-semibold">{teacherInfo.teacherName}</p>
-                      <p className="font-small text-[#98d6ff]">{teacherInfo.department} {teacherInfo.role}</p>
+                    <div className="flex-1">
+                      <p className="text-xs sm:text-sm md:text-base lg:text-lg font-semibold">{teacherInfo.teacherName}</p>
+                      <p className="text-[0.65rem] sm:text-[0.7rem] md:text-xs lg:text-sm text-[#98d6ff]">{teacherInfo.department} {teacherInfo.role}</p>
                     </div>
                   </>
                 ) : (
-                  <p className="text-white">ID: {teacherId}</p>
+                  <p className="text-white text-sm sm:text-base">ID: {teacherId}</p>
                 )}
               </div>
 
-              {/* Students Info Card - Updated height */}
-              <div className="bg-[#057DCD] text-white p-4 rounded-lg shadow-lg flex-1 min-h-[300px] overflow-y-auto fade-in delay-300"> {/* Added min-h-[300px] and overflow-y-auto */}
-                <p className="font-semibold text-center mb-2">Student/s</p>
+              {/* Students Info Card */}
+              <div className="bg-[#057DCD] text-white p-3 sm:p-4 rounded-lg shadow-lg flex-1 min-h-[200px] sm:min-h-[250px] md:min-h-[300px] overflow-y-auto fade-in delay-300"> 
+                <p className="font-semibold text-center mb-2 text-sm sm:text-base">Student/s</p>
                 {studentInfo ? (
                   <ul className="space-y-2">
                     {Array.isArray(studentInfo)
@@ -443,55 +447,57 @@ const Session = () => {
                               <img
                                 src={student.profile_picture}
                                 alt="Student"
-                                className="w-10 h-10 rounded-full mr-2 border-2 border-[#ffffff]"
+                                className="w-7 h-7 sm:w-9 sm:h-9 md:w-10 md:h-10 rounded-full mr-2 border-2 border-[#ffffff]"
                               />
                             )}
-                            {student.firstName} {student.lastName}
+                            <span className="text-[0.7rem] sm:text-xs md:text-sm lg:text-base">
+                              {student.firstName} {student.lastName}
+                            </span>
                           </li>
                         ))
-                      : <p>{studentIds}</p>}
+                      : <p className="text-xs sm:text-sm md:text-base">{studentIds}</p>}
                   </ul>
                 ) : (
-                  <p>{studentIds}</p>
+                  <p className="text-xs sm:text-sm md:text-base">{studentIds}</p>
                 )}
               </div>
             </div>
 
             {/* Controls Section */}
-            <div className="mt-4 space-y-4 fade-in delay-400"> {/* Changed from mt-auto to mt-4 */}
-              <div className="flex items-center justify-between">
-                <div className="flex items-center space-x-1">
+            <div className="mt-3 sm:mt-4 space-y-3 fade-in delay-400"> 
+              <div className="flex items-center justify-between bg-gray-100 bg-opacity-10 p-2 rounded-lg">
+                <div className="flex items-center space-x-2">
                   <button
                     onClick={recording ? stopRecording : startRecording}
-                    className="p-2 transition-transform duration-200 hover:scale-110"
+                    className="p-1 sm:p-2 transition-transform duration-200 hover:scale-110"
                   >
                     {recording ? (
-                      <StopIcon className="w-6 h-6 text-red-500" />
+                      <StopIcon className="w-5 h-5 sm:w-6 sm:h-6 text-red-500" />
                     ) : (
-                      <PlayIcon className="w-6 h-6 text-green-500" />
+                      <PlayIcon className="w-5 h-5 sm:w-6 sm:h-6 text-green-500" />
                     )}
                   </button>
                   <button
                     onClick={toggleMicrophone}
                     disabled={recording}
-                    className={`p-2 transition-transform duration-200 ${
+                    className={`p-1 sm:p-2 transition-transform duration-200 ${
                       !recording ? 'hover:scale-110' : 'cursor-not-allowed opacity-50'
                     }`}
                   >
                     {micEnabled ? (
-                      <MicrophoneIcon className="w-6 h-6 text-blue-500" />
+                      <MicrophoneIcon className="w-5 h-5 sm:w-6 sm:h-6 text-blue-500" />
                     ) : (
-                      <MicrophoneSlashIcon className="w-6 h-6 text-gray-400" />
+                      <MicrophoneSlashIcon className="w-5 h-5 sm:w-6 sm:h-6 text-gray-400" />
                     )}
                   </button>
                 </div>
-                <span className="text-gray-600">{timer}</span>
+                <span className="text-black text-opacity-85 font-mono text-sm sm:text-base">{timer}</span>
               </div>
 
               <button
                 onClick={finishSession}
                 disabled={processing}
-                className="w-full bg-[#057DCD] text-white py-3 rounded-lg shadow-md hover:hover:bg-[#54BEFF] duration-300ms ease-in-out"
+                className="w-full bg-[#057DCD] text-white py-2 sm:py-3 rounded-lg shadow-md hover:bg-[#54BEFF] duration-300ms ease-in-out text-sm sm:text-base"
               >
                 Finalize Consultation
               </button>

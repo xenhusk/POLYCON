@@ -354,7 +354,7 @@ function TeacherAppointments() {
         <div className="flex-1 overflow-y-auto min-h-0">
           {isLoading ? (
             <ul className="space-y-4 pr-2">
-              {Array.from({ length: 5 }).map((_, index) => (
+              {Array.from({ length: 1 }).map((_, index) => (
                 <li
                   key={index}
                   className="bg-white rounded-lg shadow-md p-6 my-4 border-l-4 border-[#0065A8] hover:shadow-lg transition-shadow flex flex-col fade-in delay-300 animate-pulse"
@@ -435,7 +435,7 @@ function TeacherAppointments() {
         <div className="flex-1 overflow-y-auto min-h-0">
           {isLoading ? (
             <ul className="space-y-4 pr-2">
-              {Array.from({ length: 5 }).map((_, index) => (
+              {Array.from({ length: 1 }).map((_, index) => (
                 <li
                   key={index}
                   className="bg-white rounded-lg shadow-md p-6 my-4 border-l-4 border-[#0065A8] hover:shadow-lg transition-shadow flex flex-col fade-in delay-300 animate-pulse"
