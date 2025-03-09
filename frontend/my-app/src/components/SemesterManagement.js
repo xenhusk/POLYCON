@@ -26,6 +26,7 @@ const SemesterManagement = () => {
   const [isEndingSemester, setIsEndingSemester] = useState(false);
   const [isSchedulingEnd, setIsSchedulingEnd] = useState(false);
   const [isActivatingTeacher, setIsActivatingTeacher] = useState(null); // Will store teacher ID
+  const [showSemesterModal, setShowSemesterModal] = useState(false); // Add this state
 
   // NEW: function to fetch latest (active) semester
   const fetchLatestSemester = async () => {
@@ -450,40 +451,23 @@ const SemesterManagement = () => {
   };
 
   return (
-    <div className="p-6 fade-in">
-    
-      {/* Error/Success Message Toast - Updated with dynamic colors */}
-      {error && (
-        <div className={`fixed top-5 right-5 p-4 rounded-lg shadow-lg z-50 
-          ${typeof error === 'string' && error.toLowerCase().includes("successfully") 
-            ? "bg-green-100 text-green-700" 
-            : "bg-red-100 text-red-700"}`}>
-          {error}
-          {/* Render Delete Duplicate button if error indicates duplicate */}
-          {typeof error === 'string' && error.includes("already exists") && (
-            <button
-              onClick={handleDeleteDuplicate}
-              className="ml-4 bg-red-500 text-white px-3 py-1 rounded-lg hover:bg-red-600"
-            >
-              Delete Duplicate?
-            </button>
-          )}
-        </div>
-      )}
-
+    <div className="p-6 fade-in flex flex-1 flex-col">
       <h2 className="text-3xl font-bold text-[#0065A8] pt-10 pb-4 mb-6 text-center fade-in delay-100">
         Semester Management
       </h2>
 
-      <div className="flex gap-6 fade-in delay-200">
-        {/* Left side - Teacher List (filtered if teacherSearchTerm is set) */}
-        <div className="w-2/3 fade-in delay-300">
-          <div className="flex justify-between items-center mb-4">
-            {/* Left: Title */}
-            <h3 className="text-xl font-semibold text-gray-800 w-1/4">Teacher List</h3>
-
-            {/* Center: Search and Filter Controls */}
-            <div className="flex items-center justify-center gap-2 w-2/4">
+      <div className="fade-in delay-200">
+        <div className="w-full">
+          {/* Teacher List Header */}
+          <div className="flex justify-between items-center mb-4 mx-20">
+          <button
+                onClick={() => setShowSemesterModal(true)}
+                className="bg-[#057DCD] text-white px-4 py-2 rounded-lg hover:bg-[#54BEFF] transition-colors"
+              >
+                Manage Semester
+              </button>
+            {/* Search and Controls */}
+            <div className="flex items-center justify-center gap-2 ml-[11rem]">
               <input 
                 type="text"
                 value={teacherSearchTerm}
@@ -551,7 +535,7 @@ const SemesterManagement = () => {
               </div>
             </div>
 
-            {/* Right: Activate All Button */}
+            {/* Activate All Button */}
             <div className="w-1/4 flex justify-end">
               <button
                 onClick={handleActivateAll}
@@ -563,8 +547,8 @@ const SemesterManagement = () => {
               </button>
             </div>
           </div>
-
-          <div className="shadow-md rounded-lg overflow-hidden">
+          {/* Teacher Table */}
+          <div className="shadow-md rounded-lg overflow-hidden mx-20">
             <table className="min-w-full bg-white">
               <thead className="bg-[#057DCD] text-white">
                 <tr>
@@ -606,148 +590,195 @@ const SemesterManagement = () => {
             </table>
           </div>
         </div>
+      </div>
 
-        {/* Right side - Semester Management */}
-        <div className="w-1/3 bg-white p-6 rounded-lg shadow-md fade-in delay-300">
-          <div className="mb-6">
-            <h3 className="text-xl font-semibold text-gray-800">
-              {latestSemester && canEndSemester ? 'Current Semester' : 'Start New Semester'}
-            </h3>
-          </div>
+      {/* Semester Management Modal */}
+      <AnimatePresence>
+        {showSemesterModal && (
+          <div 
+            className="fixed inset-0 bg-black/30 backdrop-blur-sm flex items-center justify-center z-50 p-4"
+            onClick={() => setShowSemesterModal(false)}
+          >
+            <motion.div
+              initial={{ opacity: 0, scale: 0.95, y: 20 }}
+              animate={{ opacity: 1, scale: 1, y: 0 }}
+              exit={{ opacity: 0, scale: 0.95, y: 20 }}
+              transition={{ type: "spring", stiffness: 300, damping: 30 }}
+              className="bg-white rounded-xl shadow-2xl w-[500px] max-h-[90vh] overflow-y-auto"
+              onClick={(e) => e.stopPropagation()}
+            >
+              {/* Modal Header */}
+              <div className="bg-[#0065A8] px-6 py-4 flex justify-between items-center">
+                <h2 className="text-xl font-semibold text-white">
+                  {latestSemester && canEndSemester ? 'Current Semester' : 'Start New Semester'}
+                </h2>
+                <button
+                  onClick={() => setShowSemesterModal(false)}
+                  className="text-white hover:text-gray-200"
+                >
+                  <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M6 18L18 6M6 6l12 12" />
+                  </svg>
+                </button>
+              </div>
 
-          {/* Current Semester Display */}
-          {latestSemester && canEndSemester ? (
-            <div className="space-y-4">
-              <div className="bg-[#edf8ff] p-4 rounded-lg">
-                <div className="flex justify-between items-center">
-                  <div className="space-y-2">
-                    <p className="text-lg font-medium">
-                      Semester: {latestSemester.semester} Semester
-                    </p>
-                    <p className="text-gray-600">
-                      School Year: {latestSemester.school_year}
-                    </p>
-                    <p className="text-gray-600">
-                      Start Date: {new Date(latestSemester.startDate).toLocaleDateString()}
-                    </p>
-                    {/* Add end date display if it exists */}
-                    {latestSemester.endDate && (
-                      <p className="text-gray-600">
-                        End Date: {new Date(latestSemester.endDate).toLocaleDateString()}
-                      </p>
+              {/* Modal Body */}
+              <div className="p-6">
+                {/* Message/Error Display - Now inside modal */}
+                {error && (
+                  <div className={`mb-4 p-4 rounded-lg ${
+                    typeof error === 'string' && error.toLowerCase().includes("successfully")
+                      ? "bg-green-100 text-green-700"
+                      : "bg-red-100 text-red-700"
+                  }`}>
+                    {error}
+                    {typeof error === 'string' && error.includes("already exists") && (
+                      <button
+                        onClick={handleDeleteDuplicate}
+                        className="ml-4 bg-red-500 text-white px-3 py-1 rounded-lg hover:bg-red-600"
+                      >
+                        Delete Duplicate?
+                      </button>
                     )}
                   </div>
-                </div>
-              </div>
-              <div>
-                <button
-                  onClick={handleEndSemesterNow}
-                  className="w-full bg-red-600 text-white px-4 py-2 mb-4 rounded-lg hover:bg-[#FF7171] disabled:opacity-50"
-                  disabled={isEndingSemester}
-                >
-                  {isEndingSemester ? 'Ending...' : 'End Semester Now'}
-                </button>
-                <label className="block text-sm font-medium text-gray-700 mb-2">
-                  Schedule End Date (Optional)
-                </label>
-                <input
-                  type="date"
-                  value={endDate}
-                  onChange={(e) => setEndDate(e.target.value)}
-                  min={new Date(Math.max(
-                    new Date(latestSemester?.startDate).getTime(),
-                    new Date(getTodayString()).getTime()
-                  )).toISOString().split('T')[0]}
-                  className="w-full rounded-md border-gray-300 shadow-sm px-3 py-2 focus:outline-none focus:ring-2 focus:ring-[#54BEFF] mb-4"
-                />
-                <button
-                  onClick={handleEndSemesterScheduled}
-                  className="w-full bg-red-600 text-white px-4 py-2 rounded-lg hover:bg-[#FF7171] mb-2 disabled:opacity-50"
-                  disabled={isSchedulingEnd || !endDate}
-                >
-                  {isSchedulingEnd ? 'Scheduling...' : 'Schedule End Date'}
-                </button>
-              </div>
-            </div>
-          ) : (
-            /* Start New Semester Form */
-            <div className="space-y-4">
-              {/* ...existing form fields for starting semester... */}
-              <div>
-                <label className="block text-sm font-medium text-gray-700">School Year (20XX-20XX)</label>
-                <input
-                  type="text"
-                  placeholder="23-24"
-                  value={schoolYear}
-                  onChange={handleSchoolYearChange}
-                  className="mt-1 block w-full px-4 py-2 rounded-md border-gray-300 shadow-sm focus:outline-none focus:ring-2 focus:ring-[#54BEFF]"
-                />
-              </div>
-              {/* ...rest of the start semester form fields... */}
-              <div>
-                <label className="block text-sm font-medium text-gray-700">Semester</label>
-                <select
-                  value={semester}
-                  onChange={(e) => setSemester(e.target.value)}
-                  disabled={shouldDisableInputs()}
-                  className="mt-1 block w-full rounded-md border-gray-300 px-3 py-2 shadow-sm focus:outline-none focus:ring-2 focus:ring-[#54BEFF]"
-                >
-                  <option className="p-4" value="1st">1st Semester</option>
-                  <option value="2nd">2nd Semester</option>
-                </select>
-              </div>
-              <div>
-                <label className="block text-sm font-medium text-gray-700">Start Date</label>
-                <input
-                  type="date"
-                  value={startDate}
-                  onChange={(e) => setStartDate(e.target.value)}
-                  min={getTodayString()} // Prevents selecting dates before today
-                  disabled={shouldDisableInputs()}
-                  className="mt-1 block w-full rounded-md px-3 py-2 border-gray-300 shadow-sm focus:outline-none focus:ring-2 focus:ring-[#54BEFF]"
-                />
-              </div>
-              {currentSemester && (
-                <div>
-                  <label className="block text-sm font-medium text-gray-700">End Date</label>
-                  <input
-                    type="date"
-                    value={endDate}
-                    onChange={(e) => setEndDate(e.target.value)}
-                    className="mt-1 block w-full rounded-md border-gray-300 shadow-sm px-3 py-2 focus:outline-none focus:ring-2 focus:ring-[#54BEFF]"
-                  />
-                </div>
-              )}
-              <div className="pt-4 flex flex-col gap-2">
-                {!currentSemester ? (
-                  <button
-                    onClick={handleStartSemester}
-                    className="w-full bg-[#057DCD] text-white px-4 py-2 rounded-lg hover:bg-[#54BEFF] disabled:opacity-50"
-                    disabled={!schoolYear || !startDate || isStartingSemester}
-                  >
-                    {isStartingSemester ? 'Starting...' : 'Start Semester'}
-                  </button>
+                )}
+
+                {/* Semester Management Content */}
+                {latestSemester && canEndSemester ? (
+                  <div className="space-y-4">
+                    <div className="bg-[#edf8ff] p-4 rounded-lg">
+                      <div className="flex justify-between items-center">
+                        <div className="space-y-2">
+                          <p className="text-lg font-medium">
+                            Semester: {latestSemester.semester} Semester
+                          </p>
+                          <p className="text-gray-600">
+                            School Year: {latestSemester.school_year}
+                          </p>
+                          <p className="text-gray-600">
+                            Start Date: {new Date(latestSemester.startDate).toLocaleDateString()}
+                          </p>
+                          {/* Add end date display if it exists */}
+                          {latestSemester.endDate && (
+                            <p className="text-gray-600">
+                              End Date: {new Date(latestSemester.endDate).toLocaleDateString()}
+                            </p>
+                          )}
+                        </div>
+                      </div>
+                    </div>
+                    <div>
+                      <button
+                        onClick={handleEndSemesterNow}
+                        className="w-full bg-red-600 text-white px-4 py-2 mb-4 rounded-lg hover:bg-[#FF7171] disabled:opacity-50"
+                        disabled={isEndingSemester}
+                      >
+                        {isEndingSemester ? 'Ending...' : 'End Semester Now'}
+                      </button>
+                      <label className="block text-sm font-medium text-gray-700 mb-2">
+                        Schedule End Date (Optional)
+                      </label>
+                      <input
+                        type="date"
+                        value={endDate}
+                        onChange={(e) => setEndDate(e.target.value)}
+                        min={new Date(Math.max(
+                          new Date(latestSemester?.startDate).getTime(),
+                          new Date(getTodayString()).getTime()
+                        )).toISOString().split('T')[0]}
+                        className="w-full rounded-md border-gray-300 shadow-sm px-3 py-2 focus:outline-none focus:ring-2 focus:ring-[#54BEFF] mb-4"
+                      />
+                      <button
+                        onClick={handleEndSemesterScheduled}
+                        className="w-full bg-red-600 text-white px-4 py-2 rounded-lg hover:bg-[#FF7171] mb-2 disabled:opacity-50"
+                        disabled={isSchedulingEnd || !endDate}
+                      >
+                        {isSchedulingEnd ? 'Scheduling...' : 'Schedule End Date'}
+                      </button>
+                    </div>
+                  </div>
                 ) : (
-                  <>
-                    <button
-                      onClick={handleEndSemesterScheduled}
-                      className="w-full bg-red-500 text-white px-4 py-2 rounded-lg hover:bg-red-600"
-                    >
-                      End Semester on Selected Date
-                    </button>
-                    <button
-                      onClick={handleEndSemesterNow}
-                      className="w-full bg-red-600 text-white px-4 py-2 rounded-lg hover:bg-red-700"
-                    >
-                      End Semester Now
-                    </button>
-                  </>
+                  /* Start New Semester Form */
+                  <div className="space-y-4">
+                    {/* ...existing form fields for starting semester... */}
+                    <div>
+                      <label className="block text-sm font-medium text-gray-700">School Year (20XX-20XX)</label>
+                      <input
+                        type="text"
+                        placeholder="23-24"
+                        value={schoolYear}
+                        onChange={handleSchoolYearChange}
+                        className="mt-1 block w-full px-4 py-2 rounded-md border-gray-300 shadow-sm focus:outline-none focus:ring-2 focus:ring-[#54BEFF]"
+                      />
+                    </div>
+                    {/* ...rest of the start semester form fields... */}
+                    <div>
+                      <label className="block text-sm font-medium text-gray-700">Semester</label>
+                      <select
+                        value={semester}
+                        onChange={(e) => setSemester(e.target.value)}
+                        disabled={shouldDisableInputs()}
+                        className="mt-1 block w-full rounded-md border-gray-300 px-3 py-2 shadow-sm focus:outline-none focus:ring-2 focus:ring-[#54BEFF]"
+                      >
+                        <option className="p-4" value="1st">1st Semester</option>
+                        <option value="2nd">2nd Semester</option>
+                      </select>
+                    </div>
+                    <div>
+                      <label className="block text-sm font-medium text-gray-700">Start Date</label>
+                      <input
+                        type="date"
+                        value={startDate}
+                        onChange={(e) => setStartDate(e.target.value)}
+                        min={getTodayString()} // Prevents selecting dates before today
+                        disabled={shouldDisableInputs()}
+                        className="mt-1 block w-full rounded-md px-3 py-2 border-gray-300 shadow-sm focus:outline-none focus:ring-2 focus:ring-[#54BEFF]"
+                      />
+                    </div>
+                    {currentSemester && (
+                      <div>
+                        <label className="block text-sm font-medium text-gray-700">End Date</label>
+                        <input
+                          type="date"
+                          value={endDate}
+                          onChange={(e) => setEndDate(e.target.value)}
+                          className="mt-1 block w-full rounded-md border-gray-300 shadow-sm px-3 py-2 focus:outline-none focus:ring-2 focus:ring-[#54BEFF]"
+                        />
+                      </div>
+                    )}
+                    <div className="pt-4">
+                      {!currentSemester ? (
+                        <button
+                          onClick={handleStartSemester}
+                          className="w-full bg-[#057DCD] text-white px-4 py-2 rounded-lg hover:bg-[#54BEFF] disabled:opacity-50"
+                          disabled={!schoolYear || !startDate || isStartingSemester}
+                        >
+                          {isStartingSemester ? 'Starting...' : 'Start Semester'}
+                        </button>
+                      ) : (
+                        <>
+                          <button
+                            onClick={handleEndSemesterScheduled}
+                            className="w-full bg-red-500 text-white px-4 py-2 mb-3 rounded-lg hover:bg-red-600"
+                          >
+                            End Semester on Selected Date
+                          </button>
+                          <button
+                            onClick={handleEndSemesterNow}
+                            className="w-full bg-red-600 text-white px-4 py-2 rounded-lg hover:bg-red-700"
+                          >
+                            End Semester Now
+                          </button>
+                        </>
+                      )}
+                    </div>
+                  </div>
                 )}
               </div>
-            </div>
-          )}
-        </div>
-      </div>
+            </motion.div>
+          </div>
+        )}
+      </AnimatePresence>
     </div>
   );
 };
