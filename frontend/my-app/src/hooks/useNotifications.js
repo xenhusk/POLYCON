@@ -9,8 +9,12 @@ const SOCKET_SERVER_URL = "http://localhost:5001";
 // Helper function to format an ISO date string into a friendly format.
 const formatSchedule = (schedule) => {
   if (!schedule) return "";
-  const date = new Date(schedule);
-  return date.toLocaleString('en-US', {
+  const parsed = new Date(schedule);
+  if (isNaN(parsed)) {
+    console.error("Invalid schedule format in notification:", schedule);
+    return schedule;
+  }
+  return parsed.toLocaleString('en-US', {
     year: 'numeric', month: 'short', day: 'numeric',
     hour: 'numeric', minute: '2-digit'
   });

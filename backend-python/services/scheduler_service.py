@@ -158,55 +158,41 @@ def check_appointments_24h():
 def parse_booking_time(schedule_str):
     """
     Parses booking time in various formats and always returns a UTC datetime
-    
-    Args:
-        schedule_str: String datetime in various possible formats
-        
-    Returns:
-        datetime with UTC timezone or None if parsing fails
     """
     if not schedule_str or not isinstance(schedule_str, str):
         return None
         
     parsed_time = None
     
-    # Try multiple parsing approaches
     try:
-        # Method 1: ISO format with Z (UTC timezone)
+        # Try ISO format with Z
         if 'Z' in schedule_str:
-            parsed_time = datetime.datetime.fromisoformat(schedule_str.replace('Z', '+00:00'))
-            logger.debug(f"Parsed using ISO with Z: {parsed_time}")
-            
-        # Method 2: ISO format with timezone info
-        elif '+' in schedule_str or '-' in schedule_str and 'T' in schedule_str:
-            parsed_time = datetime.datetime.fromisoformat(schedule_str)
-            logger.debug(f"Parsed using ISO with timezone: {parsed_time}")
-            
-        # Method 3: Abbreviated ISO format (YYYY-MM-DDTHH:MM) - common in form inputs
+            parsed_time = datetime.fromisoformat(schedule_str.replace('Z', '+00:00'))
+            logger.debug(f"Parsed with 'Z': {parsed_time}")
+        # Try full ISO format with timezone info
+        elif ('+' in schedule_str or '-' in schedule_str) and 'T' in schedule_str:
+            parsed_time = datetime.fromisoformat(schedule_str)
+            logger.debug(f"Parsed ISO with timezone: {parsed_time}")
+        # Try abbreviated ISO format (YYYY-MM-DDTHH:MM)
         elif 'T' in schedule_str and len(schedule_str) >= 16:
-            # This is the format you're seeing: "2025-03-02T20:40"
-            # Assume UTC timezone for consistency
-            base_time = datetime.datetime.fromisoformat(schedule_str)
-            if not base_time.tzinfo:
-                parsed_time = base_time.replace(tzinfo=pytz.UTC)
-                logger.debug(f"Parsed abbreviated ISO, assuming UTC: {parsed_time}")
-            else:
-                parsed_time = base_time
-                
-        # Method 4: Last resort - general parser
-        if parsed_time is None:
+            base_time = datetime.fromisoformat(schedule_str)
+            parsed_time = base_time.replace(tzinfo=pytz.UTC)
+            logger.debug(f"Parsed abbreviated ISO, assuming UTC: {parsed_time}")
+    except Exception as e:
+        logger.warning(f"Primary parsing failed for '{schedule_str}': {str(e)}")
+    
+    # Fallback: use dateutil parser if needed
+    if parsed_time is None:
+        try:
             from dateutil import parser
             parsed_time = parser.parse(schedule_str)
-            logger.debug(f"Parsed using general parser: {parsed_time}")
-            
-    except Exception as e:
-        logger.warning(f"All parsing methods failed for '{schedule_str}': {str(e)}")
-        return None
+            if not parsed_time.tzinfo:
+                parsed_time = parsed_time.replace(tzinfo=pytz.UTC)
+            logger.debug(f"Parsed using dateutil: {parsed_time}")
+        except Exception as e:
+            logger.warning(f"All parsing methods failed for '{schedule_str}': {str(e)}")
+            return None
     
-    # Ensure timezone info exists - default to UTC if none
-    if parsed_time and not parsed_time.tzinfo:
-        parsed_time = parsed_time.replace(tzinfo=pytz.UTC)
-        
     return parsed_time
 
 def check_appointments_1h():

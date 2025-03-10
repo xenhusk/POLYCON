@@ -21,6 +21,14 @@ def send_notification(notification_data):
         if 'timestamp' not in notification_data:
             notification_data['timestamp'] = datetime.datetime.now(pytz.UTC).isoformat()
             
+        # NEW: Standardize schedule format so it is a proper ISO string ending with "Z"
+        if 'schedule' in notification_data and isinstance(notification_data['schedule'], str):
+            try:
+                dt = datetime.datetime.fromisoformat(notification_data['schedule'].replace("Z", "+00:00"))
+                notification_data['schedule'] = dt.isoformat().replace("+00:00", "Z")
+            except Exception as e:
+                logger.warning(f"Failed to standardize schedule format: {notification_data['schedule']}, error: {str(e)}")
+        
         # For reminder notifications, get additional data if needed
         if notification_data['action'].startswith('reminder_') and 'bookingID' in notification_data and notification_data['bookingID'] != 'test-booking-123':
             # Only fetch booking data for real bookings, not test ones

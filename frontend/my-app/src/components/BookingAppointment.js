@@ -353,8 +353,8 @@ function BookingAppointment({ closeModal, role: propRole }) {
       const bookingData = {
         teacherID: selectedTeacher,
         studentIDs: studentIDsArray,
-        schedule: "",
-        venue: "",
+        schedule, // use the schedule state value
+        venue,    // use the venue state value
         createdBy: studentID,
       };
       
@@ -764,6 +764,33 @@ function BookingAppointment({ closeModal, role: propRole }) {
               {/* Add enrollment message display */}
               {renderEnrollmentMessage()}
             </div>
+
+            {/* NEW: Schedule Selection for Student */}
+            <div>
+              <label className="block text-sm font-medium text-gray-700 mb-1 sm:mb-2">
+                Schedule <span className="text-red-500">*</span>
+              </label>
+              <input
+                type="datetime-local"
+                value={schedule}
+                onChange={(e) => setSchedule(e.target.value)}
+                className="w-full border-2 border-[#397de2] rounded-lg px-2 sm:px-3 py-2 text-sm sm:text-base focus:outline-none focus:ring-2 focus:ring-[#54BEFF]"
+              />
+            </div>
+
+            {/* NEW: Venue Selection for Student */}
+            <div>
+              <label className="block text-sm font-medium text-gray-700 mb-1 sm:mb-2">
+                Venue <span className="text-red-500">*</span>
+              </label>
+              <input
+                type="text"
+                value={venue}
+                onChange={(e) => setVenue(e.target.value)}
+                placeholder={isMobile ? "Room number" : "Enter venue (e.g., Room 101)"}
+                className="w-full border-2 border-[#397de2] rounded-lg px-2 sm:px-3 py-2 text-sm sm:text-base focus:outline-none focus:ring-2 focus:ring-[#54BEFF]"
+              />
+            </div>
           </div>
         </>
       )}
@@ -808,7 +835,7 @@ function BookingAppointment({ closeModal, role: propRole }) {
               } bg-[#397de2] hover:bg-[#54BEFF] text-white flex-1 py-4 sm:py-6 md:py-4 rounded-bl-lg justify-center transition-colors flex items-center text-xs sm:text-sm
               ${SubmitBookingClicked ? "scale-100" : "scale-100"}`}
             >
-              {isLoading ? (
+            {isLoading ? (
                 <>
                   <svg
                     className="animate-spin h-4 w-4 sm:h-5 sm:w-5 text-white"

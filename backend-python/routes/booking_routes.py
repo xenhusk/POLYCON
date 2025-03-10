@@ -5,6 +5,7 @@ from google.cloud import firestore
 from services.firebase_service import db
 from utils.firestore_utils import batch_fetch_documents
 from services.socket_service import socketio
+from datetime import datetime, timezone
 
 booking_bp = Blueprint('booking_routes', __name__)
 
@@ -63,6 +64,18 @@ def format_student_names(student_refs):
     except Exception as e:
         print(f"Error formatting student names: {str(e)}")
         return "Unknown student(s)"
+
+# NEW: Helper function to convert schedule to ISO UTC format
+def convert_schedule_to_iso(schedule):
+    try:
+        dt = datetime.fromisoformat(schedule)
+    except Exception as e:
+        print(f"Error parsing schedule: {str(e)}")
+        return schedule  # Return original value if parsing fails
+    if dt.tzinfo is None:
+        dt = dt.astimezone()  # Treat naive as local
+    dt_utc = dt.astimezone(timezone.utc)
+    return dt_utc.isoformat().replace("+00:00", "Z")
 
 @booking_bp.route('/get_teachers', methods=['GET'])
 def get_teachers():
@@ -304,6 +317,10 @@ def create_booking():
         # Determine Firestore references.
         creator_path = db.document(f"{user_role}/{creator_id}")
 
+        # NEW: Convert schedule if provided
+        if schedule:
+            schedule = convert_schedule_to_iso(schedule)
+
         # Prepare booking document with Firestore references.
         booking_data = {
             "teacherID": db.document(f"faculty/{teacher_id}"),
@@ -437,6 +454,10 @@ def confirm_booking():
 
         student_refs = booking_data.get('studentID', [])
         student_ids = [ref.id for ref in student_refs] if student_refs else []
+
+        # NEW: Convert schedule if provided
+        if schedule:
+            schedule = convert_schedule_to_iso(schedule)
 
         # Update booking status in database
         booking_ref.update({
