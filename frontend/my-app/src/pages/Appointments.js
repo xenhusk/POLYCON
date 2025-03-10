@@ -365,7 +365,6 @@ function TeacherAppointments() {
                   {/* Student(s) Section Skeleton */}
                   <div className="mt-4 fade-in delay-200">
                     <p className="h-4 bg-gray-300 rounded w-40 mb-2">
-                      Student(s)
                     </p>
                     <div className="flex flex-wrap items-center gap-3">
                       {Array.from({ length: 3 }).map((_, index) => (
@@ -425,7 +424,7 @@ function TeacherAppointments() {
                 >
                   {/* Teacher Section Skeleton */}
                   <div className="mb-4 fade-in delay-100">
-                    <p className="h-4 bg-gray-300 rounded w-40 mb-2">Teacher</p>
+                    <p className="h-4 bg-gray-300 rounded w-40 mb-2"></p>
                     <div className="flex items-center">
                       <div className="w-8 sm:w-10 md:w-12 h-8 sm:h-10 md:h-12 bg-gray-200 rounded-full mr-3 border-2 border-[#54BEFF]"></div>
                       <div className="h-4 bg-gray-300 rounded w-40"></div>

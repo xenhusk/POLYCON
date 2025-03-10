@@ -621,7 +621,7 @@ export default function AddGrade() {
 
       <div className="max-w-9xl mx-auto p-4 bg-white mt-6">
         <h2 className="text-3xl font-bold text-center text-[#0065A8] mb-4 fade-in delay-100">
-          {selectedGradeID ? "Edit Grade" : "Add Grade"}
+          Grade Management
         </h2>
 
         {/* Search and Filter Section */}
