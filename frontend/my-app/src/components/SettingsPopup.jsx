@@ -150,7 +150,7 @@ const SettingsPopup = ({ isVisible, onClose, position, userEmail, onLogout }) =>
       ) : (
         // Desktop: Small dropdown at the specified position
         <div 
-          className="absolute bg-white rounded-lg shadow-lg w-56 py-2 z-[1000]"
+          className="fixed bg-white rounded-lg shadow-lg w-56 py-2 z-[1000]"
           style={{ top: position.top, left: position.left }}
         >
           {/* Security Section */}

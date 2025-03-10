@@ -91,7 +91,7 @@ function StudentAppointments() {
                 >
                   {/* Teacher Section Skeleton */}
                   <div className="mb-4 fade-in delay-100">
-                    <p className="text-[#0065A8] font-semibold mb-2">Teacher</p>
+                    <p className="h-4 bg-gray-300 rounded w-40 mb-2"></p>
                     <div className="flex items-center">
                       <div className="w-8 sm:w-10 md:w-12 h-8 sm:h-10 md:h-12 bg-gray-200 rounded-full mr-3 border-2 border-[#54BEFF]"></div>
                       <div className="h-4 bg-gray-300 rounded w-40"></div>
@@ -99,8 +99,7 @@ function StudentAppointments() {
                   </div>
                   {/* Student(s) Section Skeleton */}
                   <div className="mt-4 fade-in delay-200">
-                    <p className="text-[#0065A8] font-semibold mb-2">
-                      Student(s)
+                    <p className="h-4 bg-gray-300 rounded w-40 mb-2">
                     </p>
                     <div className="flex flex-wrap items-center gap-3">
                       {Array.from({ length: 3 }).map((_, index) => (
@@ -117,8 +116,7 @@ function StudentAppointments() {
                   {/* Details Section Skeleton */}
                   <div className="grid grid-cols-2 gap-4 mt-4 fade-in delay-300">
                     <div>
-                      <div className="text-[#0065A8] font-semibold mb-2">
-                        Created at
+                      <div className="h-4 bg-gray-300 rounded w-40 mb-2">
                       </div>
                       <div className="h-3 bg-gray-200 rounded w-24"></div>
                     </div>
@@ -157,7 +155,7 @@ function StudentAppointments() {
                 >
                   {/* Teacher Section Skeleton */}
                   <div className="mb-4 fade-in delay-100">
-                    <p className="text-[#0065A8] font-semibold mb-2">Teacher</p>
+                    <p className="h-4 bg-gray-300 rounded w-40 mb-2"></p>
                     <div className="flex items-center">
                       <div className="w-8 sm:w-10 md:w-12 h-8 sm:h-10 md:h-12 bg-gray-200 rounded-full mr-3 border-2 border-[#54BEFF]"></div>
                       <div className="h-4 bg-gray-300 rounded w-40"></div>
@@ -165,7 +163,7 @@ function StudentAppointments() {
                   </div>
                   {/* Student(s) Section Skeleton */}
                   <div className="mt-4 fade-in delay-200">
-                    <p className="text-[#0065A8] font-semibold mb-2">
+                    <p className="h-4 bg-gray-300 rounded w-40 mb-2">
                       Student(s)
                     </p>
                     <div className="flex flex-wrap items-center gap-3">
@@ -183,20 +181,17 @@ function StudentAppointments() {
                   {/* Details Section Skeleton */}
                   <div className="grid grid-cols-2 gap-4 mt-4 fade-in delay-300">
                     <div>
-                      <div className="text-[#0065A8] font-semibold mb-2">
-                        Created at
+                      <div className="h-4 bg-gray-300 rounded w-40 mb-2">
                       </div>
                       <div className="h-3 bg-gray-200 rounded w-24"></div>
                     </div>
                     <div>
-                      <div className="text-[#0065A8] font-semibold mb-2">
-                        Schedule
+                      <div className="h-4 bg-gray-300 rounded w-40 mb-2">
                       </div>
                       <div className="h-3 bg-gray-200 rounded w-24"></div>
                     </div>
                     <div>
-                      <div className="text-[#0065A8] font-semibold mb-2">
-                        Venue
+                      <div className="h-4 bg-gray-300 rounded w-40 mb-2">
                       </div>
                       <div className="h-3 bg-gray-200 rounded w-24"></div>
                     </div>
@@ -361,7 +356,7 @@ function TeacherAppointments() {
                 >
                   {/* Teacher Section Skeleton */}
                   <div className="mb-4 fade-in delay-100">
-                    <p className="text-[#0065A8] font-semibold mb-2">Teacher</p>
+                    <p className="h-4 bg-gray-300 rounded w-40 mb-2"></p>
                     <div className="flex items-center">
                       <div className="w-8 sm:w-10 md:w-12 h-8 sm:h-10 md:h-12 bg-gray-200 rounded-full mr-3 border-2 border-[#54BEFF]"></div>
                       <div className="h-4 bg-gray-300 rounded w-40"></div>
@@ -369,7 +364,7 @@ function TeacherAppointments() {
                   </div>
                   {/* Student(s) Section Skeleton */}
                   <div className="mt-4 fade-in delay-200">
-                    <p className="text-[#0065A8] font-semibold mb-2">
+                    <p className="h-4 bg-gray-300 rounded w-40 mb-2">
                       Student(s)
                     </p>
                     <div className="flex flex-wrap items-center gap-3">
@@ -387,21 +382,9 @@ function TeacherAppointments() {
                   {/* Details Section Skeleton */}
                   <div className="grid grid-cols-2 gap-4 mt-4 fade-in delay-300">
                     <div>
-                      <div className="text-[#0065A8] font-semibold mb-2">
-                        Created at
+                      <div className="h-4 bg-gray-300 rounded w-40 mb-2">
                       </div>
                       <div className="h-3 bg-gray-200 rounded w-24"></div>
-                    </div>
-                  </div>
-                  {/* Action Buttons Skeleton */}
-                  <div className="mt-6 -mx-6 -mb-6 flex">
-                    {/* Start Session Button Placeholder */}
-                    <div className="flex-1 bg-[#0065A8] text-white py-5 transition-colors rounded-bl-lg rounded-br-none flex items-center justify-center gap-2">
-                      <div className="h-4 bg-gray-300 rounded w-24"></div>
-                    </div>
-                    {/* Cancel Button Placeholder */}
-                    <div className="flex-1 bg-[#54BEFF] text-white py-5 transition-colors rounded-br-lg rounded-bl-none flex items-center justify-center gap-2">
-                      <div className="h-4 bg-gray-300 rounded w-24"></div>
                     </div>
                   </div>
                 </li>
@@ -442,7 +425,7 @@ function TeacherAppointments() {
                 >
                   {/* Teacher Section Skeleton */}
                   <div className="mb-4 fade-in delay-100">
-                    <p className="text-[#0065A8] font-semibold mb-2">Teacher</p>
+                    <p className="h-4 bg-gray-300 rounded w-40 mb-2">Teacher</p>
                     <div className="flex items-center">
                       <div className="w-8 sm:w-10 md:w-12 h-8 sm:h-10 md:h-12 bg-gray-200 rounded-full mr-3 border-2 border-[#54BEFF]"></div>
                       <div className="h-4 bg-gray-300 rounded w-40"></div>
@@ -450,8 +433,7 @@ function TeacherAppointments() {
                   </div>
                   {/* Student(s) Section Skeleton */}
                   <div className="mt-4 fade-in delay-200">
-                    <p className="text-[#0065A8] font-semibold mb-2">
-                      Student(s)
+                    <p className="h-4 bg-gray-300 rounded w-40 mb-2">
                     </p>
                     <div className="flex flex-wrap items-center gap-3">
                       {Array.from({ length: 3 }).map((_, index) => (
@@ -468,33 +450,19 @@ function TeacherAppointments() {
                   {/* Details Section Skeleton */}
                   <div className="grid grid-cols-2 gap-4 mt-4 fade-in delay-300">
                     <div>
-                      <div className="text-[#0065A8] font-semibold mb-2">
-                        Created at
+                      <div className="h-4 bg-gray-300 rounded w-40 mb-2">
                       </div>
                       <div className="h-3 bg-gray-200 rounded w-24"></div>
                     </div>
                     <div>
-                      <div className="text-[#0065A8] font-semibold mb-2">
-                        Schedule
+                      <div className="h-4 bg-gray-300 rounded w-40 mb-2">
                       </div>
                       <div className="h-3 bg-gray-200 rounded w-24"></div>
                     </div>
                     <div>
-                      <div className="text-[#0065A8] font-semibold mb-2">
-                        Venue
+                      <div className="h-4 bg-gray-300 rounded w-40 mb-2">
                       </div>
                       <div className="h-3 bg-gray-200 rounded w-24"></div>
-                    </div>
-                  </div>
-                  {/* Action Buttons Skeleton */}
-                  <div className="mt-6 -mx-6 -mb-6 flex">
-                    {/* Start Session Button Placeholder */}
-                    <div className="flex-1 bg-[#0065A8] text-white py-5 transition-colors rounded-bl-lg rounded-br-none flex items-center justify-center gap-2">
-                      <div className="h-4 bg-gray-300 rounded w-24"></div>
-                    </div>
-                    {/* Cancel Button Placeholder */}
-                    <div className="flex-1 bg-[#54BEFF] text-white py-5 transition-colors rounded-br-lg rounded-bl-none flex items-center justify-center gap-2">
-                      <div className="h-4 bg-gray-300 rounded w-24"></div>
                     </div>
                   </div>
                 </li>
