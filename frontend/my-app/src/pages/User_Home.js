@@ -37,7 +37,7 @@ function Home() {
   return (
     <div className="min-h-screen flex flex-col">
       {/* Welcome Header */}
-      <div className="px-2 sm:px-4 py-1 sm:py-2 bg-white">
+      <div className="px-10 sm:px-20 py-1 sm:py-2 bg-white">
         <div className="mx-auto">
           <h1 className="text-lg sm:text-xl md:text-2xl font-bold text-[#0065A8]">
             Welcome, {userDetails?.firstName} {userDetails?.lastName}

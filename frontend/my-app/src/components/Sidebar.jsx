@@ -467,7 +467,9 @@ const Sidebar = ({ onExpandChange }) => {
             {renderMenuItem("dashboard", HomeIcon, "Home")}
             {renderMenuItem("appointments", UpcomingIcon, "Appointments")}
             {renderMenuItem("past", PastIcon, "History")}
-            {renderMenuItem("grades", GradesIcon, "Grades")}
+            <div className='hidden md:block'>
+              {renderMenuItem("grades", GradesIcon, "Grades")}
+            </div>
           </ul>
         )}
 
@@ -476,7 +478,9 @@ const Sidebar = ({ onExpandChange }) => {
             {renderMenuItem("dashboard", HomeIcon, "Home")}
             {renderMenuItem("appointments", UpcomingIcon, "Appointments")}
             {renderMenuItem("past", PastIcon, "History")}
-            {renderMenuItem("classRecord", ClassRecorderIcon, "Class Record")}
+            <div className="hidden md:block">
+              {renderMenuItem("classRecord", ClassRecorderIcon, "Class Record")}
+            </div>
           </ul>
         )}
 
