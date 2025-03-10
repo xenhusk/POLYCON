@@ -89,7 +89,7 @@ const EnrollmentPopup = () => {
                   `} 
         title="Enroll Students"
       >
-        <div className={`w-8 h-8 ${iconSize}`}>
+        <div className={`w-10 h-10 md:w-8 md:h-8 ${iconSize}`}>
           <EnrollmentIcon />
         </div>
       </button>
