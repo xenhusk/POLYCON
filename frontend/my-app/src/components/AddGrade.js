@@ -607,7 +607,7 @@ export default function AddGrade() {
   };
 
   return (
-    <div className="max-w-9xl mx-auto p-6 bg-white fade-in">
+    <div className="w-[24rem] md:w-[47rem] lg:w-[64rem] xl:w-[96%] mx-auto p-2 sm:p-3 bg-white fade-in">
       {/* Updated toast message display */}
       {message.content && (
         <div className={`fixed top-5 right-5 p-4 rounded-lg shadow-lg z-50 ${
@@ -619,49 +619,50 @@ export default function AddGrade() {
         </div>
       )}
 
-      <div className="max-w-9xl mx-auto p-4 bg-white mt-6">
-        <h2 className="text-3xl font-bold text-center text-[#0065A8] mb-4 fade-in delay-100">
+      <div className="w-full mx-auto p-2 sm:p-4 bg-white mt-2 sm:mt-4 flex flex-col justify-center">
+        <h2 className="relative top-0 text-2xl sm:text-3xl font-bold text-center text-[#0065A8] mb-2 fade-in delay-100">
           Grade Management
         </h2>
 
-        {/* Search and Filter Section */}
-        <div className="mt-4 fade-in delay-200">
-          <div className="flex items-center justify-center space-x-2 w-full">
+        {/* Search and Filter Section - Updated for better mobile layout */}
+        <div className="mt-4 fade-in delay-200 z-50 flex justify-center">
+          <div className="flex flex-col sm:flex-row gap-3 w-full lg:w-[60%]">
             {/* Search Input Container */}
-            <div className="relative border border-gray-300 rounded-lg px-3 py-2 shadow-md flex flex-wrap items-center min-h-[42px]">
-              {/* Display Selected Students Inside the Input Field */}
-              {selectedFilterStudents.map((student) => (
-                <div
-                  key={student.studentID}
-                  className="bg-gray-200 text-gray-700 px-2 py-1 mr-2 mb-1 rounded flex items-center"
-                >
-                  {student.name}
-                  <span
-                    onClick={() => handleRemoveFilterStudent(student.studentID)}
-                    className="ml-2 cursor-pointer text-gray-500 hover:text-gray-700"
-                  >
-                    ×
-                  </span>
+            <div className="relative w-full">
+              <div className="border border-gray-300 rounded-lg px-3 py-2 shadow-md flex flex-wrap items-center min-h-[42px] w-full">
+                <div className="flex flex-wrap gap-1 w-full">
+                  {selectedFilterStudents.map((student) => (
+                    <div
+                      key={student.studentID}
+                      className="bg-gray-200 text-gray-700 px-2 py-1 rounded flex items-center text-sm mb-1"
+                    >
+                      <span className="truncate max-w-[150px]">{student.name}</span>
+                      <span
+                        onClick={() => handleRemoveFilterStudent(student.studentID)}
+                        className="ml-1 cursor-pointer text-gray-500 hover:text-gray-700"
+                      >
+                        ×
+                      </span>
+                    </div>
+                  ))}
+                  <input
+                    type="text"
+                    value={filterStudentQuery}
+                    onChange={handleFilterStudentQueryChange}
+                    placeholder="Search by Name"
+                    className="border-none focus:ring-0 outline-none flex-1 min-w-[120px] text-sm py-1"
+                  />
                 </div>
-              ))}
+              </div>
 
-              {/* Search Input (Fixed Width) */}
-              <input
-                type="text"
-                value={filterStudentQuery}
-                onChange={handleFilterStudentQueryChange}
-                placeholder="Search by Name"
-                className="border-none focus:ring-0 outline-none w-[25rem]"
-              />
-
-              {/* Dropdown Suggestions Below Input Field */}
+              {/* Dropdown Suggestions */}
               {filterStudentSuggestions.length > 0 && (
-                <ul className="absolute left-0 right-0 bg-white text-black border border-gray-300 rounded-lg mt-1 max-h-40 overflow-y-auto shadow-lg z-10">
+                <ul className="absolute left-0 right-0 top-full mt-1 bg-white border border-gray-300 rounded-lg max-h-40 overflow-y-auto shadow-lg z-[60]">
                   {filterStudentSuggestions.map((student) => (
                     <li
                       key={student.studentID}
                       onClick={() => handleSelectFilterStudent(student)}
-                      className="px-4 py-2 cursor-pointer hover:bg-gray-200"
+                      className="px-3 py-2 cursor-pointer hover:bg-gray-100 text-sm"
                     >
                       {student.name}
                     </li>
@@ -670,11 +671,10 @@ export default function AddGrade() {
               )}
             </div>
 
-            {/* Buttons */}
-            <div className="flex space-x-2">
-              {/* Search Button */}
+            {/* Buttons Container */}
+            <div className="flex gap-3 w-full sm:w-auto">
               <button 
-                className={`bg-[#057DCD] text-white px-6 py-2 rounded-lg shadow-md hover:bg-[#54BEFF] transition 
+                className={`flex-1 sm:flex-none bg-[#057DCD] text-white px-6 py-2 rounded-lg shadow-md hover:bg-[#54BEFF] transition text-sm
                   ${SearchClicked ? "scale-90" : "scale-100"}`}
                 onClick={() => {
                   setSearchClicked(true);
@@ -685,14 +685,13 @@ export default function AddGrade() {
                 Search
               </button>
 
-              {/* Filter Button */}
               <button
                 onClick={() => {
                   setFilterClicked(true);
                   setTimeout(() => setFilterClicked(false), 300);
                   setShowFilters(!showFilters);
                 }}
-                className={`bg-[#057DCD] text-white p-3 rounded-full shadow-md flex items-center justify-center hover:bg-[#54BEFF] transition
+                className={`w-12 md:w-12 lg:w-auto bg-[#057DCD] text-white p-2 rounded-lg shadow-md flex items-center justify-center hover:bg-[#54BEFF] transition
                   ${FilterClicked ? "scale-90" : "scale-100"}`}
               >
                 <FilterIcon className="w-5 h-5" />
@@ -704,10 +703,10 @@ export default function AddGrade() {
         {/* Filter Panel */}
         <div className="relative">
           {showFilters && (
-            <div className="absolute right-20 mt-2 mr-60 w-80 rounded-xl shadow-2xl overflow-hidden z-40">
+            <div className="absolute right-0 sm:right-20 lg:right-64 mt-1 w-full sm:w-80 rounded-xl shadow-2xl overflow-hidden z-40 max-h-[75vh] sm:max-h-[75vh] lg:max-h-[78vh] flex flex-col">
               {/* Filter Header */}
-              <div className="bg-[#0065A8] px-6 py-4 flex justify-between items-center">
-                <h3 className="text-xl font-semibold text-white">FILTERS</h3>
+              <div className="bg-[#0065A8] px-4 md:px-6 py-3 md:py-4 flex justify-between items-center flex-shrink-0">
+                <h3 className="text-lg md:text-xl font-semibold text-white">FILTERS</h3>
                 <button
                   onClick={handleResetFilters}
                   className="text-white hover:text-gray-200 transition-transform hover:scale-110"
@@ -717,12 +716,12 @@ export default function AddGrade() {
                 </button>
               </div>
 
-              {/* Filter Content */}
-              <div className="bg-white p-6 space-y-4">
+              {/* Filter Content - Made scrollable */}
+              <div className="bg-white p-4 md:p-6 space-y-4 overflow-y-auto">
                 {/* Period Filter */}
-                <div>
+                <div className="min-h-fit">
                   <label className="block text-sm font-medium text-gray-700 mb-2">Period</label>
-                  <div className="max-h-40 overflow-y-auto border-2 border-[#0065A8] rounded-lg">
+                  <div className="max-h-32 sm:max-h-40 overflow-y-auto border-2 border-[#0065A8] rounded-lg">
                     {["Prelim", "Midterm", "Pre-Final", "Final"].map((period) => (
                       <div key={period} className="px-2 py-1">
                         <label className={`flex items-center p-2 rounded-lg transition-colors duration-200
@@ -747,7 +746,7 @@ export default function AddGrade() {
                   </div>
                 </div>
 
-                {/* Course Filter */}
+                {/* Other filters remain the same */}
                 <div>
                   <label className="block text-sm font-medium text-gray-700 mb-2">Course</label>
                   <input
@@ -795,144 +794,139 @@ export default function AddGrade() {
           )}
         </div>
 
-        {/* Table Section */}
-        <div className="mt-4 shadow-md overflow-hidden rounded-lg fade-in delay-300">
-          {/* Table Header */}
+        {/* Table Section - Unified table structure */}
+        <div className="mt-4 shadow-md overflow-hidden rounded-lg fade-in delay-300 relative z-0">
           <div className="overflow-x-auto">
-            <table className="w-full bg-white text-center">
-              <thead className="bg-[#0065A8] text-white">
-                <tr className="border-b">
-                  <th className="px-4 py-3 w-[150px] min-w-[120px]">Student ID</th>
-                  <th className="px-4 py-3 w-[200px] min-w-[180px]">Student Name</th>
-                  <th className="px-4 py-3 w-[350px] min-w-[200px]">Course</th>
-                  <th className="px-4 py-3 w-[140px] min-w-[100px]">Grade</th>
-                  <th className="px-4 py-3 w-[150px] min-w-[120px]">Period</th>
-                  <th className="px-4 py-3 w-[180px] min-w-[150px]">School Year</th>
-                  <th className="px-4 py-3 w-[120px] min-w-[100px]">Semester</th>
-                  <th className="px-4 py-3 w-[160px] min-w-[140px]">Remarks</th>
-                  <th className="px-4 py-3 pr-7 w-[100px] min-w-[80px] text-center">Actions</th>
-                </tr>
-              </thead>
-            </table>
-          </div>
-
-          {/* Table Body */}
-          <div className="max-h-80 overflow-y-scroll">
-            <table className="w-full bg-white text-center">
-              <tbody>
-                {/* Replace the plain text row with skeleton rows */}
-                {(isLoading || isFiltering) ? (
-                  Array.from({ length: 5 }).map((_, index) => (
-                    <tr key={index} className="animate-pulse border-b">
-                      <td className="px-4 py-3 w-[150px]">
-                        <div className="h-4 bg-gray-200 rounded mx-auto w-20"></div>
-                      </td>
-                      <td className="px-4 py-3 w-[200px]">
-                        <div className="h-4 bg-gray-200 rounded mx-auto w-28"></div>
-                      </td>
-                      <td className="px-4 py-3 w-[350px]">
-                        <div className="h-4 bg-gray-200 rounded mx-auto w-32"></div>
-                      </td>
-                      <td className="px-4 py-3 w-[140px]">
-                        <div className="h-4 bg-gray-200 rounded mx-auto w-12"></div>
-                      </td>
-                      <td className="px-4 py-3 w-[150px]">
-                        <div className="h-4 bg-gray-200 rounded mx-auto w-16"></div>
-                      </td>
-                      <td className="px-4 py-3 w-[180px]">
-                        <div className="h-4 bg-gray-200 rounded mx-auto w-24"></div>
-                      </td>
-                      <td className="px-4 py-3 w-[120px]">
-                        <div className="h-4 bg-gray-200 rounded mx-auto w-12"></div>
-                      </td>
-                      <td className="px-4 py-3 w-[160px]">
-                        <div className="h-4 bg-gray-200 rounded mx-auto w-20"></div>
-                      </td>
-                      <td className="px-4 py-3 w-[100px]">
-                        <div className="flex justify-center space-x-2">
-                          <div className="h-5 w-5 bg-gray-300 rounded"></div>
-                          <div className="h-5 w-5 bg-gray-300 rounded"></div>
-                        </div>
-                      </td>
-                    </tr>
-                  ))
-                ) : filteredGrades.length > 0 ? (
-                  filteredGrades.map((gradeData) => {
-                    const grade = sanitizeGrade(gradeData);
-                    if (!grade) return null;
-              
-                    return (
-                      <tr
-                        key={grade.id}
-                        className="border-b hover:bg-gray-100 align-middle"
-                      >
-                        <td className="px-4 py-3 w-[150px] min-w-[120px]">{String(grade.studentID)}</td>
-                        <td className="px-4 py-3 w-[200px] min-w-[180px]">{String(grade.studentName)}</td>
-                        <td className="px-4 py-3 w-[350px] min-w-[200px]">{String(grade.courseName)}</td>
-                        <td className="px-4 py-3 w-[140px] min-w-[100px]">{String(grade.grade)}</td>
-                        <td className="px-4 py-3 w-[150px] min-w-[120px]">{String(grade.period)}</td>
-                        <td className="px-4 py-3 w-[180px] min-w-[150px]">{String(grade.school_year)}</td>
-                        <td className="px-4 py-3 w-[120px] min-w-[100px]">{String(grade.semester)}</td>
-                        <td className={`px-4 py-3 w-[160px] min-w-[140px] ${
-                          grade.remarks === "PASSED" ? "text-green-500" : "text-red-500"
-                        }`}>
-                          {String(grade.remarks)}
+            <div className="max-h-[500px] overflow-y-auto">
+              <table className="w-full bg-white text-center" style={{ minWidth: '1200px' }}>
+                <thead className="bg-[#0065A8] text-white sticky top-0 z-10">
+                  <tr className="border-b">
+                    <th className="px-4 py-3 min-w-[120px]">Student ID</th>
+                    <th className="px-4 py-3 min-w-[180px]">Student Name</th>
+                    <th className="px-4 py-3 min-w-[200px]">Course</th>
+                    <th className="px-4 py-3 min-w-[100px]">Grade</th>
+                    <th className="px-4 py-3 min-w-[120px]">Period</th>
+                    <th className="px-4 py-3 min-w-[150px]">School Year</th>
+                    <th className="px-4 py-3 min-w-[100px]">Semester</th>
+                    <th className="px-4 py-3 min-w-[140px]">Remarks</th>
+                    <th className="px-4 py-3 pr-7 min-w-[80px] text-center">Actions</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {/* Your existing tbody content */}
+                  {(isLoading || isFiltering) ? (
+                    Array.from({ length: 5 }).map((_, index) => (
+                      <tr key={index} className="animate-pulse border-b">
+                        <td className="px-4 py-3 w-[150px]">
+                          <div className="h-4 bg-gray-200 rounded mx-auto w-20"></div>
                         </td>
-                        <td className="align-middle px-4 py-3 w-[100px] min-w-[80px] space-x-3">
-                          <div className="flex items-center justify-center h-full space-x-3">
-                            <button
-                              className={`text-gray-500 hover:text-gray-700 ${
-                                EditClicked ? "scale-90" : "scale-100"}`}
-                              onClick={() => {
-                                setEditClicked(true);
-                                setTimeout(() => setEditClicked(false), 300);
-                                handleEditGrade(gradeData);
-                              }}
-                            >
-                              <EditIcon className="w-5 h-5 inline-block" />
-                            </button>
-                            <button
-                              className={`text-gray-500 hover:text-gray-700 ${
-                                DeleteClicked ? "scale-90" : "scale-100"}`}
-                              onClick={() => {
-                                setDeleteClicked(true);
-                                setTimeout(() => setDeleteClicked(false), 300);
-                                handleDeleteGrade(grade.id);
-                              }}
-                            >
-                              <DeleteIcon className="w-5 h-5 inline-block" />
-                            </button>
+                        <td className="px-4 py-3 w-[200px]">
+                          <div className="h-4 bg-gray-200 rounded mx-auto w-28"></div>
+                        </td>
+                        <td className="px-4 py-3 w-[350px]">
+                          <div className="h-4 bg-gray-200 rounded mx-auto w-32"></div>
+                        </td>
+                        <td className="px-4 py-3 w-[140px]">
+                          <div className="h-4 bg-gray-200 rounded mx-auto w-12"></div>
+                        </td>
+                        <td className="px-4 py-3 w-[150px]">
+                          <div className="h-4 bg-gray-200 rounded mx-auto w-16"></div>
+                        </td>
+                        <td className="px-4 py-3 w-[180px]">
+                          <div className="h-4 bg-gray-200 rounded mx-auto w-24"></div>
+                        </td>
+                        <td className="px-4 py-3 w-[120px]">
+                          <div className="h-4 bg-gray-200 rounded mx-auto w-12"></div>
+                        </td>
+                        <td className="px-4 py-3 w-[160px]">
+                          <div className="h-4 bg-gray-200 rounded mx-auto w-20"></div>
+                        </td>
+                        <td className="px-4 py-3 w-[100px]">
+                          <div className="flex justify-center space-x-2">
+                            <div className="h-5 w-5 bg-gray-300 rounded"></div>
+                            <div className="h-5 w-5 bg-gray-300 rounded"></div>
                           </div>
                         </td>
                       </tr>
-                    );
-                  })
-                ) : (
-                  <tr>
-                    <td colSpan="9" className="px-6 py-4 text-center text-gray-500">
-                      No grades found
-                    </td>
-                  </tr>
-                )}
-              </tbody>
-            </table>
+                    ))
+                  ) : filteredGrades.length > 0 ? (
+                    filteredGrades.map((gradeData) => {
+                      const grade = sanitizeGrade(gradeData);
+                      if (!grade) return null;
+                
+                      return (
+                        <tr
+                          key={grade.id}
+                          className="border-b hover:bg-gray-100 align-middle"
+                        >
+                          <td className="px-4 py-3 w-[150px] min-w-[120px]">{String(grade.studentID)}</td>
+                          <td className="px-4 py-3 w-[200px] min-w-[180px]">{String(grade.studentName)}</td>
+                          <td className="px-4 py-3 w-[350px] min-w-[200px]">{String(grade.courseName)}</td>
+                          <td className="px-4 py-3 w-[140px] min-w-[100px]">{String(grade.grade)}</td>
+                          <td className="px-4 py-3 w-[150px] min-w-[120px]">{String(grade.period)}</td>
+                          <td className="px-4 py-3 w-[180px] min-w-[150px]">{String(grade.school_year)}</td>
+                          <td className="px-4 py-3 w-[120px] min-w-[100px]">{String(grade.semester)}</td>
+                          <td className={`px-4 py-3 w-[160px] min-w-[140px] ${
+                            grade.remarks === "PASSED" ? "text-green-500" : "text-red-500"
+                          }`}>
+                            {String(grade.remarks)}
+                          </td>
+                          <td className="align-middle px-4 py-3 w-[100px] min-w-[80px] space-x-3">
+                            <div className="flex items-center justify-center h-full space-x-3">
+                              <button
+                                className={`text-gray-500 hover:text-gray-700 ${
+                                  EditClicked ? "scale-90" : "scale-100"}`}
+                                onClick={() => {
+                                  setEditClicked(true);
+                                  setTimeout(() => setEditClicked(false), 300);
+                                  handleEditGrade(gradeData);
+                                }}
+                              >
+                                <EditIcon className="w-5 h-5 inline-block" />
+                              </button>
+                              <button
+                                className={`text-gray-500 hover:text-gray-700 ${
+                                  DeleteClicked ? "scale-90" : "scale-100"}`}
+                                onClick={() => {
+                                  setDeleteClicked(true);
+                                  setTimeout(() => setDeleteClicked(false), 300);
+                                  handleDeleteGrade(grade.id);
+                                }}
+                              >
+                                <DeleteIcon className="w-5 h-5 inline-block" />
+                              </button>
+                            </div>
+                          </td>
+                        </tr>
+                      );
+                    })
+                  ) : (
+                    <tr>
+                      <td colSpan="9" className="px-6 py-4 text-center text-gray-500">
+                        No grades found
+                      </td>
+                    </tr>
+                  )}
+                </tbody>
+              </table>
+            </div>
           </div>
         </div>
 
-        {/* Form Section */}
-        <div className="mt-6 shadow-md rounded-lg p-2 bg-white">
-          <div className="flex items-center justify-between space-x-4">
+        {/* Form Section - Updated grid layout for tablet */}
+        <div className="mt-6 shadow-md rounded-lg p-2 md:p-3 lg:p-4 bg-white">
+          <div className="grid grid-cols-1 md:grid-cols-7 gap-2 md:gap-3 lg:gap-4">
             {/* Student Name Input */}
-            <div className="relative flex-grow">
+            <div className="relative col-span-1 md:col-span-1">
               <input
                 type="text"
                 placeholder="Student Name"
                 value={studentName}
                 onChange={handleStudentNameChange}
-                className=" rounded-lg px-4 py-2 w-full outline-none focus:ring focus:ring-blue-300 focus:border-blue-500"
+                className="rounded-lg px-4 py-2 w-full outline-none focus:ring focus:ring-blue-300 focus:border-blue-500"
               />
               {filteredStudents.length > 0 && (
-                <ul className="absolute z-10 bg-white border border-gray-300 rounded-lg mt-1 max-h-40 overflow-y-auto w-full shadow-lg">
+                <ul className="absolute z-[70] bg-white border border-gray-300 rounded-lg mt-1 max-h-40 overflow-y-auto w-full shadow-lg">
                   {filteredStudents.map((student) => (
                     <li
                       key={student.studentID}
@@ -946,11 +940,11 @@ export default function AddGrade() {
               )}
             </div>
 
-            {/* Course Selection */}
+            {/* Rest of the form inputs with consistent col-span-1 */}
             <select
               value={courseID}
               onChange={(e) => setCourseID(e.target.value)}
-              className=" rounded-lg px-4 py-2 w-[200px] focus:ring focus:ring-blue-300 focus:border-blue-500"
+              className="col-span-1 rounded-lg px-4 py-2 w-full focus:ring focus:ring-blue-300 focus:border-blue-500"
             >
               <option value="">Course</option>
               {courses.map((course) => (
@@ -960,22 +954,20 @@ export default function AddGrade() {
               ))}
             </select>
 
-            {/* Semester Selection */}
             <select
               value={semester}
               onChange={(e) => setSemester(e.target.value)}
-              className=" rounded-lg px-4 py-2 w-[200px] focus:ring focus:ring-blue-400 focus:border-blue-500"
+              className="col-span-1 rounded-lg px-4 py-2 w-full focus:ring focus:ring-blue-400 focus:border-blue-500"
             >
               <option value="">Semester</option>
               <option value="1st">1st</option>
               <option value="2nd">2nd</option>
             </select>
 
-            {/* Period Selection */}
             <select
               value={period}
               onChange={(e) => setPeriod(e.target.value)}
-              className=" rounded-lg px-4 py-2 w-[200px] focus:ring focus:ring-blue-400 focus:border-blue-500"
+              className="col-span-1 rounded-lg px-4 py-2 w-full focus:ring focus:ring-blue-400 focus:border-blue-500"
             >
               <option value="">Period</option>
               <option value="Prelim">Prelim</option>
@@ -984,66 +976,65 @@ export default function AddGrade() {
               <option value="Final">Final</option>
             </select>
 
-            {/* Grade Input */}
             <input
               type="number"
               placeholder="Grade"
               value={grade}
               onChange={(e) => setGrade(e.target.value)}
-              className="rounded-lg px-4 py-2 w-[150px] text-center focus:outline-none focus:ring focus:ring-blue-400 focus:border-blue-500"
+              className="col-span-1 rounded-lg px-4 py-2 w-full text-center focus:outline-none focus:ring focus:ring-blue-400 focus:border-blue-500"
             />
 
-            {/* School Year Selection */}
             <input
               type="text"
               placeholder="YYYY-YYYY"
               value={schoolYear}
               onChange={(e) => handleSchoolYearChange(e)}
-              className="rounded-lg px-4 py-2 w-[200px] text-center focus:outline-none focus:ring focus:ring-blue-400 focus:border-blue-500"
+              className="col-span-1 rounded-lg px-4 py-2 w-full text-center focus:outline-none focus:ring focus:ring-blue-400 focus:border-blue-500"
             />
 
-            {/* Submit / Update Button */}
-            <button
-              onClick={() => {
-                setSubmitClicked(true); 
-                setTimeout(() => { setSubmitClicked(false); 
-                  setTimeout(() => {
-                    if (selectedGradeID) {
-                      // Update grade
-                      handleUpdateGrade();
-                    } else {
-                      // Submit new grade
-                      handleSubmitGrade();
-                    } 
-                  }, 500);
-                }, 200);
-              }}
-              className={`px-4 py-2 rounded-lg text-white shadow-md 
-                ${SubmitClicked ? "scale-90" : "scale-100"}
-                ${selectedGradeID
-                  ? "bg-yellow-400 hover:bg-yellow-300"
-                  : "bg-[#057DCD] hover:bg-[#54BEFF] focus:outline-none focus:ring focus:ring-blue-500 focus:border-blue-500 transition duration-300"
-              }`}
-            >
-              {selectedGradeID ? "Update" : "Submit"}
-            </button>
-
-            {/* Cancel Button (Only if Editing) */}
-            {selectedGradeID && (
+            {/* Button Container */}
+            <div className="col-span-1 flex gap-2 md:justify-end">
               <button
                 onClick={() => {
-                  setCancelClicked(true); 
-                  setTimeout(() => { setCancelClicked(false); 
-                    setTimeout(() => handleCancelEdit(), 
-                    500);
+                  setSubmitClicked(true); 
+                  setTimeout(() => { setSubmitClicked(false); 
+                    setTimeout(() => {
+                      if (selectedGradeID) {
+                        // Update grade
+                        handleUpdateGrade();
+                      } else {
+                        // Submit new grade
+                        handleSubmitGrade();
+                      } 
+                    }, 500);
                   }, 200);
                 }}
-                className={`bg-gray-500 text-white px-4 py-2 rounded-lg transition-colors hover:bg-gray-400 
-                  ${CancelClicked ? "scale-90" : "scale-100"}`}
+                className={`flex-1 md:flex-initial px-4 py-2 rounded-lg text-white shadow-md 
+                  ${SubmitClicked ? "scale-90" : "scale-100"}
+                  ${selectedGradeID
+                    ? "bg-yellow-400 hover:bg-yellow-300"
+                    : "bg-[#057DCD] hover:bg-[#54BEFF] focus:outline-none focus:ring focus:ring-blue-500 focus:border-blue-500 transition duration-300"
+                }`}
               >
-                Cancel
+                {selectedGradeID ? "Update" : "Submit"}
               </button>
-            )}
+
+              {selectedGradeID && (
+                <button
+                  onClick={() => {
+                    setCancelClicked(true); 
+                    setTimeout(() => { setCancelClicked(false); 
+                      setTimeout(() => handleCancelEdit(), 
+                      500);
+                    }, 200);
+                  }}
+                  className={`flex-1 md:flex-initial bg-gray-500 text-white px-4 py-2 rounded-lg transition-colors hover:bg-gray-400 
+                    ${CancelClicked ? "scale-90" : "scale-100"}`}
+                >
+                  Cancel
+                </button>
+              )}
+            </div>
           </div>
         </div>
       </div>
