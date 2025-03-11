@@ -3,7 +3,7 @@ import { ReactComponent as DeleteIcon } from "./icons/delete.svg";
 import { ReactComponent as EditIcon } from "./icons/Edit.svg";
 import { ReactComponent as FilterIcon } from "./icons/FilterAdd.svg";
 import { ReactComponent as RedoIcon } from "./icons/redo.svg"; // Add this import
-import './transitions.css';
+import "./transitions.css";
 
 export default function AddGrade() {
   const [studentID, setStudentID] = useState("");
@@ -50,7 +50,9 @@ export default function AddGrade() {
     // Add this new fetch for latest semester defaults
     const fetchLatestSemester = async () => {
       try {
-        const response = await fetch('http://localhost:5001/semester/get_latest_filter');
+        const response = await fetch(
+          "http://localhost:5001/semester/get_latest_filter"
+        );
         if (response.ok) {
           const data = await response.json();
           setSchoolYear(data.school_year);
@@ -60,7 +62,7 @@ export default function AddGrade() {
           setSemesterFilter(data.semester);
         }
       } catch (error) {
-        console.error('Error fetching latest semester:', error);
+        console.error("Error fetching latest semester:", error);
       }
     };
 
@@ -81,9 +83,11 @@ export default function AddGrade() {
     setIsLoading(true);
     try {
       // First get the latest semester info
-      const latestSemesterResponse = await fetch('http://localhost:5001/semester/get_latest_filter');
+      const latestSemesterResponse = await fetch(
+        "http://localhost:5001/semester/get_latest_filter"
+      );
       const latestSemesterData = await latestSemesterResponse.json();
-      
+
       // Set both form and filter values
       setSchoolYear(latestSemesterData.school_year);
       setSemester(latestSemesterData.semester);
@@ -94,53 +98,69 @@ export default function AddGrade() {
       const cachedCourses = localStorage.getItem("courses");
 
       // Fetch ALL grades for this teacher without semester filter
-      const gradesUrl = new URL('http://localhost:5001/grade/get_grades');
-      gradesUrl.searchParams.append('facultyID', localStorage.getItem("teacherID"));
+      const gradesUrl = new URL("http://localhost:5001/grade/get_grades");
+      gradesUrl.searchParams.append(
+        "facultyID",
+        localStorage.getItem("teacherID")
+      );
 
       let gradesData; // Declare gradesData here
 
       if (cachedStudents && cachedCourses) {
         setStudents(JSON.parse(cachedStudents));
         setCourses(JSON.parse(cachedCourses));
-        
+
         // Fetch all grades
         const gradesResponse = await fetch(gradesUrl);
         gradesData = await gradesResponse.json(); // Assign to gradesData
-        
+
         // Store all grades
         setGrades(Array.isArray(gradesData) ? gradesData : []);
-        
+
         // Filter to show only latest semester grades initially
-        const filteredGradesData = (Array.isArray(gradesData) ? gradesData : []).filter(grade => 
-          grade.school_year === latestSemesterData.school_year && 
-          grade.semester === latestSemesterData.semester
+        const filteredGradesData = (
+          Array.isArray(gradesData) ? gradesData : []
+        ).filter(
+          (grade) =>
+            grade.school_year === latestSemesterData.school_year &&
+            grade.semester === latestSemesterData.semester
         );
-        
+
         setFilteredGrades(filteredGradesData);
       } else {
-        const [studentsResponse, gradesResponse, coursesResponse] = await Promise.all([
-          fetch("http://localhost:5001/grade/get_students"),
-          fetch(gradesUrl),
-          fetch(`http://localhost:5001/course/get_courses?facultyID=${localStorage.getItem("teacherID")}`)
-        ]);
+        const [studentsResponse, gradesResponse, coursesResponse] =
+          await Promise.all([
+            fetch("http://localhost:5001/grade/get_students"),
+            fetch(gradesUrl),
+            fetch(
+              `http://localhost:5001/course/get_courses?facultyID=${localStorage.getItem(
+                "teacherID"
+              )}`
+            ),
+          ]);
 
         const studentsData = await studentsResponse.json();
         gradesData = await gradesResponse.json(); // Assign to gradesData
         const coursesData = await coursesResponse.json();
 
         setStudents(Array.isArray(studentsData) ? studentsData : []);
-        
+
         // Store all grades
         setGrades(Array.isArray(gradesData) ? gradesData : []);
-        
+
         // Filter to show only latest semester grades initially
-        const filteredGradesData = (Array.isArray(gradesData) ? gradesData : []).filter(grade => 
-          grade.school_year === latestSemesterData.school_year && 
-          grade.semester === latestSemesterData.semester
+        const filteredGradesData = (
+          Array.isArray(gradesData) ? gradesData : []
+        ).filter(
+          (grade) =>
+            grade.school_year === latestSemesterData.school_year &&
+            grade.semester === latestSemesterData.semester
         );
-        
+
         setFilteredGrades(filteredGradesData);
-        setCourses(Array.isArray(coursesData.courses) ? coursesData.courses : []);
+        setCourses(
+          Array.isArray(coursesData.courses) ? coursesData.courses : []
+        );
 
         // Update cache
         localStorage.setItem("students", JSON.stringify(studentsData));
@@ -149,9 +169,14 @@ export default function AddGrade() {
       }
 
       // Move this after we have gradesData
-      const uniqueYears = [...new Set((Array.isArray(gradesData) ? gradesData : []).map(grade => grade.school_year))];
+      const uniqueYears = [
+        ...new Set(
+          (Array.isArray(gradesData) ? gradesData : []).map(
+            (grade) => grade.school_year
+          )
+        ),
+      ];
       setUniqueSchoolYears(uniqueYears);
-
     } catch (error) {
       console.error("Error fetching initial data:", error);
       setMessage({ type: "error", content: "Error loading grades" });
@@ -191,27 +216,39 @@ export default function AddGrade() {
             <button
               onClick={async () => {
                 try {
-                  const response = await fetch("http://localhost:5001/grade/delete_grade", {
-                    method: "POST",
-                    headers: { "Content-Type": "application/json" },
-                    body: JSON.stringify({ gradeID: gradeDocID }),
-                  });
-            
+                  const response = await fetch(
+                    "http://localhost:5001/grade/delete_grade",
+                    {
+                      method: "POST",
+                      headers: { "Content-Type": "application/json" },
+                      body: JSON.stringify({ gradeID: gradeDocID }),
+                    }
+                  );
+
                   if (response.ok) {
-                    setGrades(prevGrades => 
-                      prevGrades.filter(grade => grade.id !== gradeDocID)
+                    setGrades((prevGrades) =>
+                      prevGrades.filter((grade) => grade.id !== gradeDocID)
                     );
-                    setFilteredGrades(prevFiltered => 
-                      prevFiltered.filter(grade => grade.id !== gradeDocID)
+                    setFilteredGrades((prevFiltered) =>
+                      prevFiltered.filter((grade) => grade.id !== gradeDocID)
                     );
-                    setMessage({ type: "success", content: "Grade deleted successfully" });
+                    setMessage({
+                      type: "success",
+                      content: "Grade deleted successfully",
+                    });
                   } else {
                     const result = await response.json();
-                    setMessage({ type: "error", content: "Failed to delete grade: " + result.error });
+                    setMessage({
+                      type: "error",
+                      content: "Failed to delete grade: " + result.error,
+                    });
                   }
                 } catch (error) {
                   console.error("Error deleting grade:", error);
-                  setMessage({ type: "error", content: "Error deleting grade" });
+                  setMessage({
+                    type: "error",
+                    content: "Error deleting grade",
+                  });
                 }
                 setTimeout(() => setMessage({ type: "", content: "" }), 3000);
               }}
@@ -227,7 +264,7 @@ export default function AddGrade() {
             </button>
           </div>
         </div>
-      )
+      ),
     });
   };
 
@@ -261,7 +298,7 @@ export default function AddGrade() {
       setTimeout(() => setMessage({ type: "", content: "" }), 3000);
       return;
     }
-  
+
     try {
       const response = await fetch("http://localhost:5001/grade/edit_grade", {
         method: "POST",
@@ -277,7 +314,7 @@ export default function AddGrade() {
           semester,
         }),
       });
-  
+
       if (response.ok) {
         // Update local state immediately
         const updatedGrade = {
@@ -285,27 +322,31 @@ export default function AddGrade() {
           studentID,
           studentName,
           courseID,
-          courseName: courses.find(c => c.courseID === courseID)?.courseName || '',
+          courseName:
+            courses.find((c) => c.courseID === courseID)?.courseName || "",
           grade,
           period,
           school_year: schoolYear,
           semester,
-          remarks: determineRemarks(grade)
+          remarks: determineRemarks(grade),
         };
-  
-        setGrades(prevGrades => 
-          prevGrades.map(g => g.id === selectedGradeID ? updatedGrade : g)
+
+        setGrades((prevGrades) =>
+          prevGrades.map((g) => (g.id === selectedGradeID ? updatedGrade : g))
         );
-        setFilteredGrades(prevFiltered => 
-          prevFiltered.map(g => g.id === selectedGradeID ? updatedGrade : g)
+        setFilteredGrades((prevFiltered) =>
+          prevFiltered.map((g) => (g.id === selectedGradeID ? updatedGrade : g))
         );
-  
+
         // Reset form and selected grade
         handleCancelEdit();
         setMessage({ type: "success", content: "Grade updated successfully" });
       } else {
         const result = await response.json();
-        setMessage({ type: "error", content: "Failed to update grade: " + result.error });
+        setMessage({
+          type: "error",
+          content: "Failed to update grade: " + result.error,
+        });
       }
     } catch (error) {
       console.error("❌ Error updating grade:", error);
@@ -345,12 +386,20 @@ export default function AddGrade() {
   };
 
   const handleSubmitGrade = async () => {
-    if (!studentID || !courseID || !grade || !period || !schoolYear || !semester || !facultyID) {
+    if (
+      !studentID ||
+      !courseID ||
+      !grade ||
+      !period ||
+      !schoolYear ||
+      !semester ||
+      !facultyID
+    ) {
       setMessage({ type: "error", content: "All fields are required" });
       setTimeout(() => setMessage({ type: "", content: "" }), 3000);
       return;
     }
-  
+
     try {
       const response = await fetch("http://localhost:5001/grade/add_grade", {
         method: "POST",
@@ -366,9 +415,9 @@ export default function AddGrade() {
           semester,
         }),
       });
-  
+
       const result = await response.json();
-  
+
       if (response.ok) {
         // Create new grade object with all necessary data
         const newGrade = {
@@ -376,18 +425,19 @@ export default function AddGrade() {
           studentID,
           studentName,
           courseID,
-          courseName: courses.find(c => c.courseID === courseID)?.courseName || '',
+          courseName:
+            courses.find((c) => c.courseID === courseID)?.courseName || "",
           grade,
           period,
           school_year: schoolYear,
           semester,
-          remarks: determineRemarks(grade)
+          remarks: determineRemarks(grade),
         };
-  
+
         // Update local state immediately
-        setGrades(prevGrades => [...prevGrades, newGrade]);
-        setFilteredGrades(prevFiltered => [...prevFiltered, newGrade]);
-  
+        setGrades((prevGrades) => [...prevGrades, newGrade]);
+        setFilteredGrades((prevFiltered) => [...prevFiltered, newGrade]);
+
         // Reset form
         setStudentID("");
         setStudentName("");
@@ -396,10 +446,13 @@ export default function AddGrade() {
         setPeriod("");
         setSchoolYear("2024-2025");
         setSemester("");
-  
+
         setMessage({ type: "success", content: "Grade added successfully" });
       } else {
-        setMessage({ type: "error", content: "Failed to add grade: " + result.error });
+        setMessage({
+          type: "error",
+          content: "Failed to add grade: " + result.error,
+        });
       }
     } catch (error) {
       console.error("❌ Error adding grade:", error);
@@ -418,21 +471,32 @@ export default function AddGrade() {
       // Immediately filter grades based on all current criteria
       const filtered = grades.filter((grade) => {
         // Period filter
-        if (updatedPeriods.length && !updatedPeriods.includes(grade.period)) return false;
-        
+        if (updatedPeriods.length && !updatedPeriods.includes(grade.period))
+          return false;
+
         // Course filter
-        if (courseFilter && !grade.courseName.toLowerCase().includes(courseFilter.toLowerCase())) return false;
-        
+        if (
+          courseFilter &&
+          !grade.courseName.toLowerCase().includes(courseFilter.toLowerCase())
+        )
+          return false;
+
         // School year filter
-        if (schoolYearFilter && grade.school_year !== schoolYearFilter) return false;
-        
+        if (schoolYearFilter && grade.school_year !== schoolYearFilter)
+          return false;
+
         // Semester filter
         if (semesterFilter && grade.semester !== semesterFilter) return false;
-        
+
         // Student filter
-        if (selectedFilterStudents.length && !selectedFilterStudents.some(
-          student => grade.studentName.toLowerCase() === student.name.toLowerCase()
-        )) return false;
+        if (
+          selectedFilterStudents.length &&
+          !selectedFilterStudents.some(
+            (student) =>
+              grade.studentName.toLowerCase() === student.name.toLowerCase()
+          )
+        )
+          return false;
 
         return true;
       });
@@ -449,21 +513,31 @@ export default function AddGrade() {
     // Immediately filter grades based on new school year
     const filtered = grades.filter((grade) => {
       // Period filter
-      if (selectedPeriods.length && !selectedPeriods.includes(grade.period)) return false;
-      
+      if (selectedPeriods.length && !selectedPeriods.includes(grade.period))
+        return false;
+
       // Course filter
-      if (courseFilter && !grade.courseName.toLowerCase().includes(courseFilter.toLowerCase())) return false;
-      
+      if (
+        courseFilter &&
+        !grade.courseName.toLowerCase().includes(courseFilter.toLowerCase())
+      )
+        return false;
+
       // School year filter
       if (selectedYear && grade.school_year !== selectedYear) return false;
-      
+
       // Semester filter
       if (semesterFilter && grade.semester !== semesterFilter) return false;
-      
+
       // Student filter
-      if (selectedFilterStudents.length && !selectedFilterStudents.some(
-        student => grade.studentName.toLowerCase() === student.name.toLowerCase()
-      )) return false;
+      if (
+        selectedFilterStudents.length &&
+        !selectedFilterStudents.some(
+          (student) =>
+            grade.studentName.toLowerCase() === student.name.toLowerCase()
+        )
+      )
+        return false;
 
       return true;
     });
@@ -478,21 +552,32 @@ export default function AddGrade() {
     // Immediately filter grades based on new semester
     const filtered = grades.filter((grade) => {
       // Period filter
-      if (selectedPeriods.length && !selectedPeriods.includes(grade.period)) return false;
-      
+      if (selectedPeriods.length && !selectedPeriods.includes(grade.period))
+        return false;
+
       // Course filter
-      if (courseFilter && !grade.courseName.toLowerCase().includes(courseFilter.toLowerCase())) return false;
-      
+      if (
+        courseFilter &&
+        !grade.courseName.toLowerCase().includes(courseFilter.toLowerCase())
+      )
+        return false;
+
       // School year filter
-      if (schoolYearFilter && grade.school_year !== schoolYearFilter) return false;
-      
+      if (schoolYearFilter && grade.school_year !== schoolYearFilter)
+        return false;
+
       // Semester filter
       if (selectedSemester && grade.semester !== selectedSemester) return false;
-      
+
       // Student filter
-      if (selectedFilterStudents.length && !selectedFilterStudents.some(
-        student => grade.studentName.toLowerCase() === student.name.toLowerCase()
-      )) return false;
+      if (
+        selectedFilterStudents.length &&
+        !selectedFilterStudents.some(
+          (student) =>
+            grade.studentName.toLowerCase() === student.name.toLowerCase()
+        )
+      )
+        return false;
 
       return true;
     });
@@ -540,46 +625,67 @@ export default function AddGrade() {
 
   // Add this helper function at the top level of your component
   const sanitizeGrade = (gradeData) => {
-    if (!gradeData || typeof gradeData !== 'object') return null;
-  
+    if (!gradeData || typeof gradeData !== "object") return null;
+
     // Extract only the required string/number values
     const sanitized = {
-      id: gradeData.id || gradeData.gradeID || '',
-      studentID: typeof gradeData.studentID === 'string' ? gradeData.studentID : '',
-      studentName: typeof gradeData.studentName === 'string' ? gradeData.studentName : '',
-      courseID: typeof gradeData.courseID === 'string' ? gradeData.courseID : '',
-      courseName: typeof gradeData.courseName === 'string' ? gradeData.courseName : '',
-      grade: typeof gradeData.grade === 'string' || typeof gradeData.grade === 'number' ? gradeData.grade : '',
-      period: typeof gradeData.period === 'string' ? gradeData.period : '',
-      school_year: typeof gradeData.school_year === 'string' ? gradeData.school_year : '',
-      semester: typeof gradeData.semester === 'string' ? gradeData.semester : '',
-      remarks: typeof gradeData.remarks === 'string' ? gradeData.remarks : ''
+      id: gradeData.id || gradeData.gradeID || "",
+      studentID:
+        typeof gradeData.studentID === "string" ? gradeData.studentID : "",
+      studentName:
+        typeof gradeData.studentName === "string" ? gradeData.studentName : "",
+      courseID:
+        typeof gradeData.courseID === "string" ? gradeData.courseID : "",
+      courseName:
+        typeof gradeData.courseName === "string" ? gradeData.courseName : "",
+      grade:
+        typeof gradeData.grade === "string" ||
+        typeof gradeData.grade === "number"
+          ? gradeData.grade
+          : "",
+      period: typeof gradeData.period === "string" ? gradeData.period : "",
+      school_year:
+        typeof gradeData.school_year === "string" ? gradeData.school_year : "",
+      semester:
+        typeof gradeData.semester === "string" ? gradeData.semester : "",
+      remarks: typeof gradeData.remarks === "string" ? gradeData.remarks : "",
     };
-  
+
     return sanitized;
   };
 
   // Remove the setTimeout from applyFilters function
   const applyFilters = () => {
     setIsFiltering(true);
-    
+
     const filtered = grades.filter((grade) => {
       // Period filter
-      if (selectedPeriods.length && !selectedPeriods.includes(grade.period)) return false;
-      
+      if (selectedPeriods.length && !selectedPeriods.includes(grade.period))
+        return false;
+
       // Course filter
-      if (courseFilter && !grade.courseName.toLowerCase().includes(courseFilter.toLowerCase())) return false;
-      
+      if (
+        courseFilter &&
+        !grade.courseName.toLowerCase().includes(courseFilter.toLowerCase())
+      )
+        return false;
+
       // School year filter
-      if (schoolYearFilter && grade.school_year !== schoolYearFilter) return false;
-      
+      if (schoolYearFilter && grade.school_year !== schoolYearFilter)
+        return false;
+
       // Semester filter
       if (semesterFilter && grade.semester !== semesterFilter) return false;
-      
+
       // Student filter
-      if (selectedFilterStudents.length && !selectedFilterStudents.some(
-        student => grade.studentName.toLowerCase() === student.name.toLowerCase()
-      )) return false;
+      if (
+        selectedFilterStudents.length &&
+        !selectedFilterStudents.some(
+          (student) =>
+            grade.studentName.toLowerCase() === student.name.toLowerCase()
+        )
+      )
+        return false;
 
       return true;
     });
@@ -610,11 +716,13 @@ export default function AddGrade() {
     <div className="w-[24rem] md:w-[47rem] lg:w-[64rem] xl:w-[96%] mx-auto p-2 sm:p-3 bg-white fade-in">
       {/* Updated toast message display */}
       {message.content && (
-        <div className={`fixed top-5 right-5 p-4 rounded-lg shadow-lg z-50 ${
-          message.type === "success" 
-            ? "bg-green-100 text-green-700" 
-            : "bg-red-100 text-red-700"
-        }`}>
+        <div
+          className={`fixed top-5 right-5 p-4 rounded-lg shadow-lg z-50 ${
+            message.type === "success"
+              ? "bg-green-100 text-green-700"
+              : "bg-red-100 text-red-700"
+          }`}
+        >
           {message.content}
         </div>
       )}
@@ -626,19 +734,23 @@ export default function AddGrade() {
 
         {/* Search and Filter Section - Updated for better mobile layout */}
         <div className="mt-4 fade-in delay-200 z-50 flex justify-center">
-          <div className="flex flex-col sm:flex-row gap-3 w-full lg:w-[60%]">
+          <div className="flex flex-col sm:flex-row gap-3 w-full lg:w-[60%] justify-center">
             {/* Search Input Container */}
-            <div className="relative w-full">
-              <div className="border border-gray-300 rounded-lg px-3 py-2 shadow-md flex flex-wrap items-center min-h-[42px] w-full">
-                <div className="flex flex-wrap gap-1 w-full">
+            <div className="relative w-full lg:w-[26rem]">
+              <div className="border border-gray-300 rounded-lg px-3 py-2 shadow-md flex flex-nowrap items-center min-h-[42px] w-full overflow-x-auto no-scrollbar">
+                <div className="flex gap-1 w-auto">
                   {selectedFilterStudents.map((student) => (
                     <div
                       key={student.studentID}
-                      className="bg-gray-200 text-gray-700 px-2 py-1 rounded flex items-center text-sm mb-1"
+                      className="bg-gray-200 text-gray-700 px-2 py-1 rounded flex items-center text-sm whitespace-nowrap"
                     >
-                      <span className="truncate max-w-[150px]">{student.name}</span>
+                      <span className="truncate max-w-[150px]">
+                        {student.name}
+                      </span>
                       <span
-                        onClick={() => handleRemoveFilterStudent(student.studentID)}
+                        onClick={() =>
+                          handleRemoveFilterStudent(student.studentID)
+                        }
                         className="ml-1 cursor-pointer text-gray-500 hover:text-gray-700"
                       >
                         ×
@@ -673,7 +785,7 @@ export default function AddGrade() {
 
             {/* Buttons Container */}
             <div className="flex gap-3 w-full sm:w-auto">
-              <button 
+              <button
                 className={`flex-1 sm:flex-none bg-[#057DCD] text-white px-6 py-2 rounded-lg shadow-md hover:bg-[#54BEFF] transition text-sm
                   ${SearchClicked ? "scale-90" : "scale-100"}`}
                 onClick={() => {
@@ -706,7 +818,9 @@ export default function AddGrade() {
             <div className="absolute right-0 sm:right-20 lg:right-64 mt-1 w-full sm:w-80 rounded-xl shadow-2xl overflow-hidden z-40 max-h-[75vh] sm:max-h-[75vh] lg:max-h-[78vh] flex flex-col">
               {/* Filter Header */}
               <div className="bg-[#0065A8] px-4 md:px-6 py-3 md:py-4 flex justify-between items-center flex-shrink-0">
-                <h3 className="text-lg md:text-xl font-semibold text-white">FILTERS</h3>
+                <h3 className="text-lg md:text-xl font-semibold text-white">
+                  FILTERS
+                </h3>
                 <button
                   onClick={handleResetFilters}
                   className="text-white hover:text-gray-200 transition-transform hover:scale-110"
@@ -720,35 +834,50 @@ export default function AddGrade() {
               <div className="bg-white p-4 md:p-6 space-y-4 overflow-y-auto">
                 {/* Period Filter */}
                 <div className="min-h-fit">
-                  <label className="block text-sm font-medium text-gray-700 mb-2">Period</label>
+                  <label className="block text-sm font-medium text-gray-700 mb-2">
+                    Period
+                  </label>
                   <div className="max-h-32 sm:max-h-40 overflow-y-auto border-2 border-[#0065A8] rounded-lg">
-                    {["Prelim", "Midterm", "Pre-Final", "Final"].map((period) => (
-                      <div key={period} className="px-2 py-1">
-                        <label className={`flex items-center p-2 rounded-lg transition-colors duration-200
-                        ${selectedPeriods.includes(period) 
-                          ? "bg-[#0065A8] text-white" 
-                          : "hover:bg-[#54BEFF] hover:text-white"}`}
-                        >
-                          <input
-                            type="checkbox"
-                            value={period}
-                            checked={selectedPeriods.includes(period)}
-                            onChange={() => handlePeriodFilterChange(period)}
-                            className="mr-3 h-4 w-4 accent-[#0065A8] border-gray-300 rounded
+                    {["Prelim", "Midterm", "Pre-Final", "Final"].map(
+                      (period) => (
+                        <div key={period} className="px-2 py-1">
+                          <label
+                            className={`flex items-center p-2 rounded-lg transition-colors duration-200
+                        ${
+                          selectedPeriods.includes(period)
+                            ? "bg-[#0065A8] text-white"
+                            : "hover:bg-[#54BEFF] hover:text-white"
+                        }`}
+                          >
+                            <input
+                              type="checkbox"
+                              value={period}
+                              checked={selectedPeriods.includes(period)}
+                              onChange={() => handlePeriodFilterChange(period)}
+                              className="mr-3 h-4 w-4 accent-[#0065A8] border-gray-300 rounded
                             checked:bg-[#0065A8] checked:hover:bg-[#54BEFF]"
-                          />
-                          <span className={selectedPeriods.includes(period) ? "text-white" : "text-gray-700"}>
-                            {period}
-                          </span>
-                        </label>
-                      </div>
-                    ))}
+                            />
+                            <span
+                              className={
+                                selectedPeriods.includes(period)
+                                  ? "text-white"
+                                  : "text-gray-700"
+                              }
+                            >
+                              {period}
+                            </span>
+                          </label>
+                        </div>
+                      )
+                    )}
                   </div>
                 </div>
 
                 {/* Other filters remain the same */}
                 <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-2">Course</label>
+                  <label className="block text-sm font-medium text-gray-700 mb-2">
+                    Course
+                  </label>
                   <input
                     type="text"
                     value={courseFilter}
@@ -761,7 +890,9 @@ export default function AddGrade() {
 
                 {/* School Year Filter */}
                 <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-2">School Year</label>
+                  <label className="block text-sm font-medium text-gray-700 mb-2">
+                    School Year
+                  </label>
                   <select
                     value={schoolYearFilter}
                     onChange={handleSchoolYearFilterChange}
@@ -770,14 +901,18 @@ export default function AddGrade() {
                   >
                     <option value="">All School Years</option>
                     {uniqueSchoolYears.map((year) => (
-                      <option key={year} value={year}>{year}</option>
+                      <option key={year} value={year}>
+                        {year}
+                      </option>
                     ))}
                   </select>
                 </div>
 
                 {/* Semester Filter */}
                 <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-2">Semester</label>
+                  <label className="block text-sm font-medium text-gray-700 mb-2">
+                    Semester
+                  </label>
                   <select
                     value={semesterFilter}
                     onChange={handleSemesterFilterChange}
@@ -798,7 +933,10 @@ export default function AddGrade() {
         <div className="mt-4 shadow-md overflow-hidden rounded-lg fade-in delay-300 relative z-0">
           <div className="overflow-x-auto">
             <div className="max-h-[500px] overflow-y-auto">
-              <table className="w-full bg-white text-center" style={{ minWidth: '1200px' }}>
+              <table
+                className="w-full bg-white text-center"
+                style={{ minWidth: "1200px" }}
+              >
                 <thead className="bg-[#0065A8] text-white sticky top-0 z-10">
                   <tr className="border-b">
                     <th className="px-4 py-3 min-w-[120px]">Student ID</th>
@@ -809,12 +947,14 @@ export default function AddGrade() {
                     <th className="px-4 py-3 min-w-[150px]">School Year</th>
                     <th className="px-4 py-3 min-w-[100px]">Semester</th>
                     <th className="px-4 py-3 min-w-[140px]">Remarks</th>
-                    <th className="px-4 py-3 pr-7 min-w-[80px] text-center">Actions</th>
+                    <th className="px-4 py-3 pr-7 min-w-[80px] text-center">
+                      Actions
+                    </th>
                   </tr>
                 </thead>
                 <tbody>
                   {/* Your existing tbody content */}
-                  {(isLoading || isFiltering) ? (
+                  {isLoading || isFiltering ? (
                     Array.from({ length: 5 }).map((_, index) => (
                       <tr key={index} className="animate-pulse border-b">
                         <td className="px-4 py-3 w-[150px]">
@@ -853,29 +993,48 @@ export default function AddGrade() {
                     filteredGrades.map((gradeData) => {
                       const grade = sanitizeGrade(gradeData);
                       if (!grade) return null;
-                
+
                       return (
                         <tr
                           key={grade.id}
                           className="border-b hover:bg-gray-100 align-middle"
                         >
-                          <td className="px-4 py-3 w-[150px] min-w-[120px]">{String(grade.studentID)}</td>
-                          <td className="px-4 py-3 w-[200px] min-w-[180px]">{String(grade.studentName)}</td>
-                          <td className="px-4 py-3 w-[350px] min-w-[200px]">{String(grade.courseName)}</td>
-                          <td className="px-4 py-3 w-[140px] min-w-[100px]">{String(grade.grade)}</td>
-                          <td className="px-4 py-3 w-[150px] min-w-[120px]">{String(grade.period)}</td>
-                          <td className="px-4 py-3 w-[180px] min-w-[150px]">{String(grade.school_year)}</td>
-                          <td className="px-4 py-3 w-[120px] min-w-[100px]">{String(grade.semester)}</td>
-                          <td className={`px-4 py-3 w-[160px] min-w-[140px] ${
-                            grade.remarks === "PASSED" ? "text-green-500" : "text-red-500"
-                          }`}>
+                          <td className="px-4 py-3 w-[150px] min-w-[120px]">
+                            {String(grade.studentID)}
+                          </td>
+                          <td className="px-4 py-3 w-[200px] min-w-[180px]">
+                            {String(grade.studentName)}
+                          </td>
+                          <td className="px-4 py-3 w-[350px] min-w-[200px]">
+                            {String(grade.courseName)}
+                          </td>
+                          <td className="px-4 py-3 w-[140px] min-w-[100px]">
+                            {String(grade.grade)}
+                          </td>
+                          <td className="px-4 py-3 w-[150px] min-w-[120px]">
+                            {String(grade.period)}
+                          </td>
+                          <td className="px-4 py-3 w-[180px] min-w-[150px]">
+                            {String(grade.school_year)}
+                          </td>
+                          <td className="px-4 py-3 w-[120px] min-w-[100px]">
+                            {String(grade.semester)}
+                          </td>
+                          <td
+                            className={`px-4 py-3 w-[160px] min-w-[140px] ${
+                              grade.remarks === "PASSED"
+                                ? "text-green-500"
+                                : "text-red-500"
+                            }`}
+                          >
                             {String(grade.remarks)}
                           </td>
                           <td className="align-middle px-4 py-3 w-[100px] min-w-[80px] space-x-3">
                             <div className="flex items-center justify-center h-full space-x-3">
                               <button
                                 className={`text-gray-500 hover:text-gray-700 ${
-                                  EditClicked ? "scale-90" : "scale-100"}`}
+                                  EditClicked ? "scale-90" : "scale-100"
+                                }`}
                                 onClick={() => {
                                   setEditClicked(true);
                                   setTimeout(() => setEditClicked(false), 300);
@@ -886,10 +1045,14 @@ export default function AddGrade() {
                               </button>
                               <button
                                 className={`text-gray-500 hover:text-gray-700 ${
-                                  DeleteClicked ? "scale-90" : "scale-100"}`}
+                                  DeleteClicked ? "scale-90" : "scale-100"
+                                }`}
                                 onClick={() => {
                                   setDeleteClicked(true);
-                                  setTimeout(() => setDeleteClicked(false), 300);
+                                  setTimeout(
+                                    () => setDeleteClicked(false),
+                                    300
+                                  );
                                   handleDeleteGrade(grade.id);
                                 }}
                               >
@@ -902,7 +1065,10 @@ export default function AddGrade() {
                     })
                   ) : (
                     <tr>
-                      <td colSpan="9" className="px-6 py-4 text-center text-gray-500">
+                      <td
+                        colSpan="9"
+                        className="px-6 py-4 text-center text-gray-500"
+                      >
                         No grades found
                       </td>
                     </tr>
@@ -914,7 +1080,7 @@ export default function AddGrade() {
         </div>
 
         {/* Form Section - Updated grid layout for tablet */}
-        <div className="mt-6 shadow-md rounded-lg p-2 md:p-3 lg:p-4 bg-white">
+        <div className="mt-6 shadow-md rounded-lg p-2 mx-4 bg-white">
           <div className="grid grid-cols-1 md:grid-cols-7 gap-2 md:gap-3 lg:gap-4">
             {/* Student Name Input */}
             <div className="relative col-span-1 md:col-span-1">
@@ -996,8 +1162,9 @@ export default function AddGrade() {
             <div className="col-span-1 flex gap-2 md:justify-end">
               <button
                 onClick={() => {
-                  setSubmitClicked(true); 
-                  setTimeout(() => { setSubmitClicked(false); 
+                  setSubmitClicked(true);
+                  setTimeout(() => {
+                    setSubmitClicked(false);
                     setTimeout(() => {
                       if (selectedGradeID) {
                         // Update grade
@@ -1005,16 +1172,17 @@ export default function AddGrade() {
                       } else {
                         // Submit new grade
                         handleSubmitGrade();
-                      } 
+                      }
                     }, 500);
                   }, 200);
                 }}
-                className={`flex-1 md:flex-initial px-4 py-2 rounded-lg text-white shadow-md 
+                className={`flex-1 md:flex-initial px-5 py-2 rounded-lg text-white shadow-md 
                   ${SubmitClicked ? "scale-90" : "scale-100"}
-                  ${selectedGradeID
-                    ? "bg-yellow-400 hover:bg-yellow-300"
-                    : "bg-[#057DCD] hover:bg-[#54BEFF] focus:outline-none focus:ring focus:ring-blue-500 focus:border-blue-500 transition duration-300"
-                }`}
+                  ${
+                    selectedGradeID
+                      ? "bg-yellow-400 hover:bg-yellow-300"
+                      : "bg-[#057DCD] hover:bg-[#54BEFF] focus:outline-none focus:ring focus:ring-blue-500 focus:border-blue-500 transition duration-300"
+                  }`}
               >
                 {selectedGradeID ? "Update" : "Submit"}
               </button>
@@ -1022,13 +1190,13 @@ export default function AddGrade() {
               {selectedGradeID && (
                 <button
                   onClick={() => {
-                    setCancelClicked(true); 
-                    setTimeout(() => { setCancelClicked(false); 
-                      setTimeout(() => handleCancelEdit(), 
-                      500);
+                    setCancelClicked(true);
+                    setTimeout(() => {
+                      setCancelClicked(false);
+                      setTimeout(() => handleCancelEdit(), 500);
                     }, 200);
                   }}
-                  className={`flex-1 md:flex-initial bg-gray-500 text-white px-4 py-2 rounded-lg transition-colors hover:bg-gray-400 
+                  className={`flex-1 md:flex-initial bg-gray-500 text-white px-5 py-2 rounded-lg transition-colors hover:bg-gray-400 
                     ${CancelClicked ? "scale-90" : "scale-100"}`}
                 >
                   Cancel

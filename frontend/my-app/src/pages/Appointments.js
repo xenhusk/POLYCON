@@ -78,7 +78,7 @@ function StudentAppointments() {
     <div className="grid grid-cols-1 gap-5 h-full sm:grid-cols-1 md:grid-cols-1 lg:grid-cols-2">
       {/* Pending Appointments Section */}
       <section className="bg-white rounded-xl shadow-sm p-6 flex flex-col max-h-[76vh] sm:order-1 md:order-1 lg:order-none">
-        <h3 className="text-xl font-semibold mb-4 text-[#0065A8] border-b-2 border-[#54BEFF] pb-2 sticky top-0 bg-white z-10">
+        <h3 className="text-xl font-semibold mb-4 text-[#0065A8] border-b-2 border-[#54BEFF] sticky pb-2 top-0 bg-white">
           Pending Appointments
         </h3>
         <div className="flex-1 overflow-y-auto min-h-0 Appointments-scroll">
@@ -142,7 +142,7 @@ function StudentAppointments() {
 
       {/* Upcoming Appointments Section */}
       <section className="bg-white rounded-xl shadow-sm p-6 flex flex-col max-h-[76vh] sm:order-2 md:order-2 lg:order-none">
-        <h3 className="text-xl font-semibold mb-4 text-[#0065A8] border-b-2 border-[#54BEFF] pb-2 sticky top-0 bg-white z-10">
+        <h3 className="text-xl font-semibold mb-4 text-[#0065A8] border-b-2 border-[#54BEFF] pb-2 sticky top-0 bg-white">
           Upcoming Appointments
         </h3>
         <div className="flex-1 overflow-y-auto min-h-0 Appointments-scroll">
@@ -343,7 +343,7 @@ function TeacherAppointments() {
       className="grid grid-cols-1 gap-5 h-full sm:grid-cols-1 md:grid-cols-1 lg:grid-cols-2"
     >
       <section className="bg-white rounded-xl shadow-sm p-6 flex flex-col max-h-[76vh] sm:order-1 md:order-none lg:order-none">
-        <h3 className="text-xl font-semibold mb-4 text-[#0065A8] border-b-2 border-[#54BEFF] pb-2 top-0 bg-white z-10">
+        <h3 className="text-xl font-semibold mb-4 text-[#0065A8] border-b-2 border-[#54BEFF] sticky pb-2 top-0 bg-white">
           Pending Appointments
         </h3>
         <div className="flex-1 overflow-y-auto min-h-0">
@@ -411,7 +411,7 @@ function TeacherAppointments() {
       </section>
 
       <section className="bg-white rounded-xl shadow-sm p-6 flex flex-col max-h-[76vh] sm:order-1 md:order-none lg:order-none">
-        <h3 className="text-xl font-semibold mb-4 text-[#0065A8] border-b-2 border-[#54BEFF] pb-2 sticky top-0 bg-white z-10">
+        <h3 className="text-xl font-semibold mb-4 text-[#0065A8] border-b-2 border-[#54BEFF] pb-2 sticky top-0 bg-white">
           Upcoming Appointments
         </h3>
         <div className="flex-1 overflow-y-auto min-h-0">
