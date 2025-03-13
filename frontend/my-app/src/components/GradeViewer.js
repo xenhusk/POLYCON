@@ -83,7 +83,7 @@ const GradeViewer = () => {
   };
 
   return (
-    <div className="w-[24rem] md:w-[44rem] lg:w-[64rem] xl:w-[96%] mx-auto p-2 sm:p-4 lg:p-6 bg-white fade-in">
+    <div className="w-[24rem] md:w-[42rem] lg:w-[64rem] xl:w-[96%] mx-auto p-2 sm:p-4 lg:p-6 bg-white fade-in">
       <div className="w-full mx-auto p-2 sm:p-4 bg-white mt-2 sm:mt-6 flex flex-col justify-center">
         <h2 className="relative top-0 text-2xl sm:text-3xl font-bold text-center text-[#0065A8] mb-4 fade-in delay-100">
           Grades

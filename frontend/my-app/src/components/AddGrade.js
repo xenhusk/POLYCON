@@ -713,7 +713,7 @@ export default function AddGrade() {
   };
 
   return (
-    <div className="w-[24rem] md:w-[47rem] lg:w-[64rem] xl:w-[96%] mx-auto p-2 sm:p-3 bg-white fade-in">
+    <div className="w-[24rem] md:w-[42rem] lg:w-[64rem] xl:w-[96%] mx-auto p-2 sm:p-4 bg-white fade-in">
       {/* Updated toast message display */}
       {message.content && (
         <div
@@ -727,7 +727,7 @@ export default function AddGrade() {
         </div>
       )}
 
-      <div className="w-full mx-auto p-2 sm:p-4 bg-white mt-2 sm:mt-4 flex flex-col justify-center">
+      <div className="w-full mx-auto p-2 md:p-0 sm:p-4 bg-white mt-2 sm:mt-4 flex flex-col justify-center">
         <h2 className="relative top-0 text-2xl sm:text-3xl font-bold text-center text-[#0065A8] mb-2 fade-in delay-100">
           Grade Management
         </h2>
