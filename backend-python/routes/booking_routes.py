@@ -686,3 +686,64 @@ def get_all_bookings_admin():
     except Exception as e:
         print(f"Error in /get_all_bookings_admin: {e}")
         return jsonify({"error": str(e)}), 500
+
+@booking_bp.route('/get_faculty_students', methods=['GET'])
+def get_faculty_students():
+    try:
+        faculty_id = request.args.get('facultyID')
+        if not faculty_id:
+            return jsonify({"error": "Faculty ID is required"}), 400
+
+        # Get the faculty reference
+        faculty_ref = db.document(f'faculty/{faculty_id}')
+        
+        # Get all consultation sessions for this faculty
+        sessions = db.collection('consultation_sessions')\
+            .where('teacher_id', '==', faculty_ref)\
+            .stream()
+
+        # Set to store unique student IDs
+        student_ids = set()
+        for session in sessions:
+            session_data = session.to_dict()
+            student_refs = session_data.get('student_ids', [])
+            for student_ref in student_refs:
+                student_ids.add(student_ref.id)
+
+        # Get student details
+        students = []
+        for student_id in student_ids:
+            # Get student enrollment status
+            student_doc = db.collection('students').document(student_id).get()
+            if student_doc.exists and student_doc.to_dict().get('isEnrolled', False):
+                # Get user details
+                user_doc = db.collection('user').document(student_id).get()
+                if user_doc.exists:
+                    user_data = user_doc.to_dict()
+                    student_data = {
+                        'id': student_id,
+                        'firstName': user_data.get('firstName', ''),
+                        'lastName': user_data.get('lastName', ''),
+                        'profile_picture': user_data.get('profile_picture', ''),
+                        'program': '',
+                        'year_section': ''
+                    }
+
+                    # Get program details
+                    program_ref = student_doc.to_dict().get('program')
+                    if program_ref:
+                        program_doc = program_ref.get()
+                        if program_doc.exists:
+                            program_data = program_doc.to_dict()
+                            student_data['program'] = program_data.get('programName', '')
+                    
+                    # Get year and section
+                    student_data['year_section'] = student_doc.to_dict().get('year_section', '')
+                    
+                    students.append(student_data)
+
+        return jsonify(students), 200
+
+    except Exception as e:
+        print(f"Error getting faculty students: {str(e)}")
+        return jsonify({"error": str(e)}), 500

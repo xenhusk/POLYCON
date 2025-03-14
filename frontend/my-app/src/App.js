@@ -45,6 +45,7 @@ import { ensureUserIdPersistence, recoverUserIds } from "./utils/persistUtils";
 import NotificationPermissionRequest from './components/NotificationPermissionRequest'; // Add this import
 import NotificationTester from './components/NotificationTester'; // Add this import
 import NotificationDebugger from './components/NotificationDebugger'; // Add this import
+import ComparativeAnalysis from './pages/ComparativeAnalysis';
 const PreloaderTest = React.lazy(() => import('./components/PagePreloader'));
 
 // Update the variants to only include fade in (no fade out)
@@ -795,6 +796,7 @@ function App() {
                       <Route path="/enrollment-test" element={<EnrollmentTestPage />} /> {/* new test route */}
                       <Route path="/semester-management" element={<SemesterManagement />} /> {/* Update this line */}
                       <Route path="/notification-test" element={<NotificationTester />} /> {/* Add this new route */}
+                      <Route path="/comparative-analysis" element={<ComparativeAnalysis />} />
                     </Routes>
                   </Suspense>
                 </motion.div>

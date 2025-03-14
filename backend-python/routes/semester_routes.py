@@ -283,3 +283,24 @@ def get_latest_filter():
     except Exception as e:
         print(f"Error getting latest filter: {str(e)}")
         return jsonify({"error": str(e)}), 500
+
+@semester_routes.route('/get_semester_options', methods=['GET'])
+def get_semester_options():
+    try:
+        semesters = db.collection('semesters').order_by('school_year', direction=firestore.Query.DESCENDING).stream()
+        options = []
+        seen = set()  # To track unique combinations
+        
+        for sem in semesters:
+            data = sem.to_dict()
+            key = f"{data['school_year']}_{data['semester']}"
+            if key not in seen:
+                seen.add(key)
+                options.append({
+                    'school_year': data['school_year'],
+                    'semester': data['semester']
+                })
+        
+        return jsonify(options), 200
+    except Exception as e:
+        return jsonify({"error": str(e)}), 500

@@ -15,6 +15,7 @@ import { ReactComponent as CourseAdd } from './icons/CourseAdd.svg';
 import { ReactComponent as ProgramAdd } from './icons/Code.svg'; // NEW: import profile icon
 import { ReactComponent as DepartmentAdd } from './icons/Briefcase.svg';
 import { ReactComponent as SemesterAdd } from './icons/Timer.svg';
+import { ReactComponent as ComparativeIcon } from './icons/Comparative.svg';
 import logo from './icons/logo2.png';
 // Import missing icons from react-icons/fa
 import { FaHome, FaGraduationCap, FaClipboardList, FaUser, FaUsers, FaCog } from 'react-icons/fa'; // Added FaUsers, FaCog
@@ -225,7 +226,8 @@ const Sidebar = ({ onExpandChange }) => {
       dashboard: '/dashboard',
       classRecord: '/addgrade',
       appointments: '/appointments',
-      past: '/history'
+      past: '/history',
+      comparative: '/comparative-analysis'
     },
     admin: {
       homeadmin: '/homeadmin',
@@ -477,6 +479,7 @@ const Sidebar = ({ onExpandChange }) => {
             {renderMenuItem("appointments", UpcomingIcon, "Appointments")}
             {renderMenuItem("past", PastIcon, "History")}
             {renderMenuItem("classRecord", ClassRecorderIcon, "Class Record")}
+            {renderMenuItem("comparative", ComparativeIcon, "Comparative Analysis")}
           </ul>
         )}
 
