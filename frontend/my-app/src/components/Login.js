@@ -22,15 +22,15 @@ const Login = ({ onLoginSuccess, onSwitchToSignup }) => {
     setMessage('');
     setLoginClicked(true);
     setIsLoading(true); // Set loading to true when login starts
-
+  
     // Check email domain first
-    if (!email.endsWith('@wnu.sti.edu.ph')) {
-      setMessage('Email must end with @wnu.sti.edu.ph');
+    if (!(email.endsWith('@wnu.sti.edu.ph') || email.endsWith('@gmail.com'))) {
+      setMessage('Email must end with @wnu.sti.edu.ph or @gmail.com');
       setLoginClicked(false);
       setIsLoading(false); // Reset loading state
       return;
     }
-
+  
     try {
       const response = await fetch("http://localhost:5001/account/login", {
         method: "POST",
@@ -39,21 +39,21 @@ const Login = ({ onLoginSuccess, onSwitchToSignup }) => {
         },
         body: JSON.stringify({ email, password }),
       });
-      
+  
       const data = await response.json();
-
+  
       if (response.ok) {
         console.log("Login successful:", data);
         localStorage.setItem("userEmail", email);
         storeUserAuth(data, data.role);
-        
+  
         if (data.role === 'student') {
           const studentId = data.studentId || data.userId || data.id;
           if (studentId) {
             await fetchAndStoreEnrollmentStatus(studentId);
           }
         }
-        
+  
         setTimeout(() => {
           console.log("Verification - localStorage values after login:", {
             userEmail: localStorage.getItem("userEmail"),
@@ -63,11 +63,11 @@ const Login = ({ onLoginSuccess, onSwitchToSignup }) => {
             isEnrolled: localStorage.getItem("isEnrolled")
           });
         }, 100);
-
+  
         if (onLoginSuccess) {
           onLoginSuccess(data);
         }
-        
+  
         switch (data.role) {
           case "admin":
             navigate("/homeadmin");
@@ -84,12 +84,10 @@ const Login = ({ onLoginSuccess, onSwitchToSignup }) => {
         }
       } else {
         const errorMsg = data.error ? data.error.toLowerCase() : "";
-        if (errorMsg.includes("password") || errorMsg.includes("incorrect")) {
+        if (errorMsg.includes("email") || errorMsg.includes("not found") || errorMsg.includes("not registered")) {
+          setMessage("No email found on our database.");
+        } else if (errorMsg.includes("password") || errorMsg.includes("incorrect")) {
           setMessage("The password is incorrect. Forgot Password?");
-        } else if (!email.endsWith('@wnu.sti.edu.ph')) {
-          setMessage('Email must end with @wnu.sti.edu.ph');
-        } else if ((errorMsg.includes("email") || errorMsg.includes("not found") || errorMsg.includes("not registered")) && !errorMsg.includes("password")) {
-          setMessage("Email is not registered");
         } else {
           setMessage(data.error || "Login failed. Please try again.");
         }
