@@ -1,6 +1,24 @@
 import React, { useState, useEffect } from 'react';
 import { getProfilePictureUrl } from '../utils/utils';
 import { motion, AnimatePresence } from 'framer-motion';
+// Add Chart.js and required components
+import { Chart as ChartJS, ArcElement, Tooltip, Legend, CategoryScale, LinearScale, BarElement, Title, RadialLinearScale, PointElement, LineElement, Filler } from 'chart.js';
+import { Pie, Bar, Radar } from 'react-chartjs-2';
+
+// Register Chart.js components
+ChartJS.register(
+  ArcElement, 
+  Tooltip, 
+  Legend, 
+  CategoryScale, 
+  LinearScale, 
+  BarElement, 
+  Title,
+  RadialLinearScale,
+  PointElement,
+  LineElement,
+  Filler
+);
 
 function ComparativeAnalysis() {
   // Main states for filtering
@@ -14,6 +32,11 @@ function ComparativeAnalysis() {
   const [teachers, setTeachers] = useState([]);
   const [students, setStudents] = useState([]);
   const [availableCourses, setAvailableCourses] = useState([]);
+  const [analysisResult, setAnalysisResult] = useState(null);
+  // New states for academic events
+  const [academicEvents, setAcademicEvents] = useState([]);
+  const [academicEventName, setAcademicEventName] = useState("");
+  const [academicEventRating, setAcademicEventRating] = useState("");
 
   // Modal (for all four selections) states (temporary)
   const [showSelectionModal, setShowSelectionModal] = useState(false);
@@ -158,6 +181,59 @@ function ComparativeAnalysis() {
   const allFieldsProvided =
     selectedSemester && selectedTeacher && selectedStudents.length === 1 && selectedCourse.trim() !== "";
 
+  // Update function to add an academic event with a name and rating (1-5)
+  const addAcademicEvent = () => {
+    if (academicEventName && academicEventRating) {
+      setAcademicEvents([...academicEvents, { name: academicEventName, rating: academicEventRating }]);
+      setAcademicEventName("");
+      setAcademicEventRating("");
+    }
+  };
+
+  // New function to remove a previously added academic event
+  const removeAcademicEvent = (index) => {
+    const updated = academicEvents.filter((_, i) => i !== index);
+    setAcademicEvents(updated);
+  };
+
+  // Function to run comparative analysis using the first grade record as sample
+  const runComparativeAnalysis = () => {
+    if (grades.length > 0) {
+      const grade = grades[0]; // Using first grade record
+      const payload = {
+        student_id: selectedStudents[0],
+        grades: {
+          prelim: grade.Prelim,
+          midterm: grade.Midterm,
+          prefinals: grade['Pre-Final'],
+          finals: grade.Final
+        },
+        academic_events: academicEvents
+      };
+      fetch('http://localhost:5001/comparative/compare_student', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(payload)
+      })
+      .then(res => res.json())
+      .then(data => setAnalysisResult(data))
+      .catch(err => console.error('Error running comparative analysis:', err));
+    }
+  };
+
+  // Function to generate colors for charts
+  const generateColors = (count) => {
+    const baseColors = [
+      'rgba(54, 162, 235, 0.7)', // blue
+      'rgba(255, 99, 132, 0.7)', // red
+      'rgba(75, 192, 192, 0.7)', // green
+      'rgba(255, 159, 64, 0.7)', // orange
+      'rgba(153, 102, 255, 0.7)', // purple
+    ];
+    
+    return Array(count).fill().map((_, i) => baseColors[i % baseColors.length]);
+  };
+
   return (
     <div className="p-6 bg-white">
       <div className="mb-6 text-center">
@@ -231,6 +307,231 @@ function ComparativeAnalysis() {
                 <p><strong>Outcome:</strong> {session.outcome}</p>
               </div>
             ))}
+          </div>
+        </div>
+      )}
+
+      {/* New Section for Academic Events */}
+      {allFieldsProvided && (
+        <div className="mb-6">
+          <h3 className="text-xl font-bold mb-3 text-[#0065A8]">Academic Events</h3>
+          <div className="flex items-center space-x-2">
+            <input
+              type="text"
+              value={academicEventName}
+              onChange={(e) => setAcademicEventName(e.target.value)}
+              placeholder="Enter event name"
+              className="px-3 py-2 border rounded-lg focus:outline-none"
+            />
+            <input
+              type="number"
+              min="1"
+              max="5"
+              value={academicEventRating}
+              onChange={(e) => setAcademicEventRating(e.target.value)}
+              placeholder="Rating (1-5)"
+              className="px-3 py-2 border rounded-lg focus:outline-none"
+            />
+            <button 
+              onClick={addAcademicEvent}
+              className="px-4 py-2 bg-[#0065A8] text-white rounded-lg hover:bg-[#54BEFF] transition"
+            >
+              Add Event
+            </button>
+          </div>
+          {academicEvents.length > 0 && (
+            <ul className="mt-4 list-disc pl-5">
+              {academicEvents.map((event, index) => (
+                <li key={index} className="flex items-center space-x-2">
+                  <span>{event.name} – Rating: {event.rating}</span>
+                  <button
+                    onClick={() => removeAcademicEvent(index)}
+                    className="text-red-500 text-sm"
+                  >
+                    Remove
+                  </button>
+                </li>
+              ))}
+            </ul>
+          )}
+        </div>
+      )}
+
+      {allFieldsProvided && grades.length > 0 && (
+        <div className="mt-6 text-center">
+          <button 
+            onClick={runComparativeAnalysis}
+            className="px-4 py-2 bg-green-600 text-white rounded-lg hover:bg-green-500 transition"
+          >
+            Run Comparative Analysis
+          </button>
+        </div>
+      )}
+
+      {analysisResult && (
+        <div className="mt-6">
+          <h3 className="text-2xl font-bold mb-4 text-center text-[#0065A8]">Analysis Results</h3>
+          
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+            {/* Basic Info Card */}
+            <div className="bg-white rounded-xl shadow-md p-6 border-t-4 border-[#0065A8]">
+              <h4 className="text-xl font-semibold mb-3">Student Performance</h4>
+              <div className="space-y-2">
+                <p><strong>Student ID:</strong> {analysisResult.student_id}</p>
+                <div className="flex items-center">
+                  <strong>Rating:</strong>
+                  <span className={`ml-2 px-3 py-1 rounded-full text-white ${
+                    analysisResult.rating === "Excellent" ? "bg-green-500" :
+                    analysisResult.rating === "Good" ? "bg-blue-500" :
+                    analysisResult.rating === "Average" ? "bg-yellow-500" :
+                    "bg-red-500"
+                  }`}>
+                    {analysisResult.rating}
+                  </span>
+                </div>
+                <p><strong>Overall Score:</strong> {analysisResult.overall_score * 100}%</p>
+              </div>
+              
+              {/* Progress Bar for Overall Score */}
+              <div className="mt-4">
+                <div className="w-full bg-gray-200 rounded-full h-4">
+                  <div 
+                    className={`h-4 rounded-full ${
+                      analysisResult.overall_score >= 0.7 ? "bg-green-500" :
+                      analysisResult.overall_score >= 0.5 ? "bg-blue-500" :
+                      analysisResult.overall_score >= 0.3 ? "bg-yellow-500" :
+                      "bg-red-500"
+                    }`}
+                    style={{ width: `${analysisResult.overall_score * 100}%` }}
+                  ></div>
+                </div>
+              </div>
+            </div>
+            
+            {/* Grade Improvement Card */}
+            <div className="bg-white rounded-xl shadow-md p-6 border-t-4 border-[#0065A8]">
+              <h4 className="text-xl font-semibold mb-3">Grade Progression</h4>
+              <Bar 
+                data={{
+                  labels: ['Prelim', 'Midterm', 'Pre-Finals', 'Finals'],
+                  datasets: [
+                    {
+                      label: 'Grade',
+                      data: [
+                        analysisResult.grades.prelim,
+                        analysisResult.grades.midterm,
+                        analysisResult.grades.prefinals,
+                        analysisResult.grades.finals
+                      ],
+                      backgroundColor: generateColors(4)
+                    }
+                  ]
+                }}
+                options={{
+                  responsive: true,
+                  scales: {
+                    y: {
+                      beginAtZero: false,
+                      min: Math.max(0, Math.min(
+                        parseFloat(analysisResult.grades.prelim),
+                        parseFloat(analysisResult.grades.midterm),
+                        parseFloat(analysisResult.grades.prefinals),
+                        parseFloat(analysisResult.grades.finals)
+                      ) - 5)
+                    }
+                  }
+                }}
+              />
+              <div className="mt-3 text-center">
+                <p><strong>Improvement:</strong> {analysisResult.grade_improvement > 0 ? "+" : ""}{analysisResult.grade_improvement} points</p>
+              </div>
+            </div>
+            
+            {/* Academic Events Impact */}
+            {analysisResult.academic_events?.length > 0 && (
+              <div className="bg-white rounded-xl shadow-md p-6 border-t-4 border-[#0065A8]">
+                <h4 className="text-xl font-semibold mb-3">Academic Events Impact</h4>
+                <Pie 
+                  data={{
+                    labels: analysisResult.academic_events.map(event => event.name || `Event ${analysisResult.academic_events.indexOf(event) + 1}`),
+                    datasets: [
+                      {
+                        data: analysisResult.academic_events.map(event => event.rating),
+                        backgroundColor: generateColors(analysisResult.academic_events.length),
+                        borderWidth: 1
+                      }
+                    ]
+                  }}
+                  options={{
+                    responsive: true,
+                    plugins: {
+                      legend: {
+                        position: 'bottom',
+                      }
+                    }
+                  }}
+                />
+                <div className="mt-3 text-center">
+                  <p><strong>Average Impact:</strong> {analysisResult.average_event_impact * 5}/5</p>
+                </div>
+              </div>
+            )}
+            
+            {/* Performance Metrics Radar */}
+            <div className="bg-white rounded-xl shadow-md p-6 border-t-4 border-[#0065A8]">
+              <h4 className="text-xl font-semibold mb-3">Performance Metrics</h4>
+              <Radar
+                data={{
+                  labels: ['Grade Improvement', 'Academic Events', 'Overall Score'],
+                  datasets: [
+                    {
+                      label: 'Student Performance',
+                      data: [
+                        analysisResult.normalized_improvement,
+                        analysisResult.average_event_impact,
+                        analysisResult.overall_score
+                      ],
+                      backgroundColor: 'rgba(54, 162, 235, 0.2)',
+                      borderColor: 'rgb(54, 162, 235)',
+                      pointBackgroundColor: 'rgb(54, 162, 235)',
+                      pointBorderColor: '#fff',
+                      pointHoverBackgroundColor: '#fff',
+                      pointHoverBorderColor: 'rgb(54, 162, 235)'
+                    }
+                  ]
+                }}
+                options={{
+                  scales: {
+                    r: {
+                      angleLines: {
+                        display: true
+                      },
+                      suggestedMin: 0,
+                      suggestedMax: 1
+                    }
+                  }
+                }}
+              />
+            </div>
+          </div>
+          
+          {/* Recommendations Section */}
+          <div className="mt-6 bg-white rounded-xl shadow-md p-6 border-t-4 border-[#0065A8]">
+            <h4 className="text-xl font-semibold mb-3">Recommendations</h4>
+            <div className="p-4 bg-gray-50 rounded-lg">
+              {analysisResult.rating === "Excellent" && (
+                <p>Congratulations on an excellent performance! Continue with your current strategies, and consider mentoring other students.</p>
+              )}
+              {analysisResult.rating === "Good" && (
+                <p>You're doing well! Focus on maintaining consistency and identify opportunities for further improvement in specific areas.</p>
+              )}
+              {analysisResult.rating === "Average" && (
+                <p>You're on the right track. Consider increasing participation in relevant academic events and seeking additional support in challenging topics.</p>
+              )}
+              {analysisResult.rating === "Needs Improvement" && (
+                <p>Schedule regular consultations with your instructor to address specific challenges. Consider supplementary learning resources and structured study plans.</p>
+              )}
+            </div>
           </div>
         </div>
       )}

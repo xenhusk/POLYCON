@@ -39,33 +39,45 @@ def compare_student():
     # Normalize improvement (assuming maximum improvement is 100)
     normalized_improvement = improvement / 100
 
-    # Process academic events – each event must include an 'impact' field (a number)
+    # Process academic events – each event can include a 'rating' (1-5) or an 'impact' field
     academic_events = data.get("academic_events", [])
     total_impact = 0
     if academic_events:
         for event in academic_events:
-            impact = event.get("impact")
-            if impact is None:
-                return jsonify({"error": "Each academic event must include an 'impact' field"}), 400
-            try:
-                total_impact += float(impact)
-            except ValueError:
-                return jsonify({"error": "Event impact must be a number"}), 400
+            if "rating" in event:
+                try:
+                    rating_value = float(event["rating"])
+                    if not (1 <= rating_value <= 5):
+                        return jsonify({"error": "Event rating must be between 1 and 5"}), 400
+                    # Convert the rating to a normalized impact between 0 and 1.
+                    event_impact = rating_value / 5
+                except ValueError:
+                    return jsonify({"error": "Event rating must be a number"}), 400
+            else:
+                impact = event.get("impact")
+                if impact is None:
+                    return jsonify({"error": "Each academic event must include an 'impact' or a 'rating' field"}), 400
+                try:
+                    event_impact = float(impact)
+                except ValueError:
+                    return jsonify({"error": "Event impact must be a number"}), 400
+            total_impact += event_impact
         average_event_impact = total_impact / len(academic_events)
     else:
         average_event_impact = 0
 
     # Combine grade improvement and event impact using weights
-    w_grade = 0.7
-    w_event = 0.3
+    # Adjusted weights: grade improvement is less impactful given high grades; the academic events matter more.
+    w_grade = 0.3
+    w_event = 0.7
     overall_score = (w_grade * normalized_improvement) + (w_event * average_event_impact)
-
-    # Define performance rating thresholds
-    if overall_score >= 0.8:
+    
+    # Updated performance rating thresholds
+    if overall_score >= 0.7:
         rating = "Excellent"
-    elif overall_score >= 0.6:
+    elif overall_score >= 0.5:
         rating = "Good"
-    elif overall_score >= 0.4:
+    elif overall_score >= 0.3:
         rating = "Average"
     else:
         rating = "Needs Improvement"
@@ -118,6 +130,10 @@ def compare_student():
         # Remove the Firestore reference before returning
         if "student_ref" in result:
             result["student_ref"] = student_ref.path
+
+        # Convert analysis_date to a JSON-serializable format
+        # This replaces the Firestore SERVER_TIMESTAMP sentinel value
+        result["analysis_date"] = datetime.utcnow().isoformat()
         
         return jsonify(result), 200
         
