@@ -43,7 +43,7 @@ def compare_student():
     baseline_factor = 1.0
     if prelim >= 90:  # Excellent starting point
         baseline_factor = 1.3  # Higher multiplier for maintaining excellence
-    elif prelim >= 85:
+    elif prelim >= 85: 
         baseline_factor = 1.2
     elif prelim >= 80:
         baseline_factor = 1.1
@@ -202,7 +202,13 @@ def compare_student():
         
         # Add to result object
         result["overall_score"] = round(overall_score, 2)
+        result["academic_effectiveness_index"] = round(overall_score, 2)  # Add new property with better name
         result["rating"] = rating
+        result["contribution_weights"] = {  # Add weights for frontend display
+            "grade_weight": w_grade,
+            "event_weight": w_event if 'average_event_impact' in result else 0,
+            "consultation_weight": w_consult if 'consultation_quality' in result else 0
+        }
         
         # Generate personalized recommendations based on all factors
         recommendations = generate_recommendations(

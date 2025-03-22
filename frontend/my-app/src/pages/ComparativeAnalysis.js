@@ -609,6 +609,34 @@ function ComparativeAnalysis() {
                 />
               </div>
             </div>
+
+            {/* Overall performance card - with improved naming and description */}
+            <div className="bg-white rounded-xl shadow-md overflow-hidden">
+              <div className="bg-[#0065A8] text-white p-4">
+                <h4 className="text-xl font-semibold">Academic Effectiveness Index</h4>
+              </div>
+              <div className="p-6 text-center">
+                <div className="mb-4">
+                  <p className="text-3xl font-bold">{(analysisResult.overall_score * 100).toFixed(0)}%</p>
+                  <p className="text-sm text-gray-500 mt-1">Combined measure of grade improvement, academic engagement, and consultation effectiveness</p>
+                </div>
+                
+                <div className="grid grid-cols-3 gap-2 mt-4">
+                  <div className="text-center">
+                    <p className="text-xs font-medium text-gray-500">Grade Factor</p>
+                    <p className="font-bold text-[#397de2]">{analysisResult.hasOwnProperty('academic_events') && analysisResult.academic_events.length > 0 ? '45%' : '65%'}</p>
+                  </div>
+                  <div className="text-center">
+                    <p className="text-xs font-medium text-gray-500">Events Factor</p>
+                    <p className="font-bold text-[#fc6969]">{analysisResult.hasOwnProperty('academic_events') && analysisResult.academic_events.length > 0 ? '30%' : '0%'}</p>
+                  </div>
+                  <div className="text-center">
+                    <p className="text-xs font-medium text-gray-500">Consultation Factor</p>
+                    <p className="font-bold text-[#00D1B2]">{analysisResult.hasOwnProperty('academic_events') && analysisResult.academic_events.length > 0 ? '25%' : '35%'}</p>
+                  </div>
+                </div>
+              </div>
+            </div>
           </div>
           
           {/* Recommendations Section */}
