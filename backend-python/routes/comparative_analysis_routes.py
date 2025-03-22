@@ -34,23 +34,59 @@ def compare_student():
     except ValueError:
         return jsonify({"error": "Grades must be numbers"}), 400
 
-    # Compute grade improvement (for example, finals - prelim)
+    # Enhanced grade improvement calculation that accounts for starting point
+    # If student starts with high grades, even small improvements are significant
     improvement = finals - prelim
-    # Normalize improvement (assuming maximum improvement is 100)
-    normalized_improvement = improvement / 100
+    
+    # Calculate baseline factor (higher starting grades get more credit)
+    # Scale: 0.7-1.3 multiplier based on starting grade
+    baseline_factor = 1.0
+    if prelim >= 90:  # Excellent starting point
+        baseline_factor = 1.3  # Higher multiplier for maintaining excellence
+    elif prelim >= 85:
+        baseline_factor = 1.2
+    elif prelim >= 80:
+        baseline_factor = 1.1
+    elif prelim <= 70:  # Lower starting point
+        baseline_factor = 0.9  # Less emphasis on pure improvement
+    elif prelim <= 60:
+        baseline_factor = 0.7
+    
+    # Apply baseline factor to normalized improvement
+    # Cap max improvement at 30 points (more realistic than 100)
+    raw_normalized_improvement = improvement / 30
+    normalized_improvement = raw_normalized_improvement * baseline_factor
+    
+    # Cap the normalized improvement at 1.0 for the final calculation
+    normalized_improvement = min(1.0, max(0.0, normalized_improvement))
+    
+    # Calculate consistency factor based on grade pattern
+    # Reward consistent or upward trend, penalize downward trends
+    trend_pattern = 0
+    if midterm > prelim: trend_pattern += 1
+    if prefinals > midterm: trend_pattern += 1
+    if finals > prefinals: trend_pattern += 1
+    
+    consistency_factor = (trend_pattern / 3) * 0.2 + 0.8  # Range: 0.8-1.0
+    
+    # Apply consistency factor
+    normalized_improvement *= consistency_factor
 
-    # Process academic events – each event can include a 'rating' (1-5) or an 'impact' field
+    # Process academic events with enhanced weighting
     academic_events = data.get("academic_events", [])
     total_impact = 0
+    
     if academic_events:
-        for event in academic_events:
+        # Weight events by recency (more recent events have higher impact)
+        for i, event in enumerate(academic_events):
             if "rating" in event:
                 try:
                     rating_value = float(event["rating"])
                     if not (1 <= rating_value <= 5):
                         return jsonify({"error": "Event rating must be between 1 and 5"}), 400
-                    # Convert the rating to a normalized impact between 0 and 1.
-                    event_impact = rating_value / 5
+                    # More recent events get higher weight
+                    recency_weight = 1.0 + (i / (len(academic_events) * 5))  # Small recency bonus
+                    event_impact = (rating_value / 5) * recency_weight
                 except ValueError:
                     return jsonify({"error": "Event rating must be a number"}), 400
             else:
@@ -66,30 +102,39 @@ def compare_student():
     else:
         average_event_impact = 0
 
-    # Combine grade improvement and event impact using weights
-    # Adjusted weights: grade improvement is less impactful given high grades; the academic events matter more.
-    w_grade = 0.3
-    w_event = 0.7
-    overall_score = (w_grade * normalized_improvement) + (w_event * average_event_impact)
+    # Dynamic weighting system based on available data
+    # Base weights
+    w_grade = 0.45  # Increased from 0.3
+    w_event = 0.30  # Decreased from 0.7
+    w_consult = 0.25  # New weight for consultation quality
     
-    # Updated performance rating thresholds
-    if overall_score >= 0.7:
-        rating = "Excellent"
-    elif overall_score >= 0.5:
-        rating = "Good"
-    elif overall_score >= 0.3:
-        rating = "Average"
-    else:
-        rating = "Needs Improvement"
-
-    # Create result object
+    # If no academic events, redistribute weights
+    if not academic_events:
+        w_grade = 0.65
+        w_consult = 0.35
+    
+    # Calculate base score from grade improvement and events
+    base_score = (w_grade * normalized_improvement) + (w_event * average_event_impact)
+    
+    # Will add consultation quality later in the try block
+    
+    # Calculate final grade assessment (useful for recommendations)
+    final_grade_assessment = ""
+    if finals >= 95: final_grade_assessment = "excellent"
+    elif finals >= 85: final_grade_assessment = "very_good"
+    elif finals >= 75: final_grade_assessment = "good"
+    elif finals >= 70: final_grade_assessment = "satisfactory"
+    else: final_grade_assessment = "needs_improvement"
+    
+    # Create initial result object
     result = {
         "student_id": student_id,
         "grade_improvement": improvement,
         "normalized_improvement": round(normalized_improvement, 2),
         "average_event_impact": round(average_event_impact, 2),
-        "overall_score": round(overall_score, 2),
-        "rating": rating,
+        "baseline_factor": round(baseline_factor, 2),  # Add these new factors to help frontend
+        "consistency_factor": round(consistency_factor, 2),
+        "final_grade_assessment": final_grade_assessment,
         "grades": grades,
         "academic_events": academic_events,
         "analysis_date": firestore.SERVER_TIMESTAMP
@@ -120,6 +165,54 @@ def compare_student():
         # Save analysis data with the student reference
         result["student_ref"] = student_ref
         
+        # NEW: Compute aggregated consultation quality from student's consultation sessions
+        consultations_query = db.collection('consultation_sessions').where('student_ids', 'array_contains', student_ref).stream()
+        consultation_scores = []
+        for doc in consultations_query:
+            doc_data = doc.to_dict()
+            if 'quality_score' in doc_data:
+                consultation_scores.append(float(doc_data['quality_score']))
+        if consultation_scores:
+            avg_consultation_quality = sum(consultation_scores) / len(consultation_scores)
+        else:
+            avg_consultation_quality = 0.0
+        result["consultation_quality"] = round(avg_consultation_quality, 2)
+        
+        # Calculate overall score including consultation quality
+        if 'consultation_quality' in result and result['consultation_quality'] > 0:
+            consultation_quality = result['consultation_quality']
+            overall_score = (w_grade * normalized_improvement) + (w_event * average_event_impact) + (w_consult * consultation_quality)
+        else:
+            # If no consultation quality, adjust weights accordingly
+            w_grade_adj = w_grade / (w_grade + w_event)
+            w_event_adj = w_event / (w_grade + w_event)
+            overall_score = (w_grade_adj * normalized_improvement) + (w_event_adj * average_event_impact)
+        
+        # More granular performance rating thresholds
+        if overall_score >= 0.85 or final_grade_assessment == "excellent":
+            rating = "Excellent"
+        elif overall_score >= 0.7 or final_grade_assessment == "very_good":
+            rating = "Very Good"
+        elif overall_score >= 0.55 or final_grade_assessment == "good":
+            rating = "Good"
+        elif overall_score >= 0.4 or final_grade_assessment == "satisfactory":
+            rating = "Satisfactory"
+        else:
+            rating = "Needs Improvement"
+        
+        # Add to result object
+        result["overall_score"] = round(overall_score, 2)
+        result["rating"] = rating
+        
+        # Generate personalized recommendations based on all factors
+        recommendations = generate_recommendations(
+            prelim, finals, improvement, 
+            overall_score, rating, 
+            final_grade_assessment,
+            bool(academic_events)
+        )
+        result["recommendations"] = recommendations
+        
         # Store in Firestore
         analysis_ref = db.collection('comparative_analyses').document(analysis_id)
         analysis_ref.set(result)
@@ -132,13 +225,55 @@ def compare_student():
             result["student_ref"] = student_ref.path
 
         # Convert analysis_date to a JSON-serializable format
-        # This replaces the Firestore SERVER_TIMESTAMP sentinel value
         result["analysis_date"] = datetime.utcnow().isoformat()
         
         return jsonify(result), 200
         
     except Exception as e:
         return jsonify({"error": f"Failed to save analysis to Firestore: {str(e)}"}), 500
+
+def generate_recommendations(prelim, finals, improvement, overall_score, rating, grade_assessment, has_events):
+    """Generate personalized recommendations based on student performance"""
+    recommendations = []
+    
+    # High-performing students
+    if grade_assessment in ("excellent", "very_good"):
+        recommendations.append("Maintain your excellent performance by continuing your current study approaches.")
+        
+        if improvement > 5:
+            recommendations.append("Your significant improvement shows your strategies are working well. Consider mentoring other students.")
+        else:
+            recommendations.append("Focus on maintaining consistency and exploring advanced concepts in the subject.")
+    
+    # Good-performing students
+    elif grade_assessment == "good":
+        recommendations.append("Your performance is good. Identify specific areas where you can improve further.")
+        
+        if improvement > 0:
+            recommendations.append("Your positive trend shows progress. Continue applying effective study techniques.")
+        else:
+            recommendations.append("Work on strengthening your understanding of core concepts to improve consistency.")
+    
+    # Average or below students
+    else:
+        if improvement > 5:
+            recommendations.append("You're making good progress. Continue seeking help in challenging areas.")
+        else:
+            recommendations.append("Schedule regular consultations with your instructor to address specific challenges.")
+        
+        recommendations.append("Consider developing a structured study plan focusing on foundational concepts.")
+    
+    # Academic event recommendations
+    if not has_events:
+        recommendations.append("Participate in academic events related to this subject to enhance your learning experience.")
+    elif overall_score < 0.6:
+        recommendations.append("Engage more actively in academic events to strengthen your understanding.")
+    
+    # Consultation recommendations
+    if overall_score < 0.7:
+        recommendations.append("Regular consultations with your instructor can help address specific questions and challenges.")
+    
+    return recommendations
 
 @comparative_bp.route('/get_student_analyses/<student_id>', methods=['GET'])
 def get_student_analyses(student_id):

@@ -190,7 +190,7 @@ const Session = () => {
     }
   };
 
-  // Audio upload function remains the same.
+  // Audio upload function - modify to save quality metrics
   const uploadAudio = async (audioBlob) => {
     const formData = new FormData();
     formData.append("audio", audioBlob, "session-audio.webm");
@@ -247,12 +247,20 @@ const Session = () => {
     stopTimer();
 
     let transcriptionText = "";
-    let audioUrl = ""; // <-- new variable for audio URL
+    let audioUrl = "";
+    let qualityScore = 0;
+    let qualityMetrics = {};
+    let rawSentimentAnalysis = [];
+    
     if (audioBlob) {
       try {
         const audioUploadResponse = await uploadAudio(audioBlob);
         transcriptionText = audioUploadResponse.transcription || "";
         audioUrl = audioUploadResponse.audioUrl || "";
+        // Save quality data from transcription response
+        qualityScore = audioUploadResponse.quality_score || 0;
+        qualityMetrics = audioUploadResponse.quality_metrics || {};
+        rawSentimentAnalysis = audioUploadResponse.raw_sentiment_analysis || [];
       } catch (error) {
         console.error("Error uploading audio:", error);
         alert("Audio upload failed. Proceeding without transcription.");
@@ -285,7 +293,11 @@ const Session = () => {
       duration: timer,
       venue: venueFromQuery,
       session_date: new Date().toISOString(),
-      audio_file_path: audioUrl, // <-- include the audio URL here
+      audio_file_path: audioUrl,
+      // Include quality data in the payload
+      quality_score: qualityScore,
+      quality_metrics: qualityMetrics,
+      raw_sentiment_analysis: rawSentimentAnalysis
     };
 
     console.log("Sending payload:", payload);

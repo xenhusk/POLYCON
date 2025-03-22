@@ -4,6 +4,7 @@ import { motion, AnimatePresence } from 'framer-motion';
 // Add Chart.js and required components
 import { Chart as ChartJS, ArcElement, Tooltip, Legend, CategoryScale, LinearScale, BarElement, Title, RadialLinearScale, PointElement, LineElement, Filler } from 'chart.js';
 import { Pie, Bar, Radar } from 'react-chartjs-2';
+import PerformanceRadarChart from '../components/PerformanceRadarChart';
 
 // Register Chart.js components
 ChartJS.register(
@@ -216,7 +217,11 @@ function ComparativeAnalysis() {
         body: JSON.stringify(payload)
       })
       .then(res => res.json())
-      .then(data => setAnalysisResult(data))
+      .then(data => {
+        // Cap the normalized improvement at 0.5
+        data.normalized_improvement = Math.min(0.5, data.normalized_improvement);
+        setAnalysisResult(data);
+      })
       .catch(err => console.error('Error running comparative analysis:', err));
     }
   };
@@ -235,51 +240,63 @@ function ComparativeAnalysis() {
   };
 
   return (
-    <div className="p-6 bg-white">
-      <div className="mb-6 text-center">
-        <h2 className="text-3xl font-bold text-[#0065A8]">Comparative Analysis</h2>
+    <div className="p-6 bg-gradient-to-b from-white to-gray-50 min-h-screen">
+      <div className="mb-8 text-center">
+        <h2 className="text-3xl md:text-4xl font-bold text-[#0065A8]">Comparative Analysis</h2>
+        <p className="text-gray-500 mt-2">Analyze student performance and academic progress</p>
       </div>
 
       {/* Button to open the selection modal */}
-      <div className="mb-6 text-center">
+      <div className="mb-8 text-center">
         <button 
           onClick={openSelectionModal}
-          className="px-4 py-2 bg-[#0065A8] text-white rounded-lg hover:bg-[#54BEFF] transition"
+          className="px-6 py-3 bg-[#0065A8] text-white rounded-lg hover:bg-[#54BEFF] transition-all transform hover:scale-105 duration-300 shadow-md"
         >
-          Select Analysis Options
+          <span className="flex items-center justify-center">
+            <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5 mr-2" viewBox="0 0 20 20" fill="currentColor">
+              <path fillRule="evenodd" d="M10 3a1 1 0 011 1v5h5a1 1 0 110 2h-5v5a1 1 0 11-2 0v-5H4a1 1 0 110-2h5V4a1 1 0 011-1z" clipRule="evenodd" />
+            </svg>
+            Select Analysis Options
+          </span>
         </button>
       </div>
 
       {/* Prompt if not all fields are provided */}
       {!allFieldsProvided && (
-        <div className="text-center text-gray-500 my-8">
-          Please select a semester, teacher, student, and course to view the analysis.
+        <div className="text-center text-gray-500 my-10 p-8 bg-white rounded-xl shadow-sm border border-gray-100">
+          <svg xmlns="http://www.w3.org/2000/svg" className="h-12 w-12 mx-auto text-[#0065A8] mb-4 opacity-50" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+          </svg>
+          <p className="text-lg">Please select a semester, teacher, student, and course to view the analysis.</p>
         </div>
       )}
 
       {/* Display Grades Table */}
       {allFieldsProvided && grades.length > 0 && (
-        <div className="mb-6">
-          <h3 className="text-xl font-bold mb-3 text-[#0065A8]">Grades</h3>
-          <div className="overflow-x-auto">
-            <table className="min-w-full bg-white text-center table-fixed">
-              <thead className="bg-[#057DCD] text-white">
+        <div className="mb-8">
+          <div className="flex items-center mb-4">
+            <h3 className="text-xl font-bold text-[#0065A8]">Student Grades</h3>
+            <div className="h-0.5 flex-grow ml-4 bg-gradient-to-r from-[#0065A8] to-transparent"></div>
+          </div>
+          <div className="overflow-x-auto bg-white rounded-xl shadow-md">
+            <table className="min-w-full bg-white text-center">
+              <thead className="bg-[#397de2] text-white">
                 <tr>
-                  <th className="border px-4 py-3">Subject</th>
-                  <th className="border px-4 py-3">Prelim</th>
-                  <th className="border px-4 py-3">Midterm</th>
-                  <th className="border px-4 py-3">Pre-Final</th>
-                  <th className="border px-4 py-3">Final</th>
+                  <th className="px-4 py-3 rounded-tl-xl">Subject</th>
+                  <th className="px-4 py-3">Prelim</th>
+                  <th className="px-4 py-3">Midterm</th>
+                  <th className="px-4 py-3">Pre-Final</th>
+                  <th className="px-4 py-3 rounded-tr-xl">Final</th>
                 </tr>
               </thead>
               <tbody>
                 {grades.map((grade, idx) => (
-                  <tr key={idx} className="hover:bg-[#DBF1FF]">
-                    <td className="border px-4 py-3">{grade.course}</td>
-                    <td className="border px-4 py-3">{grade.Prelim}</td>
-                    <td className="border px-4 py-3">{grade.Midterm}</td>
-                    <td className="border px-4 py-3">{grade['Pre-Final']}</td>
-                    <td className="border px-4 py-3">{grade.Final}</td>
+                  <tr key={idx} className={idx % 2 === 0 ? "bg-white" : "bg-blue-50"}>
+                    <td className="border-b border-gray-200 px-4 py-3 font-medium">{grade.course}</td>
+                    <td className="border-b border-gray-200 px-4 py-3">{grade.Prelim}</td>
+                    <td className="border-b border-gray-200 px-4 py-3">{grade.Midterm}</td>
+                    <td className="border-b border-gray-200 px-4 py-3">{grade['Pre-Final']}</td>
+                    <td className="border-b border-gray-200 px-4 py-3 font-semibold">{grade.Final}</td>
                   </tr>
                 ))}
               </tbody>
@@ -290,21 +307,24 @@ function ComparativeAnalysis() {
 
       {/* Display Consultation History */}
       {allFieldsProvided && sessions.length > 0 && (
-        <div>
-          <h3 className="text-xl font-bold mb-3 text-[#0065A8]">Consultation History</h3>
-          <div className="space-y-4">
+        <div className="mb-8">
+          <div className="flex items-center mb-4">
+            <h3 className="text-xl font-bold text-[#0065A8]">Consultation History</h3>
+            <div className="h-0.5 flex-grow ml-4 bg-gradient-to-r from-[#0065A8] to-transparent"></div>
+          </div>
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
             {sessions.map((session, idx) => (
               <div 
                 key={idx} 
-                className="bg-white rounded-lg p-4 shadow hover:shadow-lg transition-shadow cursor-pointer border-l-4 border-[#0065A8]"
+                className="bg-white rounded-xl p-5 shadow-md hover:shadow-lg transition-shadow transform hover:-translate-y-1 duration-300 border-l-4 border-[#397de2]"
               >
-                <div className="flex justify-between mb-2">
-                  <span className="font-bold">Date: {new Date(session.session_date).toLocaleDateString()}</span>
-                  <span>Teacher: {session.teacher_name || "Unknown"}</span>
+                <div className="flex justify-between mb-3">
+                  <span className="font-bold text-[#0065A8]">{new Date(session.session_date).toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' })}</span>
+                  <span className="text-sm text-gray-500">Teacher: {session.teacher_name || "Unknown"}</span>
                 </div>
-                <p><strong>Student:</strong> {session.student_name || "Unknown"}</p>
-                <p><strong>Concern:</strong> {session.concern}</p>
-                <p><strong>Outcome:</strong> {session.outcome}</p>
+                <p className="text-gray-700 mb-2"><span className="font-semibold">Student:</span> {session.student_name || "Unknown"}</p>
+                <p className="text-gray-700 mb-2"><span className="font-semibold">Concern:</span> {session.concern}</p>
+                <p className="text-gray-700"><span className="font-semibold">Outcome:</span> {session.outcome}</p>
               </div>
             ))}
           </div>
@@ -313,152 +333,190 @@ function ComparativeAnalysis() {
 
       {/* New Section for Academic Events */}
       {allFieldsProvided && (
-        <div className="mb-6">
-          <h3 className="text-xl font-bold mb-3 text-[#0065A8]">Academic Events</h3>
-          <div className="flex items-center space-x-2">
-            <input
-              type="text"
-              value={academicEventName}
-              onChange={(e) => setAcademicEventName(e.target.value)}
-              placeholder="Enter event name"
-              className="px-3 py-2 border rounded-lg focus:outline-none"
-            />
-            <input
-              type="number"
-              min="1"
-              max="5"
-              value={academicEventRating}
-              onChange={(e) => setAcademicEventRating(e.target.value)}
-              placeholder="Rating (1-5)"
-              className="px-3 py-2 border rounded-lg focus:outline-none"
-            />
-            <button 
-              onClick={addAcademicEvent}
-              className="px-4 py-2 bg-[#0065A8] text-white rounded-lg hover:bg-[#54BEFF] transition"
-            >
-              Add Event
-            </button>
+        <div className="mb-8">
+          <div className="flex items-center mb-4">
+            <h3 className="text-xl font-bold text-[#0065A8]">Academic Events</h3>
+            <div className="h-0.5 flex-grow ml-4 bg-gradient-to-r from-[#0065A8] to-transparent"></div>
           </div>
-          {academicEvents.length > 0 && (
-            <ul className="mt-4 list-disc pl-5">
-              {academicEvents.map((event, index) => (
-                <li key={index} className="flex items-center space-x-2">
-                  <span>{event.name} – Rating: {event.rating}</span>
-                  <button
-                    onClick={() => removeAcademicEvent(index)}
-                    className="text-red-500 text-sm"
-                  >
-                    Remove
-                  </button>
-                </li>
-              ))}
-            </ul>
-          )}
+          <div className="bg-white rounded-xl shadow-md p-6">
+            <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+              <input
+                type="text"
+                value={academicEventName}
+                onChange={(e) => setAcademicEventName(e.target.value)}
+                placeholder="Enter event name"
+                className="px-4 py-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-[#0065A8] focus:border-transparent col-span-2"
+              />
+              <div className="flex space-x-2">
+                <input
+                  type="number"
+                  min="1"
+                  max="5"
+                  value={academicEventRating}
+                  onChange={(e) => setAcademicEventRating(e.target.value)}
+                  placeholder="Rating (1-5)"
+                  className="px-4 py-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-[#0065A8] focus:border-transparent w-24"
+                />
+                <button 
+                  onClick={addAcademicEvent}
+                  className="flex-grow px-4 py-2 bg-[#0065A8] text-white rounded-lg hover:bg-[#54BEFF] transition-colors"
+                >
+                  Add Event
+                </button>
+              </div>
+            </div>
+
+            {academicEvents.length > 0 && (
+              <div className="mt-6">
+                <h4 className="font-semibold text-gray-700 mb-3">Added Events:</h4>
+                <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3">
+                  {academicEvents.map((event, index) => (
+                    <div key={index} className="flex items-center justify-between bg-blue-50 p-3 rounded-lg">
+                      <div>
+                        <span className="font-medium">{event.name}</span>
+                        <div className="flex items-center mt-1">
+                          <span className="text-sm text-gray-600">Rating:</span>
+                          <div className="ml-2 flex">
+                            {[...Array(5)].map((_, i) => (
+                              <svg key={i} xmlns="http://www.w3.org/2000/svg" className={`h-4 w-4 ${i < event.rating ? 'text-yellow-400' : 'text-gray-300'}`} viewBox="0 0 20 20" fill="currentColor">
+                                <path d="M9.049 2.927c.3-.921 1.603-.921 1.902 0l1.07 3.292a1 1 0 00.95.69h3.462c.969 0 1.371 1.24.588 1.81l-2.8 2.034a1 1 0 00-.364 1.118l1.07 3.292c.3.921-.755 1.688-1.54 1.118l-2.8-2.034a1 1 0 00-1.175 0l-2.8 2.034c-.784.57-1.838-.197-1.539-1.118l1.07-3.292a1 1 0 00-.364-1.118L2.98 8.72c-.783-.57-.38-1.81.588-1.81h3.461a1 1 0 00.951-.69l1.07-3.292z" />
+                              </svg>
+                            ))}
+                          </div>
+                        </div>
+                      </div>
+                      <button
+                        onClick={() => removeAcademicEvent(index)}
+                        className="text-red-500 hover:text-red-700 p-1"
+                      >
+                        <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5" viewBox="0 0 20 20" fill="currentColor">
+                          <path fillRule="evenodd" d="M9 2a1 1 0 00-.894.553L7.382 4H4a1 1 0 000 2v10a2 2 0 002 2h8a2 2 0 002-2V6a1 1 0 100-2h-3.382l-.724-1.447A1 1 0 0011 2H9zM7 8a1 1 0 012 0v6a1 1 0 11-2 0V8zm5-1a1 1 0 00-1 1v6a1 1 0 102 0V8a1 1 0 00-1-1z" clipRule="evenodd" />
+                        </svg>
+                      </button>
+                    </div>
+                  ))}
+                </div>
+              </div>
+            )}
+
+            {academicEvents.length === 0 && (
+              <div className="mt-6 text-center text-gray-500 p-4 border border-dashed border-gray-300 rounded-lg">
+                <p>No academic events added yet. Add events to include them in your analysis.</p>
+              </div>
+            )}
+          </div>
         </div>
       )}
 
       {allFieldsProvided && grades.length > 0 && (
-        <div className="mt-6 text-center">
+        <div className="mb-10 text-center">
           <button 
             onClick={runComparativeAnalysis}
-            className="px-4 py-2 bg-green-600 text-white rounded-lg hover:bg-green-500 transition"
+            className="px-6 py-3 bg-[#00D1B2] text-white rounded-lg hover:bg-opacity-90 transition shadow-md transform hover:scale-105 duration-300 font-medium flex items-center mx-auto"
           >
+            <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5 mr-2" viewBox="0 0 20 20" fill="currentColor">
+              <path fillRule="evenodd" d="M6 2a2 2 0 00-2 2v12a2 2 0 002 2h8a2 2 0 002-2V7.414A2 2 0 0015.414 6L12 2.586A2 2 0 0010.586 2H6zm2 10a1 1 0 10-2 0v3a1 1 0 102 0v-3zm4-1a1 1 0 011 1v3a1 1 0 11-2 0v-3a1 1 0 011-1zm-2-8a1 1 0 00-1 1v.01a1 1 0 002 0V4a1 1 0 00-1-1z" clipRule="evenodd" />
+            </svg>
             Run Comparative Analysis
           </button>
         </div>
       )}
 
       {analysisResult && (
-        <div className="mt-6">
-          <h3 className="text-2xl font-bold mb-4 text-center text-[#0065A8]">Analysis Results</h3>
+        <div className="mt-8 mb-12">
+          <div className="flex items-center mb-6">
+            <div className="h-0.5 flex-grow mr-4 bg-gradient-to-l from-[#0065A8] to-transparent"></div>
+            <h3 className="text-2xl font-bold text-center text-[#0065A8]">Analysis Results</h3>
+            <div className="h-0.5 flex-grow ml-4 bg-gradient-to-r from-[#0065A8] to-transparent"></div>
+          </div>
           
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
             {/* Basic Info Card */}
-            <div className="bg-white rounded-xl shadow-md p-6 border-t-4 border-[#0065A8]">
-              <h4 className="text-xl font-semibold mb-3">Student Performance</h4>
-              <div className="space-y-2">
-                <p><strong>Student ID:</strong> {analysisResult.student_id}</p>
-                <div className="flex items-center">
-                  <strong>Rating:</strong>
-                  <span className={`ml-2 px-3 py-1 rounded-full text-white ${
-                    analysisResult.rating === "Excellent" ? "bg-green-500" :
-                    analysisResult.rating === "Good" ? "bg-blue-500" :
-                    analysisResult.rating === "Average" ? "bg-yellow-500" :
-                    "bg-red-500"
-                  }`}>
-                    {analysisResult.rating}
-                  </span>
-                </div>
-                <p><strong>Overall Score:</strong> {analysisResult.overall_score * 100}%</p>
+            <div className="bg-white rounded-xl shadow-md overflow-hidden">
+              <div className="bg-[#397de2] text-white p-4">
+                <h4 className="text-xl font-semibold">Student Performance</h4>
               </div>
-              
-              {/* Progress Bar for Overall Score */}
-              <div className="mt-4">
-                <div className="w-full bg-gray-200 rounded-full h-4">
-                  <div 
-                    className={`h-4 rounded-full ${
-                      analysisResult.overall_score >= 0.7 ? "bg-green-500" :
-                      analysisResult.overall_score >= 0.5 ? "bg-blue-500" :
-                      analysisResult.overall_score >= 0.3 ? "bg-yellow-500" :
+              <div className="p-6 space-y-4">
+                <div className="flex justify-between items-center">
+                  <p className="text-gray-700"><span className="font-semibold">Student ID:</span> {analysisResult.student_id}</p>
+                  <div className="flex items-center">
+                    <span className="text-gray-700 mr-2">Rating:</span>
+                    <span className={`px-3 py-1 rounded-full text-white text-sm font-medium ${
+                      analysisResult.rating === "Excellent" ? "bg-green-500" :
+                      analysisResult.rating === "Very Good" ? "bg-[#00D1B2]" :
+                      analysisResult.rating === "Good" ? "bg-blue-500" :
+                      analysisResult.rating === "Satisfactory" ? "bg-yellow-500" :
                       "bg-red-500"
-                    }`}
-                    style={{ width: `${analysisResult.overall_score * 100}%` }}
-                  ></div>
+                    }`}>
+                      {analysisResult.rating}
+                    </span>
+                  </div>
+                </div>
+                
+                <div>
+                  <div className="flex justify-between mb-1">
+                    <span className="text-gray-700 font-medium">Overall Score</span>
+                    <span className="text-gray-700 font-medium">{(analysisResult.overall_score * 100).toFixed(0)}%</span>
+                  </div>
+                  <div className="w-full bg-gray-200 rounded-full h-3">
+                    <div 
+                      className={`h-3 rounded-full ${
+                        analysisResult.overall_score >= 0.8 ? "bg-green-500" :
+                        analysisResult.overall_score >= 0.65 ? "bg-[#00D1B2]" :
+                        analysisResult.overall_score >= 0.5 ? "bg-blue-500" :
+                        analysisResult.overall_score >= 0.35 ? "bg-yellow-500" :
+                        "bg-red-500"
+                      }`}
+                      style={{ width: `${analysisResult.overall_score * 100}%` }}
+                    ></div>
+                  </div>
+                </div>
+
+                <div className="pt-2">
+                  <h5 className="font-semibold text-gray-700 mb-2">Performance Factors</h5>
+                  <div className="space-y-3">
+                    <div>
+                      <div className="flex justify-between text-sm mb-1">
+                        <span>Baseline Factor</span>
+                        <span>{analysisResult.baseline_factor}</span>
+                      </div>
+                      <div className="w-full bg-gray-200 rounded-full h-2">
+                        <div className="bg-[#397de2] h-2 rounded-full" style={{ width: `${analysisResult.baseline_factor * 75}%` }}></div>
+                      </div>
+                    </div>
+                    <div>
+                      <div className="flex justify-between text-sm mb-1">
+                        <span>Consistency Factor</span>
+                        <span>{analysisResult.consistency_factor}</span>
+                      </div>
+                      <div className="w-full bg-gray-200 rounded-full h-2">
+                        <div className="bg-[#397de2] h-2 rounded-full" style={{ width: `${analysisResult.consistency_factor * 100}%` }}></div>
+                      </div>
+                    </div>
+                  </div>
                 </div>
               </div>
             </div>
             
             {/* Grade Improvement Card */}
-            <div className="bg-white rounded-xl shadow-md p-6 border-t-4 border-[#0065A8]">
-              <h4 className="text-xl font-semibold mb-3">Grade Progression</h4>
-              <Bar 
-                data={{
-                  labels: ['Prelim', 'Midterm', 'Pre-Finals', 'Finals'],
-                  datasets: [
-                    {
-                      label: 'Grade',
-                      data: [
-                        analysisResult.grades.prelim,
-                        analysisResult.grades.midterm,
-                        analysisResult.grades.prefinals,
-                        analysisResult.grades.finals
-                      ],
-                      backgroundColor: generateColors(4)
-                    }
-                  ]
-                }}
-                options={{
-                  responsive: true,
-                  scales: {
-                    y: {
-                      beginAtZero: false,
-                      min: Math.max(0, Math.min(
-                        parseFloat(analysisResult.grades.prelim),
-                        parseFloat(analysisResult.grades.midterm),
-                        parseFloat(analysisResult.grades.prefinals),
-                        parseFloat(analysisResult.grades.finals)
-                      ) - 5)
-                    }
-                  }
-                }}
-              />
-              <div className="mt-3 text-center">
-                <p><strong>Improvement:</strong> {analysisResult.grade_improvement > 0 ? "+" : ""}{analysisResult.grade_improvement} points</p>
+            <div className="bg-white rounded-xl shadow-md overflow-hidden">
+              <div className="bg-[#fc6969] text-white p-4">
+                <h4 className="text-xl font-semibold">Grade Progression</h4>
               </div>
-            </div>
-            
-            {/* Academic Events Impact */}
-            {analysisResult.academic_events?.length > 0 && (
-              <div className="bg-white rounded-xl shadow-md p-6 border-t-4 border-[#0065A8]">
-                <h4 className="text-xl font-semibold mb-3">Academic Events Impact</h4>
-                <Pie 
+              <div className="p-6">
+                <Bar 
                   data={{
-                    labels: analysisResult.academic_events.map(event => event.name || `Event ${analysisResult.academic_events.indexOf(event) + 1}`),
+                    labels: ['Prelim', 'Midterm', 'Pre-Finals', 'Finals'],
                     datasets: [
                       {
-                        data: analysisResult.academic_events.map(event => event.rating),
-                        backgroundColor: generateColors(analysisResult.academic_events.length),
-                        borderWidth: 1
+                        label: 'Grade',
+                        data: [
+                          analysisResult.grades.prelim,
+                          analysisResult.grades.midterm,
+                          analysisResult.grades.prefinals,
+                          analysisResult.grades.finals
+                        ],
+                        backgroundColor: ['#397de2', '#54BEFF', '#fc6969', '#00D1B2']
                       }
                     ]
                   }}
@@ -466,70 +524,128 @@ function ComparativeAnalysis() {
                     responsive: true,
                     plugins: {
                       legend: {
-                        position: 'bottom',
+                        display: false
+                      }
+                    },
+                    scales: {
+                      y: {
+                        beginAtZero: false,
+                        min: Math.max(0, Math.min(
+                          parseFloat(analysisResult.grades.prelim),
+                          parseFloat(analysisResult.grades.midterm),
+                          parseFloat(analysisResult.grades.prefinals),
+                          parseFloat(analysisResult.grades.finals)
+                        ) - 5)
                       }
                     }
                   }}
                 />
-                <div className="mt-3 text-center">
-                  <p><strong>Average Impact:</strong> {analysisResult.average_event_impact * 5}/5</p>
+                <div className="mt-4 text-center p-3 bg-gray-50 rounded-lg">
+                  <div className="text-lg font-semibold">
+                    <span className="text-gray-700">Grade Improvement: </span>
+                    <span className={analysisResult.grade_improvement > 0 ? "text-green-600" : analysisResult.grade_improvement < 0 ? "text-red-600" : "text-gray-600"}>
+                      {analysisResult.grade_improvement > 0 ? "+" : ""}{analysisResult.grade_improvement} points
+                    </span>
+                  </div>
+                </div>
+              </div>
+            </div>
+            
+            {/* Academic Events Impact */}
+            {analysisResult.academic_events?.length > 0 && (
+              <div className="bg-white rounded-xl shadow-md overflow-hidden">
+                <div className="bg-[#00D1B2] text-white p-4">
+                  <h4 className="text-xl font-semibold">Academic Events Impact</h4>
+                </div>
+                <div className="p-6">
+                  <Pie 
+                    data={{
+                      labels: analysisResult.academic_events.map(event => event.name || `Event ${analysisResult.academic_events.indexOf(event) + 1}`),
+                      datasets: [
+                        {
+                          data: analysisResult.academic_events.map(event => event.rating),
+                          backgroundColor: generateColors(analysisResult.academic_events.length),
+                          borderWidth: 1
+                        }
+                      ]
+                    }}
+                    options={{
+                      responsive: true,
+                      plugins: {
+                        legend: {
+                          position: 'bottom',
+                          labels: {
+                            padding: 20,
+                            usePointStyle: true,
+                            font: {
+                              size: 11
+                            }
+                          }
+                        }
+                      }
+                    }}
+                  />
+                  <div className="mt-4 text-center p-3 bg-gray-50 rounded-lg">
+                    <div className="text-lg font-semibold text-[#00D1B2]">
+                      Average Impact: {(analysisResult.average_event_impact * 5).toFixed(1)}/5
+                    </div>
+                  </div>
                 </div>
               </div>
             )}
             
             {/* Performance Metrics Radar */}
-            <div className="bg-white rounded-xl shadow-md p-6 border-t-4 border-[#0065A8]">
-              <h4 className="text-xl font-semibold mb-3">Performance Metrics</h4>
-              <Radar
-                data={{
-                  labels: ['Grade Improvement', 'Academic Events', 'Overall Score'],
-                  datasets: [
-                    {
-                      label: 'Student Performance',
-                      data: [
-                        analysisResult.normalized_improvement,
-                        analysisResult.average_event_impact,
-                        analysisResult.overall_score
-                      ],
-                      backgroundColor: 'rgba(54, 162, 235, 0.2)',
-                      borderColor: 'rgb(54, 162, 235)',
-                      pointBackgroundColor: 'rgb(54, 162, 235)',
-                      pointBorderColor: '#fff',
-                      pointHoverBackgroundColor: '#fff',
-                      pointHoverBorderColor: 'rgb(54, 162, 235)'
-                    }
-                  ]
-                }}
-                options={{
-                  scales: {
-                    r: {
-                      angleLines: {
-                        display: true
-                      },
-                      suggestedMin: 0,
-                      suggestedMax: 1
-                    }
-                  }
-                }}
-              />
+            <div className="bg-white rounded-xl shadow-md overflow-hidden">
+              <div className="bg-[#0065A8] text-white p-4">
+                <h4 className="text-xl font-semibold">Performance Metrics</h4>
+              </div>
+              <div className="p-6">
+                <PerformanceRadarChart 
+                  metricsData={{
+                    normalizedImprovement: analysisResult.normalized_improvement,
+                    averageEventImpact: analysisResult.average_event_impact,
+                    consultationQuality: analysisResult.consultation_quality
+                  }}
+                />
+              </div>
             </div>
           </div>
           
           {/* Recommendations Section */}
-          <div className="mt-6 bg-white rounded-xl shadow-md p-6 border-t-4 border-[#0065A8]">
-            <h4 className="text-xl font-semibold mb-3">Recommendations</h4>
-            <div className="p-4 bg-gray-50 rounded-lg">
-              {analysisResult.rating === "Excellent" && (
-                <p>Congratulations on an excellent performance! Continue with your current strategies, and consider mentoring other students.</p>
-              )}
-              {analysisResult.rating === "Good" && (
-                <p>You're doing well! Focus on maintaining consistency and identify opportunities for further improvement in specific areas.</p>
-              )}
-              {analysisResult.rating === "Average" && (
-                <p>You're on the right track. Consider increasing participation in relevant academic events and seeking additional support in challenging topics.</p>
-              )}
-              {analysisResult.rating === "Needs Improvement" && (
-                <p>Schedule regular consultations with your instructor to address specific challenges. Consider supplementary learning resources and structured study plans.</p>
+          <div className="mt-8 bg-white rounded-xl shadow-md overflow-hidden">
+            <div className="bg-[#0065A8] text-white p-4">
+              <h4 className="text-xl font-semibold">Recommendations</h4>
+            </div>
+            <div className="p-6">
+              {analysisResult.recommendations ? (
+                <ul className="space-y-3">
+                  {analysisResult.recommendations.map((recommendation, index) => (
+                    <li key={index} className="flex items-start">
+                      <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5 text-[#0065A8] mt-0.5 mr-2 flex-shrink-0" viewBox="0 0 20 20" fill="currentColor">
+                        <path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clipRule="evenodd" />
+                      </svg>
+                      <span className="text-gray-700">{recommendation}</span>
+                    </li>
+                  ))}
+                </ul>
+              ) : (
+                <div className="p-4 bg-gray-50 rounded-lg">
+                  {analysisResult.rating === "Excellent" && (
+                    <p className="text-gray-700">Congratulations on an excellent performance! Continue with your current strategies, and consider mentoring other students.</p>
+                  )}
+                  {analysisResult.rating === "Very Good" && (
+                    <p className="text-gray-700">You're performing very well! Focus on maintaining consistency and explore more advanced concepts in your studies.</p>
+                  )}
+                  {analysisResult.rating === "Good" && (
+                    <p className="text-gray-700">You're doing well! Focus on maintaining consistency and identify opportunities for further improvement in specific areas.</p>
+                  )}
+                  {analysisResult.rating === "Satisfactory" && (
+                    <p className="text-gray-700">You're on the right track. Consider increasing participation in relevant academic events and seeking additional support in challenging topics.</p>
+                  )}
+                  {analysisResult.rating === "Needs Improvement" && (
+                    <p className="text-gray-700">Schedule regular consultations with your instructor to address specific challenges. Consider supplementary learning resources and structured study plans.</p>
+                  )}
+                </div>
               )}
             </div>
           </div>
