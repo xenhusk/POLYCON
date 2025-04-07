@@ -1,24 +1,23 @@
 .fade-in {
-  animation: fadeInBottom 0.5s ease-in-out;
-  animation-fill-mode: both;
+  animation: fadeIn 0.5s ease-in;
 }
 
 .delay-100 {
-  animation-delay: 0.1s;
+  animation-delay: 100ms;
 }
 
 .delay-200 {
-  animation-delay: 0.2s;
+  animation-delay: 200ms;
 }
 
 .delay-300 {
-  animation-delay: 0.3s;
+  animation-delay: 300ms;
 }
 
-@keyframes fadeInBottom {
+@keyframes fadeIn {
   from {
     opacity: 0;
-    transform: translateY(20px);
+    transform: translateY(10px);
   }
   to {
     opacity: 1;

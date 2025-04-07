@@ -328,8 +328,18 @@ def update_user():
         if 'lastName' in data: updates['lastName'] = data['lastName']
         if 'email' in data: updates['email'] = data['email']
         if 'role' in data: updates['role'] = data['role']
+        
+        # Handle department update with proper reference
         if 'department' in data and data['department']:
-            updates['department'] = f"/departments/{data['department']}"
+            # Get department reference
+            department_id = data['department']
+            department_ref = db.collection('departments').document(department_id)
+            department_doc = department_ref.get()
+            
+            if not department_doc.exists:
+                return jsonify({"error": "Invalid department ID"}), 400
+                
+            updates['department'] = department_ref
 
         print("Updating user with:", updates)  # Debugging log
         user_ref.update(updates)

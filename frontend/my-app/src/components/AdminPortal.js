@@ -2,6 +2,7 @@ import React, { useEffect, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { ReactComponent as EditIcon } from "./icons/Edit.svg";
 import { ReactComponent as DeleteIcon } from "./icons/delete.svg";
+import './transitions.css';  // Add this import
 
 export default function AdminPortal() {
   const [idNumber, setIdNumber] = useState('');
@@ -31,17 +32,47 @@ export default function AdminPortal() {
   const [userToDelete, setUserToDelete] = useState(null);
 
   useEffect(() => {
-    fetchAllUsers();
-    fetchDepartments();
+    fetchInitialData();
   }, []);
 
-  useEffect(() => {
-    if (department && role === 'student') {
-      fetchPrograms(department);
-    } else {
-      setPrograms([]);
+  const fetchInitialData = async () => {
+    setLoading(true);
+    try {
+      // Try to get data from cache first
+      const cachedUsers = localStorage.getItem('users');
+      const cachedDepartments = localStorage.getItem('departments');
+
+      if (cachedUsers && cachedDepartments) {
+        const usersData = JSON.parse(cachedUsers);
+        const departmentsData = JSON.parse(cachedDepartments);
+
+        setUserList(usersData);
+        setDepartments(departmentsData);
+      } else {
+        // If no cache, fetch from server
+        const [usersResponse, departmentsResponse] = await Promise.all([
+          fetch('http://localhost:5001/account/get_all_users'),
+          fetch('http://localhost:5001/account/departments')
+        ]);
+
+        const usersData = await usersResponse.json();
+        const departmentsData = await departmentsResponse.json();
+
+        setUserList(Array.isArray(usersData) ? usersData : []);
+        setDepartments(Array.isArray(departmentsData) ? departmentsData : []);
+
+        // Cache the fetched data
+        localStorage.setItem('users', JSON.stringify(usersData));
+        localStorage.setItem('departments', JSON.stringify(departmentsData));
+      }
+    } catch (error) {
+      console.error('Error fetching initial data:', error);
+      setUserList([]);
+      setDepartments([]);
+    } finally {
+      setLoading(false);
     }
-  }, [department, role]);  
+  };
 
   const fetchAllUsers = async () => {
     setLoading(true);
@@ -50,9 +81,9 @@ export default function AdminPortal() {
       const data = await response.json();
       if (Array.isArray(data)) {
         setUserList(data);
+        localStorage.setItem('users', JSON.stringify(data));
       } else {
         setUserList([]);
-        console.error('Unexpected response format:', data);
       }
     } catch (error) {
       console.error('Error fetching users:', error);
@@ -67,6 +98,7 @@ export default function AdminPortal() {
       const response = await fetch('http://localhost:5001/account/departments');
       const data = await response.json();
       setDepartments(data);
+      localStorage.setItem('departments', JSON.stringify(data));
     } catch (error) {
       console.error('Error fetching departments:', error);
     }
@@ -127,33 +159,40 @@ export default function AdminPortal() {
     }
   };
 
-  
-
   const handleEditClick = async (user) => {
     setModalClosing(false);
     setIsEditLoading(false);
-    try{
-      setEditUser({
-        idNumber: user.ID,
-        firstName: user.firstName,
-        lastName: user.lastName,
-        email: user.email,
-        role: user.role,
-        department: user.department,
-        program: user.program || '',
-        sex: user.sex || '',
-        yearSection: user.year_section || ''
-      });
+    try {
+        let departmentId = '';
+        if (user.department && typeof user.department === 'string') {
+            if (user.department.includes('departments/')) {
+                departmentId = user.department.split('/')[1];
+            } else {
+                const matchingDept = departments.find(dept => dept.departmentName === user.department);
+                departmentId = matchingDept ? matchingDept.departmentID : '';
+            }
+        }
 
-      if (user.role === 'student' && user.department) {
-        await fetchPrograms(user.department);
-      } 
-    }catch (error) {
-      console.error("Error updating user:", error);
-      // Optionally show an error message
+        setEditUser({
+            idNumber: user.ID,
+            firstName: user.firstName,
+            lastName: user.lastName,
+            email: user.email,
+            role: user.role,
+            department: departmentId,
+            program: user.program || '',
+            sex: user.sex || '',
+            yearSection: user.year_section || ''
+        });
+
+        if (user.role === 'student' && departmentId) {
+            await fetchPrograms(departmentId);
+        }
+    } catch (error) {
+        console.error("Error updating user:", error);
     } finally {
-      setIsEditLoading(false); // hide spinner
-      setModalClosing(false); // show modal
+        setIsEditLoading(false);
+        setModalClosing(false);
     }
   };
 
@@ -206,13 +245,11 @@ export default function AdminPortal() {
       setUserToDelete(null);
     }
   };
-  
 
   const handleRoleChange = (e) => {
     const selectedRole = e.target.value;
     setRole(selectedRole);
     
-    // Animate when "student" is selected
     if (selectedRole === "student") {
       setShowStudentFields(true);
     } else {
@@ -221,16 +258,15 @@ export default function AdminPortal() {
   };
 
   return (
-    <div className="w-full min-h-screen p-6 items-center">
-      <header className="w-full max-w-[95%] bg-white mt-10 rounded-br-[0.8rem] rounded-bl-[0.8rem] flex justify-center items-center mb-2">
+    <div className="w-full min-h-screen p-6 items-center fade-in">
+      <header className="w-full max-w-[95%] bg-white mt-10 rounded-br-[0.8rem] rounded-bl-[0.8rem] flex justify-center items-center mb-2 fade-in delay-100">
         <h2 className="text-3xl font-bold text-center pb-5 text-[#005B98]">Manage Users</h2>
       </header>
 
-      <div className="flex justify-center items-start mb-2 mt-8 h-[60vh]">
+      <div className="flex justify-center items-start mb-2 mt-8 h-[60vh] fade-in delay-200">
         <div className="w-[90%] max-h-[65vh] overflow-hidden rounded-lg shadow-lg bg-white">
           <div className="overflow-x-auto">
             <div className="relative">
-              {/* Table wrapper to control scrolling */}
               <table className="w-full table-fixed items-center justify-center">
                 <thead className="sticky top-0 bg-[#057DCD] text-white shadow-md z-10 mr-2">
                   <tr>
@@ -244,12 +280,10 @@ export default function AdminPortal() {
                 </thead>
               </table>
 
-              {/* Scrollable tbody */}
               <div className="max-h-[50vh] overflow-y-auto">
                 <table className="w-full table-fixed border-collapse">
                   <tbody>
                     {loading ? (
-                      // 🚀 Show skeleton loader when loading
                       Array.from({ length: 5 }).map((_, index) => (
                         <tr key={index} className="animate-pulse">
                           <td className="py-2 px-6">
@@ -286,7 +320,6 @@ export default function AdminPortal() {
                         </tr>
                       ))
                     ) : (
-                      // 🚀 Show actual data when loaded
                       userList.map((u) => (
                         <tr key={u.ID} className="border-b hover:bg-[#DBF1FF] transition-all duration-100 ease-in-out">
                           <td className="py-2 px-6 overflow-hidden text-center">{u.ID}</td>
@@ -331,7 +364,6 @@ export default function AdminPortal() {
         </div>
       </div>
 
-      {/* DeleteAccount */}
       {showDeleteModal && (
         <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
           <div className="bg-white rounded-lg p-6 w-96">
@@ -382,8 +414,7 @@ export default function AdminPortal() {
         </div>
       )}
 
-      {/* Add User Form */}
-      <div className="flex justify-center items-center">
+      <div className="flex justify-center items-center fade-in delay-300">
         <div className="w-[90%] h-[10vh]">
           <div className="flex flex-row bg-white shadow-md p-1 rounded-lg justify-between items-center">
             <input
@@ -433,7 +464,6 @@ export default function AdminPortal() {
               ))}
             </select>
 
-            {/* Store Student Fields */}
             <div className={`flex p-0 w-auto justify-center transition-all duration-500 ease-in-out transform ${
                 showStudentFields ? "opacity-100 scale-100" : "opacity-0 scale-90"
               }`}>
@@ -479,14 +509,12 @@ export default function AdminPortal() {
         </div>
       </div>
 
-      {/* Edit User Modal */}
       {editUser && (
         <div
           className={`fixed inset-0 bg-black bg-opacity-50 flex flex-col items-center justify-center z-50 transition-opacity duration-500 ${
             modalClosing ? "opacity-0" : "opacity-100"
           }`}>
 
-            {/* Modal Title */}
             <div className='bg-[#0065A8] w-[85%] md:w-[50%] px-6 py-4 flex relative items-center top-0 right-0 left-0 rounded-t-lg'>
                 <h3 className="text-xl font-semibold text-white">Edit User</h3>
             </div>
@@ -495,7 +523,6 @@ export default function AdminPortal() {
             className={`bg-white w-[85%] md:w-[50%] h-[70vh] p-6 rounded-br-lg rounded-bl-lg shadow-lg relative overflow-y-auto transform transition-all duration-500
             }`}>
 
-            {/* Edit User Form */}
             <div className='p-4'>
               <label htmlFor="IdNumber" className='block text-sm font-medium text-gray-700 mb-1'> ID Number</label>
               <input
@@ -531,8 +558,6 @@ export default function AdminPortal() {
                 className="w-full min-h-[45px] items-center mb-2 border-2 border-[#0065A8] rounded-lg px-3 py-2 dark:border-gray-600 dark:focus:border-blue-500 focus:outline-none focus:ring-2 focus:border-[#0065A8] peer appearance-none"
               />
 
-              {/* Role Selection */}
-
               <label htmlFor="Role" className='block text-sm font-medium text-gray-700 mb-1'> Role</label>
               <select
                 value={editUser.role}
@@ -545,7 +570,6 @@ export default function AdminPortal() {
                 <option value="admin">Admin</option>
               </select>
 
-              {/* Department Selection */}
               <label htmlFor="Department" className='block text-sm font-medium text-gray-700 mb-1'> Department</label>
               <select
                 value={editUser.department}
@@ -568,7 +592,6 @@ export default function AdminPortal() {
 
               {editUser.role === "student" && editUser.department && (
                 <>
-                  {/* Program Selection (Visible only for Students) */}
                   <label htmlFor="Program" className='block text-sm font-medium text-gray-700 mb-1'> Program</label>
                   <select
                     value={editUser.program}
@@ -583,7 +606,6 @@ export default function AdminPortal() {
                     ))}
                   </select>
 
-                  {/* Gender Selection */}
                   <label htmlFor="Sex" className='block text-sm font-medium text-gray-700 mb-1'> Gender</label>
                   <select
                     value={editUser.sex}
@@ -595,7 +617,6 @@ export default function AdminPortal() {
                     <option value="Female">Female</option>
                   </select>
 
-                  {/* Year & Section Input */}
                   <label htmlFor="YearSection" className='block text-sm font-medium text-gray-700 mb-1'> Year & Section</label>
                   <input
                     placeholder="Year & Section"
@@ -605,7 +626,6 @@ export default function AdminPortal() {
                   />
                 </>
               )}
-              {/* Buttons */}
               <div className="py-2 flex justify-end space-x-4 bg-white rounded-b-lg">
                 <button
                   className={`bg-[#0065A8] hover:bg-[#54BEFF] text-white px-4 py-2 rounded-lg transition-colors
@@ -613,7 +633,6 @@ export default function AdminPortal() {
                     ${isEditLoading ? "opacity-50 cursor-not-allowed" : ""} 
                   `}
                   disabled={isEditLoading}
-                  // Save User & Delay Edit User State Reset
                   onClick={() => {
                     setSaveClicked(true); setTimeout(() => {setSaveClicked(false); setModalClosing(true); setTimeout(() => {handleUpdateUser(); setEditUser(null);
                       }, 500);
@@ -652,7 +671,6 @@ export default function AdminPortal() {
                   className={`bg-gray-500 text-white px-4 py-2 rounded-lg transition-colors
                      ${ CancelClicked ? "scale-90" : "scale-100"
                   }`}
-                  // Cancel Edit & Delay Edit User State Reset
                   onClick={() => {
                     setCancelClicked(true); setTimeout(() => { setCancelClicked(false); setModalClosing(true); setTimeout(() => setEditUser(null), 
                       500);
