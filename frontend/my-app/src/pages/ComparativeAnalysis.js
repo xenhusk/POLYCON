@@ -46,6 +46,7 @@ function ComparativeAnalysis() {
   const [tempStudent, setTempStudent] = useState('');
   const [tempCourse, setTempCourse] = useState('');
   const [tempStudents, setTempStudents] = useState([]); // students list for the chosen teacher
+  const [isLoadingStudents, setIsLoadingStudents] = useState(false);
 
   // Animation variants for modal
   const modalVariants = {
@@ -56,34 +57,49 @@ function ComparativeAnalysis() {
 
   // On mount, fetch semesters and teachers
   useEffect(() => {
+    // Get the logged-in teacher's information from localStorage
+    const teacherId = localStorage.getItem('teacherId') || localStorage.getItem('teacherID');
+    const userInfo = JSON.parse(localStorage.getItem('userInfo') || '{}');
+    const firstName = userInfo.firstName || localStorage.getItem('firstName');
+    const lastName = userInfo.lastName || localStorage.getItem('lastName');
+    
+    console.log('Teacher Info:', { teacherId, firstName, lastName, userInfo });
+
+    if (teacherId && (firstName || lastName)) {
+      const teacher = {
+        id: teacherId,
+        fullName: `${firstName || ''} ${lastName || ''}`.trim()
+      };
+      
+      console.log('Setting teacher in ComparativeAnalysis:', teacher);
+      setTeachers([teacher]);
+      setTempTeacher(teacher.id);
+      setSelectedTeacher(teacher.id);
+    }
+
     // Fetch semester options
     fetch('http://localhost:5001/semester/get_semester_options')
       .then(res => res.json())
       .then(data => {
         setSemesters(data);
         if (data.length > 0) {
-          // Optionally, you can preselect the latest semester
           setSelectedSemester(data[0]);
         }
       })
       .catch(err => console.error('Error fetching semesters:', err));
-
-    // Fetch all teachers for dropdown
-    fetch('http://localhost:5001/bookings/get_teachers')
-      .then(res => res.json())
-      .then(data => setTeachers(data))
-      .catch(err => console.error('Error fetching teachers:', err));
   }, []);
 
   // When a teacher is selected in the main state, fetch the students list
   useEffect(() => {
-    if (selectedTeacher) {
-      fetch(`http://localhost:5001/polycon-analysis/get_teacher_students?teacherID=${selectedTeacher}`)
+    if (selectedTeacher && selectedSemester) {
+      fetch(`http://localhost:5001/polycon-analysis/get_teacher_students?teacherID=${selectedTeacher}&schoolYear=${selectedSemester.school_year}&semester=${selectedSemester.semester}`)
         .then(res => res.json())
         .then(data => setStudents(data))
         .catch(err => console.error('Error fetching students:', err));
+    } else {
+      setStudents([]);
     }
-  }, [selectedTeacher]);
+  }, [selectedTeacher, selectedSemester]);
 
   // Fetch grades and consultation history when all main filters are provided
   useEffect(() => {
@@ -158,6 +174,26 @@ function ComparativeAnalysis() {
       setAvailableCourses([]);
     }
   }, [showSelectionModal, tempTeacher, tempStudent, tempSemester]);
+
+  // When a teacher and semester are selected in the temp state, fetch their students
+  useEffect(() => {
+    if (tempTeacher && tempSemester) {
+      setIsLoadingStudents(true);
+      fetch(`http://localhost:5001/polycon-analysis/get_teacher_students?teacherID=${tempTeacher}&schoolYear=${tempSemester.school_year}&semester=${tempSemester.semester}`)
+        .then(res => res.json())
+        .then(data => {
+          setTempStudents(Array.isArray(data) ? data : []);
+          setIsLoadingStudents(false);
+        })
+        .catch(err => {
+          console.error('Error fetching students:', err);
+          setTempStudents([]);
+          setIsLoadingStudents(false);
+        });
+    } else {
+      setTempStudents([]);
+    }
+  }, [tempTeacher, tempSemester]);
 
   // Open the selection modal and initialize temporary fields from current selections (if any)
   const openSelectionModal = () => {
@@ -706,6 +742,8 @@ function ComparativeAnalysis() {
                   onChange={(e) => {
                     const sem = semesters.find(s => `${s.school_year}|${s.semester}` === e.target.value);
                     setTempSemester(sem);
+                    setTempStudent(''); // Clear selected student when semester changes
+                    setTempCourse(''); // Clear selected course when semester changes
                   }}
                 >
                   <option value="">Select a semester</option>
@@ -717,25 +755,12 @@ function ComparativeAnalysis() {
                 </select>
               </div>
 
-              {/* Teacher Dropdown */}
+              {/* Teacher Display */}
               <div className="mb-4">
-                <label className="block text-gray-700 mb-1">Select Teacher:</label>
-                <select 
-                  className="w-full px-3 py-2 border-2 border-[#0065A8] rounded-lg focus:outline-none focus:ring-2 focus:ring-[#54BEFF]"
-                  value={tempTeacher}
-                  onChange={(e) => {
-                    setTempTeacher(e.target.value);
-                    setTempStudent(''); // reset student when teacher changes
-                    setTempCourse('');  // reset course as well
-                  }}
-                >
-                  <option value="">Select a teacher</option>
-                  {teachers.map((teacher) => (
-                    <option key={teacher.id} value={teacher.id}>
-                      {teacher.firstName} {teacher.lastName}
-                    </option>
-                  ))}
-                </select>
+                <label className="block text-gray-700 mb-1">Teacher:</label>
+                <div className="w-full px-3 py-2 border-2 border-[#0065A8] rounded-lg ">
+                  {teachers[0]?.fullName || 'Loading...'}
+                </div>
               </div>
 
               {/* Student Dropdown */}
@@ -748,14 +773,18 @@ function ComparativeAnalysis() {
                     setTempStudent(e.target.value);
                     setTempCourse('');
                   }}
-                  disabled={!tempTeacher || tempStudents.length === 0}
+                  disabled={!tempTeacher || !tempSemester || tempStudents.length === 0}
                 >
                   <option value="">Select a student</option>
-                  {tempStudents.map(student => (
-                    <option key={student.id} value={student.id}>
-                      {student.firstName} {student.lastName}
-                    </option>
-                  ))}
+                  {isLoadingStudents ? (
+                    <option value="" disabled>Loading students...</option>
+                  ) : (
+                    Array.isArray(tempStudents) && tempStudents.map(student => (
+                      <option key={student.id} value={student.id}>
+                        {student.firstName} {student.lastName}
+                      </option>
+                    ))
+                  )}
                 </select>
               </div>
 

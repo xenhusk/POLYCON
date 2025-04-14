@@ -1,4 +1,3 @@
-
 from flask import Blueprint, request, jsonify
 from services.firebase_service import db
 from google.cloud import firestore
@@ -227,96 +226,76 @@ def get_students():
 @polycon_analysis_bp.route('/get_teacher_students', methods=['GET'])
 def get_teacher_students():
     """
-    Return all 'student' users who are enrolled and share the same department
-    as the given teacher. This version ignores consultation sessions entirely.
+    Return only students who have grades from the specified teacher for a specific semester and school year.
     """
     try:
         teacher_id = request.args.get('teacherID')
-        if not teacher_id:
-            return jsonify({"error": "Teacher ID is required"}), 400
+        school_year = request.args.get('schoolYear')
+        semester = request.args.get('semester')
 
-        # 1) Try to get the teacher doc from 'faculty'
-        teacher_ref = db.document(f'faculty/{teacher_id}')
-        teacher_doc = teacher_ref.get()
-        if teacher_doc.exists:
-            teacher_data = teacher_doc.to_dict()
-        else:
-            # If no faculty doc, fall back to 'user' doc
-            user_doc = db.collection('user').document(teacher_id).get()
-            if not user_doc.exists:
-                # If there's no user doc either, return empty
-                return jsonify([]), 200
-            teacher_data = user_doc.to_dict()
+        if not teacher_id or not school_year or not semester:
+            return jsonify({"error": "Teacher ID, school year, and semester are required"}), 400
 
-        # 2) Grab the department field from the teacher data
-        teacher_department = teacher_data.get('department')
-        if not teacher_department:
-            # If missing in faculty doc, also check user doc just in case
-            user_doc = db.collection('user').document(teacher_id).get()
-            if user_doc.exists:
-                teacher_department = user_doc.to_dict().get('department')
+        print(f"Searching grades for teacher: {teacher_id}, School Year: {school_year}, Semester: {semester}")
 
-        if not teacher_department:
-            # No department info at all -> no students to return
+        # Build the faculty reference
+        faculty_ref = db.document(f'user/{teacher_id}')
+        print(f"Faculty reference being used for query: {faculty_ref.path}")
+
+        # Query the grades collection with semester and school year filter
+        grades = db.collection('grades')\
+            .where('facultyID', '==', faculty_ref)\
+            .where('school_year', '==', school_year)\
+            .where('semester', '==', semester)\
+            .stream()
+
+        student_ids = set()
+        count = 0
+        for grade in grades:
+            count += 1
+            grade_data = grade.to_dict()
+            if 'studentID' in grade_data and isinstance(grade_data['studentID'], DocumentReference):
+                student_id_extracted = grade_data['studentID'].id
+                student_ids.add(student_id_extracted)
+                print(f"Found grade for student: {student_id_extracted}")
+        print(f"Number of grade docs found with facultyID {faculty_ref.path}: {count}")
+
+        if not student_ids:
+            print("No students found with grades from this teacher in the specified semester")
             return jsonify([]), 200
 
-        # 3) Convert the teacher's department into a consistent string path if it's a DocumentReference
-        if isinstance(teacher_department, firestore.DocumentReference):
-            teacher_department_str = teacher_department.path  # e.g. "departments/D01"
-        else:
-            teacher_department_str = str(teacher_department).strip()
-
-        # 4) Query all user docs with role='student'
-        #    We cannot do .where('department', '==', ...) directly if half are strings and half are references,
-        #    so we do a broad query and then compare in Python.
-        students_query = db.collection('user').where('role', '==', 'student').stream()
-
+        # Get details for each student
         matched_students = []
-        for user_doc in students_query:
+        for student_id in student_ids:
+            user_doc = db.collection('user').document(student_id).get()
+            if not user_doc.exists:
+                print(f"User document not found for student: {student_id}")
+                continue
             user_data = user_doc.to_dict()
-            student_id = user_doc.id
+            student_doc = db.collection('students').document(student_id).get()
+            if not student_doc.exists:
+                print(f"Student document not found for: {student_id}")
+                continue
+            student_data = student_doc.to_dict()
+            if not student_data.get('isEnrolled', False):
+                print(f"Student not enrolled: {student_id}")
+                continue
 
-            # 5) Compare the department field
-            student_dept = user_data.get('department', '')
-            if isinstance(student_dept, firestore.DocumentReference):
-                student_dept = student_dept.path
+            student = {
+                'id': student_id,
+                'firstName': user_data.get('firstName', ''),
+                'lastName': user_data.get('lastName', ''),
+                'fullName': f"{user_data.get('firstName', '')} {user_data.get('lastName', '')}".strip()
+            }
+            print(f"Adding student to list: {student['fullName']}")
+            matched_students.append(student)
 
-            if str(student_dept).strip() == teacher_department_str:
-                # 6) Fetch additional info from 'students/{student_id}'
-                stud_doc = db.collection('students').document(student_id).get()
-                if not stud_doc.exists:
-                    continue
-
-                stud_info = stud_doc.to_dict()
-                if not stud_info.get('isEnrolled', False):
-                    # Only return if the student is enrolled
-                    continue
-
-                # 7) Get program name if program is a reference
-                program_name = ''
-                program_ref = stud_info.get('program')
-                if program_ref and isinstance(program_ref, firestore.DocumentReference):
-                    pdoc = program_ref.get()
-                    if pdoc.exists:
-                        program_name = pdoc.to_dict().get('programName', '')
-
-                # 8) Build the final student record
-                matched_students.append({
-                    'id': student_id,
-                    'firstName': user_data.get('firstName', ''),
-                    'lastName':  user_data.get('lastName', ''),
-                    'fullName': f"{user_data.get('firstName','')} {user_data.get('lastName','')}".strip(),
-                    'profile_picture': user_data.get('profile_picture', ''),
-                    'program': program_name,
-                    'year_section': stud_info.get('year_section', '')
-                })
-
+        print(f"Total students with grades found: {len(matched_students)}")
         return jsonify(matched_students), 200
 
     except Exception as e:
-        print(f"Error in get_teacher_students: {e}")
+        print(f"Error in get_teacher_students: {str(e)}")
         return jsonify({"error": str(e)}), 500
-
 
 @polycon_analysis_bp.route('/get_grades_by_period', methods=['GET'])
 def get_grades_by_period():
@@ -330,40 +309,20 @@ def get_grades_by_period():
         if not student_id or not school_year or not semester:
             return jsonify({"error": "Student ID, school year, and semester are required"}), 400
 
-        # 1) Fetch semester doc
-        semester_query = db.collection('semesters') \
-                           .where('school_year', '==', school_year) \
-                           .where('semester', '==', semester) \
-                           .limit(1).stream()
-        semester_doc = next(semester_query, None)
-        if not semester_doc:
-            return jsonify({"error": "Semester not found"}), 404
-
-        semester_data = semester_doc.to_dict()
-        start_date_str = semester_data.get('startDate')
-        end_date_str   = semester_data.get('endDate')
-        if not start_date_str or not end_date_str:
-            return jsonify({"error": "Semester has no valid start or end date"}), 400
-
-        start_date = datetime.strptime(start_date_str, "%Y-%m-%d")
-        end_date   = datetime.strptime(end_date_str,   "%Y-%m-%d")
-
-        # 2) Build student reference
+        # Build student reference
         student_ref = db.document(f'students/{student_id}')
 
-        # 3) Base query
+        # Base query with school year and semester filter
         query = db.collection('grades') \
                   .where('studentID', '==', student_ref) \
-                  .where('created_at', '>=', start_date) \
-                  .where('created_at', '<=', end_date) \
                   .where('school_year', '==', school_year) \
                   .where('semester', '==', semester)
 
-        # 4) If teacher_id is provided, handle either 'faculty/{id}' or 'user/{id}'
+        # If teacher_id is provided, handle either 'faculty/{id}' or 'user/{id}'
         if teacher_id:
             # We attempt to see which doc actually exists
             faculty_ref = db.document(f'faculty/{teacher_id}')
-            user_ref    = db.document(f'user/{teacher_id}')
+            user_ref = db.document(f'user/{teacher_id}')
             # We'll gather whichever doc(s) actually exist
             possible_refs = []
             if faculty_ref.get().exists:
@@ -376,17 +335,17 @@ def get_grades_by_period():
                 # Firestore allows 'in' with up to 10 references
                 query = query.where('facultyID', 'in', possible_refs)
 
-        # 5) Stream the grades
+        # Stream the grades
         grades_docs = query.stream()
 
-        # 6) Group by course
+        # Group by course
         course_grades = {}
         for doc in grades_docs:
             grade_data = doc.to_dict()
 
             # Get course name
             course_name = "Unknown Course"
-            course_ref  = grade_data.get('courseID')
+            course_ref = grade_data.get('courseID')
             if isinstance(course_ref, DocumentReference):
                 cdoc = course_ref.get()
                 if cdoc.exists:
@@ -401,25 +360,25 @@ def get_grades_by_period():
             # Setup or update period-based grades
             if course_name not in course_grades:
                 course_grades[course_name] = {
-                    'Prelim':    'N/A',
-                    'Midterm':   'N/A',
+                    'Prelim': 'N/A',
+                    'Midterm': 'N/A',
                     'Pre-Final': 'N/A',
-                    'Final':     'N/A'
+                    'Final': 'N/A'
                 }
 
-            period      = grade_data.get('period', '')
+            period = grade_data.get('period', '')
             grade_value = grade_data.get('grade', 'N/A')
             if period in course_grades[course_name]:
                 course_grades[course_name][period] = grade_value
 
-        # 7) Format for the front-end
+        # Format for the front-end
         formatted_grades = [
             {
-                'course':    cname,
-                'Prelim':    pdata['Prelim'],
-                'Midterm':   pdata['Midterm'],
+                'course': cname,
+                'Prelim': pdata['Prelim'],
+                'Midterm': pdata['Midterm'],
                 'Pre-Final': pdata['Pre-Final'],
-                'Final':     pdata['Final']
+                'Final': pdata['Final']
             }
             for cname, pdata in course_grades.items()
         ]

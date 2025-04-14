@@ -43,7 +43,28 @@ const Login = ({ onLoginSuccess, onSwitchToSignup }) => {
       const data = await response.json();
   
       if (response.ok) {
-        console.log("Login successful:", data);
+        console.log("Login response data:", data); // Add this debug log
+
+        // Store complete user info including name
+        const userInfo = {
+          email: email,
+          teacherId: data.teacherId || data.userId || data.id,
+          role: data.role,
+          firstName: data.firstName,
+          lastName: data.lastName,
+          fullName: `${data.firstName} ${data.lastName}`.trim()  // Add this
+        };
+        
+        console.log("About to store userInfo:", userInfo);
+        localStorage.setItem("userInfo", JSON.stringify(userInfo));
+        
+        // Verify storage immediately
+        const storedInfo = localStorage.getItem("userInfo");
+        console.log("Verification - stored userInfo:", storedInfo);
+        const parsedInfo = JSON.parse(storedInfo);
+        console.log("Parsed userInfo:", parsedInfo);
+
+        // Rest of the existing login code...
         localStorage.setItem("userEmail", email);
         storeUserAuth(data, data.role);
   
