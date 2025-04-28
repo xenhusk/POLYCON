@@ -111,7 +111,8 @@ def signup():
             "email": email,
             "password": hashed_password,
             "department": db.collection('departments').document(department_id),  # Firestore reference
-            "role": role
+            "role": role,
+            "archived": 0  # Default value for archived field
         })
 
         # Store student-specific data in Firestore under 'students' collection if role is student
@@ -282,10 +283,12 @@ def get_all_users():
     try:
         role_filter = request.args.get('role')
         users_collection = db.collection('user')
-        if (role_filter):
-            query = users_collection.where('role', '==', role_filter).stream()
+        
+        # Base query to get non-archived users
+        if role_filter:
+            query = users_collection.where('role', '==', role_filter).where('archived', '!=', 1).stream()
         else:
-            query = users_collection.stream()
+            query = users_collection.where('archived', '!=', 1).stream()
 
         users = []
         for doc in query:
@@ -360,23 +363,12 @@ def delete_user():
         if not user_doc.exists:
             return jsonify({"error": "User not found"}), 404
 
-        user_data = user_doc.to_dict()
-        email = user_data.get('email')
+        # Update the archived field instead of deleting
+        user_ref.update({
+            'archived': 1
+        })
 
-        # Optionally also remove from 'students' or 'faculty' if needed
-        if user_data.get('role') == 'student':
-            db.collection('students').document(id_number).delete()
-        elif user_data.get('role') == 'faculty':
-            db.collection('faculty').document(id_number).delete()
-
-        # Delete user from Firestore
-        user_ref.delete()
-
-        # Delete user from Firebase Authentication
-        user = auth_pyrebase.get_user_by_email(email)
-        auth_pyrebase.delete_user(user.uid)
-
-        return jsonify({"message": "User deleted successfully"}), 200
+        return jsonify({"message": "User archived successfully"}), 200
     except Exception as e:
         return jsonify({"error": str(e)}), 500
 
