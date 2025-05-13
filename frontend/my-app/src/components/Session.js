@@ -545,7 +545,7 @@ const Session = () => {
               </div>
 
               {/* Assessment Data Button */}
-              <button
+              {/* <button
                 onClick={() => {
                   setAssessmentClicked(true);
                   setTimeout(() => { setAssessmentClicked(false);
@@ -557,7 +557,7 @@ const Session = () => {
                 `}
               >
                 Assessment Data
-              </button>
+              </button> */}
             </div>
 
             {/* Controls Section */}
