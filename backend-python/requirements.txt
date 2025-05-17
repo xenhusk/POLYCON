@@ -19,3 +19,4 @@ apscheduler
 pytz
 celery
 redis
+gevent

@@ -1,8 +1,19 @@
 # backend-python/tasks.py
 
-# MUST BE AT THE VERY TOP before other standard library imports
-import eventlet
-eventlet.monkey_patch() # You can also use eventlet.monkey_patch(all=True) for more thorough patching
+# MUST BE AT THE VERY TOP
+import gevent # Import gevent
+from gevent import monkey # Import monkey directly
+monkey.patch_all() # Patch with gevent
+
+# Initialize gRPC for gevent IMMEDIATELY AFTER monkey_patching
+try:
+    import grpc.experimental.gevent as grpc_gevent
+    grpc_gevent.init_gevent()
+    print("GRPC_INIT_CELERY: Successfully initialized gRPC for gevent in Celery worker.")
+except ImportError:
+    print("WARNING_CELERY: grpc.experimental.gevent not found. Firestore might still have issues with gevent in Celery worker.")
+except Exception as e_grpc_init_celery:
+    print(f"ERROR_CELERY: Failed to initialize gRPC for gevent in Celery worker: {e_grpc_init_celery}")
 
 import os
 import tempfile
@@ -16,7 +27,7 @@ from services.google_storage import upload_audio
 from services.assemblyai_service import transcribe_audio_with_assemblyai
 from services.consultation_quality_service import calculate_consultation_quality
 from services.google_gemini import identify_roles_in_transcription
-# DO NOT import Flask blueprints (like consultation_bp)
+# DO NOT import Flask blueprints
 # DO NOT import create_app from app.py here at the global level
 
 # Initialize your Celery application instance
@@ -42,9 +53,10 @@ def process_consultation_audio(self, raw_audio_path, speaker_count, original_fil
     """
     Celery task to process consultation audio: convert, upload, transcribe, analyze quality, and identify roles.
     Optionally updates a Firestore session document upon completion.
+    This task will run in a gevent-patched environment if the worker is started with -P gevent.
     """
     task_id = self.request.id
-    print(f"Task {task_id} ({original_filename}): Starting audio processing...")
+    print(f"Task {task_id} ({original_filename}) (gevent worker): Starting audio processing...")
 
     results_to_store = { # Initialize with placeholder/failure state
         "original_filename": original_filename,
@@ -62,7 +74,6 @@ def process_consultation_audio(self, raw_audio_path, speaker_count, original_fil
 
         # 2. Upload to Google Cloud Storage
         print(f"Task {task_id} ({original_filename}): Uploading converted audio to GCS...")
-        # Ensure upload_audio returns necessary info, e.g., (audio_url, blob_name)
         audio_url, _ = upload_audio(converted_path)
         print(f"Task {task_id} ({original_filename}): Audio uploaded to GCS: {audio_url}")
         results_to_store["audioUrl"] = audio_url
@@ -92,19 +103,17 @@ def process_consultation_audio(self, raw_audio_path, speaker_count, original_fil
         print(f"Task {task_id} ({original_filename}): Role identification complete.")
         results_to_store["transcription_identified_roles"] = processed_transcription_with_roles
 
-        # Update status to success
         results_to_store["status"] = "SUCCESS"
-        results_to_store.pop("error_message", None) # Remove error message on success
+        results_to_store.pop("error_message", None)
         print(f"Task {task_id} ({original_filename}): Processing successful.")
 
     except Exception as e:
         error_message = f"Error during audio processing for {original_filename}: {str(e)}"
         print(f"Task {task_id} ({original_filename}): {error_message}")
-        traceback.print_exc() # Print full traceback to Celery worker logs
+        traceback.print_exc()
         results_to_store["status"] = "FAILURE"
         results_to_store["error_message"] = error_message
-        # Optional: re-raise the exception if you want Celery to mark the task as FAILED explicitly
-        # and potentially trigger retry mechanisms if configured.
+        # Consider re-raising if you want Celery to explicitly mark task as FAILED
         # raise
 
     finally:
@@ -122,53 +131,35 @@ def process_consultation_audio(self, raw_audio_path, speaker_count, original_fil
             except Exception as e_clean_conv:
                 print(f"Task {task_id} ({original_filename}): Error cleaning up converted audio file {converted_path}: {e_clean_conv}")
 
-    # Optionally, update Firestore document if session_id_to_update is provided
     if session_id_to_update:
         try:
-            from services.firebase_service import db # Import db here to avoid top-level issues if firebase_admin initializes early
-            from google.cloud import firestore # For SERVER_TIMESTAMP or other field types
-            
-            session_doc_ref = db.collection('consultation_sessions').document(session_id_to_update)
-            update_data = {
-                "audio_url": results_to_store.get("audioUrl"),
-                "transcription": results_to_store.get("transcription_identified_roles"),
-                "transcription_original_speakers": results_to_store.get("transcription_original_speakers"),
-                "quality_score": results_to_store.get("quality_score"),
-                "quality_metrics": results_to_store.get("quality_metrics"),
-                "raw_sentiment_analysis": results_to_store.get("raw_sentiment_analysis", []),
-                "task_id": task_id, # For traceability
-                "processing_status": results_to_store["status"], # e.g., "SUCCESS" or "FAILURE"
-                "last_processed_at": firestore.SERVER_TIMESTAMP # Update timestamp
-            }
-            if results_to_store["status"] == "FAILURE":
-                update_data["processing_error"] = results_to_store.get("error_message")
+            # Lazy import db and firestore client to ensure they are initialized
+            # in the gevent-patched environment of the worker, if not already.
+            from services.firebase_service import db
+            from google.cloud import firestore # For SERVER_TIMESTAMP
 
-            # Remove None values before updating Firestore to avoid errors with non-nullable fields
-            # or to simply not overwrite existing fields with None if that's the desired behavior.
-            # update_data_cleaned = {k: v for k, v in update_data.items() if v is not None}
+            if not db: # Check if db was successfully initialized in firebase_service
+                print(f"Task {task_id} ({original_filename}): Firestore client (db) not available in firebase_service. Cannot update session.")
+            else:
+                session_doc_ref = db.collection('consultation_sessions').document(session_id_to_update)
+                update_data = {
+                    "audio_url": results_to_store.get("audioUrl"),
+                    "transcription": results_to_store.get("transcription_identified_roles"),
+                    "transcription_original_speakers": results_to_store.get("transcription_original_speakers"),
+                    "quality_score": results_to_store.get("quality_score"),
+                    "quality_metrics": results_to_store.get("quality_metrics"),
+                    "raw_sentiment_analysis": results_to_store.get("raw_sentiment_analysis", []),
+                    "task_id": task_id,
+                    "processing_status": results_to_store["status"],
+                    "last_processed_at": firestore.SERVER_TIMESTAMP
+                }
+                if results_to_store["status"] == "FAILURE":
+                    update_data["processing_error"] = results_to_store.get("error_message")
 
-            session_doc_ref.update(update_data)
-            print(f"Task {task_id} ({original_filename}): Firestore session {session_id_to_update} updated with processing results.")
-
-            # If you want to notify via SocketIO after DB update:
-            # This is complex from Celery. A common pattern is for the frontend to listen
-            # to Firestore changes on the session document, or poll a status endpoint.
-            # Another option: Celery task publishes a message to another queue (e.g., Redis Pub/Sub)
-            # and a separate small Flask-SocketIO aware service listens to that queue to emit messages.
-            # Example (hypothetical, direct socketio.emit from Celery is tricky):
-            # if user_id_for_notification and results_to_store["status"] == "SUCCESS":
-            #     # from services.socket_service import socketio # Ensure socketio is Celery-compatible or use a proxy
-            #     # socketio.emit('transcription_processed', {'session_id': session_id_to_update, 'status': 'SUCCESS'}, room=user_id_for_notification)
-            #     print(f"Task {task_id}: Would emit SocketIO notification for user {user_id_for_notification}")
-            # elif user_id_for_notification and results_to_store["status"] == "FAILURE":
-            #     # socketio.emit('transcription_failed', {'session_id': session_id_to_update, 'status': 'FAILURE', 'error': results_to_store.get("error_message")}, room=user_id_for_notification)
-            #     print(f"Task {task_id}: Would emit SocketIO failure notification for user {user_id_for_notification}")
-
-
+                session_doc_ref.update(update_data)
+                print(f"Task {task_id} ({original_filename}): Firestore session {session_id_to_update} updated with processing results.")
         except Exception as e_firestore:
             print(f"Task {task_id} ({original_filename}): Error updating Firestore session {session_id_to_update}: {e_firestore}")
             traceback.print_exc()
-            # The main task result still reflects the processing status,
-            # this error is about storing/notifying that result.
 
-    return results_to_store # This result is stored in Celery's backend (e.g., Redis)
+    return results_to_store
