@@ -17,3 +17,5 @@ Pillow
 gunicorn
 apscheduler
 pytz
+celery
+redis
