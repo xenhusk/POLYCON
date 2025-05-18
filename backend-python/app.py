@@ -29,8 +29,8 @@ from flask import Flask, request, jsonify # Keep this import early
 from flask_cors import CORS
 import logging
 import atexit
-import threading # For scheduler health check if you re-enable it
-import time # For scheduler health check if you re-enable it
+import threading
+import time
 
 # Import your blueprints - these should come AFTER monkey_patching and gRPC init
 from routes.consultation_routes import consultation_bp
@@ -84,6 +84,7 @@ def create_app():
     # Register blueprints
     current_app.register_blueprint(user_bp, url_prefix='/user')
     current_app.register_blueprint(booking_bp, url_prefix='/bookings')
+    # ... (rest of your blueprint registrations) ...
     current_app.register_blueprint(search_bp, url_prefix='/search')
     current_app.register_blueprint(reminder_bp, url_prefix='/reminder')
     current_app.register_blueprint(consultation_bp, url_prefix='/consultation')
@@ -102,6 +103,7 @@ def create_app():
     current_app.register_blueprint(comparative_bp, url_prefix='/comparative')
     current_app.register_blueprint(polycon_analysis_bp, url_prefix='/polycon-analysis')
     current_app.register_blueprint(notification_bp, url_prefix='/notifications')
+
 
     @current_app.route('/')
     def home():
@@ -182,10 +184,8 @@ def create_app():
 
     return current_app
 
-# Create the Flask app instance using the factory
 app = create_app()
 
-# Define SocketIO event handlers using the imported 'socketio' instance
 @socketio.on('connect')
 def handle_connect():
     logger = app.logger if app and hasattr(app, 'logger') else logging.getLogger(__name__)
@@ -196,7 +196,6 @@ def handle_disconnect():
     logger = app.logger if app and hasattr(app, 'logger') else logging.getLogger(__name__)
     logger.info(f'Client disconnected (gevent): {request.sid}')
 
-# This block will execute when you run `python app.py`
 if __name__ == '__main__':
     main_logger = app.logger if app and hasattr(app, 'logger') else logging.getLogger(__name__)
     main_logger.info("--- Starting POLYCON Flask-SocketIO server with gevent (Direct Run) ---")
