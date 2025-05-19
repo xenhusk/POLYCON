@@ -3,7 +3,7 @@
 # MUST BE AT THE VERY TOP
 import gevent # Import gevent
 from gevent import monkey # Import monkey directly
-monkey.patch_all() # Patch with gevent, this should patch socket, ssl, threading etc.
+monkey.patch_all() # Patch with gevent. This patches socket, ssl, threading, os, etc.
 
 # Initialize gRPC for gevent IMMEDIATELY AFTER monkey_patching
 # This is crucial for grpcio (used by Firestore) to work correctly with gevent
@@ -18,10 +18,7 @@ except Exception as e_grpc_init:
     print(f"ERROR: Failed to initialize gRPC for gevent: {e_grpc_init}")
 
 import os
-# DEBUG: Print GOOGLE_APPLICATION_CREDENTIALS after potential patching
-# to ensure the environment variable is still accessible as expected.
-# Note: gevent patching should not affect os.environ directly.
-# This print was for earlier debugging and can be removed if confident.
+# The debug print for GOOGLE_APPLICATION_CREDENTIALS can be kept if useful during setup
 # print(f"DEBUG: GOOGLE_APPLICATION_CREDENTIALS seen by Python: {os.environ.get('GOOGLE_APPLICATION_CREDENTIALS')}")
 
 import datetime
@@ -29,8 +26,8 @@ from flask import Flask, request, jsonify # Keep this import early
 from flask_cors import CORS
 import logging
 import atexit
-import threading
-import time
+import threading # For scheduler health check if you re-enable it
+import time # For scheduler health check if you re-enable it
 
 # Import your blueprints - these should come AFTER monkey_patching and gRPC init
 from routes.consultation_routes import consultation_bp
@@ -70,9 +67,9 @@ def create_app():
     current_app = Flask(__name__)
     CORS(current_app, resources={
         r"/*": {
-            "origins": "*",
-            "allow_headers": ["Content-Type", "Authorization"],
-            "methods": ["GET", "POST", "PUT", "DELETE", "OPTIONS"]
+            "origins": "*", # Allow all origins for development
+            "allow_headers": ["Content-Type", "Authorization"], # Common headers
+            "methods": ["GET", "POST", "PUT", "DELETE", "OPTIONS"] # Common HTTP methods
         }
     })
 
@@ -84,7 +81,6 @@ def create_app():
     # Register blueprints
     current_app.register_blueprint(user_bp, url_prefix='/user')
     current_app.register_blueprint(booking_bp, url_prefix='/bookings')
-    # ... (rest of your blueprint registrations) ...
     current_app.register_blueprint(search_bp, url_prefix='/search')
     current_app.register_blueprint(reminder_bp, url_prefix='/reminder')
     current_app.register_blueprint(consultation_bp, url_prefix='/consultation')
@@ -104,7 +100,6 @@ def create_app():
     current_app.register_blueprint(polycon_analysis_bp, url_prefix='/polycon-analysis')
     current_app.register_blueprint(notification_bp, url_prefix='/notifications')
 
-
     @current_app.route('/')
     def home():
         return jsonify({"message": "POLYCON Python Backend is Running with gevent"})
@@ -114,29 +109,32 @@ def create_app():
                        format='%(asctime)s [%(levelname)s] %(name)s: %(message)s',
                        datefmt='%Y-%m-%d %H:%M:%S',
                        force=True) # force=True can help if logging was already configured
-    logger = logging.getLogger(__name__)
+    logger = logging.getLogger(__name__) # Logger for this module
+    # Configure Flask's built-in logger
     current_app.logger.handlers.clear() # Clear default Flask handlers if any
-    current_app.logger.addHandler(logging.StreamHandler()) # Add a stream handler
+    current_app.logger.addHandler(logging.StreamHandler()) # Add a stream handler for console output
     current_app.logger.setLevel(logging.INFO)
     current_app.logger.propagate = False # Prevent duplicate logs to root logger if root also has handlers
 
     # Initialize the APScheduler
-    if not current_app.config.get('TESTING', False):
-        if os.environ.get('WERKZEUG_RUN_MAIN') != 'true': # Attempt to init only when not in Flask reloader's parent process
+    if not current_app.config.get('TESTING', False): # Don't run scheduler during tests
+        # Attempt to init only when not in Flask reloader's parent process (if reloader is used)
+        if os.environ.get('WERKZEUG_RUN_MAIN') != 'true':
             try:
                 logger.info("Initializing appointment reminder scheduler (gevent)...")
-                temp_scheduler = initialize_scheduler()
+                temp_scheduler = initialize_scheduler() # This should return the scheduler object
                 if temp_scheduler:
-                    scheduler_instance_global = temp_scheduler
+                    scheduler_instance_global = temp_scheduler # Assign to global
                     if scheduler_instance_global.running:
                         logger.info("Scheduler initialized and running successfully (gevent).")
+                        # Register a function to stop the scheduler when the app exits
                         atexit.register(lambda: scheduler_instance_global.shutdown(wait=False))
                     else:
                         logger.warning("Scheduler initialized but NOT running (gevent). Attempting to start.")
                         try:
-                            scheduler_instance_global.start(paused=False)
+                            scheduler_instance_global.start(paused=False) # Ensure it's started
                             logger.info("Scheduler started successfully via explicit start call (gevent).")
-                            # Avoid double registration of atexit
+                            # Avoid double registration of atexit hook
                             if not hasattr(scheduler_instance_global, '_atexit_gevent_registered'):
                                 atexit.register(lambda: scheduler_instance_global.shutdown(wait=False))
                                 scheduler_instance_global._atexit_gevent_registered = True
@@ -147,7 +145,7 @@ def create_app():
             except Exception as e:
                 logger.error(f"Error during scheduler initialization (gevent): {str(e)}", exc_info=True)
         else:
-             logger.info("Scheduler initialization skipped by WERKZEUG_RUN_MAIN check (gevent).")
+             logger.info("Scheduler initialization skipped by WERKZEUG_RUN_MAIN check (likely in reloader parent process) (gevent).")
 
 
     @current_app.route('/scheduler/status', methods=['GET'])
@@ -169,7 +167,7 @@ def create_app():
                     'id': job.id,
                     'name': job.name,
                     'next_run_time': str(job.next_run_time) if job.next_run_time else 'N/A',
-                    'func_ref': str(job.func_ref),
+                    'func_ref': str(job.func_ref), # Shows the function reference string
                     'trigger': trigger_info
                 })
             return jsonify({
@@ -184,10 +182,16 @@ def create_app():
 
     return current_app
 
+# Create the Flask app instance using the factory
+# This `app` variable will be used by `socketio.run()` if __name__ == '__main__'
 app = create_app()
 
+# Define SocketIO event handlers using the imported 'socketio' instance
+# These are defined at the module level, associated with the global 'socketio' import.
 @socketio.on('connect')
 def handle_connect():
+    # Use app.logger for consistency if app context is available,
+    # otherwise use the module-level logger.
     logger = app.logger if app and hasattr(app, 'logger') else logging.getLogger(__name__)
     logger.info(f'Client connected (gevent): {request.sid}')
 
@@ -196,15 +200,23 @@ def handle_disconnect():
     logger = app.logger if app and hasattr(app, 'logger') else logging.getLogger(__name__)
     logger.info(f'Client disconnected (gevent): {request.sid}')
 
+# This block will execute when you run `python app.py`
 if __name__ == '__main__':
+    # Use the app.logger from the created app instance
+    # Fallback to a default logger if app instance isn't available for some reason
     main_logger = app.logger if app and hasattr(app, 'logger') else logging.getLogger(__name__)
+
     main_logger.info("--- Starting POLYCON Flask-SocketIO server with gevent (Direct Run) ---")
     try:
-        # Flask-SocketIO's socketio.run() will use gevent if it's patched and no other async_mode is forced.
-        # For clarity, ensure your services.socket_service.py creates SocketIO(async_mode='gevent')
+        # Flask-SocketIO's socketio.run() will use gevent if it's patched.
+        # For clarity and to ensure it, make sure your services.socket_service.py
+        # creates the SocketIO instance with async_mode='gevent'.
+        # e.g., socketio = SocketIO(async_mode='gevent', cors_allowed_origins="*")
+        #
+        # use_reloader=False is STRONGLY recommended with gevent on Windows
+        # as Flask's built-in reloader can conflict with gevent's mechanisms or monkey patching.
         socketio.run(app, host='0.0.0.0', port=5001, debug=True, use_reloader=False)
     except Exception as e:
         main_logger.critical(f"Failed to start the server (gevent): {e}", exc_info=True)
     finally:
         main_logger.info("--- POLYCON Flask-SocketIO server stopped (gevent) ---")
-

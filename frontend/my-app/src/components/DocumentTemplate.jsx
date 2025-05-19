@@ -395,7 +395,7 @@ const DocumentTemplate = ({
                 }}
                 >
                 {teacherInfo
-                    ? `${teacherInfo.firstName} ${teacherInfo.lastName}`
+                    ? `${teacherInfo.firstName || ''} ${teacherInfo.lastName || ''}`.trim() || 'Name of your Teacher/Adviser Here with his/her title'
                     : 'Name of your Teacher/Adviser Here with his/her title'}
                 </p>
             </td>
@@ -415,8 +415,8 @@ const DocumentTemplate = ({
                 }}
                 >
                 {teacherInfo
-                    ? teacherInfo.department || 'Position of Teacher / Name Program'
-                    : 'Position of Teacher / Name Program'} {teacherInfo.role}
+                    ? `${teacherInfo.department || 'Position of Teacher / Name Program'} ${teacherInfo.role || ''}`.trim() || 'Position of Teacher / Name Program'
+                    : 'Position of Teacher / Name Program'}
                 </p>
             </td>
             </tr>

@@ -114,8 +114,13 @@ const FinalDocument = () => {
             setTeacherInfo(data.teacher_info);
           } else if (data.teacher_id) {
             const teacherId = data.teacher_id.split('/').pop();
-            const teacherResponse = await fetch(`http://localhost:5001/user/get_user?id=${teacherId}`);
-            setTeacherInfo(await teacherResponse.json());
+            const teacherResponse = await fetch(`http://localhost:5001/user/get_user?userID=${teacherId}`);
+            if (teacherResponse.ok) {
+              setTeacherInfo(await teacherResponse.json());
+            } else {
+              console.error("Failed to fetch teacher fallback info", await teacherResponse.text());
+              setTeacherInfo(null);
+            }
           }
 
           // Use student_info directly if available, otherwise fall back to student_ids fetch
@@ -124,10 +129,16 @@ const FinalDocument = () => {
           } else if (data.student_ids && Array.isArray(data.student_ids)) {
             const studentPromises = data.student_ids.map(async (studentPath) => {
               const studentId = studentPath.split('/').pop();
-              const studentResponse = await fetch(`http://localhost:5001/user/get_user?id=${studentId}`);
-              return studentResponse.json();
+              const studentResponse = await fetch(`http://localhost:5001/user/get_user?userID=${studentId}`);
+              if (studentResponse.ok) {
+                return studentResponse.json();
+              } else {
+                console.error(`Failed to fetch student fallback info for ID ${studentId}`, await studentResponse.text());
+                return null;
+              }
             });
-            setStudentInfo(await Promise.all(studentPromises));
+            const resolvedStudentInfo = (await Promise.all(studentPromises)).filter(info => info !== null);
+            setStudentInfo(resolvedStudentInfo.length > 0 ? resolvedStudentInfo : null);
           }
         } else {
           console.error("Error fetching session details:", data.error);
