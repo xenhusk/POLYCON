@@ -196,33 +196,42 @@ def fetch_user_details(doc_ref, collection_name):
             main_data.update(user_data)
         else:
             print(f"FETCH_USER_DETAILS: User document {user_doc_ref.path} not found for {doc_ref.path}")
-        program_field = main_data.get("program")
-        if isinstance(program_field, DocumentReference):
-            prog_doc = program_field.get()
-            main_data["programName"] = prog_doc.to_dict().get("programName", "Unknown Program") if prog_doc.exists else "Unknown Program"
-            main_data["program"] = program_field.path
-        elif isinstance(program_field, str) and "/" in program_field :
-            try:
+
+        # Handle programs for students and departments for faculty
+        if collection_name == 'students':
+            program_field = main_data.get("program")
+            if isinstance(program_field, DocumentReference):
+                prog_doc = program_field.get()
+                if prog_doc.exists:
+                    prog_data = prog_doc.to_dict()
+                    main_data["program"] = program_field.path  # Keep the reference
+                    main_data["programName"] = prog_data.get("programName")  # Get actual program name like "BSCS"
+            elif isinstance(program_field, str) and "/" in program_field:
                 prog_doc = db.document(program_field).get()
-                main_data["programName"] = prog_doc.to_dict().get("programName", "Unknown Program") if prog_doc.exists else "Unknown Program"
-            except Exception: main_data["programName"] = "Error Resolving Program"
-        elif isinstance(program_field, str):
-             main_data["programName"] = program_field
-        else: main_data["programName"] = "N/A"
-        department_field = main_data.get("department")
-        if isinstance(department_field, DocumentReference):
-            dept_doc = department_field.get()
-            main_data["departmentName"] = dept_doc.to_dict().get("departmentName", "Unknown Department") if dept_doc.exists else "Unknown Department"
-            main_data["department"] = department_field.path
-        elif isinstance(department_field, str) and "/" in department_field:
-            try:
+                if prog_doc.exists:
+                    prog_data = prog_doc.to_dict()
+                    main_data["programName"] = prog_data.get("programName")
+            if not main_data.get("programName"):
+                main_data["programName"] = "Unknown Program"
+
+        elif collection_name == 'faculty':
+            department_field = main_data.get("department")
+            if isinstance(department_field, DocumentReference):
+                dept_doc = department_field.get()
+                if dept_doc.exists:
+                    dept_data = dept_doc.to_dict()
+                    main_data["department"] = department_field.path  # Keep the reference
+                    main_data["departmentName"] = dept_data.get("departmentName")  # Get actual department name like "CICT"
+            elif isinstance(department_field, str) and "/" in department_field:
                 dept_doc = db.document(department_field).get()
-                main_data["departmentName"] = dept_doc.to_dict().get("departmentName", "Unknown Department") if dept_doc.exists else "Unknown Department"
-            except Exception: main_data["departmentName"] = "Error Resolving Department"
-        elif isinstance(department_field, str):
-             main_data["departmentName"] = department_field
-        else: main_data["departmentName"] = "N/A"
+                if dept_doc.exists:
+                    dept_data = dept_doc.to_dict()
+                    main_data["departmentName"] = dept_data.get("departmentName")
+            if not main_data.get("departmentName"):
+                main_data["departmentName"] = "Unknown Department"
+
         return main_data
+        
     except Exception as e:
         print(f"FETCH_USER_DETAILS: Critical error for {doc_ref.path} in {collection_name}: {str(e)}")
         traceback.print_exc()
@@ -318,14 +327,17 @@ def get_history():
         else: session_data["teacher"] = {}
         detailed_students = []
         if "student_ids" in session_data and isinstance(session_data["student_ids"], list):
-            for student_ref_data in session_data["student_ids"]:
-                if isinstance(student_ref_data, DocumentReference):
-                     detailed_students.append(fetch_user_details(student_ref_data, "students"))
-        session_data["info"] = detailed_students
-        fields_to_check = ['action_taken', 'audio_url', 'concern', 'outcome', 'remarks', 'summary', 'transcription']
-        for field in fields_to_check:
-            if not session_data.get(field) or (isinstance(session_data.get(field), str) and not session_data[field].strip()):
-                session_data[field] = "N/A"
+            for student_ref in session_data["student_ids"]:
+                if isinstance(student_ref, DocumentReference):
+                    student_details = fetch_user_details(student_ref, "students")
+                    detailed_students.append(student_details)
+
+            session_data["students"] = detailed_students
+            session_data["info"] = detailed_students  # Keeping this for backward compatibility
+            fields_to_check = ['action_taken', 'audio_url', 'concern', 'outcome', 'remarks', 'summary', 'transcription']
+            for field in fields_to_check:
+                if field not in session_data:
+                    session_data[field] = ""
         if 'session_date' in session_data and not isinstance(session_data['session_date'], str):
              if hasattr(session_data['session_date'], 'isoformat'):
                 session_data['session_date'] = session_data['session_date'].isoformat()
