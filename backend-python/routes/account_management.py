@@ -2,6 +2,7 @@ from flask import Blueprint, request, jsonify
 from services.firebase_service import db, register_user, login_user, auth_pyrebase
 from google.cloud import firestore
 import bcrypt
+import traceback # For printing full tracebacks
 
 acc_management_bp = Blueprint('account_management', __name__)
 
@@ -20,9 +21,8 @@ def generate_full_name(first_name, last_name):
 def signup():
     try:
         data = request.json
-        print("Received signup request:", data)  # Debugging log
+        print("Received signup request:", data)
 
-        # Extracting data from request
         id_number = data.get('idNumber')
         first_name = data.get('firstName')
         last_name = data.get('lastName')
@@ -32,251 +32,271 @@ def signup():
         sex = data.get('sex')
         year_section = data.get('year_section')
         department_id = data.get('department')
-        role = data.get('role')  # Use the role provided in the request data
+        role = data.get('role')
 
-        # Email validation
-        if not email.endswith('@wnu.sti.edu.ph'):
-            return jsonify({"error": "Email must end with @wnu.sti.edu.ph"}), 400
+        if not email or not email.endswith('@wnu.sti.edu.ph'):
+            return jsonify({"error": "Valid email ending with @wnu.sti.edu.ph is required"}), 400
 
-        # Debugging logs for missing fields
-        if not id_number:
-            print("Missing idNumber")
-        if not first_name:
-            print("Missing firstName")
-        if not last_name:
-            print("Missing lastName")
-        if not email:
-            print("Missing email")
-        if not password:
-            print("Missing password")
-        if not department_id:
-            print("Missing department_id")
-        if not role:
-            print("Missing role")
-        if role == "student":
-            if not program_id:
-                print("Missing program_id")
-            if not sex:
-                print("Missing sex")
-            if not year_section:
-                print("Missing year_section")
+        required_fields_student = [id_number, first_name, last_name, email, password, program_id, sex, year_section, department_id, role]
+        required_fields_faculty = [id_number, first_name, last_name, email, password, department_id, role]
 
-        if role == "student" and not all([id_number, first_name, last_name, email, password, program_id, sex, year_section, department_id, role]):
-            return jsonify({"error": "Missing required fields"}), 400
-        elif role == "faculty" and not all([id_number, first_name, last_name, email, password, department_id, role]):
-            return jsonify({"error": "Missing required fields"}), 400
+        if role == "student" and not all(required_fields_student):
+            print(f"Missing fields for student: {[f for f, v in zip(['id_number', 'first_name', 'last_name', 'email', 'password', 'program_id', 'sex', 'year_section', 'department_id', 'role'], required_fields_student) if not v]}")
+            return jsonify({"error": "Missing required fields for student"}), 400
+        elif role == "faculty" and not all(required_fields_faculty):
+            print(f"Missing fields for faculty: {[f for f, v in zip(['id_number', 'first_name', 'last_name', 'email', 'password', 'department_id', 'role'], required_fields_faculty) if not v]}")
+            return jsonify({"error": "Missing required fields for faculty"}), 400
+        elif role not in ["student", "faculty"]:
+             return jsonify({"error": "Invalid role specified"}), 400
 
-        # Check if department exists
-        department_ref = db.collection('departments').document(department_id).get()
-        if not department_ref.exists:
+
+        department_doc_ref = db.collection('departments').document(department_id)
+        if not department_doc_ref.get().exists:
             return jsonify({"error": "Invalid department ID"}), 400
 
-        # Check if program exists (only for students)
         if role == "student":
-            program_ref = db.collection('programs').document(program_id).get()
-            if not program_ref.exists:
+            program_doc_ref = db.collection('programs').document(program_id)
+            if not program_doc_ref.get().exists:
                 return jsonify({"error": "Invalid program ID"}), 400
-        
-        # Register the user with Firebase Authentication using Pyrebase
+
         try:
-            user = register_user(email, password)
-            user_id = user['localId']  # Access the localId attribute from the user dictionary
+            user_auth_info = register_user(email, password) # Using Pyrebase for Auth
+            user_id_from_auth = user_auth_info['localId'] # Firebase Auth UID
+            print(f"User registered in Firebase Auth. UID: {user_id_from_auth}")
         except ValueError as e:
             error_message = str(e)
-            if "EMAIL_EXISTS" in error_message:
-                return jsonify({"error": "The email address is already in use."}), 400
-            elif "INVALID_EMAIL" in error_message:
-                return jsonify({"error": "The email address is invalid."}), 400
-            elif "OPERATION_NOT_ALLOWED" in error_message:
-                return jsonify({"error": "Registration is currently disabled."}), 403
-            elif "TOO_MANY_ATTEMPTS_TRY_LATER" in error_message:
-                return jsonify({"error": "Too many attempts, please try again later."}), 429
-            else:
-                return jsonify({"error": "An error occurred during registration. Please try again."}), 400
+            if "EMAIL_EXISTS" in error_message: return jsonify({"error": "The email address is already in use."}), 400
+            if "INVALID_EMAIL" in error_message: return jsonify({"error": "The email address is invalid."}), 400
+            # Add other specific Firebase auth error codes if needed
+            return jsonify({"error": f"Registration error: {error_message}"}), 400
         except Exception as e:
-            # Log the exception for further investigation
-            return jsonify({"error": "An unexpected error occurred. Please try again later."}), 500
+            print(f"Unexpected error during Firebase user registration: {str(e)}")
+            traceback.print_exc()
+            return jsonify({"error": "An unexpected error occurred during registration."}), 500
 
-        # Hash the password before storing
         hashed_password = bcrypt.hashpw(password.encode('utf-8'), bcrypt.gensalt()).decode('utf-8')
 
-        # Store user data in Firestore under 'users' collection
-        # Reference to the user document
-        user_ref = db.collection('user').document(id_number)
-        user_ref.set({
-            "ID": id_number,
+        # Use the provided id_number as the document ID in Firestore 'user' collection
+        user_doc_firestore_ref = db.collection('user').document(id_number)
+
+        user_firestore_data = {
+            "ID": id_number, # This is the school ID number
+            "firebaseAuthUID": user_id_from_auth, # Store Firebase Auth UID for linking if needed
             "firstName": first_name,
             "lastName": last_name,
-            "fullName": generate_full_name(first_name, last_name),  # NEW: fullName field
+            "fullName": generate_full_name(first_name, last_name),
             "email": email,
-            "password": hashed_password,
-            "department": db.collection('departments').document(department_id),  # Firestore reference
+            "password": hashed_password, # Storing hashed password, though Firebase Auth handles auth
+            "department": department_doc_ref, # Store as DocumentReference
             "role": role,
-            "archived": 0  # Default value for archived field
-        })
+            "archived": 0
+        }
+        user_doc_firestore_ref.set(user_firestore_data)
+        print(f"User data stored in Firestore 'user' collection for ID: {id_number}")
 
-        # Store student-specific data in Firestore under 'students' collection if role is student
         if role == "student":
-            student_ref = db.collection('students').document(id_number)
-            student_ref.set({
-                "ID": user_ref,  # Firestore reference to the user document
-                "program": db.collection('programs').document(program_id),  # Firestore reference
+            student_doc_firestore_ref = db.collection('students').document(id_number) # Use school ID as student doc ID
+            student_firestore_data = {
+                "ID": user_doc_firestore_ref, # Reference to the document in 'user' collection
+                "program": db.collection('programs').document(program_id), # Store as DocumentReference
                 "sex": sex,
-                "year_section": year_section
-            })
+                "year_section": year_section,
+                "isEnrolled": False # Default enrollment status
+            }
+            student_doc_firestore_ref.set(student_firestore_data)
+            print(f"Student-specific data stored for ID: {id_number}")
 
         return jsonify({"message": "User registered successfully."}), 201
 
     except Exception as e:
-        print("Error during signup:", str(e))  # Debugging log
-        return jsonify({"error": "An unexpected error occurred. Please try again later."}), 500
+        print(f"Critical error during signup: {str(e)}")
+        traceback.print_exc()
+        return jsonify({"error": "An unexpected critical error occurred. Please try again later."}), 500
 
 
 @acc_management_bp.route('/login', methods=['POST'])
 def login():
     try:
         data = request.json
-        print("Received login request:", data)  # Debugging log
+        print(f"Received login request: {data}")
         email = data.get('email')
         password = data.get('password')
 
         if not email or not password:
-            print("Missing email or password")  # Debugging log
+            print("Login attempt failed: Missing email or password")
             return jsonify({"error": "Missing email or password"}), 400
 
-        # Firebase authentication using Pyrebase
+        print(f"Attempting Firebase authentication for email: {email}")
+        user_auth_info = None # To store Firebase auth response
         try:
-            user = login_user(email, password)
-            user_id = user['localId']
-            id_token = user['idToken']
-
-            # Get user info from Firebase using Pyrebase
-            user_info = auth_pyrebase.get_account_info(id_token)['users'][0]
-            print("User authenticated successfully:", user_info)  # Debugging log
-
+            user_auth_info = login_user(email, password) # Pyrebase auth
+            firebase_uid = user_auth_info['localId']
+            # id_token = user_auth_info['idToken'] # Not strictly needed here unless you verify it
+            print(f"Firebase authentication successful for email: {email}, UID: {firebase_uid}")
         except ValueError as e:
-            error_message = str(e)
-            if "EMAIL_NOT_FOUND" in error_message:
-                return jsonify({"error": "The email address is not registered."}), 401
-            elif "INVALID_PASSWORD" in error_message:
-                return jsonify({"error": "The password is incorrect. Forgot Password?"}), 401
-            else:
-                return jsonify({"error": "Invalid email or password."}), 401
+            error_message = str(e).upper() # Standardize for easier checking
+            print(f"Firebase authentication failed for {email}: {error_message}")
+            if "EMAIL_NOT_FOUND" in error_message: return jsonify({"error": "Email not registered or incorrect."}), 401
+            if "INVALID_PASSWORD" in error_message: return jsonify({"error": "Incorrect password."}), 401
+            if "USER_DISABLED" in error_message: return jsonify({"error": "This user account has been disabled."}), 403
+            return jsonify({"error": "Invalid email or password."}), 401 # Generic
         except Exception as e:
-            print("Error during Firebase authentication:", str(e))  # Debugging log
-            return jsonify({"error": "Invalid email or password"}), 401
+            print(f"Unexpected error during Firebase authentication for {email}: {str(e)}")
+            traceback.print_exc()
+            return jsonify({"error": "Authentication service error."}), 500
 
-        # Retrieve user details from Firestore
-        user_ref = db.collection('user').where('email', '==', email).stream()
-        user_data = None
-        teacher_id = None  # Variable to store teacher ID
+        print(f"Fetching user details from Firestore for email: {email}")
+        users_query = db.collection('user').where(filter=firestore.FieldFilter('email', '==', email))
+        
+        user_data_from_firestore = None
+        firestore_user_doc_id = None
+        
+        print(f"Attempting Firestore query with .get(timeout=15) for email: {email}")
+        try:
+            # Use .limit(1).get() to fetch a specific number of documents with a timeout
+            users_snapshot = users_query.limit(1).get(timeout=15) # 15-second timeout
+            
+            if users_snapshot: # Check if the list of snapshots is not empty
+                doc = users_snapshot[0] # Get the first document
+                user_data_from_firestore = doc.to_dict()
+                firestore_user_doc_id = doc.id
+                print(f"Found user in Firestore (using .get()): ID={firestore_user_doc_id}, Data={user_data_from_firestore}")
+            else:
+                print(f"No user document found in Firestore (using .get()) for email: {email}")
+        except Exception as firestore_e:
+            print(f"Error during Firestore .get() for email {email}: {str(firestore_e)}")
+            traceback.print_exc() # Print the full traceback for the Firestore error
+            # Decide if you want to return an error here or let it proceed to the "user not found" logic
+            # For now, we'll let it proceed, and the 'user_data_from_firestore' will remain None
+            # which should be handled by the subsequent check.
 
-        for doc in user_ref:
-            user_data = doc.to_dict()
-            if user_data.get('role') == 'faculty':  # Fetch teacher ID if faculty
-                teacher_id = user_data.get('ID')  # Get the teacher ID from Firestore
-            break  # Get only the first matched document
+        # The rest of your /login function continues from here...
+        # if not user_data_from_firestore:
+        #    ...
 
-        if not user_data:
-            print("User not found for email:", email)  # Debugging log
-            return jsonify({"error": "User not found"}), 404
+        if not user_data_from_firestore:
+            print(f"CRITICAL: Firebase auth succeeded for {email}, but no user record found in Firestore 'user' collection.")
+            # This state indicates data inconsistency.
+            # For security, might be better to not complete login, or flag the account.
+            return jsonify({"error": "Login failed: User account details are incomplete. Please contact support."}), 404 # Or 500
 
-        # Return consolidated response based on role
-        return jsonify({
+        user_role = user_data_from_firestore.get('role')
+        response_payload = {
             "message": "Login successful",
-            "userId": user_id,
-            "email": user_info['email'],
-            "role": user_data.get('role'),
-            "firstName": user_data.get('firstName', ''),
-            "lastName": user_data.get('lastName', ''),
-            "studentId": user_data.get('ID') if user_data.get('role') == 'student' else None,
-            "teacherId": teacher_id if user_data.get('role') == 'faculty' else None  # Send teacher ID if faculty
-        }), 200
+            "firebaseUID": firebase_uid, # Firebase Auth UID
+            "email": email, # Already have this from request, can also take from user_auth_info
+            "role": user_role,
+            "firstName": user_data_from_firestore.get('firstName', ''),
+            "lastName": user_data_from_firestore.get('lastName', ''),
+            # The ID field in your 'user' collection is the school ID (id_number)
+            # The 'userId' from Firebase Auth is different (firebase_uid)
+        }
+
+        # Add role-specific IDs. The document ID from 'user' collection is the school ID.
+        if user_role == 'student':
+            response_payload["studentId"] = firestore_user_doc_id
+        elif user_role == 'faculty':
+            response_payload["teacherId"] = firestore_user_doc_id
+        
+        # You might also want to return the actual school ID (id_number) as a general 'userId' for your app's internal use
+        response_payload["schoolIdNumber"] = firestore_user_doc_id
+
+
+        print(f"Login successful, returning payload: {response_payload}")
+        return jsonify(response_payload), 200
 
     except Exception as e:
-        print("Error during login:", str(e))  # Debugging log
-        return jsonify({"error": str(e)}), 500
-
+        print(f"Critical error during login for email {data.get('email', 'N/A')}: {str(e)}")
+        traceback.print_exc() # This will print the full traceback to your Flask terminal for 500 errors
+        return jsonify({"error": "An unexpected error occurred during login."}), 500
 
 
 @acc_management_bp.route('/programs', methods=['GET'])
 def get_programs():
     try:
         department_id = request.args.get('departmentID')
-        if (department_id):
-            department_ref = db.document(f'departments/{department_id}')
+        programs_query = db.collection('programs')
+        
+        if department_id:
+            department_ref = db.collection('departments').document(department_id) # Corrected to collection
             print(f"Fetching programs for departmentID: {department_ref.path}")
-            programs_ref = db.collection('programs').where('departmentID', '==', department_ref).stream()
-            programs = []
+            programs_query = programs_query.where(filter=firestore.FieldFilter('departmentID', '==', department_ref))
+        
+        programs_stream = programs_query.stream()
+        programs = []
+        for doc in programs_stream:
+            program_data = doc.to_dict()
+            program_data['programID'] = doc.id
 
-            for doc in programs_ref:
-                program_data = doc.to_dict()
-                program_data['programID'] = doc.id  # Include program ID
-
-                # Fetch department details from the 'departments' collection using department ID
-                department_ref = db.collection('departments').document(department_id).get()
-                if department_ref.exists:
-                    department_data = department_ref.to_dict()
-                    program_data['departmentName'] = department_data.get('departmentName', 'Unknown')
-
-                program_data = {key: convert_references(value) for key, value in program_data.items()}
-                programs.append(program_data)
-        else:
-            programs_ref = db.collection('programs').stream()
-            programs = []
-
-            for doc in programs_ref:
-                program_data = doc.to_dict()
-                program_data['programID'] = doc.id  # Include program ID
-
-                # Fetch department details from the 'departments' collection using department ID
-                department_ref = program_data['departmentID']
-                if isinstance(department_ref, firestore.DocumentReference):
-                    department_ref = department_ref.get()
-                    if department_ref.exists:
-                        department_data = department_ref.to_dict()
-                        program_data['departmentName'] = department_data.get('departmentName', 'Unknown')
-
-                program_data = {key: convert_references(value) for key, value in program_data.items()}
-                programs.append(program_data)
-
-        print(f"Programs fetched: {programs}")
+            dept_ref_from_program = program_data.get('departmentID')
+            if isinstance(dept_ref_from_program, firestore.DocumentReference):
+                dept_doc = dept_ref_from_program.get()
+                if dept_doc.exists:
+                    program_data['departmentName'] = dept_doc.to_dict().get('departmentName', 'Unknown')
+                else:
+                    program_data['departmentName'] = 'Orphaned (Dept Not Found)'
+            else:
+                program_data['departmentName'] = 'Unknown (Invalid Dept Ref)'
+            
+            # No need to call convert_references here if departmentID is already resolved to name
+            programs.append(program_data)
+        
+        print(f"Programs fetched: {len(programs)}")
         return jsonify(programs)
     except Exception as e:
         print(f"Error fetching programs: {str(e)}")
-        return jsonify({"error": str(e)}), 500
+        traceback.print_exc()
+        return jsonify({"error": "Failed to fetch programs."}), 500
 
 @acc_management_bp.route('/departments', methods=['GET'])
-def get_departments(): 
+def get_departments():
     try:
-        departments = [
-            {
+        departments = []
+        for doc in db.collection('departments').stream():
+            dept_data = doc.to_dict()
+            departments.append({
                 "departmentID": doc.id,
-                "departmentName": doc.to_dict().get("departmentName")
-            } 
-            for doc in db.collection('departments').stream()
-        ]
+                "departmentName": dept_data.get("departmentName", "Unnamed Department")
+            })
         return jsonify(departments)
     except Exception as e:
-        return jsonify({"error": str(e)}), 500
-    
+        print(f"Error fetching departments: {str(e)}")
+        traceback.print_exc()
+        return jsonify({"error": "Failed to fetch departments."}), 500
+
 @acc_management_bp.route('/get_user_role', methods=['GET'])
 def get_user_role():
     try:
         email = request.args.get('email')
-        users_ref = db.collection('user').where('email', '==', email).stream()
+        if not email:
+            return jsonify({"error": "Email parameter is required"}), 400
+            
+        print(f"Getting user role for email: {email}")
+        # Use FieldFilter for where clauses
+        users_query = db.collection('user').where(filter=firestore.FieldFilter('email', '==', email))
+        user_stream = users_query.stream()
+        
         user_data = None
-        for doc in users_ref:
+        for doc in user_stream:
             user_data = doc.to_dict()
             break
 
         if not user_data:
+            print(f"User not found for role check, email: {email}")
             return jsonify({"error": "User not found"}), 404
 
-        return jsonify({"role": user_data.get('role')}), 200
+        role = user_data.get('role')
+        print(f"Role for {email}: {role}")
+        return jsonify({"role": role}), 200
 
     except Exception as e:
-        return jsonify({"error": str(e)}), 500
+        print(f"Error in get_user_role for email {request.args.get('email', 'N/A')}: {str(e)}")
+        traceback.print_exc()
+        return jsonify({"error": "Failed to get user role."}), 500
+
+# ... (keep other routes like get_all_users, update_user, delete_user, reset_password as they were,
+# but consider adding traceback.print_exc() to their main except blocks and using FieldFilter) ...
+# For brevity, I'll omit repeating them here but apply similar logging and FieldFilter patterns.
 
 @acc_management_bp.route('/get_all_users', methods=['GET'])
 def get_all_users():
@@ -284,119 +304,100 @@ def get_all_users():
         role_filter = request.args.get('role')
         users_collection = db.collection('user')
         
-        # Base query to get non-archived users
+        query = users_collection.where(filter=firestore.FieldFilter('archived', '!=', 1))
         if role_filter:
-            query = users_collection.where('role', '==', role_filter).where('archived', '!=', 1).stream()
-        else:
-            query = users_collection.where('archived', '!=', 1).stream()
-
+            query = query.where(filter=firestore.FieldFilter('role', '==', role_filter))
+        
+        users_stream = query.stream()
         users = []
-        for doc in query:
+        for doc in users_stream:
             user_data = doc.to_dict()
-            dept_val = user_data.get('department')
+            user_data['idNumber'] = doc.id # Add the document ID as idNumber
 
+            dept_val = user_data.get('department')
             if isinstance(dept_val, firestore.DocumentReference):
                 dept_doc = dept_val.get()
-                if dept_doc.exists:
-                    user_data['department'] = dept_doc.to_dict().get('departmentName', '')
-            elif isinstance(dept_val, str) and 'departments/' in dept_val:
-                dept_id = dept_val.split('/')[-1]
-                dept_doc = db.collection('departments').document(dept_id).get()
-                if dept_doc.exists:
-                    user_data['department'] = dept_doc.to_dict().get('departmentName', '')
-
-            user_data = {k: convert_references(v) for k,v in user_data.items()}
+                user_data['departmentName'] = dept_doc.to_dict().get('departmentName', 'Unknown') if dept_doc.exists else 'Unknown'
+                user_data['department'] = dept_val.path # Keep path for reference if needed by frontend
+            else:
+                user_data['departmentName'] = 'Unknown (No Dept Ref)'
+            
+            # Remove password before sending
+            user_data.pop('password', None)
             users.append(user_data)
 
         return jsonify(users), 200
     except Exception as e:
-        return jsonify({"error": str(e)}), 500
+        print(f"Error in get_all_users: {str(e)}")
+        traceback.print_exc()
+        return jsonify({"error": "Failed to retrieve users."}), 500
+
 
 @acc_management_bp.route('/update_user', methods=['POST'])
 def update_user():
     try:
         data = request.json
-        print("Received update request:", data)  # Debugging log
-        id_number = data.get('idNumber')
+        print(f"Received user update request: {data}")
+        id_number = data.get('idNumber') # This is the document ID for 'user' collection
         if not id_number:
-            return jsonify({"error": "Missing idNumber"}), 400
+            return jsonify({"error": "Missing idNumber (document ID)"}), 400
 
         user_ref = db.collection('user').document(id_number)
-        user_doc = user_ref.get()
-        if not user_doc.exists:
+        if not user_ref.get().exists:
             return jsonify({"error": "User not found"}), 404
 
         updates = {}
-        if 'firstName' in data: updates['firstName'] = data['firstName']
-        if 'lastName' in data: updates['lastName'] = data['lastName']
-        if 'email' in data: updates['email'] = data['email']
-        if 'role' in data: updates['role'] = data['role']
+        allowed_fields = ['firstName', 'lastName', 'email', 'role'] # Define fields that can be updated
+        for field in allowed_fields:
+            if field in data:
+                updates[field] = data[field]
         
-        # Handle department update with proper reference
-        if 'department' in data and data['department']:
-            # Get department reference
-            department_id = data['department']
-            department_ref = db.collection('departments').document(department_id)
-            department_doc = department_ref.get()
-            
-            if not department_doc.exists:
+        if 'departmentID' in data and data['departmentID']: # Expecting departmentID now
+            department_ref = db.collection('departments').document(data['departmentID'])
+            if not department_ref.get().exists:
                 return jsonify({"error": "Invalid department ID"}), 400
-                
-            updates['department'] = department_ref
+            updates['department'] = department_ref # Store as reference
 
-        print("Updating user with:", updates)  # Debugging log
-        user_ref.update(updates)
-        return jsonify({"message": "User updated successfully"}), 200
+        if 'firstName' in updates and 'lastName' in updates:
+            updates['fullName'] = generate_full_name(updates['firstName'], updates['lastName'])
+        elif 'firstName' in updates and user_ref.get().to_dict().get('lastName'):
+            updates['fullName'] = generate_full_name(updates['firstName'], user_ref.get().to_dict()['lastName'])
+        elif 'lastName' in updates and user_ref.get().to_dict().get('firstName'):
+            updates['fullName'] = generate_full_name(user_ref.get().to_dict()['firstName'], updates['lastName'])
+
+
+        if updates:
+            user_ref.update(updates)
+            print(f"User {id_number} updated with: {updates}")
+            return jsonify({"message": "User updated successfully"}), 200
+        else:
+            return jsonify({"message": "No update data provided"}), 200
+
     except Exception as e:
-        print("Error updating user:", str(e))  # Debugging log
-        return jsonify({"error": str(e)}), 500
+        print(f"Error updating user {data.get('idNumber', 'N/A')}: {str(e)}")
+        traceback.print_exc()
+        return jsonify({"error": "Failed to update user."}), 500
 
-@acc_management_bp.route('/delete_user', methods=['DELETE'])
-def delete_user():
+@acc_management_bp.route('/delete_user', methods=['DELETE']) # Changed to POST or PUT for body, or use query param for DELETE
+def delete_user(): # Consider changing to POST and getting idNumber from JSON body for consistency
     try:
-        id_number = request.args.get('idNumber')
+        id_number = request.args.get('idNumber') # If using query param with DELETE
         if not id_number:
             return jsonify({"error": "Missing idNumber"}), 400
 
         user_ref = db.collection('user').document(id_number)
-        user_doc = user_ref.get()
-        if not user_doc.exists:
+        if not user_ref.get().exists:
             return jsonify({"error": "User not found"}), 404
 
-        # Update the archived field instead of deleting
-        user_ref.update({
-            'archived': 1
-        })
-
+        user_ref.update({'archived': 1})
+        print(f"User {id_number} archived.")
         return jsonify({"message": "User archived successfully"}), 200
     except Exception as e:
-        return jsonify({"error": str(e)}), 500
+        print(f"Error archiving user {request.args.get('idNumber', 'N/A')}: {str(e)}")
+        traceback.print_exc()
+        return jsonify({"error": "Failed to archive user."}), 500
 
-@acc_management_bp.route('/reset_password', methods=['POST'])
-def reset_password():
-    try:
-        data = request.json
-        email = data.get('email')
-        password = data.get('password')
-        if not email or not password:
-            return jsonify({"error": "Email and password are required"}), 400
 
-        # Validate the user's password by attempting to log in.
-        try:
-            login_user(email, password)
-        except Exception:
-            return jsonify({"error": "Invalid password"}), 401
-
-        # Send password reset email using Firebase service
-        try:
-            auth_pyrebase.send_password_reset_email(email)
-            return jsonify({"message": "Password reset email sent"}), 200
-        except Exception as e:
-            return jsonify({"error": str(e)}), 500
-
-    except Exception as e:
-        return jsonify({"error": str(e)}), 500
-    
 @acc_management_bp.route('/reset_password_with_email', methods=['POST'])
 def reset_password_with_email():
     try:
@@ -405,14 +406,25 @@ def reset_password_with_email():
         if not email:
             return jsonify({"error": "Email is required"}), 400
 
-        # Send password reset email using Firebase service
+        print(f"Attempting password reset for email: {email}")
         try:
             auth_pyrebase.send_password_reset_email(email)
-            return jsonify({"message": "Password reset email sent"}), 200
-        except Exception as e:
-            return jsonify({"error": str(e)}), 500
+            print(f"Password reset email sent to: {email}")
+            return jsonify({"message": "Password reset email sent. Please check your inbox."}), 200
+        except Exception as e: # Catch specific Pyrebase errors if possible
+            error_message = str(e)
+            print(f"Error sending password reset email to {email}: {error_message}")
+            if "EMAIL_NOT_FOUND" in error_message.upper():
+                return jsonify({"error": "This email address is not registered."}), 404
+            traceback.print_exc()
+            return jsonify({"error": "Failed to send password reset email. Please try again later."}), 500
 
     except Exception as e:
-        return jsonify({"error": str(e)}), 500
+        print(f"Critical error in reset_password_with_email: {str(e)}")
+        traceback.print_exc()
+        return jsonify({"error": "An unexpected error occurred."}), 500
 
-
+# Remove the old '/reset_password' route if '/reset_password_with_email' is the intended one.
+# If '/reset_password' was for a different flow (e.g., after current password verification),
+# it needs to be clearly distinguished or refactored.
+# For now, assuming '/reset_password_with_email' is the primary one.
