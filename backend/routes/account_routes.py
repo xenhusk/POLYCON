@@ -26,6 +26,7 @@ def login():
     response_data = {
         'message': 'Login successful',
         'userId': user.id,
+        'idNumber': user.id_number,  # Added actual user identifier
         'email': user.email,
         'role': user.role,
         'firstName': user.first_name, # Changed from user.firstName
@@ -44,12 +45,17 @@ def login():
 
     elif user.role == 'faculty':
         faculty_info = Faculty.query.filter_by(user_id=user.id).first()
+        # Add id_number for frontend to store as teacherId
+        response_data['teacherId'] = user.id_number
         if faculty_info:
-            response_data['teacherId'] = faculty_info.id # frontend uses teacherId
-            response_data['isActive'] = faculty_info.isActive
-            # department info for faculty if needed
-            if faculty_info.department:
-                 response_data['departmentName'] = faculty_info.department.name
+            response_data['isActive'] = faculty_info.is_active
+            # Access department through the user object
+            if user.department: 
+                response_data['department'] = user.department.name
+                response_data['department_id'] = user.department.id
+            else:
+                response_data['department'] = None
+                response_data['department_id'] = None
         else:
             response_data['isActive'] = False
     

@@ -8,25 +8,29 @@ booking_bp = Blueprint('booking_bp', __name__)
 @booking_bp.route('/get_bookings', methods=['GET'])
 def get_bookings():
     role = request.args.get('role')
-    user_id = request.args.get('userID')
+    # Accept both userID (primary key) or idNumber (unique string identifier)
+    user_param = request.args.get('userID') or request.args.get('idNumber')
     status = request.args.get('status')  # Optional filter
 
-    if not role or not user_id:
+    if not role or not user_param:
         return jsonify({"error": "Missing query parameters: role and userID"}), 400
 
-    try:
-        uid = int(user_id) # Ensure userID is an integer for querying
-    except ValueError:
-        return jsonify({"error": "Invalid userID format"}), 400
-
+    # Determine filtering key based on role
+    uid = None
+     
     # Fetch bookings based on role
     if role.lower() == 'faculty':
-        bookings = Booking.query.filter_by(teacher_id=str(uid))
+        # teacher_id stored as id_number in Booking model
+        bookings = Booking.query.filter_by(teacher_id=user_param)
         if status:
             bookings = bookings.filter(Booking.status == status)
         bookings = bookings.all()
     elif role.lower() == 'student':
-        bookings = Booking.query.filter(Booking.student_ids.contains([uid]))
+        # student_ids stored as list of User PKs; find user PK by id_number
+        user = User.query.filter_by(id_number=user_param).first()
+        if not user:
+            return jsonify({"error": "Student user not found"}), 404
+        bookings = Booking.query.filter(Booking.student_ids.contains([user.id]))
         if status:
             bookings = bookings.filter(Booking.status == status)
         bookings = bookings.all()

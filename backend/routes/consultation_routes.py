@@ -135,6 +135,9 @@ def get_history():
     role = request.args.get('role')
     user_id = request.args.get('userID') # This is expected to be the user's id_number
 
+    # Accept both userID and idNumber as query parameter for backward compatibility
+    user_id = request.args.get('userID') or request.args.get('idNumber') # This should be the user's id_number
+
     if not role or not user_id:
         return jsonify(error="Role and userID are required"), 400
 

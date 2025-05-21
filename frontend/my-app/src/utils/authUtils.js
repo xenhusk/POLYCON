@@ -24,8 +24,8 @@ export const storeUserAuth = (userData, role) => {
     console.error("Warning: No email found in userData.");
   }
   
-  // Use fallback: if userData.userId is not provided, fall back to userData.id
-  const primaryId = (userData.userId || userData.id) || null;
+  // Use primary identifier: prefer idNumber, then userId, then id
+  const primaryId = (userData.idNumber || userData.userId || userData.id) || null;
   if (primaryId) {
     localStorage.setItem("userId", primaryId);
     localStorage.setItem("userID", primaryId);

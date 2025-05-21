@@ -38,18 +38,19 @@ def get_user_details():
         'department_id': user.department_id
     }
 
-    if user.role == 'Student':
+    role_lower = user.role.lower() if user.role else ''
+    if role_lower == 'student':
         student_details = Student.query.filter_by(user_id=user.id).first()
         if student_details:
             program = Program.query.get(student_details.program_id)
             response_data['program'] = program.name if program else None
             response_data['program_id'] = student_details.program_id
             response_data['year_section'] = student_details.year_section
-            response_data['isEnrolled'] = student_details.isEnrolled
-    elif user.role == 'Faculty':
+            response_data['isEnrolled'] = student_details.is_enrolled  # Corrected attribute name
+    elif role_lower == 'faculty':
         faculty_details = Faculty.query.filter_by(user_id=user.id).first()
         if faculty_details:
-            response_data['isActive'] = faculty_details.isActive
+            response_data['isActive'] = faculty_details.is_active  # Corrected attribute name
             # Potentially add other faculty-specific details if needed
 
     return jsonify(response_data), 200

@@ -74,6 +74,11 @@ def get_latest_semester():
     except Exception as e:
         return jsonify({'error': str(e)}), 500
 
+@semester_bp.route('/get_latest_filter', methods=['GET'])
+def get_latest_filter():
+    # Alias for get_latest_semester
+    return get_latest_semester()
+
 @semester_bp.route('/teachers', methods=['GET'])
 def get_teachers():
     try:

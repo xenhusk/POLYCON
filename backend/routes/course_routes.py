@@ -1,5 +1,5 @@
 from flask import Blueprint, jsonify, request
-from models import Course, Department, Program, Faculty # Ensure Program is imported
+from models import Course, Department, Program, Faculty, User # Add User model to resolve id_number
 from extensions import db
 from sqlalchemy.orm import joinedload
 
@@ -8,12 +8,26 @@ course_bp = Blueprint('course_bp', __name__, url_prefix='/course')
 @course_bp.route('/get_courses', methods=['GET'])
 def get_courses():
     try:
-        faculty_id = request.args.get('facultyID')
+        # Support facultyID as User.id_number or Faculty.id (PK)
+        faculty_param = request.args.get('facultyID') or request.args.get('idNumber')
         query = Course.query.options(joinedload(Course.department))
-        if faculty_id:
-            faculty_member = Faculty.query.get(faculty_id)
-            if faculty_member and faculty_member.department_id:
-                query = query.filter(Course.department_id == faculty_member.department_id)
+        if faculty_param:
+            # Try finding User by id_number
+            user = User.query.filter_by(id_number=faculty_param).first()
+            dept_id = None
+            if user and user.department_id:
+                dept_id = user.department_id
+            else:
+                # Fallback: treat faculty_param as Faculty PK
+                try:
+                    fac = Faculty.query.get(int(faculty_param))
+                except (ValueError, TypeError):
+                    fac = None
+                if fac:
+                    u = User.query.get(fac.user_id)
+                    dept_id = u.department_id if u else None
+            if dept_id:
+                query = query.filter(Course.department_id == dept_id)
         courses = query.all()
         result = []
         for course in courses:

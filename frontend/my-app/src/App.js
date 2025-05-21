@@ -256,20 +256,20 @@ function App() {
         if (data) {
           // Log full response to see what comes back
           console.log("User data fetched:", data);
-          if (data.id && data.id !== "undefined") {
-            localStorage.setItem('userID', data.id);
-            localStorage.setItem('userId', data.id);
+          if (data.idNumber) {
+            localStorage.setItem('userID', data.idNumber);
+            localStorage.setItem('userId', data.idNumber);
           } else {
-            console.error("Fetched user data has no valid id:", data);
+            console.error("Fetched user data has no valid idNumber:", data);
           }
           
           const role = userRoleData?.role || localStorage.getItem('userRole');
           if (role === 'student') {
-            if (data.id && data.id !== "undefined") {
-              localStorage.setItem('studentID', data.id);
-              localStorage.setItem('studentId', data.id);
+            if (data.idNumber) {
+              localStorage.setItem('studentID', data.idNumber);
+              localStorage.setItem('studentId', data.idNumber);
             } else {
-              console.error("Fetched student data has no valid id:", data);
+              console.error("Fetched student data has no valid idNumber:", data);
             }
             setProfile({
               name: `${data.firstName} ${data.lastName}`,
@@ -280,12 +280,12 @@ function App() {
               profile_picture: data.profile_picture || 'https://via.placeholder.com/100'
             });
           } else if (role === 'faculty') {
-            if (data.id && data.id !== "undefined") {
-              localStorage.setItem('teacherID', data.id);
-              localStorage.setItem('teacherId', data.id);
-              localStorage.setItem('facultyID', data.id);
+            if (data.idNumber) {
+              localStorage.setItem('teacherID', data.idNumber);
+              localStorage.setItem('teacherId', data.idNumber);
+              localStorage.setItem('facultyID', data.idNumber);
             } else {
-              console.error("Fetched faculty data has no valid id:", data);
+              console.error("Fetched faculty data has no valid idNumber:", data);
             }
             setProfile({
               name: `${data.firstName} ${data.lastName}`,
@@ -518,7 +518,10 @@ function App() {
             queryClient.prefetchQuery({
               queryKey: ['consultation-history', userRole, userId],
               queryFn: async () => {
-                const res = await fetch(`http://localhost:5001/consultation/get_history?role=${userRole}&userID=${userId}`);
+                // Include idNumber parameter for backend to filter by id_number
+                const res = await fetch(
+                  `http://localhost:5001/consultation/get_history?role=${userRole}&userID=${userId}&idNumber=${userId}`
+                );
                 if (!res.ok) throw new Error('Failed to fetch consultation history');
                 return res.json();
               },

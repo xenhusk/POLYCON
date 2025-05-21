@@ -13,15 +13,26 @@ def get_teacher_students():
     if not teacher_id:
         return jsonify({"error": "Missing teacherID"}), 400
     
-    # Find the faculty user to get their department
-    faculty_user = User.query.join(Faculty, User.id == Faculty.user_id).filter(Faculty.id == teacher_id).first()
-    if not faculty_user:
-        return jsonify({"error": "Faculty not found"}), 404
+    # Determine User by id_number (id_number) or fallback to Faculty.id
+    faculty_user = None
+    # Try finding by user.id_number
+    user_by_number = User.query.filter_by(id_number=teacher_id).first()
+    if user_by_number:
+        faculty_user = user_by_number
+    else:
+        # Fallback: teacherID might be Faculty.id
+        faculty_entry = Faculty.query.get(teacher_id)
+        if not faculty_entry:
+            return jsonify({"error": "Faculty not found"}), 404
+        faculty_user = User.query.get(faculty_entry.user_id)
+    
+    # Now faculty_user is a User instance
 
-    # Query students in the same department as the teacher and enrolled in the specified semester
+    # Query students in the same department as the teacher
     # This is a simplified assumption. Real logic might involve courses taught by the teacher in that semester.
     query = Student.query.join(User, Student.user_id == User.id).join(Program, Student.program_id == Program.id)
     
+    # Filter by department
     if faculty_user.department_id:
         query = query.filter(Program.department_id == faculty_user.department_id)
     
@@ -46,11 +57,11 @@ def get_teacher_students():
         user = User.query.get(s.user_id)
         program = Program.query.get(s.program_id)
         student_list.append({
-            "id": s.id, # Student ID
-            "user_id": user.id, # User ID
-            "firstName": user.firstName,
-            "lastName": user.lastName,
-            "fullName": f"{user.firstName} {user.lastName}",
+            "id": s.id,  # Student table ID
+            "user_id": user.id,  # User PK
+            "firstName": user.first_name,
+            "lastName": user.last_name,
+            "fullName": f"{user.first_name} {user.last_name}",
             "email": user.email,
             "programName": program.name if program else "N/A",
             "year_section": s.year_section,
@@ -113,7 +124,7 @@ def get_grades_by_period():
                 grade_data["Prelim"] = g.grade
             elif g.period == "Midterm":
                 grade_data["Midterm"] = g.grade
-            elif g.period == "Pre-Final": # Match frontend key
+            elif g.period == "Pre-Final":
                 grade_data["Pre-Final"] = g.grade
             elif g.period == "Final":
                 grade_data["Final"] = g.grade

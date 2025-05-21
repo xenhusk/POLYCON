@@ -68,7 +68,10 @@ const apiClient = {
 
   consultations: {
     getHistory: (role, userID) => {
-      return apiClient.fetch(`http://localhost:5001/consultation/get_history?role=${role}&userID=${userID}`);
+      // Send both userID and idNumber for backend filtering by id_number
+      return apiClient.fetch(
+        `http://localhost:5001/consultation/get_history?role=${role}&userID=${userID}&idNumber=${userID}`
+      );
     }
   }
 };

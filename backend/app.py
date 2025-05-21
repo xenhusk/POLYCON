@@ -1,8 +1,13 @@
 from flask import Flask, jsonify, session as flask_session
 from flask_cors import CORS # Import CORS
+from flask_socketio import SocketIO
+
 from config import Config
 from extensions import db, bcrypt, jwt # Import bcrypt and jwt
 import os
+
+# Initialize SocketIO for real-time support (CORS allowed on all origins)
+socketio = SocketIO(cors_allowed_origins="*")
 
 # Import blueprints
 from routes.health import health_bp
@@ -31,8 +36,8 @@ from routes.settings_routes import settings_bp
 def create_app():
     app = Flask(__name__)
     CORS(app) # Enable CORS for all routes and origins by default
-    # If your frontend runs on a specific port, e.g., 3000, you can be more specific:
-    # CORS(app, resources={r"/*": {"origins": "http://localhost:3000"}})
+    # Initialize SocketIO with the Flask app
+    socketio.init_app(app)
 
     app.config.from_object(Config)
 
@@ -87,4 +92,5 @@ app = create_app()
 
 if __name__ == '__main__':
     port = int(os.environ.get("PORT", 5001))
-    app.run(debug=True, host='0.0.0.0', port=port)
+    # Run the application with Socket.IO support
+    socketio.run(app, debug=True, host='0.0.0.0', port=port)
