@@ -4,6 +4,17 @@ from extensions import db
 
 program_bp = Blueprint('program', __name__, url_prefix='/program')
 
+def get_next_available_id():
+    # Get all existing integer IDs, find the lowest missing one
+    ids = sorted([prog.id for prog in Program.query.order_by(Program.id).all()])
+    next_id = 1
+    for i in ids:
+        if i == next_id:
+            next_id += 1
+        else:
+            break
+    return next_id
+
 @program_bp.route('/get_programs', methods=['GET'])
 def get_programs():
     try:
@@ -17,8 +28,7 @@ def get_programs():
             dept = Department.query.get(prog.department_id)
             dept_name = dept.name if dept else ''
             result.append({
-                'id': prog.id,
-                'programID': prog.id,
+                'id': prog.id,  # integer PK
                 'programName': prog.name,
                 'departmentID': prog.department_id,
                 'departmentName': dept_name
@@ -34,9 +44,7 @@ def get_departments():
         result = [
             {
                 'id': dept.id,
-                'departmentID': dept.id,  # for consistency with frontend if it uses this
-                'name': dept.name,
-                'departmentName': dept.name  # for consistency with frontend
+                'name': dept.name
             }
             for dept in departments
         ]
@@ -50,14 +58,16 @@ def add_program():
         data = request.json
         name = data.get('programName')
         department_id = data.get('departmentID')
-        if not name or department_id is None:
+        if not name or not department_id:
             return jsonify({'error': 'Program name and departmentID are required'}), 400
         dept = Department.query.get(department_id)
         if not dept:
             return jsonify({'error': 'Department not found'}), 404
         if Program.query.filter_by(name=name, department_id=department_id).first():
             return jsonify({'error': 'Program already exists'}), 400
-        new_prog = Program(name=name, department_id=department_id)
+        # Assign the lowest available integer ID
+        new_id = get_next_available_id()
+        new_prog = Program(id=new_id, name=name, department_id=department_id)
         db.session.add(new_prog)
         db.session.commit()
         return jsonify({'message': 'Program added successfully', 'id': new_prog.id}), 201
@@ -85,23 +95,15 @@ def update_program(program_id):
         db.session.rollback()
         return jsonify({'error': str(e)}), 500
 
-@program_bp.route('/delete_program/<program_id>', methods=['DELETE'])
-def delete_program(program_id):  # Changed to accept string ID to match frontend call
+@program_bp.route('/delete_program/<int:program_id>', methods=['DELETE'])
+def delete_program(program_id):
     try:
-        # Attempt to convert program_id to integer if it's not already (e.g. 'P01' -> error, but 1 -> ok)
-        # The frontend seems to send the actual ID (e.g., 1, 2) not the 'P01' format for deletion.
-        # If it sends 'P01', this will need adjustment or the frontend needs to send the numeric ID.
-        # For now, assuming numeric ID is passed or can be derived.
-        # Let's assume the frontend sends the numeric ID as per `programToDelete` state.
-        prog_id_int = int(program_id)
-        prog = Program.query.get(prog_id_int)
+        prog = Program.query.get(program_id)
         if not prog:
             return jsonify({'error': 'Program not found'}), 404
         db.session.delete(prog)
         db.session.commit()
         return jsonify({'message': 'Program deleted successfully'}), 200
-    except ValueError:  # Handle cases where program_id is not a valid integer
-        return jsonify({'error': 'Invalid program ID format'}), 400
     except Exception as e:
         db.session.rollback()
         return jsonify({'error': str(e)}), 500

@@ -1,6 +1,7 @@
 from flask import Flask, jsonify, session as flask_session
 from flask_cors import CORS # Import CORS
 from flask_socketio import SocketIO
+from flask_migrate import Migrate  # Add this import
 
 from config import Config
 from extensions import db, bcrypt, jwt # Import bcrypt and jwt
@@ -45,6 +46,7 @@ def create_app():
     db.init_app(app)
     bcrypt.init_app(app) # Initialize bcrypt
     jwt.init_app(app)    # Initialize jwt
+    migrate = Migrate(app, db)  # Add this line to initialize Flask-Migrate
 
     with app.app_context():
         db.create_all()

@@ -11,7 +11,7 @@ export default function Courses() {
   const [courses, setCourses] = useState([]);
   const [departments, setDepartments] = useState([]);
   const [programs, setPrograms] = useState([]);
-  const [courseID, setCourseID] = useState("");
+  const [courseID, setCourseID] = useState(""); // This should be for the course code, not the integer PK
   const [courseName, setCourseName] = useState("");
   const [credits, setCredits] = useState("");
   const [department, setDepartment] = useState("");
@@ -106,40 +106,24 @@ export default function Courses() {
   const fetchInitialData = async () => {
     setIsCourseLoading(true);
     try {
-      const cachedCourses = localStorage.getItem("courses");
-      const cachedDepartments = localStorage.getItem("departments");
-      const cachedPrograms = localStorage.getItem("programs");
+      const [coursesResponse, departmentsResponse, programsResponse] =
+        await Promise.all([
+          fetch("http://localhost:5001/course/get_courses"),
+          fetch("http://localhost:5001/course/get_departments"),
+          fetch("http://localhost:5001/course/get_programs"),
+        ]);
+      const coursesData = await coursesResponse.json();
+      const departmentsData = await departmentsResponse.json();
+      const programsData = await programsResponse.json();
 
-      if (cachedCourses && cachedDepartments && cachedPrograms) {
-        const coursesData = JSON.parse(cachedCourses);
-        const departmentsData = JSON.parse(cachedDepartments);
-        const programsData = JSON.parse(cachedPrograms);
+      setCourses(coursesData.courses || []);
+      setFilteredCourses(coursesData.courses || []);
+      setDepartments(departmentsData);
+      setPrograms(programsData);
 
-        setCourses(coursesData);
-        setFilteredCourses(coursesData);
-        setDepartments(departmentsData);
-        setPrograms(programsData);
-      } else {
-        const [coursesResponse, departmentsResponse, programsResponse] =
-          await Promise.all([
-            fetch("http://localhost:5001/course/get_courses"),
-            fetch("http://localhost:5001/course/get_departments"),
-            fetch("http://localhost:5001/course/get_programs"),
-          ]);
-
-        const coursesData = await coursesResponse.json();
-        const departmentsData = await departmentsResponse.json();
-        const programsData = await programsResponse.json();
-
-        setCourses(coursesData.courses || []);
-        setFilteredCourses(coursesData.courses || []);
-        setDepartments(departmentsData);
-        setPrograms(programsData);
-
-        localStorage.setItem("courses", JSON.stringify(coursesData.courses));
-        localStorage.setItem("departments", JSON.stringify(departmentsData));
-        localStorage.setItem("programs", JSON.stringify(programsData));
-      }
+      localStorage.setItem("courses", JSON.stringify(coursesData.courses));
+      localStorage.setItem("departments", JSON.stringify(departmentsData));
+      localStorage.setItem("programs", JSON.stringify(programsData));
     } catch (error) {
       console.error("Error fetching initial data:", error);
     } finally {
@@ -148,8 +132,9 @@ export default function Courses() {
   };
 
   const handleDepartmentClick = (departmentId) => {
+    // departmentId is the department's integer id (from PostgreSQL)
     const departmentPrograms = programs.filter(
-      (prog) => prog.departmentID === departmentId
+      (prog) => String(prog.departmentID) === String(departmentId)
     );
     setSelectedDepartmentPrograms(departmentPrograms);
     setShowProgramModal(true);
@@ -159,258 +144,51 @@ export default function Courses() {
     setShowProgramModal(false);
     setSelectedDepartmentPrograms([]);
   };
-  // Add this new function for handling edit save
-  const handleEditSave = async () => {
-    if (
-      !editCourse ||
-      !editCourse.courseID ||
-      !editCourse.courseName ||
-      !editCourse.credits ||
-      !department ||
-      !selectedPrograms.length
-    ) {
-      setMessage({ type: "error", content: "All fields are required" });
-      return;
-    }
-
-    setIsEditLoading(true);
-    try {
-      const response = await fetch(
-        `http://localhost:5001/course/edit_course/${editCourse.courseID}`,
-        {
-          method: "PUT",
-          headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({
-            courseID: editCourse.courseID,
-            courseName: editCourse.courseName,
-            credits: editCourse.credits,
-            department: department,
-            program: selectedPrograms,
-          }),
-        }
-      );
-
-      if (response.ok) {
-        // Convert department ID to name and program IDs to names
-        const departmentName =
-          departments.find((d) => d.id === department)?.name || department;
-        const programNames = selectedPrograms.map((progId) => {
-          const program = programs.find((p) => p.id === progId);
-          return program ? program.name : progId;
-        });
-
-        const updatedCourse = {
-          courseID: editCourse.courseID,
-          courseName: editCourse.courseName,
-          credits: editCourse.credits,
-          department: departmentName,
-          program: programNames,
-        };
-
-        // Update the courses state
-        const updatedCourses = courses.map((course) =>
-          course.courseID === editCourse.courseID ? updatedCourse : course
-        );
-
-        setCourses(updatedCourses);
-        setFilteredCourses(updatedCourses);
-        localStorage.setItem("courses", JSON.stringify(updatedCourses));
-
-        setMessage({
-          type: "success",
-          content: "Course updated successfully!",
-        });
-        setTimeout(() => {
-          setShowEditModal(false);
-          setEditCourse(null);
-          resetForm();
-          setMessage({ type: "", content: "" });
-        }, 2000);
-      } else {
-        setMessage({ type: "error", content: "Failed to update course" });
-      }
-    } catch (error) {
-      console.error("Error updating course:", error);
-      setMessage({ type: "error", content: "Error updating course" });
-    } finally {
-      setIsEditLoading(false);
-    }
-  };
-
-  const handleDepartmentFilterChange = (e) => {
-    const selectedDeptName = e.target.value;
-    setSelectedDepartment(selectedDeptName);
-
-    // Find department ID using name
-    const selectedDept = departments.find(
-      (dept) => dept.name === selectedDeptName
-    );
-    const selectedDeptId = selectedDept ? selectedDept.id : null;
-
-    // Get programs belonging to the selected department
-    if (selectedDeptId) {
-      const departmentPrograms = programs.filter(
-        (prog) => prog.departmentID === selectedDeptId
-      );
-      setFilteredPrograms(departmentPrograms);
-    } else {
-      setFilteredPrograms([]);
-    }
-
-    // Filter courses based on selected department
-    const filtered = selectedDeptName
-      ? courses.filter((course) => course.department === selectedDeptName)
-      : courses;
-    setFilteredCourses(filtered);
-  };
-
-  const handleProgramFilterChange = (programId) => {
-    const updatedPrograms = filterSelectedPrograms.includes(programId)
-      ? filterSelectedPrograms.filter((id) => id !== programId) // Remove if already selected
-      : [...filterSelectedPrograms, programId]; // Add if not selected
-
-    setFilterSelectedPrograms(updatedPrograms);
-
-    // Filter courses based on selected programs
-    const selectedProgramNames = programs
-      .filter((prog) => updatedPrograms.includes(prog.id))
-      .map((prog) => prog.name);
-
-    const filtered =
-      selectedProgramNames.length > 0
-        ? courses.filter((course) =>
-            selectedProgramNames.every((progName) =>
-              course.program.includes(progName)
-            )
-          )
-        : courses;
-
-    setFilteredCourses(filtered);
-  };
-
-  const handleDepartmentChange = (e) => {
-    const selectedDepartment = e.target.value;
-    setDepartment(selectedDepartment);
-
-    // Filter programs based on extracted department ID
-    const departmentPrograms = programs.filter(
-      (prog) => prog.departmentID === selectedDepartment
-    );
-    setFilteredPrograms(departmentPrograms);
-    setSelectedPrograms([]); // Reset selected programs when department changes
-  };
-
-  const handleProgramChange = (programId) => {
-    if (selectedPrograms.includes(programId)) {
-      setSelectedPrograms(selectedPrograms.filter((id) => id !== programId));
-    } else {
-      setSelectedPrograms([...selectedPrograms, programId]);
-    }
-  };
 
   const handleSaveCourse = async () => {
-    // Use different values based on editing mode
-    const cID = editing ? editCourse.courseID : courseID;
-    const cName = editing ? editCourse.courseName : courseName;
-    const cCredits = editing ? editCourse.credits : credits;
-    const cDepartment = department; // This should be set to the selected department id
-    const cPrograms = selectedPrograms; // Array of selected program ids
-
-    // Debug log to check what values you have
-    console.log({ cID, cName, cCredits, cDepartment, cPrograms });
-
-    if (!cID || !cName || !cCredits || !cDepartment || cPrograms.length === 0) {
-      setMessage({ type: "error", content: "All fields are required" });
-      return;
-    }
-
     setIsAddLoading(true);
+    setMessage({ type: "", content: "" });
     try {
-      const endpoint = editing
-        ? `http://localhost:5001/course/edit_course/${cID}`
-        : `http://localhost:5001/course/add_course`;
-      const method = editing ? "PUT" : "POST";
-
-      const response = await fetch(endpoint, {
-        method,
+      const payload = {
+        courseName,
+        code: courseID, // Use courseID as the course code string
+        credits: parseInt(credits, 10),
+        department: parseInt(department, 10),
+        program: selectedPrograms.length > 0 ? selectedPrograms.map((id) => parseInt(id, 10)) : undefined,
+      };
+      // Remove undefined fields (especially program if empty)
+      Object.keys(payload).forEach(key => payload[key] === undefined || payload[key] === null || payload[key] === "" ? delete payload[key] : null);
+      const response = await fetch("http://localhost:5001/course/add_course", {
+        method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-          courseID: cID,
-          courseName: cName,
-          credits: cCredits,
-          department: cDepartment,
-          program: cPrograms,
-        }),
+        body: JSON.stringify(payload),
       });
-
+      const data = await response.json();
       if (response.ok) {
-        setMessage({
-          type: "success",
-          content: editing
-            ? "Course updated successfully!"
-            : "Course added successfully!",
-        });
-
-        // Convert department ID to department name and program IDs to names
-        const departmentName =
-          departments.find((d) => d.id === cDepartment)?.name || cDepartment;
-        const programNames = cPrograms.map((progId) => {
-          const program = programs.find((p) => p.id === progId);
-          return program ? program.name : progId;
-        });
-
-        const newCourse = {
-          courseID: cID,
-          courseName: cName,
-          credits: cCredits,
-          department: departmentName, // store department as name
-          program: programNames, // store programs as names
-        };
-
-        const updatedCourses = editing
-          ? courses.map((course) =>
-              course.courseID === cID ? newCourse : course
-            )
-          : [...courses, newCourse];
-
-        setCourses(updatedCourses);
-        setFilteredCourses(updatedCourses);
-        localStorage.setItem("courses", JSON.stringify(updatedCourses));
-        setTimeout(() => {
-          setMessage({ type: "", content: "" });
-          resetForm();
-        }, 2000);
+        setMessage({ type: "success", content: data.message });
+        resetForm();
+        fetchInitialData();
       } else {
-        setMessage({
-          type: "error",
-          content: "Failed to save course. Please try again.",
-        });
+        setMessage({ type: "error", content: data.error });
       }
     } catch (error) {
-      console.error("Error saving course:", error);
-      setMessage({
-        type: "error",
-        content: "Network error. Please try again.",
-      });
+      setMessage({ type: "error", content: error.message });
     } finally {
       setIsAddLoading(false);
     }
   };
+
   const handleEdit = (course) => {
     setEditCourse({ ...course });
-
     // Convert department name to its ID for editing
     const deptObj = departments.find((d) => d.name === course.department);
     if (deptObj) {
       setDepartment(deptObj.id);
-      
-      // Get all programs for this department
       const departmentPrograms = programs.filter(
         (prog) => prog.departmentID === deptObj.id
       );
       setFilteredPrograms(departmentPrograms);
       setSelectedDepartmentPrograms(departmentPrograms);
-
       // Find and set the IDs of programs that are already selected
       const selectedProgramIds = departmentPrograms
         .filter((prog) => course.program.includes(prog.name))
@@ -422,12 +200,10 @@ export default function Courses() {
       setSelectedDepartmentPrograms([]);
       setSelectedPrograms([]);
     }
-
     setShowEditModal(true);
   };
 
   const handleDelete = async (courseID) => {
-    // Replace window.confirm with custom message
     setMessage({
       type: "error",
       content: (
@@ -439,24 +215,15 @@ export default function Courses() {
                 try {
                   const response = await fetch(
                     `http://localhost:5001/course/delete_course/${courseID}`,
-                    {
-                      method: "DELETE",
-                    }
+                    { method: "DELETE" }
                   );
-
                   if (response.ok) {
-                    const updatedCourses = courses.filter(
-                      (course) => course.courseID !== courseID
-                    );
-                    setCourses(updatedCourses);
-                    setFilteredCourses(updatedCourses);
-                    localStorage.setItem("courses", JSON.stringify(updatedCourses));
+                    await fetchInitialData();
                     setMessage({ type: "success", content: "Course deleted successfully" });
                   } else {
                     setMessage({ type: "error", content: "Failed to delete course" });
                   }
                 } catch (error) {
-                  console.error("Error deleting course:", error);
                   setMessage({ type: "error", content: "Error deleting course" });
                 }
                 setTimeout(() => setMessage({ type: "", content: "" }), 3000);
@@ -516,6 +283,99 @@ export default function Courses() {
     setFilterSelectedPrograms([]);
     setFilteredPrograms([]);
     setFilteredCourses(courses);
+  };
+
+  const handleDepartmentFilterChange = (e) => {
+    const selectedDeptName = e.target.value;
+    setSelectedDepartment(selectedDeptName);
+  
+    // Find department ID using name
+    const selectedDept = departments.find(
+      (dept) => dept.name === selectedDeptName
+    );
+    const selectedDeptId = selectedDept ? selectedDept.id : null;
+  
+    // Get programs belonging to the selected department
+    if (selectedDeptId) {
+      const departmentPrograms = programs.filter(
+        (prog) => prog.departmentID === selectedDeptId
+      );
+      setFilteredPrograms(departmentPrograms);
+    } else {
+      setFilteredPrograms([]);
+    }
+  
+    // Filter courses based on selected department
+    const filtered = selectedDeptName
+      ? courses.filter((course) => course.department === selectedDeptName)
+      : courses;
+    setFilteredCourses(filtered);
+  };
+  
+  const handleProgramFilterChange = (programId) => {
+    const updatedPrograms = filterSelectedPrograms.includes(programId)
+      ? filterSelectedPrograms.filter((id) => id !== programId)
+      : [...filterSelectedPrograms, programId];
+  
+    setFilterSelectedPrograms(updatedPrograms);
+  
+    // Filter courses based on selected programs
+    const selectedProgramNames = programs
+      .filter((prog) => updatedPrograms.includes(prog.id))
+      .map((prog) => prog.name);
+  
+    const filtered =
+      selectedProgramNames.length > 0
+        ? courses.filter((course) =>
+            selectedProgramNames.every((progName) =>
+              course.program.includes(progName)
+            )
+          )
+        : courses;
+  
+    setFilteredCourses(filtered);
+  };
+  
+  const handleProgramChange = (programId) => {
+    if (selectedPrograms.includes(programId)) {
+      setSelectedPrograms(selectedPrograms.filter((id) => id !== programId));
+    } else {
+      setSelectedPrograms([...selectedPrograms, programId]);
+    }
+  };
+  
+  const handleEditSave = async () => {
+    setIsEditLoading(true);
+    setMessage({ type: "", content: "" });
+    try {
+      if (!editCourse) return;
+      const payload = {
+        courseName: editCourse.courseName,
+        code: editCourse.code || courseID,
+        credits: parseInt(editCourse.credits, 10),
+        department: parseInt(department, 10),
+        program: selectedPrograms.length > 0 ? selectedPrograms.map((id) => parseInt(id, 10)) : undefined,
+      };
+      Object.keys(payload).forEach(key => payload[key] === undefined || payload[key] === null || payload[key] === "" ? delete payload[key] : null);
+      const response = await fetch(`http://localhost:5001/course/edit_course/${editCourse.courseID}`, {
+        method: "PUT",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(payload),
+      });
+      const data = await response.json();
+      if (response.ok) {
+        setMessage({ type: "success", content: data.message });
+        setShowEditModal(false);
+        setEditCourse(null);
+        fetchInitialData();
+      } else {
+        setMessage({ type: "error", content: data.error });
+      }
+    } catch (error) {
+      setMessage({ type: "error", content: error.message });
+    } finally {
+      setIsEditLoading(false);
+    }
   };
 
   return (
@@ -685,7 +545,7 @@ export default function Courses() {
               {/* Fixed Table Header */}
               <thead className="bg-[#057DCD] text-white top-0 z-10">
                 <tr className="border-b">
-                  <th className="px-4 py-3">ID</th>
+                  <th className="px-4 py-3">Code</th>
                   <th className="px-4 py-3">Course Name</th>
                   <th className="px-4 py-3">Credits</th>
                   <th className="px-4 py-3">Department</th>
@@ -741,7 +601,7 @@ export default function Courses() {
                         key={course.courseID}
                         className="border-b hover:bg-[#DBF1FF] h-[50px] align-middle"
                       >
-                        <td className="px-4 py-3">{course.courseID}</td>
+                        <td className="px-4 py-3">{course.code}</td>
                         <td className="px-4 py-3">{course.courseName}</td>
                         <td className="px-4 py-3">{course.credits}</td>
                         <td className="px-4 py-3">{course.department}</td>
@@ -793,10 +653,10 @@ export default function Courses() {
       <div className="flex justify-center items-center w-full">
         <div className="relative w-[73%] h-[7vh] mt-6 shadow-md rounded-lg p-1 bg-white">
           <div className="flex flex-row items-center justify-between">
-            {/* Course ID */}
+            {/* Course Code */}
             <input
               type="text"
-              placeholder="Course ID"
+              placeholder="Course Code"
               value={courseID}
               onChange={(e) => setCourseID(e.target.value)}
               className="rounded-lg w-[20%] px-3 py-2 outline-none focus:ring focus:ring-blue-500 focus:border-blue-500"
@@ -842,12 +702,9 @@ export default function Courses() {
             {showProgramModal && (
               <div className="absolute right-[7.7rem] bottom-[4rem] mt-2 w-64 rounded-xl shadow-2xl overflow-hidden z-50">
                 <div ref={modalRef}>
-                  {/* Header matching filter style */}
                   <div className="bg-[#0065A8] px-6 py-4">
                     <h3 className="text-xl font-semibold text-white">Programs</h3>
                   </div>
-                  
-                  {/* Content matching filter style */}
                   <div className="bg-white p-6 space-y-4">
                     <div className="max-h-60 overflow-y-auto border-2 border-[#0065A8] rounded-lg">
                       {selectedDepartmentPrograms.length > 0 ? (
@@ -867,7 +724,7 @@ export default function Courses() {
                                 checked:bg-[#0065A8] checked:hover:bg-[#54BEFF]"
                               />
                               <span className={selectedPrograms.includes(prog.id) ? "text-white" : "text-gray-700"}>
-                                {prog.name}
+                                {prog.name || prog.programName}
                               </span>
                             </label>
                           </div>
@@ -882,13 +739,13 @@ export default function Courses() {
             )}
             {showEditModal && editCourse && (
               <AnimatePresence>
-                <div className="fixed inset-0 bg-black/50 backdrop-blur-sm flex items-center justify-center z-50 p-4">
+                <div className="fixed inset-0 bg-black/50 backdrop-blur-sm flex justify-center z-50 p-4">
                   <motion.div
                     variants={modalVariants}
                     initial="hidden"
                     animate="visible"
                     exit="exit"
-                    className="bg-white rounded-xl shadow-2xl w-[40rem] overflow-hidden"
+                    className="bg-white rounded-xl shadow-2xl w-[40rem] overflow-hidden max-h-[90vh] flex flex-col"
                     onClick={(e) => e.stopPropagation()}
                   >
                     {/* Modal Header */}
@@ -919,8 +776,25 @@ export default function Courses() {
                       </button>
                     </div>
 
-                    {/* Modal Body */}
-                    <div className="p-8 mx-3 space-y-6 bg-white rounded-b-lg">
+                    {/* Modal Body - Make scrollable */}
+                    <div className="p-8 mx-3 space-y-6 bg-white rounded-b-lg overflow-y-auto flex-1">
+                      {/* Course Code */}
+                      <div>
+                        <label className="block text-sm font-medium text-gray-700 mb-2">
+                          Course Code <span className="text-red-500">*</span>
+                        </label>
+                        <input
+                          type="text"
+                          value={editCourse.code}
+                          onChange={(e) =>
+                            setEditCourse({
+                              ...editCourse,
+                              code: e.target.value,
+                            })
+                          }
+                          className="w-full border-2 border-[#0065A8] rounded-lg px-3 py-2 focus:outline-none focus:ring-2 focus:ring-[#54BEFF]"
+                        />
+                      </div>
                       {/* Course Name */}
                       <div>
                         <label className="block text-sm font-medium text-gray-700 mb-2">
@@ -965,12 +839,13 @@ export default function Courses() {
                         <select
                           value={department}
                           onChange={(e) => {
-                            const deptId = e.target.value;
+                            const deptId = parseInt(e.target.value, 10);
                             setDepartment(deptId);
-                            const deptProgs = programs.filter(
-                              (prog) => prog.departmentID === deptId
-                            );
+                            // Update the list of programs for the selected department
+                            const deptProgs = programs.filter((prog) => prog.departmentID === deptId);
                             setSelectedDepartmentPrograms(deptProgs);
+                            // Reset selected programs to only those that belong to the new department
+                            setSelectedPrograms([]);
                           }}
                           className="w-full border-2 border-[#0065A8] rounded-lg px-3 py-2 focus:outline-none focus:ring-2 focus:ring-[#54BEFF]"
                         >
@@ -989,35 +864,39 @@ export default function Courses() {
                           Programs <span className="text-red-500">*</span>
                         </label>
                         <div className="h-[20vh] overflow-y-auto border-2 border-[#0065A8] rounded-lg px-3 pt-2">
-                          {selectedDepartmentPrograms.map((prog) => (
-                            <div key={prog.id} className="mb-2">
-                              <label
-                                className={`flex items-center p-2 rounded-lg transition-colors duration-200
-                                ${selectedPrograms.includes(prog.id)
-                                    ? "bg-[#0065A8] text-white hover:bg-[#54BEFF]"
-                                    : "hover:bg-[#54BEFF] text-white"
-                                }`}
-                              >
-                                <input
-                                  type="checkbox"
-                                  value={prog.id}
-                                  checked={selectedPrograms.includes(prog.id)}
-                                  onChange={() => handleProgramChange(prog.id)}
-                                  className="mr-3 h-4 w-4 accent-[#0065A8] border-gray-300 rounded 
-                                  checked:bg-[#0065A8] checked:hover:bg-[#54BEFF] "
-                                />
-                                <span
-                                  className={`${
-                                    selectedPrograms.includes(prog.id)
-                                      ? "text-white"
-                                      : "text-gray-700"
+                          {selectedDepartmentPrograms.length > 0 ? (
+                            selectedDepartmentPrograms.map((prog) => (
+                              <div key={prog.id} className="mb-2">
+                                <label
+                                  className={`flex items-center p-2 rounded-lg transition-colors duration-200
+                                  ${selectedPrograms.includes(prog.id)
+                                      ? "bg-[#0065A8] text-white hover:bg-[#54BEFF]"
+                                      : "hover:bg-[#54BEFF] text-white"
                                   }`}
                                 >
-                                  {prog.name}
-                                </span>
-                              </label>
-                            </div>
-                          ))}
+                                  <input
+                                    type="checkbox"
+                                    value={prog.id}
+                                    checked={selectedPrograms.includes(prog.id)}
+                                    onChange={() => handleProgramChange(prog.id)}
+                                    className="mr-3 h-4 w-4 accent-[#0065A8] border-gray-300 rounded 
+                                    checked:bg-[#0065A8] checked:hover:bg-[#54BEFF] "
+                                  />
+                                  <span
+                                    className={`${
+                                      selectedPrograms.includes(prog.id)
+                                        ? "text-white"
+                                        : "text-gray-700"
+                                    }`}
+                                  >
+                                    {prog.name}
+                                  </span>
+                                </label>
+                              </div>
+                            ))
+                          ) : (
+                            <div className="px-4 py-3 text-gray-500 text-center">No programs found</div>
+                          )}
                         </div>
                       </div>
                     </div>

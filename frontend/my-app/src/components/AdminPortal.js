@@ -320,41 +320,57 @@ export default function AdminPortal() {
                         </tr>
                       ))
                     ) : (
-                      userList.map((u) => (
-                        <tr key={u.ID} className="border-b hover:bg-[#DBF1FF] transition-all duration-100 ease-in-out">
-                          <td className="py-2 px-6 overflow-hidden text-center">{u.ID}</td>
-                          <td className="py-2 px-6 overflow-hidden text-center">{u.firstName} {u.lastName}</td>
-                          <td className="py-2 px-6 overflow-hidden text-center">{u.email}</td>
-                          <td className="py-2 px-6 pl-10 overflow-hidden text-center">{u.role}</td>
-                          <td className="py-2 px-6 pl-10 overflow-hidden text-center">{u.department}</td>
-                          <td className="py-2 pl-6 overflow-hidden text-center">
-                            <div className="flex items-center justify-center space-x-3">
-                              <button
-                                className={`text-gray-500 hover:text-gray-700 ${
-                                  EditClicked ? "scale-90" : "scale-100"}`}
-                                onClick={() => {
-                                  setEditClicked(true);
-                                  setTimeout(() => setEditClicked(false), 300);
-                                  handleEditClick(u);}}>
-                                <EditIcon className="w-5 h-5" />
-                              </button>
-                              <button
-                                className={`text-gray-500 hover:text-gray-700 ${
-                                  DeleteClicked ? "scale-90" : "scale-100"}`}
-                                onClick={() => {
-                                  setDeleteClicked(true);
-                                  setTimeout(() => {
-                                    setDeleteClicked(false);
-                                    setUserToDelete(u.ID);
-                                    setShowDeleteModal(true);
-                                  }, 300);
-                                }}>
-                                <DeleteIcon className="w-5 h-5" />
-                              </button>
-                            </div>
-                          </td>
-                        </tr>
-                      ))
+                      userList.map((u) => {
+                        let departmentDisplay = u.department;
+                        if (departmentDisplay && departments.length > 0) {
+                          let deptObj =
+                            departments.find(
+                              (d) =>
+                                d.id === u.department ||
+                                d.name === u.department ||
+                                d.departmentID === u.department ||
+                                d.departmentName === u.department
+                            );
+                          if (deptObj) {
+                            departmentDisplay = deptObj.name || deptObj.departmentName;
+                          }
+                        }
+                        return (
+                          <tr key={u.ID} className="border-b hover:bg-[#DBF1FF] transition-all duration-100 ease-in-out">
+                            <td className="py-2 px-6 overflow-hidden text-center">{u.idNumber}</td>
+                            <td className="py-2 px-6 overflow-hidden text-center">{u.firstName} {u.lastName}</td>
+                            <td className="py-2 px-6 overflow-hidden text-center">{u.email}</td>
+                            <td className="py-2 px-6 pl-10 overflow-hidden text-center">{u.role}</td>
+                            <td className="py-2 px-6 pl-10 overflow-hidden text-center">{departmentDisplay}</td>
+                            <td className="py-2 pl-6 overflow-hidden text-center">
+                              <div className="flex items-center justify-center space-x-3">
+                                <button
+                                  className={`text-gray-500 hover:text-gray-700 ${
+                                    EditClicked ? "scale-90" : "scale-100"}`}
+                                  onClick={() => {
+                                    setEditClicked(true);
+                                    setTimeout(() => setEditClicked(false), 300);
+                                    handleEditClick(u);}}>
+                                  <EditIcon className="w-5 h-5" />
+                                </button>
+                                <button
+                                  className={`text-gray-500 hover:text-gray-700 ${
+                                    DeleteClicked ? "scale-90" : "scale-100"}`}
+                                  onClick={() => {
+                                    setDeleteClicked(true);
+                                    setTimeout(() => {
+                                      setDeleteClicked(false);
+                                      setUserToDelete(u.ID);
+                                      setShowDeleteModal(true);
+                                    }, 300);
+                                  }}>
+                                  <DeleteIcon className="w-5 h-5" />
+                                </button>
+                              </div>
+                            </td>
+                          </tr>
+                        );
+                      })
                     )}
                   </tbody>
                 </table>

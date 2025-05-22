@@ -26,7 +26,6 @@ def login():
     response_data = {
         'message': 'Login successful',
         'userId': user.id,
-        'idNumber': user.id_number,  # Added actual user identifier
         'email': user.email,
         'role': user.role,
         'firstName': user.first_name, # Changed from user.firstName
@@ -45,17 +44,12 @@ def login():
 
     elif user.role == 'faculty':
         faculty_info = Faculty.query.filter_by(user_id=user.id).first()
-        # Add id_number for frontend to store as teacherId
-        response_data['teacherId'] = user.id_number
         if faculty_info:
-            response_data['isActive'] = faculty_info.is_active
-            # Access department through the user object
-            if user.department: 
-                response_data['department'] = user.department.name
-                response_data['department_id'] = user.department.id
-            else:
-                response_data['department'] = None
-                response_data['department_id'] = None
+            response_data['teacherId'] = faculty_info.id # frontend uses teacherId
+            response_data['isActive'] = faculty_info.isActive
+            # department info for faculty if needed
+            if faculty_info.department:
+                 response_data['departmentName'] = faculty_info.department.name
         else:
             response_data['isActive'] = False
     
@@ -145,13 +139,41 @@ def get_all_users_account():
     users = User.query.filter_by(archived=False).all()
     result = []
     for u in users:
+        # Get department name if available
+        department_name = None
+        if u.department_id:
+            dept = Department.query.filter_by(id=u.department_id).first()
+            if dept:
+                department_name = dept.name
+
+        # Default values for student-specific fields
+        program = None
+        sex = None
+        year_section = None
+
+        # If user is a student, get extra info
+        if u.role == 'student':
+            student = Student.query.filter_by(user_id=u.id).first()
+            if student:
+                program = None
+                if student.program_id:
+                    prog = Program.query.filter_by(id=student.program_id).first()
+                    if prog:
+                        program = prog.name
+                sex = student.sex
+                year_section = student.year_section
+
         result.append({
-            'id': u.id,
+            'ID': u.id,  # For frontend key
             'idNumber': u.id_number,
             'firstName': u.first_name,
             'lastName': u.last_name,
             'email': u.email,
-            'role': u.role
+            'role': u.role,
+            'department': department_name,
+            'program': program,
+            'sex': sex,
+            'year_section': year_section
         })
     return jsonify(result), 200
 

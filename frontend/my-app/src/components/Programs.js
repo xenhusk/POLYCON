@@ -10,14 +10,15 @@ export default function Programs() {
   const [selectedDepartment, setSelectedDepartment] = useState('');
   const [filteredPrograms, setFilteredPrograms] = useState([]);
   const [editing, setEditing] = useState(false);
-  const [isLoadingPrograms, setIsLoadingPrograms] = useState(true);//preloader
-  const [programFilter, setProgramFilter] = useState(''); // Program filter input
+  const [editingProgramId, setEditingProgramId] = useState(null);
+  const [isLoadingPrograms, setIsLoadingPrograms] = useState(true);
+  const [programFilter, setProgramFilter] = useState('');
   const [isAddLoading, setIsAddLoading] = useState(false);
   const [message, setMessage] = useState({ type: '', content: '' });
   const [showDeleteModal, setShowDeleteModal] = useState(false);
   const [programToDelete, setProgramToDelete] = useState(null);
   const [isDeleteLoading, setIsDeleteLoading] = useState(false);
-  const [isFiltering, setIsFiltering] = useState(false); // Loading state for filtering
+  const [isFiltering, setIsFiltering] = useState(false);
   const [AddClicked, setAddClicked] = useState(false);
   const [DeleteClicked, setDeleteClicked] = useState(false);
   const [EditClicked, setEditClicked] = useState(false);
@@ -31,37 +32,17 @@ export default function Programs() {
   const fetchInitialData = async () => {
     setIsLoadingPrograms(true);
     try {
-      const cachedPrograms = localStorage.getItem('programs');
-      const cachedDepartments = localStorage.getItem('departments');
-
-      if (cachedPrograms && cachedDepartments) {
-        const programsData = JSON.parse(cachedPrograms);
-        const departmentsData = JSON.parse(cachedDepartments);
-
-        setPrograms(programsData);
-        setFilteredPrograms(programsData);
-        setDepartments(departmentsData);
-      } else {
-        const [programsResponse, departmentsResponse] = await Promise.all([
-          fetch('http://localhost:5001/program/get_programs'),
-          fetch('http://localhost:5001/program/get_departments')
-        ]);
-
-        const programsData = await programsResponse.json();
-        const departmentsData = await departmentsResponse.json();
-
-        setPrograms(programsData || []);
-        setFilteredPrograms(programsData || []);
-        setDepartments(
-          departmentsData.map(dept => ({
-            id: dept.id,
-            name: dept.name || dept.departmentName
-          }))
-        );
-
-        localStorage.setItem('programs', JSON.stringify(programsData));
-        localStorage.setItem('departments', JSON.stringify(departmentsData));
-      }
+      const [programsResponse, departmentsResponse] = await Promise.all([
+        fetch('http://localhost:5001/program/get_programs'),
+        fetch('http://localhost:5001/program/get_departments')
+      ]);
+      const programsData = await programsResponse.json();
+      const departmentsData = await departmentsResponse.json();
+      setPrograms(programsData || []);
+      setFilteredPrograms(programsData || []);
+      setDepartments(departmentsData || []);
+      localStorage.setItem('programs', JSON.stringify(programsData));
+      localStorage.setItem('departments', JSON.stringify(departmentsData));
     } catch (error) {
       console.error('Error fetching initial data:', error);
     } finally {
@@ -86,32 +67,53 @@ export default function Programs() {
       setMessage({ type: 'error', content: 'All fields are required' });
       return;
     }
-
     setIsAddLoading(true);
     try {
-      const newProgramID = `P${String(programs.length + 1).padStart(2, '0')}`;
       const response = await fetch('http://localhost:5001/program/add_program', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ id: newProgramID, programName, departmentID: selectedDepartment })
+        body: JSON.stringify({ programName, departmentID: parseInt(selectedDepartment) })
       });
-
       if (response.ok) {
-        const newProgram = { id: newProgramID, programName, departmentID: selectedDepartment };
-        const updatedPrograms = [...programs, newProgram];
-        setPrograms(updatedPrograms);
-        setFilteredPrograms(updatedPrograms);
-        localStorage.setItem('programs', JSON.stringify(updatedPrograms));
+        await fetchInitialData();
         setMessage({ type: 'success', content: 'Program added successfully!' });
-        setTimeout(() => {
-          resetForm();
-          setMessage({ type: '', content: '' });
-        }, 2000);
+        resetForm();
       } else {
-        setMessage({ type: 'error', content: 'Failed to add program' });
+        const errorMessage = await response.json();
+        setMessage({ type: 'error', content: errorMessage.error || 'Failed to add program' });
       }
     } catch (error) {
       console.error('Error adding program:', error);
+      setMessage({ type: 'error', content: 'Network error. Please try again.' });
+    } finally {
+      setIsAddLoading(false);
+    }
+  };
+
+  const handleUpdateProgram = async () => {
+    if (!programName || !selectedDepartment || !editingProgramId) {
+      setMessage({ type: 'error', content: 'All fields are required' });
+      return;
+    }
+    setIsAddLoading(true);
+    try {
+      const response = await fetch(`http://localhost:5001/program/update_program/${editingProgramId}`, {
+        method: 'PUT',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ programName, departmentID: parseInt(selectedDepartment) })
+      });
+      if (response.ok) {
+        await fetchInitialData();
+        setMessage({ type: 'success', content: 'Program updated successfully!' });
+        resetForm();
+        setEditing(false);
+        setEditingProgramId(null);
+      } else {
+        const errorMessage = await response.json();
+        setMessage({ type: 'error', content: errorMessage.error || 'Failed to update program' });
+      }
+    } catch (error) {
+      console.error('Error updating program:', error);
       setMessage({ type: 'error', content: 'Network error. Please try again.' });
     } finally {
       setIsAddLoading(false);
@@ -122,6 +124,7 @@ export default function Programs() {
     setProgramName(program.programName);
     setSelectedDepartment(program.departmentID);
     setEditing(true);
+    setEditingProgramId(program.id);
   };
 
   const handleDelete = (programId) => {
@@ -133,15 +136,11 @@ export default function Programs() {
     setIsDeleteLoading(true);
     try {
       const response = await fetch(`http://localhost:5001/program/delete_program/${programToDelete}`, {
-        method: 'DELETE',
-        headers: { 'Content-Type': 'application/json' }
+        method: 'DELETE'
       });
 
       if (response.ok) {
-        const updatedPrograms = programs.filter(program => program.id !== programToDelete);
-        setPrograms(updatedPrograms);
-        setFilteredPrograms(updatedPrograms);
-        localStorage.setItem('programs', JSON.stringify(updatedPrograms));
+        await fetchInitialData();
         setMessage({ type: 'success', content: 'Program deleted successfully!' });
         setShowDeleteModal(false);
         setProgramToDelete(null);
@@ -161,6 +160,7 @@ export default function Programs() {
     setProgramName('');
     setSelectedDepartment('');
     setEditing(false);
+    setEditingProgramId(null);
   };
 
   const applyFilters = () => {
@@ -169,7 +169,6 @@ export default function Programs() {
     setTimeout(() => {
       let filtered = programs;
 
-      // Filter by program name
       if (programFilter) {
         filtered = filtered.filter((program) =>
           program.programName.toLowerCase().includes(programFilter.toLowerCase())
@@ -188,7 +187,6 @@ export default function Programs() {
 
   return (
     <div className="mx-auto p-6 bg-white fade-in">
-      {/* Message display */}
       {message.content && (
         <div className={`fixed top-5 right-5 p-4 rounded-lg shadow-lg z-50 ${
           message.type === 'success' ? 'bg-green-100 text-green-700' : 'bg-red-100 text-red-700'
@@ -223,7 +221,6 @@ export default function Programs() {
           </div>
         </div>
 
-        {/* Table Container with 90% width */}
         <div className="mt-4 shadow-md rounded-lg overflow-hidden w-[90%] mx-auto fade-in delay-300">
           <div className="overflow-x-auto">
             <table className="w-full bg-white text-center table-fixed">
@@ -233,7 +230,6 @@ export default function Programs() {
                   <th className="px-4 py-3">Program Name</th>
                   <th className="px-4 py-3 pl-2">Department</th>
                   <th className="pr-5">Actions</th>
-                
                 </tr>
               </thead>
             </table>
@@ -242,7 +238,6 @@ export default function Programs() {
             <table className="w-full bg-white text-center table-fixed">
               <tbody>
               {(isLoadingPrograms || isFiltering) ? (
-                // 🚀 Loading Skeleton with Pulse Animation
                 Array.from({ length: 5 }).map((_, index) => (
                   <tr key={index} className="animate-pulse border-b h-[50px] align-middle">
                     <td className="px-4 py-3">
@@ -264,17 +259,12 @@ export default function Programs() {
                 ))
               ) : filteredPrograms.length > 0 ? (
                   filteredPrograms.map((program) => {
-                    const department = departments.find(
-                      (dept) =>
-                        dept.id === program.departmentID ||
-                        dept.departmentID === program.departmentID
-                    );
                     return (
                       <tr key={program.id} className="border-b hover:bg-[#DBF1FF] h-[50px] align-middle">
                         <td className="px-4 py-3">{program.id}</td>
                         <td className="px-4 py-3">{program.programName}</td>
                         <td className="px-4 py-3">
-                          {department ? (department.name || department.departmentName) : 'Unknown'}
+                          {program.departmentName || 'Unknown'}
                         </td>
                         <td className="px-4 py-3 flex justify-center space-x-3 align-middle">
                           <button
@@ -324,7 +314,7 @@ export default function Programs() {
             />
             <select 
               value={selectedDepartment} 
-              onChange={handleDepartmentChange} 
+              onChange={(e) => setSelectedDepartment(e.target.value)} 
               className="rounded-lg py-2 w-[200px] focus:ring focus:ring-blue-300 focus:border-blue-500"
             >
               <option value="">Select Department</option>
@@ -338,13 +328,13 @@ export default function Programs() {
               onClick={() => {
                 setAddClicked(true);
                 setTimeout(() => setAddClicked(false), 300);
-                handleAddProgram();}}
+                editing ? handleUpdateProgram() : handleAddProgram();
+              }}
               disabled={isAddLoading}
               className={`px-8 py-2 rounded-lg text-white shadow-md ${
                 editing ? 'bg-[#057DCD] hover:bg-[#54BEFF]' : 'bg-[#057DCD] hover:bg-[#54BEFF]'
               } ${isAddLoading ? 'opacity-50 cursor-not-allowed' : ''} 
-                ${AddClicked ? "scale-90" : "scale-100"}
-              flex items-center space-x-2`}
+                 ${AddClicked ? "scale-90" : "scale-100"} flex items-center space-x-2`}
             >
               {isAddLoading ? (
                 <>
@@ -355,15 +345,18 @@ export default function Programs() {
                   <span>{editing ? 'Updating...' : 'Adding...'}</span>
                 </>
               ) : (
-                <span>{editing ? 'Update' : 'ADD'}</span>
+                <span>{editing ? 'UPDATE' : 'ADD'}</span>
               )}
             </button>
             {editing && (
-              <button
+              <button 
                 onClick={() => {
-                  setEditClicked(true);
-                  setTimeout(() => setEditClicked(false), 300);
-                  resetForm();}}
+                  setAddClicked(true);
+                  setTimeout(() => setAddClicked(false), 300);
+                  resetForm();
+                  setEditing(false);
+                  setEditingProgramId(null);
+                }}
                 className="bg-gray-500 hover:bg-gray-600 text-white px-4 py-2 rounded shadow-md transition duration-300"
               >
                 Cancel

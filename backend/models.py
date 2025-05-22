@@ -1,6 +1,7 @@
 from extensions import db
 from datetime import datetime
 from sqlalchemy import func
+from sqlalchemy.dialects.postgresql import ARRAY
 
 class User(db.Model):
     __tablename__ = 'users'
@@ -26,11 +27,10 @@ class Department(db.Model):
 
 class Program(db.Model):
     __tablename__ = 'programs'
-
-    id = db.Column(db.Integer, primary_key=True)
-    name = db.Column(db.String(100), unique=True, nullable=False)
+    id = db.Column(db.Integer, primary_key=True, autoincrement=False)  # autoincrement must be False
+    name = db.Column(db.String(255), nullable=False)
     department_id = db.Column(db.Integer, db.ForeignKey('departments.id'), nullable=False)
-    department = db.relationship('Department', backref='programs', lazy=True)
+    department = db.relationship('Department', backref=db.backref('programs', lazy=True))
 
 class Student(db.Model):
     __tablename__ = 'students'
@@ -68,8 +68,14 @@ class Course(db.Model):
     credits = db.Column(db.Integer, nullable=False)
     department_id = db.Column(db.Integer, db.ForeignKey('departments.id'), nullable=False)
     department = db.relationship('Department', backref='courses', lazy=True)
-    program_id = db.Column(db.Integer, db.ForeignKey('programs.id'), nullable=True)
-    program = db.relationship('Program', backref='courses', lazy=True)
+    program_ids = db.Column(ARRAY(db.Integer), nullable=True)
+
+    __table_args__ = (
+        db.CheckConstraint(
+            'program_ids @> ARRAY[]::integer[] AND NOT EXISTS (SELECT unnest(program_ids) EXCEPT SELECT id FROM programs)',
+            name='valid_program_ids'
+        ),
+    )
 
 class Grade(db.Model):
     __tablename__ = 'grades'
