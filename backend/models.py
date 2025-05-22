@@ -70,12 +70,8 @@ class Course(db.Model):
     department = db.relationship('Department', backref='courses', lazy=True)
     program_ids = db.Column(ARRAY(db.Integer), nullable=True)
 
-    __table_args__ = (
-        db.CheckConstraint(
-            'program_ids @> ARRAY[]::integer[] AND NOT EXISTS (SELECT unnest(program_ids) EXCEPT SELECT id FROM programs)',
-            name='valid_program_ids'
-        ),
-    )
+    # Removed the problematic CHECK constraint
+    # Validation of program_ids will be done at the application level
 
 class Grade(db.Model):
     __tablename__ = 'grades'

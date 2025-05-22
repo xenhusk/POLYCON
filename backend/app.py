@@ -36,7 +36,9 @@ from routes.settings_routes import settings_bp
 
 def create_app():
     app = Flask(__name__)
-    CORS(app) # Enable CORS for all routes and origins by default
+    # Enable CORS for all routes, allow any origin and credentials
+    CORS(app, resources={r"/*": {"origins": "*"}}, supports_credentials=True)
+
     # Initialize SocketIO with the Flask app
     socketio.init_app(app)
 

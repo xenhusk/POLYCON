@@ -1,4 +1,5 @@
 from flask import Blueprint, request, jsonify
+from flask_cors import cross_origin
 from models import db, User, Program, Department, Student, Faculty # Ensure Student and Faculty are imported if needed by other routes
 from werkzeug.security import generate_password_hash, check_password_hash
 from extensions import bcrypt # Assuming you have bcrypt in extensions.py
@@ -6,6 +7,7 @@ from extensions import bcrypt # Assuming you have bcrypt in extensions.py
 account_bp = Blueprint('account_bp', __name__)
 
 @account_bp.route('/login', methods=['POST'])
+@cross_origin()
 def login():
     data = request.get_json()
     email = data.get('email')
@@ -28,28 +30,27 @@ def login():
         'userId': user.id,
         'email': user.email,
         'role': user.role,
-        'firstName': user.first_name, # Changed from user.firstName
-        'lastName': user.last_name, # Changed from user.lastName
-        # Add other user details as needed by the frontend
+        'firstName': user.first_name,  # Changed from user.firstName
+        'lastName': user.last_name     # Changed from user.lastName
     }
-
+    
     if user.role == 'student':
         student_info = Student.query.filter_by(user_id=user.id).first()
         if student_info:
             response_data['studentId'] = student_info.id
-            response_data['isEnrolled'] = student_info.isEnrolled
+            response_data['isEnrolled'] = student_info.is_enrolled
         else:
             # This case should ideally not happen if data is consistent
-            response_data['isEnrolled'] = False 
+            response_data['isEnrolled'] = False
 
     elif user.role == 'faculty':
         faculty_info = Faculty.query.filter_by(user_id=user.id).first()
         if faculty_info:
             response_data['teacherId'] = faculty_info.id # frontend uses teacherId
-            response_data['isActive'] = faculty_info.isActive
+            response_data['isActive'] = faculty_info.is_active
             # department info for faculty if needed
-            if faculty_info.department:
-                 response_data['departmentName'] = faculty_info.department.name
+            if user.department:
+                 response_data['departmentName'] = user.department.name
         else:
             response_data['isActive'] = False
     
