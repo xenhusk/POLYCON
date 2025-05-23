@@ -31,7 +31,8 @@ function EnrollmentModal({ closeModal }) {
           console.error("Search error:", data.error);
           setStudentResults([]);
         } else {
-          setStudentResults(data.results || []);
+          // The API returns an array directly, not wrapped in a results object
+          setStudentResults(Array.isArray(data) ? data : []);
         }
       } catch (error) {
         console.error("Search error:", error);
@@ -119,9 +120,8 @@ function EnrollmentModal({ closeModal }) {
               <div
                 key={student.id}
                 className="bg-[#00D1B2] text-white px-1 sm:px-2 py-1 rounded-full flex items-center gap-1 sm:gap-2 text-xs sm:text-sm mb-1"
-              >
-                <img
-                  src={getProfilePictureUrl(student.profile_picture)}
+              >                <img
+                  src={getProfilePictureUrl(student.profile_picture, `${student.firstName} ${student.lastName}`)}
                   alt="Profile"
                   className="w-4 h-4 sm:w-5 sm:h-5 rounded-full"
                 />
@@ -193,18 +193,16 @@ function EnrollmentModal({ closeModal }) {
                           setSelectedStudents([...selectedStudents, student]);
                           setSearchTerm("");
                         }}
-                      >
-                        <img
-                          src={getProfilePictureUrl(student.profile_picture)}
+                      >                        <img
+                          src={getProfilePictureUrl(student.profile_picture, `${student.firstName} ${student.lastName}`)}
                           alt="Profile"
                           className="w-6 h-6 sm:w-8 sm:h-8 rounded-full"
                         />
                         <div>
                           <div className="font-medium text-xs sm:text-sm">
                             {student.firstName} {student.lastName}
-                          </div>
-                          <div className="text-xs text-gray-500">
-                            {student.programName || 'Unknown Program'} • {student.year_section || 'Unknown Section'}
+                          </div>                          <div className="text-xs text-gray-500">
+                            {student.program || student.programName || 'Unknown Program'} • {student.year_section || 'Unknown Section'}
                           </div>
                         </div>
                       </li>

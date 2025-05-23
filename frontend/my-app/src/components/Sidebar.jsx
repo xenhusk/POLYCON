@@ -524,9 +524,11 @@ const Sidebar = ({ onExpandChange }) => {
                 }}
               >
                 <div className="rounded-full p-1 bg-white">
-                  <div className="relative">
-                    <img 
-                      src={userDetails?.profile_picture || profilePicture || 'https://via.placeholder.com/100'} 
+                  <div className="relative">                    <img 
+                      src={userDetails?.profile_picture || 
+                           (userDetails ? 
+                              getProfilePictureUrl(null, `${userDetails.firstName} ${userDetails.lastName}`) : 
+                              profilePicture)} 
                       alt="Profile" 
                       className="rounded-full w-10 h-10"  
                     />

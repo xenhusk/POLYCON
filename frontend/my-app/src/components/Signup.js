@@ -504,11 +504,9 @@ const Signup = ({ onSwitchToLogin }) => {
                   >
                     <option value="" hidden>
                       Select Department
-                    </option>
-
-                    {departments.map((dept) => (
-                      <option key={dept.departmentID} value={dept.departmentID}>
-                        {dept.departmentName}
+                    </option>                    {departments.map((dept) => (
+                      <option key={dept.id} value={dept.id}>
+                        {dept.name}
                       </option>
                     ))}
                   </select>

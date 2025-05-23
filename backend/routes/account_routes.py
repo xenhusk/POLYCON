@@ -66,9 +66,11 @@ def signup():
     last_name = data.get('lastName')
     email = data.get('email')
     password = data.get('password')
-    department_id = data.get('departmentId')
-    role = data.get('role')
-    profile_image_url = data.get('profileImageUrl')
+    department_id = data.get('department')  # Frontend sends 'department'
+    program_id = data.get('program')  # Frontend sends program ID
+    sex = data.get('sex')
+    year_section = data.get('year_section')
+    role = data.get('role', 'student')  # Default to student if not specified
 
     if not email or not password:
         return jsonify({'error': 'Email and password are required'}), 400
@@ -78,19 +80,51 @@ def signup():
     if existing_user:
         return jsonify({'error': 'User with this email already exists'}), 400
 
-    hashed_password = generate_password_hash(password)
-    new_user = User(
-        id_number=id_number,
-        firstName=first_name,
-        lastName=last_name,
-        email=email,
-        password_hash=hashed_password,  # Store the hashed password
-        department_id=department_id,
-        role=role,
-        profile_image_url=profile_image_url # Add profile_image_url
-    )
-    db.session.add(new_user)
-    db.session.commit()
+    # Check if ID number is already used
+    existing_id = User.query.filter_by(id_number=id_number).first()
+    if existing_id:
+        return jsonify({'error': 'ID number already registered'}), 400
+
+    try:
+        # Generate full name from first and last names
+        full_name = f"{first_name.strip()} {last_name.strip()}"
+        
+        # Hash the password
+        hashed_password = bcrypt.generate_password_hash(password).decode('utf-8')
+        
+        # Create new user
+        new_user = User(
+            id_number=id_number,
+            first_name=first_name,
+            last_name=last_name,
+            full_name=full_name,
+            email=email,
+            password=hashed_password,
+            department_id=department_id,
+            role=role
+        )
+        
+        db.session.add(new_user)
+        db.session.commit()
+        
+        # If student role, create student record
+        if role == 'student' and program_id:
+            new_student = Student(
+                user_id=new_user.id,
+                program_id=program_id,
+                sex=sex,
+                year_section=year_section
+            )
+            db.session.add(new_student)
+            db.session.commit()
+        elif role == 'faculty':
+            new_faculty = Faculty(user_id=new_user.id)
+            db.session.add(new_faculty)
+            db.session.commit()
+
+    except Exception as e:
+        db.session.rollback()
+        return jsonify({"error": str(e)}), 500
 
     return jsonify({'message': 'User registered successfully'}), 201
 
@@ -183,5 +217,18 @@ def get_departments_account():
     departments = Department.query.all()
     result = [{'id': d.id, 'name': d.name} for d in departments]
     return jsonify(result), 200
+
+@account_bp.route('/programs', methods=['GET'])
+def get_programs_by_department():
+    department_id = request.args.get('departmentID')
+    if not department_id:
+        return jsonify({"error": "Department ID is required"}), 400
+    
+    try:
+        programs = Program.query.filter_by(department_id=department_id).all()
+        result = [{'programID': prog.id, 'programName': prog.name} for prog in programs]
+        return jsonify(result), 200
+    except Exception as e:
+        return jsonify({"error": str(e)}), 500
 
 # Add other account-related routes here (e.g., signup, password reset if not in user_routes)

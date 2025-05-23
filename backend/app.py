@@ -26,6 +26,7 @@ from routes.grade_routes import grade_bp # Import grade_bp
 from routes.homeadmin_routes import homeadmin_bp # Import homeadmin_bp
 from routes.homestudent_routes import homestudent_bp # Import homestudent_bp
 from routes.hometeacher_routes import hometeacher_bp # Import hometeacher_bp
+from routes.search_routes import search_bp # Import search_bp
 from routes.consultation_routes import consultation_bp
 from services.scheduler_service import initialize_scheduler
 from routes.polycon_analysis_routes import polycon_analysis_bp # Add this import
@@ -71,6 +72,7 @@ def create_app():
     app.register_blueprint(homeadmin_bp) # Register homeadmin_bp
     app.register_blueprint(homestudent_bp) # Register homestudent_bp
     app.register_blueprint(hometeacher_bp) # Register hometeacher_bp
+    app.register_blueprint(search_bp) # Register search_bp
     # Consultation endpoints
     app.register_blueprint(consultation_bp)
     app.register_blueprint(polycon_analysis_bp, url_prefix='/polycon-analysis') # Add this line
