@@ -279,12 +279,34 @@ ALTER SEQUENCE public.notifications_id_seq OWNED BY public.notifications.id;
 
 CREATE TABLE public.programs (
     id integer NOT NULL,
-    name character varying(255) NOT NULL,
+    name character varying(100) NOT NULL,
     department_id integer NOT NULL
 );
 
 
 ALTER TABLE public.programs OWNER TO postgres;
+
+--
+-- Name: programs_id_seq; Type: SEQUENCE; Schema: public; Owner: postgres
+--
+
+CREATE SEQUENCE public.programs_id_seq
+    AS integer
+    START WITH 1
+    INCREMENT BY 1
+    NO MINVALUE
+    NO MAXVALUE
+    CACHE 1;
+
+
+ALTER SEQUENCE public.programs_id_seq OWNER TO postgres;
+
+--
+-- Name: programs_id_seq; Type: SEQUENCE OWNED BY; Schema: public; Owner: postgres
+--
+
+ALTER SEQUENCE public.programs_id_seq OWNED BY public.programs.id;
+
 
 --
 -- Name: semesters; Type: TABLE; Schema: public; Owner: postgres
@@ -448,6 +470,13 @@ ALTER TABLE ONLY public.notifications ALTER COLUMN id SET DEFAULT nextval('publi
 
 
 --
+-- Name: programs id; Type: DEFAULT; Schema: public; Owner: postgres
+--
+
+ALTER TABLE ONLY public.programs ALTER COLUMN id SET DEFAULT nextval('public.programs_id_seq'::regclass);
+
+
+--
 -- Name: semesters id; Type: DEFAULT; Schema: public; Owner: postgres
 --
 
@@ -489,6 +518,8 @@ COPY public.consultation_sessions (id, session_date, duration, student_ids, summ
 --
 
 COPY public.courses (id, code, name, credits, department_id, program_ids) FROM stdin;
+2	COSC2003	Introduction to Computing	3	1	{2,1}
+3	GEDC1002	Ethics	3	1	{2,1}
 \.
 
 
@@ -498,6 +529,9 @@ COPY public.courses (id, code, name, credits, department_id, program_ids) FROM s
 
 COPY public.departments (id, name) FROM stdin;
 1	CICT
+2	CAS
+4	COEngineering
+3	COEducation
 \.
 
 
@@ -506,7 +540,7 @@ COPY public.departments (id, name) FROM stdin;
 --
 
 COPY public.faculty (id, user_id, is_active) FROM stdin;
-1	1	t
+1	2	t
 \.
 
 
@@ -531,6 +565,10 @@ COPY public.notifications (id, data, created_at) FROM stdin;
 --
 
 COPY public.programs (id, name, department_id) FROM stdin;
+2	BSIT	1
+3	BSMath	3
+1	BSCS	1
+4	BSPsychology	2
 \.
 
 
@@ -555,7 +593,8 @@ COPY public.students (id, user_id, program_id, sex, year_section, is_enrolled, e
 --
 
 COPY public.users (id, id_number, first_name, last_name, full_name, email, password, department_id, role, archived, profile_picture) FROM stdin;
-1	22-3191-535	David Paul	Desuyo	David Paul Desuyo	desuyo.191535@wnu.sti.edu.ph	$2b$12$flAXE/8V.9/wBRD.L0CxoeOl45L3oWefIVozQ07D5mug8oAdix8Tm	1	faculty	f	7d20a773-6b8f-4678-929e-993a2570b5a3.png
+2	22-3191-535	David Paul	Desuyo	David Paul Desuyo	desuyo.191535@wnu.sti.edu.ph	$2b$12$Ssyl58TBZhvYGA.w9wYuyeYtbKJ4tpVeQb/OvywYVthYb.Z.I4wCy	1	faculty	f	\N
+1	22-2222-222	Clark Jim	Gabiota	Clark Jim Gabiota	gabiota.307132@wnu.sti.edu.ph	$2b$12$4mDp4IMTnYWb.9MwwJB4zu1LtxwiHIINNm9YXUzukLMcRS3Mlh4nC	1	admin	f	e54b05ac-e67c-4953-a3c8-5ad4b779917b.png
 \.
 
 
@@ -570,14 +609,14 @@ SELECT pg_catalog.setval('public.consultation_sessions_id_seq', 1, false);
 -- Name: courses_id_seq; Type: SEQUENCE SET; Schema: public; Owner: postgres
 --
 
-SELECT pg_catalog.setval('public.courses_id_seq', 1, false);
+SELECT pg_catalog.setval('public.courses_id_seq', 5, true);
 
 
 --
 -- Name: departments_id_seq; Type: SEQUENCE SET; Schema: public; Owner: postgres
 --
 
-SELECT pg_catalog.setval('public.departments_id_seq', 1, true);
+SELECT pg_catalog.setval('public.departments_id_seq', 5, true);
 
 
 --
@@ -602,6 +641,13 @@ SELECT pg_catalog.setval('public.notifications_id_seq', 1, false);
 
 
 --
+-- Name: programs_id_seq; Type: SEQUENCE SET; Schema: public; Owner: postgres
+--
+
+SELECT pg_catalog.setval('public.programs_id_seq', 1, false);
+
+
+--
 -- Name: semesters_id_seq; Type: SEQUENCE SET; Schema: public; Owner: postgres
 --
 
@@ -619,7 +665,7 @@ SELECT pg_catalog.setval('public.students_id_seq', 1, false);
 -- Name: users_id_seq; Type: SEQUENCE SET; Schema: public; Owner: postgres
 --
 
-SELECT pg_catalog.setval('public.users_id_seq', 1, true);
+SELECT pg_catalog.setval('public.users_id_seq', 2, true);
 
 
 --
@@ -692,6 +738,14 @@ ALTER TABLE ONLY public.grades
 
 ALTER TABLE ONLY public.notifications
     ADD CONSTRAINT notifications_pkey PRIMARY KEY (id);
+
+
+--
+-- Name: programs programs_name_key; Type: CONSTRAINT; Schema: public; Owner: postgres
+--
+
+ALTER TABLE ONLY public.programs
+    ADD CONSTRAINT programs_name_key UNIQUE (name);
 
 
 --
