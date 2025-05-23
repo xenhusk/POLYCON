@@ -9,9 +9,22 @@ This guide provides instructions for exporting and importing the POLYCON databas
 
 ## Database Export (Sharing Your Database)
 
-To export your current database and share it with other developers:
+The easiest way to export your database is to use the provided setup script:
 
-### Using PowerShell
+```bash
+# Navigate to the project directory
+cd C:\Users\xenhu\OneDrive\Documents\GitHub\POLYCON
+
+# Run the database export
+python setup_database.py export
+```
+
+The script will automatically:
+- Create a database directory if needed
+- Find your PostgreSQL installation
+- Export your current database with the current date in the filename
+
+### Using PowerShell (Alternative Method)
 
 ```powershell
 # Navigate to the project directory
@@ -23,7 +36,7 @@ if (-not (Test-Path -Path ".\database")) {
 }
 
 # Export the database (replace [version] with your PostgreSQL version)
-& "C:\Program Files\PostgreSQL\[version]\bin\pg_dump.exe" -U postgres polycon > ".\database\polycon_dump_$(Get-Date -Format 'yyyy-MM-dd').sql"
+& "C:\Program Files\PostgreSQL\17\bin\pg_dump.exe" -U postgres polycon > ".\database\polycon_dump_$(Get-Date -Format 'yyyy-MM-dd').sql"
 ```
 
 When prompted, enter your PostgreSQL password.
@@ -37,15 +50,29 @@ cd C:\Users\xenhu\OneDrive\Documents\GitHub\POLYCON
 REM Create a database directory if it doesn't exist
 if not exist "database" mkdir database
 
-REM Export the database (replace [version] with your PostgreSQL version)
-"C:\Program Files\PostgreSQL\[version]\bin\pg_dump.exe" -U postgres polycon > database\polycon_dump.sql
+REM Export the database (replace [version] with your PostgreSQL version, e.g., 17)
+"C:\Program Files\PostgreSQL\17\bin\pg_dump.exe" -U postgres polycon > database\polycon_dump.sql
 ```
 
 ## Database Import (Getting the Latest Database)
 
-To import the latest database structure and data:
+The easiest way to import the latest database dump is to use the provided setup script:
 
-### Using PowerShell
+```bash
+# Navigate to the project directory
+cd C:\Users\xenhu\OneDrive\Documents\GitHub\POLYCON
+
+# Run the database import (default action)
+python setup_database.py
+```
+
+The script will automatically:
+- Find the most recent SQL dump file in the database directory
+- Find your PostgreSQL installation
+- Create the database if it doesn't exist
+- Import the data
+
+### Using PowerShell (Alternative Method)
 
 ```powershell
 # Navigate to the project directory
@@ -58,10 +85,10 @@ $latestDump = Get-ChildItem -Path ".\database" -Filter "*.sql" |
 
 if ($latestDump) {
     # Create database if it doesn't exist
-    & "C:\Program Files\PostgreSQL\[version]\bin\createdb.exe" -U postgres polycon
+    & "C:\Program Files\PostgreSQL\17\bin\createdb.exe" -U postgres polycon
 
     # Import the database
-    & "C:\Program Files\PostgreSQL\[version]\bin\psql.exe" -U postgres -d polycon -f $latestDump.FullName
+    & "C:\Program Files\PostgreSQL\17\bin\psql.exe" -U postgres -d polycon -f $latestDump.FullName
     
     Write-Host "Database imported successfully from $($latestDump.Name)" -ForegroundColor Green
 } else {
@@ -76,10 +103,10 @@ REM Navigate to the project directory
 cd C:\Users\xenhu\OneDrive\Documents\GitHub\POLYCON
 
 REM Create database if it doesn't exist
-"C:\Program Files\PostgreSQL\[version]\bin\createdb.exe" -U postgres polycon
+"C:\Program Files\PostgreSQL\17\bin\createdb.exe" -U postgres polycon
 
 REM Import the database
-"C:\Program Files\PostgreSQL\[version]\bin\psql.exe" -U postgres -d polycon -f database\polycon_dump.sql
+"C:\Program Files\PostgreSQL\17\bin\psql.exe" -U postgres -d polycon -f database\polycon_dump.sql
 ```
 
 ## Using pgAdmin (Alternative)

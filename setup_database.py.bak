@@ -3,61 +3,6 @@ import subprocess
 import sys
 from datetime import datetime
 
-def find_postgresql_path():
-    """Find the PostgreSQL bin directory."""
-    pg_path = None
-    possible_paths = [
-        r"C:\Program Files\PostgreSQL\17\bin",  # Added your specific version
-        r"C:\Program Files\PostgreSQL\16\bin",
-        r"C:\Program Files\PostgreSQL\15\bin",
-        r"C:\Program Files\PostgreSQL\14\bin",
-        r"C:\Program Files\PostgreSQL\13\bin",
-        r"C:\Program Files\PostgreSQL\12\bin",
-        r"C:\Program Files\PostgreSQL\11\bin",
-        r"C:\Program Files\PostgreSQL\10\bin",
-        r"C:\Program Files (x86)\PostgreSQL\17\bin",
-        r"C:\Program Files (x86)\PostgreSQL\16\bin",
-        r"C:\Program Files (x86)\PostgreSQL\15\bin",
-        r"C:\Program Files (x86)\PostgreSQL\14\bin",
-        r"C:\Program Files (x86)\PostgreSQL\13\bin",
-        r"C:\Program Files (x86)\PostgreSQL\12\bin",
-        r"C:\Program Files (x86)\PostgreSQL\11\bin",
-        r"C:\Program Files (x86)\PostgreSQL\10\bin",
-    ]
-    
-    # Try to find postgres in PATH
-    try:
-        which_result = subprocess.run(['where', 'psql'], capture_output=True, text=True)
-        if which_result.returncode == 0:
-            # Extract directory from the path
-            psql_path = which_result.stdout.strip().split('\n')[0]
-            pg_path = os.path.dirname(psql_path)
-            print(f"Found PostgreSQL in PATH: {pg_path}")
-            return pg_path
-    except:
-        pass
-    
-    # If not found in PATH, try the predefined paths
-    for path in possible_paths:
-        if os.path.exists(path):
-            pg_path = path
-            print(f"Found PostgreSQL at: {pg_path}")
-            return pg_path
-    
-    # Manual path entry if not found
-    print("PostgreSQL installation not found automatically.")
-    print("Please enter the path to your PostgreSQL bin directory.")
-    print("Example: C:\\Program Files\\PostgreSQL\\14\\bin")
-    user_path = input("Path: ").strip()
-    
-    if os.path.exists(user_path) and os.path.exists(os.path.join(user_path, "psql.exe")):
-        pg_path = user_path
-        print(f"Using provided path: {pg_path}")
-        return pg_path
-    else:
-        print("Invalid path or psql.exe not found at the specified location.")
-        return None
-
 def setup_database():
     """Set up the database from the latest dump file."""
     print("\n=== POLYCON Database Setup ===\n")
@@ -83,8 +28,21 @@ def setup_database():
     print(f"Using database dump: {latest_dump}")
     
     # Get PostgreSQL path
-    pg_path = find_postgresql_path()
+    pg_path = None
+    possible_paths = [
+        r"C:\Program Files\PostgreSQL\15\bin",
+        r"C:\Program Files\PostgreSQL\14\bin",
+        r"C:\Program Files\PostgreSQL\13\bin",
+        r"C:\Program Files\PostgreSQL\12\bin"
+    ]
+    
+    for path in possible_paths:
+        if os.path.exists(path):
+            pg_path = path
+            break
+    
     if not pg_path:
+        print("PostgreSQL installation not found. Please install PostgreSQL or add it to your PATH.")
         return False
     
     # Create database
@@ -131,19 +89,31 @@ def export_database():
     dump_path = os.path.join(database_dir, dump_file)
     
     # Get PostgreSQL path
-    pg_path = find_postgresql_path()
+    pg_path = None
+    possible_paths = [
+        r"C:\Program Files\PostgreSQL\15\bin",
+        r"C:\Program Files\PostgreSQL\14\bin",
+        r"C:\Program Files\PostgreSQL\13\bin",
+        r"C:\Program Files\PostgreSQL\12\bin"
+    ]
+    
+    for path in possible_paths:
+        if os.path.exists(path):
+            pg_path = path
+            break
+    
     if not pg_path:
+        print("PostgreSQL installation not found. Please install PostgreSQL or add it to your PATH.")
         return False
     
     # Export database
     print(f"Exporting database to: {dump_file}")
     print("You'll be prompted for your PostgreSQL password.")
     
-    # Create a cmd command that redirects output to a file
-    cmd = f'"{os.path.join(pg_path, "pg_dump.exe")}" -U postgres polycon > "{dump_path}"'
-    
-    # On Windows, we need to use shell=True to handle redirections
-    result = subprocess.run(cmd, shell=True)
+    result = subprocess.run(
+        f'"{os.path.join(pg_path, "pg_dump.exe")}" -U postgres polycon > "{dump_path}"',
+        shell=True
+    )
     
     if result.returncode == 0:
         print(f"\n✅ Database exported successfully to: {dump_path}")
