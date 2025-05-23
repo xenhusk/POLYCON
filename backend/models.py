@@ -15,9 +15,8 @@ class User(db.Model):
     password = db.Column(db.String(200), nullable=False)
     department_id = db.Column(db.Integer, db.ForeignKey('departments.id'), nullable=False)
     role = db.Column(db.String(50), nullable=False)
-    archived = db.Column(db.Boolean, default=False)
+    archived = db.Column(db.Boolean, default=False)  # True = archived, False = active
     profile_picture = db.Column(db.String(255), nullable=True)
-    is_archived = db.Column(db.Integer, default=0)  # 0 = not archived, 1 = archived
 
 class Department(db.Model):
     __tablename__ = 'departments'

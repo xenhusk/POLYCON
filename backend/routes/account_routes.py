@@ -6,8 +6,11 @@ from extensions import bcrypt # Assuming you have bcrypt in extensions.py
 
 account_bp = Blueprint('account_bp', __name__)
 
-@account_bp.route('/login', methods=['POST'])
-@cross_origin()
+@account_bp.route('/login', methods=['POST', 'OPTIONS'])
+@cross_origin(origins=["http://localhost:3000", "http://127.0.0.1:3000", "*"], 
+             methods=["GET", "POST", "OPTIONS"],
+             allow_headers=["Content-Type", "Authorization"],
+             supports_credentials=True)
 def login():
     data = request.get_json()
     email = data.get('email')
@@ -196,7 +199,7 @@ def reset_password():
 
 @account_bp.route('/get_all_users', methods=['GET'])
 def get_all_users_account():
-    users = User.query.filter_by(is_archived=0).all()
+    users = User.query.filter_by(archived=False).all()
     result = []
     for u in users:
         # Get department name if available
@@ -343,7 +346,7 @@ def delete_user():
     user = User.query.get(user_id)
     if not user:
         return jsonify({'error': 'User not found'}), 404
-    user.is_archived = 1
+    user.archived = True
     db.session.commit()
     return jsonify({'message': 'User archived successfully'}), 200
 
