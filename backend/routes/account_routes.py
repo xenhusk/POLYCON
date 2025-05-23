@@ -66,31 +66,59 @@ def signup():
     last_name = data.get('lastName')
     email = data.get('email')
     password = data.get('password')
-    department_id = data.get('departmentId')
     role = data.get('role')
-    profile_image_url = data.get('profileImageUrl')
+    department_id = data.get('department') or data.get('departmentId')
+    # Accept both 'program' (ID) and 'programId' for student
+    program_id = data.get('program') or data.get('programId')
+    sex = data.get('sex')
+    year_section = data.get('year_section')
 
-    if not email or not password:
-        return jsonify({'error': 'Email and password are required'}), 400
+    if not all([id_number, first_name, last_name, email, password, role, department_id]):
+        return jsonify({'error': 'Missing required fields'}), 400
 
     # Check if user already exists
-    existing_user = User.query.filter_by(email=email).first()
-    if existing_user:
+    if User.query.filter_by(email=email).first():
         return jsonify({'error': 'User with this email already exists'}), 400
+    if User.query.filter_by(id_number=id_number).first():
+        return jsonify({'error': 'User with this ID number already exists'}), 400
 
     hashed_password = generate_password_hash(password)
     new_user = User(
         id_number=id_number,
-        firstName=first_name,
-        lastName=last_name,
+        first_name=first_name,
+        last_name=last_name,
+        full_name=f"{first_name} {last_name}",
         email=email,
-        password_hash=hashed_password,  # Store the hashed password
+        password=hashed_password,
         department_id=department_id,
-        role=role,
-        profile_image_url=profile_image_url # Add profile_image_url
+        role=role
     )
     db.session.add(new_user)
     db.session.commit()
+
+    if role == 'student':
+        if not all([program_id, sex, year_section]):
+            db.session.delete(new_user)
+            db.session.commit()
+            return jsonify({'error': 'Missing student-specific fields'}), 400
+        # Validate program exists and belongs to department
+        program = Program.query.filter_by(id=program_id, department_id=department_id).first()
+        if not program:
+            db.session.delete(new_user)
+            db.session.commit()
+            return jsonify({'error': 'Program not found for the given department'}), 400
+        new_student = Student(
+            user_id=new_user.id,
+            program_id=program.id,
+            sex=sex,
+            year_section=year_section
+        )
+        db.session.add(new_student)
+        db.session.commit()
+    elif role == 'faculty':
+        new_faculty = Faculty(user_id=new_user.id)
+        db.session.add(new_faculty)
+        db.session.commit()
 
     return jsonify({'message': 'User registered successfully'}), 201
 
@@ -137,7 +165,7 @@ def reset_password():
 
 @account_bp.route('/get_all_users', methods=['GET'])
 def get_all_users_account():
-    users = User.query.filter_by(archived=False).all()
+    users = User.query.filter_by(is_archived=0).all()
     result = []
     for u in users:
         # Get department name if available
@@ -183,5 +211,98 @@ def get_departments_account():
     departments = Department.query.all()
     result = [{'id': d.id, 'name': d.name} for d in departments]
     return jsonify(result), 200
+
+@account_bp.route('/programs', methods=['GET'])
+def get_programs_account():
+    department_id = request.args.get('departmentID', type=int)
+    query = Program.query
+    if department_id:
+        query = query.filter_by(department_id=department_id)
+    programs = query.all()
+    result = [
+        {
+            'programID': p.id,
+            'programName': p.name,
+            'departmentID': p.department_id
+        } for p in programs
+    ]
+    return jsonify(result), 200
+
+@account_bp.route('/update_user', methods=['POST'])
+def update_user():
+    data = request.json
+    user_id = data.get('id')
+    if not user_id:
+        return jsonify({'error': 'User ID (PK) is required'}), 400
+    user = User.query.get(user_id)
+    if not user:
+        return jsonify({'error': 'User not found'}), 404
+
+    # Update id_number if provided and unique
+    new_id_number = data.get('id_number')
+    if new_id_number and new_id_number != user.id_number:
+        if User.query.filter_by(id_number=new_id_number).first():
+            return jsonify({'error': 'ID number already exists'}), 400
+        user.id_number = new_id_number
+
+    # Update other fields if provided
+    for field, attr in [
+        ('firstName', 'first_name'),
+        ('lastName', 'last_name'),
+        ('email', 'email'),
+        ('department', 'department_id'),
+        ('role', 'role')
+    ]:
+        if field in data and data[field]:
+            if field == 'email' and data[field] != user.email:
+                if User.query.filter_by(email=data[field]).first():
+                    return jsonify({'error': 'Email already exists'}), 400
+            setattr(user, attr, data[field])
+
+    # Always update full_name if first/last changed
+    if 'firstName' in data or 'lastName' in data:
+        user.full_name = f"{data.get('firstName', user.first_name)} {data.get('lastName', user.last_name)}"
+
+    # Student-specific fields
+    if user.role == 'student':
+        student = Student.query.filter_by(user_id=user.id).first()
+        if student:
+            # Update program if provided and valid
+            program_id = data.get('program')
+            department_id = data.get('department') or user.department_id
+            if program_id:
+                # Accept both int and str for program_id
+                try:
+                    program_id_int = int(program_id)
+                except Exception:
+                    return jsonify({'error': 'Invalid program ID'}), 400
+                program = Program.query.filter_by(id=program_id_int, department_id=department_id).first()
+                if not program:
+                    return jsonify({'error': 'Program not found for the given department'}), 400
+                student.program_id = program_id_int
+            if 'sex' in data and data['sex'] is not None:
+                student.sex = data['sex']
+            if 'year_section' in data and data['year_section'] is not None:
+                student.year_section = data['year_section']
+    # Faculty-specific fields (add if needed)
+    # ...
+    try:
+        db.session.commit()
+        return jsonify({'message': 'User updated successfully'}), 200
+    except Exception as e:
+        db.session.rollback()
+        return jsonify({'error': str(e)}), 500
+
+@account_bp.route('/delete_user', methods=['DELETE'])
+def delete_user():
+    user_id = request.args.get('id', type=int)
+    if not user_id:
+        return jsonify({'error': 'id (PK) is required'}), 400
+    user = User.query.get(user_id)
+    if not user:
+        return jsonify({'error': 'User not found'}), 404
+    user.is_archived = 1
+    db.session.commit()
+    return jsonify({'message': 'User archived successfully'}), 200
 
 # Add other account-related routes here (e.g., signup, password reset if not in user_routes)
