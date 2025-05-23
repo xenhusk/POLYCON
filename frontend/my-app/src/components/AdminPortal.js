@@ -124,9 +124,12 @@ export default function AdminPortal() {
       email,
       password,
       role,
-      department,
-      ...(role === 'student' && { program, sex, year_section: yearSection })
+      department: department || undefined,
+      ...(role === 'student' && { program: program || undefined, sex, year_section: yearSection }),
     };
+
+    // Remove empty/undefined fields
+    Object.keys(userData).forEach(key => (userData[key] === undefined || userData[key] === '') && delete userData[key]);
 
     try {
       const response = await fetch('http://localhost:5001/account/signup', {
@@ -174,19 +177,20 @@ export default function AdminPortal() {
         }
 
         setEditUser({
-            idNumber: user.ID,
+            id: user.ID || user.id, // store PK for update
+            id_number: user.id_number || user.idNumber, // editable
             firstName: user.firstName,
             lastName: user.lastName,
             email: user.email,
             role: user.role,
-            department: departmentId,
-            program: user.program || '',
+            department: user.departmentID || user.department || '',
+            program: user.programID || user.program || '',
             sex: user.sex || '',
             yearSection: user.year_section || ''
         });
 
-        if (user.role === 'student' && departmentId) {
-            await fetchPrograms(departmentId);
+        if (user.role === 'student' && (user.departmentID || user.department)) {
+            await fetchPrograms(user.departmentID || user.department);
         }
     } catch (error) {
         console.error("Error updating user:", error);
@@ -197,11 +201,22 @@ export default function AdminPortal() {
   };
 
   const handleUpdateUser = async () => {
+    const updateData = {
+      ...editUser,
+      id: editUser.id, // always send PK for update
+      id_number: editUser.id_number, // send possibly updated id_number
+      department: editUser.department || undefined,
+      program: editUser.program || undefined,
+      year_section: editUser.yearSection || editUser.year_section || undefined,
+    };
+    delete updateData.yearSection;
+    Object.keys(updateData).forEach(key => (updateData[key] === undefined || updateData[key] === '') && delete updateData[key]);
+
     try {
       const response = await fetch('http://localhost:5001/account/update_user', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify(editUser),
+        body: JSON.stringify(updateData),
       });
       if (response.ok) {
         alert('User updated successfully');
@@ -225,15 +240,18 @@ export default function AdminPortal() {
     }
   };
 
-  const handleDeleteUser = async (idNumber) => {
+  const handleDeleteUser = async (userId) => {
     setIsDeleteLoading(true);
     try {
-      const response = await fetch(`http://localhost:5001/account/delete_user?idNumber=${idNumber}`, {
+      const response = await fetch(`http://localhost:5001/account/delete_user?id=${userId}`, {
         method: 'DELETE',
       });
       if (response.ok) {
+        setUserList(prevList => prevList.map(u =>
+          u.ID === userId ? { ...u, is_archived: 1 } : u
+        ));
         alert('User archived successfully');
-        fetchAllUsers(); // This will now get only non-archived users
+        fetchAllUsers();
       } else {
         alert('Failed to archive user');
       }
@@ -469,14 +487,18 @@ export default function AdminPortal() {
 
             <select
               value={department}
-              onChange={(e) => setDepartment(e.target.value)}
+              onChange={async (e) => {
+                setDepartment(e.target.value);
+                if (role === 'student') {
+                  await fetchPrograms(e.target.value); // This will call /programs?departmentID=...
+                  setProgram(''); // Reset program selection
+                }
+              }}
               className="w-[13%] bg-transparent border-2 border-white outline-none focus:ring focus:ring-blue-500 focus:border-blue-500 rounded-lg px-2 py-2 m-1"
             >
               <option value="">Select Department</option>
               {departments.map((dept) => (
-                <option key={dept.departmentID} value={dept.departmentID}>
-                  {dept.departmentName}
-                </option>
+                <option key={dept.id} value={dept.id}>{dept.name}</option>
               ))}
             </select>
 
@@ -488,13 +510,11 @@ export default function AdminPortal() {
                 <select
                   value={program}
                   onChange={(e) => setProgram(e.target.value)}
-                  className="w-[40%] bg-transparent border-2 border-white outline-none focus:ring focus:ring-blue-500 focus:border-blue-500 rounded-lg px-2 py-2 m-1" 
+                  className="w-[40%] bg-transparent border-2 border-white outline-none focus:ring focus:ring-blue-500 focus:border-blue-500 rounded-lg px-2 py-2 m-1"
                 >
                   <option value="">Select Program</option>
                   {programs.map((prog) => (
-                    <option key={prog.programID} value={prog.programID}>
-                      {prog.programName}
-                    </option>
+                    <option key={prog.programID} value={prog.programID}>{prog.programName}</option>
                   ))}
                 </select>
                 <select
@@ -539,162 +559,180 @@ export default function AdminPortal() {
             className={`bg-white w-[85%] md:w-[50%] h-[70vh] p-6 rounded-br-lg rounded-bl-lg shadow-lg relative overflow-y-auto transform transition-all duration-500
             }`}>
 
-            <div className='p-4'>
-              <label htmlFor="IdNumber" className='block text-sm font-medium text-gray-700 mb-1'> ID Number</label>
-              <input
-                id="IdNumber"
-                placeholder="ID Number"
-                value={editUser.idNumber || editUser.ID}
-                onChange={(e) => setEditUser({ ...editUser, idNumber: e.target.value })}
-                className="w-full h-[45px] items-center mb-2 border-2 border-[#0065A8] rounded-lg px-3 py-2 dark:border-gray-600 dark:focus:border-blue-500 focus:outline-none focus:ring-2 focus:border-[#0065A8] peer appearance-none"
-              />
-
-              <label htmlFor="FirstName" className='block text-sm font-medium text-gray-700 mb-1'> First Name</label>
-              <input
-                id="FirstName" placeholder=" "
-                value={editUser.firstName}
-                onChange={(e) => setEditUser({ ...editUser, firstName: e.target.value })}
-                className="w-full min-h-[45px] items-center mb-2 border-2 border-[#0065A8] rounded-lg px-3 py-2 dark:border-gray-600 dark:focus:border-blue-500 focus:outline-none focus:ring-2 focus:border-[#0065A8] peer appearance-none"
-              />
-
-              <label htmlFor="LastName" className='block text-sm font-medium text-gray-700 mb-1'> Last Name</label>
-              <input
-                id="LastName" placeholder=" "
-                value={editUser.lastName}
-                onChange={(e) => setEditUser({ ...editUser, lastName: e.target.value })}
-                className="w-full min-h-[45px] items-center mb-2 border-2 border-[#0065A8] rounded-lg px-3 py-2 dark:border-gray-600 dark:focus:border-blue-500 focus:outline-none focus:ring-2 focus:border-[#0065A8] peer appearance-none"
-              />
-
-              <label htmlFor="Email" className='block text-sm font-medium text-gray-700 mb-1'> Email</label>
-              <input
-                id="Email"
-                placeholder="Email"
-                value={editUser.email}
-                onChange={(e) => setEditUser({ ...editUser, email: e.target.value })}
-                className="w-full min-h-[45px] items-center mb-2 border-2 border-[#0065A8] rounded-lg px-3 py-2 dark:border-gray-600 dark:focus:border-blue-500 focus:outline-none focus:ring-2 focus:border-[#0065A8] peer appearance-none"
-              />
-
-              <label htmlFor="Role" className='block text-sm font-medium text-gray-700 mb-1'> Role</label>
-              <select
-                value={editUser.role}
-                onChange={(e) => setEditUser({ ...editUser, role: e.target.value })}
-                className="w-full min-h-[45px] items-center mb-2 border-2 border-[#0065A8] rounded-lg px-2 py-2 dark:border-gray-600 dark:focus:border-blue-500 focus:outline-none focus:ring-2 focus:border-[#0065A8] peer appearance-none"
-              >
-                <option value="">Select Role</option>
-                <option value="faculty">Faculty</option>
-                <option value="student">Student</option>
-                <option value="admin">Admin</option>
-              </select>
-
-              <label htmlFor="Department" className='block text-sm font-medium text-gray-700 mb-1'> Department</label>
-              <select
-                value={editUser.department}
-                onChange={async (e) => {
-                  const newDepartment = e.target.value;
-                  setEditUser({ ...editUser, department: newDepartment });
-                  if (editUser.role === "student") {
-                    await fetchPrograms(newDepartment);
-                  }
-                }}
-                className="w-full min-h-[45px] items-center mb-2 border-2 border-[#0065A8] rounded-lg px-3 py-2 dark:border-gray-600 dark:focus:border-blue-500 focus:outline-none focus:ring-2 focus:border-[#0065A8] peer appearance-none"
-              >
-                <option value="">Select Department</option>
-                {departments.map((dept) => (
-                  <option key={dept.departmentID} value={dept.departmentID}>
-                    {dept.departmentName}
-                  </option>
-                ))}
-              </select>
-
+            <div className="p-8 mx-3 space-y-6 bg-white rounded-b-lg overflow-y-auto flex-1">
+              {/* ID Number */}
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-2">ID Number</label>
+                <input
+                  type="text"
+                  value={editUser.id_number}
+                  onChange={e => setEditUser({ ...editUser, id_number: e.target.value })}
+                  className="w-full border-2 border-[#0065A8] rounded-lg px-3 py-2 bg-white text-gray-900"
+                />
+              </div>
+              {/* First Name */}
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-2">First Name</label>
+                <input
+                  type="text"
+                  value={editUser.firstName}
+                  onChange={(e) => setEditUser({ ...editUser, firstName: e.target.value })}
+                  className="w-full border-2 border-[#0065A8] rounded-lg px-3 py-2 focus:outline-none focus:ring-2 focus:ring-[#54BEFF]"
+                />
+              </div>
+              {/* Last Name */}
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-2">Last Name</label>
+                <input
+                  type="text"
+                  value={editUser.lastName}
+                  onChange={(e) => setEditUser({ ...editUser, lastName: e.target.value })}
+                  className="w-full border-2 border-[#0065A8] rounded-lg px-3 py-2 focus:outline-none focus:ring-2 focus:ring-[#54BEFF]"
+                />
+              </div>
+              {/* Email */}
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-2">Email</label>
+                <input
+                  type="text"
+                  value={editUser.email}
+                  onChange={(e) => setEditUser({ ...editUser, email: e.target.value })}
+                  className="w-full border-2 border-[#0065A8] rounded-lg px-3 py-2 focus:outline-none focus:ring-2 focus:ring-[#54BEFF]"
+                />
+              </div>
+              {/* Role */}
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-2">Role</label>
+                <select
+                  value={editUser.role}
+                  onChange={(e) => setEditUser({ ...editUser, role: e.target.value })}
+                  className="w-full border-2 border-[#0065A8] rounded-lg px-3 py-2 focus:outline-none focus:ring-2 focus:ring-[#54BEFF]"
+                >
+                  <option value="">Select Role</option>
+                  <option value="faculty">Faculty</option>
+                  <option value="student">Student</option>
+                  <option value="admin">Admin</option>
+                </select>
+              </div>
+              {/* Department */}
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-2">Department</label>
+                <select
+                  value={editUser.department}
+                  onChange={async (e) => {
+                    const newDepartment = e.target.value;
+                    setEditUser({ ...editUser, department: newDepartment });
+                    if (editUser.role === "student") {
+                      await fetchPrograms(newDepartment);
+                    }
+                  }}
+                  className="w-full border-2 border-[#0065A8] rounded-lg px-3 py-2 focus:outline-none focus:ring-2 focus:ring-[#54BEFF]"
+                >
+                  <option value="">Select Department</option>
+                  {departments.map((dept) => (
+                    <option key={dept.departmentID || dept.id} value={dept.departmentID || dept.id}>
+                      {dept.departmentName || dept.name}
+                    </option>
+                  ))}
+                </select>
+              </div>
+              {/* Programs (if student) */}
               {editUser.role === "student" && editUser.department && (
-                <>
-                  <label htmlFor="Program" className='block text-sm font-medium text-gray-700 mb-1'> Program</label>
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-2">Program</label>
                   <select
                     value={editUser.program}
                     onChange={(e) => setEditUser({ ...editUser, program: e.target.value })}
-                    className="w-full min-h-[45px] items-center mb-2 border-2 border-[#0065A8] rounded-lg px-3 py-2 dark:border-gray-600 dark:focus:border-blue-500 focus:outline-none focus:ring-2 focus:border-[#0065A8] peer appearance-none"
+                    className="w-full border-2 border-[#0065A8] rounded-lg px-3 py-2 focus:outline-none focus:ring-2 focus:ring-[#54BEFF]"
                   >
                     <option value="">Select Program</option>
                     {programs.map((prog) => (
-                      <option key={prog.programID} value={prog.programID}>
-                        {prog.programName}
-                      </option>
+                      <option key={prog.programID} value={prog.programID}>{prog.programName}</option>
                     ))}
                   </select>
-
-                  <label htmlFor="Sex" className='block text-sm font-medium text-gray-700 mb-1'> Gender</label>
+                </div>
+              )}
+              {/* Sex (if student) */}
+              {editUser.role === "student" && (
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-2">Gender</label>
                   <select
                     value={editUser.sex}
                     onChange={(e) => setEditUser({ ...editUser, sex: e.target.value })}
-                    className="w-full min-h-[45px] items-center mb-2 border-2 border-[#0065A8] rounded-lg px-3 py-2 dark:border-gray-600 dark:focus:border-blue-500 focus:outline-none focus:ring-2 focus:border-[#0065A8] peer appearance-none"
+                    className="w-full border-2 border-[#0065A8] rounded-lg px-3 py-2 focus:outline-none focus:ring-2 focus:ring-[#54BEFF]"
                   >
                     <option value="">Select Sex</option>
                     <option value="Male">Male</option>
                     <option value="Female">Female</option>
                   </select>
-
-                  <label htmlFor="YearSection" className='block text-sm font-medium text-gray-700 mb-1'> Year & Section</label>
+                </div>
+              )}
+              {/* Year & Section (if student) */}
+              {editUser.role === "student" && (
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-2">Year & Section</label>
                   <input
-                    placeholder="Year & Section"
+                    type="text"
                     value={editUser.yearSection || editUser.year_section}
                     onChange={(e) => setEditUser({ ...editUser, yearSection: e.target.value })}
-                    className="w-full min-h-[45px] items-center mb-2 gap-2 border-2 border-[#0065A8] rounded-lg px-3 py-2 dark:border-gray-600 dark:focus:border-blue-500 focus:outline-none focus:ring-2 focus:border-[#0065A8] peer appearance-none"
+                    className="w-full border-2 border-[#0065A8] rounded-lg px-3 py-2 focus:outline-none focus:ring-2 focus:ring-[#54BEFF]"
                   />
-                </>
+                </div>
               )}
-              <div className="py-2 flex justify-end space-x-4 bg-white rounded-b-lg">
-                <button
-                  className={`bg-[#0065A8] hover:bg-[#54BEFF] text-white px-4 py-2 rounded-lg transition-colors
-                    ${ SaveClicked ? "scale-90" : "scale-100"}
-                    ${isEditLoading ? "opacity-50 cursor-not-allowed" : ""} 
-                  `}
-                  disabled={isEditLoading}
-                  onClick={() => {
-                    setSaveClicked(true); setTimeout(() => {setSaveClicked(false); setModalClosing(true); setTimeout(() => {handleUpdateUser(); setEditUser(null);
-                      }, 500);
-                    }, 200);
-                  }}>
-                  {isEditLoading ? (
-                    <>
-                    <svg
-                        className="animate-spin h-5 w-5 text-white"
-                        xmlns="http://www.w3.org/2000/svg"
-                        fill="none"
-                        viewBox="0 0 24 24"
-                      >
-                      <circle
-                        className="opacity-25"
-                        cx="12"
-                        cy="12"
-                        r="10"
-                        stroke="currentColor"
-                        strokeWidth="4"
-                      ></circle>
-                          <path
-                            className="opacity-75"
-                            fill="currentColor"
-                            d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"
-                          ></path>
-                    </svg>
-                    <span>Saving...</span>
-                      </>
-                    ) : (
-                    <span>Save Changes</span>
-                  )}
-                </button>
+            </div>
 
-                <button
-                  className={`bg-gray-500 text-white px-4 py-2 rounded-lg transition-colors
-                     ${ CancelClicked ? "scale-90" : "scale-100"
-                  }`}
-                  onClick={() => {
-                    setCancelClicked(true); setTimeout(() => { setCancelClicked(false); setModalClosing(true); setTimeout(() => setEditUser(null), 
-                      500);
-                    }, 200);
-                  }}>
-                  Cancel
-                </button>
-              </div>
+            <div className="py-2 flex justify-end space-x-4 bg-white rounded-b-lg">
+              <button
+                className={`bg-[#0065A8] hover:bg-[#54BEFF] text-white px-4 py-2 rounded-lg transition-colors
+                  ${ SaveClicked ? "scale-90" : "scale-100"}
+                  ${isEditLoading ? "opacity-50 cursor-not-allowed" : ""} 
+                `}
+                disabled={isEditLoading}
+                onClick={() => {
+                  setSaveClicked(true); setTimeout(() => {setSaveClicked(false); setModalClosing(true); setTimeout(() => {handleUpdateUser(); setEditUser(null);
+                    }, 500);
+                  }, 200);
+                }}>
+                {isEditLoading ? (
+                  <>
+                  <svg
+                      className="animate-spin h-5 w-5 text-white"
+                      xmlns="http://www.w3.org/2000/svg"
+                      fill="none"
+                      viewBox="0 0 24 24"
+                    >
+                    <circle
+                      className="opacity-25"
+                      cx="12"
+                      cy="12"
+                      r="10"
+                      stroke="currentColor"
+                      strokeWidth="4"
+                    ></circle>
+                        <path
+                          className="opacity-75"
+                          fill="currentColor"
+                          d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"
+                        ></path>
+                  </svg>
+                  <span>Saving...</span>
+                    </>
+                  ) : (
+                  <span>Save Changes</span>
+                )}
+              </button>
+
+              <button
+                className={`bg-gray-500 text-white px-4 py-2 rounded-lg transition-colors
+                   ${ CancelClicked ? "scale-90" : "scale-100"
+                }`}
+                onClick={() => {
+                  setCancelClicked(true); setTimeout(() => { setCancelClicked(false); setModalClosing(true); setTimeout(() => setEditUser(null), 
+                    500);
+                  }, 200);
+                }}>
+                Cancel
+              </button>
             </div>
           </div>
         </div>
