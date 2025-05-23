@@ -777,7 +777,7 @@ export default function Courses() {
                     </div>
 
                     {/* Modal Body - Make scrollable */}
-                    <div className="p-8 mx-3 space-y-6 bg-white rounded-b-lg overflow-y-auto flex-1">
+                    <div className="p-8 space-y-6 bg-white rounded-b-lg overflow-y-auto flex-1">
                       {/* Course Code */}
                       <div>
                         <label className="block text-sm font-medium text-gray-700 mb-2">
