@@ -14,3 +14,22 @@ export const getProfilePictureUrl = (profilePicture, userName = '') => {
   // Construct URL for server-stored images
   return `http://localhost:5001/uploads/${profilePicture}`;
 };
+
+// Helper to get display program name from student data
+export const getDisplayProgram = (student) => {
+  if (!student) return 'Unknown Program';
+  
+  // First check for programName (new field)
+  if (student.programName) return student.programName;
+  
+  // Then check for program (direct name)
+  if (student.program) return student.program;
+  
+  // Fallback to program ID with a message
+  if (student.programId || student.program_id) {
+    return `Program ${student.programId || student.program_id}`;
+  }
+  
+  // Final fallback
+  return 'Unknown Program';
+};

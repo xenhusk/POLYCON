@@ -39,9 +39,9 @@ def create_app():
     app = Flask(__name__)
     # Enable CORS for all routes, allow all origins and credentials
     CORS(app, 
-         origins=["http://localhost:3000", "http://127.0.0.1:3000", "*"],
+         origins=["http://localhost:3000", "http://127.0.0.1:3000", "*"], # Allows your frontend
          supports_credentials=True,
-         allow_headers=["Content-Type", "Authorization"],
+         allow_headers=["Content-Type", "Authorization", "X-Requested-With", "Accept", "Origin"], # Added more common headers
          methods=["GET", "POST", "PUT", "DELETE", "OPTIONS"])
 
     # Initialize SocketIO with the Flask app
