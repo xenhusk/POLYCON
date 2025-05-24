@@ -12,6 +12,8 @@ function BookingTeacher({ closeModal }) {
   const [searchTerm, setSearchTerm] = useState('');
   const [profileDetails, setProfileDetails] = useState({ name: '', id: '', role: '', department: '' });
   const [departmentName, setDepartmentName] = useState('');
+  const [isTeacherActive, setIsTeacherActive] = useState(true);
+  const [studentSearchError, setStudentSearchError] = useState('');
   const navigate = useNavigate();
   const location = useLocation();
 
@@ -38,10 +40,26 @@ function BookingTeacher({ closeModal }) {
     if (location.state?.teacherID) {
       setTeacherID(location.state.teacherID);
       localStorage.setItem('teacherID', location.state.teacherID);
+      checkTeacherStatus(location.state.teacherID);
     } else if (storedTeacherID) {
       setTeacherID(storedTeacherID);
+      checkTeacherStatus(storedTeacherID);
     }
   }, [location]);
+
+  const checkTeacherStatus = async (teacherId) => {
+    try {
+      const response = await fetch(`http://localhost:5001/user/teacher_status?teacherId=${teacherId}`);
+      const data = await response.json();
+      setIsTeacherActive(data.isActive);
+      if (!data.isActive) {
+        setStudentSearchError('You are currently inactive. Cannot book consultations during semester break.');
+      }
+    } catch (error) {
+      console.error('Error checking teacher status:', error);
+      setStudentSearchError('Unable to verify teacher status. Please try again later.');
+    }
+  };
 
   useEffect(() => {
     if (profileDetails.department && profileDetails.department.startsWith("/departments/")) {
@@ -104,6 +122,12 @@ function BookingTeacher({ closeModal }) {
         </div>
       )}
 
+      {studentSearchError && (
+        <div className="mb-4 text-red-500 text-sm">
+          {studentSearchError}
+        </div>
+      )}
+
       <div className="mb-4 relative">
         <label className="block text-gray-700 font-medium mb-1">Search Students:</label>
         <div className="flex flex-wrap items-center gap-2 border border-gray-300 rounded-lg px-3 py-2">
@@ -133,6 +157,7 @@ function BookingTeacher({ closeModal }) {
             onChange={(e) => setSearchTerm(e.target.value)}
             placeholder="Search by name"
             className="flex-grow min-w-[150px] focus:outline-none"
+            disabled={!isTeacherActive}
           />
         </div>
         {searchTerm && (
@@ -178,7 +203,7 @@ function BookingTeacher({ closeModal }) {
         <input type="text" placeholder="Enter venue" value={venue} onChange={(e) => setVenue(e.target.value)} className="w-full border border-gray-300 rounded-lg px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500" />
       </div>
 
-      <button className="bg-blue-500 text-white px-4 py-2 rounded-lg">
+      <button className="bg-blue-500 text-white px-4 py-2 rounded-lg" disabled={!isTeacherActive}>
         Book Appointment
       </button>
     </div>

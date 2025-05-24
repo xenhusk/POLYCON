@@ -107,6 +107,33 @@ function EnrollmentModal({ closeModal }) {
     return () => window.removeEventListener('resize', handleResize);
   }, []);
 
+  useEffect(() => {
+    const checkTeacherStatus = async () => {
+      try {
+        const response = await fetch(`http://localhost:5001/user/teacher_status?teacherId=${teacherID}`);
+        const data = await response.json();
+        if (!data.isActive) {
+          setMessage({
+            type: "error",
+            content: "You are currently inactive. Cannot enroll students during semester break."
+          });
+          // Clear any existing selected students
+          setSelectedStudents([]);
+        }
+      } catch (error) {
+        console.error('Error checking teacher status:', error);
+        setMessage({
+          type: "error",
+          content: "Unable to verify teacher status. Please try again later."
+        });
+      }
+    };
+
+    if (teacherID) {
+      checkTeacherStatus();
+    }
+  }, [teacherID]);
+
   return (
     <div className="pt-2 sm:pt-4 px-2 md:px-4 h-44 md:h-52 flex flex-col">
       {/* Student Selection Input - Responsive */}
@@ -148,6 +175,7 @@ function EnrollmentModal({ closeModal }) {
               onBlur={() => setTimeout(() => setIsInputFocused(false), 200)}
               placeholder={isMobile ? "Search..." : "Search students..."}
               className="flex-1 min-w-[80px] outline-none bg-transparent text-sm"
+              disabled={message.type === "error"}
             />
           </div>
 
