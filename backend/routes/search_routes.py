@@ -56,9 +56,22 @@ def search_enrollment_students():
             'email': user.email,
             'department': department_name,
             'program': program_name,
+            'programName': program_name,  # Add programName for consistency with other endpoints
             'isEnrolled': student.is_enrolled if student else False,
             'year_section': student.year_section if student else None
         }
         result.append(student_data)
     
-    return jsonify(result), 200
+    # Pagination support (optional, basic)
+    page = int(request.args.get('page', 0))
+    page_size = 20
+    paged_result = result[page * page_size:(page + 1) * page_size]
+    has_more = len(result) > (page + 1) * page_size
+    return jsonify({"results": paged_result, "hasMore": has_more}), 200
+
+@search_bp.route('/students', methods=['GET'])
+def search_students():
+    """
+    Alias for searching students for booking (same as enrollment_students)
+    """
+    return search_enrollment_students()

@@ -1,6 +1,6 @@
 import React, { useState, useEffect, useRef } from "react";
 import { useNavigate, useLocation } from "react-router-dom";
-import { getProfilePictureUrl } from "../utils/utils";
+import { getProfilePictureUrl, getDisplayProgram } from "../utils/utils";
 import { getUserIdentifiers, validateUserForOperation } from "../utils/userUtils";
 import { useQueryClient } from "react-query";
 import { motion } from "framer-motion";
@@ -409,6 +409,8 @@ function BookingAppointment({ closeModal, role: propRole }) {
       </div>
     );
   };
+  // Import the getDisplayProgram function from utils
+  // This is now imported from utils.js at the top of the file
 
   return (
     <div className="pt-2 sm:pt-4 px-2 sm:px-4">
@@ -504,7 +506,7 @@ function BookingAppointment({ closeModal, role: propRole }) {
                               {student.firstName} {student.lastName}
                             </div>
                             <div className="text-xs text-gray-500">
-                              {student.programName || 'Unknown Program'} • {student.year_section || 'Unknown Section'}
+                              {getDisplayProgram(student)} • {student.year_section || 'Unknown Section'}
                             </div>
                           </div>
                         </li>
@@ -753,7 +755,7 @@ function BookingAppointment({ closeModal, role: propRole }) {
                               {student.firstName} {student.lastName}
                             </div>
                             <div className="text-xs text-gray-500">
-                              {student.programName || 'Unknown Program'} • {student.year_section || 'Unknown Section'}
+                              {getDisplayProgram(student)} • {student.year_section || 'Unknown Section'}
                             </div>
                           </div>
                         </li>

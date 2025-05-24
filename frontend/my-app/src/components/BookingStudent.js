@@ -64,7 +64,7 @@ function BookingStudent({ closeModal }) {
           {selectedTeacher && !teacherSearchTerm && (
             <div className="flex items-center gap-2">
               <img 
-                src={selectedTeacherProfile} // Updated: use selectedTeacherProfile directly
+                src={getProfilePictureUrl(selectedTeacherProfile, selectedTeacherName)} // Construct full URL
                 alt="Teacher Profile" 
                 className="rounded-full w-6 h-6"
                 onError={(e) => { e.target.onerror = null; e.target.src="https://avatar.iran.liara.run/public/boy?username=Ash"; }} // Fallback image

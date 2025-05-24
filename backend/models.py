@@ -126,6 +126,8 @@ class Booking(db.Model):
     status = db.Column(db.String(50), nullable=False, default='pending')
     teacher_id = db.Column(db.String(50), nullable=False)
     student_ids = db.Column(db.JSON, nullable=False, default=list)
+    created_at = db.Column(db.DateTime, server_default=db.func.now())
+    created_by = db.Column(db.String(50), nullable=True)  # ID of the user who created the booking
 
 class Notification(db.Model):
     __tablename__ = 'notifications'
