@@ -35,7 +35,9 @@ const BookingPopup = () => {
   const [windowWidth, setWindowWidth] = useState(window.innerWidth);
   const [shouldRender, setShouldRender] = useState(false);
 
-  const userRole = localStorage.getItem('userRole'); 
+  // Normalize userRole to lowercase for consistent comparisons
+  const rawUserRole = localStorage.getItem('userRole');
+  const userRole = rawUserRole ? rawUserRole.toLowerCase() : '';
   const isEnrolled = localStorage.getItem('isEnrolled'); // "true" or "false"
   const location = useLocation();
   const email = localStorage.getItem('userEmail');

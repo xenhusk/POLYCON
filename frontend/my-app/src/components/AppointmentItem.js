@@ -1,4 +1,5 @@
 import React, { useState } from 'react';
+import { getProfilePictureUrl } from '../utils/utils';
 
 function AppointmentItem({ appointment, role, onStartSession, onCancel, onConfirm, confirmInputs = {}, handleConfirmClick, setConfirmInputs }) {
   const [isLoading, setIsLoading] = useState(false);
@@ -10,8 +11,20 @@ function AppointmentItem({ appointment, role, onStartSession, onCancel, onConfir
   const [CancelClicked, setCancelClicked] = useState(false);
   const [CanceledClicked, setCanceledClicked] = useState(false);
   const [CancelingClicked, setCancelingClicked] = useState(false);
+  const [showCancelConfirm, setShowCancelConfirm] = useState(false); // New state for cancel confirmation
 
-  const teacherInfo = appointment.teacher || {};
+  // Extract teacher info from appointment data
+  // Handle potential flat or nested structure for teacher information
+  const teacherNameFromProp = appointment.teacher?.teacherName || appointment.teacherName;
+  const profilePictureFromProp = appointment.teacher?.profile_picture || appointment.teacherProfile;
+  const departmentFromProp = appointment.teacher?.department || appointment.department;
+
+  const teacherInfo = {
+    profile_picture: profilePictureFromProp,
+    teacherName: teacherNameFromProp,
+    department: departmentFromProp
+  };
+  
   const formatDateTime = (dateTime) => {
     const date = new Date(dateTime);
     const formattedDate = date.toLocaleDateString();
@@ -43,6 +56,7 @@ function AppointmentItem({ appointment, role, onStartSession, onCancel, onConfir
       await onCancel(id);
       setMessage({ type: 'success', content: 'Appointment cancelled successfully' });
       setTimeout(() => setMessage({ type: '', content: '' }), 3000);
+      setShowCancelConfirm(false); // Hide confirmation after action
     } catch (error) {
       setMessage({ type: 'error', content: error.message || 'Failed to cancel appointment' });
     } finally {
@@ -72,14 +86,14 @@ function AppointmentItem({ appointment, role, onStartSession, onCancel, onConfir
       <div className="mb-4 fade-in delay-100">
         <p className="text-[#0065A8] font-semibold mb-2">Teacher</p>
         <div className="flex items-center">
-          {teacherInfo.profile_picture && (
-            <img 
-              src={teacherInfo.profile_picture} 
-              alt="Teacher" 
-              className="w-12 h-12 rounded-full mr-3 border-2 border-[#54BEFF]" 
-            />
-          )}
-          <span className="text-gray-700 font-medium">
+          {/* Always show teacher profile with fallback */}
+          <img
+            src={getProfilePictureUrl(teacherInfo.profile_picture, teacherInfo.teacherName)}
+            alt="Teacher"
+            className="w-12 h-12 rounded-full mr-3 border-2 border-[#54BEFF]"
+          />
+          
+           <span className="text-gray-700 font-medium">
             {teacherInfo.teacherName}{teacherInfo.department ? ` (${teacherInfo.department})` : ''}
           </span>
         </div>
@@ -88,15 +102,30 @@ function AppointmentItem({ appointment, role, onStartSession, onCancel, onConfir
       <div className="mt-4 fade-in delay-200">
         <p className="text-[#0065A8] font-semibold mb-2">Student(s)</p>
         <div className="flex flex-wrap items-center gap-3">
+          {/* Log appointment.info before the conditional check */}
+          {console.log("AppointmentItem - appointment.info:", appointment.info)}
           {appointment.info && Array.isArray(appointment.info) && appointment.info.length > 0 ? (
-            appointment.info.map((student, index) => (
-              <div key={index} className="flex items-center bg-gray-50 rounded-full px-3 py-1">
-                {student.profile_picture && (
-                  <img src={student.profile_picture} alt="Student" className="w-8 h-8 rounded-full mr-2 border-2 border-[#54BEFF]"/>
-                )}
-                <span className="text-gray-700">{student.firstName} {student.lastName}</span>
-              </div>
-            ))
+            appointment.info.map((student, index) => {
+              // Log student data and generated avatar URL
+              console.log(
+                `Student ${index} - Profile Picture Input:`, student.profile_picture, 
+                `Name for Avatar: '${student.firstName} ${student.lastName}'`
+              );
+              const studentAvatarUrl = getProfilePictureUrl(student.profile_picture, `${student.firstName} ${student.lastName}`);
+              console.log(`Student ${index} - Generated Avatar URL:`, studentAvatarUrl);
+
+              return (
+                <div key={index} className="flex items-center bg-gray-50 rounded-full px-3 py-1">
+                  {/* Always render student profile with fallback */}
+                  <img
+                    src={studentAvatarUrl}
+                    alt="Student"
+                    className="w-8 h-8 rounded-full border-2 border-[#54BEFF] mr-2" // Added mr-2 for spacing
+                  />
+                  <span className="text-gray-700">{student.firstName} {student.lastName}</span>
+                </div>
+              );
+            })
           ) : (
             <span className="text-gray-700">{Array.isArray(appointment.studentNames) ? appointment.studentNames.join(", ") : appointment.studentNames}</span>
           )}
@@ -134,107 +163,126 @@ function AppointmentItem({ appointment, role, onStartSession, onCancel, onConfir
       )}
 
       {role === 'faculty' && (
-        <div className="mt-6 -mx-6 flex absol">
+        <div className="mt-6 -mx-6 flex flex-col"> {/* Changed to flex-col to stack confirmation */}
           {!confirmInputs || !confirmInputs[appointment.id] ? (
             <>
-              {typeof onStartSession === 'function' ? (
-                <>
-                  <button 
-                    onClick={() => {
-                      setStartClicked(true);
-                      setTimeout(() => setStartClicked(false), 300);
-                      handleStart();
-                    }}
-                    disabled={isLoading}
-                    className={`flex-1 bg-[#0065A8] hover:bg-[#00D1B2] text-white py-4 transition-colors rounded-bl-lg rounded-br-none flex items-center justify-center gap-2
-                      ${StartClicked ? "scale-90" : "scale-100"}
-                      ${isLoading && actionType === 'start' ? 'opacity-50 cursor-not-allowed' : ''}`}
-                  >
-                    {isLoading && actionType === 'start' ? (
-                      <>
-                        <svg className="animate-spin h-5 w-5 text-white" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
-                          <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
-                          <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
-                        </svg>
-                        <span>Starting...</span>
-                      </>
-                    ) : (
-                      'Start Session'
-                    )}
-                  </button>
-                  <button
-                    onClick={() => {
-                      setCancelClicked(true);
-                      setTimeout(() => setCancelClicked(false), 300);
-                      handleCancel(appointment.id);
-                    }}
-                    disabled={isLoading}
-                    className={`flex-1 bg-[#54BEFF] hover:bg-[#FF7171] text-white py-4 transition-colors rounded-br-lg rounded-bl-none flex items-center justify-center gap-2
-                      ${CancelClicked ? "scale-90" : "scale-100"}
-                      ${isLoading && actionType === 'cancel' ? 'opacity-50 cursor-not-allowed' : ''}`}
-                  >
-                    {isLoading && actionType === 'cancel' ? (
-                      <>
-                        <svg className="animate-spin h-5 w-5 text-white" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
-                          <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
-                          <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
-                        </svg>
-                        <span>Cancelling...</span>
-                      </>
-                    ) : (
-                      'Cancel'
-                    )}
-                  </button>
-                </>
+              {/* Conditional rendering for cancel confirmation */}
+              {showCancelConfirm ? (
+                <div className="w-full px-6 pb-4">
+                  <p className="text-center text-gray-700 mb-3">Are you sure you want to cancel this appointment?</p>
+                  <div className="flex">
+                    <button
+                      onClick={() => {
+                        setCancelClicked(true);
+                        setTimeout(() => setCancelClicked(false), 300);
+                        handleCancel(appointment.id);
+                      }}
+                      disabled={isLoading && actionType === 'cancel'}
+                      className={`flex-1 bg-[#FF7171] hover:bg-[#E65A5A] text-white py-3 transition-colors rounded-l-lg flex items-center justify-center gap-2
+                        ${CancelClicked ? "scale-90" : "scale-100"}
+                        ${isLoading && actionType === 'cancel' ? 'opacity-50 cursor-not-allowed' : ''}`}
+                    >
+                      {isLoading && actionType === 'cancel' ? (
+                        <>
+                          <svg className="animate-spin h-5 w-5 text-white" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+                            <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
+                            <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+                          </svg>
+                          <span>Cancelling...</span>
+                        </>
+                      ) : (
+                        'Yes, Cancel'
+                      )}
+                    </button>
+                    <button
+                      onClick={() => {
+                        setShowCancelConfirm(false);
+                      }}
+                      disabled={isLoading && actionType === 'cancel'}
+                      className="flex-1 bg-gray-300 hover:bg-gray-400 text-gray-800 py-3 transition-colors rounded-r-lg flex items-center justify-center"
+                    >
+                      No
+                    </button>
+                  </div>
+                </div>
               ) : (
-                <>
-                  <button 
-                    onClick={() => {
-                      setConfirmClicked(true);
-                      setTimeout(() => setConfirmClicked(false), 300);
-                      handleConfirmClick(appointment.id);
-                    }}
-                    disabled={isLoading}
-                    className={`flex-1 bg-[#0065A8] hover:bg-[#0088FF] text-white py-4 transition-colors rounded-bl-lg rounded-br-none flex items-center justify-center gap-2
-                      ${ConfirmClicked ? "scale-90" : "scale-100"}
-                      ${isLoading && actionType === 'confirm' ? 'opacity-50 cursor-not-allowed' : ''}`}
-                  >
-                    {isLoading && actionType === 'confirm' ? (
-                      <>
-                        <svg className="animate-spin h-5 w-5 text-white" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
-                          <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
-                          <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
-                        </svg>
-                        <span>Confirming...</span>
-                      </>
-                    ) : (
-                      'Confirm'
-                    )}
-                  </button>
-                  <button 
-                    onClick={() => {
-                      setCanceledClicked(true);
-                      setTimeout(() => setCanceledClicked(false), 300);
-                      handleCancel(appointment.id);
-                    }}
-                    disabled={isLoading}
-                    className={`flex-1 bg-[#54BEFF] hover:bg-[#FF7171] text-white py-4 transition-colors rounded-br-lg rounded-bl-none flex items-center justify-center gap-2
-                      ${CanceledClicked ? "scale-90" : "scale-100"}
-                      ${isLoading && actionType === 'cancel' ? 'opacity-50 cursor-not-allowed' : ''}`}
-                  >
-                    {isLoading && actionType === 'cancel' ? (
-                      <>
-                        <svg className="animate-spin h-5 w-5 text-white" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
-                          <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
-                          <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
-                        </svg>
-                        <span>Cancelling...</span>
-                      </>
-                    ) : (
-                      'Cancel'
-                    )}
-                  </button>
-                </>
+                <div className="flex"> {/* Original button layout */}
+                  {typeof onStartSession === 'function' ? (
+                    <>
+                      <button 
+                        onClick={() => {
+                          setStartClicked(true);
+                          setTimeout(() => setStartClicked(false), 300);
+                          handleStart();
+                        }}
+                        disabled={isLoading}
+                        className={`flex-1 bg-[#0065A8] hover:bg-[#00D1B2] text-white py-4 transition-colors rounded-bl-lg rounded-br-none flex items-center justify-center gap-2
+                          ${StartClicked ? "scale-90" : "scale-100"}
+                          ${isLoading && actionType === 'start' ? 'opacity-50 cursor-not-allowed' : ''}`}
+                      >
+                        {isLoading && actionType === 'start' ? (
+                          <>
+                            <svg className="animate-spin h-5 w-5 text-white" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+                              <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
+                              <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+                            </svg>
+                            <span>Starting...</span>
+                          </>
+                        ) : (
+                          'Start Session'
+                        )}
+                      </button>
+                      <button
+                        onClick={() => {
+                          setShowCancelConfirm(true); // Show confirmation
+                        }}
+                        disabled={isLoading}
+                        className={`flex-1 bg-[#54BEFF] hover:bg-[#FF7171] text-white py-4 transition-colors rounded-br-lg rounded-bl-none flex items-center justify-center gap-2
+                          ${CancelClicked ? "scale-90" : "scale-100"}
+                          ${isLoading && actionType === 'cancel' ? 'opacity-50 cursor-not-allowed' : ''}`}
+                      >
+                        Cancel
+                      </button>
+                    </>
+                  ) : (
+                    <>
+                      <button 
+                        onClick={() => {
+                          setConfirmClicked(true);
+                          setTimeout(() => setConfirmClicked(false), 300);
+                          handleConfirmClick(appointment.id);
+                        }}
+                        disabled={isLoading}
+                        className={`flex-1 bg-[#0065A8] hover:bg-[#0088FF] text-white py-4 transition-colors rounded-bl-lg rounded-br-none flex items-center justify-center gap-2
+                          ${ConfirmClicked ? "scale-90" : "scale-100"}
+                          ${isLoading && actionType === 'confirm' ? 'opacity-50 cursor-not-allowed' : ''}`}
+                      >
+                        {isLoading && actionType === 'confirm' ? (
+                          <>
+                            <svg className="animate-spin h-5 w-5 text-white" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+                              <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
+                              <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+                            </svg>
+                            <span>Confirming...</span>
+                          </>
+                        ) : (
+                          'Confirm'
+                        )}
+                      </button>
+                      <button 
+                        onClick={() => {
+                          setShowCancelConfirm(true); // Show confirmation
+                        }}
+                        disabled={isLoading}
+                        className={`flex-1 bg-[#54BEFF] hover:bg-[#FF7171] text-white py-4 transition-colors rounded-br-lg rounded-bl-none flex items-center justify-center gap-2
+                          ${CanceledClicked ? "scale-90" : "scale-100"}
+                          ${isLoading && actionType === 'cancel' ? 'opacity-50 cursor-not-allowed' : ''}`}
+                      >
+                        Cancel
+                      </button>
+                    </>
+                  )}
+                </div>
               )}
             </>
           ) : (

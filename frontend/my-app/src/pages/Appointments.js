@@ -33,17 +33,31 @@ function StudentAppointments() {
 
   useEffect(() => {
     const categorizedAppointments = { pending: [], upcoming: [] };
-    bookings.forEach((booking) => {
+    console.log("Appointments.js - Raw bookings data:", bookings); // Log raw bookings
+    bookings.forEach((booking) => {      // Build appointment object for displaying in AppointmentItem
       const appointmentItem = {
         id: booking.id,
-        teacher: booking.teacher || {},
+        teacher: {
+          profile_picture: booking.teacherProfile,
+          teacherName: booking.teacherName,
+        },
         studentNames: booking.studentNames,
-        info: booking.info,
+        // Transform studentProfiles to match AppointmentItem expected fields
+        info: Array.isArray(booking.studentProfiles) ? booking.studentProfiles.map((s) => {
+          const [firstName, ...rest] = s.name.split(" ");
+          return {
+            id: s.id,
+            profile_picture: s.profile,
+            firstName,
+            lastName: rest.join(" "),
+          };
+        }) : [], // Default to empty array if studentProfiles is not an array
         schedule: booking.schedule,
         venue: booking.venue,
         status: booking.status,
         created_at: booking.created_at,
       };
+      console.log("Appointments.js - Constructed appointmentItem:", appointmentItem); // Log constructed item
       if (booking.status === "pending") {
         categorizedAppointments.pending.push(appointmentItem);
       } else if (booking.status === "confirmed") {
@@ -99,8 +113,7 @@ function StudentAppointments() {
                   </div>
                   {/* Student(s) Section Skeleton */}
                   <div className="mt-4 fade-in delay-200">
-                    <p className="h-4 bg-gray-300 rounded w-40 mb-2">
-                    </p>
+                    <p className="h-4 bg-gray-300 rounded w-40 mb-2"></p>
                     <div className="flex flex-wrap items-center gap-3">
                       {Array.from({ length: 3 }).map((_, index) => (
                         <div
@@ -116,8 +129,7 @@ function StudentAppointments() {
                   {/* Details Section Skeleton */}
                   <div className="grid grid-cols-2 gap-4 mt-4 fade-in delay-300">
                     <div>
-                      <div className="h-4 bg-gray-300 rounded w-40 mb-2">
-                      </div>
+                      <div className="h-4 bg-gray-300 rounded w-40 mb-2"></div>
                       <div className="h-3 bg-gray-200 rounded w-24"></div>
                     </div>
                   </div>
@@ -163,9 +175,7 @@ function StudentAppointments() {
                   </div>
                   {/* Student(s) Section Skeleton */}
                   <div className="mt-4 fade-in delay-200">
-                    <p className="h-4 bg-gray-300 rounded w-40 mb-2">
-                      Student(s)
-                    </p>
+                    <p className="h-4 bg-gray-300 rounded w-40 mb-2">Student(s)</p>
                     <div className="flex flex-wrap items-center gap-3">
                       {Array.from({ length: 3 }).map((_, index) => (
                         <div
@@ -181,18 +191,15 @@ function StudentAppointments() {
                   {/* Details Section Skeleton */}
                   <div className="grid grid-cols-2 gap-4 mt-4 fade-in delay-300">
                     <div>
-                      <div className="h-4 bg-gray-300 rounded w-40 mb-2">
-                      </div>
+                      <div className="h-4 bg-gray-300 rounded w-40 mb-2"></div>
                       <div className="h-3 bg-gray-200 rounded w-24"></div>
                     </div>
                     <div>
-                      <div className="h-4 bg-gray-300 rounded w-40 mb-2">
-                      </div>
+                      <div className="h-4 bg-gray-300 rounded w-40 mb-2"></div>
                       <div className="h-3 bg-gray-200 rounded w-24"></div>
                     </div>
                     <div>
-                      <div className="h-4 bg-gray-300 rounded w-40 mb-2">
-                      </div>
+                      <div className="h-4 bg-gray-300 rounded w-40 mb-2"></div>
                       <div className="h-3 bg-gray-200 rounded w-24"></div>
                     </div>
                   </div>
@@ -230,7 +237,7 @@ const fetchTeacherAppointments = async () => {
 
 function TeacherAppointments() {
   const {
-    data: appointments = [],
+    data: appointmentsData = [], // Renamed to avoid conflict
     refetch,
     isLoading,
   } = useQuery("teacherAppointments", fetchTeacherAppointments, {
@@ -247,25 +254,46 @@ function TeacherAppointments() {
 
   // Memoize the sorted appointments
   const sortedData = useMemo(() => {
-    const upcomingApps = appointments
+    console.log("TeacherAppointments - Raw appointmentsData:", appointmentsData); // Log raw data
+
+    const transformAppointment = (app) => ({
+      ...app,
+      // Transform studentProfiles to match AppointmentItem expected fields
+      // Assuming 'studentProfiles' exists on teacher's appointment data.
+      // If the structure is different, this map will need adjustment.
+      info: Array.isArray(app.studentProfiles) ? app.studentProfiles.map((s) => {
+        const [firstName, ...rest] = (s.name || '').split(" "); // Added safeguard for s.name
+        return {
+          id: s.id, // Ensure this matches the actual student ID property
+          profile_picture: s.profile,
+          firstName,
+          lastName: rest.join(" "),
+        };
+      }) : [], // Default to empty array if studentProfiles is not an array or undefined
+    });
+
+    const upcomingApps = appointmentsData
       .filter((app) => app.status === "confirmed")
+      .map(transformAppointment)
       .sort((a, b) => new Date(a.schedule) - new Date(b.schedule));
 
-    const pendingApps = appointments
+    const pendingApps = appointmentsData
       .filter((app) => app.status === "pending")
+      .map(transformAppointment)
       .sort((a, b) => new Date(a.created_at) - new Date(b.created_at));
 
     return {
       upcoming: upcomingApps,
       pending: pendingApps,
     };
-  }, [appointments]);
+  }, [appointmentsData]); // Dependency: raw 'appointmentsData'
 
   useEffect(() => {
     setSortedAppointments(sortedData);
   }, [sortedData]);
 
   const handleBookingUpdate = useCallback(() => {
+    console.log("TeacherAppointments: booking_updated event received, refetching...");
     refetch();
   }, [refetch]);
 
@@ -285,42 +313,71 @@ function TeacherAppointments() {
 
   async function confirmBooking(bookingID, schedule, venue) {
     if (!schedule || !venue) {
+      // Consider displaying this message to the user more gracefully (e.g., a toast notification)
+      alert("Schedule and venue are required to confirm the booking.");
       throw new Error(
         "Schedule and venue are required to confirm the booking."
       );
     }
-    const response = await fetch(
-      "http://localhost:5001/bookings/confirm_booking",
-      {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ bookingID, schedule, venue }),
+    try {
+      const response = await fetch(
+        "http://localhost:5001/bookings/confirm_booking",
+        {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ bookingID, schedule, venue }),
+        }
+      );
+      if (!response.ok) {
+        const result = await response.json();
+        console.error("Failed to confirm booking:", result.error || "Unknown error");
+        // Consider displaying this error to the user
+        throw new Error(result.error || "Unknown error");
       }
-    );
-    if (!response.ok) {
-      const result = await response.json();
-      throw new Error(result.error || "Unknown error");
+      console.log("Booking confirmed successfully, refetching teacher appointments...");
+      refetch(); // Refetch appointments
+      // Clear the input fields for this booking ID after successful confirmation
+      setConfirmInputs(prev => {
+        const newInputs = { ...prev };
+        delete newInputs[bookingID];
+        return newInputs;
+      });
+    } catch (error) {
+      console.error("Error in confirmBooking:", error);
+      // Consider displaying this error to the user
+      // For example: alert(\`Error confirming booking: \${error.message}\`);
     }
   }
 
   async function cancelBooking(bookingID) {
-    const response = await fetch(
-      "http://localhost:5001/bookings/cancel_booking",
-      {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ bookingID }),
+    try {
+      const response = await fetch(
+        "http://localhost:5001/bookings/cancel_booking",
+        {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ bookingID }),
+        }
+      );
+      if (!response.ok) {
+        const result = await response.json();
+        console.error("Failed to cancel booking:", result.error || "Unknown error");
+        // Consider displaying this error to the user
+        throw new Error(result.error || "Unknown error");
       }
-    );
-    if (!response.ok) {
-      const result = await response.json();
-      throw new Error(result.error || "Unknown error");
+      console.log("Booking cancelled successfully, refetching teacher appointments...");
+      refetch(); // Refetch appointments
+    } catch (error) {
+      console.error("Error in cancelBooking:", error);
+      // Consider displaying this error to the user
+      // For example: alert(\`Error cancelling booking: \${error.message}\`);
     }
   }
 
   async function startSession(appointment) {
     const teacherID = localStorage.getItem("teacherID");
-    const studentIDs = appointment.info.map((student) => student.ID);
+    // Ensure appointment.info is an array and student.id is used
+    const studentIDs = Array.isArray(appointment.info) ? appointment.info.map((student) => student.id) : [];
     const teacherInfo = appointment.teacher
       ? encodeURIComponent(JSON.stringify(appointment.teacher))
       : "";
@@ -364,8 +421,7 @@ function TeacherAppointments() {
                   </div>
                   {/* Student(s) Section Skeleton */}
                   <div className="mt-4 fade-in delay-200">
-                    <p className="h-4 bg-gray-300 rounded w-40 mb-2">
-                    </p>
+                    <p className="h-4 bg-gray-300 rounded w-40 mb-2"></p>
                     <div className="flex flex-wrap items-center gap-3">
                       {Array.from({ length: 3 }).map((_, index) => (
                         <div
@@ -381,8 +437,7 @@ function TeacherAppointments() {
                   {/* Details Section Skeleton */}
                   <div className="grid grid-cols-2 gap-4 mt-4 fade-in delay-300">
                     <div>
-                      <div className="h-4 bg-gray-300 rounded w-40 mb-2">
-                      </div>
+                      <div className="h-4 bg-gray-300 rounded w-40 mb-2"></div>
                       <div className="h-3 bg-gray-200 rounded w-24"></div>
                     </div>
                   </div>
@@ -432,8 +487,7 @@ function TeacherAppointments() {
                   </div>
                   {/* Student(s) Section Skeleton */}
                   <div className="mt-4 fade-in delay-200">
-                    <p className="h-4 bg-gray-300 rounded w-40 mb-2">
-                    </p>
+                    <p className="h-4 bg-gray-300 rounded w-40 mb-2"></p>
                     <div className="flex flex-wrap items-center gap-3">
                       {Array.from({ length: 3 }).map((_, index) => (
                         <div
@@ -449,18 +503,15 @@ function TeacherAppointments() {
                   {/* Details Section Skeleton */}
                   <div className="grid grid-cols-2 gap-4 mt-4 fade-in delay-300">
                     <div>
-                      <div className="h-4 bg-gray-300 rounded w-40 mb-2">
-                      </div>
+                      <div className="h-4 bg-gray-300 rounded w-40 mb-2"></div>
                       <div className="h-3 bg-gray-200 rounded w-24"></div>
                     </div>
                     <div>
-                      <div className="h-4 bg-gray-300 rounded w-40 mb-2">
-                      </div>
+                      <div className="h-4 bg-gray-300 rounded w-40 mb-2"></div>
                       <div className="h-3 bg-gray-200 rounded w-24"></div>
                     </div>
                     <div>
-                      <div className="h-4 bg-gray-300 rounded w-40 mb-2">
-                      </div>
+                      <div className="h-4 bg-gray-300 rounded w-40 mb-2"></div>
                       <div className="h-3 bg-gray-200 rounded w-24"></div>
                     </div>
                   </div>

@@ -21,6 +21,7 @@ function BookingStudent({ closeModal }) {
   const [showProfileModal, setShowProfileModal] = useState(false);
   const [modalStep, setModalStep] = useState('upload');
   const [modalSelectedFile, setModalSelectedFile] = useState(null);
+  const [error, setError] = useState('');
 
   useEffect(() => {
     const storedStudentID = localStorage.getItem('studentID');
@@ -32,16 +33,30 @@ function BookingStudent({ closeModal }) {
     }
   }, []);
 
-  // Add this useEffect to fetch teachers when component mounts
   useEffect(() => {
     fetch('http://localhost:5001/get_teachers')
       .then(response => response.json())
-      .then(data => setTeachers(data))
-      .catch(error => console.error('Error fetching teachers:', error));
+      .then(data => {
+        // Filter to only show active teachers
+        const activeTeachers = data.filter(teacher => teacher.isActive);
+        setTeachers(activeTeachers);
+        if (activeTeachers.length === 0) {
+          setError('No active teachers available. Please try again later.');
+        }
+      })
+      .catch(error => {
+        console.error('Error fetching teachers:', error);
+        setError('Failed to load teachers. Please try again later.');
+      });
   }, []);
 
   return (
     <div className="p-8 bg-white rounded-lg">
+      {error && (
+        <div className="mb-4 text-red-500 text-sm">
+          {error}
+        </div>
+      )}
       {/* Booking form section */}
       <div className="mb-4 relative">
         <label className="block text-gray-700 font-medium mb-1">Teacher:</label>
@@ -49,7 +64,7 @@ function BookingStudent({ closeModal }) {
           {selectedTeacher && !teacherSearchTerm && (
             <div className="flex items-center gap-2">
               <img 
-                src={selectedTeacherProfile} // Updated: use selectedTeacherProfile directly
+                src={getProfilePictureUrl(selectedTeacherProfile, selectedTeacherName)} // Construct full URL
                 alt="Teacher Profile" 
                 className="rounded-full w-6 h-6"
                 onError={(e) => { e.target.onerror = null; e.target.src="https://avatar.iran.liara.run/public/boy?username=Ash"; }} // Fallback image

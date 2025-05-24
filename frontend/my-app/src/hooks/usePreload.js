@@ -105,7 +105,10 @@ export default function usePreload(isLoggedIn) {
           queryClient.prefetchQuery({
             queryKey: ['consultation-history', userRole, userId],
             queryFn: async () => {
-              const res = await fetch(`http://localhost:5001/consultation/get_history?role=${userRole}&userID=${userId}`);
+              // Send idNumber param for backend to filter by id_number
+              const res = await fetch(
+                `http://localhost:5001/consultation/get_history?role=${userRole}&userID=${userId}&idNumber=${userId}`
+              );
               if (!res.ok) throw new Error('Failed to fetch consultation history');
               return res.json();
             },

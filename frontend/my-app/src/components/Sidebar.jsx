@@ -126,21 +126,14 @@ const Sidebar = ({ onExpandChange }) => {
       fetch(`http://localhost:5001/user/get_user?email=${userEmail}`)
         .then(res => res.json())
         .then(data => {
-          if (userRole === 'faculty') {
-            setProfile({
-              name: `${data.firstName} ${data.lastName}`,
-              id: data.id || data.idNumber,
-              profile_picture: data.profile_picture || 'https://via.placeholder.com/100',
-              role: 'Teacher'
-            });
-          } else {
-            setProfile({
-              name: `${data.firstName} ${data.lastName}`,
-              id: data.id,
-              profile_picture: data.profile_picture || 'https://via.placeholder.com/100',
-              role: 'Student'
-            });
-          }
+          // Construct full URL for profile picture
+          const picUrl = getProfilePictureUrl(data.profile_picture);
+          setProfile({
+            name: `${data.firstName} ${data.lastName}`,
+            id: data.id || data.idNumber,
+            profile_picture: picUrl,
+            role: userRole === 'faculty' ? 'Teacher' : 'Student'
+          });
         })
         .catch(err => console.error('Error fetching profile:', err));
     }
@@ -202,9 +195,11 @@ const Sidebar = ({ onExpandChange }) => {
       }
       
       setUserDetails(userData);
-      if (userData.profile_picture) {
-        setProfilePicture(userData.profile_picture);
-      }
+      // Update userDetails with full URL for picture
+      const fullPic = getProfilePictureUrl(userData.profile_picture);
+      setUserDetails({ ...userData, profile_picture: fullPic });
+      // Fallback for profilePicture state
+      setProfilePicture(fullPic);
     } catch (error) {
       console.error('Error fetching user details:', error);
     }
@@ -529,9 +524,11 @@ const Sidebar = ({ onExpandChange }) => {
                 }}
               >
                 <div className="rounded-full p-1 bg-white">
-                  <div className="relative">
-                    <img 
-                      src={userDetails?.profile_picture || profilePicture || 'https://via.placeholder.com/100'} 
+                  <div className="relative">                    <img 
+                      src={userDetails?.profile_picture || 
+                           (userDetails ? 
+                              getProfilePictureUrl(null, `${userDetails.firstName} ${userDetails.lastName}`) : 
+                              profilePicture)} 
                       alt="Profile" 
                       className="rounded-full w-10 h-10"  
                     />
@@ -549,7 +546,7 @@ const Sidebar = ({ onExpandChange }) => {
                     {userDetails.firstName} {userDetails.lastName}
                   </p>
                   <p className="text-gray-200 text-xs truncate">
-                    {userDetails.ID}
+                    {userDetails.idNumber || userDetails.id}
                   </p>
                   <p className="text-gray-200 text-xs truncate">
                     {userRole === 'student' ? 

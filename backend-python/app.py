@@ -1,9 +1,10 @@
 import os
-import datetime
 if os.getenv("USE_EVENTLET", "false").lower() == "true":
     import eventlet
     eventlet.monkey_patch()
 
+# Standard library imports
+import datetime
 from flask import Flask, request, jsonify
 from flask_cors import CORS
 from flask_socketio import SocketIO, emit

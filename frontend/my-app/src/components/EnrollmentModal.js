@@ -31,7 +31,8 @@ function EnrollmentModal({ closeModal }) {
           console.error("Search error:", data.error);
           setStudentResults([]);
         } else {
-          setStudentResults(data.results || []);
+          // The API returns an array directly, not wrapped in a results object
+          setStudentResults(Array.isArray(data) ? data : []);
         }
       } catch (error) {
         console.error("Search error:", error);
@@ -106,6 +107,33 @@ function EnrollmentModal({ closeModal }) {
     return () => window.removeEventListener('resize', handleResize);
   }, []);
 
+  useEffect(() => {
+    const checkTeacherStatus = async () => {
+      try {
+        const response = await fetch(`http://localhost:5001/user/teacher_status?teacherId=${teacherID}`);
+        const data = await response.json();
+        if (!data.isActive) {
+          setMessage({
+            type: "error",
+            content: "You are currently inactive. Cannot enroll students during semester break."
+          });
+          // Clear any existing selected students
+          setSelectedStudents([]);
+        }
+      } catch (error) {
+        console.error('Error checking teacher status:', error);
+        setMessage({
+          type: "error",
+          content: "Unable to verify teacher status. Please try again later."
+        });
+      }
+    };
+
+    if (teacherID) {
+      checkTeacherStatus();
+    }
+  }, [teacherID]);
+
   return (
     <div className="pt-2 sm:pt-4 px-2 md:px-4 h-44 md:h-52 flex flex-col">
       {/* Student Selection Input - Responsive */}
@@ -119,9 +147,8 @@ function EnrollmentModal({ closeModal }) {
               <div
                 key={student.id}
                 className="bg-[#00D1B2] text-white px-1 sm:px-2 py-1 rounded-full flex items-center gap-1 sm:gap-2 text-xs sm:text-sm mb-1"
-              >
-                <img
-                  src={getProfilePictureUrl(student.profile_picture)}
+              >                <img
+                  src={getProfilePictureUrl(student.profile_picture, `${student.firstName} ${student.lastName}`)}
                   alt="Profile"
                   className="w-4 h-4 sm:w-5 sm:h-5 rounded-full"
                 />
@@ -148,6 +175,7 @@ function EnrollmentModal({ closeModal }) {
               onBlur={() => setTimeout(() => setIsInputFocused(false), 200)}
               placeholder={isMobile ? "Search..." : "Search students..."}
               className="flex-1 min-w-[80px] outline-none bg-transparent text-sm"
+              disabled={message.type === "error"}
             />
           </div>
 
@@ -193,18 +221,16 @@ function EnrollmentModal({ closeModal }) {
                           setSelectedStudents([...selectedStudents, student]);
                           setSearchTerm("");
                         }}
-                      >
-                        <img
-                          src={getProfilePictureUrl(student.profile_picture)}
+                      >                        <img
+                          src={getProfilePictureUrl(student.profile_picture, `${student.firstName} ${student.lastName}`)}
                           alt="Profile"
                           className="w-6 h-6 sm:w-8 sm:h-8 rounded-full"
                         />
                         <div>
                           <div className="font-medium text-xs sm:text-sm">
                             {student.firstName} {student.lastName}
-                          </div>
-                          <div className="text-xs text-gray-500">
-                            {student.programName || 'Unknown Program'} • {student.year_section || 'Unknown Section'}
+                          </div>                          <div className="text-xs text-gray-500">
+                            {student.program || student.programName || 'Unknown Program'} • {student.year_section || 'Unknown Section'}
                           </div>
                         </div>
                       </li>

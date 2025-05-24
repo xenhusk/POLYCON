@@ -104,29 +104,37 @@ export const recoverUserIds = async () => {
       const userResponse = await fetch(`http://localhost:5001/user/get_user?email=${encodeURIComponent(email)}`);
       const userData = await userResponse.json();
       
-      if (userData && userData.id) {
-        // Store user ID
-        localStorage.setItem("userId", userData.id);
-        localStorage.setItem("userID", userData.id);
-        
-        // Store role-specific IDs
-        if (roleData.role === "student") {
-          localStorage.setItem("studentId", userData.id);
-          localStorage.setItem("studentID", userData.id);
-        } else if (roleData.role === "faculty") {
-          localStorage.setItem("teacherId", userData.id);
-          localStorage.setItem("teacherID", userData.id);
-          localStorage.setItem("facultyID", userData.id);
-        } else if (roleData.role === "admin") {
-          localStorage.setItem("adminId", userData.id);
-          localStorage.setItem("adminID", userData.id);
+      if (userData) {
+        // Prefer idNumber (string) over numeric PK, to persist correct ID across reloads
+        const idNum = userData.idNumber || userData.id;
+        if (idNum) {
+          localStorage.setItem("userId", idNum);
+          localStorage.setItem("userID", idNum);
         }
-        
+
+        // Store role-specific IDs using idNumber as well
+        if (roleData.role === "student") {
+          if (userData.idNumber) {
+            localStorage.setItem("studentId", userData.idNumber);
+            localStorage.setItem("studentID", userData.idNumber);
+          }
+        } else if (roleData.role === "faculty") {
+          if (userData.idNumber) {
+            localStorage.setItem("teacherId", userData.idNumber);
+            localStorage.setItem("teacherID", userData.idNumber);
+            localStorage.setItem("facultyID", userData.idNumber);
+          }
+        } else if (roleData.role === "admin") {
+          if (userData.idNumber) {
+            localStorage.setItem("adminId", userData.idNumber);
+            localStorage.setItem("adminID", userData.idNumber);
+          }
+        }
+
         console.log("Successfully recovered user IDs:", {
-          userId: userData.id,
+          userId: idNum,
           role: roleData.role
         });
-        
         return true;
       }
     }
