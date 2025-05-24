@@ -11,8 +11,68 @@ from sqlalchemy.orm import joinedload
 from sqlalchemy import or_ # Add or_
 import os
 import tempfile
+import uuid
 
 consultation_bp = Blueprint('consultation', __name__, url_prefix='/consultation')
+
+@consultation_bp.route('/transcribe', methods=['POST'])
+def transcribe():
+    try:
+        if 'audio' not in request.files:
+            return jsonify({"error": "Audio file is required"}), 400
+
+        audio_file = request.files['audio']
+        speaker_count = int(request.form.get('speaker_count', 1))
+
+        # Save the raw audio file to a temporary directory
+        temp_dir = tempfile.gettempdir()
+        raw_path = os.path.join(temp_dir, audio_file.filename)
+        audio_file.save(raw_path)
+
+        # Convert the raw audio file and get the path of the converted file
+        converted_path = convert_audio(raw_path)
+
+        # Store the audio file locally instead of in Google Cloud
+        upload_folder = 'uploads'
+        audio_filename = f"session_audio_{uuid.uuid4().hex}.wav"
+        local_path = os.path.join(upload_folder, audio_filename)
+        
+        # Save a copy to the uploads directory
+        os.makedirs(upload_folder, exist_ok=True)
+        with open(converted_path, 'rb') as src_file:
+            with open(local_path, 'wb') as dst_file:
+                dst_file.write(src_file.read())
+        
+        # Generate a URL for accessing the audio file
+        audio_url = f"/uploads/{audio_filename}"
+
+        # Transcribe the audio using AssemblyAI
+        transcription_data = transcribe_audio_with_assemblyai(converted_path, speaker_count)
+        
+        # Calculate consultation quality
+        duration = float(request.form.get('duration', 0)) if 'duration' in request.form else None
+        quality_score, quality_metrics = calculate_consultation_quality(
+            transcription_data["raw_sentiment_analysis"],
+            transcription_data["transcription_text"],
+            duration
+        )
+
+        # Clean up temporary files
+        os.remove(raw_path)
+        os.remove(converted_path)
+
+        # Process the transcription with Gemini to identify roles
+        processed_transcription = identify_roles_in_transcription(transcription_data["full_text"])
+
+        return jsonify({
+            "audioUrl": audio_url,
+            "transcription": processed_transcription,
+            "quality_score": quality_score,
+            "quality_metrics": quality_metrics,
+            "raw_sentiment_analysis": transcription_data["raw_sentiment_analysis"]
+        })
+    except Exception as e:
+        return jsonify({"error": str(e)}), 500
 
 @consultation_bp.route('/identify_roles', methods=['POST'])
 def identify_roles():

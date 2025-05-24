@@ -63,11 +63,10 @@ function BookingStudent({ closeModal }) {
         <div className="flex items-center border border-gray-300 rounded-lg px-3 py-2">
           {selectedTeacher && !teacherSearchTerm && (
             <div className="flex items-center gap-2">
-              <img 
-                src={getProfilePictureUrl(selectedTeacherProfile, selectedTeacherName)} // Construct full URL
-                alt="Teacher Profile" 
+              <img
+                src={getProfilePictureUrl(selectedTeacherProfile, selectedTeacherName)}
+                alt={selectedTeacherName}
                 className="rounded-full w-6 h-6"
-                onError={(e) => { e.target.onerror = null; e.target.src="https://avatar.iran.liara.run/public/boy?username=Ash"; }} // Fallback image
               />
               <span>{selectedTeacherName}</span>
               <button 
@@ -108,18 +107,16 @@ function BookingStudent({ closeModal }) {
                   onClick={() => {
                     console.log('Selected teacher data:', teacher); // Debug log
                     setSelectedTeacher(teacher.id);
-                    setSelectedTeacherName(`${teacher.firstName} ${teacher.lastName}`);
-                    // Store the complete profile picture URL
-                    const profilePic = teacher.profile_picture || "https://avatar.iran.liara.run/public/boy?username=Ash";
+                    setSelectedTeacherName(`${teacher.firstName} ${teacher.lastName}`);                    // Store the profile picture information
+                    const profilePic = teacher.profile_picture;
                     console.log('Setting profile picture:', profilePic); // Debug log
                     setSelectedTeacherProfile(profilePic);
                     setTeacherSearchTerm('');
                   }} 
                   className="px-3 py-2 cursor-pointer hover:bg-gray-200 flex items-center"
-                >
-                  <img 
-                    src={teacher.profile_picture || "https://avatar.iran.liara.run/public/boy?username=Ash"}
-                    alt="Profile" 
+                >                  <img 
+                    src={getProfilePictureUrl(teacher.profile_picture, `${teacher.firstName} ${teacher.lastName}`)}
+                    alt={`${teacher.firstName} ${teacher.lastName}`}
                     className="rounded-full w-6 h-6 mr-1" 
                   />
                   <span>{teacher.firstName} {teacher.lastName}</span>
@@ -136,10 +133,10 @@ function BookingStudent({ closeModal }) {
             const student = students.find(s => s.id === studentId);
             return student ? (
               <div key={studentId} className="bg-blue-100 text-blue-800 px-2 py-1 rounded flex items-center">
-                <img 
-                  src={getProfilePictureUrl(student.profile_picture)} 
-                  alt="Profile" 
-                  className="rounded-full w-6 h-6 mr-1" 
+                <img
+                  src={getProfilePictureUrl(student.profile_picture, `${student.firstName} ${student.lastName}`)}
+                  alt={`${student.firstName} ${student.lastName}`}
+                  className="rounded-full w-6 h-6 mr-1"
                 />
                 <span>{student.firstName} {student.lastName}</span>
                 <button 
@@ -177,10 +174,10 @@ function BookingStudent({ closeModal }) {
                   }} 
                   className="px-3 py-2 cursor-pointer hover:bg-gray-200 flex items-center"
                 >
-                  <img 
-                    src={getProfilePictureUrl(student.profile_picture)} 
-                    alt="Profile" 
-                    className="rounded-full w-6 h-6 mr-1" 
+                  <img
+                    src={getProfilePictureUrl(student.profile_picture, `${student.firstName} ${student.lastName}`)}
+                    alt={`${student.firstName} ${student.lastName}`}
+                    className="rounded-full w-6 h-6 mr-1"
                   />
                   <span>{student.firstName} {student.lastName} ({student.program} {student.year_section})</span>
                 </li>

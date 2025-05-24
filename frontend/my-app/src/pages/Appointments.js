@@ -258,18 +258,16 @@ function TeacherAppointments() {
 
     const transformAppointment = (app) => ({
       ...app,
-      // Transform studentProfiles to match AppointmentItem expected fields
-      // Assuming 'studentProfiles' exists on teacher's appointment data.
-      // If the structure is different, this map will need adjustment.
       info: Array.isArray(app.studentProfiles) ? app.studentProfiles.map((s) => {
-        const [firstName, ...rest] = (s.name || '').split(" "); // Added safeguard for s.name
+        const [firstName, ...rest] = (s.name || '').split(" "); 
         return {
-          id: s.id, // Ensure this matches the actual student ID property
+          id: s.id, // Keep this as the unique key for React lists or other internal uses
+          idNumber: s.idNumber, // Assuming 's.idNumber' holds the student's ID number
           profile_picture: s.profile,
           firstName,
           lastName: rest.join(" "),
         };
-      }) : [], // Default to empty array if studentProfiles is not an array or undefined
+      }) : [], 
     });
 
     const upcomingApps = appointmentsData
@@ -376,20 +374,31 @@ function TeacherAppointments() {
 
   async function startSession(appointment) {
     const teacherID = localStorage.getItem("teacherID");
-    // Ensure appointment.info is an array and student.id is used
-    const studentIDs = Array.isArray(appointment.info) ? appointment.info.map((student) => student.id) : [];
-    const teacherInfo = appointment.teacher
-      ? encodeURIComponent(JSON.stringify(appointment.teacher))
+    // Use student.idNumber for the studentIDs query parameter
+    const studentIDs = Array.isArray(appointment.info) ? appointment.info.map((student) => student.idNumber) : [];
+
+    // Construct teacherInfo object for Session.js
+    // Session.js expects 'name', 'profile_picture', 'department', and 'role'.
+    // 'department' and 'role' are not directly available in the 'appointment' object from booking data.
+    // Passing them as null so Session.js can handle them gracefully.
+    const teacherDetailsForSession = {
+      name: appointment.teacherName,
+      profile_picture: appointment.teacherProfile,
+      department: null, 
+      role: null,       
+    };
+    const teacherInfoParam = encodeURIComponent(JSON.stringify(teacherDetailsForSession));
+
+    const studentInfoParam = appointment.info
+      ? encodeURIComponent(JSON.stringify(appointment.info)) // studentInfo will now also contain idNumber in each student object
       : "";
-    const studentInfo = appointment.info
-      ? encodeURIComponent(JSON.stringify(appointment.info))
-      : "";
-    const venue = appointment.venue
+    const venueParam = appointment.venue
       ? encodeURIComponent(appointment.venue)
       : "";
+
     const sessionUrl = `/session?teacherID=${teacherID}&studentIDs=${studentIDs.join(
       ","
-    )}&teacherInfo=${teacherInfo}&studentInfo=${studentInfo}&venue=${venue}&booking_id=${
+    )}&teacherInfo=${teacherInfoParam}&studentInfo=${studentInfoParam}&venue=${venueParam}&booking_id=${
       appointment.id
     }`;
     window.open(sessionUrl, "_blank");

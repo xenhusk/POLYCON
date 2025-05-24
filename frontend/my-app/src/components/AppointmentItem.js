@@ -34,19 +34,65 @@ function AppointmentItem({ appointment, role, onStartSession, onCancel, onConfir
 
   // Ensure the appointment object contains booking_id (if not, map id accordingly)
   const bookingID = appointment.booking_id || appointment.id; 
+
   // In your Start Session button click handler:
-  const handleStart = async () => {
-    setIsLoading(true);
-    setActionType('start');
-    try {
-      await onStartSession({ ...appointment, booking_id: bookingID });
-      setMessage({ type: 'success', content: 'Session started successfully' });
-    } catch (error) {
-      setMessage({ type: 'error', content: error.message || 'Failed to start session' });
-    } finally {
-      setIsLoading(false);
-      setActionType('');
+  const handleStart = () => {
+    // If onStartSession prop is provided, prefer delegating to it.
+    // This is generally a better pattern for separation of concerns.
+    if (onStartSession) {
+      onStartSession(appointment);
+      return;
     }
+
+    // Fallback: If onStartSession is not provided, AppointmentItem will construct the URL.
+    // This section assumes AppointmentItem is responsible for URL generation.
+    console.warn("AppointmentItem is generating session URL directly. Consider using onStartSession prop for better separation.");
+
+    const teacherIDFromStorage = localStorage.getItem("teacherID"); // Assuming teacherID is stored
+
+    if (!appointment || !Array.isArray(appointment.info)) {
+      console.error("Student info is missing or not an array in appointment object:", appointment);
+      alert("Cannot start session: student information is missing.");
+      return;
+    }
+
+    const studentIdNumbers = appointment.info.map(student => {
+      if (!student.idNumber) {
+        console.warn("Student object in appointment.info is missing idNumber:", student);
+        // Fallback to id if idNumber is missing, though this is not ideal
+        return student.id || null; 
+      }
+      return student.idNumber;
+    }).filter(idNum => idNum !== null);
+
+    if (studentIdNumbers.length === 0 && appointment.info.length > 0) {
+      console.error("No valid student IDNumbers (or fallback IDs) found to start session.");
+      alert("Cannot start session: no valid student identifiers found.");
+      return;
+    }
+    
+    const studentIDsParam = studentIdNumbers.join(',');
+
+    // Prepare teacherInfo for the URL
+    const teacherDetailsForSession = {
+      name: teacherNameFromProp, // Already extracted at the top of the component
+      profile_picture: profilePictureFromProp, // Already extracted
+      department: departmentFromProp, // Already extracted
+      // role: appointment.teacher?.role || null, // If role is available
+    };
+    const teacherInfoParam = encodeURIComponent(JSON.stringify(teacherDetailsForSession));
+
+    // Student info for the URL - appointment.info should contain idNumber if prepared correctly by parent
+    const studentInfoParam = encodeURIComponent(JSON.stringify(appointment.info)); 
+
+    const venueParam = appointment.venue ? encodeURIComponent(appointment.venue) : "";
+    const bookingIdParam = bookingID; // Already determined
+
+    const sessionUrl = `/session?teacherID=${teacherIDFromStorage}&studentIDs=${studentIDsParam}&teacherInfo=${teacherInfoParam}&studentInfo=${studentInfoParam}&venue=${venueParam}&booking_id=${bookingIdParam}`;
+    
+    setStartClicked(true); // Assuming this state is for UI feedback
+    window.open(sessionUrl, "_blank");
+    // setTimeout(() => setStartClicked(false), 2000); // Reset UI state if needed
   };
 
   const handleCancel = async (id) => {

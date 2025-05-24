@@ -31,8 +31,13 @@ function EnrollmentModal({ closeModal }) {
           console.error("Search error:", data.error);
           setStudentResults([]);
         } else {
-          // The API returns an array directly, not wrapped in a results object
-          setStudentResults(Array.isArray(data) ? data : []);
+          // The API may return either an array directly or an object with a 'results' array
+          const fetchedStudents = Array.isArray(data)
+            ? data
+            : Array.isArray(data.results)
+            ? data.results
+            : [];
+          setStudentResults(fetchedStudents);
         }
       } catch (error) {
         console.error("Search error:", error);
@@ -110,15 +115,20 @@ function EnrollmentModal({ closeModal }) {
   useEffect(() => {
     const checkTeacherStatus = async () => {
       try {
-        const response = await fetch(`http://localhost:5001/user/teacher_status?teacherId=${teacherID}`);
-        const data = await response.json();
-        if (!data.isActive) {
-          setMessage({
-            type: "error",
-            content: "You are currently inactive. Cannot enroll students during semester break."
-          });
-          // Clear any existing selected students
-          setSelectedStudents([]);
+        // Fetch teacher status to decide on enrollment action
+        if (teacherID) {
+          // Ensure teacherID is not null or undefined before fetching
+          const response = await fetch(`http://localhost:5001/user/get_user?idNumber=${teacherID}`);
+          if (!response.ok) throw new Error('Network response was not ok');
+          const data = await response.json();
+          if (!data.isActive) {
+            setMessage({
+              type: "error",
+              content: "You are currently inactive. Cannot enroll students during semester break."
+            });
+            // Clear any existing selected students
+            setSelectedStudents([]);
+          }
         }
       } catch (error) {
         console.error('Error checking teacher status:', error);
@@ -147,9 +157,10 @@ function EnrollmentModal({ closeModal }) {
               <div
                 key={student.id}
                 className="bg-[#00D1B2] text-white px-1 sm:px-2 py-1 rounded-full flex items-center gap-1 sm:gap-2 text-xs sm:text-sm mb-1"
-              >                <img
-                  src={getProfilePictureUrl(student.profile_picture, `${student.firstName} ${student.lastName}`)}
-                  alt="Profile"
+              >
+                <img
+                  src={getProfilePictureUrl(student.profile_picture, student.fullName)}
+                  alt={student.fullName}
                   className="w-4 h-4 sm:w-5 sm:h-5 rounded-full"
                 />
                 <span className="max-w-[100px] sm:max-w-full truncate">
@@ -221,9 +232,10 @@ function EnrollmentModal({ closeModal }) {
                           setSelectedStudents([...selectedStudents, student]);
                           setSearchTerm("");
                         }}
-                      >                        <img
-                          src={getProfilePictureUrl(student.profile_picture, `${student.firstName} ${student.lastName}`)}
-                          alt="Profile"
+                      >
+                        <img
+                          src={getProfilePictureUrl(student.profile_picture, student.fullName)}
+                          alt={student.fullName}
                           className="w-6 h-6 sm:w-8 sm:h-8 rounded-full"
                         />
                         <div>

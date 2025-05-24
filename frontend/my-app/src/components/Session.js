@@ -6,6 +6,34 @@ import { ReactComponent as MicrophoneIcon } from "./icons/microphone.svg";
 import { ReactComponent as MicrophoneSlashIcon } from "./icons/microphoneSlash.svg";
 import AnimatedBackground from "./AnimatedBackground";
 import AssessmentModal from "./AssessmentModal";
+import { getProfilePictureUrl, getDisplayProgram } from "../utils/utils";
+
+// Helper function to format program and section together (e.g. "BSCS 3A")
+const formatProgramWithSection = (student) => {
+  if (!student) return '';
+  
+  const program = getDisplayProgram(student);
+  const section = student.year_section || student.section || '';
+  
+  if (!program) return section;
+  if (!section) return program;
+  
+  return `${program} ${section}`;
+};
+
+const fetchUserDetails = async (idNumber) => {
+  try {
+    console.log(`Fetching user details for ID: ${idNumber}`);
+    const response = await fetch(`http://localhost:5001/user/get_user?idNumber=${encodeURIComponent(idNumber)}`);
+    if (!response.ok) throw new Error("Failed to fetch user details");
+    const data = await response.json();
+    console.log(`User details received for ${idNumber}:`, data);
+    return data;
+  } catch (error) {
+    console.error(`Error fetching user ${idNumber}:`, error);
+    return null;
+  }
+};
 
 const Session = () => {
   const [teacherId, setTeacherId] = useState("");
@@ -46,8 +74,6 @@ const Session = () => {
     const sessionID = queryParams.get("sessionID");
     const teacherIDFromQuery = queryParams.get("teacherID");
     const studentIDsFromQuery = queryParams.get("studentIDs");
-    const teacherInfoQuery = queryParams.get("teacherInfo");
-    const studentInfoQuery = queryParams.get("studentInfo");
 
     if (sessionID) {
       // Existing session - fetch its details.
@@ -57,12 +83,38 @@ const Session = () => {
             `http://localhost:5001/consultation/get_session?sessionID=${sessionID}`
           );
           const data = await response.json();
-          if (response.ok) {
-            setTeacherId(data.teacher_id.split("/").pop());
-            setStudentIds(
-              data.student_ids.map((id) => id.split("/").pop()).join(", ")
-            );
-            // Optionally, you might set teacherInfo/studentInfo from data here.
+          if (response.ok) {            const teacherIdNum = data.teacher_id.split("/").pop();
+            setTeacherId(teacherIdNum);
+            const studentIdNums = data.student_ids.map((id) => id.split("/").pop());
+            setStudentIds(studentIdNums.join(", "));
+            
+            console.log("Session teacherIdNum:", teacherIdNum);
+            console.log("Session studentIdNums:", studentIdNums);
+            
+            // Fetch teacher info from backend
+            fetchUserDetails(teacherIdNum)
+              .then(teacherData => {
+                console.log("Teacher info fetched:", teacherData);
+                setTeacherInfo(teacherData);
+              })
+              .catch(err => console.error("Error fetching teacher info:", err));
+              
+            // Fetch student info from backend
+            if (studentIdNums && studentIdNums.length > 0) {
+              Promise.all(
+                studentIdNums.map(fetchUserDetails)
+              ).then(results => {
+                console.log("All session student details fetched:", results);
+                const validStudents = results.filter(student => student !== null);
+                console.log("Valid student info to display:", validStudents);
+                setStudentInfo(validStudents);
+              }).catch(err => {
+                console.error("Error fetching session student details:", err);
+              });
+            } else {
+              console.log("No student IDs found in the session");
+              setStudentInfo([]);
+            }
           } else {
             console.error("Failed to fetch session details:", data.error);
           }
@@ -75,28 +127,21 @@ const Session = () => {
       // New session: use the query parameters provided from the appointment page.
       if (teacherIDFromQuery) {
         setTeacherId(teacherIDFromQuery);
-      }
-      if (studentIDsFromQuery) {
-        setStudentIds(
-          studentIDsFromQuery
-            .split(",")
-            .map((id) => id.trim())
-            .join(", ")
-        );
-      }
-      if (teacherInfoQuery) {
-        try {
-          setTeacherInfo(JSON.parse(teacherInfoQuery));
-        } catch (e) {
-          console.error("Error parsing teacher info", e);
-        }
-      }
-      if (studentInfoQuery) {
-        try {
-          setStudentInfo(JSON.parse(studentInfoQuery));
-        } catch (e) {
-          console.error("Error parsing student info", e);
-        }
+        fetchUserDetails(teacherIDFromQuery).then(setTeacherInfo);
+      }    if (studentIDsFromQuery) {
+        const studentIdArr = studentIDsFromQuery.split(",").map((id) => id.trim());
+        setStudentIds(studentIdArr.join(", "));
+        
+        console.log("Student ID array:", studentIdArr);
+        
+        Promise.all(
+          studentIdArr.map(fetchUserDetails)
+        ).then(results => {
+          console.log("All student details fetched:", results);
+          setStudentInfo(results.filter(student => student !== null));
+        }).catch(err => {
+          console.error("Error fetching multiple student details:", err);
+        });
       }
     }
   }, [location.search]);
@@ -479,85 +524,86 @@ const Session = () => {
 
           {/* Right Section: Teacher & Student Info, Recording & Finalize */}
           <div className="md:col-span-2 flex flex-col justify-between h-full">
-            <div className="space-y-3 sm:space-y-4 flex-1">
-              {/* Teacher Info Card */}
-              <div className="flex flex-row items-center gap-2 py-2 sm:py-3 px-3 lg:px-4 bg-[#057DCD] text-white rounded-lg shadow-lg fade-in delay-200">
-                {teacherInfo ? (
+            <div className="space-y-3 sm:space-y-4 flex-1">              {/* Teacher Info Card */}              <div className="flex flex-row items-center gap-2 py-2 sm:py-3 px-3 lg:px-4 bg-[#057DCD] text-white rounded-lg shadow-lg fade-in delay-200">
+                {console.log("Rendering teacher info:", teacherInfo)}                {teacherInfo && console.log("Teacher properties:", {
+                  // Profile pic properties
+                  profilePic: teacherInfo.profilePic,
+                  profile_pic: teacherInfo.profile_pic,
+                  profilePicture: teacherInfo.profilePicture, 
+                  profile_picture: teacherInfo.profile_picture,
+                  // List all properties
+                  allKeys: Object.keys(teacherInfo)
+                })}
+                  {teacherInfo ? (
                   <>
                     <div className="rounded-full p-1 bg-[#54BEFF]">
-                      <div className="rounded-full p-1 bg-white">
-                        <img
+                      <div className="rounded-full p-1 bg-white">                        <img
                           className="w-8 h-8 sm:w-10 sm:h-10 md:w-12 md:h-12 rounded-full"
-                          src={teacherInfo.profile_picture}
-                          alt="Teacher"
+                          src={getProfilePictureUrl(teacherInfo.profile_picture || teacherInfo.profilePic || teacherInfo.profile_pic || teacherInfo.profilePicture, teacherInfo.fullName)}
+                          alt={teacherInfo.fullName || "Teacher"}
                         />
                       </div>
                     </div>
                     <div className="flex-1">
                       <p className="text-xs sm:text-sm md:text-base lg:text-lg font-semibold">
-                        {teacherInfo.teacherName}
+                        {teacherInfo.fullName || teacherInfo.firstName || "Teacher"}
                       </p>
                       <p className="text-[0.65rem] sm:text-[0.7rem] md:text-xs lg:text-sm text-[#98d6ff]">
-                        {teacherInfo.department} {teacherInfo.role}
+                        {teacherInfo.department || ""} {teacherInfo.role || ""}
                       </p>
                     </div>
                   </>
                 ) : (
-                  <p className="text-white text-sm sm:text-base">
-                    ID: {teacherId}
-                  </p>
+                  <p className="text-white">Loading teacher info...</p>
                 )}
-              </div>
-
-              {/* Students Info Card */}
-              <div className="bg-[#057DCD] text-white p-3 sm:p-4 rounded-lg shadow-lg flex-1 min-h-[200px] sm:min-h-[250px] md:min-h-[300px] overflow-y-auto fade-in delay-300">
-                <p className="font-semibold text-center mb-2 text-sm sm:text-base">
-                  Student/s
-                </p>
-                {studentInfo ? (
-                  <ul className="space-y-2">
-                    {Array.isArray(studentInfo) ? (
-                      studentInfo.map((student, index) => (
-                        <li key={index} className="flex items-center">
-                          {student.profile_picture && (
-                            <img
-                              src={student.profile_picture}
-                              alt="Student"
-                              className="w-7 h-7 sm:w-9 sm:h-9 md:w-10 md:h-10 rounded-full mr-2 border-2 border-[#ffffff]"
-                            />
-                          )}
-                          <span className="text-[0.7rem] sm:text-xs md:text-sm lg:text-base">
-                            {student.firstName} {student.lastName}
-                          </span>
-                        </li>
-                      ))
-                    ) : (
-                      <p className="text-xs sm:text-sm md:text-base">
-                        {studentIds}
-                      </p>
-                    )}
-                  </ul>
-                ) : (
-                  <p className="text-xs sm:text-sm md:text-base">
-                    {studentIds}
-                  </p>
-                )}
-              </div>
-
-              {/* Assessment Data Button */}
-              {/* <button
-                onClick={() => {
-                  setAssessmentClicked(true);
-                  setTimeout(() => { setAssessmentClicked(false);
-                    setTimeout(() => setAssessmentModalOpen(true), 400);
-                  }, 150);
-                }}
-                className={`w-full bg-[#057DCD] text-white py-2 sm:py-3 rounded-lg shadow-md hover:bg-[#54BEFF] duration-300ms ease-in-out text-sm sm:text-base
-                ${AssessmentClicked ? "scale-90" : "scale-100"}
-                `}
-              >
-                Assessment Data
-              </button> */}
+              </div> {/* End of Teacher Info Card */}{/* Student Info Card(s) */}
+              {console.log("Rendering student info:", studentInfo)}
+              
+              {/* Case 1: studentInfo is still loading */}
+              {studentInfo === null ? (
+                <div className="py-2 sm:py-3 px-3 lg:px-4 bg-[#057DCD] text-white rounded-lg shadow-lg fade-in delay-300">
+                  <p className="text-white">Loading student info...</p>
+                </div>
+              ) : Array.isArray(studentInfo) && studentInfo.length === 0 ? (
+                /* Case 2: studentInfo is an empty array */
+                <div className="py-2 sm:py-3 px-3 lg:px-4 bg-[#057DCD] text-white rounded-lg shadow-lg fade-in delay-300">
+                  <p className="text-white">No student information available.</p>
+                </div>
+              ) : (
+                /* Case 3: We have student info to display */                (Array.isArray(studentInfo) ? studentInfo : [studentInfo]).map((student, index) => {
+                  console.log(`Rendering student ${index}:`, student);                  console.log(`Student ${index} data properties:`, {
+                    // Profile pic properties
+                    profilePic: student?.profilePic,
+                    profile_pic: student?.profile_pic, 
+                    profilePicture: student?.profilePicture,
+                    profile_picture: student?.profile_picture,
+                    // Section properties
+                    section: student?.section,
+                    year_section: student?.year_section,
+                    // List all properties for debugging
+                    allKeys: Object.keys(student || {})
+                  });
+                  return (
+                    <div key={index} className="flex flex-row items-center gap-2 py-2 sm:py-3 px-3 lg:px-4 bg-[#057DCD] text-white rounded-lg shadow-lg fade-in delay-300">
+                      <div className="rounded-full p-1 bg-[#54BEFF]">
+                        <div className="rounded-full p-1 bg-white">                          <img
+                            className="w-8 h-8 sm:w-10 sm:h-10 md:w-12 md:h-12 rounded-full"
+                            src={getProfilePictureUrl(student?.profile_picture || student?.profilePic || student?.profile_pic || student?.profilePicture, student?.fullName)}
+                            alt={(student && student.fullName) || "Student"}
+                          />
+                        </div>
+                      </div>
+                      <div className="flex-1">
+                        <p className="text-xs sm:text-sm md:text-base lg:text-lg font-semibold">
+                          {student && student.fullName ? student.fullName : student && student.firstName ? student.firstName : "Student Name"}
+                        </p>                        <p className="text-[0.65rem] sm:text-[0.7rem] md:text-xs lg:text-sm text-[#98d6ff]">
+                          {formatProgramWithSection(student)}
+                        </p>
+                      </div>
+                    </div>
+                  );
+                })
+              )}
             </div>
 
             {/* Controls Section */}
