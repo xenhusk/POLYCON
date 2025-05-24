@@ -116,17 +116,18 @@ export default function AdminPortal() {
   };
 
   const handleAddUser = async () => {
-    const password = role === 'student' ? `student${idNumber}` : `faculty${idNumber}`;
-
+    // Use the same payload as Signup, but set password to default
     const userData = {
       idNumber,
       firstName,
       lastName,
       email,
-      password,
-      role,
+      password: 'password123', // Default password for new users
+      role: role || 'student',
       department: department || undefined,
-      ...(role === 'student' && { program: program || undefined, sex, year_section: yearSection }),
+      program: program || undefined,
+      sex: sex || undefined,
+      year_section: yearSection || undefined,
     };
 
     // Remove empty/undefined fields
@@ -167,31 +168,31 @@ export default function AdminPortal() {
     setModalClosing(false);
     setIsEditLoading(false);
     try {
-        let departmentId = '';
-        if (user.department && typeof user.department === 'string') {
-            if (user.department.includes('departments/')) {
-                departmentId = user.department.split('/')[1];
-            } else {
-                const matchingDept = departments.find(dept => dept.departmentName === user.department);
-                departmentId = matchingDept ? matchingDept.departmentID : '';
+        // Find the department ID based on department name
+        let departmentId = null;
+        if (user.department && departments.length > 0) {
+            const deptObj = departments.find(d => d.name === user.department);
+            if (deptObj) {
+                departmentId = deptObj.id;
             }
         }
 
         setEditUser({
-            id: user.ID || user.id, // store PK for update
-            id_number: user.id_number || user.idNumber, // editable
+            id: user.ID,
+            id_number: user.idNumber,
             firstName: user.firstName,
             lastName: user.lastName,
             email: user.email,
             role: user.role,
-            department: user.departmentID || user.department || '',
+            department: departmentId, // Use the numeric ID
             program: user.programID || user.program || '',
             sex: user.sex || '',
             yearSection: user.year_section || ''
         });
 
-        if (user.role === 'student' && (user.departmentID || user.department)) {
-            await fetchPrograms(user.departmentID || user.department);
+        // Fetch programs if department is set
+        if (departmentId) {
+            await fetchPrograms(departmentId);
         }
     } catch (error) {
         console.error("Error updating user:", error);
@@ -203,15 +204,17 @@ export default function AdminPortal() {
 
   const handleUpdateUser = async () => {
     const updateData = {
-      ...editUser,
-      id: editUser.id, // always send PK for update
-      id_number: editUser.id_number, // send possibly updated id_number
-      department: editUser.department || undefined,
-      program: editUser.program || undefined,
-      year_section: editUser.yearSection || editUser.year_section || undefined,
+      id: editUser.id,
+      id_number: editUser.id_number,
+      firstName: editUser.firstName,
+      lastName: editUser.lastName,
+      email: editUser.email,
+      role: editUser.role,
+      department: editUser.department, // This will now be the numeric ID
+      program: editUser.program,
+      sex: editUser.sex,
+      year_section: editUser.yearSection
     };
-    delete updateData.yearSection;
-    Object.keys(updateData).forEach(key => (updateData[key] === undefined || updateData[key] === '') && delete updateData[key]);
 
     try {
       const response = await fetch('http://localhost:5001/account/update_user', {
@@ -223,21 +226,13 @@ export default function AdminPortal() {
         alert('User updated successfully');
         setEditUser(null);
         fetchAllUsers();
-        // Clear input fields
-        setIdNumber('');
-        setFirstName('');
-        setLastName('');
-        setEmail('');
-        setRole('');
-        setDepartment('');
-        setProgram('');
-        setSex('');
-        setYearSection('');
       } else {
-        alert('Failed to update user');
+        const data = await response.json();
+        alert(data.error || 'Failed to update user');
       }
     } catch (error) {
       console.error('Error updating user:', error);
+      alert('Error updating user');
     }
   };
 
@@ -274,6 +269,17 @@ export default function AdminPortal() {
       setShowStudentFields(false);
     }
   };
+
+  // When department changes in Add User modal, fetch programs just like Signup
+  useEffect(() => {
+    if (department) {
+      fetchPrograms(department);
+      setProgram(""); // Reset program when department changes
+    } else {
+      setPrograms([]);
+      setProgram("");
+    }
+  }, [department]);
 
   return (
     <div className="w-full min-h-screen p-6 items-center fade-in">
@@ -549,10 +555,8 @@ export default function AdminPortal() {
                   value={department}
                   onChange={async (e) => {
                     setDepartment(e.target.value);
-                    if (role === 'student') {
-                      await fetchPrograms(e.target.value);
-                      setProgram('');
-                    }
+                    setProgram("");
+                    await fetchPrograms(e.target.value);
                   }}
                   className="w-full border-2 border-[#0065A8] rounded-lg px-3 py-2 focus:outline-none focus:ring-2 focus:ring-[#54BEFF]"
                 >
@@ -562,44 +566,49 @@ export default function AdminPortal() {
                   ))}
                 </select>
               </div>
-              {/* Student-specific fields */}
-              {role === 'student' && department && (
-                <>
-                  <div>
-                    <label className="block text-sm font-medium text-gray-700 mb-2">Program</label>
-                    <select
-                      value={program}
-                      onChange={(e) => setProgram(e.target.value)}
-                      className="w-full border-2 border-[#0065A8] rounded-lg px-3 py-2 focus:outline-none focus:ring-2 focus:ring-[#54BEFF]"
-                    >
-                      <option value="">Select Program</option>
-                      {programs.map((prog) => (
-                        <option key={prog.programID} value={prog.programID}>{prog.programName}</option>
-                      ))}
-                    </select>
-                  </div>
-                  <div>
-                    <label className="block text-sm font-medium text-gray-700 mb-2">Sex</label>
-                    <select
-                      value={sex}
-                      onChange={(e) => setSex(e.target.value)}
-                      className="w-full border-2 border-[#0065A8] rounded-lg px-3 py-2 focus:outline-none focus:ring-2 focus:ring-[#54BEFF]"
-                    >
-                      <option value="">Select Sex</option>
-                      <option value="Male">Male</option>
-                      <option value="Female">Female</option>
-                    </select>
-                  </div>
-                  <div>
-                    <label className="block text-sm font-medium text-gray-700 mb-2">Year & Section</label>
-                    <input
-                      type="text"
-                      value={yearSection}
-                      onChange={(e) => setYearSection(e.target.value)}
-                      className="w-full border-2 border-[#0065A8] rounded-lg px-3 py-2 focus:outline-none focus:ring-2 focus:ring-[#54BEFF]"
-                    />
-                  </div>
-                </>
+              {/* Program (show if department is selected and role is student) */}
+              {role === 'student' || role === 'faculty' && department && (
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-2">Program</label>
+                  <select
+                    value={program}
+                    onChange={(e) => setProgram(e.target.value)}
+                    className="w-full border-2 border-[#0065A8] rounded-lg px-3 py-2 focus:outline-none focus:ring-2 focus:ring-[#54BEFF]"
+                  >
+                    <option value="">Select Program</option>
+                    {programs.map((prog) => (
+                      <option key={prog.programID} value={prog.programID}>{prog.programName}</option>
+                    ))}
+                  </select>
+                </div>
+              )}
+              {/* Sex (show if role is student) */}
+              {role === 'student' || role === 'faculty' && (
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-2">Sex</label>
+                  <select
+                    value={sex}
+                    onChange={(e) => setSex(e.target.value)}
+                    className="w-full border-2 border-[#0065A8] rounded-lg px-3 py-2 focus:outline-none focus:ring-2 focus:ring-[#54BEFF]"
+                  >
+                    <option value="">Select Sex</option>
+                    <option value="Male">Male</option>
+                    <option value="Female">Female</option>
+                  </select>
+                </div>
+              )}
+              {/* Year & Section (show if role is student) */}
+              {role === 'student' || role === 'faculty' && (
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-2">Year & Section</label>
+                  <input
+                    type="text"
+                    placeholder='e.g. 1A'
+                    value={yearSection}
+                    onChange={(e) => setYearSection(e.target.value)}
+                    className="w-full border-2 border-[#0065A8] rounded-lg px-3 py-2 focus:outline-none focus:ring-2 focus:ring-[#54BEFF]"
+                  />
+                </div>
               )}
             </div>
 
@@ -677,7 +686,7 @@ export default function AdminPortal() {
                 <input
                   type="text"
                   value={editUser.id_number}
-                  onChange={e => setEditUser({ ...editUser, id_number: e.target.value })}
+                  onChange={(e) => setEditUser({ ...editUser, id_number: e.target.value })}
                   className="w-full border-2 border-[#0065A8] rounded-lg px-3 py-2 focus:outline-none focus:ring-2 focus:ring-[#54BEFF]"
                 />
               </div>
@@ -705,7 +714,7 @@ export default function AdminPortal() {
               <div>
                 <label className="block text-sm font-medium text-gray-700 mb-2">Email</label>
                 <input
-                  type="text"
+                  type="email"
                   value={editUser.email}
                   onChange={(e) => setEditUser({ ...editUser, email: e.target.value })}
                   className="w-full border-2 border-[#0065A8] rounded-lg px-3 py-2 focus:outline-none focus:ring-2 focus:ring-[#54BEFF]"
@@ -720,35 +729,34 @@ export default function AdminPortal() {
                   className="w-full border-2 border-[#0065A8] rounded-lg px-3 py-2 focus:outline-none focus:ring-2 focus:ring-[#54BEFF]"
                 >
                   <option value="">Select Role</option>
-                  <option value="faculty">Faculty</option>
                   <option value="student">Student</option>
-                  <option value="admin">Admin</option>
+                  <option value="faculty">Faculty</option>
                 </select>
               </div>
               {/* Department */}
               <div>
                 <label className="block text-sm font-medium text-gray-700 mb-2">Department</label>
                 <select
-                  value={editUser.department}
+                  value={editUser.department || ''}
                   onChange={async (e) => {
                     const newDepartment = e.target.value;
-                    setEditUser({ ...editUser, department: newDepartment });
-                    if (editUser.role === "student") {
-                      await fetchPrograms(newDepartment);
+                    setEditUser({ ...editUser, department: newDepartment, program: '' });
+                    if (newDepartment) {
+                        await fetchPrograms(newDepartment);
                     }
                   }}
                   className="w-full border-2 border-[#0065A8] rounded-lg px-3 py-2 focus:outline-none focus:ring-2 focus:ring-[#54BEFF]"
                 >
                   <option value="">Select Department</option>
                   {departments.map((dept) => (
-                    <option key={dept.departmentID || dept.id} value={dept.departmentID || dept.id}>
-                      {dept.departmentName || dept.name}
+                    <option key={dept.id} value={dept.id}>
+                      {dept.name}
                     </option>
                   ))}
                 </select>
               </div>
-              {/* Programs (if student) */}
-              {editUser.role === "student" && editUser.department && (
+              {/* Program (only show for students) */}
+              {editUser.role === 'student' && (
                 <div>
                   <label className="block text-sm font-medium text-gray-700 mb-2">Program</label>
                   <select
@@ -758,13 +766,15 @@ export default function AdminPortal() {
                   >
                     <option value="">Select Program</option>
                     {programs.map((prog) => (
-                      <option key={prog.programID} value={prog.programID}>{prog.programName}</option>
+                      <option key={prog.programID} value={prog.programID}>
+                        {prog.programName}
+                      </option>
                     ))}
                   </select>
                 </div>
               )}
-              {/* Sex (if student) */}
-              {editUser.role === "student" && (
+              {/* Gender (only show for students) */}
+              {editUser.role === 'student' && (
                 <div>
                   <label className="block text-sm font-medium text-gray-700 mb-2">Gender</label>
                   <select
@@ -772,20 +782,21 @@ export default function AdminPortal() {
                     onChange={(e) => setEditUser({ ...editUser, sex: e.target.value })}
                     className="w-full border-2 border-[#0065A8] rounded-lg px-3 py-2 focus:outline-none focus:ring-2 focus:ring-[#54BEFF]"
                   >
-                    <option value="">Select Sex</option>
+                    <option value="">Select Gender</option>
                     <option value="Male">Male</option>
                     <option value="Female">Female</option>
                   </select>
                 </div>
               )}
-              {/* Year & Section (if student) */}
-              {editUser.role === "student" && (
+              {/* Year and Section (only show for students) */}
+              {editUser.role === 'student' && (
                 <div>
                   <label className="block text-sm font-medium text-gray-700 mb-2">Year & Section</label>
                   <input
                     type="text"
-                    value={editUser.yearSection || editUser.year_section}
+                    value={editUser.yearSection}
                     onChange={(e) => setEditUser({ ...editUser, yearSection: e.target.value })}
+                    placeholder="e.g. 4A"
                     className="w-full border-2 border-[#0065A8] rounded-lg px-3 py-2 focus:outline-none focus:ring-2 focus:ring-[#54BEFF]"
                   />
                 </div>
