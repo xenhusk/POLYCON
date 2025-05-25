@@ -84,11 +84,6 @@ def signup():
     if User.query.filter_by(id_number=id_number).first():
         return jsonify({'error': 'User with this ID number already exists'}), 400
 
-    # Check if ID number is already used
-    existing_id = User.query.filter_by(id_number=id_number).first()
-    if existing_id:
-        return jsonify({'error': 'ID number already registered'}), 400
-
     try:
         # Generate full name from first and last names
         full_name = f"{first_name.strip()} {last_name.strip()}"
@@ -110,9 +105,22 @@ def signup():
         
         db.session.add(new_user)
         db.session.commit()
-        
-        # If student role, create student record
-        if role == 'student' and program_id:
+
+        # For student role, validate additional required fields and create student record
+        if role == 'student':
+            if not all([program_id, sex, year_section]):
+                db.session.delete(new_user)
+                db.session.commit()
+                return jsonify({'error': 'Missing student-specific fields'}), 400
+
+            # Validate program exists and belongs to department
+            program = Program.query.filter_by(id=program_id, department_id=department_id).first()
+            if not program:
+                db.session.delete(new_user)
+                db.session.commit()
+                return jsonify({'error': 'Program not found for the given department'}), 400
+
+            # Create student record
             new_student = Student(
                 user_id=new_user.id,
                 program_id=program_id,
@@ -120,41 +128,18 @@ def signup():
                 year_section=year_section
             )
             db.session.add(new_student)
-            db.session.commit()
+            
+        # For faculty role, create faculty record
         elif role == 'faculty':
             new_faculty = Faculty(user_id=new_user.id)
             db.session.add(new_faculty)
-            db.session.commit()
+
+        db.session.commit()
+        return jsonify({'message': 'User registered successfully'}), 201
 
     except Exception as e:
         db.session.rollback()
         return jsonify({"error": str(e)}), 500
-
-    if role == 'student':
-        if not all([program_id, sex, year_section]):
-            db.session.delete(new_user)
-            db.session.commit()
-            return jsonify({'error': 'Missing student-specific fields'}), 400
-        # Validate program exists and belongs to department
-        program = Program.query.filter_by(id=program_id, department_id=department_id).first()
-        if not program:
-            db.session.delete(new_user)
-            db.session.commit()
-            return jsonify({'error': 'Program not found for the given department'}), 400
-        new_student = Student(
-            user_id=new_user.id,
-            program_id=program.id,
-            sex=sex,
-            year_section=year_section
-        )
-        db.session.add(new_student)
-        db.session.commit()
-    elif role == 'faculty':
-        new_faculty = Faculty(user_id=new_user.id)
-        db.session.add(new_faculty)
-        db.session.commit()
-
-    return jsonify({'message': 'User registered successfully'}), 201
 
 @account_bp.route('/get_user_role', methods=['GET'])
 def get_user_role():

@@ -192,14 +192,13 @@ const SemesterManagement = () => {
   const handleEndSemesterNow = async () => {
     if (!latestSemester) return;
     
-    // Show confirmation toast instead of window.confirm
     setError(
-      <div className="flex items-center justify-between bg-yellow-100 text-yellow-700 border-yellow-500 p-4 rounded-lg shadow-lg">
+      <div className="flex items-center justify-between bg-yellow-100 text-yellow-700 border-yellow-500 p-4 rounded">
         <span>Are you sure you want to end the current semester? This cannot be undone. </span>
         <div className="flex gap-2">
           <button
             onClick={async () => {
-              setIsEndingSemester(true); // Only set loading when confirmed
+              setIsEndingSemester(true);
               try {
                 const currentDate = format(new Date(), 'yyyy-MM-dd');
                 const response = await fetch('http://localhost:5001/semester/end', {
@@ -212,6 +211,14 @@ const SemesterManagement = () => {
                 });
                 
                 if (!response.ok) throw new Error('Failed to end semester');
+                
+                // After successfully ending semester, deactivate all teachers
+                const updatedTeachers = teachers.map(teacher => ({
+                  ...teacher,
+                  isActive: false
+                }));
+                setTeachers(updatedTeachers);
+                localStorage.setItem('teachers', JSON.stringify(updatedTeachers));
                 
                 setSchoolYear('');
                 setSemester('1st');
@@ -268,9 +275,9 @@ const SemesterManagement = () => {
         ? `This will end the semester immediately and deactivate teachers (scheduled end date: ${formattedDate}). Confirm?`
         : `Schedule semester to end on ${formattedDate}? Teachers and Students will remain active until that day.`;
 
-    // Show confirmation toast
+    // Show confirmation toast - Remove shadow-lg class and adjust styling
     setError(
-      <div className="flex items-center justify-between">
+      <div className="flex items-center justify-between bg-yellow-100 text-yellow-700 border-yellow-500 p-4 rounded">
         <span>{confirmationMessage}</span>
         <div className="flex gap-2">
           <button
@@ -500,8 +507,8 @@ const SemesterManagement = () => {
     <div className="p-6 fade-in flex flex-1 flex-col">
       {/* Toasts for specific messages outside the modal */}
       {(error === 'Please start a semester first before activating teachers' || error === 'Teacher activated successfully') && (
-        <div className={`fixed top-5 right-5 z-50 rounded-lg shadow-lg max-w-md P-4 
-          ${error === 'Teacher activated successfully' ? 'bg-green-100 text-green-700 border-l-4 p-4 border-green-500' : 'bg-yellow-100 text-yellow-700 border-l-4 border-yellow-500'}`}
+        <div className={`fixed top-5 right-5 z-50 rounded-lg shadow-lg max-w-md p-4 
+          ${error === 'Teacher activated successfully' ? 'bg-green-100 text-green-700' : 'bg-yellow-100 text-yellow-700'}`}
         >
           <div className="flex justify-between items-start">
             <div className="flex-1">{error}</div>
@@ -685,17 +692,17 @@ const SemesterManagement = () => {
               <div className="p-6">
                 {/* All other error/success messages inside the modal */}
                 {error && error !== 'Please start a semester first before activating teachers' && error !== 'Teacher activated successfully' && (
-                  <div className={`fixed top-5 right-5 z-50 rounded-lg shadow-lg max-w-md transform transition-all duration-500 ease-in-out 
-    ${
-      typeof error === 'string'
-        ? error.toLowerCase().includes('successfully')
-          ? 'bg-green-100 text-green-700 border-l-4 border-green-500'
-          : error.toLowerCase().includes('no active semester') || error.toLowerCase().includes('please start a semester') || error.toLowerCase().includes('please enter a complete')
-          ? 'bg-yellow-100 text-yellow-700 border-l-4 border-yellow-500'
-          : 'bg-red-100 text-red-700 border-l-4 border-red-500'
-        : ''
-    }
-  `}>
+                  <div className={`fixed top-5 right-5 z-50 rounded p-4 transform transition-all duration-500 ease-in-out 
+          ${
+            typeof error === 'string'
+              ? error.toLowerCase().includes('successfully')
+                ? 'bg-green-100 text-green-700'
+                : error.toLowerCase().includes('no active semester') || error.toLowerCase().includes('please start a semester') || error.toLowerCase().includes('please enter a complete')
+                ? 'bg-yellow-100 text-yellow-700'
+                : 'bg-red-100 text-red-700'
+              : ''
+          }
+        `}>
                     <div className="flex justify-between items-start">
                       <div className="flex-1">
                         {error}
@@ -708,7 +715,6 @@ const SemesterManagement = () => {
                           </button>
                         )}
                       </div>
-                      {/* No close button as requested */}
                     </div>
                   </div>
                 )}
@@ -788,8 +794,8 @@ const SemesterManagement = () => {
                         <input
                           type="text"
                           readOnly
-                          value={schoolYear && schoolYear.length === 4 && !isNaN(parseInt(schoolYear)) ? (parseInt(schoolYear) + 1).toString() : 'XXXX'}
-                          className="w-20 px-4 py-2 bg-gray-100 text-gray-700 text-center rounded-md border-gray-300"
+                          value={schoolYear && schoolYear.length === 4 && !isNaN(parseInt(schoolYear)) ? (parseInt(schoolYear) + 1).toString() : ''}
+                          className="w-20 px-4 py-2 bg-gray-100 text-gray-700 text-center rounded-md focus:outline-none border-gray-300 focus:ring-2 focus:ring-[#54BEFF]"
                         />
                         <span className="ml-2 text-gray-500 text-sm">(Enter year: XXXX)</span>
                       </div>

@@ -567,7 +567,7 @@ export default function AdminPortal() {
                 </select>
               </div>
               {/* Program (show if department is selected and role is student) */}
-              {role === 'student' || role === 'faculty' && department && (
+              {role === 'student' && department && (
                 <div>
                   <label className="block text-sm font-medium text-gray-700 mb-2">Program</label>
                   <select
@@ -583,7 +583,7 @@ export default function AdminPortal() {
                 </div>
               )}
               {/* Sex (show if role is student) */}
-              {role === 'student' || role === 'faculty' && (
+              {role === 'student' && (
                 <div>
                   <label className="block text-sm font-medium text-gray-700 mb-2">Sex</label>
                   <select
@@ -598,7 +598,7 @@ export default function AdminPortal() {
                 </div>
               )}
               {/* Year & Section (show if role is student) */}
-              {role === 'student' || role === 'faculty' && (
+              {role === 'student' && (
                 <div>
                   <label className="block text-sm font-medium text-gray-700 mb-2">Year & Section</label>
                   <input
