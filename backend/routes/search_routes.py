@@ -54,6 +54,7 @@ def search_enrollment_students():
             'lastName': user.last_name,
             'fullName': user.full_name or f"{user.first_name} {user.last_name}",
             'email': user.email,
+            'profile_picture': user.profile_picture,  # Added profile_picture
             'department': department_name,
             'program': program_name,
             'programName': program_name,  # Add programName for consistency with other endpoints

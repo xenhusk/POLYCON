@@ -19,7 +19,7 @@ def get_user_details():
         user = User.query.filter_by(id_number=id_number_param).first()
     else:
         return jsonify({'error': 'User identifier (userID, email, or idNumber) is required'}), 400
-
+        
     if not user:
         return jsonify({'error': 'User not found'}), 404
 
@@ -33,7 +33,7 @@ def get_user_details():
         'fullName': f'{user.first_name} {user.last_name}',
         'email': user.email,
         'role': user.role,
-        'profile_picture': user.profile_picture if user.profile_picture else 'https://avatar.iran.liara.run/public/boy?username=Ash', # Default avatar
+        'profile_picture': user.profile_picture,  # Frontend will handle default avatar
         'department': department_name,
         'department_id': user.department_id
     }

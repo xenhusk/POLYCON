@@ -49,7 +49,7 @@ function BookingTeacher({ closeModal }) {
 
   const checkTeacherStatus = async (teacherId) => {
     try {
-      const response = await fetch(`http://localhost:5001/user/teacher_status?teacherId=${teacherId}`);
+      const response = await fetch(`http://localhost:5001/user/get_user?idNumber=${teacherId}`);
       const data = await response.json();
       setIsTeacherActive(data.isActive);
       if (!data.isActive) {
@@ -133,16 +133,17 @@ function BookingTeacher({ closeModal }) {
         <div className="flex flex-wrap items-center gap-2 border border-gray-300 rounded-lg px-3 py-2">
           {selectedStudents.map(studentId => {
             const student = students.find(s => s.id === studentId);
-            const studentProfile = getProfilePictureUrl(student.profile_picture);
+            const studentName = student.fullName || `${student.firstName} ${student.lastName}`;
+            const studentProfile = getProfilePictureUrl(student.profile_picture, studentName);
             return student ? (
               <div key={studentId} className="bg-blue-100 text-blue-800 px-2 py-1 rounded flex items-center">
-                <img 
-                  src={studentProfile} 
-                  alt="Profile" 
-                  className="rounded-full w-6 h-6 mr-1" 
+                <img
+                  src={studentProfile}
+                  alt={studentName}
+                  className="rounded-full w-6 h-6 mr-1"
                 />
-                <span>{student.firstName} {student.lastName}</span>
-                <button 
+                <span>{studentName}</span>
+                <button
                   onClick={() => setSelectedStudents(selectedStudents.filter(id => id !== studentId))}
                   className="ml-1 text-red-500"
                 >
@@ -164,28 +165,29 @@ function BookingTeacher({ closeModal }) {
           <ul className="absolute z-10 bg-white border border-gray-300 rounded-lg mt-1 max-h-40 overflow-y-auto w-full shadow-md">
             {students
               .filter(student => {
-                const fullName = `${student.firstName} {student.lastName}`.toLowerCase();
-                return fullName.includes(searchTerm.toLowerCase());
+                const name = (student.fullName || `${student.firstName} ${student.lastName}`).toLowerCase();
+                return name.includes(searchTerm.toLowerCase());
               })
               .map(student => {
-                const studentProfile = getProfilePictureUrl(student.profile_picture);
+                const studentName = student.fullName || `${student.firstName} ${student.lastName}`;
+                const studentProfile = getProfilePictureUrl(student.profile_picture, studentName);
                 return (
-                  <li 
-                    key={student.id} 
+                  <li
+                    key={student.id}
                     onClick={() => {
                       if (!selectedStudents.includes(student.id)) {
                         setSelectedStudents([...selectedStudents, student.id]);
                       }
                       setSearchTerm(''); // Clear search term after selection
-                    }} 
+                    }}
                     className="px-3 py-2 cursor-pointer hover:bg-gray-200 flex items-center"
                   >
-                    <img 
-                      src={studentProfile} 
-                      alt="Profile" 
-                      className="rounded-full w-6 h-6 mr-1" 
+                    <img
+                      src={studentProfile}
+                      alt={studentName}
+                      className="rounded-full w-6 h-6 mr-1"
                     />
-                    <span>{student.firstName} {student.lastName} ({student.program} {student.year_section})</span>
+                    <span>{studentName} ({student.program} {student.year_section})</span>
                   </li>
                 );
               })}

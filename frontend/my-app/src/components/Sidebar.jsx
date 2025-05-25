@@ -380,6 +380,12 @@ const Sidebar = ({ onExpandChange }) => {
     setShowNotifications(!showNotifications);
   };
 
+  // Derive display name and picture for avatar (initial or fetched)
+  const initialName = profile?.name || '';
+  const initialPic = profile?.profile_picture || profilePicture;  // from localStorage fallback
+  const displayName = userDetails?.fullName || initialName;
+  const displayPic = userDetails?.profile_picture || initialPic;
+
   return (
     <>
       {/* MOBILE: Standalone pointer when sidebar is closed */}
@@ -524,13 +530,11 @@ const Sidebar = ({ onExpandChange }) => {
                 }}
               >
                 <div className="rounded-full p-1 bg-white">
-                  <div className="relative">                    <img 
-                      src={userDetails?.profile_picture || 
-                           (userDetails ? 
-                              getProfilePictureUrl(null, `${userDetails.firstName} ${userDetails.lastName}`) : 
-                              profilePicture)} 
-                      alt="Profile" 
-                      className="rounded-full w-10 h-10"  
+                  <div className="relative">
+                    <img
+                      src={getProfilePictureUrl(displayPic, displayName)}
+                      alt={displayName || 'Profile'}
+                      className="rounded-full w-10 h-10"
                     />
                     <div className="absolute inset-0 bg-black bg-opacity-50 rounded-full opacity-0 group-hover:opacity-100 flex items-center justify-center transition-opacity duration-200">
                       <span className="text-white text-xs">Edit</span>
