@@ -226,7 +226,7 @@ export default function Programs() {
             <table className="w-full bg-white text-center table-fixed">
               <thead className="bg-[#057DCD] text-white sticky top-0 z-10">
                 <tr className="border-b align-middle">
-                  <th className="px-4 py-3">ID</th>
+                  {/* <th className="px-4 py-3">ID</th> */}
                   <th className="px-4 py-3">Program Name</th>
                   <th className="px-4 py-3 pl-2">Department</th>
                   <th className="pr-5">Actions</th>
@@ -240,9 +240,9 @@ export default function Programs() {
               {(isLoadingPrograms || isFiltering) ? (
                 Array.from({ length: 5 }).map((_, index) => (
                   <tr key={index} className="animate-pulse border-b h-[50px] align-middle">
-                    <td className="px-4 py-3">
+                    {/* <td className="px-4 py-3">
                       <div className="h-4 w-20 bg-gray-200 rounded mx-auto"></div>
-                    </td>
+                    </td> */}
                     <td className="px-4 py-3">
                       <div className="h-4 w-32 bg-gray-200 rounded mx-auto"></div>
                     </td>
@@ -261,7 +261,7 @@ export default function Programs() {
                   filteredPrograms.map((program) => {
                     return (
                       <tr key={program.id} className="border-b hover:bg-[#DBF1FF] h-[50px] align-middle">
-                        <td className="px-4 py-3">{program.id}</td>
+                        {/* <td className="px-4 py-3">{program.id}</td> */}
                         <td className="px-4 py-3">{program.programName}</td>
                         <td className="px-4 py-3">
                           {program.departmentName || 'Unknown'}

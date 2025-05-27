@@ -14,6 +14,7 @@ import ReactCrop from 'react-image-crop';
 import 'react-image-crop/dist/ReactCrop.css';
 import ProfilePictureUploader from './components/ProfilePictureUploader'; // added import
 import HomeTeacher from './components/HomeTeacher'; // added import
+import HomeStudent from './components/HomeStudent'; // Update import name and path
 import Programs from './components/Programs';
 import FinalDocument from './pages/finaldocument'; // add import for FinalDocument
 import History from './pages/History'; // add import for History
@@ -796,6 +797,7 @@ function App() {
                       <Route path="/department" element={<Departments />} /> {/* New route */}
                       <Route path="/preloader-test" element={<PreloaderTest />} /> {/* Add this line */}
                       <Route path="/homeadmin" element={<HomeAdmin />} /> 
+                      <Route path="/homestudent" element={<HomeStudent />} />
                       <Route path="/enrollment-test" element={<EnrollmentTestPage />} /> {/* new test route */}
                       <Route path="/semester-management" element={<SemesterManagement />} /> {/* Update this line */}
                       <Route path="/notification-test" element={<NotificationTester />} /> {/* Add this new route */}

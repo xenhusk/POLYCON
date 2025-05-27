@@ -209,7 +209,7 @@ export default function Departments() {
               {/* Fixed Table Header */}
               <thead className="bg-[#057DCD] text-white top-0 z-10">
                 <tr className="border-b">
-                  <th className="py-3 ">ID</th>
+                  {/* <th className="py-3 ">ID</th> */}
                   <th className=" py-3  ">Department Name</th>
                   <th className="pr-5">Actions</th>
                 </tr>
@@ -224,9 +224,9 @@ export default function Departments() {
                   // 🚀 Loading Skeleton with Pulse Animation
                   Array.from({ length: 5 }).map((_, index) => (
                     <tr key={index} className="animate-pulse border-b h-[50px] align-middle">
-                      <td className="px-4 py-3">
+                      {/* <td className="px-4 py-3">
                         <div className="h-4 w-20 bg-gray-200 rounded mx-auto"></div>
-                      </td>
+                      </td> */}
                       <td className="px-4 py-3">
                         <div className="h-4 w-32 bg-gray-200 rounded mx-auto"></div>
                       </td>
@@ -241,7 +241,7 @@ export default function Departments() {
                 ) : filteredDepartments.length > 0 ? (
                     filteredDepartments.map((department) => (
                       <tr key={department.id} className="border-b hover:bg-[#DBF1FF] h-[50px] align-middle">
-                        <td className="px-4 py-3">{department.id}</td>
+                        {/* <td className="px-4 py-3">{department.id}</td> */}
                         <td className="px-4 py-3">{department.name}</td>
                         <td className="px-4 py-3 text-center">
                           <div className="flex items-center justify-center space-x-3">

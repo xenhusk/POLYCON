@@ -212,9 +212,9 @@ const Sidebar = ({ onExpandChange }) => {
   // Update path mappings to include exact paths
   const menuPaths = {
     student: {
-      dashboard: '/dashboard',
+      homestudent: '/dashboard',
       appointments: '/appointments',
-      past: '/history',
+      history: '/history',
       grades: '/gradeview'
     },
     faculty: {
@@ -467,9 +467,9 @@ const Sidebar = ({ onExpandChange }) => {
 
         {userRole === 'student' && (
           <ul className="mt-2 space-y-3 relative">
-            {renderMenuItem("dashboard", HomeIcon, "Home")}
+            {renderMenuItem("homestudent", HomeIcon, "Home")}
             {renderMenuItem("appointments", UpcomingIcon, "Appointments")}
-            {renderMenuItem("past", PastIcon, "History")}
+            {renderMenuItem("history", PastIcon, "History")}
             {renderMenuItem("grades", GradesIcon, "Grades")}
           </ul>
         )}
@@ -478,7 +478,7 @@ const Sidebar = ({ onExpandChange }) => {
           <ul className="mt-2 space-y-3 relative"> {/* Changed from mt-6 to mt-2 */}
             {renderMenuItem("dashboard", HomeIcon, "Home")}
             {renderMenuItem("appointments", UpcomingIcon, "Appointments")}
-            {renderMenuItem("past", PastIcon, "History")}
+            {renderMenuItem("history", PastIcon, "History")}
             {renderMenuItem("classRecord", ClassRecorderIcon, "Class Record")}
             {renderMenuItem("comparative", ComparativeIcon, "Comparative Analysis")}
           </ul>

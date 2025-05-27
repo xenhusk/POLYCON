@@ -352,7 +352,7 @@ export default function AdminPortal() {
                         </tr>
                       ))
                     ) : (
-                      userList.map((u) => {
+                      userList.map((u) => { 
                         let departmentDisplay = u.department;
                         if (departmentDisplay && departments.length > 0) {
                           let deptObj = departments.find(d => 
