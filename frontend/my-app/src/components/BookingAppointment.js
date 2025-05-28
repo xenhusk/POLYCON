@@ -430,8 +430,8 @@ function BookingAppointment({ closeModal, role: propRole }) {
                     className="bg-[#397de2] text-white px-1 sm:px-2 py-1 rounded-full flex items-center gap-1 sm:gap-2 text-xs sm:text-sm mb-1"
                   >
                     <img
-                      src={getProfilePictureUrl(student.profile_picture)}
-                      alt="Profile"
+                      src={getProfilePictureUrl(student.profile_picture, `${student.firstName} ${student.lastName}`)}
+                      alt={`${student.firstName} ${student.lastName}`}
                       className="w-4 h-4 sm:w-5 sm:h-5 rounded-full"
                     />
                     <span className="max-w-[100px] sm:max-w-full truncate">
@@ -497,8 +497,8 @@ function BookingAppointment({ closeModal, role: propRole }) {
                           className="px-2 sm:px-4 py-2 hover:bg-gray-50 flex items-center gap-2 sm:gap-3 cursor-pointer"
                         >
                           <img
-                            src={getProfilePictureUrl(student.profile_picture)}
-                            alt="Profile"
+                            src={getProfilePictureUrl(student.profile_picture, `${student.firstName} ${student.lastName}`)}
+                            alt={`${student.firstName} ${student.lastName}`}
                             className="w-6 h-6 sm:w-8 sm:h-8 rounded-full"
                           />
                           <div>
@@ -559,8 +559,8 @@ function BookingAppointment({ closeModal, role: propRole }) {
                 {selectedTeacher && !teacherSearchTerm ? (
                   <div className="bg-[#397de2] text-white px-2 py-1 rounded-full flex items-center gap-2 text-xs sm:text-sm">
                     <img
-                      src={getProfilePictureUrl(selectedTeacherProfile)}
-                      alt="Teacher"
+                      src={getProfilePictureUrl(selectedTeacherProfile, selectedTeacherName)}
+                      alt={selectedTeacherName || 'Teacher'}
                       className="w-4 h-4 sm:w-5 sm:h-5 rounded-full"
                     />
                     <span className="max-w-[120px] sm:max-w-full truncate">{selectedTeacherName}</span>
@@ -631,8 +631,8 @@ function BookingAppointment({ closeModal, role: propRole }) {
                         className="px-2 sm:px-4 py-2 hover:bg-gray-50 flex items-center gap-2 sm:gap-3 cursor-pointer"
                       >
                         <img
-                          src={getProfilePictureUrl(teacher.profile_picture)}
-                          alt="Profile"
+                          src={getProfilePictureUrl(teacher.profile_picture, `${teacher.firstName} ${teacher.lastName}`)}
+                          alt={`${teacher.firstName} ${teacher.lastName}`}
                           className="w-6 h-6 sm:w-8 sm:h-8 rounded-full"
                         />
                         <div>
@@ -662,8 +662,8 @@ function BookingAppointment({ closeModal, role: propRole }) {
                     className="bg-[#397de2] text-white px-1 sm:px-2 py-1 rounded-full flex items-center gap-1 sm:gap-2 text-xs sm:text-sm mb-1"
                   >
                     <img
-                      src={getProfilePictureUrl(student.profile_picture)}
-                      alt="Profile"
+                      src={getProfilePictureUrl(student.profile_picture, `${student.firstName} ${student.lastName}`)}
+                      alt={`${student.firstName} ${student.lastName}`}
                       className="w-4 h-4 sm:w-5 sm:h-5 rounded-full"
                     />
                     <span className="max-w-[100px] sm:max-w-full truncate">
@@ -746,8 +746,8 @@ function BookingAppointment({ closeModal, role: propRole }) {
                           className="px-2 sm:px-4 py-2 hover:bg-gray-50 flex items-center gap-2 sm:gap-3 cursor-pointer"
                         >
                           <img
-                            src={getProfilePictureUrl(student.profile_picture)}
-                            alt="Profile"
+                            src={getProfilePictureUrl(student.profile_picture, `${student.firstName} ${student.lastName}`)}
+                            alt={`${student.firstName} ${student.lastName}`}
                             className="w-6 h-6 sm:w-8 sm:h-8 rounded-full"
                           />
                           <div>
