@@ -31,7 +31,7 @@ function BookingStudent({ closeModal }) {
     } else if (storedStudentID) {
       setStudentID(storedStudentID);
     }
-  }, []);
+  }, [location.state?.studentID]); // Added location.state?.studentID to dependency array
 
   useEffect(() => {
     fetch('http://localhost:5001/get_teachers')
@@ -48,7 +48,23 @@ function BookingStudent({ closeModal }) {
         console.error('Error fetching teachers:', error);
         setError('Failed to load teachers. Please try again later.');
       });
-  }, []);
+
+    // Fetch students
+    fetch('http://localhost:5001/get_students')
+      .then(response => response.json())
+      .then(data => {
+        setStudents(data);
+        if (data.length === 0) {
+          // Optionally set an error or handle empty student list
+          console.warn('No students found.');
+        }
+      })
+      .catch(error => {
+        console.error('Error fetching students:', error);
+        // Optionally set an error specific to student fetching
+        setError(prevError => prevError ? `${prevError} Failed to load students.` : 'Failed to load students. Please try again later.');
+      });
+  }, []); // Empty dependency array, so it runs once on mount
 
   return (
     <div className="p-8 bg-white rounded-lg">
