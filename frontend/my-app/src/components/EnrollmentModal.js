@@ -159,8 +159,8 @@ function EnrollmentModal({ closeModal }) {
                 className="bg-[#00D1B2] text-white px-1 sm:px-2 py-1 rounded-full flex items-center gap-1 sm:gap-2 text-xs sm:text-sm mb-1"
               >
                 <img
-                  src={getProfilePictureUrl(student.profile_picture, student.fullName)}
-                  alt={student.fullName}
+                  src={getProfilePictureUrl(student.profile_picture, `${student.firstName} ${student.lastName}`)}
+                  alt={`${student.firstName} ${student.lastName}`}
                   className="w-4 h-4 sm:w-5 sm:h-5 rounded-full"
                 />
                 <span className="max-w-[100px] sm:max-w-full truncate">
@@ -234,8 +234,8 @@ function EnrollmentModal({ closeModal }) {
                         }}
                       >
                         <img
-                          src={getProfilePictureUrl(student.profile_picture, student.fullName)}
-                          alt={student.fullName}
+                          src={getProfilePictureUrl(student.profile_picture, `${student.firstName} ${student.lastName}`)}
+                          alt={`${student.firstName} ${student.lastName}`}
                           className="w-6 h-6 sm:w-8 sm:h-8 rounded-full"
                         />
                         <div>

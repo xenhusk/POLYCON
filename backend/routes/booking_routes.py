@@ -8,7 +8,6 @@ booking_bp = Blueprint('booking_bp', __name__)
 @booking_bp.route('/get_bookings', methods=['GET'])
 def get_bookings():
     role = request.args.get('role')
-    # Accept both userID (primary key) or idNumber (unique string identifier)
     user_param = request.args.get('userID') or request.args.get('idNumber')
     status = request.args.get('status')  # Optional filter
 
@@ -17,23 +16,23 @@ def get_bookings():
 
     # Determine filtering key based on role
     uid = None
-     
+    
     # Fetch bookings based on role
     if role.lower() == 'faculty':
-        # teacher_id stored as id_number in Booking model
         bookings = Booking.query.filter_by(teacher_id=user_param)
         if status:
             bookings = bookings.filter(Booking.status == status)
         bookings = bookings.all()
     elif role.lower() == 'student':
-        # student_ids stored as list of User PKs; find user PK by id_number
         user = User.query.filter_by(id_number=user_param).first()
         if not user:
             return jsonify({"error": "Student user not found"}), 404
-        bookings = Booking.query.filter(Booking.student_ids.contains([user.id]))
+        # Fetch all bookings with the given status, then filter in Python
+        query = Booking.query
         if status:
-            bookings = bookings.filter(Booking.status == status)
-        bookings = bookings.all()
+            query = query.filter(Booking.status == status)
+        all_bookings = query.all()
+        bookings = [b for b in all_bookings if user.id in (b.student_ids or [])]
     elif role.lower() == 'admin':
         bookings = Booking.query
         if status:
