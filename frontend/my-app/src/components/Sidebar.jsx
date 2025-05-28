@@ -65,6 +65,14 @@ const Sidebar = ({ onExpandChange }) => {
   // Add the missing isMounted ref
   const isMounted = useRef(true);
   
+  // Logout handler to navigate to homepage
+  const handleLogoutCommand = () => {
+    // Additional cleanup for Sidebar state can be done here if necessary,
+    // e.g., resetting activeItem, isOpen, etc.
+    // For now, the main goal is navigation.
+    navigate('/');
+  };
+  
   // Add cleanup effect for isMounted
   useEffect(() => {
     return () => {
@@ -577,6 +585,8 @@ const Sidebar = ({ onExpandChange }) => {
         isVisible={showSettings} 
         onClose={() => setShowSettings(false)}
         position={settingsPosition}
+        onLogout={handleLogoutCommand} // Pass the logout handler
+        userEmail={userDetails?.email} // Pass userEmail if needed by SettingsPopup
       />
 
       {/* Photo Upload Modal */}
