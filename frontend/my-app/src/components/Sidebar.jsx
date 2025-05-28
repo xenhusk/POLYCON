@@ -134,12 +134,11 @@ const Sidebar = ({ onExpandChange }) => {
       fetch(`http://localhost:5001/user/get_user?email=${userEmail}`)
         .then(res => res.json())
         .then(data => {
-          // Construct full URL for profile picture
-          const picUrl = getProfilePictureUrl(data.profile_picture);
+          // Store raw profile_picture value
           setProfile({
             name: `${data.firstName} ${data.lastName}`,
             id: data.id || data.idNumber,
-            profile_picture: picUrl,
+            profile_picture: data.profile_picture, // MODIFIED: Store raw value
             role: userRole === 'faculty' ? 'Teacher' : 'Student'
           });
         })
@@ -156,7 +155,7 @@ const Sidebar = ({ onExpandChange }) => {
   // NEW: retrieve profile picture using the API-based placeholder logic
   useEffect(() => {
     const storedPic = localStorage.getItem('profile_picture');
-    setProfilePicture(getProfilePictureUrl(storedPic));
+    setProfilePicture(storedPic); // MODIFIED: Store raw value
   }, []);
 
   const fetchUserDetails = async () => {
@@ -168,7 +167,7 @@ const Sidebar = ({ onExpandChange }) => {
 
     try {
       const response = await fetch(`http://localhost:5001/user/get_user?email=${email}`);
-      let userData = await response.json();
+      let userData = await response.json(); // userData.profile_picture should be raw
       
       if (userRole === 'student' && studentID) {
         try {
@@ -202,12 +201,13 @@ const Sidebar = ({ onExpandChange }) => {
         }
       }
       
-      setUserDetails(userData);
-      // Update userDetails with full URL for picture
-      const fullPic = getProfilePictureUrl(userData.profile_picture);
-      setUserDetails({ ...userData, profile_picture: fullPic });
-      // Fallback for profilePicture state
-      setProfilePicture(fullPic);
+      // MODIFIED: Store raw profile_picture from userData
+      // The userData object from the response should already contain the raw profile_picture string (filename or null)
+      setUserDetails(userData); 
+      
+      // MODIFIED: Update profilePicture state with the raw value from userData
+      setProfilePicture(userData.profile_picture);
+
     } catch (error) {
       console.error('Error fetching user details:', error);
     }
