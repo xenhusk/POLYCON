@@ -300,28 +300,6 @@ CREATE TABLE public.programs (
 ALTER TABLE public.programs OWNER TO postgres;
 
 --
--- Name: programs_id_seq; Type: SEQUENCE; Schema: public; Owner: postgres
---
-
-CREATE SEQUENCE public.programs_id_seq
-    AS integer
-    START WITH 1
-    INCREMENT BY 1
-    NO MINVALUE
-    NO MAXVALUE
-    CACHE 1;
-
-
-ALTER SEQUENCE public.programs_id_seq OWNER TO postgres;
-
---
--- Name: programs_id_seq; Type: SEQUENCE OWNED BY; Schema: public; Owner: postgres
---
-
-ALTER SEQUENCE public.programs_id_seq OWNED BY public.programs.id;
-
-
---
 -- Name: semesters; Type: TABLE; Schema: public; Owner: postgres
 --
 
@@ -413,7 +391,7 @@ CREATE TABLE public.users (
     role character varying(50) NOT NULL,
     archived boolean,
     profile_picture character varying(255),
-    is_verified boolean DEFAULT false
+    is_verified boolean
 );
 
 
@@ -484,13 +462,6 @@ ALTER TABLE ONLY public.notifications ALTER COLUMN id SET DEFAULT nextval('publi
 
 
 --
--- Name: programs id; Type: DEFAULT; Schema: public; Owner: postgres
---
-
-ALTER TABLE ONLY public.programs ALTER COLUMN id SET DEFAULT nextval('public.programs_id_seq'::regclass);
-
-
---
 -- Name: semesters id; Type: DEFAULT; Schema: public; Owner: postgres
 --
 
@@ -525,27 +496,17 @@ fix_models_syntax
 --
 
 COPY public.bookings (id, subject, description, schedule, venue, status, teacher_id, student_ids, created_at, created_by) FROM stdin;
-7452f34e-4c46-47ad-9d97-8b3a2fc19707	Consultation		2025-05-24 01:18:00	B303	cancelled	22-3191-535	[3]	2025-05-24 01:18:21.697984	22-3191-535
-0f2a085c-0ddc-457d-8894-f763a6f8610b	Consultation		2025-05-24 03:56:00	B303	cancelled	22-3191-535	[3]	2025-05-24 03:56:29.480817	22-3191-535
-2d26b3be-3516-421f-ad57-2917c1d20cc9	Consultation		2025-05-24 04:02:00	B303	cancelled	22-3191-535	[3]	2025-05-24 04:02:53.900547	22-3191-535
-71b6dbad-f437-4e3a-a501-fd2b3fe60f96	Consultation		2025-05-24 04:06:00	B303	cancelled	22-3191-535	[3]	2025-05-24 04:06:31.350478	22-3191-535
-3bfaf740-9be6-45d4-8de3-92823b643352	Consultation		2025-05-24 04:14:00	asd	cancelled	22-3191-535	[3]	2025-05-24 04:14:20.759795	22-3191-535
-3f58f561-1007-4bcd-9754-db7c3aee2b52	Consultation		2025-05-24 19:16:00	B303	cancelled	22-3191-535	[3]	2025-05-24 19:16:49.041222	22-3191-535
-64a980d9-7cf8-48b7-82d4-3e58a5b8e0cd	Consultation		2025-05-24 19:17:00	b303	cancelled	22-3191-535	[3]	2025-05-24 19:17:37.033769	22-3191-535
-90ed0af7-da15-434e-b1ab-40ab7cbf33f7	Consultation		2025-05-24 19:32:00	B303	cancelled	22-3191-535	[3]	2025-05-24 19:35:16.713454	22-3191-535
-f43a7030-42e8-458c-8878-747a4f0da488	Consultation		2025-05-24 20:01:00	B303	cancelled	22-3191-535	[3]	2025-05-24 20:02:02.901811	22-3191-535
-eb5a06d6-8b9e-4674-8cc4-3b1af412cfbd	Consultation		2025-05-24 20:14:00	B303	cancelled	22-3191-535	[3]	2025-05-24 20:14:24.459413	22-3191-535
-4c5ec648-b7bb-464d-a2e3-9a8184594a31	Consultation		2025-05-24 20:34:00	B303	cancelled	22-3191-535	[3]	2025-05-24 20:35:04.157642	22-3191-535
-5aee3a52-5a02-4e9d-b19a-d64384335d35	Consultation		2025-05-24 20:40:00	B303	cancelled	22-3191-535	[3]	2025-05-24 20:40:20.926697	22-3191-535
-d7b01bc7-292a-400a-90b1-f5a29183646c	Consultation		2025-05-24 22:35:00	B303	cancelled	22-3191-535	[4, 3]	2025-05-24 22:35:29.784632	22-3191-535
-767692c3-380b-487d-baf9-65a788450fe9	Consultation		2025-05-24 23:03:00	B303	cancelled	22-3191-535	[3, 4]	2025-05-24 23:03:24.018192	22-3191-535
-7e5e23d4-9613-4ea8-8505-3cd2723e572f	Consultation		2025-05-24 23:34:00	B303	cancelled	22-3191-535	[3, 4]	2025-05-24 23:34:23.554231	22-3191-535
-1156544c-d5e9-4c8a-bd94-a240b4904cc0	Consultation		2025-05-28 09:39:00	B303	cancelled	22-3191-535	[3, 4]	2025-05-28 09:39:31.231825	22-3191-535
-187fb3db-5be8-4356-8c5e-f94ff9f064f1	Consultation		2025-05-28 09:57:00	B303	cancelled	22-3191-535	[3]	2025-05-28 09:57:58.243633	22-3191-535
-38add541-2dd3-4412-8ed2-a35e3e609c25	Consultation		2025-05-28 11:18:00	B303	cancelled	22-3191-535	[3]	2025-05-28 11:19:02.546745	22-3191-535
-69d0d854-0543-4cac-b9ad-7c767ae13db8	Consultation		2025-05-28 11:21:00	b303	cancelled	22-3191-535	[3]	2025-05-28 11:21:44.177179	22-3191-535
-f97ae99b-7c1f-415f-b57e-a28b2211799c	Consultation		2025-05-28 11:24:00	B303	cancelled	22-3191-535	[3]	2025-05-28 11:24:57.600782	22-3191-535
-d8b22f29-9eb5-4ed9-9449-fe6cab4c46a3	Consultation		2025-05-28 11:29:00	B303	cancelled	22-3191-535	[3]	2025-05-28 11:29:44.390275	22-3191-535
+BOOKING_SAMPLE_001	Academic Consultation	Discussion about project progress.	2025-05-31 13:04:48.658001	Consultation Room 1	pending	F2024002	[8]	2025-05-28 22:04:48.658007	S2024003
+BOOKING_SAMPLE_002	Career Advice	Discussion about upcoming exams.	2025-06-10 11:04:48.659002	Consultation Room 1	completed	F2024003	[7]	2025-05-28 22:04:48.658007	S2024002
+BOOKING_SAMPLE_003	Project Guidance	Discussion about upcoming exams.	2025-05-31 15:04:48.662563	Library Cubicle A	confirmed	F2024004	[9, 6, 12]	2025-05-28 22:04:48.658007	S2024001
+BOOKING_SAMPLE_004	Career Advice	Discussion about course material.	2025-06-27 08:04:48.663563	Library Cubicle A	confirmed	F2024002	[12]	2025-05-28 22:04:48.658007	S2024007
+BOOKING_SAMPLE_005	Academic Consultation	Discussion about course material.	2025-06-12 13:04:48.664562	Consultation Room 1	completed	F2024003	[10, 13]	2025-05-28 22:04:48.658007	S2024008
+BOOKING_SAMPLE_006	Thesis Discussion	Discussion about upcoming exams.	2025-06-15 15:04:48.664562	Faculty Room	completed	F2024002	[7]	2025-05-28 22:04:48.658007	S2024002
+BOOKING_SAMPLE_007	Project Guidance	Discussion about project progress.	2025-06-28 12:04:48.664562	Consultation Room 1	completed	F2024004	[10]	2025-05-28 22:04:48.658007	S2024005
+BOOKING_SAMPLE_008	Academic Consultation	Discussion about upcoming exams.	2025-06-20 12:04:48.664562	Consultation Room 1	completed	F2024001	[12, 13, 7]	2025-05-28 22:04:48.658007	S2024008
+BOOKING_SAMPLE_009	Career Advice	Discussion about course material.	2025-06-26 12:04:48.665562	Consultation Room 1	pending	F2024002	[8]	2025-05-28 22:04:48.658007	S2024003
+BOOKING_SAMPLE_010	Project Guidance	Discussion about course material.	2025-06-20 14:04:48.665562	Online Meeting	completed	F2024001	[6, 12]	2025-05-28 22:04:48.658007	S2024007
+9c9c27ed-0bb8-49f5-851c-f7ea85582539	Consultation		2025-05-28 22:43:00	B303	confirmed	22-3191-535	[6, 13, 8]	2025-05-28 22:43:37.119034	22-3191-535
 \.
 
 
@@ -554,6 +515,11 @@ d8b22f29-9eb5-4ed9-9449-fe6cab4c46a3	Consultation		2025-05-28 11:29:00	B303	canc
 --
 
 COPY public.consultation_sessions (id, session_date, duration, student_ids, summary, teacher_id, transcription, concern, action_taken, outcome, remarks, venue, audio_file_path, quality_score, quality_metrics, raw_sentiment_analysis, booking_id) FROM stdin;
+1	2025-06-10 11:04:48.659002	24 minutes	[7]	Summary of consultation for booking BOOKING_SAMPLE_002.	F2024003	Sample transcription of the session...	Discussed student's concern about X.	Advised student to Y.	Student understood the concept.	Productive session.	Consultation Room 1	\N	4.2	\N	\N	BOOKING_SAMPLE_002
+2	2025-06-12 13:04:48.664562	40 minutes	[10, 13]	Summary of consultation for booking BOOKING_SAMPLE_005.	F2024003	Sample transcription of the session...	Discussed student's concern about X.	Advised student to Y.	Student understood the concept.	Productive session.	Consultation Room 1	\N	3.4	\N	\N	BOOKING_SAMPLE_005
+3	2025-06-15 15:04:48.664562	47 minutes	[7]	Summary of consultation for booking BOOKING_SAMPLE_006.	F2024002	Sample transcription of the session...	Discussed student's concern about X.	Advised student to Y.	Student understood the concept.	Productive session.	Faculty Room	\N	\N	\N	\N	BOOKING_SAMPLE_006
+4	2025-06-28 12:04:48.664562	18 minutes	[10]	Summary of consultation for booking BOOKING_SAMPLE_007.	F2024004	Sample transcription of the session...	Discussed student's concern about X.	Advised student to Y.	Student understood the concept.	Productive session.	Consultation Room 1	\N	3.3	\N	\N	BOOKING_SAMPLE_007
+5	2025-06-20 12:04:48.664562	34 minutes	[12, 13, 7]	Summary of consultation for booking BOOKING_SAMPLE_008.	F2024001	Sample transcription of the session...	Discussed student's concern about X.	Advised student to Y.	Student understood the concept.	Productive session.	Consultation Room 1	\N	4.7	\N	\N	BOOKING_SAMPLE_008
 \.
 
 
@@ -562,8 +528,11 @@ COPY public.consultation_sessions (id, session_date, duration, student_ids, summ
 --
 
 COPY public.courses (id, code, name, credits, department_id, program_ids) FROM stdin;
-2	COSC2003	Introduction to Computing	3	1	{2,1}
-3	GEDC1002	Ethics	3	1	{2,1}
+1	IT101	Introduction to Programming	3	1	{1,2}
+2	CS201	Data Structures and Algorithms	3	1	{2}
+3	IT202	Database Management Systems	3	1	{1}
+4	ACC101	Basic Accounting	3	2	{3,4}
+5	ED101	Principles of Teaching	3	3	{5}
 \.
 
 
@@ -572,10 +541,9 @@ COPY public.courses (id, code, name, credits, department_id, program_ids) FROM s
 --
 
 COPY public.departments (id, name) FROM stdin;
-1	CICT
-2	CAS
-4	COEngineering
-3	COEducation
+1	College of Information Technology and Engineering
+2	College of Business and Accountancy
+3	College of Education
 \.
 
 
@@ -585,6 +553,10 @@ COPY public.departments (id, name) FROM stdin;
 
 COPY public.faculty (id, user_id, is_active) FROM stdin;
 1	2	t
+2	3	t
+3	4	t
+4	5	t
+5	15	t
 \.
 
 
@@ -593,6 +565,36 @@ COPY public.faculty (id, user_id, is_active) FROM stdin;
 --
 
 COPY public.grades (id, course_id, faculty_user_id, student_user_id, grade, period, school_year, semester, remarks, created_at, updated_at) FROM stdin;
+1	3	5	6	3.23	Midterm	2024-2025	1st	Failed	2025-05-28 22:04:48.637003	\N
+2	3	4	6	2.91	Final	2024-2025	1st	Passed	2025-05-28 22:04:48.637003	\N
+3	1	2	7	3.22	Midterm	2024-2025	1st	Failed	2025-05-28 22:04:48.637003	\N
+4	1	5	7	1.97	Final	2024-2025	1st	Passed	2025-05-28 22:04:48.637003	\N
+5	4	4	8	1.81	Midterm	2024-2025	1st	Passed	2025-05-28 22:04:48.637003	\N
+6	4	3	8	1.88	Final	2024-2025	1st	Passed	2025-05-28 22:04:48.637003	\N
+7	5	3	8	1.64	Midterm	2024-2025	1st	Passed	2025-05-28 22:04:48.637003	\N
+8	5	3	8	3.44	Final	2024-2025	1st	Failed	2025-05-28 22:04:48.637003	\N
+9	4	2	9	3.3	Midterm	2024-2025	1st	Failed	2025-05-28 22:04:48.637003	\N
+10	4	4	9	2.96	Final	2024-2025	1st	Passed	2025-05-28 22:04:48.637003	\N
+11	2	5	9	1.76	Midterm	2024-2025	1st	Passed	2025-05-28 22:04:48.637003	\N
+12	2	2	9	2.05	Final	2024-2025	1st	Passed	2025-05-28 22:04:48.637003	\N
+13	5	5	10	1.25	Midterm	2024-2025	1st	Passed	2025-05-28 22:04:48.637003	\N
+14	5	3	10	2.97	Final	2024-2025	1st	Passed	2025-05-28 22:04:48.637003	\N
+15	2	5	10	2.4	Midterm	2024-2025	1st	Passed	2025-05-28 22:04:48.637003	\N
+16	2	5	10	2.67	Final	2024-2025	1st	Passed	2025-05-28 22:04:48.637003	\N
+17	4	5	10	3.29	Midterm	2024-2025	1st	Failed	2025-05-28 22:04:48.637003	\N
+18	4	5	10	2.98	Final	2024-2025	1st	Passed	2025-05-28 22:04:48.637003	\N
+19	2	5	11	1.57	Midterm	2024-2025	1st	Passed	2025-05-28 22:04:48.637003	\N
+20	2	2	11	3.59	Final	2024-2025	1st	Failed	2025-05-28 22:04:48.637003	\N
+21	5	4	11	2.7	Midterm	2024-2025	1st	Passed	2025-05-28 22:04:48.637003	\N
+22	5	4	11	3.74	Final	2024-2025	1st	Failed	2025-05-28 22:04:48.637003	\N
+23	1	4	12	3.31	Midterm	2024-2025	1st	Failed	2025-05-28 22:04:48.637003	\N
+24	1	4	12	2	Final	2024-2025	1st	Passed	2025-05-28 22:04:48.637003	\N
+25	4	2	12	3.35	Midterm	2024-2025	1st	Failed	2025-05-28 22:04:48.637003	\N
+26	4	2	12	1.69	Final	2024-2025	1st	Passed	2025-05-28 22:04:48.637003	\N
+27	3	2	12	1.1	Midterm	2024-2025	1st	Passed	2025-05-28 22:04:48.637003	\N
+28	3	2	12	2.27	Final	2024-2025	1st	Passed	2025-05-28 22:04:48.637003	\N
+29	4	2	13	3.56	Midterm	2024-2025	1st	Failed	2025-05-28 22:04:48.637003	\N
+30	4	4	13	2.9	Final	2024-2025	1st	Passed	2025-05-28 22:04:48.637003	\N
 \.
 
 
@@ -601,6 +603,21 @@ COPY public.grades (id, course_id, faculty_user_id, student_user_id, grade, peri
 --
 
 COPY public.notifications (id, data, created_at) FROM stdin;
+1	{"user_id": 12, "message": "Sample notification 1: Your booking has been updated.", "type": "booking_update", "related_id": "BOOKING_SAMPLE_003", "read": true}	2025-05-28 22:04:48.683727
+2	{"user_id": 10, "message": "Sample notification 2: Your booking has been updated.", "type": "booking_update", "related_id": "BOOKING_SAMPLE_005", "read": false}	2025-05-28 22:04:48.683727
+3	{"user_id": 2, "message": "Sample notification 3: Your booking has been updated.", "type": "booking_update", "related_id": "BOOKING_SAMPLE_010", "read": true}	2025-05-28 22:04:48.683727
+4	{"user_id": 10, "message": "Sample notification 4: Your booking has been updated.", "type": "booking_update", "related_id": "BOOKING_SAMPLE_005", "read": false}	2025-05-28 22:04:48.683727
+5	{"user_id": 3, "message": "Sample notification 5: Your booking has been updated.", "type": "booking_update", "related_id": "BOOKING_SAMPLE_005", "read": false}	2025-05-28 22:04:48.683727
+6	{"user_id": 4, "message": "Sample notification 6: Your booking has been updated.", "type": "booking_update", "related_id": "BOOKING_SAMPLE_002", "read": false}	2025-05-28 22:04:48.683727
+7	{"user_id": 9, "message": "Sample notification 7: Your booking has been updated.", "type": "booking_update", "related_id": "BOOKING_SAMPLE_001", "read": true}	2025-05-28 22:04:48.683727
+8	{"user_id": 4, "message": "Sample notification 8: Your booking has been updated.", "type": "booking_update", "related_id": "BOOKING_SAMPLE_010", "read": false}	2025-05-28 22:04:48.683727
+9	{"user_id": 11, "message": "Sample notification 9: Your booking has been updated.", "type": "booking_update", "related_id": "BOOKING_SAMPLE_002", "read": false}	2025-05-28 22:04:48.683727
+10	{"user_id": 10, "message": "Sample notification 10: Your booking has been updated.", "type": "booking_update", "related_id": "BOOKING_SAMPLE_005", "read": false}	2025-05-28 22:04:48.683727
+11	{"user_id": 9, "message": "Sample notification 11: Your booking has been updated.", "type": "booking_update", "related_id": "BOOKING_SAMPLE_005", "read": true}	2025-05-28 22:04:48.683727
+12	{"user_id": 8, "message": "Sample notification 12: Your booking has been updated.", "type": "booking_update", "related_id": "BOOKING_SAMPLE_004", "read": false}	2025-05-28 22:04:48.683727
+13	{"user_id": 5, "message": "Sample notification 13: Your booking has been updated.", "type": "booking_update", "related_id": "BOOKING_SAMPLE_007", "read": false}	2025-05-28 22:04:48.683727
+14	{"user_id": 8, "message": "Sample notification 14: Your booking has been updated.", "type": "booking_update", "related_id": "BOOKING_SAMPLE_010", "read": false}	2025-05-28 22:04:48.683727
+15	{"user_id": 6, "message": "Sample notification 15: Your booking has been updated.", "type": "booking_update", "related_id": "BOOKING_SAMPLE_006", "read": false}	2025-05-28 22:04:48.683727
 \.
 
 
@@ -609,10 +626,11 @@ COPY public.notifications (id, data, created_at) FROM stdin;
 --
 
 COPY public.programs (id, name, department_id) FROM stdin;
-2	BSIT	1
-3	BSMath	3
-1	BSCS	1
-4	BSPsychology	2
+1	Bachelor of Science in Information Technology	1
+2	Bachelor of Science in Computer Science	1
+3	Bachelor of Science in Accountancy	2
+4	Bachelor of Science in Management Accounting	2
+5	Bachelor of Science in Education	3
 \.
 
 
@@ -621,6 +639,9 @@ COPY public.programs (id, name, department_id) FROM stdin;
 --
 
 COPY public.semesters (id, start_date, end_date, school_year, semester) FROM stdin;
+1	2024-08-01	2024-12-15	2024-2025	1st
+2	2025-01-15	2025-05-30	2024-2025	2nd
+3	2025-08-01	2025-12-15	2025-2026	1st
 \.
 
 
@@ -629,9 +650,15 @@ COPY public.semesters (id, start_date, end_date, school_year, semester) FROM std
 --
 
 COPY public.students (id, user_id, program_id, sex, year_section, is_enrolled, enrolled_by) FROM stdin;
-1	3	1	Male	3A	t	22-3191-535
-2	4	2	Male	3A	t	22-3191-535
-3	4	2	Male	3A	t	22-3191-535
+1	6	1	Female	BSIT-1A	t	F2024001
+2	7	2	Male	BSCS-1A	t	F2024001
+3	8	3	Male	BSA-2B	t	F2024001
+4	9	5	Female	BSED-3A	t	F2024001
+5	10	1	Male	BSIT-1B	t	F2024001
+6	11	2	Female	BSCS-2A	t	F2024001
+7	12	4	Male	BSMA-1A	t	F2024001
+8	13	5	Female	BSED-4A	t	F2024001
+9	14	1	Male	3A	f	\N
 \.
 
 
@@ -640,10 +667,21 @@ COPY public.students (id, user_id, program_id, sex, year_section, is_enrolled, e
 --
 
 COPY public.users (id, id_number, first_name, last_name, full_name, email, password, department_id, role, archived, profile_picture, is_verified) FROM stdin;
-1	22-2222-222	Clark Jim	Gabiota	Clark Jim Gabiota	gabiota.307132@wnu.sti.edu.ph	$2b$12$4mDp4IMTnYWb.9MwwJB4zu1LtxwiHIINNm9YXUzukLMcRS3Mlh4nC	1	admin	f	e54b05ac-e67c-4953-a3c8-5ad4b779917b.png	t
-2	22-3191-535	David Paul	Desuyo	David Paul Desuyo	desuyo.191535@wnu.sti.edu.ph	$2b$12$Ssyl58TBZhvYGA.w9wYuyeYtbKJ4tpVeQb/OvywYVthYb.Z.I4wCy	1	faculty	f	664c3536-e5d2-4512-a220-e782d6f2930a.png	t
-3	22-3191-534	David Paul	Desuyo	David Paul Desuyo	desuyo.191534@wnu.sti.edu.ph	$2b$12$c4mV.a76zCyzfUZWVfXu5uKHPeprz2Ys4UMg/0GFIwR5pYRZbB5SO	1	student	f	\N	t
-4	22-3191-666	Benmark	Desuyo	Benmark Desuyo	benmark.191666@wnu.sti.edu.ph	$2b$12$c6T2GzZS7egAyt5q/1gLyO2lOjtfXKtx7SPjDbOmrH9t8pqZZIKJi	1	student	f	f1b850b7-3622-41d9-b427-c353d4bfd226.png	t
+1	admin001	Admin	User	Admin User	admin@wnu.sti.edu.ph	$2b$12$OXy/GEwI.q04avGVYNRD8OdaoO2H9q/a82JkogFMrDPzkbgZel0aK	1	admin	f	\N	t
+2	F2024001	John	Doe	John Doe	john.doe@wnu.sti.edu.ph	$2b$12$drxHXvt30ArW2uarfnhmbu8aWsSpOvJef1NiqSReSeS5xlG4tp0Ym	1	faculty	f	\N	t
+3	F2024002	Jane	Smith	Jane Smith	jane.smith@wnu.sti.edu.ph	$2b$12$DR77HrpK2wuJtOWo6hVp9ujfYhwHq89w3CpNtGRgIuUgjKtJZlpF6	2	faculty	f	\N	t
+4	F2024003	Robert	Brown	Robert Brown	robert.brown@wnu.sti.edu.ph	$2b$12$/xaFSWnIaTJqRD4D5QxQce6Dr5RqiBfWVRhRNnF.fskv01eyMNx/S	3	faculty	f	\N	t
+5	F2024004	Emily	White	Emily White	emily.white@wnu.sti.edu.ph	$2b$12$UFXyYa3H/3bun3gpLjuwOefPF/cfxBAWCHs4qhGPuP3509ig.2rHu	1	faculty	f	\N	t
+6	S2024001	Alice	Johnson	Alice Johnson	alice.S2024001@wnu.sti.edu.ph	$2b$12$zdo9e.naxxLCmSkg3ekzD./D48SruHzuWKma8mPSNwfzI2qFG5jhG	1	student	f	\N	t
+7	S2024002	Bob	Williams	Bob Williams	bob.S2024002@wnu.sti.edu.ph	$2b$12$CvwoihoBIoyeP3glX0MwN.j1I5JR4QqaHVdoFe34/ACDSLAe..J/y	1	student	f	\N	t
+8	S2024003	Charlie	Davis	Charlie Davis	charlie.S2024003@wnu.sti.edu.ph	$2b$12$MHvqswJOKdnsAgBdnzeQEejm/zAYzmB3dSQGlWCsDveN6KuGTt7X6	2	student	f	\N	t
+9	S2024004	Diana	Miller	Diana Miller	diana.S2024004@wnu.sti.edu.ph	$2b$12$qbaaVCPFxmkaDutcZ4yhdOLyleYYT4Q71SB9qJ7UkRLX25TXgv2j.	3	student	f	\N	t
+10	S2024005	Edward	Wilson	Edward Wilson	edward.S2024005@wnu.sti.edu.ph	$2b$12$Ve4WYxSdZXnUjTw5UGPIfOWOe5USpgkBbkW4.0QqbTj8dGbwfydja	1	student	f	\N	t
+11	S2024006	Fiona	Garcia	Fiona Garcia	fiona.S2024006@wnu.sti.edu.ph	$2b$12$NjLyAzBFgt1Agj/rDMUmsuoXFJt8SARsoUnRVvO7o5xUR/Nu9n8m2	1	student	f	\N	t
+12	S2024007	George	Rodriguez	George Rodriguez	george.S2024007@wnu.sti.edu.ph	$2b$12$sqckg491Ih.0qGOvvQxAUeh4v/81l13wgv1Yoc5tOy2zQaYt2CN.2	2	student	f	\N	t
+13	S2024008	Hannah	Martinez	Hannah Martinez	hannah.S2024008@wnu.sti.edu.ph	$2b$12$0uRGowpLr6ULi.NJiS2n9uWj.6wUu3ZP6kPbuawBLf7Oapw0UnOEm	3	student	f	\N	t
+14	22-3191-534	David Paul	Desuyo	David Paul Desuyo	desuyo.191534@wnu.sti.edu.ph	$2b$12$pY8c/v99mzhfdBgO1EXg0Oe/pEhiZh17MsocnnQQcj3LBJ.OoiVGi	1	student	f	\N	t
+15	22-3191-535	David Paul	Desuyo	David Paul Desuyo	desuyo.191535@wnu.sti.edu.ph	$2b$12$oNreF1f0SDa6R.ADEPnPjOhff1OYiEEjEoKWHMYvkcppuU/6YX6DC	2	faculty	f	a3cbca33-bd75-4f83-a3f7-ac469bbc65f3.png	t
 \.
 
 
@@ -651,7 +689,7 @@ COPY public.users (id, id_number, first_name, last_name, full_name, email, passw
 -- Name: consultation_sessions_id_seq; Type: SEQUENCE SET; Schema: public; Owner: postgres
 --
 
-SELECT pg_catalog.setval('public.consultation_sessions_id_seq', 1, false);
+SELECT pg_catalog.setval('public.consultation_sessions_id_seq', 5, true);
 
 
 --
@@ -665,56 +703,49 @@ SELECT pg_catalog.setval('public.courses_id_seq', 5, true);
 -- Name: departments_id_seq; Type: SEQUENCE SET; Schema: public; Owner: postgres
 --
 
-SELECT pg_catalog.setval('public.departments_id_seq', 5, true);
+SELECT pg_catalog.setval('public.departments_id_seq', 3, true);
 
 
 --
 -- Name: faculty_id_seq; Type: SEQUENCE SET; Schema: public; Owner: postgres
 --
 
-SELECT pg_catalog.setval('public.faculty_id_seq', 1, true);
+SELECT pg_catalog.setval('public.faculty_id_seq', 4, true);
 
 
 --
 -- Name: grades_id_seq; Type: SEQUENCE SET; Schema: public; Owner: postgres
 --
 
-SELECT pg_catalog.setval('public.grades_id_seq', 1, false);
+SELECT pg_catalog.setval('public.grades_id_seq', 30, true);
 
 
 --
 -- Name: notifications_id_seq; Type: SEQUENCE SET; Schema: public; Owner: postgres
 --
 
-SELECT pg_catalog.setval('public.notifications_id_seq', 1, false);
-
-
---
--- Name: programs_id_seq; Type: SEQUENCE SET; Schema: public; Owner: postgres
---
-
-SELECT pg_catalog.setval('public.programs_id_seq', 1, false);
+SELECT pg_catalog.setval('public.notifications_id_seq', 15, true);
 
 
 --
 -- Name: semesters_id_seq; Type: SEQUENCE SET; Schema: public; Owner: postgres
 --
 
-SELECT pg_catalog.setval('public.semesters_id_seq', 1, false);
+SELECT pg_catalog.setval('public.semesters_id_seq', 3, true);
 
 
 --
 -- Name: students_id_seq; Type: SEQUENCE SET; Schema: public; Owner: postgres
 --
 
-SELECT pg_catalog.setval('public.students_id_seq', 3, true);
+SELECT pg_catalog.setval('public.students_id_seq', 10, true);
 
 
 --
 -- Name: users_id_seq; Type: SEQUENCE SET; Schema: public; Owner: postgres
 --
 
-SELECT pg_catalog.setval('public.users_id_seq', 4, true);
+SELECT pg_catalog.setval('public.users_id_seq', 15, true);
 
 
 --
