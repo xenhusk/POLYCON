@@ -3,6 +3,10 @@ from flask_cors import cross_origin
 from models import db, User, Program, Department, Student, Faculty # Ensure Student and Faculty are imported if needed by other routes
 from werkzeug.security import generate_password_hash, check_password_hash
 from extensions import bcrypt # Assuming you have bcrypt in extensions.py
+from services.email_service import send_verification_email
+from flask_jwt_extended import create_access_token, decode_token
+import datetime
+import uuid
 
 account_bp = Blueprint('account_bp', __name__)
 
@@ -24,7 +28,12 @@ def login():
     if not user:
         return jsonify({'error': 'Email not found'}), 401 # Or 404 depending on desired behavior
 
-    if not bcrypt.check_password_hash(user.password, password):
+    # Check if user is verified before allowing login
+    if not user.is_verified:
+        return jsonify({'error': 'Account not verified. Please check your email for verification instructions.'}), 403
+
+    # Use werkzeug.security's check_password_hash instead of bcrypt's
+    if not check_password_hash(user.password, password):
         return jsonify({'error': 'Incorrect password'}), 401
 
     # Login successful, prepare response
@@ -39,6 +48,7 @@ def login():
     
     if user.role == 'student':
         student_info = Student.query.filter_by(user_id=user.id).first()
+        response_data['is_verified'] = user.is_verified  # Add this line for frontend
         if student_info:
             response_data['studentId'] = student_info.id
             response_data['isEnrolled'] = student_info.is_enrolled
@@ -64,82 +74,130 @@ def login():
 @account_bp.route('/signup', methods=['POST'])
 def signup():
     data = request.json
+    email = data.get('email')
+    password = data.get('password')
     id_number = data.get('idNumber')
     first_name = data.get('firstName')
     last_name = data.get('lastName')
-    email = data.get('email')
-    password = data.get('password')
-    department_id = data.get('department')  # Frontend sends 'department'
-    program_id = data.get('program')  # Frontend sends program ID
+    department_id = data.get('department')
+    program_id = data.get('program')
     sex = data.get('sex')
     year_section = data.get('year_section')
-    role = data.get('role', 'student')  # Default to student if not specified
+    role = data.get('role', 'student')
 
     if not all([id_number, first_name, last_name, email, password, role, department_id]):
         return jsonify({'error': 'Missing required fields'}), 400
 
-    # Check if user already exists
+    if role == 'student' and not email.endswith('@wnu.sti.edu.ph'):
+        return jsonify({'error': 'Student email must end with @wnu.sti.edu.ph'}), 400
+
     if User.query.filter_by(email=email).first():
         return jsonify({'error': 'User with this email already exists'}), 400
     if User.query.filter_by(id_number=id_number).first():
         return jsonify({'error': 'User with this ID number already exists'}), 400
 
+    # Hash the password
+    hashed_password = bcrypt.generate_password_hash(password).decode('utf-8')
+
+    # Prepare data for token (do NOT include raw password)
+    token_data = {
+        'email': email,
+        'password': hashed_password,
+        'first_name': first_name,
+        'last_name': last_name,
+        'id_number': id_number,
+        'department_id': department_id,
+        'program_id': program_id,
+        'sex': sex,
+        'year_section': year_section,
+        'role': role
+    }    
+    import json
+    # Convert token_data to JSON string for the token
+    token_data_str = json.dumps(token_data)
+    # Generate token valid for 1 hour
+    token = create_access_token(identity=token_data_str, expires_delta=datetime.timedelta(hours=1))
+    verify_url = f"http://localhost:5001/account/verify?token={token}"
+    send_verification_email(email, verify_url)
+    return jsonify({'message': 'Verification email sent. Please check your email.'}), 200
+
+@account_bp.route('/verify', methods=['GET'])
+def verify_email():
+    token = request.args.get('token')
+    print(f"[DEBUG] /account/verify called with token: {token}")
+    if not token:
+        print("[ERROR] No token provided in request.")
+        return jsonify({'error': 'Verification token is required'}), 400
+    
     try:
-        # Generate full name from first and last names
-        full_name = f"{first_name.strip()} {last_name.strip()}"
+        import json
+        # First try to decode the token
+        decoded = decode_token(token)
+        print(f"[DEBUG] Decoded token: {decoded}")
+        print(f"[DEBUG] Decoded token type: {type(decoded)}")
         
-        # Hash the password
-        hashed_password = bcrypt.generate_password_hash(password).decode('utf-8')
+        # Get the identity string from the token
+        signup_data_str = decoded.get('sub', '') if isinstance(decoded, dict) else getattr(decoded, 'sub', '')
+        print(f"[DEBUG] Raw signup_data string: {signup_data_str}")
         
-        # Create new user
+        # Parse the JSON string back into a dictionary
+        try:
+            signup_data = json.loads(signup_data_str)
+            print(f"[DEBUG] Parsed signup_data: {signup_data}")
+        except json.JSONDecodeError as e:
+            print(f"[ERROR] Failed to parse signup data: {e}")
+            return jsonify({'error': 'Invalid token data format'}), 400
+
+        if not signup_data or not isinstance(signup_data, dict):
+            print(f"[ERROR] Invalid signup data format: {signup_data}")
+            return jsonify({'error': 'Invalid token data format'}), 400
+
+        # Check if user already exists
+        if User.query.filter_by(email=signup_data['email']).first():
+            print("[ERROR] User already exists or already verified.")
+            return jsonify({'error': 'User already exists or already verified.'}), 400
+
+        # Validate program exists and belongs to department
+        program = Program.query.filter_by(id=signup_data['program_id'], department_id=signup_data['department_id']).first()
+        print(f"[DEBUG] Program lookup result: {program}")
+        if not program:
+            print("[ERROR] Program not found for the given department.")
+            return jsonify({'error': 'Program not found for the given department'}), 400
+
+        # Create user in DB
         new_user = User(
-            id_number=id_number,
-            first_name=first_name,
-            last_name=last_name,
-            full_name=full_name,
-            email=email,
-            password=hashed_password,
-            department_id=department_id,
-            role=role
+            id_number=signup_data['id_number'],
+            first_name=signup_data['first_name'],
+            last_name=signup_data['last_name'],
+            full_name=f"{signup_data['first_name']} {signup_data['last_name']}",
+            email=signup_data['email'],
+            password=signup_data['password'],
+            department_id=signup_data['department_id'],
+            role=signup_data['role'],
+            is_verified=True
         )
-        
         db.session.add(new_user)
         db.session.commit()
+        print(f"[DEBUG] Created new user: {new_user}")
 
-        # For student role, validate additional required fields and create student record
-        if role == 'student':
-            if not all([program_id, sex, year_section]):
-                db.session.delete(new_user)
-                db.session.commit()
-                return jsonify({'error': 'Missing student-specific fields'}), 400
-
-            # Validate program exists and belongs to department
-            program = Program.query.filter_by(id=program_id, department_id=department_id).first()
-            if not program:
-                db.session.delete(new_user)
-                db.session.commit()
-                return jsonify({'error': 'Program not found for the given department'}), 400
-
-            # Create student record
+        # For student role, create student record
+        if signup_data['role'] == 'student':
             new_student = Student(
                 user_id=new_user.id,
-                program_id=program_id,
-                sex=sex,
-                year_section=year_section
+                program_id=signup_data['program_id'],
+                sex=signup_data['sex'],
+                year_section=signup_data['year_section']
             )
             db.session.add(new_student)
-            
-        # For faculty role, create faculty record
-        elif role == 'faculty':
-            new_faculty = Faculty(user_id=new_user.id)
-            db.session.add(new_faculty)
+            db.session.commit()
+            print(f"[DEBUG] Created new student: {new_student}")
 
-        db.session.commit()
-        return jsonify({'message': 'User registered successfully'}), 201
+        print("[DEBUG] Account verified and created successfully!")
+        return jsonify({'message': 'Account verified and created successfully!'}), 200
 
     except Exception as e:
-        db.session.rollback()
-        return jsonify({"error": str(e)}), 500
+        print(f"[ERROR] Exception in /account/verify: {e}")
+        return jsonify({'error': str(e)}), 400
 
 @account_bp.route('/get_user_role', methods=['GET'])
 def get_user_role():
@@ -334,5 +392,3 @@ def delete_user():
     user.archived = True
     db.session.commit()
     return jsonify({'message': 'User archived successfully'}), 200
-
-# Add other account-related routes here (e.g., signup, password reset if not in user_routes)

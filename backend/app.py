@@ -70,7 +70,7 @@ def create_app():
     app.register_blueprint(program_bp)
     app.register_blueprint(course_bp, url_prefix='/course') # Add this line
     app.register_blueprint(booking_bp, url_prefix='/bookings') # Add this line
-    app.register_blueprint(account_bp, url_prefix='/account') # Add this line
+    app.register_blueprint(account_bp, url_prefix='/account') # This ensures /account/verify is the route
     app.register_blueprint(enrollment_bp) # Register enrollment_bp
     app.register_blueprint(grade_bp) # Register grade_bp
     app.register_blueprint(homeadmin_bp) # Register homeadmin_bp

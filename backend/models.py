@@ -17,6 +17,7 @@ class User(db.Model):
     role = db.Column(db.String(50), nullable=False)
     archived = db.Column(db.Boolean, default=False)  # True = archived, False = active
     profile_picture = db.Column(db.String(255), nullable=True)
+    is_verified = db.Column(db.Boolean, default=False)  # For email verification
 
 class Department(db.Model):
     __tablename__ = 'departments'
