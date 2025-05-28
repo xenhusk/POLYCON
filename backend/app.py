@@ -38,11 +38,8 @@ from routes.settings_routes import settings_bp
 def create_app():
     app = Flask(__name__)
     # Enable CORS for all routes, allow all origins and credentials
-    CORS(app, 
-         origins=["http://localhost:3000", "http://127.0.0.1:3000", "*"], # Allows your frontend
-         supports_credentials=True,
-         allow_headers=["Content-Type", "Authorization", "X-Requested-With", "Accept", "Origin"], # Added more common headers
-         methods=["GET", "POST", "PUT", "DELETE", "OPTIONS"])
+    # Apply CORS to all routes for the React frontend
+    CORS(app, resources={r"/*": {"origins": ["http://localhost:3000"]}}, supports_credentials=True)
 
     # Initialize SocketIO with the Flask app
     socketio.init_app(app)
@@ -57,6 +54,10 @@ def create_app():
 
     with app.app_context():
         db.create_all()
+        # Ensure is_verified column exists for login
+        from sqlalchemy import text
+        db.session.execute(text("ALTER TABLE users ADD COLUMN IF NOT EXISTS is_verified BOOLEAN DEFAULT FALSE"))
+        db.session.commit()
         # Start the appointment reminder scheduler
         initialize_scheduler()
 
@@ -94,6 +95,15 @@ def create_app():
     @app.route('/uploads/<filename>')
     def uploaded_file(filename):
         return send_from_directory(app.config['UPLOADS_FOLDER'], filename)
+
+    # Explicitly set CORS headers on all responses
+    @app.after_request
+    def add_cors_headers(response):
+        response.headers['Access-Control-Allow-Origin'] = 'http://localhost:3000'
+        response.headers['Access-Control-Allow-Credentials'] = 'true'
+        response.headers['Access-Control-Allow-Headers'] = 'Content-Type,Authorization,X-Requested-With,Accept,Origin'
+        response.headers['Access-Control-Allow-Methods'] = 'GET, POST, PUT, DELETE, OPTIONS'
+        return response
 
     return app
 
