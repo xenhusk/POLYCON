@@ -229,7 +229,7 @@ const Sidebar = ({ onExpandChange }) => {
       dashboard: '/dashboard',
       classRecord: '/addgrade',
       appointments: '/appointments',
-      past: '/history',
+      history: '/history', // FIX: was 'past', should be 'history' to match menu item
       comparative: '/comparative-analysis'
     },
     admin: {

@@ -193,10 +193,7 @@ def store_consultation_data(): # Renamed function
 @consultation_bp.route('/get_history', methods=['GET'])
 def get_history():
     role = request.args.get('role')
-    user_id = request.args.get('userID') # This is expected to be the user's id_number
-
-    # Accept both userID and idNumber as query parameter for backward compatibility
-    user_id = request.args.get('userID') or request.args.get('idNumber') # This should be the user's id_number
+    user_id = request.args.get('userID') or request.args.get('idNumber')
 
     if not role or not user_id:
         return jsonify(error="Role and userID are required"), 400
@@ -205,29 +202,20 @@ def get_history():
     query = db.session.query(ConsultationSession).order_by(ConsultationSession.session_date.desc())
 
     if role.lower() == 'faculty':
-        # Find the User by id_number, then find the Faculty by user_id
         user = User.query.filter_by(id_number=user_id).first()
         if not user:
             return jsonify(error="Faculty user not found"), 404
-        # faculty_entry = Faculty.query.filter_by(user_id=user.id).first()
-        # if not faculty_entry:
-        #     return jsonify(error="Faculty entry not found for user"), 404
-        query = query.filter(ConsultationSession.teacher_id == user.id_number) # Assuming teacher_id in ConsultationSession stores id_number
-    
+        query = query.filter(ConsultationSession.teacher_id == user.id_number)
+        consultation_sessions = query.limit(20).all()
     elif role.lower() == 'student':
-        # Find the User by id_number
         user = User.query.filter_by(id_number=user_id).first()
         if not user:
             return jsonify(error="Student user not found"), 404
-        # Filter sessions where the student's user_id (actual PK) is in the student_ids list.
-        # student_ids in ConsultationSession stores a list of user_id (PKs)
-        query = query.filter(or_(*[ConsultationSession.student_ids.contains(student_user_id) for student_user_id in [user.id]]))
-
-
+        # Fetch all sessions, then filter in Python for those where user.id is in student_ids
+        all_sessions = query.limit(100).all()  # Increase limit if needed
+        consultation_sessions = [s for s in all_sessions if user.id in (s.student_ids or [])][:20]
     else:
         return jsonify(error="Invalid role specified"), 400
-
-    consultation_sessions = query.limit(20).all() # Limiting to 20 for now
 
     for session in consultation_sessions:
         session_dict = {
