@@ -28,7 +28,6 @@ from routes.homestudent_routes import homestudent_bp # Import homestudent_bp
 from routes.hometeacher_routes import hometeacher_bp # Import hometeacher_bp
 from routes.search_routes import search_bp # Import search_bp
 from routes.consultation_routes import consultation_bp
-from services.scheduler_service import initialize_scheduler
 from routes.polycon_analysis_routes import polycon_analysis_bp # Add this import
 from routes.comparative_routes import comparative_bp # Add this import
 from routes.profile_routes import profile_bp
@@ -59,7 +58,8 @@ def create_app():
         db.session.execute(text("ALTER TABLE users ADD COLUMN IF NOT EXISTS is_verified BOOLEAN DEFAULT FALSE"))
         db.session.commit()
         # Start the appointment reminder scheduler
-        initialize_scheduler()
+        from services.scheduler_service import initialize_scheduler  # Import here to avoid circular import
+        initialize_scheduler(app)  # Pass the Flask app instance
 
     # Register blueprints
     app.register_blueprint(health_bp)

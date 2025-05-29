@@ -1,5 +1,8 @@
 import React from 'react';
 import { useNavigate } from 'react-router-dom';
+import { getProfilePictureUrl } from '../utils/utils'; // Import profile picture util
+// Set API base URL for image loading
+const API_BASE_URL = process.env.REACT_APP_API_URL || 'http://localhost:5001';
 
 const HistoryItem = ({ session, className }) => {
   const navigate = useNavigate();
@@ -31,7 +34,7 @@ const HistoryItem = ({ session, className }) => {
       ? `${teacher.firstName} ${teacher.lastName}`
       : (typeof session.teacher_id === 'string' && session.teacher_id.split('/')?.pop()) || 'N/A';
   const teacherDept = teacher.department || 'N/A';
-  const teacherPic = teacher.profile_picture || '';
+  const teacherPicUrl = getProfilePictureUrl(teacher.profile_picture, teacherName);
 
   // For students, use detailed info if available; fallback to student_ids.
   const students = session.info && Array.isArray(session.info) && session.info.length > 0 
@@ -49,19 +52,21 @@ const HistoryItem = ({ session, className }) => {
         md-px:mb-4 sm-px:mb-3 xs:mb-2">
         <div>
           <div className="flex items-center">
-            {session.teacher?.profile_picture ? (
-              <img 
-                src={session.teacher.profile_picture} 
-                alt="Teacher" 
-                className="w-12 h-12 rounded-full mr-3 border-2 border-[#54BEFF]
-                  md-px:w-12 md-px:h-12 sm-px:w-10 sm-px:h-10 xs:w-8 xs:h-8
-                  md-px:mr-3 sm-px:mr-2 xs:mr-2" 
-              />
-            ) : (
-              <div className="w-12 h-12 rounded-full mr-3 bg-gray-200
-                md-px:w-12 md-px:h-12 sm-px:w-10 sm-px:h-10 xs:w-8 xs:h-8
-                md-px:mr-3 sm-px:mr-2 xs:mr-2"/>
-            )}
+            {session.teacher ? (
+              // Always render teacher image with placeholder fallback via util
+              (() => {
+                const url = getProfilePictureUrl(session.teacher.profile_picture, teacherName);
+                return (
+                  <img
+                    src={url}
+                    alt="Teacher"
+                    className="w-12 h-12 rounded-full mr-3 border-2 border-[#54BEFF]
+                      md-px:w-12 md-px:h-12 sm-px:w-10 sm-px:h-10 xs:w-8 xs:h-8
+                      md-px:mr-3 sm-px:mr-2 xs:mr-2" 
+                  />
+                );
+              })()
+            ) : null}
             <div>
               <h3 className="font-semibold text-[#0065A8] text-lg
                 md-px:text-base sm-px:text-sm xs:text-sm">
@@ -93,19 +98,14 @@ const HistoryItem = ({ session, className }) => {
                 return (
                   <div key={index} className="flex items-center bg-gray-50 rounded-full px-3 py-1
                     md-px:px-3 md-px:py-1 sm-px:px-2 sm-px:py-0.5 xs:px-2 xs:py-0.5">
-                    {student.profile_picture ? (
-                      <img 
-                        src={student.profile_picture} 
-                        alt="Student" 
-                        className="w-8 h-8 rounded-full mr-2 border-2 border-[#54BEFF]
-                          md-px:w-8 md-px:h-8 sm-px:w-7 sm-px:h-7 xs:w-6 xs:h-6
-                          md-px:mr-2 sm-px:mr-1.5 xs:mr-1.5"
-                      />
-                    ) : (
-                      <div className="w-8 h-8 rounded-full mr-2 bg-gray-200
+                    {/* Always render student image with placeholder via util */}
+                    <img
+                      src={getProfilePictureUrl(student.profile_picture, `${student.firstName} ${student.lastName}`)}
+                      alt="Student"
+                      className="w-8 h-8 rounded-full mr-2 border-2 border-[#54BEFF]
                         md-px:w-8 md-px:h-8 sm-px:w-7 sm-px:h-7 xs:w-6 xs:h-6
-                        md-px:mr-2 sm-px:mr-1.5 xs:mr-1.5"/>
-                    )}
+                        md-px:mr-2 sm-px:mr-1.5 xs:mr-1.5"
+                    />
                     <span className="text-gray-700 text-base
                       md-px:text-sm sm-px:text-xs xs:text-xs">
                       {student.firstName} {student.lastName}

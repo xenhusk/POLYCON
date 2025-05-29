@@ -48,8 +48,10 @@ def get_scheduler_info():
         "timestamp": datetime.datetime.now().isoformat()
     }
 
-def initialize_scheduler():
-    """Initialize the background scheduler for appointments reminders."""
+def initialize_scheduler(app):
+    """
+    Initialize the background scheduler for appointments reminders.
+    """
     # Create a daemon scheduler so it shuts down when the app exits
     scheduler = BackgroundScheduler(daemon=True)
     
@@ -143,23 +145,27 @@ def parse_booking_time(schedule_str):
     return parsed_time
 
 def check_appointments_1h():
-    """Check for appointments happening approximately 1 hour from now and send reminders"""
-    # Check for bookings ~1 hour ahead and send reminders
-    logger.info("Checking for appointments scheduled in 1 hour...")
-    now = datetime.datetime.now(pytz.UTC)
-    target = now + datetime.timedelta(hours=1)
-    start = target - datetime.timedelta(minutes=30)
-    end = target + datetime.timedelta(minutes=30)
-    bookings = Booking.query.filter(
-        Booking.status == 'confirmed',
-        Booking.schedule >= start,
-        Booking.schedule <= end
-    ).all()
-    for b in bookings:
-        try:
-            process_booking_reminder(b.id, 'reminder_1h')
-        except Exception as e:
-            logger.error(f"Error processing 1h reminder for booking {b.id}: {e}")
+    # Wrap job logic in the Flask app context
+    from flask import current_app
+    app = current_app._get_current_object()
+    with app.app_context():
+        """Check for appointments happening approximately 1 hour from now and send reminders"""
+        # Check for bookings ~1 hour ahead and send reminders
+        logger.info("Checking for appointments scheduled in 1 hour...")
+        now = datetime.datetime.now(pytz.UTC)
+        target = now + datetime.timedelta(hours=1)
+        start = target - datetime.timedelta(minutes=30)
+        end = target + datetime.timedelta(minutes=30)
+        bookings = Booking.query.filter(
+            Booking.status == 'confirmed',
+            Booking.schedule >= start,
+            Booking.schedule <= end
+        ).all()
+        for b in bookings:
+            try:
+                process_booking_reminder(b.id, 'reminder_1h')
+            except Exception as e:
+                logger.error(f"Error processing 1h reminder for booking {b.id}: {e}")
 
 def process_booking_reminder(booking_id, reminder_type):  # Simplify signature to booking_id and reminder_type
     """Process a single booking for reminder notifications"""

@@ -336,8 +336,7 @@ const DocumentTemplate = ({
                 Position / Program
                 </span>
             </td>
-            </tr>
-            {studentInfo &&
+            </tr>            {studentInfo &&
             studentInfo.map((student, index) => (
                 <tr key={index}>
                 <td
@@ -345,6 +344,7 @@ const DocumentTemplate = ({
                     padding: '5pt',
                     border: '1pt solid #000',
                     width: '270pt',
+                    textAlign: 'center' // Added for horizontal alignment
                     }}
                 >
                     <p
@@ -353,9 +353,10 @@ const DocumentTemplate = ({
                         color: '#000',
                         fontFamily: '"Times New Roman", serif',
                         fontSize: '11pt',
+                        paddingTop: '20pt'
                     }}
                     >
-                    {student.firstName} {student.lastName}
+                    {student.full_name || (student.firstName && student.lastName ? `${student.firstName} ${student.lastName}` : "Student Name")}
                     </p>
                 </td>
                 <td
@@ -384,6 +385,7 @@ const DocumentTemplate = ({
                 padding: '5pt',
                 border: '1pt solid #000',
                 width: '270pt',
+                textAlign: 'center' // Added for horizontal alignment
                 }}
             >
                 <p
@@ -392,10 +394,13 @@ const DocumentTemplate = ({
                     color: '#000',
                     fontFamily: '"Times New Roman", serif',
                     fontSize: '11pt',
+                    paddingTop: '20pt'
                 }}
-                >
-                {teacherInfo
-                    ? `${teacherInfo.firstName} ${teacherInfo.lastName}`
+                >                {teacherInfo
+                    ? (teacherInfo.full_name || 
+                       (teacherInfo.firstName && teacherInfo.lastName ? 
+                        `${teacherInfo.firstName} ${teacherInfo.lastName}` : 
+                        "Teacher Name"))
                     : 'Name of your Teacher/Adviser Here with his/her title'}
                 </p>
             </td>
@@ -413,10 +418,9 @@ const DocumentTemplate = ({
                     fontFamily: '"Times New Roman", serif',
                     fontSize: '11pt',
                 }}
-                >
-                {teacherInfo
+                >                {teacherInfo
                     ? teacherInfo.department || 'Position of Teacher / Name Program'
-                    : 'Position of Teacher / Name Program'} {teacherInfo.role}
+                    : 'Position of Teacher / Name Program'} {teacherInfo?.role || ''}
                 </p>
             </td>
             </tr>
