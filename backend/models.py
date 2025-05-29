@@ -43,6 +43,7 @@ class Student(db.Model):
     year_section = db.Column(db.String(50), nullable=False)
     is_enrolled = db.Column(db.Boolean, default=False)  # Track enrollment status
     enrolled_by = db.Column(db.String(50), nullable=True)  # Teacher ID who enrolled the student
+    program = db.relationship('Program', backref=db.backref('students', lazy=True)) # Add this line
 
 class Faculty(db.Model):
     __tablename__ = 'faculty'

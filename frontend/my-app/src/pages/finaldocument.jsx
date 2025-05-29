@@ -97,29 +97,46 @@ const FinalDocument = () => {
         }
         const response = await fetch(`http://localhost:5001/consultation/get_final_document?sessionID=${sessionID}`);
         const data = await response.json();
-        if (response.ok) {
-          const cleanString = str => str.replace(/^"|"$/g, "");
+        if (response.ok) {          const cleanString = str => str && typeof str === 'string' ? str.replace(/^"|"$/g, "") : "";
           setTranscription(cleanString(data.transcription || ""));
           setSummary(cleanString(data.summary || ""));
-          setAudioUrl(data.audio_url || "");
+            // Improved audio URL handling - create full URL if path is relative
+          const audioPath = data.audio_url || data.audio_file_path || "";
+          const fullAudioUrl = audioPath && !audioPath.startsWith('http') && !audioPath.startsWith('/uploads') 
+            ? `/uploads/${audioPath.split('/').pop()}` 
+            : audioPath;
+          setAudioUrl(fullAudioUrl);
+          
           setConcern(cleanString(data.concern || ""));
           setActionTaken(cleanString(data.action_taken || ""));
           setOutcome(cleanString(data.outcome || ""));
           setRemarks(cleanString(data.remarks || ""));
           setSessionDate(data.session_date || "");
-          setVenue(data.venue || "N/A");
-
-          // Use teacher_info directly if available, otherwise fall back to teacher_id fetch
+          setVenue(data.venue || "N/A");          // Use teacher_info directly if available, otherwise fall back to teacher_id fetch
           if (data.teacher_info) {
-            setTeacherInfo(data.teacher_info);
+            // Map data structure as needed for proper rendering
+            const formattedTeacherInfo = {
+              ...data.teacher_info,
+              firstName: data.teacher_info.full_name ? data.teacher_info.full_name.split(' ')[0] : '',
+              lastName: data.teacher_info.full_name ? 
+                data.teacher_info.full_name.split(' ').slice(1).join(' ') : ''
+            };
+            setTeacherInfo(formattedTeacherInfo);
           } else if (data.teacher_id) {
             const teacherId = data.teacher_id.split('/').pop();
             const teacherResponse = await fetch(`http://localhost:5001/user/get_user?id=${teacherId}`);
             setTeacherInfo(await teacherResponse.json());
-          }
-
-          // Use student_info directly if available, otherwise fall back to student_ids fetch
-          if (data.student_info && Array.isArray(data.student_info)) {
+          }          // Use students_info directly if available, otherwise fall back to student_info or student_ids
+          if (data.students_info && Array.isArray(data.students_info)) {
+            // Format each student record for proper rendering
+            const formattedStudentInfo = data.students_info.map(student => ({
+              ...student,
+              firstName: student.full_name ? student.full_name.split(' ')[0] : '',
+              lastName: student.full_name ? student.full_name.split(' ').slice(1).join(' ') : '',
+              year_section: student.year_section || ''
+            }));
+            setStudentInfo(formattedStudentInfo);
+          } else if (data.student_info && Array.isArray(data.student_info)) {
             setStudentInfo(data.student_info);
           } else if (data.student_ids && Array.isArray(data.student_ids)) {
             const studentPromises = data.student_ids.map(async (studentPath) => {
@@ -279,11 +296,29 @@ const FinalDocument = () => {
             </div>
           </div>
           {/* Controls */}
-          <div className="w-full p-4 rounded-lg flex items-center justify-between  ">
-            <div className="w-1/2">
-              <audio ref={audioRef} controls src={audioUrl} className="w-full fade-in delay-400">
-                Your browser does not support the audio element.
-              </audio> 
+          <div className="w-full p-4 rounded-lg flex items-center justify-between  ">          <div className="w-1/2">              {audioUrl ? (
+                <audio 
+                  ref={audioRef} 
+                  controls 
+                  src={audioUrl.startsWith('http') 
+                       ? audioUrl 
+                       : audioUrl.startsWith('/') 
+                         ? `http://localhost:5001${audioUrl}` 
+                         : `http://localhost:5001/uploads/${audioUrl}`} 
+                  className="w-full fade-in delay-400"
+                  onError={(e) => {
+                    console.error("Audio loading error:", e);
+                    // Try alternative URL format if the first one fails
+                    if (audioUrl.includes('/')) {
+                      e.target.src = `http://localhost:5001/uploads/${audioUrl.split('/').pop()}`;
+                    }
+                  }}
+                >
+                  Your browser does not support the audio element.
+                </audio>
+              ) : (
+                <p className="text-gray-600">No audio recording available</p>
+              )}
             </div>
             <div>     
               <button

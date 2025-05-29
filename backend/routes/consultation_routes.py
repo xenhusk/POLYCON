@@ -117,17 +117,17 @@ def store_consultation_data(): # Renamed function
             return jsonify(error=f"Missing or empty required field: {field}"), 400
     
     try:
-        # Validate student_ids format (should be a list of integers)
-        if not isinstance(data['student_ids'], list) or not all(isinstance(sid, int) for sid in data['student_ids']):
+        # Validate student_ids format (should be a list of strings)
+        if not isinstance(data['student_ids'], list) or not all(isinstance(sid, str) for sid in data['student_ids']):
             # If frontend sends comma-separated string of IDs, attempt to parse
             if isinstance(data['student_ids'], str):
                 try:
-                    parsed_ids = [int(sid.strip()) for sid in data['student_ids'].split(',') if sid.strip()]
+                    parsed_ids = [str(sid.strip()) for sid in data['student_ids'].split(',') if sid.strip()]
                     data['student_ids'] = parsed_ids
                 except ValueError:
-                    return jsonify(error="Invalid format for student_ids. Expected a list of integers or a comma-separated string of integers."), 400
+                    return jsonify(error="Invalid format for student_ids. Expected a list of strings or a comma-separated string of strings."), 400
             else:
-                 return jsonify(error="Invalid format for student_ids. Expected a list of integers."), 400
+                 return jsonify(error="Invalid format for student_ids. Expected a list of strings."), 400
         
         # Validate teacher_id (should be a string - id_number)
         if not isinstance(data['teacher_id'], str):
@@ -193,85 +193,115 @@ def store_consultation_data(): # Renamed function
 @consultation_bp.route('/get_history', methods=['GET'])
 def get_history():
     role = request.args.get('role')
-    user_id = request.args.get('userID') or request.args.get('idNumber')
+    user_identifier_param = request.args.get('userID') or request.args.get('idNumber') # This is the User.id_number string
 
-    if not role or not user_id:
-        return jsonify(error="Role and userID are required"), 400
+    if not role or not user_identifier_param:
+        return jsonify(error="Role and userID (or idNumber) are required"), 400
 
     sessions_data = []
     query = db.session.query(ConsultationSession).order_by(ConsultationSession.session_date.desc())
 
+    # Fetch the current user by their id_number
+    current_user = User.query.filter_by(id_number=user_identifier_param).first()
+    if not current_user:
+        # If the user is not found by id_number, this is the source of the 404 or incorrect data
+        return jsonify(error=f"User not found with ID Number: {user_identifier_param}"), 404
+
     if role.lower() == 'faculty':
-        user = User.query.filter_by(id_number=user_id).first()
-        if not user:
-            return jsonify(error="Faculty user not found"), 404
-        query = query.filter(ConsultationSession.teacher_id == user.id_number)
+        # ConsultationSession.teacher_id stores User.id_number
+        # So, we filter sessions where the teacher_id matches the current_user's id_number
+        query = query.filter(ConsultationSession.teacher_id == current_user.id_number)
         consultation_sessions = query.limit(20).all()
     elif role.lower() == 'student':
-        user = User.query.filter_by(id_number=user_id).first()
-        if not user:
-            return jsonify(error="Student user not found"), 404
-        # Fetch all sessions, then filter in Python for those where user.id is in student_ids
-        all_sessions = query.limit(100).all()  # Increase limit if needed
-        consultation_sessions = [s for s in all_sessions if user.id in (s.student_ids or [])][:20]
+        # ConsultationSession.student_ids stores a list of User id (PKs)
+        # So, we need to check if the current_user's PK (current_user.id) is in that list
+        all_sessions = query.limit(100).all() 
+        consultation_sessions = []
+        for s in all_sessions:
+            try:
+                # Ensure student_ids are treated as integers for comparison
+                student_pks_in_session = [int(sid) for sid in (s.student_ids or []) if sid is not None]
+                if current_user.id in student_pks_in_session:
+                    consultation_sessions.append(s)
+                if len(consultation_sessions) >= 20:
+                    break
+            except (ValueError, TypeError) as e: # Catch TypeError if sid is not string/int convertible
+                print(f"Warning: Session {s.id} contains non-integer or problematic student_id in student_ids list: {s.student_ids}. Error: {e}")
+                continue # Skip this session if student_ids are malformed
     else:
         return jsonify(error="Invalid role specified"), 400
 
     for session in consultation_sessions:
         session_dict = {
-            "session_id": session.id, # Use the actual primary key if it's an integer, or a specific session_id field if you have one
+            "session_id": session.id,
             "session_date": session.session_date.isoformat() if session.session_date else None,
             "duration": session.duration,
             "summary": session.summary or "N/A",
-            "concern": getattr(session, 'concern', "N/A"), # Assuming these might not exist directly
+            "concern": getattr(session, 'concern', "N/A"),
             "action_taken": getattr(session, 'action_taken', "N/A"),
             "outcome": getattr(session, 'outcome', "N/A"),
             "remarks": getattr(session, 'remarks', "N/A"),
-            "audio_url": getattr(session, 'audio_url', "N/A"),
+            "audio_url": getattr(session, 'audio_file_path', "N/A"), 
             "transcription": getattr(session, 'transcription', "N/A"),
             "teacher": {},
-            "info": [] # For student details
+            "info": [] 
         }
 
         # Fetch teacher details
-        if session.teacher_id: # Assuming teacher_id stores id_number of the teacher
+        if session.teacher_id: 
             teacher_user = User.query.filter_by(id_number=session.teacher_id).options(joinedload(User.department)).first()
             if teacher_user:
                 session_dict["teacher"] = {
                     "id": teacher_user.id,
                     "id_number": teacher_user.id_number,
                     "full_name": teacher_user.full_name,
+                    "firstName": teacher_user.first_name,
+                    "lastName": teacher_user.last_name,
                     "email": teacher_user.email,
-                    "department": teacher_user.department.name if teacher_user.department else "N/A"
+                    "department": teacher_user.department.name if teacher_user.department else "N/A",
+                    "profile_picture": teacher_user.profile_picture  # Store only filename
                 }
         
         # Fetch student details
         if session.student_ids and isinstance(session.student_ids, list):
-            for student_user_pk_id in session.student_ids: # student_ids stores list of User PKs
-                student_user = User.query.filter_by(id=student_user_pk_id)\
-                                         .options(joinedload(User.department))\
-                                         .first()
+            print(f"DEBUG: session.student_ids = {session.student_ids}")
+            for student_id_in_session_list in session.student_ids: 
+                if student_id_in_session_list is None: continue
+                # Try both PK and id_number
+                # First, try as PK (int)
+                student_user = None
+                try:
+                    student_pk_to_fetch = int(student_id_in_session_list)
+                    student_user = User.query.get(student_pk_to_fetch)
+                    print(f"DEBUG: Tried PK {student_pk_to_fetch}, found: {student_user}")
+                except (ValueError, TypeError):
+                    pass
+                # If not found, try as id_number (string)
+                if not student_user:
+                    student_user = User.query.filter_by(id_number=student_id_in_session_list).first()
+                    print(f"DEBUG: Tried id_number {student_id_in_session_list}, found: {student_user}")
                 if student_user:
-                    # Optionally, fetch Student specific details if needed (e.g., program)
-                    student_record = Student.query.filter_by(user_id=student_user.id).options(joinedload(Student.program_obj).joinedload(Program.department)).first()
+                    student_record = Student.query.filter_by(user_id=student_user.id).options(joinedload(Student.program).joinedload(Program.department)).first()
                     program_name = "N/A"
                     year_section = "N/A"
-                    if student_record and student_record.program_obj:
-                        program_name = student_record.program_obj.name
-                        # department_name = student_record.program_obj.department.name # If needed
+                    if student_record and student_record.program:
+                        program_name = student_record.program.name
                     if student_record:
                          year_section = student_record.year_section
-
-
                     session_dict["info"].append({
                         "id": student_user.id,
                         "id_number": student_user.id_number,
                         "full_name": student_user.full_name,
+                        "firstName": student_user.first_name,
+                        "lastName": student_user.last_name,
                         "email": student_user.email,
                         "department": student_user.department.name if student_user.department else "N/A",
                         "program": program_name,
-                        "year_section": year_section
+                        "year_section": year_section,
+                        "profile_picture": student_user.profile_picture  # Store only filename
                     })
+                else:
+                    print(f"DEBUG: No user found for student_id_in_session_list: {student_id_in_session_list}")
         
         sessions_data.append(session_dict)
 
@@ -306,6 +336,7 @@ def get_session():
         "remarks": session.remarks,
         "venue": session.venue,
         "audio_file_path": session.audio_file_path,
+        "audio_url": session.audio_file_path, # Added for frontend compatibility
         "quality_score": session.quality_score,
         "quality_metrics": session.quality_metrics,
         "raw_sentiment_analysis": session.raw_sentiment_analysis,
@@ -331,8 +362,8 @@ def get_session():
 
     # Fetch student details
     if session.student_ids and isinstance(session.student_ids, list):
-        for student_user_pk_id in session.student_ids: # List of User PKs
-            student_user = User.query.filter_by(id=student_user_pk_id).options(joinedload(User.department)).first()
+        for student_identifier in session.student_ids:  # id_number string
+            student_user = User.query.filter_by(id_number=student_identifier).options(joinedload(User.department)).first()
             if student_user:
                 student_record = Student.query.filter_by(user_id=student_user.id).options(joinedload(Student.program).joinedload(Program.department)).first()
                 program_name = "N/A"
@@ -360,8 +391,97 @@ def get_session():
     # This might be for re-populating the form if it's an existing session.
     # The get_session is primarily for viewing/loading, so let's stick to a clean structure.
     # The frontend can adapt or use the specific info from teacher_info and students_info.
-    # However, to maintain compatibility with how Session.js tries to set teacherId and studentIds state:
     session_dict["teacher_id"] = session.teacher_id # This is User.id_number
     session_dict["student_ids"] = session.student_ids # This is list of User PKs
+
+    return jsonify(session_dict), 200
+
+@consultation_bp.route('/get_final_document', methods=['GET'])
+def get_final_document():
+    session_id = request.args.get('sessionID')
+    if not session_id:
+        return jsonify(error="sessionID is required"), 400
+
+    try:
+        session_id = int(session_id)
+    except ValueError:
+        return jsonify(error="Invalid sessionID format"), 400
+
+    session = db.session.query(ConsultationSession).get(session_id)
+
+    if not session:
+        return jsonify(error="Consultation session not found"), 404
+
+    # Serialize session data (similar to get_history but for a single session)
+    session_dict = {
+        "id": session.id,
+        "session_date": session.session_date.isoformat() if session.session_date else None,
+        "duration": session.duration,
+        "summary": session.summary,
+        "transcription": session.transcription,
+        "concern": session.concern,
+        "action_taken": session.action_taken,
+        "outcome": session.outcome,
+        "remarks": session.remarks,
+        "venue": session.venue,
+        "audio_file_path": session.audio_file_path,
+        # Add audio_url for compatibility with frontend
+        "audio_url": session.audio_file_path,
+        "quality_score": session.quality_score,
+        "quality_metrics": session.quality_metrics,
+        "raw_sentiment_analysis": session.raw_sentiment_analysis,
+        "booking_id": session.booking_id,
+        "teacher_info": {},
+        "students_info": []
+    }
+
+    # Fetch teacher details
+    if session.teacher_id: # User.id_number
+        teacher_user = User.query.filter_by(id_number=session.teacher_id).options(joinedload(User.department)).first()
+        if teacher_user:
+            faculty_record = Faculty.query.filter_by(user_id=teacher_user.id).first()
+            session_dict["teacher_info"] = {
+                "user_id": teacher_user.id, # PK
+                "teacher_id": faculty_record.id if faculty_record else None, # Faculty table PK
+                "id_number": teacher_user.id_number,
+                "full_name": teacher_user.full_name,
+                "email": teacher_user.email,
+                "department": teacher_user.department.name if teacher_user.department else "N/A",
+                "profile_picture": getattr(teacher_user, 'profile_image_url', None), # Assuming profile_image_url field exists
+                "role": "faculty" # Adding role explicitly to avoid frontend errors
+            }
+
+    # Fetch student details
+    if session.student_ids and isinstance(session.student_ids, list):
+        for student_identifier in session.student_ids:  # id_number string
+            student_user = User.query.filter_by(id_number=student_identifier).options(joinedload(User.department)).first()
+            if student_user:
+                # Fixed: Remove the problematic joinedload with Student.program
+                student_record = Student.query.filter_by(user_id=student_user.id).first()
+                program_name = "N/A"
+                year_section = "N/A"
+                student_table_id = None # Student.id
+                if student_record:
+                    student_table_id = student_record.id
+                    year_section = student_record.year_section
+                    # Fixed: Get program info directly from Program table
+                    program = Program.query.get(student_record.program_id)
+                    if program:
+                        program_name = program.name
+                
+                session_dict["students_info"].append({
+                    "user_id": student_user.id, # PK
+                    "student_id": student_table_id, # Student table PK
+                    "id_number": student_user.id_number,
+                    "full_name": student_user.full_name,
+                    "email": student_user.email,
+                    "department": student_user.department.name if student_user.department else "N/A",
+                    "program": program_name,
+                    "year_section": year_section,
+                    "profile_picture": getattr(student_user, 'profile_image_url', None) # Assuming profile_image_url field exists
+                })
+    
+    session_dict["teacher_id"] = session.teacher_id
+    session_dict["student_ids"] = session.student_ids
 
     return jsonify(session_dict), 200
