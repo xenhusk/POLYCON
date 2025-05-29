@@ -1,5 +1,5 @@
 from flask import Blueprint, jsonify, request
-from models import Course, Department, Program, Faculty
+from models import Course, Department, Program, Faculty, User
 from extensions import db
 from sqlalchemy.orm import joinedload
 from sqlalchemy import and_
@@ -9,21 +9,33 @@ course_bp = Blueprint('course_bp', __name__, url_prefix='/course')
 @course_bp.route('/get_courses', methods=['GET'])
 def get_courses():
     try:
-        faculty_id = request.args.get('facultyID')
+        faculty_id_number = request.args.get('facultyID')
         query = Course.query.options(joinedload(Course.department))
-        if faculty_id:
-            faculty_member = Faculty.query.get(faculty_id)
-            if faculty_member and faculty_member.department_id:
-                query = query.filter(Course.department_id == faculty_member.department_id)
+        
+        if faculty_id_number:
+            # First find the user by their ID number
+            faculty_user = User.query.filter_by(id_number=faculty_id_number, role='faculty').first()
+            if not faculty_user:
+                return jsonify({"error": "Faculty not found"}), 404
+            
+            # Then find the faculty entry using the user's ID
+            faculty = Faculty.query.filter_by(user_id=faculty_user.id).first()
+            if not faculty:
+                return jsonify({"error": "Faculty record not found"}), 404
+                
+            if faculty_user.department_id:
+                # Filter courses by the faculty's department
+                query = query.filter(Course.department_id == faculty_user.department_id)
+        
         courses = query.all()
         result = []
         for course in courses:
             dept_name = course.department.name if course.department else None
-            # Query program names based on program_ids array
             program_names = []
             if course.program_ids:
                 program_objs = Program.query.filter(Program.id.in_(course.program_ids)).all()
                 program_names = [p.name for p in program_objs]
+            
             result.append({
                 'courseID': course.id,
                 'courseName': course.name,
@@ -33,7 +45,9 @@ def get_courses():
                 'department': dept_name,
                 'program': program_names
             })
+        
         return jsonify({"courses": result}), 200
+        
     except Exception as e:
         print(f"Error in /get_courses: {str(e)}")
         return jsonify({'error': f'Failed to fetch courses: {str(e)}'}), 500
