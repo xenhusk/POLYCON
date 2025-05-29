@@ -925,12 +925,10 @@ export default function AddGrade() {
               </div>
             </div>
           )}
-        </div>
-
-        {/* Table Section - Unified table structure */}
+        </div>        {/* Table Section - Unified table structure */}
         <div className="mt-4 shadow-md overflow-hidden rounded-lg fade-in delay-300 relative z-0">
           <div className="overflow-x-auto">
-            <div className="max-h-[500px] overflow-y-auto">
+            <div className="max-h-[320px] overflow-y-auto">
               <table
                 className="w-full bg-white text-center"
                 style={{ minWidth: "1200px" }}
@@ -986,9 +984,8 @@ export default function AddGrade() {
                           </div>
                         </td>
                       </tr>
-                    ))
-                  ) : filteredGrades.length > 0 ? (
-                    filteredGrades.map((gradeData) => {
+                    ))                  ) : filteredGrades.length > 0 ? (
+                    filteredGrades.slice(0, 5).map((gradeData) => {
                       const grade = sanitizeGrade(gradeData);
                       if (!grade) return null;
 

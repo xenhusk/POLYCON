@@ -35,26 +35,40 @@ def get_grades():
 @grade_bp.route('/add_grade', methods=['POST'])
 def add_grade():
     data = request.json
-    course_id = data.get('courseID')
+    course_code = data.get('courseID')  # This is the course code/id_number
     faculty_id = data.get('facultyID')
     student_id = data.get('studentID')
     grade_val = data.get('grade')
     period = data.get('period')
     school_year = data.get('school_year')
     semester = data.get('semester')
-    if not all([course_id, faculty_id, student_id, grade_val, period, school_year, semester]):
+    if not all([course_code, faculty_id, student_id, grade_val, period, school_year, semester]):
         return jsonify({"error": "Missing required fields"}), 400
     faculty_user = User.query.filter_by(id_number=faculty_id, role='faculty').first()
     student_user = User.query.filter_by(id_number=student_id, role='student').first()
-    if not faculty_user or not student_user:
-        return jsonify({"error": "Faculty or student not found"}), 404
+    
+    # Lookup course by ID or code
+    course = None
+    try:
+        course_id_int = int(course_code)
+        course = Course.query.get(course_id_int)
+    except (ValueError, TypeError):
+        course = Course.query.filter_by(code=course_code).first()
+    
+    # Validate faculty, student, and course separately for clearer errors
+    if not faculty_user:
+        return jsonify({"error": "Faculty not found"}), 404
+    if not student_user:
+        return jsonify({"error": "Student not found"}), 404
+    if not course:
+        return jsonify({"error": "Course not found"}), 404
     try:
         grade_float = float(grade_val)
     except ValueError:
         return jsonify({"error": "Invalid grade value"}), 400
     remarks = 'PASSED' if grade_float >= 75 else 'FAILED'
     new_grade = Grade(
-        course_id=course_id,
+        course_id=course.id,
         faculty_user_id=faculty_user.id,
         student_user_id=student_user.id,
         grade=grade_float,
@@ -76,15 +90,25 @@ def edit_grade():
     grade_obj = Grade.query.get(grade_id)
     if not grade_obj:
         return jsonify({"error": "Grade not found"}), 404
-    # Update fields
-    for field in ['courseID', 'facultyID', 'studentID', 'grade', 'period', 'school_year', 'semester']:
+    # Update fields with id_number lookups
+    if 'courseID' in data:
+        course = Course.query.filter_by(code=data['courseID']).first()
+        if not course:
+            return jsonify({"error": "Course not found"}), 404
+        grade_obj.course_id = course.id
+    if 'facultyID' in data:
+        faculty_user = User.query.filter_by(id_number=data['facultyID'], role='faculty').first()
+        if not faculty_user:
+            return jsonify({"error": "Faculty not found"}), 404
+        grade_obj.faculty_user_id = faculty_user.id
+    if 'studentID' in data:
+        student_user = User.query.filter_by(id_number=data['studentID'], role='student').first()
+        if not student_user:
+            return jsonify({"error": "Student not found"}), 404
+        grade_obj.student_user_id = student_user.id
+    for field in ['grade', 'period', 'school_year', 'semester']:
         if field in data:
-            setattr(grade_obj, 
-                    'course_id' if field=='courseID' else 
-                    'faculty_user_id' if field=='facultyID' else 
-                    'student_user_id' if field=='studentID' else 
-                    field,
-                    data[field])
+            setattr(grade_obj, field, data[field])
     # Recompute remarks if grade changed
     if 'grade' in data:
         try:
