@@ -5,21 +5,25 @@ const PerformanceRadarChart = ({ metricsData }) => {
   // Extract and prepare the data
   const { normalizedImprovement, averageEventImpact, consultationQuality } = metricsData;
   
+  // Ensure all values are numbers, not objects
+  const safeNormalizedImprovement = typeof normalizedImprovement === 'number' ? normalizedImprovement : 0;
+  const safeAverageEventImpact = typeof averageEventImpact === 'number' ? averageEventImpact : 0;
+  const safeConsultationQuality = typeof consultationQuality === 'number' ? consultationQuality : 0;
+  
   // Cap grade improvement at 0.5 and then double it for display
   // This makes it appear on the same scale as other metrics (0-1)
   // while actually representing a 0-50% range
-  const scaledImprovement = Math.min(0.5, normalizedImprovement || 0) * 2;
+  const scaledImprovement = Math.min(0.5, safeNormalizedImprovement) * 2;
   
   // Generate chart data
   const chartData = {
     labels: ['Grade Improvement', 'Academic Events', 'Consultation Quality'],
     datasets: [
       {
-        label: 'Student Performance',
-        data: [
+        label: 'Student Performance',        data: [
           scaledImprovement,
-          averageEventImpact || 0,
-          consultationQuality || 0
+          safeAverageEventImpact,
+          safeConsultationQuality
         ],
         backgroundColor: 'rgba(54, 162, 235, 0.2)',
         borderColor: 'rgb(54, 162, 235)',

@@ -1,5 +1,5 @@
 from flask import Blueprint, request, jsonify
-from models import db, Student, Grade # Assuming Grade model stores prelim, midterm, etc.
+from models import db, Student, Grade, User # Added User import
 # Add any other necessary models like AcademicEvent if you create one
 
 comparative_bp = Blueprint('comparative_bp', __name__, url_prefix='/comparative') # Added url_prefix
@@ -7,17 +7,22 @@ comparative_bp = Blueprint('comparative_bp', __name__, url_prefix='/comparative'
 @comparative_bp.route('/compare_student', methods=['POST'])
 def compare_student():
     data = request.get_json()
-    student_id = data.get('student_id') # This is Student.id
+    student_id_number = data.get('student_id') # This is now User.id_number (XX-XXXX-XXX)
     grades_input = data.get('grades') # e.g., {"prelim": 85, "midterm": 88, ...}
     academic_events_input = data.get('academic_events', []) # e.g., [{"name": "Quiz 1", "rating": "4"}]
 
-    if not student_id or not grades_input:
+    if not student_id_number or not grades_input:
         return jsonify({"error": "Missing student_id or grades"}), 400
 
     try:
-        student = Student.query.get(student_id)
-        if not student:
+        # Find student by id_number instead of Student.id
+        student_user = User.query.filter_by(id_number=student_id_number).first()
+        if not student_user:
             return jsonify({"error": "Student not found"}), 404
+            
+        student = Student.query.filter_by(user_id=student_user.id).first()
+        if not student:
+            return jsonify({"error": "Student record not found"}), 404
 
         # --- Placeholder for actual comparative analysis logic ---
         # This logic will depend heavily on how you define "comparative analysis"
@@ -56,9 +61,7 @@ def compare_student():
             finals = grades_input.get('finals')
             if prelim is not None and finals is not None:
                 improvement_percentage = (float(finals) - float(prelim)) / float(prelim) if float(prelim) > 0 else 0
-                normalized_improvement = min(0.5, max(0, improvement_percentage / 2)) # Scale and cap
-
-        # Placeholder for insights - this would come from more complex analysis
+                normalized_improvement = min(0.5, max(0, improvement_percentage / 2)) # Scale and cap        # Placeholder for insights - this would come from more complex analysis
         insights = [
             "Student shows consistent performance in exams.",
             "Participation in academic events correlates with good grades."
@@ -69,7 +72,7 @@ def compare_student():
             insights.append("No specific academic events provided for this analysis.")
 
         analysis_result = {
-            "student_id": student_id,
+            "student_id": student_id_number,
             "rating": rating,
             "overall_score": min(1.0, max(0, overall_score)), # Ensure score is between 0 and 1
             "normalized_improvement": normalized_improvement, # Capped at 0.5 by frontend later

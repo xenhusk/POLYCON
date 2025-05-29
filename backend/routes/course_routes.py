@@ -152,3 +152,23 @@ def delete_course(course_id):
         db.session.rollback()
         print(f"Error: {str(e)}")
         return jsonify({"error": str(e)}), 500
+
+@course_bp.route('/get_all', methods=['GET'])
+def get_all_courses():
+    """Return all courses with code and name for dropdowns/mapping."""
+    try:
+        courses = Course.query.all()
+        result = []
+        for course in courses:
+            result.append({
+                'courseID': course.id,
+                'courseName': course.name,
+                'name': course.name,  # Add for compatibility
+                'code': course.code,
+                'description': getattr(course, 'description', None),
+                'credits': course.credits
+            })
+        return jsonify(result), 200
+    except Exception as e:
+        print(f"Error in /get_all: {str(e)}")
+        return jsonify({'error': f'Failed to fetch all courses: {str(e)}'}), 500

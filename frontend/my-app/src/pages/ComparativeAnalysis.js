@@ -163,11 +163,27 @@ function ComparativeAnalysis() {
         course: ""
       });
       fetch(`http://localhost:5001/polycon-analysis/get_grades_by_period?${params}`)
-        .then(res => res.json())
-        .then(data => {
-          const courses = data.map(item => item.course);
-          const uniqueCourses = [...new Set(courses)];
-          setAvailableCourses(uniqueCourses);
+        .then(res => res.json())        .then(data => {
+          // Instead of just course name, fetch both code and name from the backend if possible
+          // But since backend returns only name, we need to map name to code using the course list
+          // We'll fetch all courses and match by name
+          fetch('http://localhost:5001/course/get_all')
+            .then(res2 => res2.json())
+            .then(allCourses => {
+              // allCourses should be an array of {code, courseName, ...}
+              const available = data.map(item => {
+                const found = allCourses.find(c => c.courseName === item.course);
+                return found ? { code: found.code, name: found.courseName } : { code: item.course, name: item.course };
+              });
+              // Remove duplicates by code
+              const uniqueCourses = available.filter((v,i,a) => a.findIndex(t => t.code === v.code) === i);
+              setAvailableCourses(uniqueCourses);
+            })
+            .catch(() => {
+              // fallback: just use name as code
+              const fallback = data.map(item => ({ code: item.course, name: item.course }));
+              setAvailableCourses(fallback);
+            });
         })
         .catch(err => console.error('Error fetching available courses:', err));
     } else {
@@ -217,11 +233,10 @@ function ComparativeAnalysis() {
   // Check if all required main fields are provided to display the analysis
   const allFieldsProvided =
     selectedSemester && selectedTeacher && selectedStudents.length === 1 && selectedCourse.trim() !== "";
-
   // Update function to add an academic event with a name and rating (1-5)
   const addAcademicEvent = () => {
     if (academicEventName && academicEventRating) {
-      setAcademicEvents([...academicEvents, { name: academicEventName, rating: academicEventRating }]);
+      setAcademicEvents([...academicEvents, { name: academicEventName, rating: parseInt(academicEventRating) }]);
       setAcademicEventName("");
       setAcademicEventRating("");
     }
@@ -251,15 +266,49 @@ function ComparativeAnalysis() {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify(payload)
-      })
-      .then(res => res.json())
+      })      .then(res => res.json())
       .then(data => {
+        console.log('API Response:', data);
+        // Ensure all numeric fields are actually numbers
+        data.normalized_improvement = parseFloat(data.normalized_improvement) || 0;
+        data.average_event_impact = parseFloat(data.average_event_impact) || 0;
+        data.consultation_quality = parseFloat(data.consultation_quality) || 0;
+        data.overall_score = parseFloat(data.overall_score) || 0;
+        data.baseline_factor = parseFloat(data.baseline_factor) || 0;
+        data.consistency_factor = parseFloat(data.consistency_factor) || 0;
+        
         // Cap the normalized improvement at 0.5
         data.normalized_improvement = Math.min(0.5, data.normalized_improvement);
+          // Ensure insights is an array of strings
+        if (data.insights && Array.isArray(data.insights)) {
+          data.insights = data.insights.map(insight => String(insight));
+        }
+        
+        // Ensure recommendations is an array of strings if present
+        if (data.recommendations && Array.isArray(data.recommendations)) {
+          data.recommendations = data.recommendations.map(rec => String(rec));
+        }
+        
+        // Ensure academic_events have proper string values
+        if (data.academic_events && Array.isArray(data.academic_events)) {
+          data.academic_events = data.academic_events.map(event => ({
+            ...event,
+            name: String(event.name || ''),
+            rating: parseInt(event.rating) || 0
+          }));
+        }
+        
         setAnalysisResult(data);
       })
       .catch(err => console.error('Error running comparative analysis:', err));
     }
+  };
+  // Helper function to display "N/A" for empty/null values
+  const displayValue = (value) => {
+    if (value === null || value === undefined || value === '' || value === 'null') {
+      return 'N/A';
+    }
+    return value;
   };
 
   // Function to generate colors for charts
@@ -328,11 +377,11 @@ function ComparativeAnalysis() {
               <tbody>
                 {grades.map((grade, idx) => (
                   <tr key={idx} className={idx % 2 === 0 ? "bg-white" : "bg-blue-50"}>
-                    <td className="border-b border-gray-200 px-4 py-3 font-medium">{grade.course}</td>
-                    <td className="border-b border-gray-200 px-4 py-3">{grade.Prelim}</td>
-                    <td className="border-b border-gray-200 px-4 py-3">{grade.Midterm}</td>
-                    <td className="border-b border-gray-200 px-4 py-3">{grade['Pre-Final']}</td>
-                    <td className="border-b border-gray-200 px-4 py-3 font-semibold">{grade.Final}</td>
+                    <td className="border-b border-gray-200 px-4 py-3 font-medium">{displayValue(grade.course)}</td>
+                    <td className="border-b border-gray-200 px-4 py-3">{displayValue(grade.Prelim)}</td>
+                    <td className="border-b border-gray-200 px-4 py-3">{displayValue(grade.Midterm)}</td>
+                    <td className="border-b border-gray-200 px-4 py-3">{displayValue(grade['Pre-Final'])}</td>
+                    <td className="border-b border-gray-200 px-4 py-3 font-semibold">{displayValue(grade.Final)}</td>
                   </tr>
                 ))}
               </tbody>
@@ -356,11 +405,11 @@ function ComparativeAnalysis() {
               >
                 <div className="flex justify-between mb-3">
                   <span className="font-bold text-[#0065A8]">{new Date(session.session_date).toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' })}</span>
-                  <span className="text-sm text-gray-500">Teacher: {session.teacher_name || "Unknown"}</span>
+                  <span className="text-sm text-gray-500">Teacher: {displayValue(session.teacher_name)}</span>
                 </div>
-                <p className="text-gray-700 mb-2"><span className="font-semibold">Student:</span> {session.student_name || "Unknown"}</p>
-                <p className="text-gray-700 mb-2"><span className="font-semibold">Concern:</span> {session.concern}</p>
-                <p className="text-gray-700"><span className="font-semibold">Outcome:</span> {session.outcome}</p>
+                <p className="text-gray-700 mb-2"><span className="font-semibold">Student:</span> {displayValue(session.student_name)}</p>
+                <p className="text-gray-700 mb-2"><span className="font-semibold">Concern:</span> {displayValue(session.concern)}</p>
+                <p className="text-gray-700"><span className="font-semibold">Outcome:</span> {displayValue(session.outcome)}</p>
               </div>
             ))}
           </div>
@@ -412,9 +461,8 @@ function ComparativeAnalysis() {
                         <span className="font-medium">{event.name}</span>
                         <div className="flex items-center mt-1">
                           <span className="text-sm text-gray-600">Rating:</span>
-                          <div className="ml-2 flex">
-                            {[...Array(5)].map((_, i) => (
-                              <svg key={i} xmlns="http://www.w3.org/2000/svg" className={`h-4 w-4 ${i < event.rating ? 'text-yellow-400' : 'text-gray-300'}`} viewBox="0 0 20 20" fill="currentColor">
+                          <div className="ml-2 flex">                            {[...Array(5)].map((_, i) => (
+                              <svg key={i} xmlns="http://www.w3.org/2000/svg" className={`h-4 w-4 ${i < parseInt(event.rating) ? 'text-yellow-400' : 'text-gray-300'}`} viewBox="0 0 20 20" fill="currentColor">
                                 <path d="M9.049 2.927c.3-.921 1.603-.921 1.902 0l1.07 3.292a1 1 0 00.95.69h3.462c.969 0 1.371 1.24.588 1.81l-2.8 2.034a1 1 0 00-.364 1.118l1.07 3.292c.3.921-.755 1.688-1.54 1.118l-2.8-2.034a1 1 0 00-1.175 0l-2.8 2.034c-.784.57-1.838-.197-1.539-1.118l1.07-3.292a1 1 0 00-.364-1.118L2.98 8.72c-.783-.57-.38-1.81.588-1.81h3.461a1 1 0 00.951-.69l1.07-3.292z" />
                               </svg>
                             ))}
@@ -474,7 +522,7 @@ function ComparativeAnalysis() {
               </div>
               <div className="p-6 space-y-4">
                 <div className="flex justify-between items-center">
-                  <p className="text-gray-700"><span className="font-semibold">Student ID:</span> {analysisResult.student_id}</p>
+                  <p className="text-gray-700"><span className="font-semibold">Student ID:</span> {displayValue(analysisResult.student_id)}</p>
                   <div className="flex items-center">
                     <span className="text-gray-700 mr-2">Rating:</span>
                     <span className={`px-3 py-1 rounded-full text-white text-sm font-medium ${
@@ -484,26 +532,25 @@ function ComparativeAnalysis() {
                       analysisResult.rating === "Satisfactory" ? "bg-yellow-500" :
                       "bg-red-500"
                     }`}>
-                      {analysisResult.rating}
+                      {displayValue(analysisResult.rating)}
                     </span>
                   </div>
                 </div>
-                
-                <div>
+                  <div>
                   <div className="flex justify-between mb-1">
                     <span className="text-gray-700 font-medium">Overall Score</span>
-                    <span className="text-gray-700 font-medium">{(analysisResult.overall_score * 100).toFixed(0)}%</span>
+                    <span className="text-gray-700 font-medium">{((analysisResult.overall_score || 0) * 100).toFixed(0)}%</span>
                   </div>
                   <div className="w-full bg-gray-200 rounded-full h-3">
                     <div 
                       className={`h-3 rounded-full ${
-                        analysisResult.overall_score >= 0.8 ? "bg-green-500" :
-                        analysisResult.overall_score >= 0.65 ? "bg-[#00D1B2]" :
-                        analysisResult.overall_score >= 0.5 ? "bg-blue-500" :
-                        analysisResult.overall_score >= 0.35 ? "bg-yellow-500" :
+                        (analysisResult.overall_score || 0) >= 0.8 ? "bg-green-500" :
+                        (analysisResult.overall_score || 0) >= 0.65 ? "bg-[#00D1B2]" :
+                        (analysisResult.overall_score || 0) >= 0.5 ? "bg-blue-500" :
+                        (analysisResult.overall_score || 0) >= 0.35 ? "bg-yellow-500" :
                         "bg-red-500"
                       }`}
-                      style={{ width: `${analysisResult.overall_score * 100}%` }}
+                      style={{ width: `${(analysisResult.overall_score || 0) * 100}%` }}
                     ></div>
                   </div>
                 </div>
@@ -514,19 +561,19 @@ function ComparativeAnalysis() {
                     <div>
                       <div className="flex justify-between text-sm mb-1">
                         <span>Baseline Factor</span>
-                        <span>{analysisResult.baseline_factor}</span>
+                        <span>{displayValue(analysisResult.baseline_factor)}</span>
                       </div>
                       <div className="w-full bg-gray-200 rounded-full h-2">
-                        <div className="bg-[#397de2] h-2 rounded-full" style={{ width: `${analysisResult.baseline_factor * 75}%` }}></div>
+                        <div className="bg-[#397de2] h-2 rounded-full" style={{ width: `${(analysisResult.baseline_factor || 0) * 75}%` }}></div>
                       </div>
                     </div>
                     <div>
                       <div className="flex justify-between text-sm mb-1">
                         <span>Consistency Factor</span>
-                        <span>{analysisResult.consistency_factor}</span>
+                        <span>{displayValue(analysisResult.consistency_factor)}</span>
                       </div>
                       <div className="w-full bg-gray-200 rounded-full h-2">
-                        <div className="bg-[#397de2] h-2 rounded-full" style={{ width: `${analysisResult.consistency_factor * 100}%` }}></div>
+                        <div className="bg-[#397de2] h-2 rounded-full" style={{ width: `${(analysisResult.consistency_factor || 0) * 100}%` }}></div>
                       </div>
                     </div>
                   </div>
@@ -543,14 +590,12 @@ function ComparativeAnalysis() {
                 <Bar 
                   data={{
                     labels: ['Prelim', 'Midterm', 'Pre-Finals', 'Finals'],
-                    datasets: [
-                      {
-                        label: 'Grade',
-                        data: [
-                          analysisResult.grades.prelim,
-                          analysisResult.grades.midterm,
-                          analysisResult.grades.prefinals,
-                          analysisResult.grades.finals
+                    datasets: [                      {
+                        label: 'Grade',                        data: [
+                          parseFloat(analysisResult.grades_summary?.prelim || 0),
+                          parseFloat(analysisResult.grades_summary?.midterm || 0),
+                          parseFloat(analysisResult.grades_summary?.prefinals || 0),
+                          parseFloat(analysisResult.grades_summary?.finals || 0)
                         ],
                         backgroundColor: ['#397de2', '#54BEFF', '#fc6969', '#00D1B2']
                       }
@@ -562,25 +607,27 @@ function ComparativeAnalysis() {
                       legend: {
                         display: false
                       }
-                    },
-                    scales: {
-                      y: {
+                    },                    scales: {                      y: {
                         beginAtZero: false,
-                        min: Math.max(0, Math.min(
-                          parseFloat(analysisResult.grades.prelim),
-                          parseFloat(analysisResult.grades.midterm),
-                          parseFloat(analysisResult.grades.prefinals),
-                          parseFloat(analysisResult.grades.finals)
-                        ) - 5)
+                        min: (() => {
+                          const grades = [
+                            parseFloat(analysisResult.grades_summary?.prelim || 0),
+                            parseFloat(analysisResult.grades_summary?.midterm || 0),
+                            parseFloat(analysisResult.grades_summary?.prefinals || 0),
+                            parseFloat(analysisResult.grades_summary?.finals || 0)
+                          ].filter(g => !isNaN(g));
+                          
+                          if (grades.length === 0) return 0;
+                          return Math.max(0, Math.min(...grades) - 5);
+                        })()
                       }
                     }
                   }}
-                />
-                <div className="mt-4 text-center p-3 bg-gray-50 rounded-lg">
+                />                <div className="mt-4 text-center p-3 bg-gray-50 rounded-lg">
                   <div className="text-lg font-semibold">
                     <span className="text-gray-700">Grade Improvement: </span>
-                    <span className={analysisResult.grade_improvement > 0 ? "text-green-600" : analysisResult.grade_improvement < 0 ? "text-red-600" : "text-gray-600"}>
-                      {analysisResult.grade_improvement > 0 ? "+" : ""}{analysisResult.grade_improvement} points
+                    <span className={(analysisResult.grade_improvement || 0) > 0 ? "text-green-600" : (analysisResult.grade_improvement || 0) < 0 ? "text-red-600" : "text-gray-600"}>
+                      {(analysisResult.grade_improvement || 0) > 0 ? "+" : ""}{displayValue(analysisResult.grade_improvement)} points
                     </span>
                   </div>
                 </div>
@@ -596,10 +643,10 @@ function ComparativeAnalysis() {
                 <div className="p-6">
                   <Pie 
                     data={{
-                      labels: analysisResult.academic_events.map(event => event.name || `Event ${analysisResult.academic_events.indexOf(event) + 1}`),
+                      labels: analysisResult.academic_events.map(event => displayValue(event.name) || `Event ${analysisResult.academic_events.indexOf(event) + 1}`),
                       datasets: [
                         {
-                          data: analysisResult.academic_events.map(event => event.rating),
+                          data: analysisResult.academic_events.map(event => parseInt(event.rating) || 0),
                           backgroundColor: generateColors(analysisResult.academic_events.length),
                           borderWidth: 1
                         }
@@ -623,7 +670,7 @@ function ComparativeAnalysis() {
                   />
                   <div className="mt-4 text-center p-3 bg-gray-50 rounded-lg">
                     <div className="text-lg font-semibold text-[#00D1B2]">
-                      Average Impact: {(analysisResult.average_event_impact * 5).toFixed(1)}/5
+                      Average Impact: {((analysisResult.average_event_impact || 0) * 5).toFixed(1)}/5
                     </div>
                   </div>
                 </div>
@@ -634,13 +681,12 @@ function ComparativeAnalysis() {
             <div className="bg-white rounded-xl shadow-md overflow-hidden">
               <div className="bg-[#0065A8] text-white p-4">
                 <h4 className="text-xl font-semibold">Performance Metrics</h4>
-              </div>
-              <div className="p-6">
+              </div>              <div className="p-6">
                 <PerformanceRadarChart 
                   metricsData={{
-                    normalizedImprovement: analysisResult.normalized_improvement,
-                    averageEventImpact: analysisResult.average_event_impact,
-                    consultationQuality: analysisResult.consultation_quality
+                    normalizedImprovement: analysisResult.normalized_improvement || 0,
+                    averageEventImpact: analysisResult.average_event_impact || 0,
+                    consultationQuality: analysisResult.consultation_quality || 0
                   }}
                 />
               </div>
@@ -651,9 +697,8 @@ function ComparativeAnalysis() {
               <div className="bg-[#0065A8] text-white p-4">
                 <h4 className="text-xl font-semibold">Academic Effectiveness Index</h4>
               </div>
-              <div className="p-6 text-center">
-                <div className="mb-4">
-                  <p className="text-3xl font-bold">{(analysisResult.overall_score * 100).toFixed(0)}%</p>
+              <div className="p-6 text-center">                <div className="mb-4">
+                  <p className="text-3xl font-bold">{((analysisResult.overall_score || 0) * 100).toFixed(0)}%</p>
                   <p className="text-sm text-gray-500 mt-1">Combined measure of grade improvement, academic engagement, and consultation effectiveness</p>
                 </div>
                 
@@ -672,8 +717,28 @@ function ComparativeAnalysis() {
                   </div>
                 </div>
               </div>
+            </div>          </div>
+          
+          {/* Insights Section */}
+          {analysisResult.insights && Array.isArray(analysisResult.insights) && analysisResult.insights.length > 0 && (
+            <div className="mt-8 bg-white rounded-xl shadow-md overflow-hidden">
+              <div className="bg-[#00D1B2] text-white p-4">
+                <h4 className="text-xl font-semibold">Analysis Insights</h4>
+              </div>
+              <div className="p-6">
+                <ul className="space-y-3">
+                  {analysisResult.insights.map((insight, index) => (
+                    <li key={index} className="flex items-start">
+                      <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5 text-[#00D1B2] mt-0.5 mr-2 flex-shrink-0" viewBox="0 0 20 20" fill="currentColor">
+                        <path fillRule="evenodd" d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zm-7-4a1 1 0 11-2 0 1 1 0 012 0zM9 9a1 1 0 000 2v3a1 1 0 001 1h1a1 1 0 100-2v-3a1 1 0 00-1-1H9z" clipRule="evenodd" />
+                      </svg>
+                      <span className="text-gray-700">{String(insight)}</span>
+                    </li>
+                  ))}
+                </ul>
+              </div>
             </div>
-          </div>
+          )}
           
           {/* Recommendations Section */}
           <div className="mt-8 bg-white rounded-xl shadow-md overflow-hidden">
@@ -688,7 +753,7 @@ function ComparativeAnalysis() {
                       <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5 text-[#0065A8] mt-0.5 mr-2 flex-shrink-0" viewBox="0 0 20 20" fill="currentColor">
                         <path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clipRule="evenodd" />
                       </svg>
-                      <span className="text-gray-700">{recommendation}</span>
+                      <span className="text-gray-700">{String(recommendation)}</span>
                     </li>
                   ))}
                 </ul>
@@ -799,8 +864,8 @@ function ComparativeAnalysis() {
                 >
                   <option value="">-- Choose a course --</option>
                   {availableCourses.map((course, index) => (
-                    <option key={index} value={course}>
-                      {course}
+                    <option key={index} value={course.code}>
+                      {course.name} ({course.code})
                     </option>
                   ))}
                 </select>
