@@ -99,15 +99,14 @@ export default function usePreload(isLoggedIn) {
           },
           staleTime: 1000 * 60 * 10, // 10 minutes
         }).then(() => updateProgress('courses')),
-        
-        // Task 5: Prefetch consultation history
+          // Task 5: Prefetch consultation history
         userId ? 
           queryClient.prefetchQuery({
             queryKey: ['consultation-history', userRole, userId],
             queryFn: async () => {
-              // Send idNumber param for backend to filter by id_number
+              // Use idNumber param only for backend to filter by id_number
               const res = await fetch(
-                `http://localhost:5001/consultation/get_history?role=${userRole}&userID=${userId}&idNumber=${userId}`
+                `http://localhost:5001/consultation/get_history?role=${userRole}&idNumber=${userId}`
               );
               if (!res.ok) throw new Error('Failed to fetch consultation history');
               return res.json();

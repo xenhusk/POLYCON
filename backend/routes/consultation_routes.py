@@ -193,18 +193,29 @@ def store_consultation_data(): # Renamed function
 @consultation_bp.route('/get_history', methods=['GET'])
 def get_history():
     role = request.args.get('role')
-    user_identifier_param = request.args.get('userID') or request.args.get('idNumber') # This is the User.id_number string
+    user_identifier_param = request.args.get('idNumber') or request.args.get('userID') # Prefer idNumber over userID
 
     if not role or not user_identifier_param:
-        return jsonify(error="Role and userID (or idNumber) are required"), 400
+        return jsonify(error="Role and idNumber (or userID) are required"), 400
 
     sessions_data = []
     query = db.session.query(ConsultationSession).order_by(ConsultationSession.session_date.desc())
 
     # Fetch the current user by their id_number
     current_user = User.query.filter_by(id_number=user_identifier_param).first()
+    
+    # If not found by id_number, try with primary key (although discouraged)
     if not current_user:
-        # If the user is not found by id_number, this is the source of the 404 or incorrect data
+        try:
+            pk = int(user_identifier_param)
+            current_user = User.query.filter_by(id=pk).first()
+            if current_user:
+                print(f"Warning: Used PK {pk} to find user instead of ID number. Using id_number={current_user.id_number}")
+        except (ValueError, TypeError):
+            pass
+    
+    if not current_user:
+        # If the user is not found, this is the source of the 404 or incorrect data
         return jsonify(error=f"User not found with ID Number: {user_identifier_param}"), 404
 
     if role.lower() == 'faculty':
@@ -213,21 +224,10 @@ def get_history():
         query = query.filter(ConsultationSession.teacher_id == current_user.id_number)
         consultation_sessions = query.limit(20).all()
     elif role.lower() == 'student':
-        # ConsultationSession.student_ids stores a list of User id (PKs)
-        # So, we need to check if the current_user's PK (current_user.id) is in that list
-        all_sessions = query.limit(100).all() 
-        consultation_sessions = []
-        for s in all_sessions:
-            try:
-                # Ensure student_ids are treated as integers for comparison
-                student_pks_in_session = [int(sid) for sid in (s.student_ids or []) if sid is not None]
-                if current_user.id in student_pks_in_session:
-                    consultation_sessions.append(s)
-                if len(consultation_sessions) >= 20:
-                    break
-            except (ValueError, TypeError) as e: # Catch TypeError if sid is not string/int convertible
-                print(f"Warning: Session {s.id} contains non-integer or problematic student_id in student_ids list: {s.student_ids}. Error: {e}")
-                continue # Skip this session if student_ids are malformed
+        # ConsultationSession.student_ids stores a list of User id_number strings
+        all_sessions = query.limit(100).all()
+        # Filter sessions where current_user.id_number is in student_ids list
+        consultation_sessions = [s for s in all_sessions if current_user.id_number in (s.student_ids or [])][:20]
     else:
         return jsonify(error="Invalid role specified"), 400
 

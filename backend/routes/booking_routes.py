@@ -3,16 +3,89 @@ from models import db, Booking, User, Student, Faculty
 from sqlalchemy.orm import joinedload
 from sqlalchemy import or_
 
-booking_bp = Blueprint('booking_bp', __name__)
+booking_bp = Blueprint('booking_bp', __name__, url_prefix='/bookings')
+
+# Helper function to safely emit Socket.IO events
+def emit_event(event_name, data):
+    """
+    Safe wrapper around socketio.emit that handles errors and version incompatibilities
+    """
+    try:
+        # Import flask_socketio directly to avoid circular imports
+        from flask_socketio import emit
+        from app import socketio
+        import traceback
+        
+        print(f"🔔 Emitting {event_name} event with data: {data}")
+        print(f"🔌 Socket.IO instance connected: {socketio}")
+        
+        # Get active Socket.IO clients
+        try:
+            if hasattr(socketio, 'server'):
+                eio = socketio.server.eio
+                print(f"🔌 Engine.IO clients: {eio.clients if hasattr(eio, 'clients') else 'Unknown'}")
+        except Exception as ce:
+            print(f"Error getting SocketIO clients: {ce}")
+        
+        success = False
+        
+        # Method 1: Use socketio instance directly
+        try:
+            socketio.emit(event_name, data)
+            print(f"✅ Socket.IO event '{event_name}' emitted successfully via socketio.emit")
+            success = True
+        except Exception as e1:
+            print(f"❌ Socket.IO emit method 1 failed: {str(e1)}")
+            print(traceback.format_exc())
+            
+            # Method 2: Try with namespace
+            try:
+                socketio.emit(event_name, data, namespace='/')
+                print(f"✅ Socket.IO event '{event_name}' emitted successfully via socketio.emit with namespace")
+                success = True
+            except Exception as e2:
+                print(f"❌ Socket.IO emit method 2 failed: {str(e2)}")
+                print(traceback.format_exc())
+                
+                # Method 3: Try native flask_socketio.emit with broadcast
+                try:
+                    emit(event_name, data, broadcast=True, namespace='/')
+                    print(f"✅ Socket.IO event '{event_name}' emitted successfully via flask_socketio.emit")
+                    success = True
+                except Exception as e3:
+                    print(f"❌ Socket.IO emit method 3 failed: {str(e3)}")
+                    print(traceback.format_exc())
+                    print(f"⚠️ All Socket.IO emit methods failed. Event '{event_name}' could not be emitted.")
+        
+        if not success:
+            # Try one more method - direct socketio emit to all clients
+            try:
+                # Direct socket emission to any connected clients
+                if hasattr(socketio, 'server') and hasattr(socketio.server, 'emit'):
+                    socketio.server.emit(event_name, data)
+                    print(f"✅ Socket.IO event '{event_name}' emitted via server.emit")
+                    success = True
+            except Exception as e4:
+                print(f"❌ Socket.IO direct server emit failed: {str(e4)}")
+                print(traceback.format_exc())
+                    
+        return success
+        
+    except Exception as e:
+        # Just log the error but don't raise - we don't want to break booking functionality
+        print(f"⚠️ Socket.IO import or initialization failed: {str(e)}")
+        import traceback
+        print(traceback.format_exc())
+        return False
 
 @booking_bp.route('/get_bookings', methods=['GET'])
 def get_bookings():
     role = request.args.get('role')
-    user_param = request.args.get('userID') or request.args.get('idNumber')
+    user_param = request.args.get('idNumber') or request.args.get('userID')  # Prefer idNumber over userID
     status = request.args.get('status')  # Optional filter
 
     if not role or not user_param:
-        return jsonify({"error": "Missing query parameters: role and userID"}), 400
+        return jsonify({"error": "Missing query parameters: role and idNumber/userID"}), 400
 
     # Determine filtering key based on role
     uid = None
@@ -168,70 +241,100 @@ def create_booking():
     if not data:
         return jsonify({"error": "No data provided"}), 400
     
-    # Validate required fields
+    # Validate required fields common to all creators
     if not data.get('teacherID'):
         return jsonify({"error": "teacherID is required"}), 400
     if not data.get('studentIDs') or not isinstance(data.get('studentIDs'), list):
         return jsonify({"error": "studentIDs must be provided as a list"}), 400
-    if not data.get('schedule'):
-        return jsonify({"error": "schedule is required"}), 400
-    if not data.get('venue'):
-        return jsonify({"error": "venue is required"}), 400
+
+    # Validate required fields specific to faculty
+    # Determine creator and default status
+    creator_id = data.get('createdBy')
+    status = 'pending'
+    creator_user = None
+
+    if creator_id:
+        creator_user = User.query.filter_by(id_number=creator_id).first()
+        if creator_user and creator_user.role == 'faculty':
+            status = 'confirmed'
+
+    # Parse schedule and venue only if created by faculty
+    schedule = None
+    if status == 'confirmed':
+        schedule_str = data.get('schedule')
+        if not schedule_str:
+            return jsonify({"error": "schedule is required for faculty bookings"}), 400
+        from datetime import datetime
+        try:
+            schedule = datetime.fromisoformat(schedule_str.replace('Z', '+00:00'))
+        except ValueError:
+            return jsonify({"error": "Invalid schedule format"}), 400
+    venue = data.get('venue')
+    if status == 'confirmed' and not venue:
+        return jsonify({"error": "venue is required for faculty bookings"}), 400
+    
+    # Process studentIDs to numeric user IDs for all bookings
+    student_ids = []
+    for sid in data['studentIDs']:
+        if isinstance(sid, str):
+            # If it's a string, try to find user by id_number
+            student_user = User.query.filter_by(id_number=sid).first()
+            if student_user:
+                student_ids.append(student_user.id)
+            else:
+                # If not found by id_number, try to convert to int (e.g., if it's a numeric string ID)
+                try:
+                    student_id_int = int(sid)
+                    # Optionally, verify if this integer ID exists as a user
+                    # user_exists = User.query.filter_by(id=student_id_int).first()
+                    # if user_exists:
+                    #     student_ids.append(student_id_int)
+                    # else:
+                    #     # Handle case where numeric string ID doesn't match any user
+                    #     print(f"Warning: Student ID {sid} (as int) not found.")
+                    # For now, assume if it's a numeric string, it's a valid ID
+                    student_ids.append(student_id_int)
+                except ValueError:
+                    # If it's not an id_number and not a valid integer string, skip or error
+                    print(f"Warning: Could not process student ID: {sid}")
+                    # Depending on requirements, you might want to return an error here
+                    # return jsonify({"error": f"Invalid student ID format: {sid}"}), 400
+        elif isinstance(sid, int):
+            # If it's already an integer, assume it's a valid user.id
+            student_ids.append(sid)
+        else:
+            # Handle other unexpected types if necessary
+            print(f"Warning: Unexpected type for student ID: {sid} (type: {type(sid)})")
+
+    if not student_ids and data['studentIDs']: # Check if conversion resulted in empty list but original was not
+        return jsonify({"error": "No valid student IDs could be processed from the input"}), 400
     
     try:
         # Generate a unique ID using UUID
         import uuid
         booking_id = str(uuid.uuid4())
         
-        # Parse the datetime string
-        from datetime import datetime
-        schedule = datetime.fromisoformat(data['schedule'].replace('Z', '+00:00'))
-          # Process student IDs - convert to actual user IDs if they're ID numbers
-        student_ids = []
-        for sid in data['studentIDs']:
-            if isinstance(sid, str) and not sid.isdigit():
-                # This is probably an ID number like "22-3191-535"
-                student_user = User.query.filter_by(id_number=sid).first()
-                if student_user:
-                    student_ids.append(student_user.id)  # Add the numeric user ID
-            else:
-                # This is already a numeric ID
-                student_ids.append(int(sid))
-                  # Determine creator role and set status accordingly
-        creator_id = data.get('createdBy')
-          # Default to pending, but confirm if created by faculty
-        status = 'pending'
-        creator_user = None
-        
-        if creator_id:
-            creator_user = User.query.filter_by(id_number=creator_id).first()
-            if creator_user and creator_user.role == 'faculty':
-                status = 'confirmed'
-                
-        print(f"Setting booking status to {status} based on creator role: {creator_user.role if creator_user else 'Unknown'}")
-          # Check if teacher exists
-        teacher_user = User.query.filter_by(id_number=data['teacherID']).first()
-        if not teacher_user:
-            # If teacher not found, log error but continue with booking creation
-            print(f"Warning: Teacher with ID {data['teacherID']} not found")
-        
-        # Create new booking
+        # Create new booking (schedule/venue only for confirmed)
         new_booking = Booking(
             id=booking_id,
-            subject=data.get('subject', 'Consultation'),  # Default subject if not provided
-            description=data.get('description', ''),      # Empty description if not provided
+            subject=data.get('subject', 'Consultation'),
+            description=data.get('description', ''),
             schedule=schedule,
-            venue=data['venue'],
-            status=status,                                # Confirmed if created by faculty
-            teacher_id=data['teacherID'],                 # String ID number
-            student_ids=student_ids,                      # Numeric User IDs
-            created_by=creator_id                         # Add creator ID
+            venue=venue,
+            status=status,
+            teacher_id=data['teacherID'],
+            student_ids=student_ids,
+            created_by=creator_id
         )
         
         # Add to database
         db.session.add(new_booking)
         db.session.commit()
-          # Return success response with booking ID and status
+        
+        # Use the safe emit_event helper instead of direct socketio.emit
+        emit_event('booking_created', {'bookingID': booking_id, 'status': new_booking.status})
+          
+        # Return success response with booking ID and status
         return jsonify({
             "message": "Booking created successfully", 
             "bookingId": booking_id,
@@ -267,9 +370,10 @@ def cancel_booking():
     try:
         booking.status = 'cancelled'
         db.session.commit()
-        # Optionally, emit a socket event if you have real-time updates
-        # from app import socketio
-        # socketio.emit('booking_updated', {'id': booking_id, 'status': 'cancelled'}, room=booking.teacher_id) # Example room
+        
+        # Use the safe emit_event helper instead of direct socketio.emit
+        emit_event('booking_updated', {'bookingID': booking_id, 'status': 'cancelled'})
+        
         return jsonify({"message": "Booking cancelled successfully", "bookingID": booking_id}), 200
     except Exception as e:
         db.session.rollback()
@@ -297,12 +401,37 @@ def confirm_booking():
         return jsonify({"error": "Booking not found"}), 404
 
     try:
+        from datetime import datetime
+        
+        # Modify booking
         booking.status = 'confirmed'
+        
+        # Set schedule and venue from request data
+        if data.get('schedule'):
+            try:
+                schedule = datetime.fromisoformat(data.get('schedule').replace('Z', '+00:00'))
+                booking.schedule = schedule
+            except ValueError:
+                return jsonify({"error": "Invalid schedule format"}), 400
+                
+        if data.get('venue'):
+            booking.venue = data.get('venue')
+            
         db.session.commit()
-        # Optionally, emit a socket event if you have real-time updates
-        # from app import socketio
-        # socketio.emit('booking_updated', {'id': booking_id, 'status': 'confirmed'}, room=booking.teacher_id) # Example room
-        return jsonify({"message": "Booking confirmed successfully", "bookingID": booking_id}), 200
+        
+        # Use the safe emit_event helper instead of direct socketio.emit
+        emit_data = {
+            'bookingID': booking_id, 
+            'status': 'confirmed',
+        }
+        if booking.schedule:
+            emit_data['schedule'] = booking.schedule.isoformat()
+        if booking.venue:
+            emit_data['venue'] = booking.venue
+            
+        emit_event('booking_updated', emit_data)
+        
+        return jsonify({"message": "Booking confirmed successfully"}), 200
     except Exception as e:
         db.session.rollback()
         return jsonify({"error": f"Failed to confirm booking: {str(e)}"}), 500

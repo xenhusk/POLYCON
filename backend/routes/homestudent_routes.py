@@ -4,6 +4,8 @@ from extensions import db
 from datetime import datetime
 import re
 from collections import Counter
+from sqlalchemy import func, cast
+from sqlalchemy.dialects.postgresql import JSONB
 
 homestudent_bp = Blueprint('homestudent', __name__, url_prefix='/homestudent')
 
@@ -34,7 +36,8 @@ def get_student_stats():
     if not student_id:
         return jsonify({'error': 'Student ID required'}), 400
 
-    query = ConsultationSession.query.filter(ConsultationSession.student_ids.contains([student_id]))
+    # Use JSONB_CONTAINS for PostgreSQL JSONB columns
+    query = ConsultationSession.query.filter(func.jsonb_contains(ConsultationSession.student_ids, cast([student_id], JSONB)))
     if semester_val and school_year:
         sem = Semester.query.filter_by(semester=semester_val, school_year=school_year).first()
         if not sem:
@@ -76,7 +79,8 @@ def get_student_consultations_by_date():
     if not student_id:
         return jsonify({'error': 'Student ID required'}), 400
 
-    query = ConsultationSession.query.filter(ConsultationSession.student_ids.contains([student_id]))
+    # Use JSONB_CONTAINS for PostgreSQL JSONB columns
+    query = ConsultationSession.query.filter(func.jsonb_contains(ConsultationSession.student_ids, cast([student_id], JSONB)))
     if semester_val and school_year:
         sem = Semester.query.filter_by(semester=semester_val, school_year=school_year).first()
         if not sem:

@@ -88,11 +88,21 @@ def get_student_details():
         if not student_id:
             return jsonify({"error": "Missing studentID"}), 400
 
-        student_ref = db.collection('students').document(student_id).get()
-        if not student_ref.exists:
-            return jsonify({"error": "Student not found"}), 404
+        # Try lookup by Firestore document ID
+        doc = db.collection('students').document(student_id).get()
+        if doc.exists:
+            student_doc = doc
+        else:
+            # Fallback: query by id_number field
+            query_docs = list(db.collection('students')
+                              .where('id_number', '==', student_id)
+                              .limit(1)
+                              .stream())
+            if not query_docs:
+                return jsonify({"error": "Student not found"}), 404
+            student_doc = query_docs[0]
 
-        student_data = student_ref.to_dict()
+        student_data = student_doc.to_dict()
         program_ref = student_data.get('program')
         program_name = get_program_name(program_ref) if program_ref else 'Unknown Program'
         year_section = student_data.get('year_section', 'Unknown Year/Section')

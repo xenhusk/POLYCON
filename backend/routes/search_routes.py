@@ -1,6 +1,8 @@
 from flask import Blueprint, request, jsonify
-from models import User, Student, Department, Program
+from models import User, Student, Department, Program, Faculty, Semester
 from sqlalchemy import or_
+from extensions import db
+from datetime import date
 
 search_bp = Blueprint('search', __name__, url_prefix='/search')
 
@@ -76,3 +78,54 @@ def search_students():
     Alias for searching students for booking (same as enrollment_students)
     """
     return search_enrollment_students()
+
+@search_bp.route('/teachers', methods=['GET'])
+def search_teachers_endpoint():
+    """
+    Search for teachers based on query.
+    Returns teachers based on search query matching full name.
+    """
+    term = request.args.get('query', '')
+    # Check for active semester
+    today = date.today()
+    active_semester = Semester.query.filter(
+        or_(Semester.end_date == None, Semester.end_date >= today)
+    ).first()
+
+    # Base query without is_active
+    # Query teacher ID, name, department, and profile picture
+    teachers_query = db.session.query(
+        User.id_number,
+        User.full_name,
+        Department.name,
+        User.profile_picture
+    ).join(Faculty, Faculty.user_id == User.id) \
+     .join(Department, User.department_id == Department.id) \
+     .filter(User.full_name.ilike(f'%{term}%'))
+
+    if active_semester:
+        teachers_query = teachers_query.add_columns(Faculty.is_active)
+        results = teachers_query.all()
+        teachers = [
+            {
+                'ID': id_number,
+                'fullName': full_name,
+                'department': dept_name,
+                'profilePicture': profile_picture,
+                'isActive': is_active
+            }
+            for id_number, full_name, dept_name, profile_picture, is_active in results
+        ]
+    else:
+        results = teachers_query.all()
+        teachers = [
+            {
+                'ID': id_number,
+                'fullName': full_name,
+                'department': dept_name,
+                'profilePicture': profile_picture,
+                'isActive': False
+            }
+            for id_number, full_name, dept_name, profile_picture in results
+        ]
+    return jsonify(teachers), 200

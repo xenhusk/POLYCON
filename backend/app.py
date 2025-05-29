@@ -7,8 +7,12 @@ from config import Config
 from extensions import db, bcrypt, jwt # Import bcrypt and jwt
 import os
 
-# Initialize SocketIO for real-time support (CORS allowed on all origins)
-socketio = SocketIO(cors_allowed_origins="*")
+# Initialize SocketIO instance - but don't connect it until the app is created
+# This avoids issues when it's imported elsewhere
+socketio = SocketIO(cors_allowed_origins="*", async_mode='eventlet', logger=True, engineio_logger=True)
+
+# Import socket routes for real-time events
+from routes.socket_routes import register_socket_events
 
 # Import blueprints
 from routes.health import health_bp
@@ -42,6 +46,9 @@ def create_app():
 
     # Initialize SocketIO with the Flask app
     socketio.init_app(app)
+    
+    # Register Socket.IO event handlers after initialization
+    register_socket_events(socketio)
 
     app.config.from_object(Config)
 
@@ -112,5 +119,6 @@ app = create_app()
 
 if __name__ == '__main__':
     port = int(os.environ.get("PORT", 5001))
+    print("Starting Flask-SocketIO server on port", port)
     # Run the application with Socket.IO support
-    socketio.run(app, debug=True, host='0.0.0.0', port=port)
+    socketio.run(app, debug=True, host='0.0.0.0', port=port, allow_unsafe_werkzeug=True)

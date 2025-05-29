@@ -155,3 +155,48 @@ def reset_password_with_email():
     user.password = hashed
     db.session.commit()
     return jsonify({'message': 'Password reset successfully'}), 200
+    
+@user_bp.route('/get_student_details', methods=['GET'])
+def get_student_details():
+    try:
+        student_id = request.args.get('studentID')
+        if not student_id:
+            return jsonify({"error": "Missing studentID"}), 400
+
+        # Try to find user by ID number first
+        student_user = User.query.filter_by(id_number=student_id, role='student').first()
+        
+        # If not found by ID number, try with primary key (although discouraged)
+        if not student_user:
+            try:
+                pk = int(student_id)
+                student_user = User.query.filter_by(id=pk, role='student').first()
+                if student_user:
+                    print(f"Warning: Used PK {pk} to find student instead of ID number")
+            except (ValueError, TypeError):
+                pass
+        
+        if not student_user:
+            return jsonify({"error": "Student not found"}), 404
+            
+        # Get student record
+        student_record = Student.query.filter_by(user_id=student_user.id).first()
+        if not student_record:
+            return jsonify({"error": "Student record not found"}), 404
+            
+        # Get program info
+        program_name = "Unknown Program"
+        if student_record.program_id:
+            program = Program.query.get(student_record.program_id)
+            if program:
+                program_name = program.name
+                
+        year_section = student_record.year_section or "Unknown Year/Section"
+        
+        return jsonify({
+            "program": program_name,
+            "year_section": year_section,
+            "isEnrolled": student_record.is_enrolled
+        }), 200
+    except Exception as e:
+        return jsonify({"error": f"Failed to fetch student details: {str(e)}"}), 500
