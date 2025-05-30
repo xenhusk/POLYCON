@@ -1,18 +1,10 @@
 from flask import Flask, jsonify, session as flask_session
 from flask_cors import CORS # Import CORS
-from flask_socketio import SocketIO
 from flask_migrate import Migrate  # Add this import
 
 from config import Config
 from extensions import db, bcrypt, jwt # Import bcrypt and jwt
 import os
-
-# Initialize SocketIO instance - but don't connect it until the app is created
-# This avoids issues when it's imported elsewhere
-socketio = SocketIO(cors_allowed_origins="*", async_mode='eventlet', logger=True, engineio_logger=True)
-
-# Import socket routes for real-time events
-from routes.socket_routes import register_socket_events
 
 # Import blueprints
 from routes.health import health_bp
@@ -40,15 +32,8 @@ from routes.settings_routes import settings_bp
 
 def create_app():
     app = Flask(__name__)
-    # Enable CORS for all routes, allow all origins and credentials
-    # Apply CORS to all routes for the React frontend
+    # Enable CORS for all routes, allow all origins and credentials    # Apply CORS to all routes for the React frontend
     CORS(app, resources={r"/*": {"origins": ["http://localhost:3000"]}}, supports_credentials=True)
-
-    # Initialize SocketIO with the Flask app
-    socketio.init_app(app)
-    
-    # Register Socket.IO event handlers after initialization
-    register_socket_events(socketio)
 
     app.config.from_object(Config)
 
@@ -119,6 +104,6 @@ app = create_app()
 
 if __name__ == '__main__':
     port = int(os.environ.get("PORT", 5001))
-    print("Starting Flask-SocketIO server on port", port)
-    # Run the application with Socket.IO support
-    socketio.run(app, debug=True, host='0.0.0.0', port=port, allow_unsafe_werkzeug=True)
+    print("Starting Flask server on port", port)
+    # Run the regular Flask application
+    app.run(debug=True, host='0.0.0.0', port=port)

@@ -5,79 +5,6 @@ from sqlalchemy import or_
 
 booking_bp = Blueprint('booking_bp', __name__, url_prefix='/bookings')
 
-# Helper function to safely emit Socket.IO events
-def emit_event(event_name, data):
-    """
-    Safe wrapper around socketio.emit that handles errors and version incompatibilities
-    """
-    try:
-        # Import flask_socketio directly to avoid circular imports
-        from flask_socketio import emit
-        from app import socketio
-        import traceback
-        
-        print(f"🔔 Emitting {event_name} event with data: {data}")
-        print(f"🔌 Socket.IO instance connected: {socketio}")
-        
-        # Get active Socket.IO clients
-        try:
-            if hasattr(socketio, 'server'):
-                eio = socketio.server.eio
-                print(f"🔌 Engine.IO clients: {eio.clients if hasattr(eio, 'clients') else 'Unknown'}")
-        except Exception as ce:
-            print(f"Error getting SocketIO clients: {ce}")
-        
-        success = False
-        
-        # Method 1: Use socketio instance directly
-        try:
-            socketio.emit(event_name, data)
-            print(f"✅ Socket.IO event '{event_name}' emitted successfully via socketio.emit")
-            success = True
-        except Exception as e1:
-            print(f"❌ Socket.IO emit method 1 failed: {str(e1)}")
-            print(traceback.format_exc())
-            
-            # Method 2: Try with namespace
-            try:
-                socketio.emit(event_name, data, namespace='/')
-                print(f"✅ Socket.IO event '{event_name}' emitted successfully via socketio.emit with namespace")
-                success = True
-            except Exception as e2:
-                print(f"❌ Socket.IO emit method 2 failed: {str(e2)}")
-                print(traceback.format_exc())
-                
-                # Method 3: Try native flask_socketio.emit with broadcast
-                try:
-                    emit(event_name, data, broadcast=True, namespace='/')
-                    print(f"✅ Socket.IO event '{event_name}' emitted successfully via flask_socketio.emit")
-                    success = True
-                except Exception as e3:
-                    print(f"❌ Socket.IO emit method 3 failed: {str(e3)}")
-                    print(traceback.format_exc())
-                    print(f"⚠️ All Socket.IO emit methods failed. Event '{event_name}' could not be emitted.")
-        
-        if not success:
-            # Try one more method - direct socketio emit to all clients
-            try:
-                # Direct socket emission to any connected clients
-                if hasattr(socketio, 'server') and hasattr(socketio.server, 'emit'):
-                    socketio.server.emit(event_name, data)
-                    print(f"✅ Socket.IO event '{event_name}' emitted via server.emit")
-                    success = True
-            except Exception as e4:
-                print(f"❌ Socket.IO direct server emit failed: {str(e4)}")
-                print(traceback.format_exc())
-                    
-        return success
-        
-    except Exception as e:
-        # Just log the error but don't raise - we don't want to break booking functionality
-        print(f"⚠️ Socket.IO import or initialization failed: {str(e)}")
-        import traceback
-        print(traceback.format_exc())
-        return False
-
 @booking_bp.route('/get_bookings', methods=['GET'])
 def get_bookings():
     role = request.args.get('role')
@@ -330,10 +257,6 @@ def create_booking():
         # Add to database
         db.session.add(new_booking)
         db.session.commit()
-        
-        # Use the safe emit_event helper instead of direct socketio.emit
-        emit_event('booking_created', {'bookingID': booking_id, 'status': new_booking.status})
-          
         # Return success response with booking ID and status
         return jsonify({
             "message": "Booking created successfully", 
@@ -341,7 +264,6 @@ def create_booking():
             "status": status,
             "createdBy": creator_id
         }), 201
-        
     except Exception as e:
         db.session.rollback()
         return jsonify({"error": f"Failed to create booking: {str(e)}"}), 500
@@ -370,10 +292,6 @@ def cancel_booking():
     try:
         booking.status = 'cancelled'
         db.session.commit()
-        
-        # Use the safe emit_event helper instead of direct socketio.emit
-        emit_event('booking_updated', {'bookingID': booking_id, 'status': 'cancelled'})
-        
         return jsonify({"message": "Booking cancelled successfully", "bookingID": booking_id}), 200
     except Exception as e:
         db.session.rollback()
@@ -416,21 +334,7 @@ def confirm_booking():
                 
         if data.get('venue'):
             booking.venue = data.get('venue')
-            
         db.session.commit()
-        
-        # Use the safe emit_event helper instead of direct socketio.emit
-        emit_data = {
-            'bookingID': booking_id, 
-            'status': 'confirmed',
-        }
-        if booking.schedule:
-            emit_data['schedule'] = booking.schedule.isoformat()
-        if booking.venue:
-            emit_data['venue'] = booking.venue
-            
-        emit_event('booking_updated', emit_data)
-        
         return jsonify({"message": "Booking confirmed successfully"}), 200
     except Exception as e:
         db.session.rollback()
