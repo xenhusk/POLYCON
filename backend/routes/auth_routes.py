@@ -2,8 +2,15 @@ from flask import Blueprint, request, jsonify
 from extensions import db, bcrypt
 from models import User, Student, Faculty, Department, Program
 from flask_jwt_extended import create_access_token
+import secrets
+from datetime import datetime, timedelta
+from services.email_service_new import send_password_reset_email
 
 auth_bp = Blueprint('auth', __name__, url_prefix='/auth')
+
+# In-memory cache for password reset tokens
+# Format: {token: {'email': email, 'expires': datetime}}
+reset_token_cache = {}
 
 def generate_full_name(first_name, last_name):
     return f"{first_name.strip()} {last_name.strip()}"
@@ -129,3 +136,139 @@ def login():
 def account_login():
     # Proxy to the existing /auth/login logic
     return login()
+
+# Helper function to clean expired tokens from cache
+def clean_expired_tokens():
+    current_time = datetime.utcnow()
+    expired_tokens = [token for token, data in reset_token_cache.items() 
+                     if data['expires'] < current_time]
+    for token in expired_tokens:
+        del reset_token_cache[token]
+
+@auth_bp.route('/request-password-reset', methods=['POST'])
+def request_password_reset():
+    try:
+        data = request.json
+        email = data.get('email')
+
+        if not email:
+            return jsonify({"error": "Email is required"}), 400
+
+        user = User.query.filter_by(email=email).first()
+        if not user:
+            # For security, we don't reveal if the email exists or not
+            return jsonify({"message": "If this email exists in our system, you will receive a password reset link."}), 200
+
+        # Clean expired tokens before generating a new one
+        clean_expired_tokens()
+
+        # Generate a secure reset token
+        reset_token = secrets.token_urlsafe(32)
+        reset_token_expires = datetime.utcnow() + timedelta(hours=1)  # Token expires in 1 hour
+
+        # Store token in cache instead of database
+        reset_token_cache[reset_token] = {
+            'email': user.email,
+            'expires': reset_token_expires
+        }
+
+        # Create reset link
+        frontend_url = "http://localhost:3000"  # You can make this configurable
+        reset_link = f"{frontend_url}/reset-password?token={reset_token}"
+
+        # Send password reset email
+        email_sent = send_password_reset_email(
+            to_email=user.email,
+            reset_link=reset_link,
+            user_name=user.first_name
+        )
+
+        if email_sent:
+            return jsonify({"message": "If this email exists in our system, you will receive a password reset link."}), 200
+        else:
+            return jsonify({"error": "Failed to send reset email. Please try again later."}), 500
+
+    except Exception as e:
+        return jsonify({"error": "An error occurred while processing your request."}), 500
+
+@auth_bp.route('/reset-password', methods=['POST'])
+def reset_password():
+    try:
+        data = request.json
+        token = data.get('token')
+        new_password = data.get('password')
+
+        if not token or not new_password:
+            return jsonify({"error": "Token and new password are required"}), 400
+
+        # Clean expired tokens
+        clean_expired_tokens()
+
+        # Check if token exists in cache and is valid
+        if token not in reset_token_cache:
+            return jsonify({"error": "Invalid or expired reset token"}), 400
+
+        token_data = reset_token_cache[token]
+        
+        # Double-check expiration (though clean_expired_tokens should have handled this)
+        if token_data['expires'] < datetime.utcnow():
+            del reset_token_cache[token]
+            return jsonify({"error": "Invalid or expired reset token"}), 400
+
+        # Find user by email from token data
+        user = User.query.filter_by(email=token_data['email']).first()
+        if not user:
+            # Remove invalid token
+            del reset_token_cache[token]
+            return jsonify({"error": "User not found"}), 404
+
+        # Hash the new password
+        hashed_password = bcrypt.generate_password_hash(new_password).decode('utf-8')
+        
+        # Update user password
+        user.password = hashed_password
+        db.session.commit()
+
+        # Remove the used token from cache
+        del reset_token_cache[token]
+
+        return jsonify({"message": "Password reset successfully"}), 200
+
+    except Exception as e:
+        db.session.rollback()
+        return jsonify({"error": "An error occurred while resetting your password."}), 500
+
+@auth_bp.route('/verify-reset-token', methods=['POST'])
+def verify_reset_token():
+    try:
+        data = request.json
+        token = data.get('token')
+
+        if not token:
+            return jsonify({"error": "Token is required"}), 400
+
+        # Clean expired tokens
+        clean_expired_tokens()
+
+        # Check if token exists in cache and is valid
+        if token not in reset_token_cache:
+            return jsonify({"valid": False, "error": "Invalid or expired reset token"}), 400
+
+        token_data = reset_token_cache[token]
+        
+        # Double-check expiration (though clean_expired_tokens should have handled this)
+        if token_data['expires'] < datetime.utcnow():
+            del reset_token_cache[token]
+            return jsonify({"valid": False, "error": "Invalid or expired reset token"}), 400
+
+        # Verify the user still exists
+        user = User.query.filter_by(email=token_data['email']).first()
+        if not user:
+            # Remove invalid token
+            del reset_token_cache[token]
+            return jsonify({"valid": False, "error": "User not found"}), 404
+
+        return jsonify({"valid": True, "email": user.email}), 200
+
+    except Exception as e:
+        return jsonify({"error": "An error occurred while verifying the token."}), 500

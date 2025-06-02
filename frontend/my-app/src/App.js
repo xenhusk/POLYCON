@@ -40,6 +40,7 @@ import NetworkMonitor from './components/NetworkMonitor';
 import { getUserIdentifiers } from "./utils/userUtils"; // Add import for getUserIdentifiers
 import { ensureUserIdPersistence, recoverUserIds } from "./utils/persistUtils";
 import ComparativeAnalysis from './pages/ComparativeAnalysis';
+import PasswordResetPage from './components/PasswordResetPage';
 const PreloaderTest = React.lazy(() => import('./components/PagePreloader'));
 
 // Update the variants to only include fade in (no fade out)
@@ -733,12 +734,14 @@ function App() {
                       !localStorage.getItem('userEmail') ?
                         <Login onLoginSuccess={handleLoginSuccess} /> :
                         <Navigate to="/dashboard" />
-                    } />
-                    <Route path="/signup" element={
+                    } />                    <Route path="/signup" element={
                       !localStorage.getItem('userEmail') ?
                         <Signup /> :
                         <Navigate to="/dashboard" />
                     } />
+                    
+                    {/* Password reset route - publicly accessible */}
+                    <Route path="/reset-password" element={<PasswordResetPage />} />
 
                     {/* Protected dashboard route */}
                     <Route path="/dashboard" element={

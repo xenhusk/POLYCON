@@ -35,7 +35,8 @@ def send_verification_email(to_email, verification_link):
     msg['From'] = str(from_email) if from_email is not None else ''
     msg['To'] = str(to_email) if to_email is not None else ''
     msg['Subject'] = str(subject)  # Set subject directly as a string
-    msg.attach(MIMEText(body, 'html'))    
+    msg.attach(MIMEText(body, 'html'))
+
     try:
         with smtplib.SMTP(smtp_server, smtp_port) as server:
             server.starttls()

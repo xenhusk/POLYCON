@@ -2,10 +2,10 @@ import React from 'react';
 import { Radar } from 'react-chartjs-2';
 
 const PerformanceRadarChart = ({ metricsData }) => {
-  // Extract and prepare the data
-  const { normalizedImprovement, averageEventImpact, consultationQuality } = metricsData;
+  // Extract and prepare the data with proper defaults
+  const { normalizedImprovement, averageEventImpact, consultationQuality } = metricsData || {};
   
-  // Ensure all values are numbers, not objects
+  // Ensure all values are numbers and provide fallbacks
   const safeNormalizedImprovement = typeof normalizedImprovement === 'number' ? normalizedImprovement : 0;
   const safeAverageEventImpact = typeof averageEventImpact === 'number' ? averageEventImpact : 0;
   const safeConsultationQuality = typeof consultationQuality === 'number' ? consultationQuality : 0;

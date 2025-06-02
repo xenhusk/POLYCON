@@ -29,7 +29,6 @@ const SettingsPopup = ({ isVisible, onClose, position, userEmail, onLogout }) =>
 
   // Use fallback from localStorage in case userEmail prop is undefined
   const effectiveEmail = userEmail || localStorage.getItem('userEmail');
-
   const handleLogout = () => {
     // Clear localStorage and update global logout state if needed
     localStorage.clear();    
@@ -38,33 +37,6 @@ const SettingsPopup = ({ isVisible, onClose, position, userEmail, onLogout }) =>
       onLogout();
     }
     navigate('/');
-  };
-
-  const handleChangePassword = async (currentPassword) => {
-    if (!effectiveEmail) {
-      alert("User email is missing.");
-      return;
-    }
-    try {
-      const response = await fetch('http://localhost:5001/account/reset_password', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ email: effectiveEmail, password: currentPassword })
-      });
-      
-      const data = await response.json();
-      
-      if (response.ok) {
-        alert('Password reset email sent successfully.');
-        setShowPasswordModal(false);
-        onClose();
-      } else {
-        throw new Error(data.error || 'Failed to send reset email');
-      }
-    } catch (error) {
-      console.error('Password reset error:', error);
-      alert(`Error: ${error.message}`);
-    }
   };
 
   // New handler for Change Password click
@@ -181,15 +153,12 @@ const SettingsPopup = ({ isVisible, onClose, position, userEmail, onLogout }) =>
             Logout
           </button>
         </div>
-      ))}
-
-      {/* Password Reset Modal - No separate backdrop needed */}
+      ))}      {/* Password Reset Modal - No separate backdrop needed */}
       {showPasswordModal && (
         <PasswordResetModal
           isVisible={showPasswordModal}
           onClose={handleClosePasswordModal}
           userEmail={userEmail}
-          onSubmit={handleChangePassword}
         />
       )}
     </>
