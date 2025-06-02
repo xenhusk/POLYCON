@@ -1,12 +1,8 @@
 import React, { useEffect, useState, useCallback } from 'react';
-import { useSocket } from '../../hooks/useSocket';
 
 const StudentAppointments = () => {
   const [appointments, setAppointments] = useState([]);
   const [isLoading, setIsLoading] = useState(true);
-  
-  // Use the improved hook
-  const { isConnected, on, off } = useSocket('http://localhost:5001');
   
   // Create a function to fetch appointments
   const fetchAppointments = useCallback(async () => {
@@ -41,32 +37,32 @@ const StudentAppointments = () => {
   // Set up socket listener after connection is established
   useEffect(() => {
     // Only set up listeners if socket is connected
-    if (isConnected) {
-      console.log('Setting up booking_update listener');
+    // if (isConnected) {
+    //   console.log('Setting up booking_update listener');
       
-      // Handle booking updates
-      const handleBookingUpdate = (data) => {
-        console.log('Booking update received:', data);
-        fetchAppointments();
-      };
+    //   // Handle booking updates
+    //   const handleBookingUpdate = (data) => {
+    //     console.log('Booking update received:', data);
+    //     fetchAppointments();
+    //   };
       
-      // Register event handler
-      on('booking_update', handleBookingUpdate);
+    //   // Register event handler
+    //   on('booking_update', handleBookingUpdate);
       
-      // Clean up the listener when component unmounts
-      return () => {
-        console.log('Removing booking_update listener');
-        off('booking_update', handleBookingUpdate);
-      };
-    }
-  }, [isConnected, on, off, fetchAppointments]);
+    //   // Clean up the listener when component unmounts
+    //   return () => {
+    //     console.log('Removing booking_update listener');
+    //     off('booking_update', handleBookingUpdate);
+    //   };
+    // }
+  }, [fetchAppointments]);
   
   if (isLoading) return <div className="p-4 text-center">Loading appointments...</div>;
   
   return (
     <div className="student-appointments p-4">
       <h2 className="text-xl font-semibold mb-4">Your Appointments</h2>
-      {isConnected && <div className="text-xs text-green-500 mb-2">Real-time updates enabled</div>}
+      {/* {isConnected && <div className="text-xs text-green-500 mb-2">Real-time updates enabled</div>} */}
       
       {appointments.length === 0 ? (
         <p className="text-gray-500">No appointments scheduled.</p>
