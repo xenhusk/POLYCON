@@ -69,15 +69,33 @@ def compare_student():
         if academic_events_input:
             insights.append(f"Considered {len(academic_events_input)} academic events in analysis.")
         else:
-            insights.append("No specific academic events provided for this analysis.")
+            insights.append("No specific academic events provided for this analysis.")        # Calculate average event impact
+        average_event_impact = 0.0
+        if academic_events_input and isinstance(academic_events_input, list):
+            total_impact = sum(float(event.get('rating', 0)) / 5.0 for event in academic_events_input if event.get('rating'))
+            average_event_impact = total_impact / len(academic_events_input) if len(academic_events_input) > 0 else 0.0
+        
+        # Calculate consultation quality (placeholder - would need actual consultation data)
+        consultation_quality = 0.7  # Placeholder value        # Ensure all numeric values are proper floats
+        normalized_improvement = float(normalized_improvement) if normalized_improvement is not None else 0.0
+        average_event_impact = float(average_event_impact) if average_event_impact is not None else 0.0
+        consultation_quality = float(consultation_quality) if consultation_quality is not None else 0.0
+        overall_score = float(overall_score) if overall_score is not None else 0.0
 
         analysis_result = {
             "student_id": student_id_number,
             "rating": rating,
             "overall_score": min(1.0, max(0, overall_score)), # Ensure score is between 0 and 1
             "normalized_improvement": normalized_improvement, # Capped at 0.5 by frontend later
+            "average_event_impact": average_event_impact,
+            "consultation_quality": consultation_quality,
+            "baseline_factor": 0.8,  # Placeholder
+            "consistency_factor": 0.75,  # Placeholder
+            "grade_improvement": float(grades_input.get('finals', 0)) - float(grades_input.get('prelim', 0)) if grades_input.get('finals') and grades_input.get('prelim') else 0,
+            "academic_events": academic_events_input,
             "insights": insights,
-            "grades_summary": grades_input # Echo back the grades used
+            "grades_summary": grades_input, # Echo back the grades used
+            "grades": grades_input # Also include for backward compatibility
         }
         # --- End of placeholder logic ---
 

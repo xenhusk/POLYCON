@@ -140,12 +140,13 @@ def get_grades_by_period():
                 for p in ["Prelim", "Midterm", "Pre-Final", "Final"]:
                     entry[p] = periods.get(p)
                 result.append(entry)
-            return jsonify(result), 200
-
-        # If course_code is provided, return as before
-        course_obj = Course.query.filter(Course.code == course_code).first() # Or Course.name
+            return jsonify(result), 200        # If course_code is provided, return as before
+        # Try to find course by code first, then by name
+        course_obj = Course.query.filter(Course.code == course_code).first()
         if not course_obj:
-            return jsonify({"error": f"Course with code {course_code} not found"}), 404
+            course_obj = Course.query.filter(Course.name == course_code).first()
+        if not course_obj:
+            return jsonify({"error": f"Course with code or name '{course_code}' not found"}), 404
 
         grades = Grade.query.filter_by(
             student_user_id=student_user_id,

@@ -131,48 +131,49 @@ const GradeViewer = () => {
           <div className="text-center mb-4">
             <p className="text-red-500 fade-in text-sm sm:text-base">{error}</p>
           </div>
-        )}
-
-        {/* Table Section - Updated for better responsiveness */}
+        )}        {/* Table Section - Limited to 7 rows with scrollbar */}
         <div className="mt-4 shadow-md overflow-hidden rounded-lg fade-in delay-300 relative z-0">
           <div className="overflow-x-auto">
-            <div className="max-h-[400px] md:max-h-[500px] lg:max-h-[600px] overflow-y-auto">
+            <table className="w-full bg-white text-sm sm:text-base" style={{ minWidth: '1000px' }}>
+              <thead className="bg-[#0065A8] text-white sticky top-0 z-10">
+                <tr className="border-b">
+                  <th className="px-3 py-3 min-w-[120px]">Subject Code</th>
+                  <th className="px-3 py-3 min-w-[200px]">Subject Name</th>
+                  <th className="px-3 py-3 min-w-[100px]">Credit</th>
+                  <th className="px-3 py-3 min-w-[180px]">Instructor</th>
+                  <th className="px-3 py-3 min-w-[100px]">Grade</th>
+                  <th className="px-3 py-3 min-w-[120px]">Remarks</th>
+                </tr>
+              </thead>
+            </table>
+            
+            {/* Scrollable tbody container - height for exactly 7 rows */}
+            <div className="overflow-y-auto" style={{ height: '378px' }}>
               <table className="w-full bg-white text-sm sm:text-base" style={{ minWidth: '1000px' }}>
-                <thead className="bg-[#0065A8] text-white sticky top-0 z-10">
-                  <tr className="border-b">
-                    <th className="px-3 py-3 min-w-[120px]">Subject Code</th>
-                    <th className="px-3 py-3 min-w-[200px]">Subject Name</th>
-                    <th className="px-3 py-3 min-w-[100px]">Credit</th>
-                    <th className="px-3 py-3 min-w-[180px]">Instructor</th>
-                    <th className="px-3 py-3 min-w-[100px]">Grade</th>
-                    <th className="px-3 py-3 min-w-[120px]">Remarks</th>
-                  </tr>
-                </thead>
-
                 {/* Loading State - Updated for consistent styling */}
                 {loading ? (
                   <tbody>
-                    {Array.from({ length: 5 }).map((_, index) => (
+                    {Array.from({ length: 7 }).map((_, index) => (
                       <tr key={index} className="border-b animate-pulse">
-                        <td className="px-3 py-3"><div className="h-4 bg-gray-200 rounded mx-auto w-20"></div></td>
-                        <td className="px-3 py-3"><div className="h-4 bg-gray-200 rounded mx-auto w-40"></div></td>
-                        <td className="px-3 py-3"><div className="h-4 bg-gray-200 rounded mx-auto w-10"></div></td>
-                        <td className="px-3 py-3"><div className="h-4 bg-gray-200 rounded mx-auto w-32"></div></td>
-                        <td className="px-3 py-3"><div className="h-4 bg-gray-200 rounded mx-auto w-16"></div></td>
-                        <td className="px-3 py-3"><div className="h-4 bg-gray-200 rounded mx-auto w-24"></div></td>
+                        <td className="px-3 py-3 min-w-[120px]"><div className="h-4 bg-gray-200 rounded mx-auto w-20"></div></td>
+                        <td className="px-3 py-3 min-w-[200px]"><div className="h-4 bg-gray-200 rounded mx-auto w-40"></div></td>
+                        <td className="px-3 py-3 min-w-[100px]"><div className="h-4 bg-gray-200 rounded mx-auto w-10"></div></td>
+                        <td className="px-3 py-3 min-w-[180px]"><div className="h-4 bg-gray-200 rounded mx-auto w-32"></div></td>
+                        <td className="px-3 py-3 min-w-[100px]"><div className="h-4 bg-gray-200 rounded mx-auto w-16"></div></td>
+                        <td className="px-3 py-3 min-w-[120px]"><div className="h-4 bg-gray-200 rounded mx-auto w-24"></div></td>
                       </tr>
                     ))}
                   </tbody>
                 ) : grades.length > 0 ? (
                   <tbody>
                     {grades.map((grade) => (
-                      <tr key={grade.id} className="border-b hover:bg-[#edf8ff] align-middle text-center">
-                        <td className="px-3 py-3">{grade.courseID}</td>
-                        <td className="px-3 py-3">{grade.courseName}</td>
-                        <td className="px-3 py-3">3.0</td>
-                        <td className="px-3 py-3">{grade.facultyName}</td>
-                        <td className="px-3 py-3">{grade.grade}</td>
-                        <td className="px-3 py-3">
+                      <tr key={grade.id} className="border-b hover:bg-[#edf8ff] align-middle text-center" style={{ height: '54px' }}>
+                        <td className="px-3 py-3 min-w-[120px]">{grade.courseID}</td>
+                        <td className="px-3 py-3 min-w-[200px]">{grade.courseName}</td>
+                        <td className="px-3 py-3 min-w-[100px]">3.0</td>
+                        <td className="px-3 py-3 min-w-[180px]">{grade.facultyName}</td>
+                        <td className="px-3 py-3 min-w-[100px]">{grade.grade}</td>
+                        <td className="px-3 py-3 min-w-[120px]">
                           <span className={`px-2 py-1 text-white text-xs sm:text-sm rounded-md inline-block w-20 sm:w-24 
                             ${grade.remarks === "PASSED" 
                               ? "bg-green-500" 
@@ -187,15 +188,19 @@ const GradeViewer = () => {
                       </tr>
                     ))}
                   </tbody>
-                ) : null}
+                ) : (
+                  /* No Grades Message - Centered and responsive */
+                  !error && (
+                    <tbody>
+                      <tr>
+                        <td colSpan="6" className="text-center py-8">
+                          <p className="text-gray-500 text-sm sm:text-base fade-in delay-200">No grades available.</p>
+                        </td>
+                      </tr>
+                    </tbody>
+                  )
+                )}
               </table>
-
-              {/* No Grades Message - Centered and responsive */}
-              {!loading && grades.length === 0 && !error && (
-                <div className="text-center py-8">
-                  <p className="text-gray-500 text-sm sm:text-base fade-in delay-200">No grades available.</p>
-                </div>
-              )}
             </div>
           </div>
         </div>
