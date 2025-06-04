@@ -185,20 +185,17 @@ def create_booking():
     if creator_id:
         creator_user = User.query.filter_by(id_number=creator_id).first()
         if creator_user and creator_user.role == 'faculty':
-            status = 'confirmed'
-
-    # Parse schedule and venue only if created by faculty
-    schedule = None
-    if status == 'confirmed':
-        schedule_str = data.get('schedule')
-        if not schedule_str:
-            return jsonify({"error": "schedule is required for faculty bookings"}), 400
-        from datetime import datetime
-        try:
-            schedule = datetime.fromisoformat(schedule_str.replace('Z', '+00:00'))
-        except ValueError:
-            return jsonify({"error": "Invalid schedule format"}), 400
+            status = 'confirmed'    # Parse schedule for all bookings (required by database schema)
+    schedule_str = data.get('schedule')
+    if not schedule_str:
+        return jsonify({"error": "schedule is required"}), 400
+    from datetime import datetime
+    try:
+        schedule = datetime.fromisoformat(schedule_str.replace('Z', '+00:00'))
+    except ValueError:
+        return jsonify({"error": "Invalid schedule format"}), 400
     venue = data.get('venue')
+    # Validate venue only for confirmed faculty bookings
     if status == 'confirmed' and not venue:
         return jsonify({"error": "venue is required for faculty bookings"}), 400
     

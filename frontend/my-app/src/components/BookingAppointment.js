@@ -327,10 +327,9 @@ function BookingAppointment({ closeModal, role: propRole }) {
         });
       } finally {
         setIsLoading(false);
-      }
-    } else {
-      // Validate required fields: selectedTeacher and studentID must be provided.
-      if (!studentID || !selectedTeacher) {
+      }    } else {
+      // Validate required fields: selectedTeacher, studentID, schedule, and venue must be provided.
+      if (!studentID || !selectedTeacher || !schedule || !venue) {
         setMessage({
           type: "error",
           content: "Please fill in all required fields.",
