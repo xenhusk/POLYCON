@@ -66,4 +66,23 @@ body {
     margin-top: 1rem;
     display: block;
   }
-  
+
+  /* Toast notification styles */
+#toast-container {
+  position: fixed;
+  top: 1rem;
+  right: 1rem;
+  z-index: 9999;
+}
+.toast {
+  background-color: rgba(0, 0, 0, 0.8);
+  color: #fff;
+  padding: 0.75rem 1rem;
+  margin-top: 0.5rem;
+  border-radius: 4px;
+  opacity: 1;
+  transition: opacity 0.5s ease;
+}
+.toast-info { background-color: #2196f3; }
+.toast-success { background-color: #4caf50; }
+.toast-error { background-color: #f44336; }

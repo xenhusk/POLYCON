@@ -1,6 +1,9 @@
 import React, { useState, useEffect, useMemo, useCallback } from "react";
 import { useQuery } from "react-query";
 import AppointmentItem from "../components/AppointmentItem";
+import { showErrorNotification } from '../utils/notificationUtils';
+import { useToast } from '../contexts/ToastContext';
+import io from 'socket.io-client';
 
 // Request notification permission on component load
 if ('Notification' in window && Notification.permission !== 'granted' && Notification.permission !== 'denied') {
@@ -20,6 +23,8 @@ const fetchStudentAppointments = async () => {
 };
 
 function StudentAppointments() {
+  const { showBookingCreated, showBookingConfirmed, showBookingCancelled } = useToast();
+  
   const {
     data: bookings = [],
     refetch,
@@ -76,68 +81,51 @@ function StudentAppointments() {
     );
 
     setAppointments(categorizedAppointments);
-  }, [bookings]);
-  useEffect(() => {
-    // if (socket) {
-    //   const handleBookingUpdate = (data) => {
-    //     console.log("🔄 Booking update received in StudentAppointments:", data);
-    //     // Display notification
-    //     if (data.status) {
-    //       const statusText = {
-    //         'confirmed': 'confirmed',
-    //         'cancelled': 'cancelled',
-    //         'pending': 'requested'
-    //       }[data.status] || data.status;
-          
-    //       // Show user-friendly notification
-    //       if ('Notification' in window && Notification.permission === 'granted') {
-    //         new Notification(\`Appointment \${statusText}\`, {
-    //           body: \`An appointment has been \${statusText}. Refreshing your appointments...\`,
-    //           icon: '/favicon.ico'
-    //         });
-    //       }
-    //     }
-        
-    //     // Refetch data
-    //     console.log("Refetching student appointments due to Socket.IO event");
-    //     refetch();
-    //   };
+  }, [bookings]);  useEffect(() => {
+    const socket = io('http://localhost:5001');
+    
+    // Add connection event handlers
+    socket.on('connect', () => {
+      console.log('📡 StudentAppointments: Socket connected');
+    });
+    
+    socket.on('disconnect', () => {
+      console.log('📡 StudentAppointments: Socket disconnected');
+    });
+    
+    socket.on('connect_error', (error) => {
+      console.error('📡 StudentAppointments: Socket connection error:', error);
+    });
+    
+    const handleBookingCreated = data => {
+      console.log("✨ booking_created received:", data);
+      showBookingCreated(`Subject: ${data.subject || 'Consultation'}`);
+      refetch();
+    };
+    const handleBookingConfirmed = data => {
+      console.log("✅ booking_confirmed received:", data);
+      showBookingConfirmed(`Appointment ${data.id} confirmed`);
+      refetch();
+    };
+    const handleBookingCancelled = data => {
+      console.log("❌ booking_cancelled received:", data);
+      showBookingCancelled(`Appointment ${data.id} cancelled`);
+      refetch();
+    };
 
-    //   const handleBookingCreate = (data) => {
-    //     console.log("✨ Booking created event received in StudentAppointments:", data);
-        
-    //     // Display notification
-    //     if ('Notification' in window && Notification.permission === 'granted') {
-    //       new Notification("New Appointment", {
-    //         body: "A new appointment has been created. Refreshing your appointments...",
-    //         icon: '/favicon.ico'
-    //       });
-    //     }
-        
-    //     // Refetch data
-    //     console.log("Refetching student appointments due to Socket.IO event");
-    //     refetch();
-    //   };
-
-    //   console.log("📱 StudentAppointments: Setting up Socket.IO listeners");
-    //   socket.on("booking_updated", handleBookingUpdate);
-    //   socket.on("booking_created", handleBookingCreate);
-      
-    //   // Force a connection check
-    //   if (!socket.isConnected) {
-    //     console.log("Socket not connected, attempting to reconnect...");
-    //     socket.emit("ping", {});
-    //   }
-      
-    //   return () => {
-    //     console.log("📱 StudentAppointments: Removing Socket.IO listeners");
-    //     socket.off("booking_updated", handleBookingUpdate);
-    //     socket.off("booking_created", handleBookingCreate);
-    //   };
-    // } else {
-    //   console.warn("📱 StudentAppointments: Socket not available for event listeners");
-    // }
-  }, [refetch]);
+    console.log("📱 StudentAppointments: Listening to booking_created/confirmed/cancelled events");
+    socket.on('booking_created', handleBookingCreated);
+    socket.on('booking_confirmed', handleBookingConfirmed);
+    socket.on('booking_cancelled', handleBookingCancelled);
+    
+    return () => {
+      console.log("📱 StudentAppointments: Removing Socket.IO listeners");
+      socket.off('booking_created', handleBookingCreated);
+      socket.off('booking_confirmed', handleBookingConfirmed);
+      socket.off('booking_cancelled', handleBookingCancelled);
+      socket.disconnect();
+    };
+  }, [refetch, showBookingCreated, showBookingConfirmed, showBookingCancelled]);
 
   return (
     <div className="grid grid-cols-1 gap-5 h-full sm:grid-cols-1 md:grid-cols-1 lg:grid-cols-2">
@@ -287,6 +275,8 @@ const fetchTeacherAppointments = async () => {
 };
 
 function TeacherAppointments() {
+  const { showBookingCreated, showBookingConfirmed, showBookingCancelled } = useToast();
+  
   const {
     data: appointmentsData = [], // Renamed to avoid conflict
     refetch,
@@ -338,56 +328,53 @@ function TeacherAppointments() {
 
   useEffect(() => {
     setSortedAppointments(sortedData);
-  }, [sortedData]);
-  const handleBookingUpdateOrCreate = useCallback((data) => {
+  }, [sortedData]);  const handleBookingUpdateOrCreate = useCallback((data) => {
     console.log("🔄 TeacherAppointments: booking_updated or booking_created event received:", data);
     
-    // Display notification
+    // Display notification based on status
     if (data && data.status) {
-      const statusText = {
-        'confirmed': 'confirmed',
-        'cancelled': 'cancelled',
-        'pending': 'requested'
-      }[data.status] || data.status;
-      
-      // Show user-friendly notification
-      if ('Notification' in window && Notification.permission === 'granted') {
-        new Notification(`Appointment ${statusText}`, {
-          body: `An appointment has been ${statusText}. Refreshing your appointments...`,
-          icon: '/favicon.ico'
-        });
+      if (data.status === 'confirmed') {
+        showBookingConfirmed(`An appointment has been confirmed. Refreshing your appointments...`);
+      } else if (data.status === 'cancelled') {
+        showBookingCancelled(`An appointment has been cancelled. Refreshing your appointments...`);
+      } else {
+        showBookingCreated(`An appointment has been requested. Refreshing your appointments...`);
       }
     }
     
     // Refetch data
     console.log("Refetching teacher appointments due to Socket.IO event");
     refetch();
-  }, [refetch]);
-
+  }, [refetch, showBookingCreated, showBookingConfirmed, showBookingCancelled]);
   useEffect(() => {
-    // if (socket) {
-    //   console.log("📱 TeacherAppointments: Setting up Socket.IO listeners");
-    //   socket.on("booking_updated", handleBookingUpdateOrCreate);
-    //   socket.on("booking_created", handleBookingUpdateOrCreate);
-      
-    //   // Log connection status
-    //   console.log(\`Socket connection status: \${socket.isConnected ? 'connected' : 'disconnected'}\`);
-      
-    //   // Force a connection check/reconnect if needed
-    //   if (!socket.isConnected) {
-    //     console.log("Socket not connected, attempting to reconnect...");
-    //     socket.emit("ping", {});
-    //   }
-      
-    //   return () => {
-    //     console.log("📱 TeacherAppointments: Removing Socket.IO listeners");
-    //     socket.off("booking_updated", handleBookingUpdateOrCreate);
-    //     socket.off("booking_created", handleBookingUpdateOrCreate);
-    //   };
-    // } else {
-    //   console.warn("📱 TeacherAppointments: Socket not available for event listeners");
-    // }
-  }, [handleBookingUpdateOrCreate, refetch]); // Added refetch to dependency array
+    const socket = io('http://localhost:5001');
+    
+    // Add connection event handlers
+    socket.on('connect', () => {
+      console.log('📡 TeacherAppointments: Socket connected');
+    });
+    
+    socket.on('disconnect', () => {
+      console.log('📡 TeacherAppointments: Socket disconnected');
+    });
+    
+    socket.on('connect_error', (error) => {
+      console.error('📡 TeacherAppointments: Socket connection error:', error);
+    });
+    
+    console.log("📱 TeacherAppointments: Listening to booking_created/confirmed/cancelled events");
+    socket.on('booking_created', handleBookingUpdateOrCreate);
+    socket.on('booking_confirmed', handleBookingUpdateOrCreate);
+    socket.on('booking_cancelled', handleBookingUpdateOrCreate);
+    
+    return () => {
+      console.log("📱 TeacherAppointments: Removing Socket.IO listeners");
+      socket.off('booking_created', handleBookingUpdateOrCreate);
+      socket.off('booking_confirmed', handleBookingUpdateOrCreate);
+      socket.off('booking_cancelled', handleBookingUpdateOrCreate);
+      socket.disconnect();
+    };
+  }, [handleBookingUpdateOrCreate]);
 
   const handleConfirmClick = (bookingID) => {
     setConfirmInputs((prev) => ({
@@ -395,11 +382,9 @@ function TeacherAppointments() {
       [bookingID]: { schedule: "", venue: "" },
     }));
   };
-
   async function confirmBooking(bookingID, schedule, venue) {
     if (!schedule || !venue) {
-      // Consider displaying this message to the user more gracefully (e.g., a toast notification)
-      alert("Schedule and venue are required to confirm the booking.");
+      showErrorNotification("Schedule and venue are required to confirm the booking.");
       throw new Error(
         "Schedule and venue are required to confirm the booking."
       );

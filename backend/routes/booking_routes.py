@@ -2,6 +2,8 @@ from flask import Blueprint, request, jsonify
 from models import db, Booking, User, Student, Faculty
 from sqlalchemy.orm import joinedload
 from sqlalchemy import or_
+from services.socket_service import emit_booking_created, emit_booking_confirmed, emit_booking_cancelled
+from datetime import datetime
 
 booking_bp = Blueprint('booking_bp', __name__, url_prefix='/bookings')
 
@@ -256,7 +258,29 @@ def create_booking():
         
         # Add to database
         db.session.add(new_booking)
-        db.session.commit()
+        db.session.commit()        # Emit socket notification for booking creation
+        try:
+            teacher_user = User.query.filter_by(id_number=data['teacherID']).first()
+            teacher_name = f"{teacher_user.first_name} {teacher_user.last_name}" if teacher_user else "Unknown Teacher"
+            student_names = []
+            for sid in student_ids:
+                su = User.query.filter_by(id=sid).first()
+                if su:
+                    student_names.append(f"{su.first_name} {su.last_name}")
+            booking_data = {
+                'id': booking_id,
+                'subject': data.get('subject', 'Consultation'),
+                'status': status,
+                'teacher_name': teacher_name,
+                'student_names': student_names,
+                'schedule': schedule.isoformat() if schedule else None,
+                'venue': venue,
+                'created_by': creator_id
+            }
+            print(f"🔔 Emitting booking_created: {booking_data}")
+            emit_booking_created(booking_data)
+        except Exception as e:
+            print(f"Failed to emit booking_created: {e}")
         # Return success response with booking ID and status
         return jsonify({
             "message": "Booking created successfully", 
@@ -291,7 +315,31 @@ def cancel_booking():
 
     try:
         booking.status = 'cancelled'
-        db.session.commit()
+        db.session.commit()        # Emit socket notification for booking cancellation
+        try:
+            # Get detailed booking data for notification
+            teacher_user = User.query.filter_by(id_number=booking.teacher_id).first()
+            teacher_name = f"{teacher_user.first_name} {teacher_user.last_name}" if teacher_user else "Unknown Teacher"
+            
+            student_names = []
+            for student_id in booking.student_ids:
+                student_user = User.query.filter_by(id=student_id).first()
+                if student_user:
+                    student_names.append(f"{student_user.first_name} {student_user.last_name}")
+            
+            booking_data = {
+                'id': booking_id,
+                'subject': booking.subject,
+                'status': 'cancelled',
+                'teacher_name': teacher_name,
+                'student_names': student_names,
+                'schedule': booking.schedule.isoformat() if booking.schedule else None,
+                'venue': booking.venue
+            }
+            print(f"🔔 Emitting booking_cancelled: {booking_data}")
+            emit_booking_cancelled(booking_data)
+        except Exception as e:
+            print(f"Failed to emit booking_cancelled: {e}")
         return jsonify({"message": "Booking cancelled successfully", "bookingID": booking_id}), 200
     except Exception as e:
         db.session.rollback()
@@ -319,8 +367,6 @@ def confirm_booking():
         return jsonify({"error": "Booking not found"}), 404
 
     try:
-        from datetime import datetime
-        
         # Modify booking
         booking.status = 'confirmed'
         
@@ -334,7 +380,31 @@ def confirm_booking():
                 
         if data.get('venue'):
             booking.venue = data.get('venue')
-        db.session.commit()
+        db.session.commit()        # Emit socket notification for booking confirmation
+        try:
+            # Get detailed booking data for notification
+            teacher_user = User.query.filter_by(id_number=booking.teacher_id).first()
+            teacher_name = f"{teacher_user.first_name} {teacher_user.last_name}" if teacher_user else "Unknown Teacher"
+            
+            student_names = []
+            for student_id in booking.student_ids:
+                student_user = User.query.filter_by(id=student_id).first()
+                if student_user:
+                    student_names.append(f"{student_user.first_name} {student_user.last_name}")
+            
+            booking_data = {
+                'id': booking_id,
+                'subject': booking.subject,
+                'status': 'confirmed',
+                'teacher_name': teacher_name,
+                'student_names': student_names,
+                'schedule': booking.schedule.isoformat() if booking.schedule else None,
+                'venue': booking.venue
+            }
+            print(f"🔔 Emitting booking_confirmed: {booking_data}")
+            emit_booking_confirmed(booking_data)
+        except Exception as e:
+            print(f"Failed to emit booking_confirmed: {e}")
         return jsonify({"message": "Booking confirmed successfully"}), 200
     except Exception as e:
         db.session.rollback()

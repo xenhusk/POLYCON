@@ -268,3 +268,36 @@ async function identifyRoles(transcription) {
     }
 }
 
+// --- Toast and Notification Setup ---
+const toastContainer = document.createElement('div');
+toastContainer.id = 'toast-container';
+document.body.appendChild(toastContainer);
+
+const notifSound = new Audio('/sounds/notification.mp3');  // Place your sound file here
+notifSound.volume = 0.5;
+
+function showToast(message, type = 'info') {
+  const toast = document.createElement('div');
+  // Apply SemesterManagement-style toast classes
+  toast.className = `fixed top-5 right-5 z-50 rounded-lg shadow-lg max-w-md p-4 transform transition-all duration-500 ease-in-out ${
+    type === 'success'
+      ? 'bg-green-100 text-green-700 border border-green-500'
+      : type === 'error'
+      ? 'bg-red-100 text-red-700 border border-red-500'
+      : 'bg-blue-100 text-blue-700 border border-blue-500'
+  }`;
+   toast.textContent = message;
+   toastContainer.appendChild(toast);
+   notifSound.play().catch(() => {});
+   setTimeout(() => {
+    toast.style.opacity = '0';
+    setTimeout(() => toast.remove(), 500);
+  }, 3000);
+}
+
+// Initialize Socket.IO client and listen for booking notifications
+const socket = io('http://localhost:5001');
+socket.on('booking_created', data => showToast(`Booking created: ${data.subject}`, 'success'));
+socket.on('booking_confirmed', data => showToast(`Booking confirmed: ${data.id}`, 'info'));
+socket.on('booking_cancelled', data => showToast(`Booking cancelled: ${data.id}`, 'error'));
+

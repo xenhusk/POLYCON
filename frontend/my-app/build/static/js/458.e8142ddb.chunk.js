@@ -1,0 +1,2 @@
+"use strict";(self.webpackChunkmy_app=self.webpackChunkmy_app||[]).push([[458],{3458:(e,s,r)=>{r.r(s),r.d(s,{default:()=>c});r(5043);var n=r(1626),t=r(579);const c=e=>{let{progress:s}=e;return(0,t.jsx)("div",{style:{minHeight:"100vh",backgroundColor:"#0065A8"},children:(0,t.jsx)("div",{className:"flex justify-center items-center min-h-screen",children:(0,t.jsx)(n.A,{progress:s})})})}}}]);
+//# sourceMappingURL=458.e8142ddb.chunk.js.map

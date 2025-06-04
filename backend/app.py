@@ -5,6 +5,7 @@ from flask_migrate import Migrate  # Add this import
 from config import Config
 from extensions import db, bcrypt, jwt # Import bcrypt and jwt
 import os
+from services.socket_service import socketio, init_app
 
 # Import blueprints
 from routes.health import health_bp
@@ -28,6 +29,8 @@ from routes.polycon_analysis_routes import polycon_analysis_bp # Add this import
 from routes.comparative_routes import comparative_bp # Add this import
 from routes.profile_routes import profile_bp
 from routes.settings_routes import settings_bp
+from routes.socket_test_routes import socket_test_bp # Import socket test routes
+import routes.socket_routes  # Register socket event handlers
 
 
 def create_app():
@@ -41,6 +44,7 @@ def create_app():
     db.init_app(app)
     bcrypt.init_app(app) # Initialize bcrypt
     jwt.init_app(app)    # Initialize jwt
+    init_app(app)  # Initialize SocketIO with Flask app
     migrate = Migrate(app, db)  # Add this line to initialize Flask-Migrate
 
     with app.app_context():
@@ -73,9 +77,9 @@ def create_app():
     # Consultation endpoints
     app.register_blueprint(consultation_bp)
     app.register_blueprint(polycon_analysis_bp, url_prefix='/polycon-analysis') # Add this line
-    app.register_blueprint(comparative_bp, url_prefix='/comparative') # Add this line
-    app.register_blueprint(profile_bp)
+    app.register_blueprint(comparative_bp, url_prefix='/comparative') # Add this line    app.register_blueprint(profile_bp)
     app.register_blueprint(settings_bp) # Ensure this is present
+    app.register_blueprint(socket_test_bp) # Register socket test routes
 
     # Configure static folder for uploads
     UPLOAD_FOLDER = os.path.join(os.path.dirname(os.path.abspath(__file__)), 'uploads')
@@ -104,6 +108,5 @@ app = create_app()
 
 if __name__ == '__main__':
     port = int(os.environ.get("PORT", 5001))
-    print("Starting Flask server on port", port)
-    # Run the regular Flask application
-    app.run(debug=True, host='0.0.0.0', port=port)
+    print("Starting Flask server with SocketIO on port", port)
+    socketio.run(app, debug=True, host='0.0.0.0', port=port)

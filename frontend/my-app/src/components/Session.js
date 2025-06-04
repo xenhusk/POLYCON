@@ -7,6 +7,7 @@ import { ReactComponent as MicrophoneSlashIcon } from "./icons/microphoneSlash.s
 import AnimatedBackground from "./AnimatedBackground";
 import AssessmentModal from "./AssessmentModal";
 import { getProfilePictureUrl, getDisplayProgram } from "../utils/utils";
+import { showErrorNotification, showSuccessNotification, showWarningNotification } from "../utils/notificationUtils";
 
 // Helper function to format program and section together (e.g. "BSCS 3A")
 const formatProgramWithSection = (student) => {
@@ -202,11 +203,10 @@ const Session = () => {
         mediaRecorderRef.current.start();
       }
       setRecording(true);
-      startTimer();
-    } catch (error) {
+      startTimer();    } catch (error) {
       console.error("Error starting recording:", error);
       if (error.name === "NotAllowedError") {
-        alert(
+        showErrorNotification(
           "Microphone permission denied. Please allow access to record audio."
         );
         setMicEnabled(false);
@@ -282,9 +282,8 @@ const Session = () => {
       outcome,
     });
 
-    if (!teacherId || !studentIds || !concern || !action_taken || !outcome) {
-      console.log("Missing fields detected");
-      alert("Please fill in all required fields");
+    if (!teacherId || !studentIds || !concern || !action_taken || !outcome) {      console.log("Missing fields detected");
+      showWarningNotification("Please fill in all required fields");
       setProcessing(false);
       return;
     }
@@ -306,9 +305,8 @@ const Session = () => {
         qualityScore = audioUploadResponse.quality_score || 0;
         qualityMetrics = audioUploadResponse.quality_metrics || {};
         rawSentimentAnalysis = audioUploadResponse.raw_sentiment_analysis || [];
-      } catch (error) {
-        console.error("Error uploading audio:", error);
-        alert("Audio upload failed. Proceeding without transcription.");
+      } catch (error) {        console.error("Error uploading audio:", error);
+        showErrorNotification("Audio upload failed. Proceeding without transcription.");
       }
     }
 
@@ -359,12 +357,10 @@ const Session = () => {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify(payload),
-      });
-
-      if (!response.ok) {
+      });      if (!response.ok) {
         const errorData = await response.json();
         console.error("Server validation error:", errorData); // Add this debug log
-        alert(`Failed to store consultation: ${errorData.error}`);
+        showErrorNotification(`Failed to store consultation: ${errorData.error}`);
         return;
       }
 
@@ -456,12 +452,11 @@ const Session = () => {
       );
       if (!response.ok) {
         throw new Error("Storing consultation session failed");
-      }
-      const data = await response.json();
-      alert(`Session stored successfully with ID: ${data.session_id}`);
+      }      const data = await response.json();
+      showSuccessNotification(`Session stored successfully with ID: ${data.session_id}`);
     } catch (error) {
       console.error("Error storing consultation session:", error);
-      alert("Failed to store consultation session.");
+      showErrorNotification("Failed to store consultation session.");
     }
   };
 

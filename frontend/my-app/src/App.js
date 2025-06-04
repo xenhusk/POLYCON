@@ -9,6 +9,7 @@ import AdminPortal from './components/AdminPortal';
 import Courses from './components/Courses';
 import AddGrade from './components/AddGrade';
 import UserHome from './pages/User_Home';  // Update import name and path
+import { showSuccessNotification, showErrorNotification } from './utils/notificationUtils';
 import AppointmentsCalendar from './components/AppointmentsCalendar';
 import ReactCrop from 'react-image-crop';
 import 'react-image-crop/dist/ReactCrop.css';
@@ -41,6 +42,8 @@ import { getUserIdentifiers } from "./utils/userUtils"; // Add import for getUse
 import { ensureUserIdPersistence, recoverUserIds } from "./utils/persistUtils";
 import ComparativeAnalysis from './pages/ComparativeAnalysis';
 import PasswordResetPage from './components/PasswordResetPage';
+import SocketTest from './pages/SocketTest'; // Add SocketTest import
+import { ToastProvider } from './contexts/ToastContext'; // Add ToastProvider import
 const PreloaderTest = React.lazy(() => import('./components/PagePreloader'));
 
 // Update the variants to only include fade in (no fade out)
@@ -102,13 +105,12 @@ function InlineProfilePictureUploader({ initialFile, onClose }) {
       const response = await fetch('http://localhost:5001/profile/upload_profile_picture', {
         method: 'POST',
         body: formData,
-      });
-      const data = await response.json();
+      });      const data = await response.json();
       if (response.ok) {
-        alert('Profile picture uploaded!');
+        showSuccessNotification('Profile picture uploaded!');
         onClose();
       } else {
-        alert(`Upload failed: ${data.error}`);
+        showErrorNotification(`Upload failed: ${data.error}`);
       }
     } catch (error) {
       console.error('Error uploading picture:', error);
@@ -639,10 +641,10 @@ function App() {
   }, [location.pathname]);
 
   const showDebugger = false; // Set this to false to hide the debugger
-
   return (
-    <div className={location.pathname.includes('/session') ? '' : 'flex min-h-screen'}>
-      <PreloadProvider>
+    <ToastProvider>
+      <div className={location.pathname.includes('/session') ? '' : 'flex min-h-screen'}>
+        <PreloadProvider>
         <div className="app-container flex flex-1">
           {/* Add debugging info to sidebar rendering logic */}
           {(() => {
@@ -772,10 +774,9 @@ function App() {
                     <Route path="/department" element={<Departments />} /> {/* New route */}
                     <Route path="/preloader-test" element={<PreloaderTest />} /> {/* Add this line */}
                     <Route path="/homeadmin" element={<HomeAdmin />} />
-                    <Route path="/homestudent" element={<HomeStudent />} />
-                    <Route path="/enrollment-test" element={<EnrollmentTestPage />} /> {/* new test route */}
-                    <Route path="/semester-management" element={<SemesterManagement />} /> {/* Update this line */}
-                    <Route path="/comparative-analysis" element={<ComparativeAnalysis />} />
+                    <Route path="/homestudent" element={<HomeStudent />} />                    <Route path="/enrollment-test" element={<EnrollmentTestPage />} /> {/* new test route */}
+                    <Route path="/semester-management" element={<SemesterManagement />} /> {/* Update this line */}                    <Route path="/comparative-analysis" element={<ComparativeAnalysis />} />
+                    <Route path="/socket-test" element={<SocketTest />} /> {/* Socket.IO test dashboard route */}
                   </Routes>
                 </Suspense>
               </motion.div>
@@ -825,9 +826,9 @@ function App() {
         {/* OR 2. Set it to always be hidden: */}
         {/* {false && <NotificationDebugger />} */}
         {/* OR 3. Pass a prop to make it start hidden: */}
-        {/* {showDebugger && process.env.NODE_ENV === 'development' && <NotificationDebugger />} */}
-      </PreloadProvider>
+        {/* {showDebugger && process.env.NODE_ENV === 'development' && <NotificationDebugger />} */}      </PreloadProvider>
     </div>
+    </ToastProvider>
   );
 }
 
