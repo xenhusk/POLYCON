@@ -236,15 +236,10 @@ function ComparativeAnalysis() {
   // Function to run comparative analysis using the first grade record as sample
   const runComparativeAnalysis = () => {
     if (grades.length > 0) {
-      const grade = grades[0]; // Using first grade record
+      // Use the full grades array fetched earlier
       const payload = {
         student_id: selectedStudents[0],
-        grades: {
-          prelim: grade.Prelim,
-          midterm: grade.Midterm,
-          prefinals: grade['Pre-Final'],
-          finals: grade.Final
-        },
+        grades_by_period: grades,  // send entire array of course grades
         academic_events: academicEvents
       };
       fetch('http://localhost:5001/comparative/compare_student', {
