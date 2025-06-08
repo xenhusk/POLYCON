@@ -77,7 +77,8 @@ def create_app():
     # Consultation endpoints
     app.register_blueprint(consultation_bp)
     app.register_blueprint(polycon_analysis_bp, url_prefix='/polycon-analysis') # Add this line
-    app.register_blueprint(comparative_bp, url_prefix='/comparative') # Add this line    app.register_blueprint(profile_bp)
+    app.register_blueprint(comparative_bp, url_prefix='/comparative') # Add this line
+    app.register_blueprint(profile_bp)
     app.register_blueprint(settings_bp) # Ensure this is present
     app.register_blueprint(socket_test_bp) # Register socket test routes
 
