@@ -41,3 +41,41 @@ def emit_booking_cancelled(data):
         print("✅ booking_cancelled emitted successfully")
     except Exception as e:
         print(f"❌ Error emitting booking_cancelled: {e}")
+
+def emit_booking_status_update(data):
+    """Emit a general booking status update"""
+    print(f"📡 Broadcasting booking_status_update: {data}")
+    print(f"📡 SocketIO instance: {socketio}")
+    try:
+        socketio.emit('booking_status_update', data)
+        print("✅ booking_status_update emitted successfully")
+    except Exception as e:
+        print(f"❌ Error emitting booking_status_update: {e}")
+
+def emit_appointment_reminder(data):
+    """Emit appointment reminder notifications to specific user room"""
+    print(f"📡 Broadcasting appointment_reminder: {data}")
+    print(f"📡 SocketIO instance: {socketio}")
+    
+    # Extract recipient information for targeted delivery
+    recipient_id = data.get('recipient_id')
+    recipient_type = data.get('recipient_type', 'unknown')
+    
+    if recipient_id:
+        # Target specific user room based on recipient_id
+        user_room = f"user_{recipient_id}"
+        print(f"📡 Targeting user room: {user_room} for {recipient_type}")
+        
+        try:
+            socketio.emit('appointment_reminder', data, room=user_room)
+            print(f"✅ appointment_reminder emitted successfully to room {user_room}")
+        except Exception as e:
+            print(f"❌ Error emitting appointment_reminder to room {user_room}: {e}")
+    else:
+        # Fallback to global broadcast if no recipient_id provided
+        print("⚠️ No recipient_id provided, falling back to global broadcast")
+        try:
+            socketio.emit('appointment_reminder', data)
+            print("✅ appointment_reminder emitted successfully (global)")
+        except Exception as e:
+            print(f"❌ Error emitting appointment_reminder (global): {e}")

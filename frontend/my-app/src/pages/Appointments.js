@@ -23,7 +23,7 @@ const fetchStudentAppointments = async () => {
 };
 
 function StudentAppointments() {
-  const { showBookingCreated, showBookingConfirmed, showBookingCancelled } = useToast();
+  const { showBookingCreated, showBookingConfirmed, showBookingCancelled, showAppointmentReminder } = useToast();
   
   const {
     data: bookings = [],
@@ -99,33 +99,39 @@ function StudentAppointments() {
     
     const handleBookingCreated = data => {
       console.log("✨ booking_created received:", data);
-      showBookingCreated(`Subject: ${data.subject || 'Consultation'}`);
+      showBookingCreated(`Appointment Booking Created`);
       refetch();
     };
     const handleBookingConfirmed = data => {
       console.log("✅ booking_confirmed received:", data);
-      showBookingConfirmed(`Appointment ${data.id} confirmed`);
+      showBookingConfirmed(`Appointment confirmed`);
       refetch();
-    };
-    const handleBookingCancelled = data => {
+    };    const handleBookingCancelled = data => {
       console.log("❌ booking_cancelled received:", data);
-      showBookingCancelled(`Appointment ${data.id} cancelled`);
+      showBookingCancelled(`Appointment cancelled`);
       refetch();
     };
 
-    console.log("📱 StudentAppointments: Listening to booking_created/confirmed/cancelled events");
+    const handleAppointmentReminder = data => {
+      console.log("⏰ appointment_reminder received:", data);
+      const message = `Your appointment with ${data.teacherName || 'your teacher'} is starting in 15 minutes at ${data.venue || 'the scheduled location'}`;
+      showAppointmentReminder(message);
+    };
+
+    console.log("📱 StudentAppointments: Listening to booking_created/confirmed/cancelled/reminder events");
     socket.on('booking_created', handleBookingCreated);
     socket.on('booking_confirmed', handleBookingConfirmed);
     socket.on('booking_cancelled', handleBookingCancelled);
-    
-    return () => {
+    socket.on('appointment_reminder', handleAppointmentReminder);
+      return () => {
       console.log("📱 StudentAppointments: Removing Socket.IO listeners");
       socket.off('booking_created', handleBookingCreated);
       socket.off('booking_confirmed', handleBookingConfirmed);
       socket.off('booking_cancelled', handleBookingCancelled);
+      socket.off('appointment_reminder', handleAppointmentReminder);
       socket.disconnect();
     };
-  }, [refetch, showBookingCreated, showBookingConfirmed, showBookingCancelled]);
+  }, [refetch, showBookingCreated, showBookingConfirmed, showBookingCancelled, showAppointmentReminder]);
 
   return (
     <div className="grid grid-cols-1 gap-5 h-full sm:grid-cols-1 md:grid-cols-1 lg:grid-cols-2">
@@ -275,7 +281,7 @@ const fetchTeacherAppointments = async () => {
 };
 
 function TeacherAppointments() {
-  const { showBookingCreated, showBookingConfirmed, showBookingCancelled } = useToast();
+  const { showBookingCreated, showBookingConfirmed, showBookingCancelled, showAppointmentReminder } = useToast();
   
   const {
     data: appointmentsData = [], // Renamed to avoid conflict
@@ -334,11 +340,11 @@ function TeacherAppointments() {
     // Display notification based on status
     if (data && data.status) {
       if (data.status === 'confirmed') {
-        showBookingConfirmed(`An appointment has been confirmed. Refreshing your appointments...`);
+        showBookingConfirmed(`An appointment has been confirmed.`);
       } else if (data.status === 'cancelled') {
-        showBookingCancelled(`An appointment has been cancelled. Refreshing your appointments...`);
+        showBookingCancelled(`An appointment has been cancelled.`);
       } else {
-        showBookingCreated(`An appointment has been requested. Refreshing your appointments...`);
+        showBookingCreated(`An appointment has been requested.`);
       }
     }
     
@@ -346,6 +352,13 @@ function TeacherAppointments() {
     console.log("Refetching teacher appointments due to Socket.IO event");
     refetch();
   }, [refetch, showBookingCreated, showBookingConfirmed, showBookingCancelled]);
+
+  const handleAppointmentReminder = useCallback((data) => {
+    console.log("⏰ appointment_reminder received:", data);
+    const studentNames = data.studentNames ? data.studentNames.join(', ') : 'your students';
+    const message = `Your appointment with ${studentNames} is starting in 15 minutes at ${data.venue || 'the scheduled location'}`;
+    showAppointmentReminder(message);
+  }, [showAppointmentReminder]);
   useEffect(() => {
     const socket = io('http://localhost:5001');
     
@@ -361,20 +374,20 @@ function TeacherAppointments() {
     socket.on('connect_error', (error) => {
       console.error('📡 TeacherAppointments: Socket connection error:', error);
     });
-    
-    console.log("📱 TeacherAppointments: Listening to booking_created/confirmed/cancelled events");
+      console.log("📱 TeacherAppointments: Listening to booking_created/confirmed/cancelled/reminder events");
     socket.on('booking_created', handleBookingUpdateOrCreate);
     socket.on('booking_confirmed', handleBookingUpdateOrCreate);
     socket.on('booking_cancelled', handleBookingUpdateOrCreate);
-    
-    return () => {
+    socket.on('appointment_reminder', handleAppointmentReminder);
+      return () => {
       console.log("📱 TeacherAppointments: Removing Socket.IO listeners");
       socket.off('booking_created', handleBookingUpdateOrCreate);
       socket.off('booking_confirmed', handleBookingUpdateOrCreate);
       socket.off('booking_cancelled', handleBookingUpdateOrCreate);
+      socket.off('appointment_reminder', handleAppointmentReminder);
       socket.disconnect();
     };
-  }, [handleBookingUpdateOrCreate]);
+  }, [handleBookingUpdateOrCreate, handleAppointmentReminder]);
 
   const handleConfirmClick = (bookingID) => {
     setConfirmInputs((prev) => ({

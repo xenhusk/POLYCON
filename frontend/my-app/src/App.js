@@ -638,9 +638,7 @@ function App() {
       sessionCheck: !currentPath.includes('/session'),
       docCheck: !currentPath.includes('/finaldocument')
     });
-  }, [location.pathname]);
-
-  const showDebugger = false; // Set this to false to hide the debugger
+  }, [location.pathname]);  const showDebugger = false; // Set this to false to hide the debugger
   return (
     <ToastProvider>
       <div className={location.pathname.includes('/session') ? '' : 'flex min-h-screen'}>
@@ -825,8 +823,7 @@ function App() {
         {/* {process.env.NODE_ENV === 'development' && <NotificationDebugger />} */}
         {/* OR 2. Set it to always be hidden: */}
         {/* {false && <NotificationDebugger />} */}
-        {/* OR 3. Pass a prop to make it start hidden: */}
-        {/* {showDebugger && process.env.NODE_ENV === 'development' && <NotificationDebugger />} */}      </PreloadProvider>
+        {/* OR 3. Pass a prop to make it start hidden: */}        {/* {showDebugger && process.env.NODE_ENV === 'development' && <NotificationDebugger />} */}      </PreloadProvider>
     </div>
     </ToastProvider>
   );

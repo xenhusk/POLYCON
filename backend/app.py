@@ -30,6 +30,7 @@ from routes.comparative_routes import comparative_bp # Add this import
 from routes.profile_routes import profile_bp
 from routes.settings_routes import settings_bp
 from routes.socket_test_routes import socket_test_bp # Import socket test routes
+from routes.scheduler_routes import scheduler_bp # Import scheduler routes
 import routes.socket_routes  # Register socket event handlers
 
 
@@ -52,10 +53,9 @@ def create_app():
         # Ensure is_verified column exists for login
         from sqlalchemy import text
         db.session.execute(text("ALTER TABLE users ADD COLUMN IF NOT EXISTS is_verified BOOLEAN DEFAULT FALSE"))
-        db.session.commit()
-        # Start the appointment reminder scheduler
-        # from services.scheduler_service import initialize_scheduler  # Import here to avoid circular import
-        # initialize_scheduler(app)  # Pass the Flask app instance
+        db.session.commit()        # Start the appointment reminder scheduler
+        from services.scheduler_service import initialize_scheduler  # Import here to avoid circular import
+        initialize_scheduler(app)  # Pass the Flask app instance
 
     # Register blueprints
     app.register_blueprint(health_bp)
@@ -80,6 +80,7 @@ def create_app():
     app.register_blueprint(comparative_bp, url_prefix='/comparative') # Add this line    app.register_blueprint(profile_bp)
     app.register_blueprint(settings_bp) # Ensure this is present
     app.register_blueprint(socket_test_bp) # Register socket test routes
+    app.register_blueprint(scheduler_bp, url_prefix='/scheduler') # Register scheduler routes
 
     # Configure static folder for uploads
     UPLOAD_FOLDER = os.path.join(os.path.dirname(os.path.abspath(__file__)), 'uploads')

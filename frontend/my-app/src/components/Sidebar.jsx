@@ -23,6 +23,7 @@ import { FaHome, FaGraduationCap, FaClipboardList, FaUser, FaUsers, FaCog } from
 import { getProfilePictureUrl } from '../utils/utils';
 import ProfilePictureUploader from './ProfilePictureUploader';
 import SettingsPopup from './SettingsPopup';
+import NotificationTray from './NotificationTray'; // Import NotificationTray component
 
 const Sidebar = ({ onExpandChange }) => {
   const location = useLocation(); // Add this hook
@@ -574,6 +575,12 @@ const Sidebar = ({ onExpandChange }) => {
         position={settingsPosition}
         onLogout={handleLogoutCommand} // Pass the logout handler
         userEmail={userDetails?.email} // Pass userEmail if needed by SettingsPopup
+      />
+
+      {/* Notification Tray */}
+      <NotificationTray 
+        isVisible={showNotifications}
+        onClose={() => setShowNotifications(false)}
       />
 
       {/* Photo Upload Modal */}
