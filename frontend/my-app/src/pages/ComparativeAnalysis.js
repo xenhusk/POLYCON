@@ -421,7 +421,7 @@ function ComparativeAnalysis() {
                         className="text-red-500 hover:text-red-700 p-1"
                       >
                         <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5" viewBox="0 0 20 20" fill="currentColor">
-                          <path fillRule="evenodd" d="M9 2a1 1 0 00-.894.553L7.382 4H4a1 1 0 000 2v10a2 2 0 002 2h8a2 2 0 002-2V6a1 1 0 100-2h-3.382l-.724-1.447A1 1 0 0011 2H9zM7 8a1 1 0 012 0v6a1 1 0 11-2 0V8zm5-1a1 1 0 00-1 1v6a1 1 0 102 0V8a1 1 0 00-1-1z" clipRule="evenodd" />
+                          <path fillRule="evenodd" d="M9 2a1 1 0 00-.894.553L7.382 4H4a1 1 0 000 2v10a2 2 0 002 2h8a2 2 0 002-2V6a1 1 0 100-2h-3.382l-.724-1.447A1 1 0 0011 2H9zM7 8a1 1 0 012 0v6a1 1 0 11-2 0V8zm5-1a1 1 0 00-1 1v6a1 1 0 102 0v-3a1 1 0 00-1-1z" clipRule="evenodd" />
                         </svg>
                       </button>
                     </div>
@@ -453,185 +453,294 @@ function ComparativeAnalysis() {
         </div>
       )}
 
+      {/* Analysis Results Section */}
       {analysisResult && (
-        <div className="mt-8 mb-12">
-          <div className="flex items-center mb-6">
-            <div className="h-0.5 flex-grow mr-4 bg-gradient-to-l from-[#0065A8] to-transparent"></div>
-            <h3 className="text-2xl font-bold text-center text-[#0065A8]">Analysis Results</h3>
-            <div className="h-0.5 flex-grow ml-4 bg-gradient-to-r from-[#0065A8] to-transparent"></div>
-          </div>
-          
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
-            {/* Basic Info Card */}
-            <div className="bg-white rounded-xl shadow-md overflow-hidden">
-              <div className="bg-[#397de2] text-white p-4">
-                <h4 className="text-xl font-semibold">Student Performance</h4>
-              </div>
-              <div className="p-6 space-y-4">
-                <div className="flex justify-between items-center">
-                  <p className="text-gray-700"><span className="font-semibold">Student ID:</span> {analysisResult.student_id}</p>
-                  <div className="flex items-center">
-                    <span className="text-gray-700 mr-2">Rating:</span>
-                    <span className={`px-3 py-1 rounded-full text-white text-sm font-medium ${
-                      analysisResult.rating === "Excellent" ? "bg-green-500" :
-                      analysisResult.rating === "Very Good" ? "bg-[#00D1B2]" :
-                      analysisResult.rating === "Good" ? "bg-blue-500" :
-                      analysisResult.rating === "Satisfactory" ? "bg-yellow-500" :
-                      "bg-red-500"
-                    }`}>
-                      {analysisResult.rating}
-                    </span>
+        <motion.div 
+          initial={{ opacity: 0, y: 20 }}
+          animate={{ opacity: 1, y: 0 }}
+          className="mt-12 mb-16"
+        >
+          {/* Header */}
+          <motion.div 
+            className="relative mb-12"
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            transition={{ delay: 0.2 }}
+          >
+            <div className="absolute inset-0 flex items-center">
+              <div className="h-0.5 w-full bg-gradient-to-r from-transparent via-[#0065A8] to-transparent opacity-30"></div>
+            </div>
+            <div className="relative flex justify-center">
+              <span className="bg-white px-8 py-3 rounded-full shadow-sm">
+                <h3 className="text-3xl font-bold text-[#0065A8]">Analysis Results</h3>
+              </span>
+            </div>
+          </motion.div>
+
+          {/* Cards Grid */}
+          <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
+            {/* Student Performance Card */}
+            <motion.div 
+              initial={{ opacity: 0, x: -20 }}
+              animate={{ opacity: 1, x: 0 }}
+              whileHover={{ scale: 1.01 }}
+              className="bg-white rounded-2xl shadow-lg overflow-hidden border border-gray-100 transition-all duration-300"
+            >
+              <div className="bg-gradient-to-r from-[#397de2] to-[#54BEFF] p-6">
+                <div className="flex items-start justify-between">
+                  <div>
+                    <h4 className="text-2xl font-bold text-white">Student Performance</h4>
+                    <p className="text-blue-100 mt-1 text-sm">Academic Achievement Analysis</p>
                   </div>
+                  <span className={`px-4 py-2 rounded-full text-white text-sm font-medium ${
+                    analysisResult.rating === "Excellent" ? "bg-gradient-to-r from-green-500 to-green-400" :
+                    analysisResult.rating === "Very Good" ? "bg-gradient-to-r from-[#00D1B2] to-[#00B4B4]" :
+                    analysisResult.rating === "Good" ? "bg-gradient-to-r from-blue-500 to-blue-400" :
+                    analysisResult.rating === "Satisfactory" ? "bg-gradient-to-r from-yellow-500 to-yellow-400" :
+                    "bg-gradient-to-r from-red-500 to-red-400"
+                  }`}>
+                    {analysisResult.rating}
+                  </span>
                 </div>
-                
-                <div>
-                  <div className="flex justify-between mb-1">
-                    <span className="text-gray-700 font-medium">Overall Score</span>
-                    <span className="text-gray-700 font-medium">{(analysisResult.overall_score * 100).toFixed(0)}%</span>
+              </div>
+
+              {/* Student Info & Performance Metrics */}
+              <div className="p-6 space-y-6">
+                <div className="grid grid-cols-2 gap-4">
+                  <div className="bg-gray-50 rounded-xl p-4">
+                    <p className="text-sm text-gray-500">Student ID</p>
+                    <p className="text-lg font-semibold text-gray-800">{analysisResult.student_id}</p>
                   </div>
-                  <div className="w-full bg-gray-200 rounded-full h-3">
-                    <div 
-                      className={`h-3 rounded-full ${
-                        analysisResult.overall_score >= 0.8 ? "bg-green-500" :
-                        analysisResult.overall_score >= 0.65 ? "bg-[#00D1B2]" :
-                        analysisResult.overall_score >= 0.5 ? "bg-blue-500" :
-                        analysisResult.overall_score >= 0.35 ? "bg-yellow-500" :
-                        "bg-red-500"
-                      }`}
-                      style={{ width: `${analysisResult.overall_score * 100}%` }}
-                    ></div>
+                  <div className="bg-gray-50 rounded-xl p-4 text-right">
+                    <p className="text-sm text-gray-500">Overall Score</p>
+                    <p className="text-2xl font-bold text-[#397de2]">
+                      {(analysisResult.overall_score * 100).toFixed(0)}%
+                    </p>
                   </div>
                 </div>
 
-                <div className="pt-2">
-                  <h5 className="font-semibold text-gray-700 mb-2">Performance Factors</h5>
-                  <div className="space-y-3">
-                    <div>                      <div className="flex justify-between text-sm mb-1">
-                        <span>Baseline Factor</span>
-                        <span>{analysisResult.baseline_factor || 0}</span>
-                      </div>
-                      <div className="w-full bg-gray-200 rounded-full h-2">
-                        <div className="bg-[#397de2] h-2 rounded-full" style={{ width: `${(analysisResult.baseline_factor || 0) * 75}%` }}></div>
-                      </div>
+                {/* Performance Progress Bars */}
+                <div className="space-y-4">
+                  {/* Add Overall Factor Bar */}
+                  <div className="bg-purple-50 rounded-xl p-4">
+                    <div className="flex justify-between mb-2">
+                      <span className="text-sm font-medium text-purple-700">Overall Factor</span>
+                      <span className="text-sm font-bold text-purple-700">
+                        {(analysisResult.overall_score * 100).toFixed(0)}%
+                      </span>
                     </div>
-                    <div>
-                      <div className="flex justify-between text-sm mb-1">
-                        <span>Consistency Factor</span>
-                        <span>{analysisResult.consistency_factor || 0}</span>
-                      </div>
-                      <div className="w-full bg-gray-200 rounded-full h-2">
-                        <div className="bg-[#397de2] h-2 rounded-full" style={{ width: `${(analysisResult.consistency_factor || 0) * 100}%` }}></div>
-                      </div>
+                    <div className="relative h-2 bg-purple-200 rounded-full overflow-hidden">
+                      <motion.div 
+                        initial={{ width: 0 }}
+                        animate={{ width: `${analysisResult.overall_score * 100}%` }}
+                        transition={{ duration: 1, ease: "easeOut" }}
+                        className="absolute h-full bg-gradient-to-r from-purple-600 to-purple-400 rounded-full"
+                      />
+                    </div>
+                  </div>
+
+                  <div className="bg-blue-50 rounded-xl p-4">
+                    <div className="flex justify-between mb-2">
+                      <span className="text-sm font-medium text-blue-700">Baseline Factor</span>
+                      <span className="text-sm font-bold text-blue-700">{analysisResult.baseline_factor}</span>
+                    </div>
+                    <div className="relative h-2 bg-blue-200 rounded-full overflow-hidden">
+                      <motion.div 
+                        initial={{ width: 0 }}
+                        animate={{ width: `${analysisResult.baseline_factor * 75}%` }}
+                        transition={{ duration: 1, ease: "easeOut" }}
+                        className="absolute h-full bg-gradient-to-r from-blue-600 to-blue-400 rounded-full"
+                      />
+                    </div>
+                  </div>
+
+                  <div className="bg-green-50 rounded-xl p-4">
+                    <div className="flex justify-between mb-2">
+                      <span className="text-sm font-medium text-green-700">Consistency Factor</span>
+                      <span className="text-sm font-bold text-green-700">{analysisResult.consistency_factor}</span>
+                    </div>
+                    <div className="relative h-2 bg-green-200 rounded-full overflow-hidden">
+                      <motion.div 
+                        initial={{ width: 0 }}
+                        animate={{ width: `${analysisResult.consistency_factor * 100}%` }}
+                        transition={{ duration: 1, ease: "easeOut" }}
+                        className="absolute h-full bg-gradient-to-r from-green-600 to-green-400 rounded-full"
+                      />
                     </div>
                   </div>
                 </div>
               </div>
-            </div>
-            
-            {/* Grade Improvement Card */}
-            <div className="bg-white rounded-xl shadow-md overflow-hidden">
-              <div className="bg-[#fc6969] text-white p-4">
-                <h4 className="text-xl font-semibold">Grade Progression</h4>
+            </motion.div>
+
+            {/* Grade Progression Card */}
+            <motion.div 
+              initial={{ opacity: 0, x: 20 }}
+              animate={{ opacity: 1, x: 0 }}
+              whileHover={{ scale: 1.01 }}
+              className="bg-white rounded-2xl shadow-lg overflow-hidden border border-gray-100"
+            >
+              <div className="bg-gradient-to-r from-[#fc6969] to-[#ff8f8f] p-6">
+                <h4 className="text-2xl font-bold text-white">Grade Progression</h4>
+                <p className="text-red-100 mt-1 text-sm">Term-by-Term Performance</p>
               </div>
-              <div className="p-6">                <Bar 
-                  data={{
-                    labels: ['Prelim', 'Midterm', 'Pre-Finals', 'Finals'],
-                    datasets: [
-                      {
-                        label: 'Grade',                        data: [
+              <div className="p-6">
+                <div className="mb-6">
+                  <Bar 
+                    data={{
+                      labels: ['Prelim', 'Midterm', 'Pre-Finals', 'Finals'],
+                      datasets: [{
+                        label: 'Grade',
+                        data: [
                           analysisResult.grades.prelim,
                           analysisResult.grades.midterm,
                           analysisResult.grades.prefinals,
                           analysisResult.grades.finals
                         ],
-                        backgroundColor: ['#397de2', '#54BEFF', '#fc6969', '#00D1B2']
-                      }
-                    ]
-                  }}
-                  options={{
-                    responsive: true,
-                    plugins: {
-                      legend: {
-                        display: false
-                      }
-                    },
-                    scales: {
-                      y: {
-                        beginAtZero: false,                        min: Math.max(0, Math.min(
-                          parseFloat(analysisResult.grades.prelim),
-                          parseFloat(analysisResult.grades.midterm),
-                          parseFloat(analysisResult.grades.prefinals),
-                          parseFloat(analysisResult.grades.finals)
-                        ) - 5)
-                      }
-                    }
-                  }}
-                />
-                <div className="mt-4 text-center p-3 bg-gray-50 rounded-lg">
-                  <div className="text-lg font-semibold">
-                    <span className="text-gray-700">Grade Improvement: </span>                    <span className={(analysisResult.grade_improvement || 0) > 0 ? "text-green-600" : (analysisResult.grade_improvement || 0) < 0 ? "text-red-600" : "text-gray-600"}>
-                      {(analysisResult.grade_improvement || 0) > 0 ? "+" : ""}{analysisResult.grade_improvement || 0} points
-                    </span>
-                  </div>
-                </div>
-              </div>
-            </div>
-            
-            {/* Academic Events Impact */}
-            {analysisResult.academic_events?.length > 0 && (
-              <div className="bg-white rounded-xl shadow-md overflow-hidden">
-                <div className="bg-[#00D1B2] text-white p-4">
-                  <h4 className="text-xl font-semibold">Academic Events Impact</h4>
-                </div>
-                <div className="p-6">
-                  <Pie 
-                    data={{
-                      labels: analysisResult.academic_events.map(event => event.name || `Event ${analysisResult.academic_events.indexOf(event) + 1}`),
-                      datasets: [
-                        {
-                          data: analysisResult.academic_events.map(event => event.rating),
-                          backgroundColor: generateColors(analysisResult.academic_events.length),
-                          borderWidth: 1
-                        }
-                      ]
+                        backgroundColor: ['#397de2', '#54BEFF', '#fc6969', '#00D1B2'],
+                        borderRadius: 8
+                      }]
                     }}
                     options={{
                       responsive: true,
                       plugins: {
-                        legend: {
-                          position: 'bottom',
-                          labels: {
-                            padding: 20,
-                            usePointStyle: true,
-                            font: {
-                              size: 11
-                            }
+                        legend: { display: false },
+                        tooltip: {
+                          backgroundColor: 'rgba(0, 0, 0, 0.8)',
+                          padding: 12,
+                          titleColor: '#fff',
+                          bodyColor: '#fff',
+                          cornerRadius: 8
+                        }
+                      },
+                      scales: {
+                        y: {
+                          beginAtZero: false,
+                          min: Math.max(0, Math.min(
+                            parseFloat(analysisResult.grades.prelim),
+                            parseFloat(analysisResult.grades.midterm),
+                            parseFloat(analysisResult.grades.prefinals),
+                            parseFloat(analysisResult.grades.finals)
+                          ) - 5),
+                          grid: {
+                            display: true,
+                            color: 'rgba(0, 0, 0, 0.05)'
                           }
+                        },
+                        x: {
+                          grid: { display: false }
                         }
                       }
                     }}
                   />
-                  <div className="mt-4 text-center p-3 bg-gray-50 rounded-lg">                    <div className="text-lg font-semibold text-[#00D1B2]">
-                      Average Impact: {((analysisResult.average_event_impact || 0) * 5).toFixed(1)}/5
+                </div>
+                <div className="bg-gray-50 rounded-xl p-4 text-center">
+                  <p className="text-gray-600 mb-2">Grade Improvement</p>
+                  <p className={`text-2xl font-bold ${
+                    analysisResult.grade_improvement > 0 ? "text-green-600" : 
+                    analysisResult.grade_improvement < 0 ? "text-red-600" : 
+                    "text-gray-600"
+                  }`}>
+                    {analysisResult.grade_improvement > 0 ? "+" : ""}
+                    {analysisResult.grade_improvement} points
+                  </p>
+                </div>
+              </div>
+            </motion.div>
+
+            {/* Academic Events Impact Card */}
+            {analysisResult.academic_events?.length > 0 && (
+              <motion.div 
+                initial={{ opacity: 0, y: 20 }}
+                animate={{ opacity: 1, y: 0 }}
+                whileHover={{ scale: 1.01 }}
+                className="bg-white rounded-2xl shadow-lg overflow-hidden border border-gray-100"
+              >
+                <div className="bg-gradient-to-r from-[#00D1B2] to-[#00B4B4] p-6">
+                  <h4 className="text-2xl font-bold text-white">Academic Events Impact</h4>
+                  <p className="text-teal-100 mt-1 text-sm">Event Participation Analysis</p>
+                </div>
+                <div className="p-6">
+                  <div style={{ maxHeight: '400px', justifyContent: 'center', alignItems: 'center' }} className="flex items-center justify-center">
+                    <Pie 
+                      data={{
+                        labels: analysisResult.academic_events.map(event => event.name || `Event ${analysisResult.academic_events.indexOf(event) + 1}`),
+                        datasets: [{
+                          data: analysisResult.academic_events.map(event => event.rating),
+                          backgroundColor: generateColors(analysisResult.academic_events.length),
+                          borderWidth: 1
+                        }]
+                      }}
+                      options={{
+                        responsive: true,
+                        maintainAspectRatio: true,
+                        plugins: {
+                          legend: {
+                            position: 'bottom',
+                            labels: {
+                              padding: 20,
+                              usePointStyle: true,
+                              font: { size: 11 }
+                            }
+                          }
+                        }
+                      }}
+                    />
+                  </div>
+                  <div className="mt-6 bg-teal-50 rounded-xl p-4 text-center">
+                    <p className="text-teal-800 font-medium mb-1">Average Impact Rating</p>
+                    <p className="text-2xl font-bold text-teal-600">
+                      {(analysisResult.average_event_impact * 5).toFixed(1)}/5
+                    </p>
+                  </div>
+                </div>
+              </motion.div>
+            )}
+            
+            {/* Performance Metrics Radar Card */}
+            <motion.div 
+              initial={{ opacity: 0, x: 20 }}
+              animate={{ opacity: 1, x: 0 }}
+              whileHover={{ scale: 1.01 }}
+              className="bg-white rounded-2xl shadow-lg overflow-hidden border border-gray-100"
+            >
+              <div className="bg-gradient-to-r from-[#0065A8] to-[#54BEFF] p-6">
+                <h4 className="text-2xl font-bold text-white">Performance Metrics</h4>
+                <p className="text-blue-100 mt-1 text-sm">Comprehensive Performance Analysis</p>
+              </div>
+              <div className="p-6">
+                <div style={{ maxHeight: '400px', justifyContent: 'center', alignItems: 'center' }} className="flex items-center justify-center">
+                  <PerformanceRadarChart 
+                    metricsData={{
+                      normalizedImprovement: analysisResult.normalized_improvement,
+                      averageEventImpact: analysisResult.average_event_impact,
+                      consultationQuality: analysisResult.consultation_quality
+                    }}
+                  />
+                </div>
+                <div className="mt-6 bg-blue-50 rounded-xl p-4">
+                  <div className="grid grid-cols-3 gap-4 text-center">
+                    <div>
+                      <p className="text-sm text-blue-600 mb-1">Improvement</p>
+                      <p className="font-bold text-blue-700">
+                        {(analysisResult.normalized_improvement * 100).toFixed(0)}%
+                      </p>
+                    </div>
+                    <div>
+                      <p className="text-sm text-blue-600 mb-1">Event Impact</p>
+                      <p className="font-bold text-blue-700">
+                        {(analysisResult.average_event_impact * 100).toFixed(0)}%
+                      </p>
+                    </div>
+                    <div>
+                      <p className="text-sm text-blue-600 mb-1">Consultation</p>
+                      <p className="font-bold text-blue-700">
+                        {(analysisResult.consultation_quality * 100).toFixed(0)}%
+                      </p>
                     </div>
                   </div>
                 </div>
               </div>
-            )}
-            
-            {/* Performance Metrics Radar */}
-            <div className="bg-white rounded-xl shadow-md overflow-hidden">
-              <div className="bg-[#0065A8] text-white p-4">
-                <h4 className="text-xl font-semibold">Performance Metrics</h4>
-              </div>              <div className="p-6">                <PerformanceRadarChart 
-                  metricsData={{
-                    normalizedImprovement: analysisResult.normalized_improvement,
-                    averageEventImpact: analysisResult.average_event_impact,
-                    consultationQuality: analysisResult.consultation_quality
-                  }}
-                />
-              </div>
-            </div>
+            </motion.div>
 
             {/* Overall performance card - with improved naming and description */}
             <div className="bg-white rounded-xl shadow-md overflow-hidden">
@@ -699,7 +808,8 @@ function ComparativeAnalysis() {
               )}
             </div>
           </div>
-        </div>
+        </motion.div>
+
       )}
 
       {/* Selection Modal */}

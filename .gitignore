@@ -3,6 +3,7 @@ node_modules
 .venv
 env
 venv
+envbackend/
 /backend/keys/
 /.venv/
 backend-python/.env
