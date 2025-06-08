@@ -27,6 +27,7 @@ const Signup = ({ onSwitchToLogin }) => {
     role: "student", // Default role set to student
   });
   const [errorMessage, setErrorMessage] = useState("");
+  const [successMessage, setSuccessMessage] = useState("");
   const [fieldErrors, setFieldErrors] = useState({
     firstName: "",
     lastName: "",
@@ -137,7 +138,7 @@ const Signup = ({ onSwitchToLogin }) => {
   const handleSubmit = async (e) => {
     e.preventDefault();
     setErrorMessage("");
-    setSignupClicked(true);
+    setSuccessMessage("");
     setIsLoading(true);
 
     // Validate form
@@ -171,8 +172,8 @@ const Signup = ({ onSwitchToLogin }) => {
       const data = await response.json();
 
       if (response.ok) {
-        setErrorMessage(
-          "Registration successful! Please check your email to verify your account."
+        setSuccessMessage(
+          "✅ Registration successful! Check your email for the verification link."
         );
         setIsLoading(false);
         // Optionally, switch to login after a delay
@@ -593,8 +594,13 @@ const Signup = ({ onSwitchToLogin }) => {
                 </div>
 
                 {/* General error message */}
+                {successMessage && (
+                  <p className="text-center text-green-500 text-[0.9rem]">
+                    {successMessage}
+                  </p>
+                )}
                 {errorMessage && (
-                  <p className="text-center text-red-500 text-[0.8rem] md:text-[0.9rem]">
+                  <p className="text-center text-red-500 text-[0.9rem]">
                     {errorMessage}
                   </p>
                 )}

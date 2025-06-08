@@ -123,44 +123,33 @@ def signup():
 @account_bp.route('/verify', methods=['GET'])
 def verify_email():
     token = request.args.get('token')
-    print(f"[DEBUG] /account/verify called with token: {token}")
     if not token:
-        print("[ERROR] No token provided in request.")
-        return jsonify({'error': 'Verification token is required'}), 400
-    
+        return "<h3 style='color:red;text-align:center;'>Verification token is required</h3>", 400
+
     try:
         import json
         # First try to decode the token
         decoded = decode_token(token)
-        print(f"[DEBUG] Decoded token: {decoded}")
-        print(f"[DEBUG] Decoded token type: {type(decoded)}")
         
         # Get the identity string from the token
         signup_data_str = decoded.get('sub', '') if isinstance(decoded, dict) else getattr(decoded, 'sub', '')
-        print(f"[DEBUG] Raw signup_data string: {signup_data_str}")
         
         # Parse the JSON string back into a dictionary
         try:
             signup_data = json.loads(signup_data_str)
-            print(f"[DEBUG] Parsed signup_data: {signup_data}")
         except json.JSONDecodeError as e:
-            print(f"[ERROR] Failed to parse signup data: {e}")
-            return jsonify({'error': 'Invalid token data format'}), 400
+            return f"<h3 style='color:red;text-align:center;'>Error verifying account: {e}</h3>", 400
 
         if not signup_data or not isinstance(signup_data, dict):
-            print(f"[ERROR] Invalid signup data format: {signup_data}")
-            return jsonify({'error': 'Invalid token data format'}), 400
+            return f"<h3 style='color:red;text-align:center;'>Error verifying account: Invalid token data format</h3>", 400
 
         # Check if user already exists
         if User.query.filter_by(email=signup_data['email']).first():
-            print("[ERROR] User already exists or already verified.")
             return jsonify({'error': 'User already exists or already verified.'}), 400
 
         # Validate program exists and belongs to department
         program = Program.query.filter_by(id=signup_data['program_id'], department_id=signup_data['department_id']).first()
-        print(f"[DEBUG] Program lookup result: {program}")
         if not program:
-            print("[ERROR] Program not found for the given department.")
             return jsonify({'error': 'Program not found for the given department'}), 400
 
         # Create user in DB
@@ -177,7 +166,6 @@ def verify_email():
         )
         db.session.add(new_user)
         db.session.commit()
-        print(f"[DEBUG] Created new user: {new_user}")
 
         # For student role, create student record
         if signup_data['role'] == 'student':
@@ -189,14 +177,28 @@ def verify_email():
             )
             db.session.add(new_student)
             db.session.commit()
-            print(f"[DEBUG] Created new student: {new_student}")
 
-        print("[DEBUG] Account verified and created successfully!")
-        return jsonify({'message': 'Account verified and created successfully!'}), 200
+        # Render basic HTML confirmation
+        return '''
+        <html>
+          <head>
+            <title>Account Verified</title>
+            <style>
+              body { background-color: #1e40af; color: white; margin: 0; }
+              a { color: #bfdbfe; }
+            </style>
+          </head>
+          <body style="font-family:sans-serif;text-align:center;padding-top:5rem;">
+            <!-- Ensure polyconLogo.png is placed in backend/static/polyconLogo.png -->
+            <img src="/static/polyconLogo.png" alt="Polycon Logo" style="width:200px;margin-bottom:2rem;"/>
+            <h1>Registration Complete!</h1>
+            <p>Your email has been verified. You can now <a href="http://localhost:3000">log in</a>.</p>
+          </body>
+        </html>
+        ''', 200, {'Content-Type': 'text/html'}
 
     except Exception as e:
-        print(f"[ERROR] Exception in /account/verify: {e}")
-        return jsonify({'error': str(e)}), 400
+        return f"<h3 style='color:red;text-align:center;'>Error verifying account: {e}</h3>", 400
 
 @account_bp.route('/get_user_role', methods=['GET'])
 def get_user_role():
