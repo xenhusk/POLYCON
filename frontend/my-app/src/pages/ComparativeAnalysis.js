@@ -273,7 +273,7 @@ function ComparativeAnalysis() {
   return (
     <div className="p-6 bg-gradient-to-b from-white to-gray-50 min-h-screen">
       <div className="mb-8 text-center">
-        <h2 className="text-3xl md:text-4xl font-bold text-[#0065A8]">Comparative Analysis</h2>
+        <h2 className="text-3xl md:text-4xl font-bold text-[#0065A8]">Polycon Analysis</h2>
         <p className="text-gray-500 mt-2">Analyze student performance and academic progress</p>
       </div>
 
@@ -448,7 +448,7 @@ function ComparativeAnalysis() {
             <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5 mr-2" viewBox="0 0 20 20" fill="currentColor">
               <path fillRule="evenodd" d="M6 2a2 2 0 00-2 2v12a2 2 0 002 2h8a2 2 0 002-2V7.414A2 2 0 0015.414 6L12 2.586A2 2 0 0010.586 2H6zm2 10a1 1 0 10-2 0v3a1 1 0 102 0v-3zm4-1a1 1 0 011 1v3a1 1 0 11-2 0v-3a1 1 0 011-1zm-2-8a1 1 0 00-1 1v.01a1 1 0 002 0V4a1 1 0 00-1-1z" clipRule="evenodd" />
             </svg>
-            Run Comparative Analysis
+            Run Polycon Analysis
           </button>
         </div>
       )}

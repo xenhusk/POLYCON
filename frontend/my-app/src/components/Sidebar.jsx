@@ -484,7 +484,7 @@ const Sidebar = ({ onExpandChange }) => {
             {renderMenuItem("appointments", UpcomingIcon, "Appointments")}
             {renderMenuItem("history", PastIcon, "History")}
             {renderMenuItem("classRecord", ClassRecorderIcon, "Class Record")}
-            {renderMenuItem("comparative", ComparativeIcon, "Comparative Analysis")}
+            {renderMenuItem("comparative", ComparativeIcon, "Polycon Analysis")}
           </ul>
         )}
 
