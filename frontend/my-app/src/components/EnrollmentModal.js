@@ -277,8 +277,8 @@ function EnrollmentModal({ closeModal }) {
               onClick={() => {
                 setEnrollClicked(true);
                 setTimeout(() => { setEnrollClicked(false);
-                  setTimeout(() => submitEnrollment(), 500);
-                }, 200);
+                  setTimeout(() => submitEnrollment(), 200);
+                }, 100);
               }}
               disabled={isLoading}
               className={`flex-1 py-4 sm:py-6 md:py-4 bg-[#00D1B2] hover:bg-[#00F7D4] text-white text-center justify-center rounded-bl-lg transition-colors flex items-center gap-2 text-xs sm:text-sm
