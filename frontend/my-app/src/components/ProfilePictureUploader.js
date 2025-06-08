@@ -165,7 +165,7 @@ function ProfilePictureUploader({ initialFile, onClose, onSuccess }) {
   };
 
   return (
-    <div className="bg-white p-4 sm:p-6 rounded-lg shadow-lg relative max-w-md w-full mx-auto">
+    <div className="bg-white p-4 sm:p-6 rounded-lg shadow-lg relative max-w-md w-full mx-auto overflow-visible">
       {/* Header with close button */}
       <div className="flex justify-between items-center mb-6">
         <h2 className="text-xl sm:text-2xl font-semibold text-gray-800">Profile Picture</h2>
@@ -207,46 +207,50 @@ function ProfilePictureUploader({ initialFile, onClose, onSuccess }) {
       )}
 
       {/* Current profile & upload area */}
-      <div className="flex flex-col sm:flex-row items-center gap-6">
+      <div className="flex flex-col sm:flex-row items-center gap-6 w-full overflow-visible">
         {/* Current profile picture or preview */}
         <div className="flex-shrink-0">
           {!src ? (
             <div 
               onClick={handlePlaceholderClick}
               className="relative w-32 h-32 sm:w-40 sm:h-40 rounded-full overflow-hidden bg-gray-100 cursor-pointer hover:bg-gray-200 transition-colors flex items-center justify-center"
+              style={{maxWidth: '160px', maxHeight: '160px'}}
             >
               <img 
                 src={currentProfilePic ? getProfilePictureUrl(currentProfilePic) : getProfilePictureUrl('')}
                 alt="Current profile" 
-                className="w-full h-full object-cover"
+                className="w-full h-full object-cover max-w-full max-h-full"
+                style={{objectFit: 'cover'}}
               />
               <div className="absolute inset-0 bg-black bg-opacity-50 flex items-center justify-center opacity-0 hover:opacity-100 transition-opacity">
                 <span className="text-white text-sm font-medium">Change Photo</span>
               </div>
             </div>
           ) : (
-            <div className="relative w-32 h-32 sm:w-40 sm:h-40 rounded-full overflow-hidden">
+            <div className="relative w-32 h-32 sm:w-40 sm:h-40 rounded-full overflow-hidden" style={{maxWidth: '160px', maxHeight: '160px'}}>
               <img 
                 src={src} 
                 alt="Preview" 
-                className="w-full h-full object-cover" 
+                className="w-full h-full object-cover max-w-full max-h-full" 
+                style={{objectFit: 'cover'}}
               />
             </div>
           )}
         </div>
 
         {/* Right side - Upload controls */}
-        <div className="flex-1 w-full">
+        <div className="flex-1 w-full min-w-0">
           {!src ? (
             <div 
               className={`border-2 border-dashed rounded-lg p-4 text-center ${
                 isDragging ? 'border-blue-500 bg-blue-50' : 'border-gray-300 hover:border-blue-400'
-              } transition-all cursor-pointer`}
+              } transition-all cursor-pointer w-full overflow-visible`}
               onClick={handlePlaceholderClick}
               onDragEnter={handleDragEnter}
               onDragLeave={handleDragLeave}
               onDragOver={handleDragOver}
               onDrop={handleDrop}
+              style={{minWidth: 0}}
             >
               <div className="flex flex-col items-center justify-center py-4">
                 <svg className="w-10 h-10 text-gray-400 mb-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -261,7 +265,7 @@ function ProfilePictureUploader({ initialFile, onClose, onSuccess }) {
               </div>
             </div>
           ) : (
-            <div className="space-y-4">
+            <div className="space-y-4 w-full min-w-0">
               <p className="text-sm text-gray-700 font-medium">Selected Image</p>
               <p className="text-xs text-gray-500 truncate">
                 {selectedFile?.name} ({(selectedFile?.size / 1024 / 1024).toFixed(2)}MB)
@@ -269,7 +273,7 @@ function ProfilePictureUploader({ initialFile, onClose, onSuccess }) {
               
               {/* Progress bar for upload */}
               {isUploading && (
-                <div className="w-full bg-gray-200 rounded-full h-2.5 mb-4">
+                <div className="w-full bg-gray-200 rounded-full h-2.5 mb-4 overflow-hidden">
                   <div 
                     className="bg-blue-500 h-2.5 rounded-full transition-all duration-300 ease-out"
                     style={{ width: `${uploadProgress}%` }}
@@ -277,30 +281,30 @@ function ProfilePictureUploader({ initialFile, onClose, onSuccess }) {
                 </div>
               )}
 
-              {/* Action buttons */}
-              <div className="flex flex-wrap gap-2">
+              {/* Action buttons - vertical stack for better fit */}
+              <div className="flex flex-col gap-2 w-full">
                 <button 
                   onClick={uploadPicture} 
                   disabled={isUploading}
-                  className={`${
-                    isUploading 
-                      ? 'bg-gray-400 cursor-not-allowed' 
-                      : 'bg-blue-500 hover:bg-blue-600'
-                  } text-white px-4 py-2 rounded-md text-sm font-medium transition-colors flex-1`}
+                  className={`w-full px-4 py-2 rounded-md text-sm font-medium transition-colors 
+                    ${isUploading 
+                      ? 'bg-gray-400 cursor-not-allowed text-white' 
+                      : 'bg-blue-600 hover:bg-blue-700 text-white'}
+                  `}
                 >
                   {isUploading ? `Uploading ${Math.round(uploadProgress)}%` : 'Upload'}
                 </button>
                 <button 
                   onClick={handleReset} 
                   disabled={isUploading}
-                  className="bg-gray-200 text-gray-700 px-4 py-2 rounded-md text-sm font-medium hover:bg-gray-300 transition-colors"
+                  className="w-full bg-gray-200 text-gray-700 px-4 py-2 rounded-md text-sm font-medium hover:bg-gray-300 transition-colors"
                 >
                   Change
                 </button>
                 <button 
                   onClick={onClose} 
                   disabled={isUploading}
-                  className="bg-gray-100 text-gray-700 px-4 py-2 rounded-md text-sm font-medium hover:bg-gray-200 transition-colors"
+                  className="w-full bg-gray-100 text-gray-700 px-4 py-2 rounded-md text-sm font-medium hover:bg-gray-200 transition-colors"
                 >
                   Cancel
                 </button>

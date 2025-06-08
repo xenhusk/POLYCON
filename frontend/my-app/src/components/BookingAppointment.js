@@ -873,8 +873,8 @@ function BookingAppointment({ closeModal, role: propRole }) {
                 setCancelClicked(true);
                 setTimeout(() => {
                   setCancelClicked(false);
-                  setTimeout(() => closeModal(), 500);
-                }, 200);
+                  setTimeout(() => closeModal());
+                });
               }}
               className={`flex-1 py-4 sm:py-6 md:py-4 text-gray-700 bg-gray-100 rounded-br-lg hover:bg-gray-200 transition-colors text-xs sm:text-sm
                 ${CancelClicked ? "scale-100" : "scale-100"}`}
