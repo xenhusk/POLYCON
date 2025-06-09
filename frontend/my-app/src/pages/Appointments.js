@@ -165,7 +165,7 @@ function StudentAppointments() {
                           key={index}
                           className="flex items-center bg-gray-50 rounded-full px-3 py-1"
                         >
-                          <div className="w-8 sm:w-10 md:w-12 h-8 sm:h-10 md:h-12 bg-gray-200 rounded-full mr-2 border-2 border-[#54BEFF]"></div>
+                          <div className="w-8 sm:w-10 md:w-12 h-8 sm:h-10 md:h-12 bg-gray-200 rounded-full mr-2 border-2 border-gray-200"></div>
                           <div className="h-3 bg-gray-300 rounded w-20"></div>
                         </div>
                       ))}
@@ -214,7 +214,7 @@ function StudentAppointments() {
                   <div className="mb-4 fade-in delay-100">
                     <p className="h-4 bg-gray-300 rounded w-40 mb-2"></p>
                     <div className="flex items-center">
-                      <div className="w-8 sm:w-10 md:w-12 h-8 sm:h-10 md:h-12 bg-gray-200 rounded-full mr-3 border-2 border-[#54BEFF]"></div>
+                      <div className="w-8 sm:w-10 md:w-12 h-8 sm:h-10 md:h-12 bg-gray-200 rounded-full mr-3 border-2 border-gray-200"></div>
                       <div className="h-4 bg-gray-300 rounded w-40"></div>
                     </div>
                   </div>
@@ -227,7 +227,7 @@ function StudentAppointments() {
                           key={index}
                           className="flex items-center bg-gray-50 rounded-full px-3 py-1"
                         >
-                          <div className="w-8 sm:w-10 md:w-12 h-8 sm:h-10 md:h-12 bg-gray-200 rounded-full mr-2 border-2 border-[#54BEFF]"></div>
+                          <div className="w-8 sm:w-10 md:w-12 h-8 sm:h-10 md:h-12 bg-gray-200 rounded-full mr-2 border-2 border-gray-200"></div>
                           <div className="h-3 bg-gray-300 rounded w-20"></div>
                         </div>
                       ))}
@@ -509,7 +509,7 @@ function TeacherAppointments() {
                   <div className="mb-4 fade-in delay-100">
                     <p className="h-4 bg-gray-300 rounded w-40 mb-2"></p>
                     <div className="flex items-center">
-                      <div className="w-8 sm:w-10 md:w-12 h-8 sm:h-10 md:h-12 bg-gray-200 rounded-full mr-3 border-2 border-[#54BEFF]"></div>
+                      <div className="w-8 sm:w-10 md:w-12 h-8 sm:h-10 md:h-12 bg-gray-200 rounded-full mr-3 border-2 border-gray-200"></div>
                       <div className="h-4 bg-gray-300 rounded w-40"></div>
                     </div>
                   </div>
@@ -522,7 +522,7 @@ function TeacherAppointments() {
                           key={index}
                           className="flex items-center bg-gray-50 rounded-full px-3 py-1"
                         >
-                          <div className="w-8 sm:w-10 md:w-12 h-8 sm:h-10 md:h-12 bg-gray-200 rounded-full mr-2 border-2 border-[#54BEFF]"></div>
+                          <div className="w-8 sm:w-10 md:w-12 h-8 sm:h-10 md:h-12 bg-gray-200 rounded-full mr-2 border-2 border-gray-200"></div>
                           <div className="h-3 bg-gray-300 rounded w-20"></div>
                         </div>
                       ))}
@@ -575,7 +575,7 @@ function TeacherAppointments() {
                   <div className="mb-4 fade-in delay-100">
                     <p className="h-4 bg-gray-300 rounded w-40 mb-2"></p>
                     <div className="flex items-center">
-                      <div className="w-8 sm:w-10 md:w-12 h-8 sm:h-10 md:h-12 bg-gray-200 rounded-full mr-3 border-2 border-[#54BEFF]"></div>
+                      <div className="w-8 sm:w-10 md:w-12 h-8 sm:h-10 md:h-12 bg-gray-200 rounded-full mr-3 border-2 border-gray-200"></div>
                       <div className="h-4 bg-gray-300 rounded w-40"></div>
                     </div>
                   </div>
@@ -588,7 +588,7 @@ function TeacherAppointments() {
                           key={index}
                           className="flex items-center bg-gray-50 rounded-full px-3 py-1"
                         >
-                          <div className="w-8 sm:w-10 md:w-12 h-8 sm:h-10 md:h-12 bg-gray-200 rounded-full mr-2 border-2 border-[#54BEFF]"></div>
+                          <div className="w-8 sm:w-10 md:w-12 h-8 sm:h-10 md:h-12 bg-gray-200 rounded-full mr-2 border-2 border-gray-200"></div>
                           <div className="h-3 bg-gray-300 rounded w-20"></div>
                         </div>
                       ))}
