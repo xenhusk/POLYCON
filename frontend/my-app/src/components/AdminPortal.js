@@ -114,9 +114,8 @@ export default function AdminPortal() {
       console.error('Error fetching programs:', error);
     }
   };
-
   const handleAddUser = async () => {
-    // Use the same payload as Signup, but set password to default
+    // Use direct admin endpoint instead of signup to avoid email verification
     const userData = {
       idNumber,
       firstName,
@@ -134,16 +133,14 @@ export default function AdminPortal() {
     Object.keys(userData).forEach(key => (userData[key] === undefined || userData[key] === '') && delete userData[key]);
 
     try {
-      const response = await fetch('http://localhost:5001/account/signup', {
+      const response = await fetch('http://localhost:5001/account/admin_add_user', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify(userData),
       });
 
-      const data = await response.json();
-
-      if (response.ok) {
-        alert(`${data.message} Verification email sent to the user.`);
+      const data = await response.json();      if (response.ok) {
+        alert(`${data.message} User has been created and can login immediately.`);
         fetchAllUsers();
         // Clear input fields
         setIdNumber('');
@@ -155,6 +152,8 @@ export default function AdminPortal() {
         setProgram('');
         setSex('');
         setYearSection('');
+        // Close the modal
+        setShowAddModal(false);
       } else {
         alert(data.error || 'Failed to add user');
       }

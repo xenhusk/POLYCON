@@ -87,12 +87,21 @@ def edit_grade():
     grade_id = data.get('gradeID')
     if not grade_id:
         return jsonify({"error": "gradeID is required"}), 400
+    
     grade_obj = Grade.query.get(grade_id)
     if not grade_obj:
         return jsonify({"error": "Grade not found"}), 404
+    
     # Update fields with id_number lookups
     if 'courseID' in data:
-        course = Course.query.filter_by(code=data['courseID']).first()
+        # Lookup course by ID or code (same logic as add_grade)
+        course = None
+        try:
+            course_id_int = int(data['courseID'])
+            course = Course.query.get(course_id_int)
+        except (ValueError, TypeError):
+            course = Course.query.filter_by(code=data['courseID']).first()
+        
         if not course:
             return jsonify({"error": "Course not found"}), 404
         grade_obj.course_id = course.id

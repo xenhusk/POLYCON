@@ -6,6 +6,7 @@ from services.email_service import send_verification_email
 from flask_jwt_extended import create_access_token, decode_token
 import datetime
 import uuid
+import json
 
 account_bp = Blueprint('account_bp', __name__)
 
@@ -393,3 +394,95 @@ def delete_user():
     user.archived = True
     db.session.commit()
     return jsonify({'message': 'User archived successfully'}), 200
+
+@account_bp.route('/admin_add_user', methods=['POST'])
+def admin_add_user():
+    """
+    Direct user creation for admin without email verification.
+    Creates user and associated Student/Faculty record immediately.
+    """
+    data = request.json
+    email = data.get('email')
+    password = data.get('password', 'password123')  # Default password
+    id_number = data.get('idNumber')
+    first_name = data.get('firstName')
+    last_name = data.get('lastName')
+    department_id = data.get('department')
+    program_id = data.get('program')
+    sex = data.get('sex')
+    year_section = data.get('year_section')
+    role = data.get('role', 'student')
+
+    # Basic validation
+    if not all([id_number, first_name, last_name, email, role, department_id]):
+        return jsonify({'error': 'Missing required fields: idNumber, firstName, lastName, email, role, department'}), 400
+
+    # Role-specific validation
+    if role == 'student':
+        if not all([program_id, sex, year_section]):
+            return jsonify({'error': 'Students require program, sex, and year_section'}), 400
+        if not email.endswith('@wnu.sti.edu.ph'):
+            return jsonify({'error': 'Student email must end with @wnu.sti.edu.ph'}), 400
+
+    # Check for existing users
+    if User.query.filter_by(email=email).first():
+        return jsonify({'error': 'Email already exists'}), 400
+    if User.query.filter_by(id_number=id_number).first():
+        return jsonify({'error': 'ID Number already exists'}), 400
+
+    # Validate department exists
+    department = Department.query.get(department_id)
+    if not department:
+        return jsonify({'error': 'Invalid department'}), 400
+
+    # Validate program for students
+    if role == 'student':
+        program = Program.query.get(program_id)
+        if not program:
+            return jsonify({'error': 'Invalid program'}), 400
+
+    try:
+        # Hash the password
+        hashed_password = bcrypt.generate_password_hash(password).decode('utf-8')
+
+        # Create user record
+        new_user = User(
+            id_number=id_number,
+            first_name=first_name,
+            last_name=last_name,
+            full_name=f"{first_name} {last_name}",
+            email=email,
+            password=hashed_password,
+            department_id=department_id,
+            role=role,
+            is_verified=True,  # Admin-created users are pre-verified
+            archived=False
+        )
+
+        db.session.add(new_user)
+        db.session.flush()  # Get the user ID
+
+        # Create role-specific record
+        if role == 'student':
+            student_record = Student(
+                user_id=new_user.id,
+                program_id=program_id,
+                sex=sex,
+                year_section=year_section,
+                is_enrolled=True,
+                is_active=True
+            )
+            db.session.add(student_record)
+        elif role == 'faculty':
+            faculty_record = Faculty(
+                user_id=new_user.id,
+                is_active=True
+            )
+            db.session.add(faculty_record)
+
+        db.session.commit()
+        return jsonify({'message': f'{role.title()} user created successfully'}), 201
+
+    except Exception as e:
+        db.session.rollback()
+        return jsonify({'error': f'Failed to create user: {str(e)}'}), 500

@@ -236,13 +236,6 @@ const NotificationTray = ({ isVisible, onClose }) => {
                       Clear All
                     </button>
                   )}
-                  {/* Debug: Test Toast Button */}
-                  <button 
-                    onClick={testToast}
-                    className="text-xs text-blue-500 hover:text-blue-700 border border-blue-300 px-2 py-1 rounded"
-                  >
-                    Test Toast
-                  </button>
                   <button 
                     onClick={onClose}
                     className="p-1 text-gray-500 hover:text-gray-700"
