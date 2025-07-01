@@ -27,42 +27,83 @@ Faculty-student consultations are essential for academic success, yet traditiona
 - **React.js** – Frontend user interface  
 - **Flask** – Backend API and business logic  
 - **Google Cloud Storage** – File and audio storage  
-- **Agile Software Development Methodology** – Iterative and incremental development  
+- **Agile Software Development Methodology** – Iterative and incremental development
+- 
+## 🗄️ Database Setup (PostgreSQL)
+PostgreSQL Installation
+Before proceeding, ensure that PostgreSQL is properly installed and running on your system.
+If it's not yet installed, refer to the official documentation:
+👉 https://www.postgresql.org/download/
+
+Importing the Latest Database Dump
+1. Navigate to the project directory:
+```sh
+cd /path/to/POLYCON
+```
+3. Run the database import script:
+```sh
+python setup_database.py
+```
+Exporting the Database
+1. Export using the provided script:
+```sh
+python setup_database.py export
+```
 
 ## 🚀 Installation Guide
-```bash
 1. Clone the Repository
+```sh
 git clone https://github.com/xenhusk/POLYCON.git
 cd POLYCON
-2. Backend Setup
+```
+3. Backend Setup
+```sh
 cd backend
+```
+```sh
 pip install -r requirements.txt
+```
 cp .env.example .env  # Edit this file with PostgreSQL credentials and API keys
+```sh
 python setup_database.py
-3. Frontend Setup
+```
+5. Frontend Setup
+```sh
 cd ../frontend/my-app
 npm install
-4. Run the Application Locally
+```
+7. Run the Application Locally
 # Backend
+```sh
 cd ../../backend
 python app.py
-
+```
 # Frontend
+```sh
 cd ../frontend/my-app
 npm start
+```
 
-📎 Usage Instructions
-➤ Scheduling a Consultation
+## 📎 Usage Instructions
+
+### ➤ Scheduling a Consultation  
 Log in and use the scheduling feature to book a new appointment. Select available time slots and participants (faculty or group).
-➤ AI-Powered Transcription
+
+### ➤ AI-Powered Transcription  
 During or after a consultation, upload or record audio. The system automatically transcribes the session and generates a summary/minutes using AI.
-➤ Accessing Analytics and Summaries
+
+### ➤ Accessing Analytics and Summaries  
 After consultations, users can view comparative analysis, performance metrics, and download or review AI-generated minutes and summaries from their dashboard.
 
+
 👥 Contributors
+
 David Paul Desuyo - Project Manager
+
 Kurt Zhynkent Canja - System Analyst
+
 Clark Jim Gabiota - Programmer
+
 Kyrell Santillan - System Designer
 
 📄 For more technical information, refer to the DATABASE_README.md and in-code documentation.
