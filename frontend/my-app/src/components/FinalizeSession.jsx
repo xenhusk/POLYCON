@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { useNavigate, useLocation } from 'react-router-dom';
+import { showErrorNotification, showSuccessNotification, showWarningNotification } from '../utils/notificationUtils';
 
 const FinalizeSession = () => {
   const navigate = useNavigate();
@@ -21,10 +22,9 @@ const FinalizeSession = () => {
 
   // You can reuse functions like generateSummary, identifyRoles, uploadAudio if needed here.
   // For this example, we assume transcription and summary are already available and the teacher may edit them.
-
   const finalizeSession = async () => {
     if (!teacherId || !studentIds || !concern || !actionTaken || !outcome) {
-      alert('Please fill in all required fields.');
+      showWarningNotification('Please fill in all required fields.');
       return;
     }
     setProcessing(true);
@@ -47,15 +47,14 @@ const FinalizeSession = () => {
         }),
       });
       if (!response.ok) {
-        throw new Error('Storing consultation session failed');
-      }
+        throw new Error('Storing consultation session failed');      }
       const data = await response.json();
-      alert(`Session stored successfully with ID: ${data.session_id}`);
+      showSuccessNotification(`Session stored successfully with ID: ${data.session_id}`);
       // Optionally, navigate to another page (e.g., dashboard)
       navigate('/dashboard');
     } catch (error) {
       console.error("Error storing consultation session:", error);
-      alert("Failed to store consultation session.");
+      showErrorNotification("Failed to store consultation session.");
     } finally {
       setProcessing(false);
     }

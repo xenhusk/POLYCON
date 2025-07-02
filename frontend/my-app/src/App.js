@@ -9,11 +9,13 @@ import AdminPortal from './components/AdminPortal';
 import Courses from './components/Courses';
 import AddGrade from './components/AddGrade';
 import UserHome from './pages/User_Home';  // Update import name and path
+import { showSuccessNotification, showErrorNotification } from './utils/notificationUtils';
 import AppointmentsCalendar from './components/AppointmentsCalendar';
 import ReactCrop from 'react-image-crop';
 import 'react-image-crop/dist/ReactCrop.css';
 import ProfilePictureUploader from './components/ProfilePictureUploader'; // added import
 import HomeTeacher from './components/HomeTeacher'; // added import
+import HomeStudent from './components/HomeStudent'; // Update import name and path
 import Programs from './components/Programs';
 import FinalDocument from './pages/finaldocument'; // add import for FinalDocument
 import History from './pages/History'; // add import for History
@@ -29,10 +31,6 @@ import { PreloadProvider } from './context/PreloadContext';
 import { AnimatePresence, motion } from 'framer-motion'; // Add framer-motion import
 import BookingPopup from './components/BookingPopup'; // Add import
 import GradeViewer from './components/GradeViewer';
-import NotificationTray from './components/NotificationTray';  // NEW import
-import Toast from './components/Toast'; // Add import for Toast
-import useNotifications from './hooks/useNotifications'; // Add import for useNotifications
-import { NotificationProvider } from './context/NotificationContext'; // Add import for NotificationProvider
 import PreLoader from './components/PreLoader'; // Add import for PreLoader
 import EnrollmentTestPage from './pages/EnrollmentTestPage'; // new import for testing enrollment modal
 import EnrollmentPopup from './components/EnrollmentPopup';
@@ -42,10 +40,10 @@ import { usePrefetch } from './context/DataPrefetchContext';
 import NetworkMonitor from './components/NetworkMonitor';
 import { getUserIdentifiers } from "./utils/userUtils"; // Add import for getUserIdentifiers
 import { ensureUserIdPersistence, recoverUserIds } from "./utils/persistUtils";
-import NotificationPermissionRequest from './components/NotificationPermissionRequest'; // Add this import
-import NotificationTester from './components/NotificationTester'; // Add this import
-import NotificationDebugger from './components/NotificationDebugger'; // Add this import
 import ComparativeAnalysis from './pages/ComparativeAnalysis';
+import PasswordResetPage from './components/PasswordResetPage';
+import SocketTest from './pages/SocketTest'; // Add SocketTest import
+import { ToastProvider } from './contexts/ToastContext'; // Add ToastProvider import
 const PreloaderTest = React.lazy(() => import('./components/PagePreloader'));
 
 // Update the variants to only include fade in (no fade out)
@@ -107,13 +105,12 @@ function InlineProfilePictureUploader({ initialFile, onClose }) {
       const response = await fetch('http://localhost:5001/profile/upload_profile_picture', {
         method: 'POST',
         body: formData,
-      });
-      const data = await response.json();
+      });      const data = await response.json();
       if (response.ok) {
-        alert('Profile picture uploaded!');
+        showSuccessNotification('Profile picture uploaded!');
         onClose();
       } else {
-        alert(`Upload failed: ${data.error}`);
+        showErrorNotification(`Upload failed: ${data.error}`);
       }
     } catch (error) {
       console.error('Error uploading picture:', error);
@@ -193,17 +190,6 @@ function App() {
     });
   }, []);
 
-  // Add this check at the beginning of the App component function
-  useEffect(() => {
-    // Check if we have any duplicate notification providers or hooks
-    const notificationElements = document.querySelectorAll('[data-notification-provider="true"]');
-    if (notificationElements.length > 1) {
-      console.error(`⚠️ Detected ${notificationElements.length} notification providers! This will cause duplicate notifications.`);
-    } else {
-      console.log('✅ Notification provider check passed: No duplicates found.');
-    }
-  }, []);
-
   const [user, setUser] = useState(null);
   const [profile, setProfile] = useState(null);
   const [teacherId, setTeacherId] = useState(localStorage.getItem("teacherId") || null);
@@ -211,8 +197,6 @@ function App() {
   const location = useLocation();
   const [userRole, setUserRole] = useState('');
   const [sidebarExpanded, setSidebarExpanded] = useState(false);
-  const [showNotifications, setShowNotifications] = useState(false);  // NEW state
-  const { toast, closeToast } = useNotifications();
   const [isLoading, setIsLoading] = useState(true);
   const [loadingProgress, setLoadingProgress] = useState(0);
   // NEW state to control overlay visibility
@@ -256,20 +240,20 @@ function App() {
         if (data) {
           // Log full response to see what comes back
           console.log("User data fetched:", data);
-          if (data.id && data.id !== "undefined") {
-            localStorage.setItem('userID', data.id);
-            localStorage.setItem('userId', data.id);
+          if (data.idNumber) {
+            localStorage.setItem('userID', data.idNumber);
+            localStorage.setItem('userId', data.idNumber);
           } else {
-            console.error("Fetched user data has no valid id:", data);
+            console.error("Fetched user data has no valid idNumber:", data);
           }
           
           const role = userRoleData?.role || localStorage.getItem('userRole');
           if (role === 'student') {
-            if (data.id && data.id !== "undefined") {
-              localStorage.setItem('studentID', data.id);
-              localStorage.setItem('studentId', data.id);
+            if (data.idNumber) {
+              localStorage.setItem('studentID', data.idNumber);
+              localStorage.setItem('studentId', data.idNumber);
             } else {
-              console.error("Fetched student data has no valid id:", data);
+              console.error("Fetched student data has no valid idNumber:", data);
             }
             setProfile({
               name: `${data.firstName} ${data.lastName}`,
@@ -280,12 +264,12 @@ function App() {
               profile_picture: data.profile_picture || 'https://via.placeholder.com/100'
             });
           } else if (role === 'faculty') {
-            if (data.id && data.id !== "undefined") {
-              localStorage.setItem('teacherID', data.id);
-              localStorage.setItem('teacherId', data.id);
-              localStorage.setItem('facultyID', data.id);
+            if (data.idNumber) {
+              localStorage.setItem('teacherID', data.idNumber);
+              localStorage.setItem('teacherId', data.idNumber);
+              localStorage.setItem('facultyID', data.idNumber);
             } else {
-              console.error("Fetched faculty data has no valid id:", data);
+              console.error("Fetched faculty data has no valid idNumber:", data);
             }
             setProfile({
               name: `${data.firstName} ${data.lastName}`,
@@ -518,7 +502,10 @@ function App() {
             queryClient.prefetchQuery({
               queryKey: ['consultation-history', userRole, userId],
               queryFn: async () => {
-                const res = await fetch(`http://localhost:5001/consultation/get_history?role=${userRole}&userID=${userId}`);
+                // Use idNumber parameter only for backend to filter by id_number
+                const res = await fetch(
+                  `http://localhost:5001/consultation/get_history?role=${userRole}&idNumber=${userId}`
+                );
                 if (!res.ok) throw new Error('Failed to fetch consultation history');
                 return res.json();
               },
@@ -651,186 +638,159 @@ function App() {
       sessionCheck: !currentPath.includes('/session'),
       docCheck: !currentPath.includes('/finaldocument')
     });
-  }, [location.pathname]);
-
-  // Add a hook to track and debug toast visibility
-  useEffect(() => {
-    if (toast?.visible) {
-      console.log("Toast is now visible with message:", toast.message);
-    }
-  }, [toast?.visible, toast?.message]);
-
-  const showDebugger = false; // Set this to false to hide the debugger
-
+  }, [location.pathname]);  const showDebugger = false; // Set this to false to hide the debugger
   return (
-    <NotificationProvider data-notification-provider="true">
+    <ToastProvider>
       <div className={location.pathname.includes('/session') ? '' : 'flex min-h-screen'}>
         <PreloadProvider>
-          <div className="app-container flex flex-1">
-            {/* Add debugging info to sidebar rendering logic */}
-            {(() => {
-              const userEmail = localStorage.getItem('userEmail');
-              const shouldShowSidebar = userEmail && 
-                !location.pathname.includes('/session') && 
-                !location.pathname.includes('/finaldocument');
-              
-              console.log("Sidebar render attempt:", { userEmail, shouldShowSidebar });
-              
-              return shouldShowSidebar ? (
-                <Sidebar onExpandChange={setSidebarExpanded} />
-              ) : (
-                <div className="hidden">Sidebar hidden - Email: {userEmail || 'none'}</div>
-              );
-            })()}
-
-            <div className={`flex-1 flex flex-col transition-all duration-300 ease-in-out ${
-              localStorage.getItem('userEmail') && 
+        <div className="app-container flex flex-1">
+          {/* Add debugging info to sidebar rendering logic */}
+          {(() => {
+            const userEmail = localStorage.getItem('userEmail');
+            const shouldShowSidebar = userEmail && 
               !location.pathname.includes('/session') && 
-              !location.pathname.includes('/finaldocument')
-                ? sidebarExpanded
-                  ? 'md:ml-64' // Only apply margin on medium screens and above
-                  : 'md:ml-20' 
-                : ''
-            }`}>
+              !location.pathname.includes('/finaldocument');
+            
+            console.log("Sidebar render attempt:", { userEmail, shouldShowSidebar });
+            
+            return shouldShowSidebar ? (
+              <Sidebar onExpandChange={setSidebarExpanded} />
+            ) : (
+              <div className="hidden">Sidebar hidden - Email: {userEmail || 'none'}</div>
+            );
+          })()}
 
-              {/* New Profile Picture Modal */}
-              {showProfileModal && (
-                <div className="fixed inset-0 bg-black bg-opacity-50 flex justify-center items-center z-50">
-                  <div className="bg-white p-6 rounded-lg shadow-lg">
-                    {modalStep === 'upload' && (
-                      <div>
-                        <h2 className="text-xl font-bold mb-4">Upload a Profile Picture</h2>
-                        <button
-                          onClick={() => modalFileInputRef.current && modalFileInputRef.current.click()}
-                          className="bg-blue-500 text-white px-4 py-2 rounded"
-                        >
-                          Choose File
-                        </button>
-                        <input
-                          ref={modalFileInputRef}
-                          type="file"
-                          accept="image/*"
-                          onChange={onModalSelectFile}
-                          style={{ display: 'none' }}
-                        />
-                        <button
-                          onClick={() => setShowProfileModal(false)}
-                          className="bg-gray-300 text-black px-4 py-2 rounded ml-4"
-                        >
-                          Cancel
-                        </button>
-                      </div>
-                    )}
-                    {modalStep === 'crop' && (
-                      <ProfilePictureUploader
-                        initialFile={modalSelectedFile}
-                        onClose={() => {
-                          setShowProfileModal(false);
-                          setModalSelectedFile(null);
-                        }}
+          <div className={`flex-1 flex flex-col transition-all duration-300 ease-in-out ${
+            localStorage.getItem('userEmail') && 
+            !location.pathname.includes('/session') && 
+            !location.pathname.includes('/finaldocument')
+              ? sidebarExpanded
+                ? 'md:ml-64' // Only apply margin on medium screens and above
+                : 'md:ml-20' 
+              : ''
+          }`}>
+
+            {/* New Profile Picture Modal */}
+            {showProfileModal && (
+              <div className="fixed inset-0 bg-black bg-opacity-50 flex justify-center items-center z-50">
+                <div className="bg-white p-6 rounded-lg shadow-lg">
+                  {modalStep === 'upload' && (
+                    <div>
+                      <h2 className="text-xl font-bold mb-4">Upload a Profile Picture</h2>
+                      <button
+                        onClick={() => modalFileInputRef.current && modalFileInputRef.current.click()}
+                        className="bg-blue-500 text-white px-4 py-2 rounded"
+                      >
+                        Choose File
+                      </button>
+                      <input
+                        ref={modalFileInputRef}
+                        type="file"
+                        accept="image/*"
+                        onChange={onModalSelectFile}
+                        style={{ display: 'none' }}
                       />
-                    )}
-                  </div>
+                      <button
+                        onClick={() => setShowProfileModal(false)}
+                        className="bg-gray-300 text-black px-4 py-2 rounded ml-4"
+                      >
+                        Cancel
+                      </button>
+                    </div>
+                  )}
+                  {modalStep === 'crop' && (
+                    <ProfilePictureUploader
+                      initialFile={modalSelectedFile}
+                      onClose={() => {
+                        setShowProfileModal(false);
+                        setModalSelectedFile(null);
+                      }}
+                    />
+                  )}
                 </div>
-              )}
-
-              <AnimatePresence>
-                <motion.div
-                  key={location.pathname}
-                  variants={getVariants()}
-                  initial="initial"
-                  animate="animate"
-                  transition={{ duration: 0.5 }}
-                  className="flex-1 flex flex-col"
-                >
-                  <Suspense fallback={<div>Loading test...</div>}>
-                    <Routes>
-                      {/* Public home route with redirect for logged-in users */}
-                      <Route path="/" element={
-                        localStorage.getItem('userEmail') ?
-                          <Navigate to="/dashboard" /> :
-                          <Home />
-                      } />
-
-                      {/* Auth routes with redirects */}
-                      <Route path="/login" element={
-                        !localStorage.getItem('userEmail') ?
-                          <Login onLoginSuccess={handleLoginSuccess} /> :
-                          <Navigate to="/dashboard" />
-                      } />
-                      <Route path="/signup" element={
-                        !localStorage.getItem('userEmail') ?
-                          <Signup /> :
-                          <Navigate to="/dashboard" />
-                      } />
-
-                      {/* Protected dashboard route */}
-                      <Route path="/dashboard" element={
-                        localStorage.getItem('userEmail') ?
-                          <UserHome /> :
-                          <Navigate to="/" />
-                      } />
-
-                      {/* Protected routes */}
-                      <Route path="/booking-student" element={
-                        localStorage.getItem('userEmail') ?
-                          <BookingStudent /> :
-                          <Navigate to="/login" replace />
-                      } />
-                      <Route path="/booking-teacher" element={<BookingTeacher />} />
-                      <Route path="/session" element={<Session />} />
-                      <Route path="/admin" element={<AdminPortal />} />
-                      <Route path="/courses" element={<Courses />} />
-                      <Route path="/addgrade" element={<AddGrade />} />
-                      <Route path="/appointments-calendar" element={<AppointmentsCalendar />} />
-                      <Route path="/sidebar-preview" element={<SidebarPreview />} /> {/* Add this route */}
-                      <Route path="/appointments" element={<Appointments />} /> {/* Add this route */}
-                      <Route path="/home-teacher" element={<HomeTeacher />} /> {/* Add this route */}
-                      <Route path="/gradeview" element={<GradeViewer />} /> {/* Add this route */}
-                      <Route path="/programs" element={<Programs />} /> {/* Add this route */}
-                      <Route path="/finaldocument" element={<FinalDocument />} /> {/* New route */}
-                      <Route path="/history" element={<History />} /> {/* New route */}
-                      <Route path="/department" element={<Departments />} /> {/* New route */}
-                      <Route path="/preloader-test" element={<PreloaderTest />} /> {/* Add this line */}
-                      <Route path="/homeadmin" element={<HomeAdmin />} /> 
-                      <Route path="/enrollment-test" element={<EnrollmentTestPage />} /> {/* new test route */}
-                      <Route path="/semester-management" element={<SemesterManagement />} /> {/* Update this line */}
-                      <Route path="/notification-test" element={<NotificationTester />} /> {/* Add this new route */}
-                      <Route path="/comparative-analysis" element={<ComparativeAnalysis />} />
-                    </Routes>
-                  </Suspense>
-                </motion.div>
-              </AnimatePresence>
-            </div>
-          
-            {/* Render NotificationTray */}
-            {showNotifications && (
-              <NotificationTray
-                isVisible={showNotifications}
-                onClose={() => setShowNotifications(false)}
-                position={{ top: '50px', left: 'calc(100% - 320px)' }}  // adjust as needed
-              />
+              </div>
             )}
-            {/* Only show BookingPopup and EnrollmentPopup if not on session or finaldocument page */}
-            {!location.pathname.includes('/session') &&
-              !location.pathname.includes('/finaldocument') && (
-                <>
-                  <BookingPopup />
-                  {userRole === 'faculty' && <EnrollmentPopup />} {/* Only show for faculty */}
-                </>
-              )}
-          </div>
-          <NotificationPermissionRequest /> {/* Add this near the end, before the closing tags */}
-        </PreloadProvider>
-      
-        {/* Toast positioned outside the Router */}
-        <Toast
-          message={toast.message || ''}
-          isVisible={toast.visible || false}
-          onClose={closeToast}
-          data={toast.data}  // Pass the full notification data to Toast
-        />
 
+            <AnimatePresence>
+              <motion.div
+                key={location.pathname}
+                variants={getVariants()}
+                initial="initial"
+                animate="animate"
+                transition={{ duration: 0.5 }}
+                className="flex-1 flex flex-col"
+              >
+                <Suspense fallback={<div>Loading test...</div>}>
+                  <Routes>
+                    {/* Public home route with redirect for logged-in users */}
+                    <Route path="/" element={
+                      localStorage.getItem('userEmail') ?
+                        <Navigate to="/dashboard" /> :
+                        <Home />
+                    } />
+
+                    {/* Auth routes with redirects */}
+                    <Route path="/login" element={
+                      !localStorage.getItem('userEmail') ?
+                        <Login onLoginSuccess={handleLoginSuccess} /> :
+                        <Navigate to="/dashboard" />
+                    } />                    <Route path="/signup" element={
+                      !localStorage.getItem('userEmail') ?
+                        <Signup /> :
+                        <Navigate to="/dashboard" />
+                    } />
+                    
+                    {/* Password reset route - publicly accessible */}
+                    <Route path="/reset-password" element={<PasswordResetPage />} />
+
+                    {/* Protected dashboard route */}
+                    <Route path="/dashboard" element={
+                      localStorage.getItem('userEmail') ?
+                        <UserHome /> :
+                        <Navigate to="/" />
+                    } />
+
+                    {/* Protected routes */}
+                    <Route path="/booking-student" element={
+                      localStorage.getItem('userEmail') ?
+                        <BookingStudent /> :
+                        <Navigate to="/login" replace />
+                    } />
+                    <Route path="/booking-teacher" element={<BookingTeacher />} />
+                    <Route path="/session" element={<Session />} />
+                    <Route path="/admin" element={<AdminPortal />} />
+                    <Route path="/courses" element={<Courses />} />
+                    <Route path="/addgrade" element={<AddGrade />} />
+                    <Route path="/appointments-calendar" element={<AppointmentsCalendar />} />
+                    <Route path="/sidebar-preview" element={<SidebarPreview />} /> {/* Add this route */}
+                    <Route path="/appointments" element={<Appointments />} /> {/* Add this route */}
+                    <Route path="/home-teacher" element={<HomeTeacher />} /> {/* Add this route */}
+                    <Route path="/gradeview" element={<GradeViewer />} /> {/* Add this route */}
+                    <Route path="/programs" element={<Programs />} /> {/* Add this route */}
+                    <Route path="/finaldocument" element={<FinalDocument />} /> {/* New route */}
+                    <Route path="/history" element={<History />} /> {/* New route */}
+                    <Route path="/department" element={<Departments />} /> {/* New route */}
+                    <Route path="/preloader-test" element={<PreloaderTest />} /> {/* Add this line */}
+                    <Route path="/homeadmin" element={<HomeAdmin />} />
+                    <Route path="/homestudent" element={<HomeStudent />} />                    <Route path="/enrollment-test" element={<EnrollmentTestPage />} /> {/* new test route */}
+                    <Route path="/semester-management" element={<SemesterManagement />} /> {/* Update this line */}                    <Route path="/comparative-analysis" element={<ComparativeAnalysis />} />
+                    <Route path="/socket-test" element={<SocketTest />} /> {/* Socket.IO test dashboard route */}
+                  </Routes>
+                </Suspense>
+              </motion.div>
+            </AnimatePresence>
+          </div>
+        
+          {/* Only show BookingPopup and EnrollmentPopup if not on session or finaldocument page */}
+          {!location.pathname.includes('/session') &&
+            !location.pathname.includes('/finaldocument') && (
+              <>
+                <BookingPopup />
+                {userRole === 'faculty' && <EnrollmentPopup />} {/* Only show for faculty */}
+              </>
+            )}
+        </div>
+      
         {/* NEW: Show preloader overlay only when authenticated, not on Session or Final Document pages */}
         { localStorage.getItem('userEmail') &&
           !location.pathname.includes('/session') &&
@@ -861,14 +821,11 @@ function App() {
         {/* REMOVE OR MODIFY THIS LINE - you can either:
             1. Comment it out entirely: */}
         {/* {process.env.NODE_ENV === 'development' && <NotificationDebugger />} */}
-        
         {/* OR 2. Set it to always be hidden: */}
-        {false && <NotificationDebugger />}
-        
-        {/* OR 3. Pass a prop to make it start hidden: */}
-        {showDebugger && process.env.NODE_ENV === 'development' && <NotificationDebugger />}
-      </div>
-    </NotificationProvider>
+        {/* {false && <NotificationDebugger />} */}
+        {/* OR 3. Pass a prop to make it start hidden: */}        {/* {showDebugger && process.env.NODE_ENV === 'development' && <NotificationDebugger />} */}      </PreloadProvider>
+    </div>
+    </ToastProvider>
   );
 }
 

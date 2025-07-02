@@ -1,100 +1,43 @@
+// Sound notification URLs - using actual sound files
+const NOTIFICATION_SOUNDS = {
+  booking: '/sounds/notification.mp3',
+  appointment: '/sounds/notification.mp3',
+  message: '/sounds/notification.mp3',
+  error: '/sounds/notification.mp3',
+  warning: '/sounds/notification.mp3',
+  success: '/sounds/notification.mp3'
+};
+
+// Audio instances for sound notifications
+let audioInstances = {};
+
 /**
- * Utility functions for handling browser notifications
+ * Check if browser supports notifications
+ * @returns {boolean}
  */
-
-// Add this function at the top of the file to fix notification preferences
-export const fixNotificationPreferences = () => {
-  const currentPermission = 'Notification' in window ? Notification.permission : 'API not supported';
-  console.log("Fixing notification preferences. Current permission:", currentPermission);
-  
-  // If permission is granted but localStorage doesn't reflect it, fix it
-  if (currentPermission === 'granted') {
-    localStorage.setItem('notificationsEnabled', 'true');
-    console.log("Fixed notification preferences: set to 'true'");
-    return true;
-  }
-  
-  return false;
-};
-
-// Add this debugging function
-export const debugNotificationSupport = () => {
-  const debug = {
-    supported: 'Notification' in window,
-    permission: 'Notification' in window ? Notification.permission : 'API not supported',
-    visibility: document.visibilityState,
-    localStorage: {
-      notificationsEnabled: localStorage.getItem('notificationsEnabled'),
-      notificationRequestDismissed: localStorage.getItem('notificationRequestDismissed')
-    }
-  };
-  
-  console.table(debug);
-  return debug;
-};
-
-// Add this diagnostic logging function
-export const debugNotificationPermissionStatus = () => {
-  // Check browser support
-  const isSupported = 'Notification' in window;
-  
-  // Get permission state
-  const permissionState = isSupported ? Notification.permission : 'API not supported';
-  
-  // Get localStorage values
-  const localStorageEnabled = localStorage.getItem('notificationsEnabled') === 'true';
-  const dismissedRequest = localStorage.getItem('notificationRequestDismissed') === 'true';
-  
-  // Check visibility state
-  const visibilityState = document.visibilityState;
-  
-  // Log comprehensive debug info
-  console.log('🔔 Notification System Status:', {
-    browserSupport: isSupported ? '✅ Supported' : '❌ Not supported',
-    permission: permissionState,
-    localStorage: {
-      enabled: localStorageEnabled ? '✅ Enabled' : '❌ Disabled',
-      requestDismissed: dismissedRequest ? 'Yes' : 'No'
-    },
-    pageVisibility: visibilityState,
-    userAgent: navigator.userAgent,
-    now: new Date().toISOString()
-  });
-  
-  // Fix any inconsistencies
-  if (permissionState === 'granted' && !localStorageEnabled) {
-    console.log('🔧 Fixing localStorage permissions to match browser permission');
-    localStorage.setItem('notificationsEnabled', 'true');
-    return true; // Changes made
-  }
-  
-  return false; // No changes made
-};
-
 export const areBrowserNotificationsSupported = () => {
   return 'Notification' in window;
 };
 
+/**
+ * Check if user has granted notification permission
+ * @returns {boolean}
+ */
 export const hasNotificationPermission = () => {
-  if (!areBrowserNotificationsSupported()) return false;
-  return Notification.permission === 'granted';
+  return areBrowserNotificationsSupported() && Notification.permission === 'granted';
 };
 
+/**
+ * Request notification permission from user
+ * @returns {Promise<string>} Permission result: 'granted', 'denied', or 'default'
+ */
 export const requestNotificationPermission = async () => {
   if (!areBrowserNotificationsSupported()) {
-    console.log('Browser notifications not supported');
     return 'denied';
   }
-  
+
   try {
     const permission = await Notification.requestPermission();
-    
-    // Store the user's preference in localStorage
-    localStorage.setItem('notificationsEnabled', permission === 'granted' ? 'true' : 'false');
-    
-    // Log permission for debugging
-    console.log(`Notification permission result: ${permission}`);
-    
     return permission;
   } catch (error) {
     console.error('Error requesting notification permission:', error);
@@ -102,255 +45,305 @@ export const requestNotificationPermission = async () => {
   }
 };
 
-// Add these debugging functions to help understand why notifications aren't showing
-export const debugBrowserNotification = (title, body) => {
-  console.log('🔔 Attempting direct browser notification with:', { title, body });
-  
-  // Check if notifications are supported
-  if (!('Notification' in window)) {
-    console.error('❌ Browser notifications not supported');
-    return false;
-  }
-  
-  // Check permission
-  if (Notification.permission !== 'granted') {
-    console.error('❌ Notification permission not granted:', Notification.permission);
-    return false;
-  }
-  
-  // Create notification with minimal options
-  try {
-    const notification = new Notification(title, {
-      body: body || 'Test notification',
-      requireInteraction: true
-    });
-    
-    console.log('✅ Browser notification created successfully');
-    return true;
-  } catch (error) {
-    console.error('❌ Error creating direct browser notification:', error);
-    return false;
-  }
-};
-
-// CONSOLIDATED: A single notification tracker using Set for tags and Map for timestamps
-const recentNotifications = {
-  tags: new Set(),    // For tracking notification tags
-  timestamps: new Map() // For tracking notification timestamps
-};
-
-// Add this function to fix the error - place it before showNotification()
-export const canShowNotifications = () => {
-  // Check three things:
-  // 1. Browser supports Notifications API
-  // 2. User has granted permission
-  // 3. Notifications are enabled in localStorage settings
-  return areBrowserNotificationsSupported() && 
-         hasNotificationPermission() && 
-         areNotificationsEnabled();
+/**
+ * Check if notifications are currently enabled
+ * @returns {boolean}
+ */
+export const areNotificationsEnabled = () => {
+  const enabled = localStorage.getItem('notificationsEnabled');
+  return enabled === 'true' && hasNotificationPermission();
 };
 
 /**
- * Shows a browser notification with enhanced content based on notification type
- * @param {string} title - Notification title
- * @param {Object} options - Notification options
- * @returns {Notification|null} - The notification object or null if not supported/permitted
+ * Toggle notification settings
+ * @param {boolean} enabled - Whether to enable or disable notifications
+ * @returns {boolean} Final enabled state
  */
-export const showNotification = (title, options = {}) => {
-  if (!canShowNotifications()) {
-    console.warn("Browser notifications not supported or permission not granted");
-    return null;
+export const toggleNotifications = (enabled) => {
+  if (enabled && !hasNotificationPermission()) {
+    return false;
   }
   
-  console.log("Showing notification with data:", options);
-  
-  // Get action from options for specialized formatting
-  const action = options.action || "";
-  
-  // Create an enhanced notification title and body based on action type
-  let enhancedTitle = title;
-  let enhancedBody = options.body || "";
-  
-  // Format reminder notifications with richer content
-  if (action === 'reminder_1h' || action === 'reminder_24h') {
-    const timeframe = action === 'reminder_1h' ? '1 hour' : 'tomorrow';
-    const timeLabel = action === 'reminder_1h' ? '1-HOUR REMINDER' : '24-HOUR REMINDER';
-    
-    // Create a more descriptive title
-    if (options.summary) {
-      enhancedTitle = `${timeLabel}: ${options.summary}`;
-    } else {
-      enhancedTitle = `${timeLabel}: Upcoming Appointment`;
-    }
-    
-    // Build a rich notification body
-    let bodyParts = [];
-    
-    // Add appointment details
-    if (options.targetStudentId) {
-      // For student notifications
-      const teacherName = options.teacherName || 'your teacher';
-      bodyParts.push(`Appointment with ${teacherName}`);
-    } else {
-      // For teacher notifications 
-      const students = options.studentNames || 'students';
-      bodyParts.push(`Appointment with ${students}`);
-    }
-    
-    // Format schedule time
-    let timeInfo = '';
-    if (options.schedulePretty) {
-      timeInfo = options.schedulePretty;
-    } else if (options.schedule) {
-      try {
-        const scheduleDate = new Date(options.schedule);
-        timeInfo = scheduleDate.toLocaleString();
-      } catch (e) {
-        timeInfo = options.schedule;
-      }
-    }
-    
-    if (timeInfo) {
-      bodyParts.push(`Time: ${timeInfo}`);
-    }
-    
-    // Add venue
-    if (options.venue) {
-      bodyParts.push(`Location: ${options.venue}`);
-    }
-    
-    // Add subject if available
-    if (options.subject) {
-      bodyParts.push(`Subject: ${options.subject}`);
-    }
-    
-    // Add description if available (truncated)
-    if (options.description) {
-      const maxLength = 50;
-      const description = options.description.length > maxLength 
-        ? options.description.substring(0, maxLength) + '...' 
-        : options.description;
-      bodyParts.push(`Notes: ${description}`);
-    }
-    
-    // Put it all together
-    enhancedBody = bodyParts.join('\n');
+  localStorage.setItem('notificationsEnabled', enabled.toString());
+  return enabled;
+};
+
+/**
+ * Check if sound notifications are enabled
+ * @returns {boolean}
+ */
+export const areSoundNotificationsEnabled = () => {
+  const enabled = localStorage.getItem('soundNotificationsEnabled');
+  // Enable by default if not set
+  if (enabled === null) {
+    localStorage.setItem('soundNotificationsEnabled', 'true');
+    return true;
   }
-  
-  console.log("Showing notification:", { enhancedTitle, enhancedBody });
-  
-  // Create enhanced options
-  const enhancedOptions = {
-    // Default icon
-    icon: '/polyconLogo.png',
-    // Default badge
-    badge: '/favicon.ico',
-    // Make notifications sticky by default
-    requireInteraction: true,
-    // Include all original options
-    ...options,
-    // Override with enhanced body
-    body: enhancedBody
-  };
+  return enabled === 'true';
+};
+
+/**
+ * Toggle sound notification settings
+ * @param {boolean} enabled - Whether to enable or disable sound notifications
+ */
+export const toggleSoundNotifications = (enabled) => {
+  localStorage.setItem('soundNotificationsEnabled', enabled.toString());
+};
+
+/**
+ * Play notification sound
+ * @param {string} soundType - Type of sound to play (booking, appointment, message, etc.)
+ * @param {number} volume - Volume level (0.0 to 1.0)
+ */
+export const playNotificationSound = (soundType = 'message', volume = 0.5) => {
+  if (!areSoundNotificationsEnabled()) {
+    return;
+  }
+
+  const soundUrl = NOTIFICATION_SOUNDS[soundType] || NOTIFICATION_SOUNDS.message;
   
   try {
-    // Create and show the notification
-    const notification = new Notification(enhancedTitle, enhancedOptions);
+    // Create a new audio instance for each sound to avoid conflicts
+    const audio = new Audio(soundUrl);
+    audio.volume = Math.max(0, Math.min(1, volume));
+    audio.preload = 'auto';
     
-    // Add click handler if not already defined
-    if (!options.onclick && options.bookingID) {
-      notification.onclick = () => {
-        // Open appointment details
-        window.open(`/appointments?id=${options.bookingID}`, '_blank');
+    // Play the sound with better error handling
+    const playPromise = audio.play();
+    
+    if (playPromise !== undefined) {
+      playPromise
+        .then(() => {
+          console.log('Notification sound played successfully');
+        })
+        .catch(error => {
+          console.warn('Could not play notification sound:', error);
+          // Try to enable sound on next user interaction
+          const enableSound = () => {
+            audio.play().catch(() => {}); // Silent retry
+            document.removeEventListener('click', enableSound);
+            document.removeEventListener('keydown', enableSound);
+          };
+          document.addEventListener('click', enableSound, { once: true });
+          document.addEventListener('keydown', enableSound, { once: true });
+        });
+    }
+  } catch (error) {
+    console.warn('Error creating/playing notification sound:', error);
+  }
+};
+
+/**
+ * Show browser notification with optional sound
+ * @param {string} title - Notification title
+ * @param {Object} options - Notification options
+ * @param {string} soundType - Type of sound to play
+ * @returns {Notification|null}
+ */
+export const showNotification = (title, options = {}, soundType = 'message') => {
+  if (!areNotificationsEnabled()) {
+    return null;
+  }
+
+  const defaultOptions = {
+    icon: '/favicon.ico',
+    badge: '/favicon.ico',
+    dir: 'ltr',
+    lang: 'en',
+    requireInteraction: false,
+    ...options
+  };
+
+  try {
+    const notification = new Notification(title, defaultOptions);
+    
+    // Play sound if enabled
+    playNotificationSound(soundType);
+    
+    // Auto-close after 5 seconds unless requireInteraction is true
+    if (!defaultOptions.requireInteraction) {
+      setTimeout(() => {
         notification.close();
-      };
+      }, 5000);
     }
     
     return notification;
   } catch (error) {
-    console.error("Failed to show notification:", error);
+    console.error('Error showing notification:', error);
     return null;
   }
 };
 
-export const toggleNotifications = async (enabled) => {
-  if (enabled && !hasNotificationPermission()) {
-    const permission = await requestNotificationPermission();
-    const isEnabled = permission === 'granted';
-    localStorage.setItem('notificationsEnabled', isEnabled ? 'true' : 'false');
-    return isEnabled;
-  }
-  
-  localStorage.setItem('notificationsEnabled', enabled ? 'true' : 'false');
-  return enabled;
+/**
+ * Show booking-related notification
+ * @param {string} title - Notification title
+ * @param {string} body - Notification body
+ * @param {string} type - Type: 'success', 'error', 'info'
+ */
+export const showBookingNotification = (title, body = '', type = 'info') => {
+  const soundTypes = {
+    success: 'booking',
+    error: 'error',
+    info: 'message'
+  };
+  return showNotification(
+    title,
+    {
+      body: body,
+      tag: 'booking-notification',
+      requireInteraction: type === 'error'
+    },
+    soundTypes[type] || soundTypes.info
+  );
 };
-
-// Update the areNotificationsEnabled function to handle this bug
-export const areNotificationsEnabled = () => {
-  const permissionGranted = hasNotificationPermission();
-  const localStorageValue = localStorage.getItem('notificationsEnabled');
-  
-  // If permission is granted but localStorage says disabled, fix it
-  if (permissionGranted && localStorageValue === 'false') {
-    console.log("Permission granted but localStorage says disabled. Fixing...");
-    localStorage.setItem('notificationsEnabled', 'true');
-    return true;
-  }
-  
-  return permissionGranted && localStorageValue !== 'false';
-};
-
-// Call the debug function when the file loads
-debugNotificationSupport();
-
-// Call this at the top level to fix preferences when the file loads
-fixNotificationPreferences();
-
-// Call the debug function when the file loads
-debugNotificationPermissionStatus();
 
 /**
- * Play a notification sound with error handling for browser restrictions
- * @returns {boolean} Whether the sound played successfully
+ * Show appointment reminder notification
+ * @param {Object} appointment - Appointment details
  */
-export const playNotificationSound = async (soundUrl) => {
-  try {
-    const audio = new Audio(soundUrl);
+export const showAppointmentReminder = (appointment) => {
+  const title = 'Appointment Reminder';
+  const body = `Your appointment with ${appointment.teacher || appointment.student} starts in ${appointment.timeUntil || '15 minutes'}`;
+  
+  return showNotification(
+    title,
+    {
+      body,
+      tag: 'appointment-reminder',
+      requireInteraction: true,
+      actions: [
+        { action: 'join', title: 'Join Now' },
+        { action: 'dismiss', title: 'Dismiss' }
+      ]
+    },
+    'appointment'
+  );
+};
+
+/**
+ * Show error notification (replaces alert calls)
+ * @param {string} message - Error message
+ * @param {boolean} useSound - Whether to play error sound
+ */
+export const showErrorNotification = (message, useSound = true) => {
+  return showNotification(
+    'Error',
+    {
+      body: message,
+      tag: 'error-notification',
+      requireInteraction: true
+    },
+    useSound ? 'error' : null
+  );
+};
+
+/**
+ * Show success notification
+ * @param {string} message - Success message
+ * @param {boolean} useSound - Whether to play success sound
+ */
+export const showSuccessNotification = (message, useSound = true) => {
+  return showNotification(
+    'Success',
+    {
+      body: message,
+      tag: 'success-notification'
+    },
+    useSound ? 'success' : null
+  );
+};
+
+/**
+ * Show warning notification
+ * @param {string} message - Warning message
+ * @param {boolean} useSound - Whether to play warning sound
+ */
+export const showWarningNotification = (message, useSound = true) => {
+  return showNotification(
+    'Warning',
+    {
+      body: message,
+      tag: 'warning-notification',
+      requireInteraction: true
+    },
+    useSound ? 'warning' : null
+  );
+};
+
+/**
+ * Replace alert() function with notification
+ * @param {string} message - Message to display
+ * @param {string} type - Type: 'error', 'warning', 'info', 'success'
+ */
+export const notificationAlert = (message, type = 'info') => {
+  // First show browser notification if available
+  const notification = showNotification(
+    type.charAt(0).toUpperCase() + type.slice(1),
+    {
+      body: message,
+      requireInteraction: type === 'error' || type === 'warning'
+    },
+    type === 'error' ? 'error' : type === 'warning' ? 'warning' : 'message'
+  );
+
+  // If notification failed or not supported, fall back to console and optional alert
+  if (!notification) {
+    console.log(`${type.toUpperCase()}: ${message}`);
     
-    // Set volume
-    audio.volume = 0.5;
-    
-    // First check if audio can play
-    const canPlay = document.documentElement.hasAttribute('data-user-interacted');
-    
-    if (!canPlay) {
-      console.log('Cannot play notification sound - user has not interacted with the page yet');
-      return false;
+    // Only use alert as last resort for critical errors
+    if (type === 'error') {
+      window.alert(message);
     }
-    
-    // We can use the play promise to detect failures
-    try {
-      await audio.play();
-      return true;
-    } catch (playError) {
-      console.warn('Failed to play notification sound:', playError.message);
-      return false;
-    }
-  } catch (error) {
-    console.error('Error setting up audio:', error);
-    return false;
   }
 };
 
-// Add event listeners to track user interaction
-if (typeof document !== 'undefined') {
-  const markUserInteraction = () => {
-    document.documentElement.setAttribute('data-user-interacted', 'true');
-    console.log('User interaction detected - audio can now play');
-  };
-  
-  // Common interaction events
-  document.addEventListener('click', markUserInteraction);
-  document.addEventListener('keydown', markUserInteraction);
-  document.addEventListener('touchstart', markUserInteraction);
-}
+/**
+ * Initialize notification system
+ * @returns {Promise<boolean>} Whether notifications were successfully initialized
+ */
+export const initializeNotifications = async () => {
+  if (!areBrowserNotificationsSupported()) {
+    console.warn('Browser notifications are not supported');
+    return false;
+  }
+
+  // Check if we already have permission
+  if (hasNotificationPermission()) {
+    return true;
+  }
+
+  // If no permission yet, don't auto-request - let user choose
+  return false;
+};
+
+/**
+ * Clean up audio instances
+ */
+export const cleanupNotificationSounds = () => {
+  Object.values(audioInstances).forEach(audio => {
+    audio.pause();
+    audio.src = '';
+  });
+  audioInstances = {};
+};
+
+// Export default object with all functions
+export default {
+  areBrowserNotificationsSupported,
+  hasNotificationPermission,
+  requestNotificationPermission,
+  areNotificationsEnabled,
+  toggleNotifications,
+  areSoundNotificationsEnabled,
+  toggleSoundNotifications,
+  playNotificationSound,
+  showNotification,
+  showBookingNotification,
+  showAppointmentReminder,
+  showErrorNotification,
+  showSuccessNotification,
+  showWarningNotification,
+  notificationAlert,
+  initializeNotifications,
+  cleanupNotificationSounds
+};

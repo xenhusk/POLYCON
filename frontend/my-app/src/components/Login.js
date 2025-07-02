@@ -64,6 +64,12 @@ const Login = ({ onLoginSuccess, onSwitchToSignup }) => {
         const parsedInfo = JSON.parse(storedInfo);
         console.log("Parsed userInfo:", parsedInfo);
 
+        // Block unverified student login
+        if (data.role === 'student' && data.is_verified === false) {
+          setMessage('Please verify your email before logging in.');
+          setIsLoading(false);
+          return;
+        }
         // Rest of the existing login code...
         localStorage.setItem("userEmail", email);
         storeUserAuth(data, data.role);

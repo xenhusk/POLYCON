@@ -73,30 +73,32 @@ const SemesterManagement = () => {
       const timer = setTimeout(() => setError(''), 5000);
       return () => clearTimeout(timer);
     }
-  }, [error]);
+  }, [error]);  const validateSchoolYear = (input) => {
+    if (!input) {
+      setError('');
+      return false;
+    }
 
-  const validateSchoolYear = (input) => {
-    const regex = /^\d{2}-\d{2}$/;
-    const errorElement = document.querySelector('.fixed.top-5.right-5');
-    if (!regex.test(input)) {
-      setError('School year must be in format XX-XX');
-      if (errorElement) {
-        errorElement.classList.replace('bg-red-100', 'bg-yellow-100');
-        errorElement.classList.replace('text-red-700', 'text-yellow-700');
-      }
+    const year = parseInt(input);
+    
+    // For partially entered year
+    if (input.length < 4) {
+      setError('Please enter a complete 4-digit year');
       return false;
     }
-    const [start, end] = input.split('-').map(Number);
-    if (end !== start + 1) {
-      setError('Second year must be one year after the first');
-      if (errorElement) {
-        errorElement.classList.replace('bg-red-100', 'bg-yellow-100');
-        errorElement.classList.replace('text-red-700', 'text-yellow-700');
+
+    // Validate year range when 4 digits are entered
+    if (input.length === 4) {
+      if (isNaN(year) || year < 2024 || year > 2099) {
+        setError('Year must be between 2024 and 2099');
+        return false;
       }
-      return false;
+      setError('');
+      return true;
     }
+
     setError('');
-    return true;
+    return false;
   };
 
   const handleSchoolYearChange = (e) => {
@@ -130,7 +132,11 @@ const SemesterManagement = () => {
       return;
     }
     const formattedDate = format(new Date(startDate), 'yyyy-MM-dd');
-    const fullSchoolYear = `20${schoolYear.split('-')[0]}-20${schoolYear.split('-')[1]}`;
+    // Fix: Use the user's input as xxxx-xxxx
+    let fullSchoolYear = schoolYear;
+    if (/^\d{4}$/.test(schoolYear)) {
+      fullSchoolYear = `${schoolYear}-${parseInt(schoolYear) + 1}`;
+    }
     try {
       const response = await fetch('http://localhost:5001/semester/start', {
         method: 'POST',
@@ -186,14 +192,13 @@ const SemesterManagement = () => {
   const handleEndSemesterNow = async () => {
     if (!latestSemester) return;
     
-    // Show confirmation toast instead of window.confirm
     setError(
-      <div className="flex items-center justify-between">
+      <div className="flex items-center justify-between bg-yellow-100 text-yellow-700 border-yellow-500 p-4 rounded">
         <span>Are you sure you want to end the current semester? This cannot be undone. </span>
         <div className="flex gap-2">
           <button
             onClick={async () => {
-              setIsEndingSemester(true); // Only set loading when confirmed
+              setIsEndingSemester(true);
               try {
                 const currentDate = format(new Date(), 'yyyy-MM-dd');
                 const response = await fetch('http://localhost:5001/semester/end', {
@@ -206,6 +211,14 @@ const SemesterManagement = () => {
                 });
                 
                 if (!response.ok) throw new Error('Failed to end semester');
+                
+                // After successfully ending semester, deactivate all teachers
+                const updatedTeachers = teachers.map(teacher => ({
+                  ...teacher,
+                  isActive: false
+                }));
+                setTeachers(updatedTeachers);
+                localStorage.setItem('teachers', JSON.stringify(updatedTeachers));
                 
                 setSchoolYear('');
                 setSemester('1st');
@@ -262,9 +275,9 @@ const SemesterManagement = () => {
         ? `This will end the semester immediately and deactivate teachers (scheduled end date: ${formattedDate}). Confirm?`
         : `Schedule semester to end on ${formattedDate}? Teachers and Students will remain active until that day.`;
 
-    // Show confirmation toast
+    // Show confirmation toast - Remove shadow-lg class and adjust styling
     setError(
-      <div className="flex items-center justify-between">
+      <div className="flex items-center justify-between bg-yellow-100 text-yellow-700 border-yellow-500 p-4 rounded">
         <span>{confirmationMessage}</span>
         <div className="flex gap-2">
           <button
@@ -341,9 +354,7 @@ const SemesterManagement = () => {
     } catch (err) {
       setError(`Deletion error: ${err}`);
     }
-  };
-
-  // Update cache when activating a single teacher
+  };  // Update cache when activating a single teacher
   const handleActivate = async (teacherId) => {
     if (isActivatingTeacher === teacherId) return;
     setIsActivatingTeacher(teacherId);
@@ -353,7 +364,26 @@ const SemesterManagement = () => {
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ teacherId })
       });
-      if (!response.ok) throw new Error('Activation failed');
+      
+      let data;
+      try {
+        data = await response.json();
+      } catch (e) {
+        data = { error: 'Failed to parse server response' };
+      }
+
+      if (!response.ok) {
+        if (response.status === 400 || response.status === 404) {
+          if (data.error && data.error.includes('No active semester')) {
+            setError('Please start a semester first before activating teachers');
+          } else {
+            setError(data.error || 'Failed to activate teacher');
+          }
+        } else {
+          setError('Internal server error. Please try again later.');
+        }
+        return;
+      }
       
       const updatedTeachers = teachers.map(teacher =>
         teacher.ID === teacherId ? { ...teacher, isActive: true } : teacher
@@ -361,8 +391,10 @@ const SemesterManagement = () => {
       setTeachers(updatedTeachers);
       // Update cache
       localStorage.setItem('teachers', JSON.stringify(updatedTeachers));
+      setError('Teacher activated successfully');
     } catch (err) {
-      setError('Failed to activate teacher');
+      // Error is already set above
+      console.error('Error activating teacher:', err);
     } finally {
       setIsActivatingTeacher(null);
     }
@@ -376,14 +408,35 @@ const SemesterManagement = () => {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' }
       });
-      if (!response.ok) throw new Error('Failed to activate all teachers');
+      
+      let data;
+      try {
+        data = await response.json();
+      } catch (e) {
+        data = { error: 'Failed to parse server response' };
+      }
+
+      if (!response.ok) {
+        if (response.status === 400 || response.status === 404) {
+          if (data.error && data.error.includes('No active semester')) {
+            setError('Please start a semester first before activating teachers');
+          } else {
+            setError(data.error || 'Failed to activate all teachers');
+          }
+        } else {
+          setError('Internal server error. Please try again later.');
+        }
+        return;
+      }
       
       const updatedTeachers = teachers.map(teacher => ({ ...teacher, isActive: true }));
       setTeachers(updatedTeachers);
       // Update cache
       localStorage.setItem('teachers', JSON.stringify(updatedTeachers));
+      setError('All teachers activated successfully');
     } catch (err) {
-      setError('Failed to activate all teachers');
+      console.error('Error activating all teachers:', err);
+      setError('Failed to activate all teachers. Please try again.');
     } finally {
       setIsActivatingAll(false);
     }
@@ -452,10 +505,19 @@ const SemesterManagement = () => {
 
   return (
     <div className="p-6 fade-in flex flex-1 flex-col">
+      {/* Toasts for specific messages outside the modal */}
+      {(error === 'Please start a semester first before activating teachers' || error === 'Teacher activated successfully') && (
+        <div className={`fixed top-5 right-5 z-50 rounded-lg shadow-lg max-w-md p-4 
+          ${error === 'Teacher activated successfully' ? 'bg-green-100 text-green-700' : 'bg-yellow-100 text-yellow-700'}`}
+        >
+          <div className="flex justify-between items-start">
+            <div className="flex-1">{error}</div>
+          </div>
+        </div>
+      )}
       <h2 className="text-3xl font-bold text-[#0065A8] pt-10 pb-4 mb-6 text-center fade-in delay-100">
         Semester Management
       </h2>
-
       <div className="fade-in delay-200">
         <div className="w-full">
           {/* Teacher List Header */}
@@ -596,14 +658,18 @@ const SemesterManagement = () => {
       <AnimatePresence>
         {showSemesterModal && (
           <div 
-            className="fixed inset-0 bg-black/30 backdrop-blur-sm flex items-center justify-center z-50 p-4"
+            className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4"
             onClick={() => setShowSemesterModal(false)}
           >
             <motion.div
-              initial={{ opacity: 0, scale: 0.95, y: 20 }}
-              animate={{ opacity: 1, scale: 1, y: 0 }}
-              exit={{ opacity: 0, scale: 0.95, y: 20 }}
-              transition={{ type: "spring", stiffness: 300, damping: 30 }}
+              variants={{
+                hidden: { opacity: 0, scale: 0.95, y: 20 },
+                visible: { opacity: 1, scale: 1, y: 0, transition: { type: "spring", stiffness: 300, damping: 30 } },
+                exit: { opacity: 0, scale: 0.8, y: 20, transition: { duration: 0.3 } }
+              }}
+              initial="hidden"
+              animate="visible"
+              exit="exit"
               className="bg-white rounded-xl shadow-2xl w-[500px] max-h-[90vh] overflow-y-auto"
               onClick={(e) => e.stopPropagation()}
             >
@@ -624,25 +690,34 @@ const SemesterManagement = () => {
 
               {/* Modal Body */}
               <div className="p-6">
-                {/* Message/Error Display - Now inside modal */}
-                {error && (
-                  <div className={`mb-4 p-4 rounded-lg ${
-                    typeof error === 'string' && error.toLowerCase().includes("successfully")
-                      ? "bg-green-100 text-green-700"
-                      : "bg-red-100 text-red-700"
-                  }`}>
-                    {error}
-                    {typeof error === 'string' && error.includes("already exists") && (
-                      <button
-                        onClick={handleDeleteDuplicate}
-                        className="ml-4 bg-red-500 text-white px-3 py-1 rounded-lg hover:bg-red-600"
-                      >
-                        Delete Duplicate?
-                      </button>
-                    )}
+                {/* All other error/success messages inside the modal */}
+                {error && error !== 'Please start a semester first before activating teachers' && error !== 'Teacher activated successfully' && (
+                  <div className={`fixed top-5 right-5 z-50 rounded p-4 transform transition-all duration-500 ease-in-out 
+          ${
+            typeof error === 'string'
+              ? error.toLowerCase().includes('successfully')
+                ? 'bg-green-100 text-green-700'
+                : error.toLowerCase().includes('no active semester') || error.toLowerCase().includes('please start a semester') || error.toLowerCase().includes('please enter a complete')
+                ? 'bg-yellow-100 text-yellow-700'
+                : 'bg-red-100 text-red-700'
+              : ''
+          }
+        `}>
+                    <div className="flex justify-between items-start">
+                      <div className="flex-1">
+                        {error}
+                        {typeof error === 'string' && error.includes('already exists') && (
+                          <button
+                            onClick={handleDeleteDuplicate}
+                            className="ml-4 bg-red-500 text-white px-3 py-1 rounded-lg hover:bg-red-600"
+                          >
+                            Delete Duplicate?
+                          </button>
+                        )}
+                      </div>
+                    </div>
                   </div>
                 )}
-
                 {/* Semester Management Content */}
                 {latestSemester && canEndSemester ? (
                   <div className="space-y-4">
@@ -701,15 +776,29 @@ const SemesterManagement = () => {
                   /* Start New Semester Form */
                   <div className="space-y-4">
                     {/* ...existing form fields for starting semester... */}
-                    <div>
-                      <label className="block text-sm font-medium text-gray-700">School Year (20XX-20XX)</label>
-                      <input
-                        type="text"
-                        placeholder="23-24"
-                        value={schoolYear}
-                        onChange={handleSchoolYearChange}
-                        className="mt-1 block w-full px-4 py-2 rounded-md border-gray-300 shadow-sm focus:outline-none focus:ring-2 focus:ring-[#54BEFF]"
-                      />
+                    <div>                      <label className="block text-sm font-medium text-gray-700">School Year</label>                      <div className="flex items-center gap-1">
+                        <input
+                          type="text"
+                          maxLength={4}
+                          placeholder="XXXX"
+                          value={schoolYear || ''}
+                          onChange={e => {
+                            let val = e.target.value.replace(/[^0-9]/g, '');
+                            if (val.length > 4) val = val.slice(0, 4);
+                            setSchoolYear(val);
+                            validateSchoolYear(val);
+                          }}
+                          disabled={shouldDisableInputs()}
+                          className="mt-1 block w-20 px-4 py-2 rounded-md border-gray-300 shadow-sm focus:outline-none focus:ring-2 focus:ring-[#54BEFF] text-center"
+                        />                        <span className="text-gray-700 text-lg mx-2">-</span>
+                        <input
+                          type="text"
+                          readOnly
+                          value={schoolYear && schoolYear.length === 4 && !isNaN(parseInt(schoolYear)) ? (parseInt(schoolYear) + 1).toString() : ''}
+                          className="w-20 px-4 py-2 bg-gray-100 text-gray-700 text-center rounded-md focus:outline-none border-gray-300 focus:ring-2 focus:ring-[#54BEFF]"
+                        />
+                        <span className="ml-2 text-gray-500 text-sm">(Enter year: XXXX)</span>
+                      </div>
                     </div>
                     {/* ...rest of the start semester form fields... */}
                     <div>
@@ -775,12 +864,10 @@ const SemesterManagement = () => {
                   </div>
                 )}
               </div>
-            </motion.div>
-          </div>
+            </motion.div>          </div>
         )}
       </AnimatePresence>
     </div>
   );
-};
-
+}
 export default SemesterManagement;

@@ -13,11 +13,10 @@ const SidebarRoleBased = () => {
   }, []);
 
   // Define menu items for each role
-  const menuItems = {
-    student: [
+  const menuItems = {    student: [
       { icon: <FaHome size={24} />, text: 'Dashboard', link: '/dashboard' },
-      { icon: <FaClipboardList size={24} />, text: 'Request Appointment', link: '/request' },
-      { icon: <FaClipboardList size={24} />, text: 'Calendar', link: '/appointments-calendar' },
+      { icon: <FaClipboardList size={24} />, text: 'Request Appointment', link: '/appointments' },
+      { icon: <FaClipboardList size={24} />, text: 'History', link: '/history' },
       { icon: <FaUser size={24} />, text: 'Profile', link: '/profile' },
       { icon: <FaGraduationCap size={24} />, text: 'Grades', link: '/gradeview' },
     ],

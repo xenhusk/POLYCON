@@ -1,6 +1,6 @@
 import React, { useState, useEffect, useRef } from "react";
 import { useNavigate, useLocation } from "react-router-dom";
-import { getProfilePictureUrl } from "../utils/utils";
+import { getProfilePictureUrl, getDisplayProgram } from "../utils/utils";
 import { getUserIdentifiers, validateUserForOperation } from "../utils/userUtils";
 import { useQueryClient } from "react-query";
 import { motion } from "framer-motion";
@@ -189,7 +189,10 @@ function BookingAppointment({ closeModal, role: propRole }) {
           )}`
         );
         const data = await res.json();
-        if (data.results) {
+        // Handle either paged results or direct array response
+        if (Array.isArray(data)) {
+          setTeacherResults(data);
+        } else if (data.results) {
           setTeacherResults(data.results);
         } else {
           setTeacherResults([]);
@@ -324,10 +327,9 @@ function BookingAppointment({ closeModal, role: propRole }) {
         });
       } finally {
         setIsLoading(false);
-      }
-    } else {
-      // Validate required fields: selectedTeacher and studentID must be provided.
-      if (!studentID || !selectedTeacher) {
+      }    } else {
+      // Validate required fields: selectedTeacher, studentID, schedule, and venue must be provided.
+      if (!studentID || !selectedTeacher || !schedule || !venue) {
         setMessage({
           type: "error",
           content: "Please fill in all required fields.",
@@ -409,6 +411,8 @@ function BookingAppointment({ closeModal, role: propRole }) {
       </div>
     );
   };
+  // Import the getDisplayProgram function from utils
+  // This is now imported from utils.js at the top of the file
 
   return (
     <div className="pt-2 sm:pt-4 px-2 sm:px-4">
@@ -428,8 +432,8 @@ function BookingAppointment({ closeModal, role: propRole }) {
                     className="bg-[#397de2] text-white px-1 sm:px-2 py-1 rounded-full flex items-center gap-1 sm:gap-2 text-xs sm:text-sm mb-1"
                   >
                     <img
-                      src={getProfilePictureUrl(student.profile_picture)}
-                      alt="Profile"
+                      src={getProfilePictureUrl(student.profile_picture, `${student.firstName} ${student.lastName}`)}
+                      alt={`${student.firstName} ${student.lastName}`}
                       className="w-4 h-4 sm:w-5 sm:h-5 rounded-full"
                     />
                     <span className="max-w-[100px] sm:max-w-full truncate">
@@ -481,9 +485,10 @@ function BookingAppointment({ closeModal, role: propRole }) {
                     </li>
                   ) : (
                     studentResults
-                      .filter(
-                        (student) =>
-                          !selectedStudents.some((s) => s.id === student.id)
+                      .filter((student) =>
+                        // Exclude already selected students and the current student by idNumber
+                        student.idNumber !== studentID &&
+                        !selectedStudents.some((s) => s.id === student.id)
                       )
                       .map((student) => (
                         <li
@@ -495,8 +500,8 @@ function BookingAppointment({ closeModal, role: propRole }) {
                           className="px-2 sm:px-4 py-2 hover:bg-gray-50 flex items-center gap-2 sm:gap-3 cursor-pointer"
                         >
                           <img
-                            src={getProfilePictureUrl(student.profile_picture)}
-                            alt="Profile"
+                            src={getProfilePictureUrl(student.profile_picture, `${student.firstName} ${student.lastName}`)}
+                            alt={`${student.firstName} ${student.lastName}`}
                             className="w-6 h-6 sm:w-8 sm:h-8 rounded-full"
                           />
                           <div>
@@ -504,7 +509,7 @@ function BookingAppointment({ closeModal, role: propRole }) {
                               {student.firstName} {student.lastName}
                             </div>
                             <div className="text-xs text-gray-500">
-                              {student.programName || 'Unknown Program'} • {student.year_section || 'Unknown Section'}
+                              {getDisplayProgram(student)} • {student.year_section || 'Unknown Section'}
                             </div>
                           </div>
                         </li>
@@ -557,8 +562,8 @@ function BookingAppointment({ closeModal, role: propRole }) {
                 {selectedTeacher && !teacherSearchTerm ? (
                   <div className="bg-[#397de2] text-white px-2 py-1 rounded-full flex items-center gap-2 text-xs sm:text-sm">
                     <img
-                      src={getProfilePictureUrl(selectedTeacherProfile)}
-                      alt="Teacher"
+                      src={getProfilePictureUrl(selectedTeacherProfile, selectedTeacherName)}
+                      alt={selectedTeacherName || 'Teacher'}
                       className="w-4 h-4 sm:w-5 sm:h-5 rounded-full"
                     />
                     <span className="max-w-[120px] sm:max-w-full truncate">{selectedTeacherName}</span>
@@ -616,26 +621,24 @@ function BookingAppointment({ closeModal, role: propRole }) {
                   ) : (
                     teacherResults.map((teacher) => (
                       <li
-                        key={teacher.id}
+                        key={teacher.ID}
                         onMouseDown={() => {
-                          setSelectedTeacher(teacher.id);
-                          setSelectedTeacherName(
-                            `${teacher.firstName} ${teacher.lastName}`
-                          );
-                          setSelectedTeacherProfile(teacher.profile_picture);
+                          setSelectedTeacher(teacher.ID);
+                          setSelectedTeacherName(teacher.fullName);
+                          setSelectedTeacherProfile(teacher.profilePicture);
                           setTeacherSearchTerm("");
                           setIsTeacherInputFocused(false);
                         }}
                         className="px-2 sm:px-4 py-2 hover:bg-gray-50 flex items-center gap-2 sm:gap-3 cursor-pointer"
                       >
                         <img
-                          src={getProfilePictureUrl(teacher.profile_picture)}
-                          alt="Profile"
+                          src={getProfilePictureUrl(teacher.profilePicture, teacher.fullName)}
+                          alt={teacher.fullName}
                           className="w-6 h-6 sm:w-8 sm:h-8 rounded-full"
                         />
                         <div>
                           <div className="font-medium text-xs sm:text-sm">
-                            {teacher.firstName} {teacher.lastName}
+                            {teacher.fullName}
                           </div>
                           <div className="text-xs text-gray-500">
                             {teacher.department}
@@ -660,8 +663,8 @@ function BookingAppointment({ closeModal, role: propRole }) {
                     className="bg-[#397de2] text-white px-1 sm:px-2 py-1 rounded-full flex items-center gap-1 sm:gap-2 text-xs sm:text-sm mb-1"
                   >
                     <img
-                      src={getProfilePictureUrl(student.profile_picture)}
-                      alt="Profile"
+                      src={getProfilePictureUrl(student.profile_picture, `${student.firstName} ${student.lastName}`)}
+                      alt={`${student.firstName} ${student.lastName}`}
                       className="w-4 h-4 sm:w-5 sm:h-5 rounded-full"
                     />
                     <span className="max-w-[100px] sm:max-w-full truncate">
@@ -726,11 +729,10 @@ function BookingAppointment({ closeModal, role: propRole }) {
                     </li>
                   ) : (
                     studentResults
-                      .filter(
-                        (student) =>
-                          // Add filter to exclude the current student from results
-                          student.id !== studentID && 
-                          !selectedStudents.some((s) => s.id === student.id)
+                      .filter((student) =>
+                        // Exclude current user by matching idNumber, not numeric id
+                        student.idNumber !== studentID &&
+                        !selectedStudents.some((s) => s.id === student.id)
                       )
                       .map((student) => (
                         <li
@@ -744,8 +746,8 @@ function BookingAppointment({ closeModal, role: propRole }) {
                           className="px-2 sm:px-4 py-2 hover:bg-gray-50 flex items-center gap-2 sm:gap-3 cursor-pointer"
                         >
                           <img
-                            src={getProfilePictureUrl(student.profile_picture)}
-                            alt="Profile"
+                            src={getProfilePictureUrl(student.profile_picture, `${student.firstName} ${student.lastName}`)}
+                            alt={`${student.firstName} ${student.lastName}`}
                             className="w-6 h-6 sm:w-8 sm:h-8 rounded-full"
                           />
                           <div>
@@ -753,7 +755,7 @@ function BookingAppointment({ closeModal, role: propRole }) {
                               {student.firstName} {student.lastName}
                             </div>
                             <div className="text-xs text-gray-500">
-                              {student.programName || 'Unknown Program'} • {student.year_section || 'Unknown Section'}
+                              {getDisplayProgram(student)} • {student.year_section || 'Unknown Section'}
                             </div>
                           </div>
                         </li>
@@ -871,8 +873,8 @@ function BookingAppointment({ closeModal, role: propRole }) {
                 setCancelClicked(true);
                 setTimeout(() => {
                   setCancelClicked(false);
-                  setTimeout(() => closeModal(), 500);
-                }, 200);
+                  setTimeout(() => closeModal());
+                });
               }}
               className={`flex-1 py-4 sm:py-6 md:py-4 text-gray-700 bg-gray-100 rounded-br-lg hover:bg-gray-200 transition-colors text-xs sm:text-sm
                 ${CancelClicked ? "scale-100" : "scale-100"}`}

@@ -30,6 +30,7 @@ export default function AdminPortal() {
   const [isDeleteLoading, setIsDeleteLoading] = useState(false);
   const [showDeleteModal, setShowDeleteModal] = useState(false);
   const [userToDelete, setUserToDelete] = useState(null);
+  const [showAddModal, setShowAddModal] = useState(false);
 
   useEffect(() => {
     fetchInitialData();
@@ -113,32 +114,33 @@ export default function AdminPortal() {
       console.error('Error fetching programs:', error);
     }
   };
-
   const handleAddUser = async () => {
-    const password = role === 'student' ? `student${idNumber}` : `faculty${idNumber}`;
-
+    // Use direct admin endpoint instead of signup to avoid email verification
     const userData = {
       idNumber,
       firstName,
       lastName,
       email,
-      password,
-      role,
-      department,
-      ...(role === 'student' && { program, sex, year_section: yearSection })
+      password: 'password123', // Default password for new users
+      role: role || 'student',
+      department: department || undefined,
+      program: program || undefined,
+      sex: sex || undefined,
+      year_section: yearSection || undefined,
     };
 
+    // Remove empty/undefined fields
+    Object.keys(userData).forEach(key => (userData[key] === undefined || userData[key] === '') && delete userData[key]);
+
     try {
-      const response = await fetch('http://localhost:5001/account/signup', {
+      const response = await fetch('http://localhost:5001/account/admin_add_user', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify(userData),
       });
 
-      const data = await response.json();
-
-      if (response.ok) {
-        alert(`${data.message} Verification email sent to the user.`);
+      const data = await response.json();      if (response.ok) {
+        alert(`${data.message} User has been created and can login immediately.`);
         fetchAllUsers();
         // Clear input fields
         setIdNumber('');
@@ -150,6 +152,8 @@ export default function AdminPortal() {
         setProgram('');
         setSex('');
         setYearSection('');
+        // Close the modal
+        setShowAddModal(false);
       } else {
         alert(data.error || 'Failed to add user');
       }
@@ -163,29 +167,30 @@ export default function AdminPortal() {
     setModalClosing(false);
     setIsEditLoading(false);
     try {
-        let departmentId = '';
-        if (user.department && typeof user.department === 'string') {
-            if (user.department.includes('departments/')) {
-                departmentId = user.department.split('/')[1];
-            } else {
-                const matchingDept = departments.find(dept => dept.departmentName === user.department);
-                departmentId = matchingDept ? matchingDept.departmentID : '';
+        // Find the department ID based on department name
+        let departmentId = null;
+        if (user.department && departments.length > 0) {
+            const deptObj = departments.find(d => d.name === user.department);
+            if (deptObj) {
+                departmentId = deptObj.id;
             }
         }
 
         setEditUser({
-            idNumber: user.ID,
+            id: user.ID,
+            id_number: user.idNumber,
             firstName: user.firstName,
             lastName: user.lastName,
             email: user.email,
             role: user.role,
-            department: departmentId,
-            program: user.program || '',
+            department: departmentId, // Use the numeric ID
+            program: user.programID || user.program || '',
             sex: user.sex || '',
             yearSection: user.year_section || ''
         });
 
-        if (user.role === 'student' && departmentId) {
+        // Fetch programs if department is set
+        if (departmentId) {
             await fetchPrograms(departmentId);
         }
     } catch (error) {
@@ -197,52 +202,59 @@ export default function AdminPortal() {
   };
 
   const handleUpdateUser = async () => {
+    const updateData = {
+      id: editUser.id,
+      id_number: editUser.id_number,
+      firstName: editUser.firstName,
+      lastName: editUser.lastName,
+      email: editUser.email,
+      role: editUser.role,
+      department: editUser.department, // This will now be the numeric ID
+      program: editUser.program,
+      sex: editUser.sex,
+      year_section: editUser.yearSection
+    };
+
     try {
       const response = await fetch('http://localhost:5001/account/update_user', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify(editUser),
+        body: JSON.stringify(updateData),
       });
       if (response.ok) {
         alert('User updated successfully');
         setEditUser(null);
         fetchAllUsers();
-        // Clear input fields
-        setIdNumber('');
-        setFirstName('');
-        setLastName('');
-        setEmail('');
-        setRole('');
-        setDepartment('');
-        setProgram('');
-        setSex('');
-        setYearSection('');
       } else {
-        alert('Failed to update user');
+        const data = await response.json();
+        alert(data.error || 'Failed to update user');
       }
     } catch (error) {
       console.error('Error updating user:', error);
+      alert('Error updating user');
     }
   };
 
-  const handleDeleteUser = async (idNumber) => {
+  const handleDeleteUser = async (userId) => {
     setIsDeleteLoading(true);
     try {
-      const response = await fetch(`http://localhost:5001/account/delete_user?idNumber=${idNumber}`, {
+      const response = await fetch(`http://localhost:5001/account/delete_user?id=${userId}`, {
         method: 'DELETE',
       });
       if (response.ok) {
+        // Remove the archived user from the table immediately
+        setUserList(prevList => prevList.filter(user => user.ID !== userId));
         alert('User archived successfully');
-        fetchAllUsers(); // This will now get only non-archived users
       } else {
-        alert('Failed to archive user');
+        const data = await response.json();
+        alert(data.error || 'Failed to archive user');
       }
     } catch (error) {
       console.error('Error archiving user:', error);
+      alert('Error archiving user. Please try again.');
     } finally {
       setIsDeleteLoading(false);
       setShowDeleteModal(false);
-      setUserToDelete(null);
     }
   };
 
@@ -257,61 +269,80 @@ export default function AdminPortal() {
     }
   };
 
+  // When department changes in Add User modal, fetch programs just like Signup
+  useEffect(() => {
+    if (department) {
+      fetchPrograms(department);
+      setProgram(""); // Reset program when department changes
+    } else {
+      setPrograms([]);
+      setProgram("");
+    }
+  }, [department]);
+
   return (
     <div className="w-full min-h-screen p-6 items-center fade-in">
-      <header className="w-full max-w-[95%] bg-white mt-10 rounded-br-[0.8rem] rounded-bl-[0.8rem] flex justify-center items-center mb-2 fade-in delay-100">
-        <h2 className="text-3xl font-bold text-center pb-5 text-[#005B98]">Manage Users</h2>
-      </header>
-
-      <div className="flex justify-center items-start mb-2 mt-8 h-[60vh] fade-in delay-200">
-        <div className="w-[90%] max-h-[65vh] overflow-hidden rounded-lg shadow-lg bg-white">
-          <div className="overflow-x-auto">
-            <div className="relative">
-              <table className="w-full table-fixed items-center justify-center">
-                <thead className="sticky top-0 bg-[#057DCD] text-white shadow-md z-10 mr-2">
-                  <tr>
-                    <th className="py-3 px-6 overflow-hidden border-b">ID Number</th>
-                    <th className="py-3 px-6 overflow-hidden border-b">Name</th>
-                    <th className="py-3 px-6 overflow-hidden border-b">Email</th>
-                    <th className="py-3 px-6 overflow-hidden border-b">Role</th>
-                    <th className="py-3 px-6 overflow-hidden border-b">Department</th>
-                    <th className="py-3 px-6 overflow-hidden border-b">Controls</th>
-                  </tr>
-                </thead>
-              </table>
-
+      <header className="w-full bg-white mt-10 flex justify-center  items-center mb-2 fade-in delay-100">
+        <h2 className="text-3xl items-center font-bold text-center pb-5 text-[#005B98]">Manage Users</h2>
+      </header>      
+      <div className="flex justify-center items-start mb-2 h-[60vh] fade-in delay-200">
+        <div className="w-[90%]">
+          <div className="max-h-[65vh]">
+            <div className="w-full flex justify-center mb-4 mt-4 ">
+              <button
+                className="px-6 py-2 bg-[#057DCD] text-white rounded-lg hover:bg-[#54BEFF] transition-all duration-300 transform hover:scale-105 active:scale-95 shadow-md"
+                onClick={() => setShowAddModal(true)}
+              >
+                Add User
+              </button>
+            </div>
+            <div className="overflow-x-auto shadow-md rounded-lg">
+              <div className="relative">
+                <table className="w-full table-fixed">
+                  <thead className="bg-[#057DCD] text-white">
+                    <tr>
+                      <th className="py-4 px-6 font-poppins text-base font-semibold tracking-wider text-center">ID Number</th>
+                      <th className="py-4 px-6 font-poppins text-base font-semibold tracking-wider text-center">Name</th>
+                      <th className="py-4 px-6 font-poppins text-base font-semibold tracking-wider text-center">Email</th>
+                      <th className="py-4 px-6 font-poppins text-base font-semibold tracking-wider text-center">Role</th>
+                      <th className="py-4 px-6 font-poppins text-base font-semibold tracking-wider text-center">Department</th>
+                      <th className="py-4 px-6 font-poppins text-base font-semibold tracking-wider text-center">Controls</th>
+                    </tr>
+                  </thead>
+                </table>
+              </div>
               <div className="max-h-[50vh] overflow-y-auto">
-                <table className="w-full table-fixed border-collapse">
+                <table className="w-full table-fixed">
                   <tbody>
                     {loading ? (
                       Array.from({ length: 5 }).map((_, index) => (
-                        <tr key={index} className="animate-pulse">
-                          <td className="py-2 px-6">
+                        <tr key={index} className="animate-pulse bg-white">
+                          <td className="py-4 px-6">
                             <div className="flex justify-center h-[7vh] items-center">
                               <div className="h-5 w-20 bg-gray-200 rounded mx-auto"></div>
                             </div>
                           </td>
-                          <td className="py-2 px-6">
+                          <td className="py-4 px-6">
                             <div className="flex justify-center h-[7vh] items-center">
                               <div className="h-5 w-28 bg-gray-200 rounded mx-auto"></div>
                             </div>
                           </td>
-                          <td className="py-2 px-6">
+                          <td className="py-4 px-6">
                             <div className="flex justify-center h-[7vh] items-center">
                               <div className="h-5 w-40 bg-gray-200 rounded mx-auto"></div>
                             </div>
                           </td>
-                          <td className="py-2 px-6 pl-10">
-                            <div className="flex justify-center h-[7vh]items-center">
+                          <td className="py-4 px-6">
+                            <div className="flex justify-center h-[7vh] items-center ">
                               <div className="h-5 w-20 bg-gray-200 rounded mx-auto"></div>
                             </div>
                           </td>
-                          <td className="py-2 px-6 pl-10">
+                          <td className="py-4 px-6">
                             <div className="flex justify-center h-[7vh] items-center">
                               <div className="h-5 w-28 bg-gray-200 rounded mx-auto"></div>
                             </div>
                           </td>
-                          <td className="py-2 pl-6">
+                          <td className="py-4 px-6">
                             <div className="flex justify-center h-[7vh] items-center space-x-3">
                               <div className="h-6 w-6 bg-gray-300 rounded"></div>
                               <div className="h-6 w-6 bg-gray-300 rounded"></div>
@@ -320,41 +351,60 @@ export default function AdminPortal() {
                         </tr>
                       ))
                     ) : (
-                      userList.map((u) => (
-                        <tr key={u.ID} className="border-b hover:bg-[#DBF1FF] transition-all duration-100 ease-in-out">
-                          <td className="py-2 px-6 overflow-hidden text-center">{u.ID}</td>
-                          <td className="py-2 px-6 overflow-hidden text-center">{u.firstName} {u.lastName}</td>
-                          <td className="py-2 px-6 overflow-hidden text-center">{u.email}</td>
-                          <td className="py-2 px-6 pl-10 overflow-hidden text-center">{u.role}</td>
-                          <td className="py-2 px-6 pl-10 overflow-hidden text-center">{u.department}</td>
-                          <td className="py-2 pl-6 overflow-hidden text-center">
-                            <div className="flex items-center justify-center space-x-3">
-                              <button
-                                className={`text-gray-500 hover:text-gray-700 ${
-                                  EditClicked ? "scale-90" : "scale-100"}`}
-                                onClick={() => {
-                                  setEditClicked(true);
-                                  setTimeout(() => setEditClicked(false), 300);
-                                  handleEditClick(u);}}>
-                                <EditIcon className="w-5 h-5" />
-                              </button>
-                              <button
-                                className={`text-gray-500 hover:text-gray-700 ${
-                                  DeleteClicked ? "scale-90" : "scale-100"}`}
-                                onClick={() => {
-                                  setDeleteClicked(true);
-                                  setTimeout(() => {
-                                    setDeleteClicked(false);
-                                    setUserToDelete(u.ID);
-                                    setShowDeleteModal(true);
-                                  }, 300);
-                                }}>
-                                <DeleteIcon className="w-5 h-5" />
-                              </button>
-                            </div>
-                          </td>
-                        </tr>
-                      ))
+                      userList.map((u) => { 
+                        let departmentDisplay = u.department;
+                        if (departmentDisplay && departments.length > 0) {
+                          let deptObj = departments.find(d => 
+                            d.id === u.department ||
+                            d.name === u.department ||
+                            d.departmentID === u.department ||
+                            d.departmentName === u.department
+                          );
+                          if (deptObj) {
+                            departmentDisplay = deptObj.name || deptObj.departmentName;
+                          }
+                        }
+                        return (
+                          <tr key={u.ID} className="border-b bg-white hover:bg-[#DBF1FF] transition-all duration-200">
+                            <td className="py-4 px-6 font-poppins text-base text-black text-center">{u.idNumber}</td>
+                            <td className="py-4 px-6 font-poppins text-base text-black text-center">{u.firstName} {u.lastName}</td>
+                            <td className="py-4 px-6 font-poppins text-base text-black text-center overflow-hidden">{u.email}</td>
+                            <td className="py-4 px-6 font-poppins text-base text-black text-center capitalize">{u.role}</td>
+                            <td className="py-4 px-6 font-poppins text-base text-black text-center">{departmentDisplay}</td>
+                            <td className="py-4 px-6 text-center">
+                              <div className="flex items-center justify-center space-x-4">
+                                <button
+                                  className={`text-blue-600 hover:text-blue-800 transition-all duration-200 ${
+                                    EditClicked ? "scale-90" : "scale-100"
+                                  }`}
+                                  onClick={() => {
+                                    setEditClicked(true);
+                                    setTimeout(() => setEditClicked(false), 300);
+                                    handleEditClick(u);
+                                  }}
+                                >
+                                  <EditIcon className="w-5 h-5" />
+                                </button>
+                                <button
+                                  className={`text-red-600 hover:text-red-800 transition-all duration-200 ${
+                                    DeleteClicked ? "scale-90" : "scale-100"
+                                  }`}
+                                  onClick={() => {
+                                    setDeleteClicked(true);
+                                    setTimeout(() => {
+                                      setDeleteClicked(false);
+                                      setUserToDelete(u.ID);
+                                      setShowDeleteModal(true);
+                                    }, 300);
+                                  }}
+                                >
+                                  <DeleteIcon className="w-5 h-5" />
+                                </button>
+                              </div>
+                            </td>
+                          </tr>
+                        );
+                      })
                     )}
                   </tbody>
                 </table>
@@ -412,191 +462,306 @@ export default function AdminPortal() {
             </div>
           </div>
         </div>
-      )}
-
-      <div className="flex justify-center items-center fade-in delay-300">
-        <div className="w-[90%] h-[10vh]">
-          <div className="flex flex-row bg-white shadow-md p-1 rounded-lg justify-between items-center">
-            <input
-              placeholder="ID Number"
-              value={idNumber}
-              onChange={(e) => setIdNumber(e.target.value)}
-              className="w-[12%] bg-transparent border-2 border-white outline-none focus:ring focus:ring-blue-500 focus:border-blue-500 rounded-lg px-2 py-2 m-1"
-            />
-            <input
-              placeholder="First Name"
-              value={firstName}
-              onChange={(e) => setFirstName(e.target.value)}
-              className="w-[12%] bg-transparent border-2 border-white outline-none focus:ring focus:ring-blue-500 focus:border-blue-500 rounded-lg px-2 py-2 m-1"
-            />
-            <input
-              placeholder="Last Name"
-              value={lastName}
-              onChange={(e) => setLastName(e.target.value)}
-              className="w-[12%] bg-transparent border-2 border-white outline-none focus:ring focus:ring-blue-500 focus:border-blue-500 rounded-lg px-2 py-2 m-1"
-            />
-            <input
-              placeholder="Email"
-              value={email}
-              onChange={(e) => setEmail(e.target.value)}
-              className="w-[20%] bg-transparent border-2 border-white outline-none focus:ring focus:ring-blue-500 focus:border-blue-500 rounded-lg px-2 py-2 m-1"
-            />
-            <select
-              value={role}
-              onChange={handleRoleChange}
-              className="w-[12%] bg-transparent border-2 border-white outline-none focus:ring focus:ring-blue-500 focus:border-blue-500 rounded-lg px-2 py-2 m-1"
-            >
-              <option value="">Select Role</option>
-              <option value="faculty">Faculty</option>
-              <option value="student">Student</option>
-            </select>
-
-            <select
-              value={department}
-              onChange={(e) => setDepartment(e.target.value)}
-              className="w-[13%] bg-transparent border-2 border-white outline-none focus:ring focus:ring-blue-500 focus:border-blue-500 rounded-lg px-2 py-2 m-1"
-            >
-              <option value="">Select Department</option>
-              {departments.map((dept) => (
-                <option key={dept.departmentID} value={dept.departmentID}>
-                  {dept.departmentName}
-                </option>
-              ))}
-            </select>
-
-            <div className={`flex p-0 w-auto justify-center transition-all duration-500 ease-in-out transform ${
-                showStudentFields ? "opacity-100 scale-100" : "opacity-0 scale-90"
-              }`}>
-              {role === 'student' && department && (
-                <>
-                <select
-                  value={program}
-                  onChange={(e) => setProgram(e.target.value)}
-                  className="w-[40%] bg-transparent border-2 border-white outline-none focus:ring focus:ring-blue-500 focus:border-blue-500 rounded-lg px-2 py-2 m-1" 
+      )}      {showAddModal && (
+        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
+          <div className="bg-white rounded-xl shadow-2xl w-[40rem] overflow-hidden max-h-[90vh] flex flex-col">
+            <div className="bg-[#0065A8] p-4 flex justify-between items-center">
+              <h3 className="text-xl font-semibold text-white">Add New User</h3>
+              <button
+                onClick={() => {
+                  setModalClosing(true);
+                  setTimeout(() => {
+                    setShowAddModal(false);
+                    setModalClosing(false);
+                  }, 300);
+                }}
+                className="text-white hover:text-gray-200 transition-colors"
+              >
+                <svg
+                  className="w-6 h-6"
+                  fill="none"
+                  stroke="currentColor"
+                  viewBox="0 0 24 24"
                 >
-                  <option value="">Select Program</option>
-                  {programs.map((prog) => (
-                    <option key={prog.programID} value={prog.programID}>
-                      {prog.programName}
+                  <path
+                    strokeLinecap="round"
+                    strokeLinejoin="round"
+                    strokeWidth="2"
+                    d="M6 18L18 6M6 6l12 12"
+                  />
+                </svg>
+              </button>
+            </div>
+
+            <div className="flex-1 overflow-y-auto px-8 py-6 space-y-6">
+              {/* ID Number */}
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-2">ID Number</label>
+                <input
+                  type="text"
+                  value={idNumber}
+                  onChange={(e) => setIdNumber(e.target.value)}
+                  className="w-full border-2 border-[#0065A8] rounded-lg px-3 py-2 focus:outline-none focus:ring-2 focus:ring-[#54BEFF]"
+                />
+              </div>
+              {/* First Name */}
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-2">First Name</label>
+                <input
+                  type="text"
+                  value={firstName}
+                  onChange={(e) => setFirstName(e.target.value)}
+                  className="w-full border-2 border-[#0065A8] rounded-lg px-3 py-2 focus:outline-none focus:ring-2 focus:ring-[#54BEFF]"
+                />
+              </div>
+              {/* Last Name */}
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-2">Last Name</label>
+                <input
+                  type="text"
+                  value={lastName}
+                  onChange={(e) => setLastName(e.target.value)}
+                  className="w-full border-2 border-[#0065A8] rounded-lg px-3 py-2 focus:outline-none focus:ring-2 focus:ring-[#54BEFF]"
+                />
+              </div>
+              {/* Email */}
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-2">Email</label>
+                <input
+                  type="text"
+                  value={email}
+                  onChange={(e) => setEmail(e.target.value)}
+                  className="w-full border-2 border-[#0065A8] rounded-lg px-3 py-2 focus:outline-none focus:ring-2 focus:ring-[#54BEFF]"
+                />
+              </div>
+              {/* Role */}
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-2">Role</label>
+                <select
+                  value={role}
+                  onChange={handleRoleChange}
+                  className="w-full border-2 border-[#0065A8] rounded-lg px-3 py-2 focus:outline-none focus:ring-2 focus:ring-[#54BEFF]"
+                >
+                  <option value="">Select Role</option>
+                  <option value="faculty">Faculty</option>
+                  <option value="student">Student</option>
+                </select>
+              </div>
+              {/* Department */}
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-2">Department</label>
+                <select
+                  value={department}
+                  onChange={async (e) => {
+                    setDepartment(e.target.value);
+                    setProgram("");
+                    await fetchPrograms(e.target.value);
+                  }}
+                  className="w-full border-2 border-[#0065A8] rounded-lg px-3 py-2 focus:outline-none focus:ring-2 focus:ring-[#54BEFF]"
+                >
+                  <option value="">Select Department</option>
+                  {departments.map((dept) => (
+                    <option key={dept.id} value={dept.id}>{dept.name}</option>
+                  ))}
+                </select>
+              </div>
+              {/* Program (show if department is selected and role is student) */}
+              {role === 'student' && department && (
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-2">Program</label>
+                  <select
+                    value={program}
+                    onChange={(e) => setProgram(e.target.value)}
+                    className="w-full border-2 border-[#0065A8] rounded-lg px-3 py-2 focus:outline-none focus:ring-2 focus:ring-[#54BEFF]"
+                  >
+                    <option value="">Select Program</option>
+                    {programs.map((prog) => (
+                      <option key={prog.programID} value={prog.programID}>{prog.programName}</option>
+                    ))}
+                  </select>
+                </div>
+              )}
+              {/* Sex (show if role is student) */}
+              {role === 'student' && (
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-2">Sex</label>
+                  <select
+                    value={sex}
+                    onChange={(e) => setSex(e.target.value)}
+                    className="w-full border-2 border-[#0065A8] rounded-lg px-3 py-2 focus:outline-none focus:ring-2 focus:ring-[#54BEFF]"
+                  >
+                    <option value="">Select Sex</option>
+                    <option value="Male">Male</option>
+                    <option value="Female">Female</option>
+                  </select>
+                </div>
+              )}
+              {/* Year & Section (show if role is student) */}
+              {role === 'student' && (
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-2">Year & Section</label>
+                  <input
+                    type="text"
+                    placeholder='e.g. 1A'
+                    value={yearSection}
+                    onChange={(e) => setYearSection(e.target.value)}
+                    className="w-full border-2 border-[#0065A8] rounded-lg px-3 py-2 focus:outline-none focus:ring-2 focus:ring-[#54BEFF]"
+                  />
+                </div>
+              )}
+            </div>
+
+            <div className="px-8 py-4 border-t border-gray-200 flex justify-end space-x-4">
+              <button
+                className={`bg-[#0065A8] hover:bg-[#54BEFF] text-white px-4 py-2 rounded-lg transition-colors ${
+                  AddClicked ? "scale-90" : "scale-100"
+                }`}
+                onClick={() => {
+                  setAddClicked(true);
+                  setTimeout(() => {
+                    setAddClicked(false);
+                    handleAddUser();
+                    setShowAddModal(false);
+                  }, 300);
+                }}
+              >
+                Add User
+              </button>
+              <button
+                className={`bg-gray-500 text-white px-4 py-2 rounded-lg transition-colors ${
+                  CancelClicked ? "scale-90" : "scale-100"
+                }`}
+                onClick={() => {
+                  setCancelClicked(true);
+                  setTimeout(() => {
+                    setCancelClicked(false);
+                    setShowAddModal(false);
+                  }, 300);
+                }}
+              >
+                Cancel
+              </button>
+            </div>
+          </div>
+        </div>
+      )}      {editUser && (
+        <div
+          className={`fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 transition-opacity duration-500 ${
+            modalClosing ? "opacity-0" : "opacity-100"
+          }`}>
+          <div className="bg-white rounded-xl shadow-2xl w-[40rem] overflow-hidden max-h-[90vh] flex flex-col">
+            <div className="bg-[#0065A8] p-4 flex justify-between items-center">
+              <h3 className="text-xl font-semibold text-white">Edit User</h3>
+              <button
+                onClick={() => {
+                  setModalClosing(true);
+                  setTimeout(() => {
+                    setEditUser(null);
+                    setModalClosing(false);
+                  }, 300);
+                }}
+                className="text-white hover:text-gray-200 transition-colors"
+              >
+                <svg
+                  className="w-6 h-6"
+                  fill="none"
+                  stroke="currentColor"
+                  viewBox="0 0 24 24"
+                >
+                  <path
+                    strokeLinecap="round"
+                    strokeLinejoin="round"
+                    strokeWidth="2"
+                    d="M6 18L18 6M6 6l12 12"
+                  />
+                </svg>
+              </button>
+            </div>
+
+            <div className="flex-1 overflow-y-auto px-8 py-6 space-y-6">
+              {/* ID Number */}
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-2">ID Number</label>
+                <input
+                  type="text"
+                  value={editUser.id_number}
+                  onChange={(e) => setEditUser({ ...editUser, id_number: e.target.value })}
+                  className="w-full border-2 border-[#0065A8] rounded-lg px-3 py-2 focus:outline-none focus:ring-2 focus:ring-[#54BEFF]"
+                />
+              </div>
+              {/* First Name */}
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-2">First Name</label>
+                <input
+                  type="text"
+                  value={editUser.firstName}
+                  onChange={(e) => setEditUser({ ...editUser, firstName: e.target.value })}
+                  className="w-full border-2 border-[#0065A8] rounded-lg px-3 py-2 focus:outline-none focus:ring-2 focus:ring-[#54BEFF]"
+                />
+              </div>
+              {/* Last Name */}
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-2">Last Name</label>
+                <input
+                  type="text"
+                  value={editUser.lastName}
+                  onChange={(e) => setEditUser({ ...editUser, lastName: e.target.value })}
+                  className="w-full border-2 border-[#0065A8] rounded-lg px-3 py-2 focus:outline-none focus:ring-2 focus:ring-[#54BEFF]"
+                />
+              </div>
+              {/* Email */}
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-2">Email</label>
+                <input
+                  type="email"
+                  value={editUser.email}
+                  onChange={(e) => setEditUser({ ...editUser, email: e.target.value })}
+                  className="w-full border-2 border-[#0065A8] rounded-lg px-3 py-2 focus:outline-none focus:ring-2 focus:ring-[#54BEFF]"
+                />
+              </div>
+              {/* Role */}
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-2">Role</label>
+                <select
+                  value={editUser.role}
+                  onChange={(e) => setEditUser({ ...editUser, role: e.target.value })}
+                  className="w-full border-2 border-[#0065A8] rounded-lg px-3 py-2 focus:outline-none focus:ring-2 focus:ring-[#54BEFF]"
+                >
+                  <option value="">Select Role</option>
+                  <option value="student">Student</option>
+                  <option value="faculty">Faculty</option>
+                </select>
+              </div>
+              {/* Department */}
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-2">Department</label>
+                <select
+                  value={editUser.department || ''}
+                  onChange={async (e) => {
+                    const newDepartment = e.target.value;
+                    setEditUser({ ...editUser, department: newDepartment, program: '' });
+                    if (newDepartment) {
+                        await fetchPrograms(newDepartment);
+                    }
+                  }}
+                  className="w-full border-2 border-[#0065A8] rounded-lg px-3 py-2 focus:outline-none focus:ring-2 focus:ring-[#54BEFF]"
+                >
+                  <option value="">Select Department</option>
+                  {departments.map((dept) => (
+                    <option key={dept.id} value={dept.id}>
+                      {dept.name}
                     </option>
                   ))}
                 </select>
-                <select
-                  value={sex}
-                  onChange={(e) => setSex(e.target.value)}
-                  className="w-[40%] bg-transparent border-2 border-white outline-none focus:ring focus:ring-blue-500 focus:border-blue-500 rounded-lg px-2 py-2 m-1"
-                >
-                  <option value="">Select Sex</option>
-                  <option value="Male">Male</option>
-                  <option value="Female">Female</option>
-                </select>
-                <input
-                  placeholder="Year & Section"
-                  value={yearSection}
-                  onChange={(e) => setYearSection(e.target.value)}
-                  className="w-[40%] bg-transparent border-2 border-white outline-none focus:ring focus:ring-blue-500 focus:border-blue-500 rounded-lg px-2 py-2 m-1"
-                />
-                </>
-              )}
-            </div>
-            <button
-              className={`bg-[#057DCD] text-white w-[12%] px-2 py-2 m-1 text-lg rounded-lg transition-all duration-100 ease-in delay-50 hover:bg-blue-600 hover:text-white 
-                ${AddClicked ? "scale-90" : "scale-100"}`}
-              onClick={() =>{ setAddClicked(true); setTimeout(() => setAddClicked(false), 300); handleAddUser(); }}>
-              ADD USER
-            </button>
-          </div>
-        </div>
-      </div>
-
-      {editUser && (
-        <div
-          className={`fixed inset-0 bg-black bg-opacity-50 flex flex-col items-center justify-center z-50 transition-opacity duration-500 ${
-            modalClosing ? "opacity-0" : "opacity-100"
-          }`}>
-
-            <div className='bg-[#0065A8] w-[85%] md:w-[50%] px-6 py-4 flex relative items-center top-0 right-0 left-0 rounded-t-lg'>
-                <h3 className="text-xl font-semibold text-white">Edit User</h3>
-            </div>
-
-          <div
-            className={`bg-white w-[85%] md:w-[50%] h-[70vh] p-6 rounded-br-lg rounded-bl-lg shadow-lg relative overflow-y-auto transform transition-all duration-500
-            }`}>
-
-            <div className='p-4'>
-              <label htmlFor="IdNumber" className='block text-sm font-medium text-gray-700 mb-1'> ID Number</label>
-              <input
-                id="IdNumber"
-                placeholder="ID Number"
-                value={editUser.idNumber || editUser.ID}
-                onChange={(e) => setEditUser({ ...editUser, idNumber: e.target.value })}
-                className="w-full h-[45px] items-center mb-2 border-2 border-[#0065A8] rounded-lg px-3 py-2 dark:border-gray-600 dark:focus:border-blue-500 focus:outline-none focus:ring-2 focus:border-[#0065A8] peer appearance-none"
-              />
-
-              <label htmlFor="FirstName" className='block text-sm font-medium text-gray-700 mb-1'> First Name</label>
-              <input
-                id="FirstName" placeholder=" "
-                value={editUser.firstName}
-                onChange={(e) => setEditUser({ ...editUser, firstName: e.target.value })}
-                className="w-full min-h-[45px] items-center mb-2 border-2 border-[#0065A8] rounded-lg px-3 py-2 dark:border-gray-600 dark:focus:border-blue-500 focus:outline-none focus:ring-2 focus:border-[#0065A8] peer appearance-none"
-              />
-
-              <label htmlFor="LastName" className='block text-sm font-medium text-gray-700 mb-1'> Last Name</label>
-              <input
-                id="LastName" placeholder=" "
-                value={editUser.lastName}
-                onChange={(e) => setEditUser({ ...editUser, lastName: e.target.value })}
-                className="w-full min-h-[45px] items-center mb-2 border-2 border-[#0065A8] rounded-lg px-3 py-2 dark:border-gray-600 dark:focus:border-blue-500 focus:outline-none focus:ring-2 focus:border-[#0065A8] peer appearance-none"
-              />
-
-              <label htmlFor="Email" className='block text-sm font-medium text-gray-700 mb-1'> Email</label>
-              <input
-                id="Email"
-                placeholder="Email"
-                value={editUser.email}
-                onChange={(e) => setEditUser({ ...editUser, email: e.target.value })}
-                className="w-full min-h-[45px] items-center mb-2 border-2 border-[#0065A8] rounded-lg px-3 py-2 dark:border-gray-600 dark:focus:border-blue-500 focus:outline-none focus:ring-2 focus:border-[#0065A8] peer appearance-none"
-              />
-
-              <label htmlFor="Role" className='block text-sm font-medium text-gray-700 mb-1'> Role</label>
-              <select
-                value={editUser.role}
-                onChange={(e) => setEditUser({ ...editUser, role: e.target.value })}
-                className="w-full min-h-[45px] items-center mb-2 border-2 border-[#0065A8] rounded-lg px-2 py-2 dark:border-gray-600 dark:focus:border-blue-500 focus:outline-none focus:ring-2 focus:border-[#0065A8] peer appearance-none"
-              >
-                <option value="">Select Role</option>
-                <option value="faculty">Faculty</option>
-                <option value="student">Student</option>
-                <option value="admin">Admin</option>
-              </select>
-
-              <label htmlFor="Department" className='block text-sm font-medium text-gray-700 mb-1'> Department</label>
-              <select
-                value={editUser.department}
-                onChange={async (e) => {
-                  const newDepartment = e.target.value;
-                  setEditUser({ ...editUser, department: newDepartment });
-                  if (editUser.role === "student") {
-                    await fetchPrograms(newDepartment);
-                  }
-                }}
-                className="w-full min-h-[45px] items-center mb-2 border-2 border-[#0065A8] rounded-lg px-3 py-2 dark:border-gray-600 dark:focus:border-blue-500 focus:outline-none focus:ring-2 focus:border-[#0065A8] peer appearance-none"
-              >
-                <option value="">Select Department</option>
-                {departments.map((dept) => (
-                  <option key={dept.departmentID} value={dept.departmentID}>
-                    {dept.departmentName}
-                  </option>
-                ))}
-              </select>
-
-              {editUser.role === "student" && editUser.department && (
-                <>
-                  <label htmlFor="Program" className='block text-sm font-medium text-gray-700 mb-1'> Program</label>
+              </div>
+              {/* Program (only show for students) */}
+              {editUser.role === 'student' && (
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-2">Program</label>
                   <select
                     value={editUser.program}
                     onChange={(e) => setEditUser({ ...editUser, program: e.target.value })}
-                    className="w-full min-h-[45px] items-center mb-2 border-2 border-[#0065A8] rounded-lg px-3 py-2 dark:border-gray-600 dark:focus:border-blue-500 focus:outline-none focus:ring-2 focus:border-[#0065A8] peer appearance-none"
+                    className="w-full border-2 border-[#0065A8] rounded-lg px-3 py-2 focus:outline-none focus:ring-2 focus:ring-[#54BEFF]"
                   >
                     <option value="">Select Program</option>
                     {programs.map((prog) => (
@@ -605,47 +770,64 @@ export default function AdminPortal() {
                       </option>
                     ))}
                   </select>
-
-                  <label htmlFor="Sex" className='block text-sm font-medium text-gray-700 mb-1'> Gender</label>
+                </div>
+              )}
+              {/* Gender (only show for students) */}
+              {editUser.role === 'student' && (
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-2">Gender</label>
                   <select
                     value={editUser.sex}
                     onChange={(e) => setEditUser({ ...editUser, sex: e.target.value })}
-                    className="w-full min-h-[45px] items-center mb-2 border-2 border-[#0065A8] rounded-lg px-3 py-2 dark:border-gray-600 dark:focus:border-blue-500 focus:outline-none focus:ring-2 focus:border-[#0065A8] peer appearance-none"
+                    className="w-full border-2 border-[#0065A8] rounded-lg px-3 py-2 focus:outline-none focus:ring-2 focus:ring-[#54BEFF]"
                   >
-                    <option value="">Select Sex</option>
+                    <option value="">Select Gender</option>
                     <option value="Male">Male</option>
                     <option value="Female">Female</option>
                   </select>
-
-                  <label htmlFor="YearSection" className='block text-sm font-medium text-gray-700 mb-1'> Year & Section</label>
-                  <input
-                    placeholder="Year & Section"
-                    value={editUser.yearSection || editUser.year_section}
-                    onChange={(e) => setEditUser({ ...editUser, yearSection: e.target.value })}
-                    className="w-full min-h-[45px] items-center mb-2 gap-2 border-2 border-[#0065A8] rounded-lg px-3 py-2 dark:border-gray-600 dark:focus:border-blue-500 focus:outline-none focus:ring-2 focus:border-[#0065A8] peer appearance-none"
-                  />
-                </>
+                </div>
               )}
-              <div className="py-2 flex justify-end space-x-4 bg-white rounded-b-lg">
-                <button
-                  className={`bg-[#0065A8] hover:bg-[#54BEFF] text-white px-4 py-2 rounded-lg transition-colors
-                    ${ SaveClicked ? "scale-90" : "scale-100"}
-                    ${isEditLoading ? "opacity-50 cursor-not-allowed" : ""} 
-                  `}
-                  disabled={isEditLoading}
-                  onClick={() => {
-                    setSaveClicked(true); setTimeout(() => {setSaveClicked(false); setModalClosing(true); setTimeout(() => {handleUpdateUser(); setEditUser(null);
-                      }, 500);
-                    }, 200);
-                  }}>
-                  {isEditLoading ? (
-                    <>
+              {/* Year and Section (only show for students) */}
+              {editUser.role === 'student' && (
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-2">Year & Section</label>
+                  <input
+                    type="text"
+                    value={editUser.yearSection}
+                    onChange={(e) => setEditUser({ ...editUser, yearSection: e.target.value })}
+                    placeholder="e.g. 4A"
+                    className="w-full border-2 border-[#0065A8] rounded-lg px-3 py-2 focus:outline-none focus:ring-2 focus:ring-[#54BEFF]"
+                  />
+                </div>
+              )}
+            </div>
+
+            <div className="px-8 py-4 border-t border-gray-200 flex justify-end space-x-4">
+              <button
+                className={`bg-[#0065A8] hover:bg-[#54BEFF] text-white px-4 py-2 rounded-lg transition-colors ${
+                  SaveClicked ? "scale-90" : "scale-100"
+                } ${isEditLoading ? "opacity-50 cursor-not-allowed" : ""}`}
+                disabled={isEditLoading}
+                onClick={() => {
+                  setSaveClicked(true);
+                  setTimeout(() => {
+                    setSaveClicked(false);
+                    setModalClosing(true);
+                    setTimeout(() => {
+                      handleUpdateUser();
+                      setEditUser(null);
+                    }, 500);
+                  }, 200);
+                }}
+              >
+                {isEditLoading ? (
+                  <div className="flex items-center space-x-2">
                     <svg
-                        className="animate-spin h-5 w-5 text-white"
-                        xmlns="http://www.w3.org/2000/svg"
-                        fill="none"
-                        viewBox="0 0 24 24"
-                      >
+                      className="animate-spin h-5 w-5 text-white"
+                      xmlns="http://www.w3.org/2000/svg"
+                      fill="none"
+                      viewBox="0 0 24 24"
+                    >
                       <circle
                         className="opacity-25"
                         cx="12"
@@ -654,31 +836,33 @@ export default function AdminPortal() {
                         stroke="currentColor"
                         strokeWidth="4"
                       ></circle>
-                          <path
-                            className="opacity-75"
-                            fill="currentColor"
-                            d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"
-                          ></path>
+                      <path
+                        className="opacity-75"
+                        fill="currentColor"
+                        d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"
+                      ></path>
                     </svg>
                     <span>Saving...</span>
-                      </>
-                    ) : (
-                    <span>Save Changes</span>
-                  )}
-                </button>
-
-                <button
-                  className={`bg-gray-500 text-white px-4 py-2 rounded-lg transition-colors
-                     ${ CancelClicked ? "scale-90" : "scale-100"
-                  }`}
-                  onClick={() => {
-                    setCancelClicked(true); setTimeout(() => { setCancelClicked(false); setModalClosing(true); setTimeout(() => setEditUser(null), 
-                      500);
-                    }, 200);
-                  }}>
-                  Cancel
-                </button>
-              </div>
+                  </div>
+                ) : (
+                  "Save Changes"
+                )}
+              </button>
+              <button
+                className={`bg-gray-500 hover:bg-gray-600 text-white px-4 py-2 rounded-lg transition-colors ${
+                  CancelClicked ? "scale-90" : "scale-100"
+                }`}
+                onClick={() => {
+                  setCancelClicked(true);
+                  setTimeout(() => {
+                    setCancelClicked(false);
+                    setModalClosing(true);
+                    setTimeout(() => setEditUser(null), 500);
+                  }, 200);
+                }}
+              >
+                Cancel
+              </button>
             </div>
           </div>
         </div>

@@ -9,6 +9,7 @@ export default function AddGrade() {
   const [studentID, setStudentID] = useState("");
   const [studentName, setStudentName] = useState("");
   const [courseID, setCourseID] = useState("");
+  const [courseName, setCourseName] = useState("");
   const [grade, setGrade] = useState("");
   const [grades, setGrades] = useState([]);
   const [period, setPeriod] = useState("");
@@ -223,15 +224,21 @@ export default function AddGrade() {
                       headers: { "Content-Type": "application/json" },
                       body: JSON.stringify({ gradeID: gradeDocID }),
                     }
-                  );
-
-                  if (response.ok) {
-                    setGrades((prevGrades) =>
-                      prevGrades.filter((grade) => grade.id !== gradeDocID)
+                  );                  if (response.ok) {
+                    // Reload grades
+                    const gradesUrl = new URL("http://localhost:5001/grade/get_grades");
+                    gradesUrl.searchParams.append(
+                      "facultyID",
+                      localStorage.getItem("teacherID")
                     );
-                    setFilteredGrades((prevFiltered) =>
-                      prevFiltered.filter((grade) => grade.id !== gradeDocID)
-                    );
+                    const gradesResponse = await fetch(gradesUrl);
+                    const gradesData = await gradesResponse.json();
+                    
+                    // Update grades state
+                    setGrades(Array.isArray(gradesData) ? gradesData : []);
+                    setFilteredGrades(Array.isArray(gradesData) ? gradesData.filter(
+                      (grade) => grade.school_year === schoolYear && grade.semester === semester
+                    ) : []);
                     setMessage({
                       type: "success",
                       content: "Grade deleted successfully",
@@ -279,13 +286,13 @@ export default function AddGrade() {
     setSchoolYear(grade.school_year);
     setSemester(grade.semester);
   };
-
   const handleCancelEdit = () => {
     console.log("🔴 Cancel Edit Clicked - Resetting Form"); // Debugging log
     setSelectedGradeID(null); // This will revert to "Submit Grade"
     setStudentID("");
     setStudentName("");
     setCourseID("");
+    setCourseName("");
     setGrade("");
     setPeriod("");
     setSchoolYear("2024-2025");
@@ -313,30 +320,21 @@ export default function AddGrade() {
           school_year: schoolYear,
           semester,
         }),
-      });
-
-      if (response.ok) {
-        // Update local state immediately
-        const updatedGrade = {
-          id: selectedGradeID,
-          studentID,
-          studentName,
-          courseID,
-          courseName:
-            courses.find((c) => c.courseID === courseID)?.courseName || "",
-          grade,
-          period,
-          school_year: schoolYear,
-          semester,
-          remarks: determineRemarks(grade),
-        };
-
-        setGrades((prevGrades) =>
-          prevGrades.map((g) => (g.id === selectedGradeID ? updatedGrade : g))
+      });      if (response.ok) {
+        // Reload grades
+        const gradesUrl = new URL("http://localhost:5001/grade/get_grades");
+        gradesUrl.searchParams.append(
+          "facultyID",
+          localStorage.getItem("teacherID")
         );
-        setFilteredGrades((prevFiltered) =>
-          prevFiltered.map((g) => (g.id === selectedGradeID ? updatedGrade : g))
-        );
+        const gradesResponse = await fetch(gradesUrl);
+        const gradesData = await gradesResponse.json();
+        
+        // Update grades state
+        setGrades(Array.isArray(gradesData) ? gradesData : []);
+        setFilteredGrades(Array.isArray(gradesData) ? gradesData.filter(
+          (grade) => grade.school_year === schoolYear && grade.semester === semester
+        ) : []);
 
         // Reset form and selected grade
         handleCancelEdit();
@@ -378,6 +376,12 @@ export default function AddGrade() {
     setStudentName(student.name);
     setStudentID(student.studentID);
     setFilteredStudents([]); // Hide dropdown after selection
+    // If student has a courseID or course property, set it here
+    if (student.courseID) {
+      setCourseID(student.courseID);
+    } else if (student.course) {
+      setCourseID(student.course);
+    }
   };
 
   const determineRemarks = (grade) => {
@@ -414,29 +418,23 @@ export default function AddGrade() {
           school_year: schoolYear,
           semester,
         }),
-      });
-
-      const result = await response.json();
+      });      const result = await response.json();
 
       if (response.ok) {
-        // Create new grade object with all necessary data
-        const newGrade = {
-          id: result.gradeID,
-          studentID,
-          studentName,
-          courseID,
-          courseName:
-            courses.find((c) => c.courseID === courseID)?.courseName || "",
-          grade,
-          period,
-          school_year: schoolYear,
-          semester,
-          remarks: determineRemarks(grade),
-        };
-
-        // Update local state immediately
-        setGrades((prevGrades) => [...prevGrades, newGrade]);
-        setFilteredGrades((prevFiltered) => [...prevFiltered, newGrade]);
+        // Reload grades
+        const gradesUrl = new URL("http://localhost:5001/grade/get_grades");
+        gradesUrl.searchParams.append(
+          "facultyID",
+          localStorage.getItem("teacherID")
+        );
+        const gradesResponse = await fetch(gradesUrl);
+        const gradesData = await gradesResponse.json();
+        
+        // Update grades state
+        setGrades(Array.isArray(gradesData) ? gradesData : []);
+        setFilteredGrades(Array.isArray(gradesData) ? gradesData.filter(
+          (grade) => grade.school_year === schoolYear && grade.semester === semester
+        ) : []);
 
         // Reset form
         setStudentID("");
@@ -927,12 +925,10 @@ export default function AddGrade() {
               </div>
             </div>
           )}
-        </div>
-
-        {/* Table Section - Unified table structure */}
+        </div>        {/* Table Section - Unified table structure */}
         <div className="mt-4 shadow-md overflow-hidden rounded-lg fade-in delay-300 relative z-0">
           <div className="overflow-x-auto">
-            <div className="max-h-[500px] overflow-y-auto">
+            <div className="max-h-[320px] overflow-y-auto">
               <table
                 className="w-full bg-white text-center"
                 style={{ minWidth: "1200px" }}
@@ -988,9 +984,8 @@ export default function AddGrade() {
                           </div>
                         </td>
                       </tr>
-                    ))
-                  ) : filteredGrades.length > 0 ? (
-                    filteredGrades.map((gradeData) => {
+                    ))                  ) : filteredGrades.length > 0 ? (
+                    filteredGrades.slice(0, 5).map((gradeData) => {
                       const grade = sanitizeGrade(gradeData);
                       if (!grade) return null;
 
@@ -1106,16 +1101,19 @@ export default function AddGrade() {
               )}
             </div>
 
-            {/* Rest of the form inputs with consistent col-span-1 */}
-            <select
+            {/* Rest of the form inputs with consistent col-span-1 */}            <select
               value={courseID}
-              onChange={(e) => setCourseID(e.target.value)}
+              onChange={(e) => {
+                const selectedCourse = courses.find(c => c.courseID === e.target.value);
+                setCourseID(e.target.value);
+                setCourseName(selectedCourse?.courseName || '');
+              }}
               className="col-span-1 rounded-lg px-4 py-2 w-full focus:ring focus:ring-blue-300 focus:border-blue-500"
             >
               <option value="">Course</option>
               {courses.map((course) => (
                 <option key={course.courseID} value={course.courseID}>
-                  {course.courseName}
+                  {`${course.code} - ${course.courseName}`}
                 </option>
               ))}
             </select>

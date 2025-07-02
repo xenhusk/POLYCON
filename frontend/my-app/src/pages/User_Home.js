@@ -88,6 +88,7 @@ function Home() {
             )}
           </div>
         ) : (
+          userRole === 'student' && (
           <div className="space-y-2">
             <HomeStudent />  {/* Add HomeStudent component */}
             {isMobile ? (
@@ -128,6 +129,7 @@ function Home() {
               </div>
             )}
           </div>
+        )
         )}
       </div>
     </div>

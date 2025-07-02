@@ -4,21 +4,24 @@ import {
   hasNotificationPermission, 
   requestNotificationPermission,
   toggleNotifications,
-  areNotificationsEnabled
+  areNotificationsEnabled,
+  areSoundNotificationsEnabled,
+  toggleSoundNotifications,
+  playNotificationSound
 } from '../utils/notificationUtils';
 
 const UserSettings = () => {
   const [notificationsSupported, setNotificationsSupported] = useState(false);
   const [notificationsEnabled, setNotificationsEnabled] = useState(false);
-
+  const [soundNotificationsEnabled, setSoundNotificationsEnabled] = useState(false);
   useEffect(() => {
     // Check if browser supports notifications
     setNotificationsSupported(areBrowserNotificationsSupported());
     
     // Check current notification status
     setNotificationsEnabled(areNotificationsEnabled());
+    setSoundNotificationsEnabled(areSoundNotificationsEnabled());
   }, []);
-
   const handleToggleNotifications = async () => {
     const newStatus = !notificationsEnabled;
     
@@ -45,6 +48,17 @@ const UserSettings = () => {
     }
   };
 
+  const handleToggleSoundNotifications = () => {
+    const newStatus = !soundNotificationsEnabled;
+    toggleSoundNotifications(newStatus);
+    setSoundNotificationsEnabled(newStatus);
+    
+    // Play test sound if enabling
+    if (newStatus) {
+      playNotificationSound('success', 0.3);
+    }
+  };
+
   if (!notificationsSupported) {
     return (
       <div className="mt-4 p-4 bg-gray-100 rounded-lg">
@@ -55,25 +69,48 @@ const UserSettings = () => {
       </div>
     );
   }
-
   return (
-    <div className="mt-4 p-4 bg-white border border-gray-200 rounded-lg">
-      <div className="flex items-center justify-between">
-        <div>
-          <h3 className="font-medium">Browser Notifications</h3>
-          <p className="text-sm text-gray-600 mt-1">
-            Receive notifications even when browser is in background
-          </p>
+    <div className="mt-4 space-y-4">
+      {/* Browser Notifications */}
+      <div className="p-4 bg-white border border-gray-200 rounded-lg">
+        <div className="flex items-center justify-between">
+          <div>
+            <h3 className="font-medium">Browser Notifications</h3>
+            <p className="text-sm text-gray-600 mt-1">
+              Receive notifications even when browser is in background
+            </p>
+          </div>
+          <label className="inline-flex items-center cursor-pointer">
+            <input 
+              type="checkbox" 
+              className="sr-only peer"
+              checked={notificationsEnabled}
+              onChange={handleToggleNotifications}
+            />
+            <div className="relative w-11 h-6 bg-gray-200 peer-focus:outline-none peer-focus:ring-4 peer-focus:ring-blue-300 dark:peer-focus:ring-blue-800 rounded-full peer dark:bg-gray-700 peer-checked:after:translate-x-full rtl:peer-checked:after:-translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:start-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all dark:border-gray-600 peer-checked:bg-blue-600"></div>
+          </label>
         </div>
-        <label className="inline-flex items-center cursor-pointer">
-          <input 
-            type="checkbox" 
-            className="sr-only peer"
-            checked={notificationsEnabled}
-            onChange={handleToggleNotifications}
-          />
-          <div className="relative w-11 h-6 bg-gray-200 peer-focus:outline-none peer-focus:ring-4 peer-focus:ring-blue-300 dark:peer-focus:ring-blue-800 rounded-full peer dark:bg-gray-700 peer-checked:after:translate-x-full rtl:peer-checked:after:-translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:start-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all dark:border-gray-600 peer-checked:bg-blue-600"></div>
-        </label>
+      </div>
+
+      {/* Sound Notifications */}
+      <div className="p-4 bg-white border border-gray-200 rounded-lg">
+        <div className="flex items-center justify-between">
+          <div>
+            <h3 className="font-medium">Sound Notifications</h3>
+            <p className="text-sm text-gray-600 mt-1">
+              Play sounds for booking confirmations and appointment reminders
+            </p>
+          </div>
+          <label className="inline-flex items-center cursor-pointer">
+            <input 
+              type="checkbox" 
+              className="sr-only peer"
+              checked={soundNotificationsEnabled}
+              onChange={handleToggleSoundNotifications}
+            />
+            <div className="relative w-11 h-6 bg-gray-200 peer-focus:outline-none peer-focus:ring-4 peer-focus:ring-blue-300 dark:peer-focus:ring-blue-800 rounded-full peer dark:bg-gray-700 peer-checked:after:translate-x-full rtl:peer-checked:after:-translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:start-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all dark:border-gray-600 peer-checked:bg-blue-600"></div>
+          </label>
+        </div>
       </div>
     </div>
   );

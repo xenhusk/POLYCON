@@ -45,29 +45,27 @@ const HomeStudent = () => {
 
     // Fetch student stats
     fetch(`http://localhost:5001/homestudent/stats?${params}`)
-      .then(res => res.json())
-      .then(data => {
+      .then(res => res.json())      .then(data => {
         setStats({
           total_consultations: data.total_consultations || 0,
-          total_hours: Number(data.total_hours).toFixed(2) || "0.00",
+          total_hours: (isNaN(Number(data.total_hours)) ? 0 : Number(data.total_hours)).toFixed(2),
           latest_topic: data.latest_topic || "No recent consultations"
         });
       })
-      .catch(err => console.error("Error fetching stats:", err));
-
-    // Fetch consultation data for charts
+      .catch(err => console.error("Error fetching stats:", err));    // Fetch consultation data for charts
     fetch(`http://localhost:5001/homestudent/consultations_by_date?${params}`)
       .then(res => res.json())
       .then(data => {
-        const formattedConsultations = Object.entries(data.consultations)
+        const formattedConsultations = Object.entries(data.consultations || {})
           .map(([date, count]) => ({ date, consultations: count }))
           .sort((a, b) => new Date(a.date) - new Date(b.date))
           .slice(-5);
 
-        const formattedHours = Object.entries(data.consultation_hours)
+        const formattedHours = Object.entries(data.consultation_hours || {})
           .map(([date, hours]) => {
             const [hh, mm] = hours.split(':').map(Number);
-            return { date, consultation_hours: hh * 60 + mm };
+            const totalMinutes = hh * 60 + mm;
+            return { date, consultation_hours: isNaN(totalMinutes) ? 0 : totalMinutes };
           })
           .sort((a, b) => new Date(a.date) - new Date(b.date))
           .slice(-5);
@@ -80,7 +78,7 @@ const HomeStudent = () => {
 
   return (
     <div className="flex flex-col items-center min-h-screen relative">
-      <h1 className="text-3xl font-bold text-[#0065A8] mb-[4rem] mb-6">Student Dashboard</h1>
+      <h1 className="text-3xl font-bold text-[#0065A8] mb-[4rem] ">Student Dashboard</h1>
 
       {/* Settings gear icon - same as HomeTeacher */}
       <div className="absolute top-6 right-6">
@@ -157,9 +155,9 @@ const HomeStudent = () => {
             <ResponsiveContainer width="100%" height="100%">
               <LineChart data={consultationHoursData}>
                 <CartesianGrid strokeDasharray="3 3" />
-                <XAxis dataKey="date" />
-                <YAxis 
+                <XAxis dataKey="date" />                <YAxis 
                   tickFormatter={(value) => {
+                    if (isNaN(value)) return "0:00";
                     const hours = Math.floor(value / 60);
                     const minutes = value % 60;
                     return `${hours}:${minutes.toString().padStart(2, '0')}`;
@@ -167,6 +165,7 @@ const HomeStudent = () => {
                 />
                 <Tooltip 
                   formatter={(value) => {
+                    if (isNaN(value)) return ["0:00", "Hours"];
                     const hours = Math.floor(value / 60);
                     const minutes = value % 60;
                     return [`${hours}:${minutes.toString().padStart(2, '0')}`, "Hours"];

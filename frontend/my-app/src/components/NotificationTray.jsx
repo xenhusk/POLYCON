@@ -1,394 +1,336 @@
-import React, { useContext, useEffect, useState, useRef, useCallback } from 'react';
-import { NotificationContext } from '../context/NotificationContext';
-import { markAllNotificationsAsRead, debugNotificationContext, getStoredNotifications } from '../utils/notificationHelpers';
+import React, { useState, useEffect, useRef } from 'react';
 import io from 'socket.io-client';
+import { 
+  showBookingNotification, 
+  showAppointmentReminder, 
+  areNotificationsEnabled,
+  initializeNotifications 
+} from '../utils/notificationUtils';
+import { useNavigate } from 'react-router-dom';
+import { useToast } from '../contexts/ToastContext';
 
-const NotificationTray = ({ isVisible, onClose, position }) => {
-  const notificationContext = useContext(NotificationContext);
-  const [displayedNotifications, setDisplayedNotifications] = useState([]);
+const NotificationTray = ({ isVisible, onClose }) => {
+  const navigate = useNavigate();
+  const { showAppointmentReminder: showAppointmentToast } = useToast(); // Rename to avoid conflict
+  const [notifications, setNotifications] = useState([]);
+  const [isConnected, setIsConnected] = useState(false);
   const socketRef = useRef(null);
-  const updateIntervalRef = useRef(null);
-  
-  // Connect to socket for real-time updates
-  useEffect(() => {
-    // Setup socket connection for real-time updates
-    const SOCKET_SERVER_URL = "http://localhost:5001";
+  // Debug: Check if toast function is available
+  console.log('🍞 Toast function available:', typeof showAppointmentToast);
+  // Test function to manually trigger a toast (for debugging)
+  const testToast = () => {
+    console.log('🧪 Testing toast manually...');
+    console.log('🧪 Toast function type:', typeof showAppointmentToast);
+    console.log('🧪 Toast function:', showAppointmentToast);
     
-    if (!socketRef.current) {
-      socketRef.current = io(SOCKET_SERVER_URL, {
-        reconnection: true,
-        reconnectionDelay: 1000,
-        reconnectionAttempts: 5,
-      });
+    try {
+      const result = showAppointmentToast('Test appointment reminder - this is a manual test');
+      console.log('🧪 Manual toast function returned:', result);
+      console.log('🧪 Manual toast triggered successfully');
+    } catch (error) {
+      console.error('🧪 Error in manual toast test:', error);
+      console.error('🧪 Error stack:', error.stack);
+    }
+  };
+
+  // Initialize notifications and Socket.IO connection
+  useEffect(() => {
+    initializeNotifications();
+    
+    // Initialize Socket.IO connection
+    if (typeof io !== 'undefined') {
+      socketRef.current = io('http://localhost:5001');
       
       socketRef.current.on('connect', () => {
-        console.log('Notification tray connected to socket for real-time updates');
+        console.log('Connected to notification server');
+        setIsConnected(true);
       });
       
-      // Listen for notification events
-      socketRef.current.on('notification', () => {
-        console.log('Notification received - updating tray');
-        refreshNotifications();
+      socketRef.current.on('disconnect', () => {
+        console.log('Disconnected from notification server');
+        setIsConnected(false);
       });
-      
-      // Listen for booking updates which might generate notifications
-      socketRef.current.on('booking_updated', () => {
-        console.log('Booking update received - refreshing notifications');
-        refreshNotifications();
-      });
-    }
-    
-    // Cleanup on unmount
-    return () => {
-      if (socketRef.current) {
-        socketRef.current.off('notification');
-        socketRef.current.off('booking_updated');
-      }
-    };
-  }, []);
-  
-  // Set up an interval for periodic updates even when the tray is not visible
-  useEffect(() => {
-    // Start periodic updates (every 10 seconds)
-    updateIntervalRef.current = setInterval(() => {
-      refreshNotifications();
-    }, 10000);
-    
-    // Immediately refresh when tray becomes visible
-    if (isVisible) {
-      refreshNotifications();
-    }
-    
-    // Cleanup interval on component unmount
-    return () => {
-      if (updateIntervalRef.current) {
-        clearInterval(updateIntervalRef.current);
-      }
-    };
-  }, [isVisible]);
-  
-  // Debug the context when component mounts or visibility changes
-  useEffect(() => {
-    if (isVisible) {
-      console.log("NotificationTray visible - debugging context:");
-      debugNotificationContext(notificationContext);
-      
-      // Check for notifications in localStorage directly
-      refreshNotifications();
-    }
-  }, [isVisible, notificationContext]);
-  
-  // Refresh notifications from all sources
-  const refreshNotifications = useCallback(() => {
-    // First try context
-    if (notificationContext?.notifications && 
-        Array.isArray(notificationContext.notifications) && 
-        notificationContext.notifications.length > 0) {
-      console.log("Updating notifications from context:", notificationContext.notifications.length);
-      setDisplayedNotifications(notificationContext.notifications);
-      return;
-    }
-    
-    // If context is empty or missing, try localStorage directly
-    const storedNotifications = getStoredNotifications();
-    if (storedNotifications.length > 0) {
-      console.log("Updating notifications from localStorage:", storedNotifications.length);
-      setDisplayedNotifications(storedNotifications);
-      
-      // If we have localStorage notifications but none in context, sync them
-      if (notificationContext?.setNotifications) {
-        console.log("Syncing notifications from localStorage to context");
-        notificationContext.setNotifications(storedNotifications);
-      }
-    }
-  }, [notificationContext]);
-  
-  // Monitor for new notifications in context
-  useEffect(() => {
-    if (notificationContext?.notifications && 
-        Array.isArray(notificationContext.notifications)) {
-      setDisplayedNotifications(notificationContext.notifications);
-    }
-  }, [notificationContext?.notifications]);
-  
-  // Extract other values from context
-  const markNotificationRead = notificationContext?.markNotificationRead || (() => {});
-  
-  // Get markAllAsRead from context or use the utility function
-  const safeMarkAllAsRead = 
-    typeof notificationContext?.markAllAsRead === 'function' 
-      ? notificationContext.markAllAsRead 
-      : markAllNotificationsAsRead;
-  
-  const unreadCount = displayedNotifications?.filter(n => !n.isRead)?.length || 0;
-  const [isMobile, setIsMobile] = useState(window.innerWidth < 640);
-  const trayRef = useRef(null);
-
-  // Handle responsive behavior
-  useEffect(() => {
-    const handleResize = () => setIsMobile(window.innerWidth < 640);
-    window.addEventListener('resize', handleResize);
-    return () => window.removeEventListener('resize', handleResize);
-  }, []);
-
-  // Effect to prevent background scrolling when tray is open
-  useEffect(() => {
-    if (isVisible) {
-      document.body.style.overflow = 'hidden';
-    } else {
-      document.body.style.overflow = '';
-    }
-    return () => {
-      document.body.style.overflow = '';
-    };
-  }, [isVisible]);
-
-  // Adjust positioning for desktop to prevent overflow
-  useEffect(() => {
-    if (!isMobile && isVisible && trayRef.current) {
-      const tray = trayRef.current;
-      const viewportHeight = window.innerHeight;
-      const viewportWidth = window.innerWidth;
-      
-      // Calculate if tray would overflow the viewport
-      const overflow = {
-        bottom: position.top + tray.offsetHeight > viewportHeight,
-        right: position.left + tray.offsetWidth > viewportWidth
-      };
-      
-      // Adjust position if necessary
-      if (overflow.bottom) {
-        tray.style.top = 'auto';
-        tray.style.bottom = '10px';
-      } else {
-        tray.style.top = `${position.top}px`;
-        tray.style.bottom = 'auto';
-      }
-      
-      if (overflow.right) {
-        tray.style.left = 'auto';
-        tray.style.right = '10px';
-      } else {
-        tray.style.left = `${position.left}px`;
-        tray.style.right = 'auto';
-      }
-    }
-  }, [isVisible, position, isMobile]);
-
-  // Format notification message if type is booking
-  const formatMessage = (notification) => {
-    // IMPROVED: Better message formatting for different notification types
-    if (!notification) return "New notification";
-    
-    if (notification.type === 'booking' || notification.action) {
-      const action = notification.action;
-      const teacherName = notification.teacherName || "your teacher";
-      const students = notification.studentNames || "students";
-      
-      if (action === 'create') {
-        if (notification.creatorRole === 'student') {
-          return `${notification.creatorName || "A student"} requested an appointment.`;
-        } else {
-          return `New appointment scheduled with ${students}.`;
+        // Listen for booking notifications
+      socketRef.current.on('booking_confirmed', (data) => {
+        // Format the schedule date and time
+        const scheduleDate = data.schedule ? new Date(data.schedule) : null;
+        const dateStr = scheduleDate ? scheduleDate.toLocaleDateString() : 'TBD';
+        const timeStr = scheduleDate ? scheduleDate.toLocaleTimeString([], {hour: '2-digit', minute:'2-digit'}) : 'TBD';
+        
+        const notification = {
+          id: Date.now(),
+          type: 'booking',
+          title: 'Booking Confirmed',
+          message: `Your booking with ${data.teacher_name} has been confirmed for ${dateStr} at ${timeStr}`,
+          timestamp: new Date(),
+          read: false
+        };
+        setNotifications(prev => [notification, ...prev]);
+        showBookingNotification(notification.message, 'success');
+      });      // Listen for booking created notifications
+      socketRef.current.on('booking_created', (data) => {
+        // Format the schedule date and time
+        const scheduleDate = data.schedule ? new Date(data.schedule) : null;
+        const dateStr = scheduleDate ? scheduleDate.toLocaleDateString() : 'TBD';
+        const timeStr = scheduleDate ? scheduleDate.toLocaleTimeString([], {hour: '2-digit', minute:'2-digit'}) : 'TBD';
+        
+        const notification = {
+          id: Date.now(),
+          type: 'booking',
+          title: 'Booking Created',
+          message: `Your booking with ${data.teacher_name} has been created for ${dateStr} at ${timeStr}`,
+          timestamp: new Date(),
+          read: false
+        };
+        setNotifications(prev => [notification, ...prev]);
+        showBookingNotification(notification.title, notification.message, 'info');
+      });      // Listen for booking cancelled notifications
+      socketRef.current.on('booking_cancelled', (data) => {
+        // Format the schedule date and time
+        const scheduleDate = data.schedule ? new Date(data.schedule) : null;
+        const dateStr = scheduleDate ? scheduleDate.toLocaleDateString() : 'TBD';
+        const timeStr = scheduleDate ? scheduleDate.toLocaleTimeString([], {hour: '2-digit', minute:'2-digit'}) : 'TBD';
+        
+        const notification = {
+          id: Date.now(),
+          type: 'booking',
+          title: 'Booking Cancelled',
+          message: `Your booking with ${data.teacher_name} scheduled for ${dateStr} at ${timeStr} was cancelled`,
+          timestamp: new Date(),
+          read: false
+        };
+        setNotifications(prev => [notification, ...prev]);
+        showBookingNotification(notification.title, notification.message, 'error');
+      });      // Listen for appointment reminders
+      socketRef.current.on('appointment_reminder', (data) => {
+        console.log('🔔 Appointment reminder received:', data);
+        
+        // Use the message directly from the scheduler which is more specific
+        const message = data.message || `Your appointment starts in ${data.timeUntil}`;
+        
+        const notification = {
+          id: Date.now(),
+          type: 'reminder',
+          title: 'Appointment Reminder',
+          message: message,
+          timestamp: new Date(),
+          read: false
+        };
+        setNotifications(prev => [notification, ...prev]);
+        
+        // Show browser notification
+        showAppointmentReminder(data);
+        
+        // Show toast notification with the specific message
+        console.log('🍞 Attempting to show toast with message:', message);
+        console.log('🍞 Toast function type:', typeof showAppointmentToast);
+        console.log('🍞 Toast function:', showAppointmentToast);
+        
+        try {
+          const result = showAppointmentToast(message);
+          console.log('🍞 Toast function returned:', result);
+          console.log('🍞 Toast should have been shown successfully');
+        } catch (error) {
+          console.error('🍞 Error showing toast:', error);
+          console.error('🍞 Error stack:', error.stack);
         }
-      } else if (action === 'confirm') {
-        return `Appointment with ${notification.teacherName || 'teacher'} is confirmed.`;
-      } else if (action === 'cancel') {
-        return `Appointment with ${notification.teacherName || 'teacher'} was cancelled.`;
-      } else if (action === 'reminder_24h') {
-        return `Reminder: You have an appointment tomorrow.`;
-      } else if (action === 'reminder_1h') {
-        return `Reminder: You have an appointment in 1 hour.`;
-      }
-    }
-    
-    return notification.message || "New notification";
-  };
-
-  // Format timestamp - handle both created_at and createdAt
-  const formatTimestamp = (notification) => {
-    // Get timestamp from either field
-    const timestamp = notification.createdAt || notification.created_at;
-    if (!timestamp) return '';
-    
-    try {
-      const date = new Date(timestamp);
-      const now = new Date();
-      const diffMs = now - date;
-      const diffMins = Math.floor(diffMs / 60000);
-      const diffHours = Math.floor(diffMins / 60);
-      const diffDays = Math.floor(diffHours / 24);
+      });
       
-      if (diffMins < 1) return 'Just now';
-      if (diffMins < 60) return `${diffMins}m ago`;
-      if (diffHours < 24) return `${diffHours}h ago`;
-      if (diffDays < 7) return `${diffDays}d ago`;
-      
-      return date.toLocaleDateString();
-    } catch (e) {
-      console.error("Error formatting timestamp:", e);
-      return 'Unknown time';
+      return () => {
+        if (socketRef.current) {
+          socketRef.current.disconnect();
+        }
+      };
+    }
+  }, []);
+
+  // Add a new notification manually (for testing or direct calls)
+  const addNotification = (notification) => {
+    const newNotification = {
+      id: Date.now(),
+      timestamp: new Date(),
+      read: false,
+      ...notification
+    };
+    setNotifications(prev => [newNotification, ...prev]);
+  };
+
+  // Mark notification as read
+  const markAsRead = (id) => {
+    setNotifications(prev => 
+      prev.map(notif => 
+        notif.id === id ? { ...notif, read: true } : notif
+      )
+    );
+  };
+
+  // Mark notification as read and navigate
+  const handleNotificationClick = (notif) => {
+    setNotifications(prev =>
+      prev.map(n => n.id === notif.id ? { ...n, read: true } : n)
+    );
+    // Route based on notification type
+    if (notif.type === 'booking' || notif.type === 'reminder') {
+      navigate('/appointments');
     }
   };
 
-  // Handle marking all notifications as read with better error handling
-  const handleMarkAllAsRead = (e) => {
-    e.stopPropagation();
-    console.log("NotificationTray: Attempting to mark all notifications as read");
-    try {
-      safeMarkAllAsRead();
-      // Force refresh after marking all as read
-      setTimeout(refreshNotifications, 100);
-    } catch (error) {
-      console.error("Error in handleMarkAllAsRead:", error);
-      // Fallback to direct localStorage update
-      markAllNotificationsAsRead();
-      setTimeout(refreshNotifications, 100);
-    }
+  // Clear all notifications
+  const clearAll = () => {
+    setNotifications([]);
   };
 
-  // Handle marking a single notification as read
-  const handleMarkAsRead = (id) => {
-    try {
-      if (typeof markNotificationRead === 'function') {
-        markNotificationRead(id);
-        // Force refresh after marking as read
-        setTimeout(refreshNotifications, 100);
-      }
-    } catch (error) {
-      console.error("Error marking notification as read:", error);
-    }
+  // Format timestamp for display
+  const formatTime = (timestamp) => {
+    const now = new Date();
+    const diff = now - timestamp;
+    const minutes = Math.floor(diff / 60000);
+    
+    if (minutes < 1) return 'Just now';
+    if (minutes < 60) return `${minutes}m ago`;
+    
+    const hours = Math.floor(minutes / 60);
+    if (hours < 24) return `${hours}h ago`;
+    
+    return timestamp.toLocaleDateString();
   };
-
-  // ADDED: Debug function to log the notification content 
-  const debugNotification = (notification) => {
-    console.log("Notification clicked:", notification);
-  };
-
-  if (!isVisible) return null;
 
   return (
     <>
-      {/* Backdrop - only apply darkening and blur on mobile */}
-      <div 
-        className={`fixed inset-0 z-[999] ${isMobile ? "bg-black bg-opacity-60 backdrop-blur-sm" : ""}`}
-        onClick={onClose}
-        style={{position: 'fixed', top: 0, left: 0, right: 0, bottom: 0}}
-      />
-      
-      {/* Notification Tray - Full screen on mobile, positioned on desktop */}
-      <div 
-        ref={trayRef}
-        className={`
-          ${isMobile 
-            ? "fixed inset-0 z-[1000] flex flex-col" 
-            : "fixed bg-white rounded-lg shadow-xl z-[1000] w-80 lg:w-96"
-          }
-        `}
-        style={!isMobile ? { 
-          maxHeight: '80vh',
-          boxShadow: '0 10px 25px -5px rgba(0, 0, 0, 0.1), 0 10px 10px -5px rgba(0, 0, 0, 0.04)'
-        } : {}}
-      >
-        <div className={`
-          ${isMobile 
-            ? "flex flex-col h-full bg-white" 
-            : "flex flex-col max-h-[80vh] bg-white rounded-lg overflow-hidden"
-          }`}
-        >
-          {/* Header */}
-          <div className="sticky top-0 bg-white px-4 py-3 border-b border-gray-200 z-10 flex justify-between items-center">
-            <div className="flex items-center">
-              <h3 className="text-base sm:text-lg font-semibold text-gray-800">
-                Notifications
-              </h3>
-              <span className="ml-2 text-xs text-gray-500">
-                {displayedNotifications.length > 0 ? `(${displayedNotifications.length})` : ''}
-              </span>
-            </div>
-            <div className="flex items-center">
-              {unreadCount > 0 && (
-                <span 
-                  className="text-xs sm:text-sm text-blue-500 cursor-pointer hover:text-blue-700 mr-3"
-                  onClick={handleMarkAllAsRead}
-                >
-                  Mark all as read
-                </span>
-              )}
-              <button 
-                onClick={onClose}
-                className="p-1 text-gray-500 hover:text-gray-700"
-              >
-                <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
-                </svg>
-              </button>
-            </div>
-          </div>
+      {isVisible && (
+        <>
+          {/* Backdrop - only apply darkening and blur on mobile */}
+          <div 
+            className={`fixed inset-0 z-[999] bg-black bg-opacity-60 backdrop-blur-sm`}
+            onClick={onClose}
+            style={{position: 'fixed', top: 0, left: 0, right: 0, bottom: 0}}
+          />
           
-          {/* Notification List - Scrollable area */}
-          <div className="overflow-y-auto flex-grow">
-            {displayedNotifications && displayedNotifications.length > 0 ? (
-              displayedNotifications.map(notification => (
-                <div 
-                  key={notification.id || `fallback-${Math.random()}`} 
-                  className={`px-3 sm:px-4 py-3 border-b border-gray-100 hover:bg-gray-50 
-                    ${!notification.isRead ? 'bg-blue-50' : ''}`}
-                  onClick={() => {
-                    handleMarkAsRead(notification.id);
-                    debugNotification(notification);
-                  }}
-                >
-                  {/* Add action indicator bar */}
-                  <div className="flex items-start">
-                    <div 
-                      className={`w-1 h-full rounded-full mr-2 self-stretch ${
-                        notification.action === 'create' ? 'bg-blue-500' : 
-                        notification.action === 'confirm' ? 'bg-green-500' : 
-                        notification.action === 'cancel' ? 'bg-red-500' : 
-                        notification.action?.startsWith('reminder') ? 'bg-yellow-500' : 
-                        'bg-gray-300'
-                      }`}
-                      style={{minHeight: '24px'}}
-                    ></div>
-                    <div className="flex-1">
-                      <p className="text-xs sm:text-sm text-gray-800 break-words">{formatMessage(notification)}</p>
-                      <div className="flex justify-between items-center mt-1">
-                        <p className="text-xs text-gray-500">
-                          {formatTimestamp(notification)}
-                        </p>
-                        {!notification.isRead && (
-                          <span className="h-2 w-2 bg-blue-500 rounded-full flex-shrink-0"></span>
-                        )}
-                      </div>
-                    </div>
-                  </div>
+          {/* Notification Tray - Full screen on mobile, positioned on desktop */}
+          <div 
+            className={`
+              fixed inset-0 z-[1000] flex flex-col
+            `}
+          >
+            <div className={`
+              flex flex-col h-full bg-white
+            `}
+            >
+              {/* Header */}
+              <div className="sticky top-0 bg-white px-4 py-3 border-b border-gray-200 z-10 flex justify-between items-center">
+                <div className="flex items-center">
+                  <h3 className="text-base sm:text-lg font-semibold text-gray-800">
+                    Notifications
+                  </h3>
+                  {notifications.length > 0 && (
+                    <span className="ml-2 bg-blue-100 text-blue-800 text-xs px-2 py-1 rounded-full">
+                      {notifications.filter(n => !n.read).length} new
+                    </span>
+                  )}
+                </div>            <div className="flex items-center space-x-2">
+                  {notifications.length > 0 && (
+                    <button 
+                      onClick={clearAll}
+                      className="text-xs text-gray-500 hover:text-gray-700"
+                    >
+                      Clear All
+                    </button>
+                  )}
+                  <button 
+                    onClick={onClose}
+                    className="p-1 text-gray-500 hover:text-gray-700"
+                  >
+                    <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+                    </svg>
+                  </button>
                 </div>
-              ))
-            ) : (
-              <div className="flex flex-col items-center justify-center h-32 text-gray-500">
-                <svg xmlns="http://www.w3.org/2000/svg" className="h-10 w-10 mb-2" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M15 17h5l-1.405-1.405A2.032 2.032 0 0118 14.158V11a6.002 6.002 0 00-4-5.659V5a2 2 0 10-4 0v.341C7.67 6.165 6 8.388 6 11v3.159c0 .538-.214 1.055-.595 1.436L4 17h5m6 0v1a3 3 0 11-6 0v-1m6 0H9" />
-                </svg>
-                <p className="text-sm">No notifications yet</p>
-                <p className="text-xs text-gray-400 mt-2">When you receive notifications, they will appear here</p>
               </div>
-            )}
-          </div>
-          
-          {/* Footer - Only show on mobile */}
-          {isMobile && (
-            <div className="bg-white px-4 py-3 border-t border-gray-200">
-              <button 
-                onClick={onClose}
-                className="w-full py-2 bg-gray-100 text-gray-700 rounded-md text-sm font-medium hover:bg-gray-200"
-              >
-                Close
-              </button>
+              
+              {/* Notification List - Scrollable area */}
+              <div className="overflow-y-auto flex-grow">
+                {notifications.length === 0 ? (
+                  <div className="flex flex-col items-center justify-center h-32 text-gray-500">
+                    <svg xmlns="http://www.w3.org/2000/svg" className="h-10 w-10 mb-2" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M15 17h5l-1.405-1.405A2.032 2.032 0 0118 14.158V11a6.002 6.002 0 00-4-5.659V5a2 2 0 10-4 0v.341C7.67 6.165 6 8.388 6 11v3.159c0 .538-.214 1.055-.595 1.436L4 17h5m6 0v1a3 3 0 11-6 0v-1m6 0H9" />
+                    </svg>
+                    <p className="text-sm">No notifications yet</p>
+                    <p className="text-xs text-gray-400 mt-2">When you receive notifications, they will appear here</p>
+                  </div>
+                ) : (
+                  <div className="p-4 space-y-3">
+                    {notifications.map((notification) => (
+                      <div 
+                        key={notification.id}
+                        className={`p-3 rounded-lg border cursor-pointer transition-colors ${
+                          notification.read 
+                            ? 'bg-gray-50 border-gray-200' 
+                            : 'bg-blue-50 border-blue-200'
+                        }`}
+                        onClick={() => handleNotificationClick(notification)}
+                      >
+                        <div className="flex items-start space-x-3">
+                          <div className={`flex-shrink-0 w-2 h-2 rounded-full mt-2 ${
+                            notification.read ? 'bg-gray-300' : 'bg-blue-500'
+                          }`} />
+                          <div className="flex-grow">
+                            <div className="flex items-center justify-between">
+                              <h4 className="text-sm font-medium text-gray-800">
+                                {notification.title}
+                              </h4>
+                              <span className="text-xs text-gray-500">
+                                {formatTime(notification.timestamp)}
+                              </span>
+                            </div>
+                            <p className="text-sm text-gray-600 mt-1">
+                              {notification.message}
+                            </p>
+                            {notification.type && (
+                              <span className={`inline-block text-xs px-2 py-1 rounded mt-2 ${
+                                notification.type === 'booking' ? 'bg-green-100 text-green-800' :
+                                notification.type === 'reminder' ? 'bg-yellow-100 text-yellow-800' :
+                                notification.type === 'error' ? 'bg-red-100 text-red-800' :
+                                'bg-gray-100 text-gray-800'
+                              }`}>
+                                {notification.type}
+                              </span>
+                            )}
+                          </div>
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+                )}
+              </div>
+              
+              {/* Footer with connection status */}
+              <div className="px-4 py-2 border-t border-gray-200 bg-gray-50">
+                <div className="flex items-center justify-between text-xs text-gray-500">
+                  <span>
+                    Notifications {areNotificationsEnabled() ? 'enabled' : 'disabled'}
+                  </span>
+                  <span className="flex items-center">
+                    <div className={`w-2 h-2 rounded-full mr-1 ${
+                      isConnected ? 'bg-green-500' : 'bg-gray-400'
+                    }`} />
+                    {isConnected ? 'Connected' : 'Offline'}
+                  </span>
+                </div>
+              </div>
+              
+              {/* Footer - Only show on mobile */}
+              <div className="bg-white px-4 py-3 border-t border-gray-200">
+                <button 
+                  onClick={onClose}
+                  className="w-full py-2 bg-gray-100 text-gray-700 rounded-md text-sm font-medium hover:bg-gray-200"
+                >
+                  Close
+                </button>
+              </div>
             </div>
-          )}
-        </div>
-      </div>
+          </div>
+        </>
+      )}
     </>
   );
 };

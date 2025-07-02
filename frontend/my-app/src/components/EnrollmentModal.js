@@ -31,7 +31,13 @@ function EnrollmentModal({ closeModal }) {
           console.error("Search error:", data.error);
           setStudentResults([]);
         } else {
-          setStudentResults(data.results || []);
+          // The API may return either an array directly or an object with a 'results' array
+          const fetchedStudents = Array.isArray(data)
+            ? data
+            : Array.isArray(data.results)
+            ? data.results
+            : [];
+          setStudentResults(fetchedStudents);
         }
       } catch (error) {
         console.error("Search error:", error);
@@ -106,6 +112,38 @@ function EnrollmentModal({ closeModal }) {
     return () => window.removeEventListener('resize', handleResize);
   }, []);
 
+  useEffect(() => {
+    const checkTeacherStatus = async () => {
+      try {
+        // Fetch teacher status to decide on enrollment action
+        if (teacherID) {
+          // Ensure teacherID is not null or undefined before fetching
+          const response = await fetch(`http://localhost:5001/user/get_user?idNumber=${teacherID}`);
+          if (!response.ok) throw new Error('Network response was not ok');
+          const data = await response.json();
+          if (!data.isActive) {
+            setMessage({
+              type: "error",
+              content: "You are currently inactive. Cannot enroll students during semester break."
+            });
+            // Clear any existing selected students
+            setSelectedStudents([]);
+          }
+        }
+      } catch (error) {
+        console.error('Error checking teacher status:', error);
+        setMessage({
+          type: "error",
+          content: "Unable to verify teacher status. Please try again later."
+        });
+      }
+    };
+
+    if (teacherID) {
+      checkTeacherStatus();
+    }
+  }, [teacherID]);
+
   return (
     <div className="pt-2 sm:pt-4 px-2 md:px-4 h-44 md:h-52 flex flex-col">
       {/* Student Selection Input - Responsive */}
@@ -121,8 +159,8 @@ function EnrollmentModal({ closeModal }) {
                 className="bg-[#00D1B2] text-white px-1 sm:px-2 py-1 rounded-full flex items-center gap-1 sm:gap-2 text-xs sm:text-sm mb-1"
               >
                 <img
-                  src={getProfilePictureUrl(student.profile_picture)}
-                  alt="Profile"
+                  src={getProfilePictureUrl(student.profile_picture, `${student.firstName} ${student.lastName}`)}
+                  alt={`${student.firstName} ${student.lastName}`}
                   className="w-4 h-4 sm:w-5 sm:h-5 rounded-full"
                 />
                 <span className="max-w-[100px] sm:max-w-full truncate">
@@ -148,6 +186,7 @@ function EnrollmentModal({ closeModal }) {
               onBlur={() => setTimeout(() => setIsInputFocused(false), 200)}
               placeholder={isMobile ? "Search..." : "Search students..."}
               className="flex-1 min-w-[80px] outline-none bg-transparent text-sm"
+              disabled={message.type === "error"}
             />
           </div>
 
@@ -195,16 +234,15 @@ function EnrollmentModal({ closeModal }) {
                         }}
                       >
                         <img
-                          src={getProfilePictureUrl(student.profile_picture)}
-                          alt="Profile"
+                          src={getProfilePictureUrl(student.profile_picture, `${student.firstName} ${student.lastName}`)}
+                          alt={`${student.firstName} ${student.lastName}`}
                           className="w-6 h-6 sm:w-8 sm:h-8 rounded-full"
                         />
                         <div>
                           <div className="font-medium text-xs sm:text-sm">
                             {student.firstName} {student.lastName}
-                          </div>
-                          <div className="text-xs text-gray-500">
-                            {student.programName || 'Unknown Program'} • {student.year_section || 'Unknown Section'}
+                          </div>                          <div className="text-xs text-gray-500">
+                            {student.program || student.programName || 'Unknown Program'} • {student.year_section || 'Unknown Section'}
                           </div>
                         </div>
                       </li>
@@ -239,8 +277,8 @@ function EnrollmentModal({ closeModal }) {
               onClick={() => {
                 setEnrollClicked(true);
                 setTimeout(() => { setEnrollClicked(false);
-                  setTimeout(() => submitEnrollment(), 500);
-                }, 200);
+                  setTimeout(() => submitEnrollment(), 200);
+                }, 100);
               }}
               disabled={isLoading}
               className={`flex-1 py-4 sm:py-6 md:py-4 bg-[#00D1B2] hover:bg-[#00F7D4] text-white text-center justify-center rounded-bl-lg transition-colors flex items-center gap-2 text-xs sm:text-sm
@@ -276,8 +314,8 @@ function EnrollmentModal({ closeModal }) {
               onClick={() => {
                 setCancelClicked(true);
                 setTimeout(() => { setCancelClicked(false); 
-                  setTimeout(() => closeModal(), 500);
-                }, 200);
+                  setTimeout(() => closeModal());
+                });
               }}
               className={`flex-1 py-4 sm:py-6 md:py-4 text-gray-700 bg-gray-100 rounded-br-lg hover:bg-gray-200 transition-colors text-xs sm:text-sm
                 ${CancelClicked ? "scale-100" : "scale-100"}`}

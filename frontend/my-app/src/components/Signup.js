@@ -27,6 +27,7 @@ const Signup = ({ onSwitchToLogin }) => {
     role: "student", // Default role set to student
   });
   const [errorMessage, setErrorMessage] = useState("");
+  const [successMessage, setSuccessMessage] = useState("");
   const [fieldErrors, setFieldErrors] = useState({
     firstName: "",
     lastName: "",
@@ -135,7 +136,9 @@ const Signup = ({ onSwitchToLogin }) => {
   };
 
   const handleSubmit = async (e) => {
-    if (e) e.preventDefault();
+    e.preventDefault();
+    setErrorMessage("");
+    setSuccessMessage("");
     setIsLoading(true);
 
     // Validate form
@@ -158,10 +161,10 @@ const Signup = ({ onSwitchToLogin }) => {
           lastName: formData.lastName,
           email: formData.email,
           password: formData.password,
+          department: formData.department,
           program: formData.program,
           sex: formData.sex,
           year_section: formData.year_section,
-          department: formData.department,
           role: formData.role,
         }),
       });
@@ -169,39 +172,22 @@ const Signup = ({ onSwitchToLogin }) => {
       const data = await response.json();
 
       if (response.ok) {
+        setSuccessMessage(
+          "✅ Registration successful! Check your email for the verification link."
+        );
         setIsLoading(false);
-        alert("Registration successful!");
-        onSwitchToLogin();
+        // Optionally, switch to login after a delay
+        // setTimeout(() => onSwitchToLogin(), 3000);
       } else {
+        setErrorMessage(data.error || "Signup failed. Please try again.");
         setIsLoading(false);
-        // Show generic "Registration failed" message
-        setErrorMessage("Registration failed");
-
-        // Try to map specific errors to fields if provided by backend
-        if (data.errors && typeof data.errors === "object") {
-          setFieldErrors((prev) => ({ ...prev, ...data.errors }));
-        } else if (data.message) {
-          // Map common error messages to fields
-          if (data.message.toLowerCase().includes("email")) {
-            setFieldErrors((prev) => ({
-              ...prev,
-              email: "Email already in use",
-            }));
-          } else if (data.message.toLowerCase().includes("id")) {
-            setFieldErrors((prev) => ({
-              ...prev,
-              idNumber: "ID number already registered",
-            }));
-          }
-        }
       }
     } catch (error) {
-      console.error("Error during registration:", error);
-      setErrorMessage("Registration failed");
+      setErrorMessage("Network error. Please try again.");
       setIsLoading(false);
+    } finally {
+      setSignupClicked(false);
     }
-
-    return true;
   };
 
   // Helper function to render field error
@@ -505,10 +491,9 @@ const Signup = ({ onSwitchToLogin }) => {
                     <option value="" hidden>
                       Select Department
                     </option>
-
                     {departments.map((dept) => (
-                      <option key={dept.departmentID} value={dept.departmentID}>
-                        {dept.departmentName}
+                      <option key={dept.id} value={dept.id}>
+                        {dept.name}
                       </option>
                     ))}
                   </select>
@@ -609,8 +594,13 @@ const Signup = ({ onSwitchToLogin }) => {
                 </div>
 
                 {/* General error message */}
+                {successMessage && (
+                  <p className="text-center text-green-500 text-[0.9rem]">
+                    {successMessage}
+                  </p>
+                )}
                 {errorMessage && (
-                  <p className="text-center text-red-500 text-[0.8rem] md:text-[0.9rem]">
+                  <p className="text-center text-red-500 text-[0.9rem]">
                     {errorMessage}
                   </p>
                 )}
@@ -622,15 +612,7 @@ const Signup = ({ onSwitchToLogin }) => {
                     ${signupClicked ? "scale-90" : "scale-100"}
                     ${isLoading ? "opacity-50 cursor-not-allowed" : ""}
                   `}
-                  onClick={(e) => {
-                    e.preventDefault();
-                    if (!isLoading) {
-                      setSignupClicked(true);
-                      setIsLoading(true);
-                      setTimeout(() => setSignupClicked(false), 150);
-                      handleSubmit();
-                    }
-                  }}
+                  onClick={handleSubmit}
                 >
                   {isLoading ? (
                     <>

@@ -52,23 +52,24 @@ const apiClient = {
       abortControllers.delete(cacheKey);
     }
   },
-  
-  // Grouped endpoints for bookings
+    // Grouped endpoints for bookings
   bookings: {
     getStudentBookings: () => {
       const studentID = localStorage.getItem('studentID');
-      return apiClient.fetch(`http://localhost:5001/bookings/get_bookings?role=student&userID=${studentID}`);
+      return apiClient.fetch(`http://localhost:5001/bookings/get_bookings?role=student&idNumber=${studentID}`);
     },
     getTeacherBookings: () => {
       const teacherID = localStorage.getItem('teacherID');
-      return apiClient.fetch(`http://localhost:5001/bookings/get_bookings?role=faculty&userID=${teacherID}`);
+      return apiClient.fetch(`http://localhost:5001/bookings/get_bookings?role=faculty&idNumber=${teacherID}`);
     },
     // ...add more endpoints as needed
   },
-
   consultations: {
     getHistory: (role, userID) => {
-      return apiClient.fetch(`http://localhost:5001/consultation/get_history?role=${role}&userID=${userID}`);
+      // Use idNumber parameter only since that's what the backend needs
+      return apiClient.fetch(
+        `http://localhost:5001/consultation/get_history?role=${role}&idNumber=${userID}`
+      );
     }
   }
 };

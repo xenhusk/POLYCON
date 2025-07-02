@@ -1,4 +1,5 @@
 import React, { useState, useRef, useEffect } from "react";
+import { showErrorNotification, showSuccessNotification } from '../utils/notificationUtils';
 import { useNavigate, useLocation } from "react-router-dom";
 import ProfilePictureUploader from "./ProfilePictureUploader"; // replaced wrong component import
 import { getProfilePictureUrl } from "../utils/utils"; // import the utility function
@@ -6,13 +7,12 @@ import ProfileDetails from "./ProfileDetails";
 
 // Add or confirm the startSession helper function
 export function startSession(appointment) {
-  const teacherID = localStorage.getItem("teacherID");
-  if (
+  const teacherID = localStorage.getItem("teacherID");  if (
     !appointment.studentIDs ||
     !Array.isArray(appointment.studentIDs) ||
     appointment.studentIDs.length === 0
   ) {
-    alert("Cannot start session: Missing student IDs.");
+    showErrorNotification("Cannot start session: Missing student IDs.");
     console.error(
       "startSession: appointment.studentIDs not valid",
       appointment
@@ -36,10 +36,9 @@ export function startSession(appointment) {
           result.session_id
         }&teacherID=${teacherID}&studentIDs=${appointment.studentIDs.join(
           ","
-        )}`;
-        window.open(sessionUrl, "_blank");
+        )}`;        window.open(sessionUrl, "_blank");
       } else {
-        alert(`Failed to start session: ${result.error || "Unknown error"}`);
+        showErrorNotification(`Failed to start session: ${result.error || "Unknown error"}`);
         console.error("Start session error:", result.error);
       }
     })
@@ -205,16 +204,15 @@ function BookingTeacher() {
         }
       }
 
-      setAppointments(categorizedAppointments);
+            setAppointments(categorizedAppointments);
     } catch (error) {
       console.error("Error fetching teacher bookings:", error);
-      alert(`Error fetching teacher bookings: ${error.message}`);
+      showErrorNotification(`Error fetching teacher bookings: ${error.message}`);
     }
   }
-
   async function bookAppointment() {
     if (!teacherID || selectedStudents.length === 0 || !schedule || !venue) {
-      alert("Please fill in all fields.");
+      showErrorNotification("Please fill in all fields.");
       return;
     }
 

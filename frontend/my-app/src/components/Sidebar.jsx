@@ -23,8 +23,7 @@ import { FaHome, FaGraduationCap, FaClipboardList, FaUser, FaUsers, FaCog } from
 import { getProfilePictureUrl } from '../utils/utils';
 import ProfilePictureUploader from './ProfilePictureUploader';
 import SettingsPopup from './SettingsPopup';
-import NotificationTray from './NotificationTray';
-import { NotificationContext } from '../context/NotificationContext'; // NEW import
+import NotificationTray from './NotificationTray'; // Import NotificationTray component
 
 const Sidebar = ({ onExpandChange }) => {
   const location = useLocation(); // Add this hook
@@ -54,8 +53,6 @@ const Sidebar = ({ onExpandChange }) => {
   const menuItemRefs = useRef({});
   const pointerRef = useRef(null); // Add ref for the pointer element
   const navigate = useNavigate();
-  const { notifications } = useContext(NotificationContext); // Change this line to use context
-  const unreadCount = notifications?.filter(n => !n.isRead)?.length || 0; // Add null check
 
   // Add new state for mobile sidebar visibility
   const [isMobile, setIsMobile] = useState(false);
@@ -64,6 +61,14 @@ const Sidebar = ({ onExpandChange }) => {
   
   // Add the missing isMounted ref
   const isMounted = useRef(true);
+  
+  // Logout handler to navigate to homepage
+  const handleLogoutCommand = () => {
+    // Additional cleanup for Sidebar state can be done here if necessary,
+    // e.g., resetting activeItem, isOpen, etc.
+    // For now, the main goal is navigation.
+    navigate('/');
+  };
   
   // Add cleanup effect for isMounted
   useEffect(() => {
@@ -126,21 +131,13 @@ const Sidebar = ({ onExpandChange }) => {
       fetch(`http://localhost:5001/user/get_user?email=${userEmail}`)
         .then(res => res.json())
         .then(data => {
-          if (userRole === 'faculty') {
-            setProfile({
-              name: `${data.firstName} ${data.lastName}`,
-              id: data.id || data.idNumber,
-              profile_picture: data.profile_picture || 'https://via.placeholder.com/100',
-              role: 'Teacher'
-            });
-          } else {
-            setProfile({
-              name: `${data.firstName} ${data.lastName}`,
-              id: data.id,
-              profile_picture: data.profile_picture || 'https://via.placeholder.com/100',
-              role: 'Student'
-            });
-          }
+          // Store raw profile_picture value
+          setProfile({
+            name: `${data.firstName} ${data.lastName}`,
+            id: data.id || data.idNumber,
+            profile_picture: data.profile_picture, // MODIFIED: Store raw value
+            role: userRole === 'faculty' ? 'Teacher' : 'Student'
+          });
         })
         .catch(err => console.error('Error fetching profile:', err));
     }
@@ -155,7 +152,7 @@ const Sidebar = ({ onExpandChange }) => {
   // NEW: retrieve profile picture using the API-based placeholder logic
   useEffect(() => {
     const storedPic = localStorage.getItem('profile_picture');
-    setProfilePicture(getProfilePictureUrl(storedPic));
+    setProfilePicture(storedPic); // MODIFIED: Store raw value
   }, []);
 
   const fetchUserDetails = async () => {
@@ -167,7 +164,7 @@ const Sidebar = ({ onExpandChange }) => {
 
     try {
       const response = await fetch(`http://localhost:5001/user/get_user?email=${email}`);
-      let userData = await response.json();
+      let userData = await response.json(); // userData.profile_picture should be raw
       
       if (userRole === 'student' && studentID) {
         try {
@@ -201,10 +198,13 @@ const Sidebar = ({ onExpandChange }) => {
         }
       }
       
-      setUserDetails(userData);
-      if (userData.profile_picture) {
-        setProfilePicture(userData.profile_picture);
-      }
+      // MODIFIED: Store raw profile_picture from userData
+      // The userData object from the response should already contain the raw profile_picture string (filename or null)
+      setUserDetails(userData); 
+      
+      // MODIFIED: Update profilePicture state with the raw value from userData
+      setProfilePicture(userData.profile_picture);
+
     } catch (error) {
       console.error('Error fetching user details:', error);
     }
@@ -217,16 +217,16 @@ const Sidebar = ({ onExpandChange }) => {
   // Update path mappings to include exact paths
   const menuPaths = {
     student: {
-      dashboard: '/dashboard',
+      homestudent: '/dashboard',
       appointments: '/appointments',
-      past: '/history',
+      history: '/history',
       grades: '/gradeview'
     },
     faculty: {
       dashboard: '/dashboard',
       classRecord: '/addgrade',
       appointments: '/appointments',
-      past: '/history',
+      history: '/history', // FIX: was 'past', should be 'history' to match menu item
       comparative: '/comparative-analysis'
     },
     admin: {
@@ -385,6 +385,12 @@ const Sidebar = ({ onExpandChange }) => {
     setShowNotifications(!showNotifications);
   };
 
+  // Derive display name and picture for avatar (initial or fetched)
+  const initialName = profile?.name || '';
+  const initialPic = profile?.profile_picture || profilePicture;  // from localStorage fallback
+  const displayName = userDetails?.fullName || initialName;
+  const displayPic = userDetails?.profile_picture || initialPic;
+
   return (
     <>
       {/* MOBILE: Standalone pointer when sidebar is closed */}
@@ -466,9 +472,9 @@ const Sidebar = ({ onExpandChange }) => {
 
         {userRole === 'student' && (
           <ul className="mt-2 space-y-3 relative">
-            {renderMenuItem("dashboard", HomeIcon, "Home")}
+            {renderMenuItem("homestudent", HomeIcon, "Home")}
             {renderMenuItem("appointments", UpcomingIcon, "Appointments")}
-            {renderMenuItem("past", PastIcon, "History")}
+            {renderMenuItem("history", PastIcon, "History")}
             {renderMenuItem("grades", GradesIcon, "Grades")}
           </ul>
         )}
@@ -477,9 +483,9 @@ const Sidebar = ({ onExpandChange }) => {
           <ul className="mt-2 space-y-3 relative"> {/* Changed from mt-6 to mt-2 */}
             {renderMenuItem("dashboard", HomeIcon, "Home")}
             {renderMenuItem("appointments", UpcomingIcon, "Appointments")}
-            {renderMenuItem("past", PastIcon, "History")}
+            {renderMenuItem("history", PastIcon, "History")}
             {renderMenuItem("classRecord", ClassRecorderIcon, "Class Record")}
-            {renderMenuItem("comparative", ComparativeIcon, "Comparative Analysis")}
+            {renderMenuItem("comparative", ComparativeIcon, "Polycon Analysis")}
           </ul>
         )}
 
@@ -503,9 +509,6 @@ const Sidebar = ({ onExpandChange }) => {
               className={`no-hover-item relative h-8 flex items-center cursor-pointer ${((isOpen && !isMobile) || mobileOpen) ? 'opacity-100' : 'opacity-0'}`}
             >
               <BellIcon className="w-6 h-6 bell-icon -mr-2" />
-              {unreadCount > 0 && (
-                <span className="absolute -top-0 -right-2 h-3 w-3 bg-red-500 rounded-full"></span>
-              )}
             </li>
             <li 
               ref={settingsButtonRef}
@@ -530,10 +533,10 @@ const Sidebar = ({ onExpandChange }) => {
               >
                 <div className="rounded-full p-1 bg-white">
                   <div className="relative">
-                    <img 
-                      src={userDetails?.profile_picture || profilePicture || 'https://via.placeholder.com/100'} 
-                      alt="Profile" 
-                      className="rounded-full w-10 h-10"  
+                    <img
+                      src={getProfilePictureUrl(displayPic, displayName)}
+                      alt={displayName || 'Profile'}
+                      className="rounded-full w-10 h-10"
                     />
                     <div className="absolute inset-0 bg-black bg-opacity-50 rounded-full opacity-0 group-hover:opacity-100 flex items-center justify-center transition-opacity duration-200">
                       <span className="text-white text-xs">Edit</span>
@@ -549,7 +552,7 @@ const Sidebar = ({ onExpandChange }) => {
                     {userDetails.firstName} {userDetails.lastName}
                   </p>
                   <p className="text-gray-200 text-xs truncate">
-                    {userDetails.ID}
+                    {userDetails.idNumber || userDetails.id}
                   </p>
                   <p className="text-gray-200 text-xs truncate">
                     {userRole === 'student' ? 
@@ -565,17 +568,19 @@ const Sidebar = ({ onExpandChange }) => {
         </div>
       </div>
 
-      {/* Notification and Settings popups */}
-      <NotificationTray 
-        isVisible={showNotifications} 
-        onClose={() => setShowNotifications(false)}
-        position={notificationPosition}
-      />
-
+      {/* Settings popups */}
       <SettingsPopup 
         isVisible={showSettings} 
         onClose={() => setShowSettings(false)}
         position={settingsPosition}
+        onLogout={handleLogoutCommand} // Pass the logout handler
+        userEmail={userDetails?.email} // Pass userEmail if needed by SettingsPopup
+      />
+
+      {/* Notification Tray */}
+      <NotificationTray 
+        isVisible={showNotifications}
+        onClose={() => setShowNotifications(false)}
       />
 
       {/* Photo Upload Modal */}

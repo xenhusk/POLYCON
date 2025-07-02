@@ -29,20 +29,18 @@ export default function Departments() {
   }, []);
 
   const fetchInitialData = async () => {
-    setIsLoadingDepartment(true);  // Use the setter function here
+    setIsLoadingDepartment(true);
     try {
       const cachedDepartments = localStorage.getItem('departments');
-  
       if (cachedDepartments) {
         const departmentsData = JSON.parse(cachedDepartments);
-        console.log("Cached Departments:", departmentsData); // Debug log
+        console.log("Cached Departments:", departmentsData);
         setDepartments(departmentsData);
         setFilteredDepartments(departmentsData);
       } else {
-        const response = await fetch('http://localhost:5001/department/get_departments');
+        const response = await fetch('http://localhost:5001/departments/get_departments');
         const departmentsData = await response.json();
-        console.log("Fetched Departments:", departmentsData); // Debug log
-  
+        console.log("Fetched Departments:", departmentsData);
         setDepartments(departmentsData);
         setFilteredDepartments(departmentsData);
         localStorage.setItem('departments', JSON.stringify(departmentsData));
@@ -50,9 +48,9 @@ export default function Departments() {
     } catch (error) {
       console.error('Error fetching initial data:', error);
     } finally {
-      setIsLoadingDepartment(false);  // Use the setter function here too
+      setIsLoadingDepartment(false);
     }
-  };  
+  };
 
   const handleDepartmentFilterChange = (e) => {
     const input = e.target.value;
@@ -82,30 +80,29 @@ export default function Departments() {
       setMessage({ type: 'error', content: 'Department name is required' });
       return;
     }
-
     setIsAddLoading(true);
     try {
       const endpoint = editing 
-        ? `http://localhost:5001/department/edit_department/${departmentID}` 
-        : `http://localhost:5001/department/add_department`;
+        ? `http://localhost:5001/departments/edit_department/${departmentID}`
+        : `http://localhost:5001/departments/add_department`;
       const method = editing ? 'PUT' : 'POST';
-
+      console.log(`Sending ${method} request to ${endpoint} with data:`, { name: departmentName });
       const response = await fetch(endpoint, {
         method,
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ departmentName })
+        body: JSON.stringify({ name: departmentName })
       });
-
+      console.log(`Received response with status: ${response.status}`);
+      const respJson = await response.json();
       if (response.ok) {
+        let newId = editing ? departmentID : respJson.id;
         const newDepartment = { 
-          id: editing ? departmentID : (await response.json()).id, 
+          id: newId, 
           name: departmentName 
         };
-
         const updatedDepartments = editing 
-          ? departments.map(dept => dept.id === departmentID ? newDepartment : dept)
+          ? departments.map(dept => String(dept.id) === String(departmentID) ? newDepartment : dept)
           : [...departments, newDepartment];
-
         setDepartments(updatedDepartments);
         setFilteredDepartments(updatedDepartments);
         localStorage.setItem('departments', JSON.stringify(updatedDepartments));
@@ -115,11 +112,12 @@ export default function Departments() {
           setMessage({ type: '', content: '' });
         }, 2000);
       } else {
-        setMessage({ type: 'error', content: 'Failed to save department' });
+        console.error("Request failed:", response.status, respJson);
+        setMessage({ type: 'error', content: respJson.error || `Failed to save department. Status: ${response.status}` });
       }
     } catch (error) {
-      console.error('Error saving department:', error);
-      setMessage({ type: 'error', content: 'Network error. Please try again.' });
+      console.error("Network error:", error);
+      setMessage({ type: 'error', content: `Network error. Please try again. ${error}` });
     } finally {
       setIsAddLoading(false);
     }
@@ -139,12 +137,12 @@ export default function Departments() {
   const confirmDelete = async () => {
     setIsDeleteLoading(true);
     try {
-      const response = await fetch(`http://localhost:5001/department/delete_department/${departmentToDelete}`, {
+      const response = await fetch(`http://localhost:5001/departments/delete_department/${departmentToDelete}`, {
         method: 'DELETE'
       });
-
+      const respJson = await response.json();
       if (response.ok) {
-        const updatedDepartments = departments.filter(department => department.id !== departmentToDelete);
+        const updatedDepartments = departments.filter(department => String(department.id) !== String(departmentToDelete));
         setDepartments(updatedDepartments);
         setFilteredDepartments(updatedDepartments);
         localStorage.setItem('departments', JSON.stringify(updatedDepartments));
@@ -152,11 +150,12 @@ export default function Departments() {
         setShowDeleteModal(false);
         setDepartmentToDelete(null);
       } else {
-        setMessage({ type: 'error', content: 'Failed to delete department' });
+        console.error("Request failed:", response.status, respJson);
+        setMessage({ type: 'error', content: respJson.error || `Failed to delete department. Status: ${response.status}` });
       }
     } catch (error) {
-      console.error('Error deleting department:', error);
-      setMessage({ type: 'error', content: 'Network error. Please try again.' });
+      console.error("Network error:", error);
+      setMessage({ type: 'error', content: `Network error. Please try again. ${error}` });
     } finally {
       setIsDeleteLoading(false);
     }
@@ -210,7 +209,7 @@ export default function Departments() {
               {/* Fixed Table Header */}
               <thead className="bg-[#057DCD] text-white top-0 z-10">
                 <tr className="border-b">
-                  <th className="py-3 ">ID</th>
+                  {/* <th className="py-3 ">ID</th> */}
                   <th className=" py-3  ">Department Name</th>
                   <th className="pr-5">Actions</th>
                 </tr>
@@ -225,9 +224,9 @@ export default function Departments() {
                   // 🚀 Loading Skeleton with Pulse Animation
                   Array.from({ length: 5 }).map((_, index) => (
                     <tr key={index} className="animate-pulse border-b h-[50px] align-middle">
-                      <td className="px-4 py-3">
+                      {/* <td className="px-4 py-3">
                         <div className="h-4 w-20 bg-gray-200 rounded mx-auto"></div>
-                      </td>
+                      </td> */}
                       <td className="px-4 py-3">
                         <div className="h-4 w-32 bg-gray-200 rounded mx-auto"></div>
                       </td>
@@ -242,7 +241,7 @@ export default function Departments() {
                 ) : filteredDepartments.length > 0 ? (
                     filteredDepartments.map((department) => (
                       <tr key={department.id} className="border-b hover:bg-[#DBF1FF] h-[50px] align-middle">
-                        <td className="px-4 py-3">{department.id}</td>
+                        {/* <td className="px-4 py-3">{department.id}</td> */}
                         <td className="px-4 py-3">{department.name}</td>
                         <td className="px-4 py-3 text-center">
                           <div className="flex items-center justify-center space-x-3">

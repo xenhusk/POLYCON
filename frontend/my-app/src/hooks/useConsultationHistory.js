@@ -4,7 +4,10 @@ import { useGlobalState } from '../context/GlobalStateContext';
 const fetchConsultationHistory = async ({ userRole, userId }) => {
   if (!userRole || !userId) return [];
   
-  const response = await fetch(`http://localhost:5001/consultation/get_history?role=${userRole}&userID=${userId}`);
+  // Use idNumber parameter only to ensure backend matches id_number correctly
+  const response = await fetch(
+    `http://localhost:5001/consultation/get_history?role=${userRole}&idNumber=${userId}`
+  );
   if (!response.ok) throw new Error('Failed to fetch consultation history');
   return response.json();
 };
