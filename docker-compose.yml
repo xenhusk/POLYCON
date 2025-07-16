@@ -1,0 +1,48 @@
+version: '3.8'
+services:
+#  backend-python:
+#    build:
+#      context: ./backend-python
+#      dockerfile: Dockerfile
+#    command: flask run --host=0.0.0.0 --port=5001
+#    ports:
+#      - "5001:5001"
+#    container_name: polycon_backend
+#    environment:
+#      - FLASK_APP=app.py
+#      - FLASK_ENV=development
+#      - USE_EVENTLET=true
+#    volumes:
+#      - ./backend-python/keys:/app/keys
+#    dns:
+#      - 8.8.8.8
+#      - 8.8.4.4
+  db:
+    image: postgres:13
+    environment:
+      - POSTGRES_USER=postgres
+      - POSTGRES_PASSWORD=postgres
+      - POSTGRES_DB=polycon
+    ports:
+      - "5432:5432"
+    volumes:
+      - db_data:/var/lib/postgresql/data
+  backend-flask:
+    build:
+      context: ./backend
+      dockerfile: Dockerfile
+    ports:
+      - "5001:5000"
+    environment:
+      - GOOGLE_APPLICATION_CREDENTIALS=/app/keys/google-cloud-key.json
+      - GCP_BUCKET_NAME=polycon-audio-bucket
+      - ASSEMBLYAI_API_KEY=fab152fcc0684668bfa324ed74421c23
+      - GEMINI_API_KEY=AIzaSyCGyJpw3cLfXY2z30XW2fMgSvscSDwbN2g
+      - DATABASE_URL=postgresql+psycopg2://postgres:postgres@db:5432/polycon
+    volumes:
+      - ./backend:/app
+    depends_on:
+      - db
+
+volumes:
+  db_data:
