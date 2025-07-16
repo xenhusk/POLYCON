@@ -16,7 +16,18 @@ const fetchStudentAppointments = async () => {
   // Artificial 2-second delay:
   await new Promise((resolve) => setTimeout(resolve, 2000));
   const res = await fetch(
-    `http://localhost:5001/bookings/get_bookings?role=student&idNumber=${studentID}`
+    `import API_URL from '../apiConfig';
+
+// ... other imports
+
+// ... component code
+
+L19: `${API_URL}/bookings/get_bookings?role=student&idNumber=${studentID}`
+L85: const socket = io(API_URL);
+L277: `${API_URL}/bookings/get_bookings?role=faculty&idNumber=${teacherID}`
+L363: const socket = io(API_URL);
+L407: `${API_URL}/bookings/confirm_booking`,
+L438: `${API_URL}/bookings/cancel_booking`,/bookings/get_bookings?role=student&idNumber=${studentID}`
   );
   if (!res.ok) throw new Error("Network response was not ok");
   return res.json();
@@ -82,7 +93,18 @@ function StudentAppointments() {
 
     setAppointments(categorizedAppointments);
   }, [bookings]);  useEffect(() => {
-    const socket = io('http://localhost:5001');
+    const socket = io('import API_URL from '../apiConfig';
+
+// ... other imports
+
+// ... component code
+
+L19: `${API_URL}/bookings/get_bookings?role=student&idNumber=${studentID}`
+L85: const socket = io(API_URL);
+L277: `${API_URL}/bookings/get_bookings?role=faculty&idNumber=${teacherID}`
+L363: const socket = io(API_URL);
+L407: `${API_URL}/bookings/confirm_booking`,
+L438: `${API_URL}/bookings/cancel_booking`,');
     
     // Add connection event handlers
     socket.on('connect', () => {
@@ -274,7 +296,18 @@ function StudentAppointments() {
 const fetchTeacherAppointments = async () => {
   const teacherID = localStorage.getItem("teacherID");
   const res = await fetch(
-    `http://localhost:5001/bookings/get_bookings?role=faculty&idNumber=${teacherID}`
+    `import API_URL from '../apiConfig';
+
+// ... other imports
+
+// ... component code
+
+L19: `${API_URL}/bookings/get_bookings?role=student&idNumber=${studentID}`
+L85: const socket = io(API_URL);
+L277: `${API_URL}/bookings/get_bookings?role=faculty&idNumber=${teacherID}`
+L363: const socket = io(API_URL);
+L407: `${API_URL}/bookings/confirm_booking`,
+L438: `${API_URL}/bookings/cancel_booking`,/bookings/get_bookings?role=faculty&idNumber=${teacherID}`
   );
   if (!res.ok) throw new Error("Network response was not ok");
   return res.json();
@@ -360,7 +393,18 @@ function TeacherAppointments() {
     showAppointmentReminder(message);
   }, [showAppointmentReminder]);
   useEffect(() => {
-    const socket = io('http://localhost:5001');
+    const socket = io('import API_URL from '../apiConfig';
+
+// ... other imports
+
+// ... component code
+
+L19: `${API_URL}/bookings/get_bookings?role=student&idNumber=${studentID}`
+L85: const socket = io(API_URL);
+L277: `${API_URL}/bookings/get_bookings?role=faculty&idNumber=${teacherID}`
+L363: const socket = io(API_URL);
+L407: `${API_URL}/bookings/confirm_booking`,
+L438: `${API_URL}/bookings/cancel_booking`,');
     
     // Add connection event handlers
     socket.on('connect', () => {
@@ -404,7 +448,18 @@ function TeacherAppointments() {
     }
     try {
       const response = await fetch(
-        "http://localhost:5001/bookings/confirm_booking",
+        "import API_URL from '../apiConfig';
+
+// ... other imports
+
+// ... component code
+
+L19: `${API_URL}/bookings/get_bookings?role=student&idNumber=${studentID}`
+L85: const socket = io(API_URL);
+L277: `${API_URL}/bookings/get_bookings?role=faculty&idNumber=${teacherID}`
+L363: const socket = io(API_URL);
+L407: `${API_URL}/bookings/confirm_booking`,
+L438: `${API_URL}/bookings/cancel_booking`,/bookings/confirm_booking",
         {
           method: "POST",
           headers: { "Content-Type": "application/json" },
@@ -435,7 +490,18 @@ function TeacherAppointments() {
   async function cancelBooking(bookingID) {
     try {
       const response = await fetch(
-        "http://localhost:5001/bookings/cancel_booking",
+        "import API_URL from '../apiConfig';
+
+// ... other imports
+
+// ... component code
+
+L19: `${API_URL}/bookings/get_bookings?role=student&idNumber=${studentID}`
+L85: const socket = io(API_URL);
+L277: `${API_URL}/bookings/get_bookings?role=faculty&idNumber=${teacherID}`
+L363: const socket = io(API_URL);
+L407: `${API_URL}/bookings/confirm_booking`,
+L438: `${API_URL}/bookings/cancel_booking`,/bookings/cancel_booking",
         {
           method: "POST",
           headers: { "Content-Type": "application/json" },

@@ -12,7 +12,13 @@ export const getProfilePictureUrl = (profilePicture, userName = '') => {
   }
   
   // Construct URL for server-stored images
-  return `http://localhost:5001/uploads/${profilePicture}`;
+  return `import API_URL from './apiConfig';
+
+// ... other imports
+
+// ... component code
+
+L15: return `${API_URL}/uploads/${profilePicture}`;/uploads/${profilePicture}`;
 };
 
 // Helper to get display program name from student data

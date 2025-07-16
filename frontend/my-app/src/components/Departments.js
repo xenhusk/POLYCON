@@ -38,7 +38,16 @@ export default function Departments() {
         setDepartments(departmentsData);
         setFilteredDepartments(departmentsData);
       } else {
-        const response = await fetch('http://localhost:5001/departments/get_departments');
+        const response = await fetch('import API_URL from '../apiConfig';
+
+// ... other imports
+
+// ... component code
+
+L41: const response = await fetch(`${API_URL}/departments/get_departments`);
+L86: ? `${API_URL}/departments/edit_department/${departmentID}`
+L87: : `${API_URL}/departments/add_department`;
+L140: const response = await fetch(`${API_URL}/departments/delete_department/${departmentToDelete}`, {/departments/get_departments');
         const departmentsData = await response.json();
         console.log("Fetched Departments:", departmentsData);
         setDepartments(departmentsData);
@@ -83,8 +92,26 @@ export default function Departments() {
     setIsAddLoading(true);
     try {
       const endpoint = editing 
-        ? `http://localhost:5001/departments/edit_department/${departmentID}`
-        : `http://localhost:5001/departments/add_department`;
+        ? `import API_URL from '../apiConfig';
+
+// ... other imports
+
+// ... component code
+
+L41: const response = await fetch(`${API_URL}/departments/get_departments`);
+L86: ? `${API_URL}/departments/edit_department/${departmentID}`
+L87: : `${API_URL}/departments/add_department`;
+L140: const response = await fetch(`${API_URL}/departments/delete_department/${departmentToDelete}`, {/departments/edit_department/${departmentID}`
+        : `import API_URL from '../apiConfig';
+
+// ... other imports
+
+// ... component code
+
+L41: const response = await fetch(`${API_URL}/departments/get_departments`);
+L86: ? `${API_URL}/departments/edit_department/${departmentID}`
+L87: : `${API_URL}/departments/add_department`;
+L140: const response = await fetch(`${API_URL}/departments/delete_department/${departmentToDelete}`, {/departments/add_department`;
       const method = editing ? 'PUT' : 'POST';
       console.log(`Sending ${method} request to ${endpoint} with data:`, { name: departmentName });
       const response = await fetch(endpoint, {
@@ -137,7 +164,16 @@ export default function Departments() {
   const confirmDelete = async () => {
     setIsDeleteLoading(true);
     try {
-      const response = await fetch(`http://localhost:5001/departments/delete_department/${departmentToDelete}`, {
+      const response = await fetch(`import API_URL from '../apiConfig';
+
+// ... other imports
+
+// ... component code
+
+L41: const response = await fetch(`${API_URL}/departments/get_departments`);
+L86: ? `${API_URL}/departments/edit_department/${departmentID}`
+L87: : `${API_URL}/departments/add_department`;
+L140: const response = await fetch(`${API_URL}/departments/delete_department/${departmentToDelete}`, {/departments/delete_department/${departmentToDelete}`, {
         method: 'DELETE'
       });
       const respJson = await response.json();

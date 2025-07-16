@@ -52,8 +52,34 @@ export default function AdminPortal() {
       } else {
         // If no cache, fetch from server
         const [usersResponse, departmentsResponse] = await Promise.all([
-          fetch('http://localhost:5001/account/get_all_users'),
-          fetch('http://localhost:5001/account/departments')
+          fetch('import API_URL from '../apiConfig';
+
+// ... other imports
+
+// ... component code
+
+L55: fetch(`${API_URL}/account/get_all_users`),
+L56: fetch(`${API_URL}/account/departments`)
+L81: const response = await fetch(`${API_URL}/account/get_all_users`);
+L99: const response = await fetch(`${API_URL}/account/departments`);
+L110: const response = await fetch(`${API_URL}/account/programs?departmentID=${departmentID}`);
+L136: const response = await fetch(`${API_URL}/account/admin_add_user`, {
+L219: const response = await fetch(`${API_URL}/account/update_user`, {
+L241: const response = await fetch(`${API_URL}/account/delete_user?id=${userId}`, {/account/get_all_users'),
+          fetch('import API_URL from '../apiConfig';
+
+// ... other imports
+
+// ... component code
+
+L55: fetch(`${API_URL}/account/get_all_users`),
+L56: fetch(`${API_URL}/account/departments`)
+L81: const response = await fetch(`${API_URL}/account/get_all_users`);
+L99: const response = await fetch(`${API_URL}/account/departments`);
+L110: const response = await fetch(`${API_URL}/account/programs?departmentID=${departmentID}`);
+L136: const response = await fetch(`${API_URL}/account/admin_add_user`, {
+L219: const response = await fetch(`${API_URL}/account/update_user`, {
+L241: const response = await fetch(`${API_URL}/account/delete_user?id=${userId}`, {/account/departments')
         ]);
 
         const usersData = await usersResponse.json();
@@ -78,7 +104,20 @@ export default function AdminPortal() {
   const fetchAllUsers = async () => {
     setLoading(true);
     try {
-      const response = await fetch('http://localhost:5001/account/get_all_users');
+      const response = await fetch('import API_URL from '../apiConfig';
+
+// ... other imports
+
+// ... component code
+
+L55: fetch(`${API_URL}/account/get_all_users`),
+L56: fetch(`${API_URL}/account/departments`)
+L81: const response = await fetch(`${API_URL}/account/get_all_users`);
+L99: const response = await fetch(`${API_URL}/account/departments`);
+L110: const response = await fetch(`${API_URL}/account/programs?departmentID=${departmentID}`);
+L136: const response = await fetch(`${API_URL}/account/admin_add_user`, {
+L219: const response = await fetch(`${API_URL}/account/update_user`, {
+L241: const response = await fetch(`${API_URL}/account/delete_user?id=${userId}`, {/account/get_all_users');
       const data = await response.json();
       if (Array.isArray(data)) {
         setUserList(data);
@@ -96,7 +135,20 @@ export default function AdminPortal() {
 
   const fetchDepartments = async () => {
     try {
-      const response = await fetch('http://localhost:5001/account/departments');
+      const response = await fetch('import API_URL from '../apiConfig';
+
+// ... other imports
+
+// ... component code
+
+L55: fetch(`${API_URL}/account/get_all_users`),
+L56: fetch(`${API_URL}/account/departments`)
+L81: const response = await fetch(`${API_URL}/account/get_all_users`);
+L99: const response = await fetch(`${API_URL}/account/departments`);
+L110: const response = await fetch(`${API_URL}/account/programs?departmentID=${departmentID}`);
+L136: const response = await fetch(`${API_URL}/account/admin_add_user`, {
+L219: const response = await fetch(`${API_URL}/account/update_user`, {
+L241: const response = await fetch(`${API_URL}/account/delete_user?id=${userId}`, {/account/departments');
       const data = await response.json();
       setDepartments(data);
       localStorage.setItem('departments', JSON.stringify(data));
@@ -107,7 +159,20 @@ export default function AdminPortal() {
 
   const fetchPrograms = async (departmentID) => {
     try {
-      const response = await fetch(`http://localhost:5001/account/programs?departmentID=${departmentID}`);
+      const response = await fetch(`import API_URL from '../apiConfig';
+
+// ... other imports
+
+// ... component code
+
+L55: fetch(`${API_URL}/account/get_all_users`),
+L56: fetch(`${API_URL}/account/departments`)
+L81: const response = await fetch(`${API_URL}/account/get_all_users`);
+L99: const response = await fetch(`${API_URL}/account/departments`);
+L110: const response = await fetch(`${API_URL}/account/programs?departmentID=${departmentID}`);
+L136: const response = await fetch(`${API_URL}/account/admin_add_user`, {
+L219: const response = await fetch(`${API_URL}/account/update_user`, {
+L241: const response = await fetch(`${API_URL}/account/delete_user?id=${userId}`, {/account/programs?departmentID=${departmentID}`);
       const data = await response.json();
       setPrograms(data);
     } catch (error) {
@@ -133,7 +198,20 @@ export default function AdminPortal() {
     Object.keys(userData).forEach(key => (userData[key] === undefined || userData[key] === '') && delete userData[key]);
 
     try {
-      const response = await fetch('http://localhost:5001/account/admin_add_user', {
+      const response = await fetch('import API_URL from '../apiConfig';
+
+// ... other imports
+
+// ... component code
+
+L55: fetch(`${API_URL}/account/get_all_users`),
+L56: fetch(`${API_URL}/account/departments`)
+L81: const response = await fetch(`${API_URL}/account/get_all_users`);
+L99: const response = await fetch(`${API_URL}/account/departments`);
+L110: const response = await fetch(`${API_URL}/account/programs?departmentID=${departmentID}`);
+L136: const response = await fetch(`${API_URL}/account/admin_add_user`, {
+L219: const response = await fetch(`${API_URL}/account/update_user`, {
+L241: const response = await fetch(`${API_URL}/account/delete_user?id=${userId}`, {/account/admin_add_user', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify(userData),
@@ -216,7 +294,20 @@ export default function AdminPortal() {
     };
 
     try {
-      const response = await fetch('http://localhost:5001/account/update_user', {
+      const response = await fetch('import API_URL from '../apiConfig';
+
+// ... other imports
+
+// ... component code
+
+L55: fetch(`${API_URL}/account/get_all_users`),
+L56: fetch(`${API_URL}/account/departments`)
+L81: const response = await fetch(`${API_URL}/account/get_all_users`);
+L99: const response = await fetch(`${API_URL}/account/departments`);
+L110: const response = await fetch(`${API_URL}/account/programs?departmentID=${departmentID}`);
+L136: const response = await fetch(`${API_URL}/account/admin_add_user`, {
+L219: const response = await fetch(`${API_URL}/account/update_user`, {
+L241: const response = await fetch(`${API_URL}/account/delete_user?id=${userId}`, {/account/update_user', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify(updateData),
@@ -238,7 +329,20 @@ export default function AdminPortal() {
   const handleDeleteUser = async (userId) => {
     setIsDeleteLoading(true);
     try {
-      const response = await fetch(`http://localhost:5001/account/delete_user?id=${userId}`, {
+      const response = await fetch(`import API_URL from '../apiConfig';
+
+// ... other imports
+
+// ... component code
+
+L55: fetch(`${API_URL}/account/get_all_users`),
+L56: fetch(`${API_URL}/account/departments`)
+L81: const response = await fetch(`${API_URL}/account/get_all_users`);
+L99: const response = await fetch(`${API_URL}/account/departments`);
+L110: const response = await fetch(`${API_URL}/account/programs?departmentID=${departmentID}`);
+L136: const response = await fetch(`${API_URL}/account/admin_add_user`, {
+L219: const response = await fetch(`${API_URL}/account/update_user`, {
+L241: const response = await fetch(`${API_URL}/account/delete_user?id=${userId}`, {/account/delete_user?id=${userId}`, {
         method: 'DELETE',
       });
       if (response.ok) {

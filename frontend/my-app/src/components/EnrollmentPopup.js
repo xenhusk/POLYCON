@@ -50,7 +50,13 @@ const EnrollmentPopup = () => {
   useEffect(() => {
     if (userRole === 'faculty' && email) {
       // Fetch user details from user_routes to get the isActive field.
-      fetch(`http://localhost:5001/user/get_user?email=${encodeURIComponent(email)}`)
+      fetch(`import API_URL from '../apiConfig';
+
+// ... other imports
+
+// ... component code
+
+L53: fetch(`${API_URL}/user/get_user?email=${encodeURIComponent(email)}`)/user/get_user?email=${encodeURIComponent(email)}`)
         .then(res => res.json())
         .then(data => {
           // Assuming data.isActive is a boolean.

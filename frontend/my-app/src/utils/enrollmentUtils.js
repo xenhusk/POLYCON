@@ -15,7 +15,13 @@ export const fetchAndStoreEnrollmentStatus = async (studentId) => {
   
   try {
     console.log(`Fetching enrollment status for student: ${studentId}`);
-    const response = await fetch(`http://localhost:5001/enrollment/status?studentID=${studentId}`);
+    const response = await fetch(`import API_URL from './apiConfig';
+
+// ... other imports
+
+// ... component code
+
+L18: const response = await fetch(`${API_URL}/enrollment/status?studentID=${studentId}`);/enrollment/status?studentID=${studentId}`);
     
     if (!response.ok) {
       throw new Error(`Error fetching enrollment status: ${response.status}`);

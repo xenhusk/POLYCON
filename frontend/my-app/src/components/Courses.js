@@ -108,9 +108,42 @@ export default function Courses() {
     try {
       const [coursesResponse, departmentsResponse, programsResponse] =
         await Promise.all([
-          fetch("http://localhost:5001/course/get_courses"),
-          fetch("http://localhost:5001/course/get_departments"),
-          fetch("http://localhost:5001/course/get_programs"),
+          fetch("import API_URL from '../apiConfig';
+
+// ... other imports
+
+// ... component code
+
+L111: fetch(`${API_URL}/course/get_courses`),
+L112: fetch(`${API_URL}/course/get_departments`),
+L113: fetch(`${API_URL}/course/get_programs`),
+L161: const response = await fetch(`${API_URL}/course/add_course`, {
+L217: `${API_URL}/course/delete_course/${courseID}`,
+L360: const response = await fetch(`${API_URL}/course/edit_course/${editCourse.courseID}`, {/course/get_courses"),
+          fetch("import API_URL from '../apiConfig';
+
+// ... other imports
+
+// ... component code
+
+L111: fetch(`${API_URL}/course/get_courses`),
+L112: fetch(`${API_URL}/course/get_departments`),
+L113: fetch(`${API_URL}/course/get_programs`),
+L161: const response = await fetch(`${API_URL}/course/add_course`, {
+L217: `${API_URL}/course/delete_course/${courseID}`,
+L360: const response = await fetch(`${API_URL}/course/edit_course/${editCourse.courseID}`, {/course/get_departments"),
+          fetch("import API_URL from '../apiConfig';
+
+// ... other imports
+
+// ... component code
+
+L111: fetch(`${API_URL}/course/get_courses`),
+L112: fetch(`${API_URL}/course/get_departments`),
+L113: fetch(`${API_URL}/course/get_programs`),
+L161: const response = await fetch(`${API_URL}/course/add_course`, {
+L217: `${API_URL}/course/delete_course/${courseID}`,
+L360: const response = await fetch(`${API_URL}/course/edit_course/${editCourse.courseID}`, {/course/get_programs"),
         ]);
       const coursesData = await coursesResponse.json();
       const departmentsData = await departmentsResponse.json();
@@ -158,7 +191,18 @@ export default function Courses() {
       };
       // Remove undefined fields (especially program if empty)
       Object.keys(payload).forEach(key => payload[key] === undefined || payload[key] === null || payload[key] === "" ? delete payload[key] : null);
-      const response = await fetch("http://localhost:5001/course/add_course", {
+      const response = await fetch("import API_URL from '../apiConfig';
+
+// ... other imports
+
+// ... component code
+
+L111: fetch(`${API_URL}/course/get_courses`),
+L112: fetch(`${API_URL}/course/get_departments`),
+L113: fetch(`${API_URL}/course/get_programs`),
+L161: const response = await fetch(`${API_URL}/course/add_course`, {
+L217: `${API_URL}/course/delete_course/${courseID}`,
+L360: const response = await fetch(`${API_URL}/course/edit_course/${editCourse.courseID}`, {/course/add_course", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify(payload),
@@ -214,7 +258,18 @@ export default function Courses() {
               onClick={async () => {
                 try {
                   const response = await fetch(
-                    `http://localhost:5001/course/delete_course/${courseID}`,
+                    `import API_URL from '../apiConfig';
+
+// ... other imports
+
+// ... component code
+
+L111: fetch(`${API_URL}/course/get_courses`),
+L112: fetch(`${API_URL}/course/get_departments`),
+L113: fetch(`${API_URL}/course/get_programs`),
+L161: const response = await fetch(`${API_URL}/course/add_course`, {
+L217: `${API_URL}/course/delete_course/${courseID}`,
+L360: const response = await fetch(`${API_URL}/course/edit_course/${editCourse.courseID}`, {/course/delete_course/${courseID}`,
                     { method: "DELETE" }
                   );
                   if (response.ok) {
@@ -357,7 +412,18 @@ export default function Courses() {
         program: selectedPrograms.length > 0 ? selectedPrograms.map((id) => parseInt(id, 10)) : undefined,
       };
       Object.keys(payload).forEach(key => payload[key] === undefined || payload[key] === null || payload[key] === "" ? delete payload[key] : null);
-      const response = await fetch(`http://localhost:5001/course/edit_course/${editCourse.courseID}`, {
+      const response = await fetch(`import API_URL from '../apiConfig';
+
+// ... other imports
+
+// ... component code
+
+L111: fetch(`${API_URL}/course/get_courses`),
+L112: fetch(`${API_URL}/course/get_departments`),
+L113: fetch(`${API_URL}/course/get_programs`),
+L161: const response = await fetch(`${API_URL}/course/add_course`, {
+L217: `${API_URL}/course/delete_course/${courseID}`,
+L360: const response = await fetch(`${API_URL}/course/edit_course/${editCourse.courseID}`, {/course/edit_course/${editCourse.courseID}`, {
         method: "PUT",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify(payload),

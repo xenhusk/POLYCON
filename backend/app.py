@@ -37,7 +37,8 @@ import routes.socket_routes  # Register socket event handlers
 def create_app():
     app = Flask(__name__)
     # Enable CORS for all routes, allow all origins and credentials    # Apply CORS to all routes for the React frontend
-    CORS(app, resources={r"/*": {"origins": ["http://localhost:3000"]}}, supports_credentials=True)
+    allowed_origins = os.getenv('CORS_ALLOWED_ORIGINS', 'http://localhost:3000').split(',')
+    CORS(app, resources={r"/*": {"origins": allowed_origins}}, supports_credentials=True)
 
     app.config.from_object(Config)
 
@@ -94,14 +95,7 @@ def create_app():
     def uploaded_file(filename):
         return send_from_directory(app.config['UPLOADS_FOLDER'], filename)
 
-    # Explicitly set CORS headers on all responses
-    @app.after_request
-    def add_cors_headers(response):
-        response.headers['Access-Control-Allow-Origin'] = 'http://localhost:3000'
-        response.headers['Access-Control-Allow-Credentials'] = 'true'
-        response.headers['Access-Control-Allow-Headers'] = 'Content-Type,Authorization,X-Requested-With,Accept,Origin'
-        response.headers['Access-Control-Allow-Methods'] = 'GET, POST, PUT, DELETE, OPTIONS'
-        return response
+    
 
     return app
 

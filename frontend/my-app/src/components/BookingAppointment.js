@@ -110,7 +110,16 @@ function BookingAppointment({ closeModal, role: propRole }) {
       try {
         console.log(`Fetching students for search term: "${term}"`);
         const res = await fetch(
-          `http://localhost:5001/search/students?query=${encodeURIComponent(
+          `import API_URL from '../apiConfig';
+
+// ... other imports
+
+// ... component code
+
+L113: `${API_URL}/search/students?query=${encodeURIComponent(
+L187: `${API_URL}/search/teachers?query=${encodeURIComponent(
+L296: `${API_URL}/bookings/create_booking`,
+L367: `${API_URL}/bookings/create_booking`,/search/students?query=${encodeURIComponent(
             term.toLowerCase()
           )}&page=${page}`
         );
@@ -184,7 +193,16 @@ function BookingAppointment({ closeModal, role: propRole }) {
       try {
         setIsTeacherSearchLoading(true);
         const res = await fetch(
-          `http://localhost:5001/search/teachers?query=${encodeURIComponent(
+          `import API_URL from '../apiConfig';
+
+// ... other imports
+
+// ... component code
+
+L113: `${API_URL}/search/students?query=${encodeURIComponent(
+L187: `${API_URL}/search/teachers?query=${encodeURIComponent(
+L296: `${API_URL}/bookings/create_booking`,
+L367: `${API_URL}/bookings/create_booking`,/search/teachers?query=${encodeURIComponent(
             teacherSearchTerm.toLowerCase()
           )}`
         );
@@ -293,7 +311,16 @@ function BookingAppointment({ closeModal, role: propRole }) {
       console.log("Faculty bookingData:", bookingData);
       try {
         const response = await fetch(
-          "http://localhost:5001/bookings/create_booking",
+          "import API_URL from '../apiConfig';
+
+// ... other imports
+
+// ... component code
+
+L113: `${API_URL}/search/students?query=${encodeURIComponent(
+L187: `${API_URL}/search/teachers?query=${encodeURIComponent(
+L296: `${API_URL}/bookings/create_booking`,
+L367: `${API_URL}/bookings/create_booking`,/bookings/create_booking",
           {
             method: "POST",
             headers: { "Content-Type": "application/json" },
@@ -364,7 +391,16 @@ function BookingAppointment({ closeModal, role: propRole }) {
       
       try {
         const response = await fetch(
-          "http://localhost:5001/bookings/create_booking",
+          "import API_URL from '../apiConfig';
+
+// ... other imports
+
+// ... component code
+
+L113: `${API_URL}/search/students?query=${encodeURIComponent(
+L187: `${API_URL}/search/teachers?query=${encodeURIComponent(
+L296: `${API_URL}/bookings/create_booking`,
+L367: `${API_URL}/bookings/create_booking`,/bookings/create_booking",
           {
             method: "POST",
             headers: { "Content-Type": "application/json" },

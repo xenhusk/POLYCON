@@ -2,7 +2,13 @@ import { useQuery } from 'react-query';
 import { useGlobalState } from '../context/GlobalStateContext';
 
 const fetchCourses = async () => {
-  const response = await fetch('http://localhost:5001/course/get_courses');
+  const response = await fetch('import API_URL from '../apiConfig';
+
+// ... other imports
+
+// ... component code
+
+L5: const response = await fetch(`${API_URL}/course/get_courses`);/course/get_courses');
   if (!response.ok) throw new Error('Failed to fetch courses');
   return response.json();
 };

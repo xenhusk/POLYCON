@@ -100,7 +100,20 @@ function ComparativeAnalysis() {
     }
 
     // Fetch semester options
-    fetch("http://localhost:5001/semester/get_semester_options")
+    fetch("import API_URL from '../apiConfig';
+
+// ... other imports
+
+// ... component code
+
+L103: fetch(`${API_URL}/semester/get_semester_options`)
+L118: `${API_URL}/polycon-analysis/get_teacher_students?teacherID=${selectedTeacher}&schoolYear=${selectedSemester.school_year}&semester=${selectedSemester.semester}`
+L146: `${API_URL}/polycon-analysis/get_grades_by_period?${gradeParams}`
+L160: `${API_URL}/polycon-analysis/get_consultation_history?${sessionParams}`
+L175: `${API_URL}/polycon-analysis/get_teacher_students?teacherID=${tempTeacher}`
+L196: `${API_URL}/polycon-analysis/get_grades_by_period?${params}`
+L217: `${API_URL}/polycon-analysis/get_teacher_students?teacherID=${tempTeacher}&schoolYear=${tempSemester.school_year}&semester=${tempSemester.semester}`
+L287: fetch(`${API_URL}/comparative/compare_student`, {/semester/get_semester_options")
       .then((res) => res.json())
       .then((data) => {
         setSemesters(data);
@@ -115,7 +128,20 @@ function ComparativeAnalysis() {
   useEffect(() => {
     if (selectedTeacher && selectedSemester) {
       fetch(
-        `http://localhost:5001/polycon-analysis/get_teacher_students?teacherID=${selectedTeacher}&schoolYear=${selectedSemester.school_year}&semester=${selectedSemester.semester}`
+        `import API_URL from '../apiConfig';
+
+// ... other imports
+
+// ... component code
+
+L103: fetch(`${API_URL}/semester/get_semester_options`)
+L118: `${API_URL}/polycon-analysis/get_teacher_students?teacherID=${selectedTeacher}&schoolYear=${selectedSemester.school_year}&semester=${selectedSemester.semester}`
+L146: `${API_URL}/polycon-analysis/get_grades_by_period?${gradeParams}`
+L160: `${API_URL}/polycon-analysis/get_consultation_history?${sessionParams}`
+L175: `${API_URL}/polycon-analysis/get_teacher_students?teacherID=${tempTeacher}`
+L196: `${API_URL}/polycon-analysis/get_grades_by_period?${params}`
+L217: `${API_URL}/polycon-analysis/get_teacher_students?teacherID=${tempTeacher}&schoolYear=${tempSemester.school_year}&semester=${tempSemester.semester}`
+L287: fetch(`${API_URL}/comparative/compare_student`, {/polycon-analysis/get_teacher_students?teacherID=${selectedTeacher}&schoolYear=${selectedSemester.school_year}&semester=${selectedSemester.semester}`
       )
         .then((res) => res.json())
         .then((data) => setStudents(data))
@@ -143,7 +169,20 @@ function ComparativeAnalysis() {
       });
 
       fetch(
-        `http://localhost:5001/polycon-analysis/get_grades_by_period?${gradeParams}`
+        `import API_URL from '../apiConfig';
+
+// ... other imports
+
+// ... component code
+
+L103: fetch(`${API_URL}/semester/get_semester_options`)
+L118: `${API_URL}/polycon-analysis/get_teacher_students?teacherID=${selectedTeacher}&schoolYear=${selectedSemester.school_year}&semester=${selectedSemester.semester}`
+L146: `${API_URL}/polycon-analysis/get_grades_by_period?${gradeParams}`
+L160: `${API_URL}/polycon-analysis/get_consultation_history?${sessionParams}`
+L175: `${API_URL}/polycon-analysis/get_teacher_students?teacherID=${tempTeacher}`
+L196: `${API_URL}/polycon-analysis/get_grades_by_period?${params}`
+L217: `${API_URL}/polycon-analysis/get_teacher_students?teacherID=${tempTeacher}&schoolYear=${tempSemester.school_year}&semester=${tempSemester.semester}`
+L287: fetch(`${API_URL}/comparative/compare_student`, {/polycon-analysis/get_grades_by_period?${gradeParams}`
       )
         .then((res) => res.json())
         .then((data) => setGrades(data))
@@ -157,7 +196,20 @@ function ComparativeAnalysis() {
       });
 
       fetch(
-        `http://localhost:5001/polycon-analysis/get_consultation_history?${sessionParams}`
+        `import API_URL from '../apiConfig';
+
+// ... other imports
+
+// ... component code
+
+L103: fetch(`${API_URL}/semester/get_semester_options`)
+L118: `${API_URL}/polycon-analysis/get_teacher_students?teacherID=${selectedTeacher}&schoolYear=${selectedSemester.school_year}&semester=${selectedSemester.semester}`
+L146: `${API_URL}/polycon-analysis/get_grades_by_period?${gradeParams}`
+L160: `${API_URL}/polycon-analysis/get_consultation_history?${sessionParams}`
+L175: `${API_URL}/polycon-analysis/get_teacher_students?teacherID=${tempTeacher}`
+L196: `${API_URL}/polycon-analysis/get_grades_by_period?${params}`
+L217: `${API_URL}/polycon-analysis/get_teacher_students?teacherID=${tempTeacher}&schoolYear=${tempSemester.school_year}&semester=${tempSemester.semester}`
+L287: fetch(`${API_URL}/comparative/compare_student`, {/polycon-analysis/get_consultation_history?${sessionParams}`
       )
         .then((res) => res.json())
         .then((data) => setSessions(data))
@@ -172,7 +224,20 @@ function ComparativeAnalysis() {
   useEffect(() => {
     if (tempTeacher) {
       fetch(
-        `http://localhost:5001/polycon-analysis/get_teacher_students?teacherID=${tempTeacher}`
+        `import API_URL from '../apiConfig';
+
+// ... other imports
+
+// ... component code
+
+L103: fetch(`${API_URL}/semester/get_semester_options`)
+L118: `${API_URL}/polycon-analysis/get_teacher_students?teacherID=${selectedTeacher}&schoolYear=${selectedSemester.school_year}&semester=${selectedSemester.semester}`
+L146: `${API_URL}/polycon-analysis/get_grades_by_period?${gradeParams}`
+L160: `${API_URL}/polycon-analysis/get_consultation_history?${sessionParams}`
+L175: `${API_URL}/polycon-analysis/get_teacher_students?teacherID=${tempTeacher}`
+L196: `${API_URL}/polycon-analysis/get_grades_by_period?${params}`
+L217: `${API_URL}/polycon-analysis/get_teacher_students?teacherID=${tempTeacher}&schoolYear=${tempSemester.school_year}&semester=${tempSemester.semester}`
+L287: fetch(`${API_URL}/comparative/compare_student`, {/polycon-analysis/get_teacher_students?teacherID=${tempTeacher}`
       )
         .then((res) => res.json())
         .then((data) => setTempStudents(data))
@@ -193,7 +258,20 @@ function ComparativeAnalysis() {
         course: "",
       });
       fetch(
-        `http://localhost:5001/polycon-analysis/get_grades_by_period?${params}`
+        `import API_URL from '../apiConfig';
+
+// ... other imports
+
+// ... component code
+
+L103: fetch(`${API_URL}/semester/get_semester_options`)
+L118: `${API_URL}/polycon-analysis/get_teacher_students?teacherID=${selectedTeacher}&schoolYear=${selectedSemester.school_year}&semester=${selectedSemester.semester}`
+L146: `${API_URL}/polycon-analysis/get_grades_by_period?${gradeParams}`
+L160: `${API_URL}/polycon-analysis/get_consultation_history?${sessionParams}`
+L175: `${API_URL}/polycon-analysis/get_teacher_students?teacherID=${tempTeacher}`
+L196: `${API_URL}/polycon-analysis/get_grades_by_period?${params}`
+L217: `${API_URL}/polycon-analysis/get_teacher_students?teacherID=${tempTeacher}&schoolYear=${tempSemester.school_year}&semester=${tempSemester.semester}`
+L287: fetch(`${API_URL}/comparative/compare_student`, {/polycon-analysis/get_grades_by_period?${params}`
       )
         .then((res) => res.json())
         .then((data) => {
@@ -214,7 +292,20 @@ function ComparativeAnalysis() {
     if (tempTeacher && tempSemester) {
       setIsLoadingStudents(true);
       fetch(
-        `http://localhost:5001/polycon-analysis/get_teacher_students?teacherID=${tempTeacher}&schoolYear=${tempSemester.school_year}&semester=${tempSemester.semester}`
+        `import API_URL from '../apiConfig';
+
+// ... other imports
+
+// ... component code
+
+L103: fetch(`${API_URL}/semester/get_semester_options`)
+L118: `${API_URL}/polycon-analysis/get_teacher_students?teacherID=${selectedTeacher}&schoolYear=${selectedSemester.school_year}&semester=${selectedSemester.semester}`
+L146: `${API_URL}/polycon-analysis/get_grades_by_period?${gradeParams}`
+L160: `${API_URL}/polycon-analysis/get_consultation_history?${sessionParams}`
+L175: `${API_URL}/polycon-analysis/get_teacher_students?teacherID=${tempTeacher}`
+L196: `${API_URL}/polycon-analysis/get_grades_by_period?${params}`
+L217: `${API_URL}/polycon-analysis/get_teacher_students?teacherID=${tempTeacher}&schoolYear=${tempSemester.school_year}&semester=${tempSemester.semester}`
+L287: fetch(`${API_URL}/comparative/compare_student`, {/polycon-analysis/get_teacher_students?teacherID=${tempTeacher}&schoolYear=${tempSemester.school_year}&semester=${tempSemester.semester}`
       )
         .then((res) => res.json())
         .then((data) => {
@@ -284,7 +375,20 @@ function ComparativeAnalysis() {
         grades_by_period: grades, // send entire array of course grades
         academic_events: academicEvents,
       };
-      fetch("http://localhost:5001/comparative/compare_student", {
+      fetch("import API_URL from '../apiConfig';
+
+// ... other imports
+
+// ... component code
+
+L103: fetch(`${API_URL}/semester/get_semester_options`)
+L118: `${API_URL}/polycon-analysis/get_teacher_students?teacherID=${selectedTeacher}&schoolYear=${selectedSemester.school_year}&semester=${selectedSemester.semester}`
+L146: `${API_URL}/polycon-analysis/get_grades_by_period?${gradeParams}`
+L160: `${API_URL}/polycon-analysis/get_consultation_history?${sessionParams}`
+L175: `${API_URL}/polycon-analysis/get_teacher_students?teacherID=${tempTeacher}`
+L196: `${API_URL}/polycon-analysis/get_grades_by_period?${params}`
+L217: `${API_URL}/polycon-analysis/get_teacher_students?teacherID=${tempTeacher}&schoolYear=${tempSemester.school_year}&semester=${tempSemester.semester}`
+L287: fetch(`${API_URL}/comparative/compare_student`, {/comparative/compare_student", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify(payload),

@@ -98,7 +98,16 @@ function AppointmentsCalendar() {
             }
         }
         try {
-            const response = await fetch(`http://localhost:5001/bookings/get_bookings?role=student&userID=${studentID}&status=confirmed`, {
+            const response = await fetch(`import API_URL from '../apiConfig';
+
+// ... other imports
+
+// ... component code
+
+L101: const response = await fetch(`${API_URL}/bookings/get_bookings?role=student&userID=${studentID}&status=confirmed`, {
+L123: const response = await fetch(`${API_URL}/account/get_user_role?email=${storedEmail}`);
+L143: const response = await fetch(`${API_URL}/bookings/get_bookings?role=student&userID=${studentID}&status=confirmed`, {
+L167: const response = await fetch(`${API_URL}/bookings/get_bookings?role=faculty&userID=${teacherID}&status=confirmed`);/bookings/get_bookings?role=student&userID=${studentID}&status=confirmed`, {
                 cache: 'force-cache'
             });
             const data = await response.json();
@@ -120,7 +129,16 @@ function AppointmentsCalendar() {
             const storedEmail = localStorage.getItem('userEmail');
             if (storedEmail) {
                 try {
-                    const response = await fetch(`http://localhost:5001/account/get_user_role?email=${storedEmail}`);
+                    const response = await fetch(`import API_URL from '../apiConfig';
+
+// ... other imports
+
+// ... component code
+
+L101: const response = await fetch(`${API_URL}/bookings/get_bookings?role=student&userID=${studentID}&status=confirmed`, {
+L123: const response = await fetch(`${API_URL}/account/get_user_role?email=${storedEmail}`);
+L143: const response = await fetch(`${API_URL}/bookings/get_bookings?role=student&userID=${studentID}&status=confirmed`, {
+L167: const response = await fetch(`${API_URL}/bookings/get_bookings?role=faculty&userID=${teacherID}&status=confirmed`);/account/get_user_role?email=${storedEmail}`);
                     const data = await response.json();
                     setUserRole(data.role);
                     console.log('User role:', data.role);
@@ -140,7 +158,16 @@ function AppointmentsCalendar() {
                 if (studentID) {
                     try {
                         // Updated endpoint: add booking prefix to URL
-                        const response = await fetch(`http://localhost:5001/bookings/get_bookings?role=student&userID=${studentID}&status=confirmed`, {
+                        const response = await fetch(`import API_URL from '../apiConfig';
+
+// ... other imports
+
+// ... component code
+
+L101: const response = await fetch(`${API_URL}/bookings/get_bookings?role=student&userID=${studentID}&status=confirmed`, {
+L123: const response = await fetch(`${API_URL}/account/get_user_role?email=${storedEmail}`);
+L143: const response = await fetch(`${API_URL}/bookings/get_bookings?role=student&userID=${studentID}&status=confirmed`, {
+L167: const response = await fetch(`${API_URL}/bookings/get_bookings?role=faculty&userID=${teacherID}&status=confirmed`);/bookings/get_bookings?role=student&userID=${studentID}&status=confirmed`, {
                             cache: 'force-cache'
                         });
                         const bookings = await response.json();
@@ -164,7 +191,16 @@ function AppointmentsCalendar() {
                 if (teacherID) {
                     try {
                         // Updated endpoint: add booking prefix to URL
-                        const response = await fetch(`http://localhost:5001/bookings/get_bookings?role=faculty&userID=${teacherID}&status=confirmed`);
+                        const response = await fetch(`import API_URL from '../apiConfig';
+
+// ... other imports
+
+// ... component code
+
+L101: const response = await fetch(`${API_URL}/bookings/get_bookings?role=student&userID=${studentID}&status=confirmed`, {
+L123: const response = await fetch(`${API_URL}/account/get_user_role?email=${storedEmail}`);
+L143: const response = await fetch(`${API_URL}/bookings/get_bookings?role=student&userID=${studentID}&status=confirmed`, {
+L167: const response = await fetch(`${API_URL}/bookings/get_bookings?role=faculty&userID=${teacherID}&status=confirmed`);/bookings/get_bookings?role=faculty&userID=${teacherID}&status=confirmed`);
                         const bookings = await response.json();
                         const events = bookings.map(booking => {
                             const studentNamesString = booking.studentNames.join(", ");

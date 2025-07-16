@@ -32,7 +32,13 @@ const Login = ({ onLoginSuccess, onSwitchToSignup }) => {
     }
   
     try {
-      const response = await fetch("http://localhost:5001/account/login", {
+      const response = await fetch("import API_URL from '../apiConfig';
+
+// ... other imports
+
+// ... component code
+
+L35: const response = await fetch(`${API_URL}/account/login`, {/account/login", {
         method: "POST",
         headers: {
           "Content-Type": "application/json",

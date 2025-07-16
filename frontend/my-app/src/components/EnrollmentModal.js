@@ -22,7 +22,15 @@ function EnrollmentModal({ closeModal }) {
       try {
         // Use the new enrollment_students endpoint instead of the regular students endpoint
         const res = await fetch(
-          `http://localhost:5001/search/enrollment_students?query=${encodeURIComponent(
+          `import API_URL from '../apiConfig';
+
+// ... other imports
+
+// ... component code
+
+L25: `${API_URL}/search/enrollment_students?query=${encodeURIComponent(
+L67: const response = await fetch(`${API_URL}/enrollment/enroll`, {
+L121: const response = await fetch(`${API_URL}/user/get_user?idNumber=${teacherID}`);/search/enrollment_students?query=${encodeURIComponent(
             term.toLowerCase()
           )}`
         );
@@ -64,7 +72,15 @@ function EnrollmentModal({ closeModal }) {
     }
     setIsLoading(true);
     try {
-      const response = await fetch("http://localhost:5001/enrollment/enroll", {
+      const response = await fetch("import API_URL from '../apiConfig';
+
+// ... other imports
+
+// ... component code
+
+L25: `${API_URL}/search/enrollment_students?query=${encodeURIComponent(
+L67: const response = await fetch(`${API_URL}/enrollment/enroll`, {
+L121: const response = await fetch(`${API_URL}/user/get_user?idNumber=${teacherID}`);/enrollment/enroll", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
@@ -118,7 +134,15 @@ function EnrollmentModal({ closeModal }) {
         // Fetch teacher status to decide on enrollment action
         if (teacherID) {
           // Ensure teacherID is not null or undefined before fetching
-          const response = await fetch(`http://localhost:5001/user/get_user?idNumber=${teacherID}`);
+          const response = await fetch(`import API_URL from '../apiConfig';
+
+// ... other imports
+
+// ... component code
+
+L25: `${API_URL}/search/enrollment_students?query=${encodeURIComponent(
+L67: const response = await fetch(`${API_URL}/enrollment/enroll`, {
+L121: const response = await fetch(`${API_URL}/user/get_user?idNumber=${teacherID}`);/user/get_user?idNumber=${teacherID}`);
           if (!response.ok) throw new Error('Network response was not ok');
           const data = await response.json();
           if (!data.isActive) {

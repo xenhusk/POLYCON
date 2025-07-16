@@ -24,7 +24,13 @@ const ForgotPassword = ({ onClose }) => {
     }
 
     try {
-      const response = await fetch("http://localhost:5001/account/reset_password_with_email", {
+      const response = await fetch("import API_URL from '../apiConfig';
+
+// ... other imports
+
+// ... component code
+
+L27: const response = await fetch(`${API_URL}/account/reset_password_with_email`, {/account/reset_password_with_email", {
         method: "POST",
         headers: {
           "Content-Type": "application/json",

@@ -25,7 +25,19 @@ const formatProgramWithSection = (student) => {
 const fetchUserDetails = async (idNumber) => {
   try {
     console.log(`Fetching user details for ID: ${idNumber}`);
-    const response = await fetch(`http://localhost:5001/user/get_user?idNumber=${encodeURIComponent(idNumber)}`);
+    const response = await fetch(`import API_URL from '../apiConfig';
+
+// ... other imports
+
+// ... component code
+
+L28: const response = await fetch(`${API_URL}/user/get_user?idNumber=${encodeURIComponent(idNumber)}`);
+L84: `${API_URL}/consultation/get_session?sessionID=${sessionID}`
+L256: `${API_URL}/consultation/transcribe`,
+L351: let url = `${API_URL}/consultation/store_consultation`;
+L390: `${API_URL}/consultation/summarize`,
+L413: `${API_URL}/consultation/identify_roles`,
+L436: `${API_URL}/consultation/store_consultation`,/user/get_user?idNumber=${encodeURIComponent(idNumber)}`);
     if (!response.ok) throw new Error("Failed to fetch user details");
     const data = await response.json();
     console.log(`User details received for ${idNumber}:`, data);
@@ -81,7 +93,19 @@ const Session = () => {
       const fetchSessionDetails = async (sessionID) => {
         try {
           const response = await fetch(
-            `http://localhost:5001/consultation/get_session?sessionID=${sessionID}`
+            `import API_URL from '../apiConfig';
+
+// ... other imports
+
+// ... component code
+
+L28: const response = await fetch(`${API_URL}/user/get_user?idNumber=${encodeURIComponent(idNumber)}`);
+L84: `${API_URL}/consultation/get_session?sessionID=${sessionID}`
+L256: `${API_URL}/consultation/transcribe`,
+L351: let url = `${API_URL}/consultation/store_consultation`;
+L390: `${API_URL}/consultation/summarize`,
+L413: `${API_URL}/consultation/identify_roles`,
+L436: `${API_URL}/consultation/store_consultation`,/consultation/get_session?sessionID=${sessionID}`
           );
           const data = await response.json();
           if (response.ok) {            const teacherIdNum = data.teacher_id.split("/").pop();
@@ -253,7 +277,19 @@ const Session = () => {
     console.log(`Calculated speaker count: ${expectedSpeakers}`);
 
     const response = await fetch(
-      "http://localhost:5001/consultation/transcribe",
+      "import API_URL from '../apiConfig';
+
+// ... other imports
+
+// ... component code
+
+L28: const response = await fetch(`${API_URL}/user/get_user?idNumber=${encodeURIComponent(idNumber)}`);
+L84: `${API_URL}/consultation/get_session?sessionID=${sessionID}`
+L256: `${API_URL}/consultation/transcribe`,
+L351: let url = `${API_URL}/consultation/store_consultation`;
+L390: `${API_URL}/consultation/summarize`,
+L413: `${API_URL}/consultation/identify_roles`,
+L436: `${API_URL}/consultation/store_consultation`,/consultation/transcribe",
       {
         method: "POST",
         body: formData,
@@ -348,7 +384,19 @@ const Session = () => {
 
     try {
       // Append booking_id as a query parameter if available.
-      let url = "http://localhost:5001/consultation/store_consultation";
+      let url = "import API_URL from '../apiConfig';
+
+// ... other imports
+
+// ... component code
+
+L28: const response = await fetch(`${API_URL}/user/get_user?idNumber=${encodeURIComponent(idNumber)}`);
+L84: `${API_URL}/consultation/get_session?sessionID=${sessionID}`
+L256: `${API_URL}/consultation/transcribe`,
+L351: let url = `${API_URL}/consultation/store_consultation`;
+L390: `${API_URL}/consultation/summarize`,
+L413: `${API_URL}/consultation/identify_roles`,
+L436: `${API_URL}/consultation/store_consultation`,/consultation/store_consultation";
       if (bookingID) {
         url += `?booking_id=${bookingID}`;
         console.log("🔍 Debug - Using booking_id:", bookingID); // Add debug log
@@ -387,7 +435,19 @@ const Session = () => {
 
   const generateSummary = async (transcription, notes) => {
     const response = await fetch(
-      "http://localhost:5001/consultation/summarize",
+      "import API_URL from '../apiConfig';
+
+// ... other imports
+
+// ... component code
+
+L28: const response = await fetch(`${API_URL}/user/get_user?idNumber=${encodeURIComponent(idNumber)}`);
+L84: `${API_URL}/consultation/get_session?sessionID=${sessionID}`
+L256: `${API_URL}/consultation/transcribe`,
+L351: let url = `${API_URL}/consultation/store_consultation`;
+L390: `${API_URL}/consultation/summarize`,
+L413: `${API_URL}/consultation/identify_roles`,
+L436: `${API_URL}/consultation/store_consultation`,/consultation/summarize",
       {
         method: "POST",
         headers: { "Content-Type": "application/json" },
@@ -410,7 +470,19 @@ const Session = () => {
 
   const identifyRoles = async (transcription) => {
     const response = await fetch(
-      "http://localhost:5001/consultation/identify_roles",
+      "import API_URL from '../apiConfig';
+
+// ... other imports
+
+// ... component code
+
+L28: const response = await fetch(`${API_URL}/user/get_user?idNumber=${encodeURIComponent(idNumber)}`);
+L84: `${API_URL}/consultation/get_session?sessionID=${sessionID}`
+L256: `${API_URL}/consultation/transcribe`,
+L351: let url = `${API_URL}/consultation/store_consultation`;
+L390: `${API_URL}/consultation/summarize`,
+L413: `${API_URL}/consultation/identify_roles`,
+L436: `${API_URL}/consultation/store_consultation`,/consultation/identify_roles",
       {
         method: "POST",
         headers: { "Content-Type": "application/json" },
@@ -433,7 +505,19 @@ const Session = () => {
       const audioUploadResponse = await uploadAudio(audioBlob);
       const audioFilePath = audioUploadResponse.audioUrl;
       const response = await fetch(
-        "http://localhost:5001/consultation/store_consultation",
+        "import API_URL from '../apiConfig';
+
+// ... other imports
+
+// ... component code
+
+L28: const response = await fetch(`${API_URL}/user/get_user?idNumber=${encodeURIComponent(idNumber)}`);
+L84: `${API_URL}/consultation/get_session?sessionID=${sessionID}`
+L256: `${API_URL}/consultation/transcribe`,
+L351: let url = `${API_URL}/consultation/store_consultation`;
+L390: `${API_URL}/consultation/summarize`,
+L413: `${API_URL}/consultation/identify_roles`,
+L436: `${API_URL}/consultation/store_consultation`,/consultation/store_consultation",
         {
           method: "POST",
           headers: { "Content-Type": "application/json" },

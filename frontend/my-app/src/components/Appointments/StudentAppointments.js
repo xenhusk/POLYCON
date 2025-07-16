@@ -15,7 +15,13 @@ const StudentAppointments = () => {
       }
       
       setIsLoading(true);
-      const response = await fetch(`http://localhost:5001/bookings/get_bookings?role=student&userID=${userID}&status=confirmed`);
+      const response = await fetch(`import API_URL from '../../apiConfig';
+
+// ... other imports
+
+// ... component code
+
+L18: const response = await fetch(`${API_URL}/bookings/get_bookings?role=student&userID=${userID}&status=confirmed`);/bookings/get_bookings?role=student&userID=${userID}&status=confirmed`);
       
       if (!response.ok) throw new Error('Failed to fetch appointments');
       

@@ -14,7 +14,14 @@ const GradeViewer = () => {
   useEffect(() => {
     const fetchLatestFilter = async () => {
       try {
-        const response = await fetch('http://localhost:5001/semester/get_latest_filter');
+        const response = await fetch('import API_URL from '../apiConfig';
+
+// ... other imports
+
+// ... component code
+
+L17: const response = await fetch(`${API_URL}/semester/get_latest_filter`);
+L69: const response = await fetch(`${API_URL}/grade/get_student_grades?${queryParams}`);/semester/get_latest_filter');
         if (response.ok) {
           const data = await response.json();
           setSchoolYear(data.school_year);
@@ -66,7 +73,14 @@ const GradeViewer = () => {
          period: period || ""
       }).toString();
 
-      const response = await fetch(`http://localhost:5001/grade/get_student_grades?${queryParams}`);
+      const response = await fetch(`import API_URL from '../apiConfig';
+
+// ... other imports
+
+// ... component code
+
+L17: const response = await fetch(`${API_URL}/semester/get_latest_filter`);
+L69: const response = await fetch(`${API_URL}/grade/get_student_grades?${queryParams}`);/grade/get_student_grades?${queryParams}`);
       const data = await response.json();
 
       if (response.ok) {

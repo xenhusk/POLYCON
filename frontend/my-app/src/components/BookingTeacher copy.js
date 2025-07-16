@@ -19,7 +19,20 @@ export function startSession(appointment) {
     );
     return;
   }
-  fetch("http://localhost:5001/consultation/start_session", {
+  fetch("import API_URL from '../apiConfig';
+
+// ... other imports
+
+// ... component code
+
+L22: fetch(`${API_URL}/consultation/start_session`, {
+L108: `${API_URL}/bookings/get_students`
+L120: `${API_URL}/bookings/get_user?userID=${userID}`
+L141: fetch(`${API_URL}/account/departments`)
+L164: `${API_URL}/bookings/get_teacher_bookings?teacherID=${teacherID}`
+L229: `${API_URL}/bookings/create_booking`,
+L256: `${API_URL}/bookings/confirm_booking`,
+L279: `${API_URL}/bookings/cancel_booking`,/consultation/start_session", {
     method: "POST",
     headers: { "Content-Type": "application/json" },
     body: JSON.stringify({
@@ -105,7 +118,20 @@ function BookingTeacher() {
   async function fetchStudents() {
     try {
       const response = await fetch(
-        "http://localhost:5001/bookings/get_students"
+        "import API_URL from '../apiConfig';
+
+// ... other imports
+
+// ... component code
+
+L22: fetch(`${API_URL}/consultation/start_session`, {
+L108: `${API_URL}/bookings/get_students`
+L120: `${API_URL}/bookings/get_user?userID=${userID}`
+L141: fetch(`${API_URL}/account/departments`)
+L164: `${API_URL}/bookings/get_teacher_bookings?teacherID=${teacherID}`
+L229: `${API_URL}/bookings/create_booking`,
+L256: `${API_URL}/bookings/confirm_booking`,
+L279: `${API_URL}/bookings/cancel_booking`,/bookings/get_students"
       );
       const data = await response.json();
       setStudents(data);
@@ -117,7 +143,20 @@ function BookingTeacher() {
   async function fetchProfileDetails(userID) {
     try {
       const response = await fetch(
-        `http://localhost:5001/bookings/get_user?userID=${userID}`
+        `import API_URL from '../apiConfig';
+
+// ... other imports
+
+// ... component code
+
+L22: fetch(`${API_URL}/consultation/start_session`, {
+L108: `${API_URL}/bookings/get_students`
+L120: `${API_URL}/bookings/get_user?userID=${userID}`
+L141: fetch(`${API_URL}/account/departments`)
+L164: `${API_URL}/bookings/get_teacher_bookings?teacherID=${teacherID}`
+L229: `${API_URL}/bookings/create_booking`,
+L256: `${API_URL}/bookings/confirm_booking`,
+L279: `${API_URL}/bookings/cancel_booking`,/bookings/get_user?userID=${userID}`
       );
       const data = await response.json();
       setProfileDetails({
@@ -138,7 +177,20 @@ function BookingTeacher() {
       profileDetails.department.startsWith("/departments/")
     ) {
       const deptID = profileDetails.department.split("/").pop();
-      fetch(`http://localhost:5001/account/departments`)
+      fetch(`import API_URL from '../apiConfig';
+
+// ... other imports
+
+// ... component code
+
+L22: fetch(`${API_URL}/consultation/start_session`, {
+L108: `${API_URL}/bookings/get_students`
+L120: `${API_URL}/bookings/get_user?userID=${userID}`
+L141: fetch(`${API_URL}/account/departments`)
+L164: `${API_URL}/bookings/get_teacher_bookings?teacherID=${teacherID}`
+L229: `${API_URL}/bookings/create_booking`,
+L256: `${API_URL}/bookings/confirm_booking`,
+L279: `${API_URL}/bookings/cancel_booking`,/account/departments`)
         .then((response) => response.json())
         .then((data) => {
           const dept = data.find((item) => item.departmentID === deptID);
@@ -161,7 +213,20 @@ function BookingTeacher() {
 
     try {
       const response = await fetch(
-        `http://localhost:5001/bookings/get_teacher_bookings?teacherID=${teacherID}`
+        `import API_URL from '../apiConfig';
+
+// ... other imports
+
+// ... component code
+
+L22: fetch(`${API_URL}/consultation/start_session`, {
+L108: `${API_URL}/bookings/get_students`
+L120: `${API_URL}/bookings/get_user?userID=${userID}`
+L141: fetch(`${API_URL}/account/departments`)
+L164: `${API_URL}/bookings/get_teacher_bookings?teacherID=${teacherID}`
+L229: `${API_URL}/bookings/create_booking`,
+L256: `${API_URL}/bookings/confirm_booking`,
+L279: `${API_URL}/bookings/cancel_booking`,/bookings/get_teacher_bookings?teacherID=${teacherID}`
       );
       const bookings = await response.json();
 
@@ -226,7 +291,20 @@ function BookingTeacher() {
 
     try {
       const response = await fetch(
-        "http://localhost:5001/bookings/create_booking",
+        "import API_URL from '../apiConfig';
+
+// ... other imports
+
+// ... component code
+
+L22: fetch(`${API_URL}/consultation/start_session`, {
+L108: `${API_URL}/bookings/get_students`
+L120: `${API_URL}/bookings/get_user?userID=${userID}`
+L141: fetch(`${API_URL}/account/departments`)
+L164: `${API_URL}/bookings/get_teacher_bookings?teacherID=${teacherID}`
+L229: `${API_URL}/bookings/create_booking`,
+L256: `${API_URL}/bookings/confirm_booking`,
+L279: `${API_URL}/bookings/cancel_booking`,/bookings/create_booking",
         {
           method: "POST",
           headers: { "Content-Type": "application/json" },
@@ -253,7 +331,20 @@ function BookingTeacher() {
 
     try {
       const response = await fetch(
-        "http://localhost:5001/bookings/confirm_booking",
+        "import API_URL from '../apiConfig';
+
+// ... other imports
+
+// ... component code
+
+L22: fetch(`${API_URL}/consultation/start_session`, {
+L108: `${API_URL}/bookings/get_students`
+L120: `${API_URL}/bookings/get_user?userID=${userID}`
+L141: fetch(`${API_URL}/account/departments`)
+L164: `${API_URL}/bookings/get_teacher_bookings?teacherID=${teacherID}`
+L229: `${API_URL}/bookings/create_booking`,
+L256: `${API_URL}/bookings/confirm_booking`,
+L279: `${API_URL}/bookings/cancel_booking`,/bookings/confirm_booking",
         {
           method: "POST",
           headers: { "Content-Type": "application/json" },
@@ -276,7 +367,20 @@ function BookingTeacher() {
   async function cancelBooking(bookingID) {
     try {
       const response = await fetch(
-        "http://localhost:5001/bookings/cancel_booking",
+        "import API_URL from '../apiConfig';
+
+// ... other imports
+
+// ... component code
+
+L22: fetch(`${API_URL}/consultation/start_session`, {
+L108: `${API_URL}/bookings/get_students`
+L120: `${API_URL}/bookings/get_user?userID=${userID}`
+L141: fetch(`${API_URL}/account/departments`)
+L164: `${API_URL}/bookings/get_teacher_bookings?teacherID=${teacherID}`
+L229: `${API_URL}/bookings/create_booking`,
+L256: `${API_URL}/bookings/confirm_booking`,
+L279: `${API_URL}/bookings/cancel_booking`,/bookings/cancel_booking",
         {
           method: "POST",
           headers: { "Content-Type": "application/json" },

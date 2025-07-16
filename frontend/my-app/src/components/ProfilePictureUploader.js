@@ -24,7 +24,14 @@ function ProfilePictureUploader({ initialFile, onClose, onSuccess }) {
     const fetchCurrentProfilePic = async () => {
       const userEmail = localStorage.getItem('userEmail');
       try {
-        const response = await fetch(`http://localhost:5001/user/get_user?email=${userEmail}`);
+        const response = await fetch(`import API_URL from '../apiConfig';
+
+// ... other imports
+
+// ... component code
+
+L27: const response = await fetch(`${API_URL}/user/get_user?email=${userEmail}`);
+L126: const response = await fetch(`${API_URL}/profile/upload_profile_picture`, {/user/get_user?email=${userEmail}`);
         const userData = await response.json();
         if (userData.profile_picture) {
           setCurrentProfilePic(userData.profile_picture);
@@ -123,7 +130,14 @@ function ProfilePictureUploader({ initialFile, onClose, onSuccess }) {
         });
       }, 200);
       
-      const response = await fetch('http://localhost:5001/profile/upload_profile_picture', {
+      const response = await fetch('import API_URL from '../apiConfig';
+
+// ... other imports
+
+// ... component code
+
+L27: const response = await fetch(`${API_URL}/user/get_user?email=${userEmail}`);
+L126: const response = await fetch(`${API_URL}/profile/upload_profile_picture`, {/profile/upload_profile_picture', {
         method: 'POST',
         body: formData,
       });

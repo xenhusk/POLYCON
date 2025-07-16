@@ -18,7 +18,13 @@ function TeacherAppointments() {
     if (!teacherID) return;
     
     try {
-      const response = await fetch(`http://localhost:5001/bookings/get_bookings?role=faculty&userID=${teacherID}&status=pending`);
+      const response = await fetch(`import API_URL from '../apiConfig';
+
+// ... other imports
+
+// ... component code
+
+L21: const response = await fetch(`${API_URL}/bookings/get_bookings?role=faculty&userID=${teacherID}&status=pending`);/bookings/get_bookings?role=faculty&userID=${teacherID}&status=pending`);
       const data = await response.json();
       if (Array.isArray(data)) {
         setAppointments(data);

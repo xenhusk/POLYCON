@@ -77,11 +77,6 @@
   color: #0065A8 !important; /* Change to sidebar color */
 }
 
-/* Remove these styles since we're using Tailwind classes */
-.sidebar-item.active {
-  /* Remove styles */
-}
-
 /* Add new style for active text */
 .sidebar-item.active .sidebar-label {
   color: #0065A8 !important; /* Match sidebar color */
@@ -213,4 +208,3 @@
   fill: #057DCD !important;
 }
 
-/* Keep other existing styles */

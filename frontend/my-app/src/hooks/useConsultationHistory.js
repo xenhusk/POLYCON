@@ -6,7 +6,13 @@ const fetchConsultationHistory = async ({ userRole, userId }) => {
   
   // Use idNumber parameter only to ensure backend matches id_number correctly
   const response = await fetch(
-    `http://localhost:5001/consultation/get_history?role=${userRole}&idNumber=${userId}`
+    `import API_URL from '../apiConfig';
+
+// ... other imports
+
+// ... component code
+
+L9: `${API_URL}/consultation/get_history?role=${userRole}&idNumber=${userId}`/consultation/get_history?role=${userRole}&idNumber=${userId}`
   );
   if (!response.ok) throw new Error('Failed to fetch consultation history');
   return response.json();

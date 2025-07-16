@@ -49,7 +49,15 @@ const Signup = ({ onSwitchToLogin }) => {
     const fetchDepartments = async () => {
       try {
         const departmentsRes = await fetch(
-          "http://localhost:5001/account/departments"
+          "import API_URL from '../apiConfig';
+
+// ... other imports
+
+// ... component code
+
+L52: `${API_URL}/account/departments`
+L86: `${API_URL}/account/programs?departmentID=${departmentID}`
+L153: const response = await fetch(`${API_URL}/account/signup`, {/account/departments"
         );
         const departmentsData = await departmentsRes.json();
         setDepartments(departmentsData);
@@ -83,7 +91,15 @@ const Signup = ({ onSwitchToLogin }) => {
   const fetchPrograms = async (departmentID) => {
     try {
       const programsRes = await fetch(
-        `http://localhost:5001/account/programs?departmentID=${departmentID}`
+        `import API_URL from '../apiConfig';
+
+// ... other imports
+
+// ... component code
+
+L52: `${API_URL}/account/departments`
+L86: `${API_URL}/account/programs?departmentID=${departmentID}`
+L153: const response = await fetch(`${API_URL}/account/signup`, {/account/programs?departmentID=${departmentID}`
       );
       const programsData = await programsRes.json();
       setFilteredPrograms(programsData);
@@ -150,7 +166,15 @@ const Signup = ({ onSwitchToLogin }) => {
     }
 
     try {
-      const response = await fetch("http://localhost:5001/account/signup", {
+      const response = await fetch("import API_URL from '../apiConfig';
+
+// ... other imports
+
+// ... component code
+
+L52: `${API_URL}/account/departments`
+L86: `${API_URL}/account/programs?departmentID=${departmentID}`
+L153: const response = await fetch(`${API_URL}/account/signup`, {/account/signup", {
         method: "POST",
         headers: {
           "Content-Type": "application/json",

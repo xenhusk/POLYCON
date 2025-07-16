@@ -55,7 +55,18 @@ export default function usePreload(isLoggedIn) {
         queryClient.prefetchQuery({
           queryKey: ['userData', userEmail],
           queryFn: async () => {
-            const res = await fetch(`http://localhost:5001/user/get_user?email=${userEmail}`);
+            const res = await fetch(`import API_URL from '../apiConfig';
+
+// ... other imports
+
+// ... component code
+
+L58: const res = await fetch(`${API_URL}/user/get_user?email=${userEmail}`);
+L71: const res = await fetch(`${API_URL}/bookings/get_bookings?role=${userRole}&userID=${userId}&status=confirmed`);
+L84: const res = await fetch(`${API_URL}/grade/get_student_grades?studentID=${studentId}&schoolYear=&semester=&period=`);
+L96: const res = await fetch(`${API_URL}/course/get_courses`);
+L109: `${API_URL}/consultation/get_history?role=${userRole}&idNumber=${userId}`
+L123: const res = await fetch(`${API_URL}/enrollment/status?studentID=${studentId}`);/user/get_user?email=${userEmail}`);
             if (!res.ok) throw new Error('Failed to fetch user data');
             const data = await res.json();
             return data;
@@ -68,7 +79,18 @@ export default function usePreload(isLoggedIn) {
           queryClient.prefetchQuery({
             queryKey: ['bookings', userRole, userId, 'confirmed'],
             queryFn: async () => {
-              const res = await fetch(`http://localhost:5001/bookings/get_bookings?role=${userRole}&userID=${userId}&status=confirmed`);
+              const res = await fetch(`import API_URL from '../apiConfig';
+
+// ... other imports
+
+// ... component code
+
+L58: const res = await fetch(`${API_URL}/user/get_user?email=${userEmail}`);
+L71: const res = await fetch(`${API_URL}/bookings/get_bookings?role=${userRole}&userID=${userId}&status=confirmed`);
+L84: const res = await fetch(`${API_URL}/grade/get_student_grades?studentID=${studentId}&schoolYear=&semester=&period=`);
+L96: const res = await fetch(`${API_URL}/course/get_courses`);
+L109: `${API_URL}/consultation/get_history?role=${userRole}&idNumber=${userId}`
+L123: const res = await fetch(`${API_URL}/enrollment/status?studentID=${studentId}`);/bookings/get_bookings?role=${userRole}&userID=${userId}&status=confirmed`);
               if (!res.ok) throw new Error('Failed to fetch bookings');
               return res.json();
             },
@@ -81,7 +103,18 @@ export default function usePreload(isLoggedIn) {
           queryClient.prefetchQuery({
             queryKey: ['grades', studentId],
             queryFn: async () => {
-              const res = await fetch(`http://localhost:5001/grade/get_student_grades?studentID=${studentId}&schoolYear=&semester=&period=`);
+              const res = await fetch(`import API_URL from '../apiConfig';
+
+// ... other imports
+
+// ... component code
+
+L58: const res = await fetch(`${API_URL}/user/get_user?email=${userEmail}`);
+L71: const res = await fetch(`${API_URL}/bookings/get_bookings?role=${userRole}&userID=${userId}&status=confirmed`);
+L84: const res = await fetch(`${API_URL}/grade/get_student_grades?studentID=${studentId}&schoolYear=&semester=&period=`);
+L96: const res = await fetch(`${API_URL}/course/get_courses`);
+L109: `${API_URL}/consultation/get_history?role=${userRole}&idNumber=${userId}`
+L123: const res = await fetch(`${API_URL}/enrollment/status?studentID=${studentId}`);/grade/get_student_grades?studentID=${studentId}&schoolYear=&semester=&period=`);
               if (!res.ok) throw new Error('Failed to fetch grades');
               return res.json();
             },
@@ -93,7 +126,18 @@ export default function usePreload(isLoggedIn) {
         queryClient.prefetchQuery({
           queryKey: ['courses'],
           queryFn: async () => {
-            const res = await fetch(`http://localhost:5001/course/get_courses`);
+            const res = await fetch(`import API_URL from '../apiConfig';
+
+// ... other imports
+
+// ... component code
+
+L58: const res = await fetch(`${API_URL}/user/get_user?email=${userEmail}`);
+L71: const res = await fetch(`${API_URL}/bookings/get_bookings?role=${userRole}&userID=${userId}&status=confirmed`);
+L84: const res = await fetch(`${API_URL}/grade/get_student_grades?studentID=${studentId}&schoolYear=&semester=&period=`);
+L96: const res = await fetch(`${API_URL}/course/get_courses`);
+L109: `${API_URL}/consultation/get_history?role=${userRole}&idNumber=${userId}`
+L123: const res = await fetch(`${API_URL}/enrollment/status?studentID=${studentId}`);/course/get_courses`);
             if (!res.ok) throw new Error('Failed to fetch courses');
             return res.json();
           },
@@ -106,7 +150,18 @@ export default function usePreload(isLoggedIn) {
             queryFn: async () => {
               // Use idNumber param only for backend to filter by id_number
               const res = await fetch(
-                `http://localhost:5001/consultation/get_history?role=${userRole}&idNumber=${userId}`
+                `import API_URL from '../apiConfig';
+
+// ... other imports
+
+// ... component code
+
+L58: const res = await fetch(`${API_URL}/user/get_user?email=${userEmail}`);
+L71: const res = await fetch(`${API_URL}/bookings/get_bookings?role=${userRole}&userID=${userId}&status=confirmed`);
+L84: const res = await fetch(`${API_URL}/grade/get_student_grades?studentID=${studentId}&schoolYear=&semester=&period=`);
+L96: const res = await fetch(`${API_URL}/course/get_courses`);
+L109: `${API_URL}/consultation/get_history?role=${userRole}&idNumber=${userId}`
+L123: const res = await fetch(`${API_URL}/enrollment/status?studentID=${studentId}`);/consultation/get_history?role=${userRole}&idNumber=${userId}`
               );
               if (!res.ok) throw new Error('Failed to fetch consultation history');
               return res.json();
@@ -120,7 +175,18 @@ export default function usePreload(isLoggedIn) {
           queryClient.prefetchQuery({
             queryKey: ['enrollment-status', studentId],
             queryFn: async () => {
-              const res = await fetch(`http://localhost:5001/enrollment/status?studentID=${studentId}`);
+              const res = await fetch(`import API_URL from '../apiConfig';
+
+// ... other imports
+
+// ... component code
+
+L58: const res = await fetch(`${API_URL}/user/get_user?email=${userEmail}`);
+L71: const res = await fetch(`${API_URL}/bookings/get_bookings?role=${userRole}&userID=${userId}&status=confirmed`);
+L84: const res = await fetch(`${API_URL}/grade/get_student_grades?studentID=${studentId}&schoolYear=&semester=&period=`);
+L96: const res = await fetch(`${API_URL}/course/get_courses`);
+L109: `${API_URL}/consultation/get_history?role=${userRole}&idNumber=${userId}`
+L123: const res = await fetch(`${API_URL}/enrollment/status?studentID=${studentId}`);/enrollment/status?studentID=${studentId}`);
               if (!res.ok) throw new Error('Failed to fetch enrollment status');
               const data = await res.json();
               if (typeof data.isEnrolled === 'boolean') {

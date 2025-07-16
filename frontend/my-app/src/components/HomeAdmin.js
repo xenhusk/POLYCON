@@ -111,7 +111,16 @@ const HomeAdmin = () => {
 
   useEffect(() => {
     // Fetch available semesters
-    fetch('http://localhost:5001/homeadmin/semesters')
+    fetch('import API_URL from '../apiConfig';
+
+// ... other imports
+
+// ... component code
+
+L114: fetch(`${API_URL}/homeadmin/semesters`)
+L139: fetch(`${API_URL}/homeadmin/stats?${params}`)
+L151: fetch(`${API_URL}/homeadmin/consultations_by_date?${params}`)
+L174: fetch(`${API_URL}/bookings/get_all_bookings_admin`)/homeadmin/semesters')
       .then(res => res.json())
       .then(data => {
         setSemesters(data);
@@ -136,7 +145,16 @@ const HomeAdmin = () => {
     });
 
     // Fetch stats with semester filter
-    fetch(`http://localhost:5001/homeadmin/stats?${params}`)
+    fetch(`import API_URL from '../apiConfig';
+
+// ... other imports
+
+// ... component code
+
+L114: fetch(`${API_URL}/homeadmin/semesters`)
+L139: fetch(`${API_URL}/homeadmin/stats?${params}`)
+L151: fetch(`${API_URL}/homeadmin/consultations_by_date?${params}`)
+L174: fetch(`${API_URL}/bookings/get_all_bookings_admin`)/homeadmin/stats?${params}`)
       .then(res => res.json())
       .then(data => {
         setStats({
@@ -148,7 +166,16 @@ const HomeAdmin = () => {
       .catch(err => console.error("Error fetching stats:", err));
 
     // Fetch consultation data with semester filter
-    fetch(`http://localhost:5001/homeadmin/consultations_by_date?${params}`)
+    fetch(`import API_URL from '../apiConfig';
+
+// ... other imports
+
+// ... component code
+
+L114: fetch(`${API_URL}/homeadmin/semesters`)
+L139: fetch(`${API_URL}/homeadmin/stats?${params}`)
+L151: fetch(`${API_URL}/homeadmin/consultations_by_date?${params}`)
+L174: fetch(`${API_URL}/bookings/get_all_bookings_admin`)/homeadmin/consultations_by_date?${params}`)
       .then(res => res.json())
       .then(data => {
         const consultationsArr = Object.entries(data.consultations || {})
@@ -171,7 +198,16 @@ const HomeAdmin = () => {
   };
 
   useEffect(() => {
-    fetch(`http://localhost:5001/bookings/get_all_bookings_admin`)
+    fetch(`import API_URL from '../apiConfig';
+
+// ... other imports
+
+// ... component code
+
+L114: fetch(`${API_URL}/homeadmin/semesters`)
+L139: fetch(`${API_URL}/homeadmin/stats?${params}`)
+L151: fetch(`${API_URL}/homeadmin/consultations_by_date?${params}`)
+L174: fetch(`${API_URL}/bookings/get_all_bookings_admin`)/bookings/get_all_bookings_admin`)
       .then(res => res.json())
       .then(data => {
         console.log('Raw booking data:', data); // Debug log

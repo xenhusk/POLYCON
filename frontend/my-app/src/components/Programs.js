@@ -33,8 +33,28 @@ export default function Programs() {
     setIsLoadingPrograms(true);
     try {
       const [programsResponse, departmentsResponse] = await Promise.all([
-        fetch('http://localhost:5001/program/get_programs'),
-        fetch('http://localhost:5001/program/get_departments')
+        fetch('import API_URL from '../apiConfig';
+
+// ... other imports
+
+// ... component code
+
+L36: fetch(`${API_URL}/program/get_programs`),
+L37: fetch(`${API_URL}/program/get_departments`)
+L72: const response = await fetch(`${API_URL}/program/add_program`, {
+L100: const response = await fetch(`${API_URL}/program/update_program/${editingProgramId}`, {
+L138: const response = await fetch(`${API_URL}/program/delete_program/${programToDelete}`, {/program/get_programs'),
+        fetch('import API_URL from '../apiConfig';
+
+// ... other imports
+
+// ... component code
+
+L36: fetch(`${API_URL}/program/get_programs`),
+L37: fetch(`${API_URL}/program/get_departments`)
+L72: const response = await fetch(`${API_URL}/program/add_program`, {
+L100: const response = await fetch(`${API_URL}/program/update_program/${editingProgramId}`, {
+L138: const response = await fetch(`${API_URL}/program/delete_program/${programToDelete}`, {/program/get_departments')
       ]);
       const programsData = await programsResponse.json();
       const departmentsData = await departmentsResponse.json();
@@ -69,7 +89,17 @@ export default function Programs() {
     }
     setIsAddLoading(true);
     try {
-      const response = await fetch('http://localhost:5001/program/add_program', {
+      const response = await fetch('import API_URL from '../apiConfig';
+
+// ... other imports
+
+// ... component code
+
+L36: fetch(`${API_URL}/program/get_programs`),
+L37: fetch(`${API_URL}/program/get_departments`)
+L72: const response = await fetch(`${API_URL}/program/add_program`, {
+L100: const response = await fetch(`${API_URL}/program/update_program/${editingProgramId}`, {
+L138: const response = await fetch(`${API_URL}/program/delete_program/${programToDelete}`, {/program/add_program', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ programName, departmentID: parseInt(selectedDepartment) })
@@ -97,7 +127,17 @@ export default function Programs() {
     }
     setIsAddLoading(true);
     try {
-      const response = await fetch(`http://localhost:5001/program/update_program/${editingProgramId}`, {
+      const response = await fetch(`import API_URL from '../apiConfig';
+
+// ... other imports
+
+// ... component code
+
+L36: fetch(`${API_URL}/program/get_programs`),
+L37: fetch(`${API_URL}/program/get_departments`)
+L72: const response = await fetch(`${API_URL}/program/add_program`, {
+L100: const response = await fetch(`${API_URL}/program/update_program/${editingProgramId}`, {
+L138: const response = await fetch(`${API_URL}/program/delete_program/${programToDelete}`, {/program/update_program/${editingProgramId}`, {
         method: 'PUT',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ programName, departmentID: parseInt(selectedDepartment) })
@@ -135,7 +175,17 @@ export default function Programs() {
   const confirmDelete = async () => {
     setIsDeleteLoading(true);
     try {
-      const response = await fetch(`http://localhost:5001/program/delete_program/${programToDelete}`, {
+      const response = await fetch(`import API_URL from '../apiConfig';
+
+// ... other imports
+
+// ... component code
+
+L36: fetch(`${API_URL}/program/get_programs`),
+L37: fetch(`${API_URL}/program/get_departments`)
+L72: const response = await fetch(`${API_URL}/program/add_program`, {
+L100: const response = await fetch(`${API_URL}/program/update_program/${editingProgramId}`, {
+L138: const response = await fetch(`${API_URL}/program/delete_program/${programToDelete}`, {/program/delete_program/${programToDelete}`, {
         method: 'DELETE'
       });
 

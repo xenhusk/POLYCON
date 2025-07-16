@@ -4,7 +4,13 @@ import { useGlobalState } from '../context/GlobalStateContext';
 const fetchBookings = async ({ userRole, userId, status = 'confirmed' }) => {
   if (!userRole || !userId) return [];
   
-  const response = await fetch(`http://localhost:5001/bookings/get_bookings?role=${userRole}&userID=${userId}&status=${status}`);
+  const response = await fetch(`import API_URL from '../apiConfig';
+
+// ... other imports
+
+// ... component code
+
+L7: const response = await fetch(`${API_URL}/bookings/get_bookings?role=${userRole}&userID=${userId}&status=${status}`);/bookings/get_bookings?role=${userRole}&userID=${userId}&status=${status}`);
   if (!response.ok) throw new Error('Failed to fetch bookings');
   return response.json();
 };

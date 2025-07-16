@@ -34,7 +34,14 @@ function BookingStudent({ closeModal }) {
   }, [location.state?.studentID]); // Added location.state?.studentID to dependency array
 
   useEffect(() => {
-    fetch('http://localhost:5001/get_teachers')
+    fetch('import API_URL from '../apiConfig';
+
+// ... other imports
+
+// ... component code
+
+L37: fetch(`${API_URL}/get_teachers`)
+L53: fetch(`${API_URL}/get_students`)/get_teachers')
       .then(response => response.json())
       .then(data => {
         // Filter to only show active teachers
@@ -50,7 +57,14 @@ function BookingStudent({ closeModal }) {
       });
 
     // Fetch students
-    fetch('http://localhost:5001/get_students')
+    fetch('import API_URL from '../apiConfig';
+
+// ... other imports
+
+// ... component code
+
+L37: fetch(`${API_URL}/get_teachers`)
+L53: fetch(`${API_URL}/get_students`)/get_students')
       .then(response => response.json())
       .then(data => {
         setStudents(data);

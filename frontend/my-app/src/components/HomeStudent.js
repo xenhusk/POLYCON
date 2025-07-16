@@ -22,7 +22,15 @@ const HomeStudent = () => {
     }
 
     // Fetch semesters for filtering
-    fetch('http://localhost:5001/homeadmin/semesters')
+    fetch('import API_URL from '../apiConfig';
+
+// ... other imports
+
+// ... component code
+
+L25: fetch(`${API_URL}/homeadmin/semesters`)
+L47: fetch(`${API_URL}/homestudent/stats?${params}`)
+L56: fetch(`${API_URL}/homestudent/consultations_by_date?${params}`)/homeadmin/semesters')
       .then(res => res.json())
       .then(data => {
         setSemesters(data);
@@ -44,7 +52,15 @@ const HomeStudent = () => {
     });
 
     // Fetch student stats
-    fetch(`http://localhost:5001/homestudent/stats?${params}`)
+    fetch(`import API_URL from '../apiConfig';
+
+// ... other imports
+
+// ... component code
+
+L25: fetch(`${API_URL}/homeadmin/semesters`)
+L47: fetch(`${API_URL}/homestudent/stats?${params}`)
+L56: fetch(`${API_URL}/homestudent/consultations_by_date?${params}`)/homestudent/stats?${params}`)
       .then(res => res.json())      .then(data => {
         setStats({
           total_consultations: data.total_consultations || 0,
@@ -53,7 +69,15 @@ const HomeStudent = () => {
         });
       })
       .catch(err => console.error("Error fetching stats:", err));    // Fetch consultation data for charts
-    fetch(`http://localhost:5001/homestudent/consultations_by_date?${params}`)
+    fetch(`import API_URL from '../apiConfig';
+
+// ... other imports
+
+// ... component code
+
+L25: fetch(`${API_URL}/homeadmin/semesters`)
+L47: fetch(`${API_URL}/homestudent/stats?${params}`)
+L56: fetch(`${API_URL}/homestudent/consultations_by_date?${params}`)/homestudent/consultations_by_date?${params}`)
       .then(res => res.json())
       .then(data => {
         const formattedConsultations = Object.entries(data.consultations || {})

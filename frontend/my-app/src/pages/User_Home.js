@@ -24,7 +24,13 @@ function Home() {
     setUserRole(role);
 
     if (email) {
-      fetch(`http://localhost:5001/user/get_user?email=${email}`)
+      fetch(`import API_URL from '../apiConfig';
+
+// ... other imports
+
+// ... component code
+
+L27: fetch(`${API_URL}/user/get_user?email=${email}`)/user/get_user?email=${email}`)
         .then(res => res.json())
         .then(data => setUserDetails(data))
         .catch(err => console.error('Error fetching user details:', err));

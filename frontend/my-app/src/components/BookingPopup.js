@@ -69,7 +69,13 @@ const BookingPopup = () => {
     }
     
     if (userRole === 'faculty' && email) {
-      fetch(`http://localhost:5001/user/get_user?email=${encodeURIComponent(email)}`)
+      fetch(`import API_URL from '../apiConfig';
+
+// ... other imports
+
+// ... component code
+
+L72: fetch(`${API_URL}/user/get_user?email=${encodeURIComponent(email)}`)/user/get_user?email=${encodeURIComponent(email)}`)
         .then(res => res.json())
         .then(data => {
           setTeacherActive(data.isActive);

@@ -10,7 +10,16 @@ const SocketTest = () => {
 
   useEffect(() => {
     // Initialize socket connection
-    const newSocket = io('http://localhost:5001');
+    const newSocket = io('import API_URL from '../apiConfig';
+
+// ... other imports
+
+// ... component code
+
+L13: const newSocket = io(API_URL);
+L70: const response = await fetch(`${API_URL}/socket-test/test-booking-created`);
+L81: const response = await fetch(`${API_URL}/socket-test/test-booking-confirmed`);
+L91: const response = await fetch(`${API_URL}/socket-test/test-booking-cancelled`);');
     setSocket(newSocket);
 
     // Connection events
@@ -67,7 +76,16 @@ const SocketTest = () => {
 
   const testBookingCreated = async () => {
     try {
-      const response = await fetch('http://localhost:5001/socket-test/test-booking-created');
+      const response = await fetch('import API_URL from '../apiConfig';
+
+// ... other imports
+
+// ... component code
+
+L13: const newSocket = io(API_URL);
+L70: const response = await fetch(`${API_URL}/socket-test/test-booking-created`);
+L81: const response = await fetch(`${API_URL}/socket-test/test-booking-confirmed`);
+L91: const response = await fetch(`${API_URL}/socket-test/test-booking-cancelled`);/socket-test/test-booking-created');
       const result = await response.json();
       setTestResults(prev => ({ ...prev, created: result }));
       addEvent('Triggered test booking_created', 'info');
@@ -78,7 +96,16 @@ const SocketTest = () => {
 
   const testBookingConfirmed = async () => {
     try {
-      const response = await fetch('http://localhost:5001/socket-test/test-booking-confirmed');
+      const response = await fetch('import API_URL from '../apiConfig';
+
+// ... other imports
+
+// ... component code
+
+L13: const newSocket = io(API_URL);
+L70: const response = await fetch(`${API_URL}/socket-test/test-booking-created`);
+L81: const response = await fetch(`${API_URL}/socket-test/test-booking-confirmed`);
+L91: const response = await fetch(`${API_URL}/socket-test/test-booking-cancelled`);/socket-test/test-booking-confirmed');
       const result = await response.json();
       setTestResults(prev => ({ ...prev, confirmed: result }));
       addEvent('Triggered test booking_confirmed', 'info');
@@ -88,7 +115,16 @@ const SocketTest = () => {
   };
   const testBookingCancelled = async () => {
     try {
-      const response = await fetch('http://localhost:5001/socket-test/test-booking-cancelled');
+      const response = await fetch('import API_URL from '../apiConfig';
+
+// ... other imports
+
+// ... component code
+
+L13: const newSocket = io(API_URL);
+L70: const response = await fetch(`${API_URL}/socket-test/test-booking-created`);
+L81: const response = await fetch(`${API_URL}/socket-test/test-booking-confirmed`);
+L91: const response = await fetch(`${API_URL}/socket-test/test-booking-cancelled`);/socket-test/test-booking-cancelled');
       const result = await response.json();
       setTestResults(prev => ({ ...prev, cancelled: result }));
       addEvent('Triggered test booking_cancelled', 'info');

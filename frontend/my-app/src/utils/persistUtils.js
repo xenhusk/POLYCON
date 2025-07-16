@@ -94,14 +94,28 @@ export const recoverUserIds = async () => {
     console.log("Attempting to recover user IDs for email:", email);
     
     // First get the role
-    const roleResponse = await fetch(`http://localhost:5001/account/get_user_role?email=${encodeURIComponent(email)}`);
+    const roleResponse = await fetch(`import API_URL from './apiConfig';
+
+// ... other imports
+
+// ... component code
+
+L97: const roleResponse = await fetch(`${API_URL}/account/get_user_role?email=${encodeURIComponent(email)}`);
+L104: const userResponse = await fetch(`${API_URL}/user/get__user?email=${encodeURIComponent(email)}`);/account/get_user_role?email=${encodeURIComponent(email)}`);
     const roleData = await roleResponse.json();
     
     if (roleData.role) {
       localStorage.setItem("userRole", roleData.role);
       
       // Now get the user details
-      const userResponse = await fetch(`http://localhost:5001/user/get_user?email=${encodeURIComponent(email)}`);
+      const userResponse = await fetch(`import API_URL from './apiConfig';
+
+// ... other imports
+
+// ... component code
+
+L97: const roleResponse = await fetch(`${API_URL}/account/get_user_role?email=${encodeURIComponent(email)}`);
+L104: const userResponse = await fetch(`${API_URL}/user/get__user?email=${encodeURIComponent(email)}`);/user/get_user?email=${encodeURIComponent(email)}`);
       const userData = await userResponse.json();
       
       if (userData) {

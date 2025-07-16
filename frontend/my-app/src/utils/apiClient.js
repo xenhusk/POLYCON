@@ -56,11 +56,27 @@ const apiClient = {
   bookings: {
     getStudentBookings: () => {
       const studentID = localStorage.getItem('studentID');
-      return apiClient.fetch(`http://localhost:5001/bookings/get_bookings?role=student&idNumber=${studentID}`);
+      return apiClient.fetch(`import API_URL from './apiConfig';
+
+// ... other imports
+
+// ... component code
+
+L59: return apiClient.fetch(`${API_URL}/bookings/get_bookings?role=student&idNumber=${studentID}`);
+L63: return apiClient.fetch(`${API_URL}/bookings/get_bookings?role=faculty&idNumber=${teacherID}`);
+L71: `${API_URL}/consultation/get_history?role=${role}&idNumber=${userID}`/bookings/get_bookings?role=student&idNumber=${studentID}`);
     },
     getTeacherBookings: () => {
       const teacherID = localStorage.getItem('teacherID');
-      return apiClient.fetch(`http://localhost:5001/bookings/get_bookings?role=faculty&idNumber=${teacherID}`);
+      return apiClient.fetch(`import API_URL from './apiConfig';
+
+// ... other imports
+
+// ... component code
+
+L59: return apiClient.fetch(`${API_URL}/bookings/get_bookings?role=student&idNumber=${studentID}`);
+L63: return apiClient.fetch(`${API_URL}/bookings/get_bookings?role=faculty&idNumber=${teacherID}`);
+L71: `${API_URL}/consultation/get_history?role=${role}&idNumber=${userID}`/bookings/get_bookings?role=faculty&idNumber=${teacherID}`);
     },
     // ...add more endpoints as needed
   },
@@ -68,7 +84,15 @@ const apiClient = {
     getHistory: (role, userID) => {
       // Use idNumber parameter only since that's what the backend needs
       return apiClient.fetch(
-        `http://localhost:5001/consultation/get_history?role=${role}&idNumber=${userID}`
+        `import API_URL from './apiConfig';
+
+// ... other imports
+
+// ... component code
+
+L59: return apiClient.fetch(`${API_URL}/bookings/get_bookings?role=student&idNumber=${studentID}`);
+L63: return apiClient.fetch(`${API_URL}/bookings/get_bookings?role=faculty&idNumber=${teacherID}`);
+L71: `${API_URL}/consultation/get_history?role=${role}&idNumber=${userID}`/consultation/get_history?role=${role}&idNumber=${userID}`
       );
     }
   }

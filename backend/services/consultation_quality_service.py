@@ -73,7 +73,7 @@ def calculate_consultation_quality(sentiment_results, transcription_text, durati
             # Assuming ideal consultation length is between 10 and 30 minutes
             min_ideal = 10 * 60  # 10 minutes in seconds
             max_ideal = 30 * 60  # 30 minutes in seconds
-            
+
             if duration_seconds < min_ideal:
                 # For very short consultations (< 3 minutes), apply a stricter penalty
                 if duration_seconds < 3 * 60:

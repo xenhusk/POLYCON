@@ -49,7 +49,14 @@ function BookingTeacher({ closeModal }) {
 
   const checkTeacherStatus = async (teacherId) => {
     try {
-      const response = await fetch(`http://localhost:5001/user/get_user?idNumber=${teacherId}`);
+      const response = await fetch(`import API_URL from '../apiConfig';
+
+// ... other imports
+
+// ... component code
+
+L52: const response = await fetch(`${API_URL}/user/get_user?idNumber=${teacherId}`);
+L67: fetch(`${API_URL}/account/departments`)/user/get_user?idNumber=${teacherId}`);
       const data = await response.json();
       setIsTeacherActive(data.isActive);
       if (!data.isActive) {
@@ -64,7 +71,14 @@ function BookingTeacher({ closeModal }) {
   useEffect(() => {
     if (profileDetails.department && profileDetails.department.startsWith("/departments/")) {
       const deptID = profileDetails.department.split("/").pop();
-      fetch(`http://localhost:5001/account/departments`)
+      fetch(`import API_URL from '../apiConfig';
+
+// ... other imports
+
+// ... component code
+
+L52: const response = await fetch(`${API_URL}/user/get_user?idNumber=${teacherId}`);
+L67: fetch(`${API_URL}/account/departments`)/account/departments`)
         .then(response => response.json())
         .then(data => {
           const dept = data.find(item => item.departmentID === deptID);

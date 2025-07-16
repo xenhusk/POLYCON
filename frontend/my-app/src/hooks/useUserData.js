@@ -4,7 +4,13 @@ import { useGlobalState } from '../context/GlobalStateContext';
 const fetchUserData = async (email) => {
   if (!email) return null;
   
-  const response = await fetch(`http://localhost:5001/user/get_user?email=${email}`);
+  const response = await fetch(`import API_URL from '../apiConfig';
+
+// ... other imports
+
+// ... component code
+
+L7: const response = await fetch(`${API_URL}/user/get_user?email=${email}`);/user/get_user?email=${email}`);
   if (!response.ok) throw new Error('Failed to fetch user data');
   return response.json();
 };

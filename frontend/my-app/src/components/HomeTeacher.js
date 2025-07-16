@@ -26,7 +26,16 @@ const HomeTeacher = () => {
     }, []);
 
     useEffect(() => {
-        fetch('http://localhost:5001/homeadmin/semesters')
+        fetch('import API_URL from '../apiConfig';
+
+// ... other imports
+
+// ... component code
+
+L29: fetch(`${API_URL}/homeadmin/semesters`)
+L44: fetch(`${API_URL}/hometeacher/getTeacherId`, {
+L67: fetch(`${API_URL}/hometeacher/stats?${params}`)
+L79: fetch(`${API_URL}/hometeacher/consultations_by_date?${params}`)/homeadmin/semesters')
             .then(res => res.json())
             .then(data => {
                 setSemesters(data);
@@ -41,7 +50,16 @@ const HomeTeacher = () => {
         if (storedTeacherID) {
             setTeacherId(storedTeacherID);
         } else {
-            fetch('http://localhost:5001/hometeacher/getTeacherId', {
+            fetch('import API_URL from '../apiConfig';
+
+// ... other imports
+
+// ... component code
+
+L29: fetch(`${API_URL}/homeadmin/semesters`)
+L44: fetch(`${API_URL}/hometeacher/getTeacherId`, {
+L67: fetch(`${API_URL}/hometeacher/stats?${params}`)
+L79: fetch(`${API_URL}/hometeacher/consultations_by_date?${params}`)/hometeacher/getTeacherId', {
                 method: 'GET',
                 credentials: 'include'
             })
@@ -64,7 +82,16 @@ const HomeTeacher = () => {
             school_year: selectedSchoolYear
         });
 
-        fetch(`http://localhost:5001/hometeacher/stats?${params}`)
+        fetch(`import API_URL from '../apiConfig';
+
+// ... other imports
+
+// ... component code
+
+L29: fetch(`${API_URL}/homeadmin/semesters`)
+L44: fetch(`${API_URL}/hometeacher/getTeacherId`, {
+L67: fetch(`${API_URL}/hometeacher/stats?${params}`)
+L79: fetch(`${API_URL}/hometeacher/consultations_by_date?${params}`)/hometeacher/stats?${params}`)
             .then(response => response.json())
             .then(data => {
                 console.log("API Response:", data);
@@ -76,7 +103,16 @@ const HomeTeacher = () => {
             })
             .catch(error => console.error("Error fetching stats:", error));
 
-        fetch(`http://localhost:5001/hometeacher/consultations_by_date?${params}`)
+        fetch(`import API_URL from '../apiConfig';
+
+// ... other imports
+
+// ... component code
+
+L29: fetch(`${API_URL}/homeadmin/semesters`)
+L44: fetch(`${API_URL}/hometeacher/getTeacherId`, {
+L67: fetch(`${API_URL}/hometeacher/stats?${params}`)
+L79: fetch(`${API_URL}/hometeacher/consultations_by_date?${params}`)/hometeacher/consultations_by_date?${params}`)
             .then(response => response.json())
             .then(data => {
                 console.log("Consultation Data:", data);

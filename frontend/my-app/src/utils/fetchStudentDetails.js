@@ -1,6 +1,12 @@
 export async function fetchStudentDetails(studentID) {
   try {
-    const response = await fetch(`http://localhost:5001/bookings/get_student_details?studentID=${studentID}`);
+    const response = await fetch(`import API_URL from './apiConfig';
+
+// ... other imports
+
+// ... component code
+
+L3: const response = await fetch(`${API_URL}/bookings/get_student_details?studentID=${studentID}`);/bookings/get_student_details?studentID=${studentID}`);
     const data = await response.json();
     if (response.ok) {
       return data;

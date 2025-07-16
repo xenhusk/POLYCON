@@ -132,5 +132,3 @@ def compare_student():
     except Exception as e:
         import traceback; traceback.print_exc()
         return jsonify({'error': f'Internal server error: {str(e)}'}), 500
-
-# NOTE: Removed Firestore-based retrieval endpoints as analyses are computed on-the-fly and not persisted in PostgreSQL.
