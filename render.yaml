@@ -1,0 +1,38 @@
+services:
+  # Backend API Service
+  - type: web
+    name: polycon-backend
+    env: python
+    buildCommand: pip install -r backend/requirements.txt
+    startCommand: cd backend && gunicorn -k eventlet --worker-connections 1000 -b 0.0.0.0:$PORT app:app
+    envVars:
+      - key: PYTHON_VERSION
+        value: 3.12.0
+      - key: DATABASE_URL
+        fromDatabase:
+          name: polycon-db
+          property: connectionString
+      - key: SECRET_KEY
+        generateValue: true
+      - key: JWT_SECRET_KEY
+        generateValue: true
+      - key: CORS_ALLOWED_ORIGINS
+        value: https://polycon-frontend.onrender.com
+      - key: FLASK_ENV
+        value: production
+
+  # Frontend Service  
+  - type: web
+    name: polycon-frontend
+    env: static
+    buildCommand: cd frontend/my-app && npm install && npm run build
+    staticPublishPath: frontend/my-app/build
+    routes:
+      - type: rewrite
+        source: /*
+        destination: /index.html
+
+databases:
+  - name: polycon-db
+    databaseName: polycon
+    user: polycon_user
