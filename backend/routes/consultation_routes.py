@@ -1,5 +1,5 @@
 from flask import Blueprint, request, jsonify
-from datetime import datetime
+from datetime import datetime, timedelta
 from extensions import db
 from models import ConsultationSession, User, Student, Faculty, Program, Booking # Add Booking
 from services.google_gemini import generate_summary, identify_roles_in_transcription
@@ -8,6 +8,7 @@ from services.audio_conversion_service import convert_audio
 from services.assemblyai_service import transcribe_audio_with_assemblyai
 from services.google_storage import upload_audio  # upload converted audio for download
 from sqlalchemy.orm import joinedload
+from sqlalchemy import or_
 from sqlalchemy import or_ # Add or_
 import os
 import tempfile
@@ -212,7 +213,14 @@ def store_consultation_data(): # Renamed function
 def get_history():
     role = request.args.get('role')
     user_identifier_param = request.args.get('idNumber') or request.args.get('userID') # Prefer idNumber over userID
-
+    
+    # New parameters for filtering and pagination
+    search_query = request.args.get('search', '').strip()
+    start_date = request.args.get('startDate')
+    end_date = request.args.get('endDate')
+    page = int(request.args.get('page', 1))
+    limit = int(request.args.get('limit', 10))
+    
     if not role or not user_identifier_param:
         return jsonify(error="Role and idNumber (or userID) are required"), 400
 
@@ -236,16 +244,144 @@ def get_history():
         # If the user is not found, this is the source of the 404 or incorrect data
         return jsonify(error=f"User not found with ID Number: {user_identifier_param}"), 404
 
+    # Apply date filtering if provided
+    if start_date:
+        try:
+            start_date_obj = datetime.strptime(start_date, '%Y-%m-%d')
+            query = query.filter(ConsultationSession.session_date >= start_date_obj)
+        except ValueError:
+            return jsonify(error="Invalid start_date format. Use YYYY-MM-DD"), 400
+    
+    if end_date:
+        try:
+            end_date_obj = datetime.strptime(end_date, '%Y-%m-%d')
+            # Add one day to include sessions on the end date
+            end_date_obj = end_date_obj + timedelta(days=1)
+            query = query.filter(ConsultationSession.session_date < end_date_obj)
+        except ValueError:
+            return jsonify(error="Invalid end_date format. Use YYYY-MM-DD"), 400
+
     if role.lower() == 'faculty':
         # ConsultationSession.teacher_id stores User.id_number
         # So, we filter sessions where the teacher_id matches the current_user's id_number
         query = query.filter(ConsultationSession.teacher_id == current_user.id_number)
-        consultation_sessions = query.limit(20).all()
+        
+        # Apply search filtering for faculty (including student names)
+        if search_query:
+            # Get all sessions for this teacher first
+            teacher_sessions = query.all()
+            filtered_session_ids = []
+            
+            for session in teacher_sessions:
+                # Check if search matches session content
+                content_match = any([
+                    search_query.lower() in (session.summary or '').lower(),
+                    search_query.lower() in (session.concern or '').lower(),
+                    search_query.lower() in (session.action_taken or '').lower(),
+                    search_query.lower() in (session.outcome or '').lower(),
+                    search_query.lower() in (session.remarks or '').lower(),
+                    search_query.lower() in (session.transcription or '').lower()
+                ])
+                
+                # Check if search matches any student name in this session
+                student_match = False
+                if session.student_ids:
+                    for student_id in session.student_ids:
+                        try:
+                            # Try as PK first
+                            student_user = User.query.get(int(student_id))
+                        except (ValueError, TypeError):
+                            # Try as id_number
+                            student_user = User.query.filter_by(id_number=student_id).first()
+                        
+                        if student_user:
+                            full_name = f"{student_user.first_name} {student_user.last_name}".lower()
+                            if search_query.lower() in full_name:
+                                student_match = True
+                                break
+                
+                if content_match or student_match:
+                    filtered_session_ids.append(session.id)
+            
+            if filtered_session_ids:
+                query = db.session.query(ConsultationSession).filter(
+                    ConsultationSession.id.in_(filtered_session_ids),
+                    ConsultationSession.teacher_id == current_user.id_number
+                ).order_by(ConsultationSession.session_date.desc())
+            else:
+                # No matches found, return empty query
+                query = db.session.query(ConsultationSession).filter(ConsultationSession.id == -1)
+        
+        # Calculate total count for pagination
+        total_count = query.count()
+        
+        # Apply pagination
+        offset = (page - 1) * limit
+        consultation_sessions = query.offset(offset).limit(limit).all()
     elif role.lower() == 'student':
-        # ConsultationSession.student_ids stores a list of User id_number strings
-        all_sessions = query.limit(100).all()
-        # Filter sessions where current_user.id_number is in student_ids list
-        consultation_sessions = [s for s in all_sessions if current_user.id_number in (s.student_ids or [])][:20]
+        # For students, we need to get all sessions first, then filter by student_ids
+        # Apply search filtering including teacher names
+        all_sessions = query.all()
+        filtered_sessions = []
+        
+        for session in all_sessions:
+            # Check if current student is in this session
+            if current_user.id_number not in (session.student_ids or []):
+                continue
+            
+            # If no search query, include all sessions for this student
+            if not search_query:
+                filtered_sessions.append(session)
+                continue
+            
+            # Check if search matches session content
+            content_match = any([
+                search_query.lower() in (session.summary or '').lower(),
+                search_query.lower() in (session.concern or '').lower(),
+                search_query.lower() in (session.action_taken or '').lower(),
+                search_query.lower() in (session.outcome or '').lower(),
+                search_query.lower() in (session.remarks or '').lower(),
+                search_query.lower() in (session.transcription or '').lower()
+            ])
+            
+            # Check if search matches teacher name
+            teacher_match = False
+            if session.teacher_id:
+                teacher_user = User.query.filter_by(id_number=session.teacher_id).first()
+                if teacher_user:
+                    teacher_full_name = f"{teacher_user.first_name} {teacher_user.last_name}".lower()
+                    if search_query.lower() in teacher_full_name:
+                        teacher_match = True
+            
+            # Check if search matches other student names in the session
+            other_student_match = False
+            if session.student_ids:
+                for student_id in session.student_ids:
+                    if student_id == current_user.id_number:
+                        continue  # Skip current user
+                    
+                    try:
+                        # Try as PK first
+                        student_user = User.query.get(int(student_id))
+                    except (ValueError, TypeError):
+                        # Try as id_number
+                        student_user = User.query.filter_by(id_number=student_id).first()
+                    
+                    if student_user:
+                        student_full_name = f"{student_user.first_name} {student_user.last_name}".lower()
+                        if search_query.lower() in student_full_name:
+                            other_student_match = True
+                            break
+            
+            if content_match or teacher_match or other_student_match:
+                filtered_sessions.append(session)
+        
+        # Calculate total count for pagination
+        total_count = len(filtered_sessions)
+        
+        # Apply pagination manually
+        offset = (page - 1) * limit
+        consultation_sessions = filtered_sessions[offset:offset + limit]
     else:
         return jsonify(error="Invalid role specified"), 400
 
@@ -323,7 +459,22 @@ def get_history():
         
         sessions_data.append(session_dict)
 
-    return jsonify(sessions_data), 200
+    # Calculate pagination metadata
+    total_pages = (total_count + limit - 1) // limit
+    has_next = page < total_pages
+    has_prev = page > 1
+
+    return jsonify({
+        "data": sessions_data,
+        "pagination": {
+            "current_page": page,
+            "total_pages": total_pages,
+            "total_count": total_count,
+            "has_next": has_next,
+            "has_prev": has_prev,
+            "limit": limit
+        }
+    }), 200
 
 @consultation_bp.route('/get_session', methods=['GET'])
 def get_session():

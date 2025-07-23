@@ -66,9 +66,27 @@ const apiClient = {
     // ...add more endpoints as needed
   },
   consultations: {
-    getHistory: (role, userID) => {
-      // Use idNumber parameter only since that's what the backend needs
-      return apiClient.fetch(`${API_URL}/consultation/get_history?role=${role}&idNumber=${userID}`);
+    getHistory: (role, userID, options = {}) => {
+      const {
+        search = '',
+        startDate = '',
+        endDate = '',
+        page = 1,
+        limit = 10
+      } = options;
+      
+      const params = new URLSearchParams({
+        role,
+        idNumber: userID,
+        page: page.toString(),
+        limit: limit.toString()
+      });
+      
+      if (search) params.append('search', search);
+      if (startDate) params.append('startDate', startDate);
+      if (endDate) params.append('endDate', endDate);
+      
+      return apiClient.fetch(`${API_URL}/consultation/get_history?${params.toString()}`);
     }
   }
 };
