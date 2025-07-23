@@ -163,13 +163,54 @@ const FinalDocument = () => {
   const [initialScale, setInitialScale] = useState(0.35);
   const containerRef = useRef(null);
 
+  // Store resetTransform function
+  const resetTransformRef = useRef(null);
+
+  // Effect to trigger reset on mount
   useEffect(() => {
-    if (containerRef.current) {
-      const containerHeight = containerRef.current.clientHeight;
-      const documentHeight = 11 * 96; // 11 inches in pixels (96 DPI)
-      const scale = (containerHeight * 0.95) / documentHeight;
-      setInitialScale(scale);
+    if (resetTransformRef.current) {
+      setTimeout(() => {
+        resetTransformRef.current();
+        setTimeout(() => resetTransformRef.current(), 50);
+      }, 500); // Increased delay to ensure component is fully mounted
     }
+  }, [loading]); // Added loading dependency to trigger after data loads
+
+  useEffect(() => {
+    const updateScale = () => {
+      if (containerRef.current) {
+        const containerHeight = containerRef.current.clientHeight;
+        const documentHeight = 11 * 96; // 11 inches in pixels (96 DPI)
+        const scale = Math.max(0.35, Math.min(2, (containerHeight * 0.95) / documentHeight));
+        setInitialScale(scale);
+      }
+    };
+
+    // Initial update
+    updateScale();
+
+    // Add resize listener
+    const resizeObserver = new ResizeObserver((entries) => {
+      // Debounce the scale update
+      if (window.resizeTimeout) {
+        clearTimeout(window.resizeTimeout);
+      }
+      window.resizeTimeout = setTimeout(() => {
+        updateScale();
+      }, 100);
+    });
+
+    if (containerRef.current) {
+      resizeObserver.observe(containerRef.current);
+    }
+
+    // Cleanup
+    return () => {
+      if (window.resizeTimeout) {
+        clearTimeout(window.resizeTimeout);
+      }
+      resizeObserver.disconnect();
+    };
   }, []);
 
   // New: Helper function to format the transcription
@@ -187,17 +228,17 @@ const FinalDocument = () => {
   };
 
   return (
-    <div className="relative h-screen overflow-hidden fade-in">
+    <div className="relative min-h-screen overflow-y-auto fade-in">
       <AnimatedBackground />
       {loading ? (
-        <div className="flex h-full items-center justify-center">Loading...</div>
+        <div className="flex h-screen items-center justify-center">Loading...</div>
       ) : (
-        <div className="relative z-10 h-full p-8 flex flex-col">
-          <h1 className="text-3xl font-bold text-[#057DCD] mb-6 text-center fade-in delay-100">Final Document</h1>
-          <div className="flex gap-8 flex-1 overflow-hidden mb-6">
-            <div className="w-1/2 flex flex-col">
+        <div className="relative z-10 min-h-screen p-4 md:p-8 flex flex-col">
+          <h1 className="text-2xl md:text-3xl font-bold text-[#057DCD] mb-4 md:mb-6 text-center fade-in delay-100">Final Document</h1>
+          <div className="flex flex-col md:flex-row gap-4 md:gap-8 flex-1 mb-4 md:mb-6">
+            <div className="w-full md:w-1/2 flex flex-col">
               {/* Left Column: Displaying Summary, Transcription, etc. */}
-              <div className="flex-1 bg-[#057DCD] rounded-lg p-6 overflow-hidden flex flex-col fade-in delay-200">
+              <div className="bg-[#057DCD] rounded-lg p-4 md:p-6 flex flex-col fade-in delay-200 md:h-[calc(100vh-12rem)]">
                 <div className="flex-1 overflow-y-auto pr-4 final-document-scroll">
                   <section className="mb-6">
                     <h2 className="text-xl font-semibold text-white mb-2">Summary</h2>
@@ -234,7 +275,7 @@ const FinalDocument = () => {
               </div>
             </div>
             {/* Right Column: Document Preview */}
-            <div className="w-1/2 bg-white rounded-lg shadow-lg p-6 flex flex-col fade-in delay-300">
+            <div className="w-full md:w-1/2 bg-white rounded-lg shadow-lg p-4 md:p-6 flex flex-col fade-in delay-300 md:h-[calc(100vh-12rem)] h-[calc(100vh-12rem)] mb-24 md:mb-0">
               <TransformWrapper
                 initialScale={initialScale}
                 minScale={0.35}
@@ -242,13 +283,35 @@ const FinalDocument = () => {
                 initialPositionX={265}
                 initialPositionY={345}
                 limitToBounds={false}
+                centerOnInit={true}
+                centerZoomedOut={true}
+                onTransformed={(e) => {
+                  // Clear any existing animation frame
+                  if (window.transformTimeout) {
+                    clearTimeout(window.transformTimeout);
+                  }
+                  // Debounce transform updates
+                  window.transformTimeout = setTimeout(() => {
+                    if (containerRef.current) {
+                      containerRef.current.style.willChange = 'auto';
+                    }
+                  }, 100);
+                  
+                  if (containerRef.current) {
+                    containerRef.current.style.willChange = 'transform';
+                  }
+                }}
               >
-                {({ zoomIn, zoomOut, resetTransform }) => (
+                {({ zoomIn, zoomOut, resetTransform }) => {
+                  // Store resetTransform function in ref for auto-reset on mount
+                  resetTransformRef.current = resetTransform;
+                  
+                  return (
                   <>
                     <div className="mb-4 flex justify-end space-x-2">
                       <button
                         onClick={() => zoomOut()}
-                        className="bg-[#057DCD] text-white px-3 py-1 rounded-lg hover:bg-[#54BEFF]"
+                        className="bg-[#057DCD] text-white px-4 py-2 md:px-3 md:py-1 rounded-lg hover:bg-[#54BEFF] text-lg md:text-base"
                       >
                         -
                       </button>
@@ -257,13 +320,13 @@ const FinalDocument = () => {
                           resetTransform();
                           setTimeout(() => resetTransform(), 50);
                         }}
-                        className="bg-[#057DCD] text-white px-3 py-1 rounded-lg hover:bg-[#54BEFF]"
+                        className="bg-[#057DCD] text-white px-4 py-2 md:px-3 md:py-1 rounded-lg hover:bg-[#54BEFF] text-lg md:text-base"
                       >
                         Reset
                       </button>
                       <button
                         onClick={() => zoomIn()}
-                        className="bg-[#057DCD] text-white px-3 py-1 rounded-lg hover:bg-[#54BEFF]"
+                        className="bg-[#057DCD] text-white px-4 py-2 md:px-3 md:py-1 rounded-lg hover:bg-[#54BEFF] text-lg md:text-base"
                       >
                         +
                       </button>
@@ -271,10 +334,11 @@ const FinalDocument = () => {
                     <div
                       ref={containerRef}
                       className="flex-1 overflow-hidden bg-gray-100 rounded-lg flex items-center justify-center"
+                      style={{ contain: 'paint layout size' }}
                     >
                       <TransformComponent
                         wrapperClass="w-full h-full flex items-center justify-center"
-                        contentClass="flex items-center justify-center"
+                        contentClass="flex items-center justify-center transform-center"
                       >
                         <div ref={documentRef}>
                           <DocumentTemplate
@@ -292,12 +356,14 @@ const FinalDocument = () => {
                       </TransformComponent>
                     </div>
                   </>
-                )}
+                  );
+                }}
               </TransformWrapper>
             </div>
           </div>
           {/* Controls */}
-          <div className="w-full p-4 rounded-lg flex items-center justify-between  ">          <div className="w-1/2">              {audioUrl ? (
+          <div className="fixed md:relative bottom-0 left-0 right-0 bg-white md:bg-transparent p-4 shadow-lg md:shadow-none rounded-t-lg md:rounded-lg flex flex-col md:flex-row items-center gap-4 md:gap-0 md:justify-between z-50 pb-safe">
+            <div className="w-full md:w-1/2 max-w-full">              {audioUrl ? (
                 <audio 
                   ref={audioRef} 
                   controls 
@@ -324,7 +390,7 @@ const FinalDocument = () => {
             <div>     
               <button
                 onClick={handlePrint}
-                className="bg-[#057DCD] hover:bg-[#54BEFF] text-white px-4 py-2 rounded-lg transition-colors fade-in delay-200"
+                className="bg-[#057DCD] hover:bg-[#54BEFF] text-white px-4 py-2 rounded-lg transition-colors fade-in delay-200 w-full md:w-auto text-center"
               >
                 Print/Save Document
               </button>
