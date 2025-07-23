@@ -79,6 +79,24 @@ function BookingAppointment({ closeModal, role: propRole }) {
   const [CancelClicked, setCancelClicked] = useState(false);
   const [enrollmentMessage, setEnrollmentMessage] = useState("");
 
+  // Helper function to get minimum date/time (tomorrow)
+  const getMinDateTime = () => {
+    const tomorrow = new Date();
+    tomorrow.setDate(tomorrow.getDate() + 1);
+    tomorrow.setHours(0, 0, 0, 0);
+    return tomorrow.toISOString().slice(0, 16); // Format for datetime-local input
+  };
+
+  // Helper function to validate selected date/time
+  const isDateTimeValid = (dateTimeString) => {
+    if (!dateTimeString) return false;
+    const selectedDateTime = new Date(dateTimeString);
+    const tomorrow = new Date();
+    tomorrow.setDate(tomorrow.getDate() + 1);
+    tomorrow.setHours(0, 0, 0, 0);
+    return selectedDateTime >= tomorrow;
+  };
+
   // Check for ID validation issues on component mount with specific error for studentID case issue
   useEffect(() => {
     const { isValid, errorMessage } = validateUserForOperation("booking");
@@ -263,6 +281,15 @@ function BookingAppointment({ closeModal, role: propRole }) {
       setMessage({
         type: "error",
         content: "Some selected students are not enrolled. Please remove them before proceeding."
+      });
+      return;
+    }
+
+    // Validate that the selected date/time is not in the past
+    if (!isDateTimeValid(schedule)) {
+      setMessage({
+        type: "error",
+        content: "Please select a date and time that is at least tomorrow or later."
       });
       return;
     }
@@ -526,6 +553,7 @@ function BookingAppointment({ closeModal, role: propRole }) {
               <input
                 type="datetime-local"
                 value={schedule}
+                min={getMinDateTime()}
                 onChange={(e) => setSchedule(e.target.value)}
                 className="w-full border-2 border-[#397de2] rounded-lg px-2 sm:px-3 py-2 sm:py-2 text-sm sm:text-base focus:outline-none focus:ring-2 focus:ring-[#54BEFF]"
               />
@@ -772,6 +800,7 @@ function BookingAppointment({ closeModal, role: propRole }) {
               <input
                 type="datetime-local"
                 value={schedule}
+                min={getMinDateTime()}
                 onChange={(e) => setSchedule(e.target.value)}
                 className="w-full border-2 border-[#397de2] rounded-lg px-2 sm:px-3 py-2 text-sm sm:text-base focus:outline-none focus:ring-2 focus:ring-[#54BEFF]"
               />
