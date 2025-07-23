@@ -6,6 +6,7 @@ import { ReactComponent as DeleteIcon } from "./icons/delete.svg";
 import { motion, AnimatePresence } from "framer-motion";
 import { ReactComponent as RedoIcon } from './icons/redo.svg'; // Add this import
 import './transitions.css';
+import API_URL from '../apiConfig';
 
 export default function Courses() {
   const [courses, setCourses] = useState([]);
@@ -108,42 +109,9 @@ export default function Courses() {
     try {
       const [coursesResponse, departmentsResponse, programsResponse] =
         await Promise.all([
-          fetch("import API_URL from '../apiConfig';
-
-// ... other imports
-
-// ... component code
-
-L111: fetch(`${API_URL}/course/get_courses`),
-L112: fetch(`${API_URL}/course/get_departments`),
-L113: fetch(`${API_URL}/course/get_programs`),
-L161: const response = await fetch(`${API_URL}/course/add_course`, {
-L217: `${API_URL}/course/delete_course/${courseID}`,
-L360: const response = await fetch(`${API_URL}/course/edit_course/${editCourse.courseID}`, {/course/get_courses"),
-          fetch("import API_URL from '../apiConfig';
-
-// ... other imports
-
-// ... component code
-
-L111: fetch(`${API_URL}/course/get_courses`),
-L112: fetch(`${API_URL}/course/get_departments`),
-L113: fetch(`${API_URL}/course/get_programs`),
-L161: const response = await fetch(`${API_URL}/course/add_course`, {
-L217: `${API_URL}/course/delete_course/${courseID}`,
-L360: const response = await fetch(`${API_URL}/course/edit_course/${editCourse.courseID}`, {/course/get_departments"),
-          fetch("import API_URL from '../apiConfig';
-
-// ... other imports
-
-// ... component code
-
-L111: fetch(`${API_URL}/course/get_courses`),
-L112: fetch(`${API_URL}/course/get_departments`),
-L113: fetch(`${API_URL}/course/get_programs`),
-L161: const response = await fetch(`${API_URL}/course/add_course`, {
-L217: `${API_URL}/course/delete_course/${courseID}`,
-L360: const response = await fetch(`${API_URL}/course/edit_course/${editCourse.courseID}`, {/course/get_programs"),
+          fetch(`${API_URL}/course/get_courses`),
+          fetch(`${API_URL}/course/get_departments`),
+          fetch(`${API_URL}/course/get_programs`),
         ]);
       const coursesData = await coursesResponse.json();
       const departmentsData = await departmentsResponse.json();
@@ -191,18 +159,7 @@ L360: const response = await fetch(`${API_URL}/course/edit_course/${editCourse.c
       };
       // Remove undefined fields (especially program if empty)
       Object.keys(payload).forEach(key => payload[key] === undefined || payload[key] === null || payload[key] === "" ? delete payload[key] : null);
-      const response = await fetch("import API_URL from '../apiConfig';
-
-// ... other imports
-
-// ... component code
-
-L111: fetch(`${API_URL}/course/get_courses`),
-L112: fetch(`${API_URL}/course/get_departments`),
-L113: fetch(`${API_URL}/course/get_programs`),
-L161: const response = await fetch(`${API_URL}/course/add_course`, {
-L217: `${API_URL}/course/delete_course/${courseID}`,
-L360: const response = await fetch(`${API_URL}/course/edit_course/${editCourse.courseID}`, {/course/add_course", {
+      const response = await fetch(`${API_URL}/course/add_course`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify(payload),
@@ -258,18 +215,7 @@ L360: const response = await fetch(`${API_URL}/course/edit_course/${editCourse.c
               onClick={async () => {
                 try {
                   const response = await fetch(
-                    `import API_URL from '../apiConfig';
-
-// ... other imports
-
-// ... component code
-
-L111: fetch(`${API_URL}/course/get_courses`),
-L112: fetch(`${API_URL}/course/get_departments`),
-L113: fetch(`${API_URL}/course/get_programs`),
-L161: const response = await fetch(`${API_URL}/course/add_course`, {
-L217: `${API_URL}/course/delete_course/${courseID}`,
-L360: const response = await fetch(`${API_URL}/course/edit_course/${editCourse.courseID}`, {/course/delete_course/${courseID}`,
+                    `${API_URL}/course/delete_course/${courseID}`,
                     { method: "DELETE" }
                   );
                   if (response.ok) {
@@ -412,18 +358,7 @@ L360: const response = await fetch(`${API_URL}/course/edit_course/${editCourse.c
         program: selectedPrograms.length > 0 ? selectedPrograms.map((id) => parseInt(id, 10)) : undefined,
       };
       Object.keys(payload).forEach(key => payload[key] === undefined || payload[key] === null || payload[key] === "" ? delete payload[key] : null);
-      const response = await fetch(`import API_URL from '../apiConfig';
-
-// ... other imports
-
-// ... component code
-
-L111: fetch(`${API_URL}/course/get_courses`),
-L112: fetch(`${API_URL}/course/get_departments`),
-L113: fetch(`${API_URL}/course/get_programs`),
-L161: const response = await fetch(`${API_URL}/course/add_course`, {
-L217: `${API_URL}/course/delete_course/${courseID}`,
-L360: const response = await fetch(`${API_URL}/course/edit_course/${editCourse.courseID}`, {/course/edit_course/${editCourse.courseID}`, {
+      const response = await fetch(`${API_URL}/course/edit_course/${editCourse.courseID}`, {
         method: "PUT",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify(payload),

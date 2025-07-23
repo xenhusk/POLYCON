@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { getProfilePictureUrl } from '../utils/utils';
+import { API_URL } from '../apiConfig';
 
 const ProfileDetails = ({ profileDetails, departmentName, onProfileClick }) => {
   const [profile, setProfile] = useState(null);
@@ -7,7 +8,7 @@ const ProfileDetails = ({ profileDetails, departmentName, onProfileClick }) => {
 
   useEffect(() => {
     if (userID) {
-      fetch(`http://localhost:5001/user/get_user?userID=${userID}`)
+      fetch(`${API_URL}/user/get_user?userID=${userID}`)
         .then(res => res.json())
         .then(data => setProfile(data))
         .catch(err => console.error(err));

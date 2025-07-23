@@ -1,4 +1,5 @@
 import React, { useState, useEffect, useCallback, useMemo } from 'react';
+import { API_URL } from '../apiConfig';
 import { Calendar, momentLocalizer } from 'react-big-calendar';
 import moment from 'moment';
 import 'react-big-calendar/lib/css/react-big-calendar.css';
@@ -18,13 +19,7 @@ function TeacherAppointments() {
     if (!teacherID) return;
     
     try {
-      const response = await fetch(`import API_URL from '../apiConfig';
-
-// ... other imports
-
-// ... component code
-
-L21: const response = await fetch(`${API_URL}/bookings/get_bookings?role=faculty&userID=${teacherID}&status=pending`);/bookings/get_bookings?role=faculty&userID=${teacherID}&status=pending`);
+      const response = await fetch(`${API_URL}/bookings/get_bookings?role=faculty&userID=${teacherID}&status=pending`);
       const data = await response.json();
       if (Array.isArray(data)) {
         setAppointments(data);

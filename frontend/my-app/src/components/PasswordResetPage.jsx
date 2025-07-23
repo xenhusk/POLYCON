@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { useLocation, useNavigate } from 'react-router-dom';
-import { motion } from 'framer-motion';
+import { API_URL } from '../apiConfig';
 
 const PasswordResetPage = () => {
   const [password, setPassword] = useState('');
@@ -29,7 +29,7 @@ const PasswordResetPage = () => {
   }, [token]);
   const verifyToken = async () => {
     try {
-      const response = await fetch('http://localhost:5001/auth/verify-reset-token', {
+      const response = await fetch(`${API_URL}/auth/verify-reset-token`, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
@@ -72,7 +72,7 @@ const PasswordResetPage = () => {
     setIsLoading(true);
     setMessage('');
       try {
-      const response = await fetch('http://localhost:5001/auth/reset-password', {
+      const response = await fetch(`${API_URL}/auth/reset-password`, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',

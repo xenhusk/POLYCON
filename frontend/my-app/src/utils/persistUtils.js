@@ -1,3 +1,4 @@
+import { API_URL } from './apiConfig';
 /**
  * Utility functions for ensuring data persistence across page reloads
  */
@@ -92,32 +93,18 @@ export const recoverUserIds = async () => {
   
   try {
     console.log("Attempting to recover user IDs for email:", email);
-    
+
     // First get the role
-    const roleResponse = await fetch(`import API_URL from './apiConfig';
-
-// ... other imports
-
-// ... component code
-
-L97: const roleResponse = await fetch(`${API_URL}/account/get_user_role?email=${encodeURIComponent(email)}`);
-L104: const userResponse = await fetch(`${API_URL}/user/get__user?email=${encodeURIComponent(email)}`);/account/get_user_role?email=${encodeURIComponent(email)}`);
+    const roleResponse = await fetch(`${API_URL}/account/get_user_role?email=${encodeURIComponent(email)}`);
     const roleData = await roleResponse.json();
-    
+
     if (roleData.role) {
       localStorage.setItem("userRole", roleData.role);
-      
+
       // Now get the user details
-      const userResponse = await fetch(`import API_URL from './apiConfig';
-
-// ... other imports
-
-// ... component code
-
-L97: const roleResponse = await fetch(`${API_URL}/account/get_user_role?email=${encodeURIComponent(email)}`);
-L104: const userResponse = await fetch(`${API_URL}/user/get__user?email=${encodeURIComponent(email)}`);/user/get_user?email=${encodeURIComponent(email)}`);
+      const userResponse = await fetch(`${API_URL}/user/get_user?email=${encodeURIComponent(email)}`);
       const userData = await userResponse.json();
-      
+
       if (userData) {
         // Prefer idNumber (string) over numeric PK, to persist correct ID across reloads
         const idNum = userData.idNumber || userData.id;

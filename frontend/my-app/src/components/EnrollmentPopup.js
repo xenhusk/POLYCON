@@ -2,6 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { useLocation } from 'react-router-dom';
 import { motion, AnimatePresence } from 'framer-motion';
 import EnrollmentModal from './EnrollmentModal';
+import API_URL from '../apiConfig';
 
 // Enrollment icon SVG - Updated for responsiveness
 const EnrollmentIcon = () => (
@@ -50,13 +51,7 @@ const EnrollmentPopup = () => {
   useEffect(() => {
     if (userRole === 'faculty' && email) {
       // Fetch user details from user_routes to get the isActive field.
-      fetch(`import API_URL from '../apiConfig';
-
-// ... other imports
-
-// ... component code
-
-L53: fetch(`${API_URL}/user/get_user?email=${encodeURIComponent(email)}`)/user/get_user?email=${encodeURIComponent(email)}`)
+      fetch(`${API_URL}/user/get_user?email=${encodeURIComponent(email)}`)
         .then(res => res.json())
         .then(data => {
           // Assuming data.isActive is a boolean.

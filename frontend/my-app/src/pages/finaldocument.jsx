@@ -1,4 +1,5 @@
 import React, { useState, useEffect, useRef } from 'react';
+import { API_URL } from '../apiConfig';
 import { TransformWrapper, TransformComponent } from 'react-zoom-pan-pinch';
 import jsPDF from 'jspdf';
 import html2canvas from 'html2canvas';
@@ -95,7 +96,7 @@ const FinalDocument = () => {
           setLoading(false);
           return;
         }
-        const response = await fetch(`http://localhost:5001/consultation/get_final_document?sessionID=${sessionID}`);
+        const response = await fetch(`${API_URL}/consultation/get_final_document?sessionID=${sessionID}`);
         const data = await response.json();
         if (response.ok) {          const cleanString = str => str && typeof str === 'string' ? str.replace(/^"|"$/g, "") : "";
           setTranscription(cleanString(data.transcription || ""));
@@ -124,7 +125,7 @@ const FinalDocument = () => {
             setTeacherInfo(formattedTeacherInfo);
           } else if (data.teacher_id) {
             const teacherId = data.teacher_id.split('/').pop();
-            const teacherResponse = await fetch(`http://localhost:5001/user/get_user?id=${teacherId}`);
+            const teacherResponse = await fetch(`${API_URL}/user/get_user?id=${teacherId}`);
             setTeacherInfo(await teacherResponse.json());
           }          // Use students_info directly if available, otherwise fall back to student_info or student_ids
           if (data.students_info && Array.isArray(data.students_info)) {
@@ -141,7 +142,7 @@ const FinalDocument = () => {
           } else if (data.student_ids && Array.isArray(data.student_ids)) {
             const studentPromises = data.student_ids.map(async (studentPath) => {
               const studentId = studentPath.split('/').pop();
-              const studentResponse = await fetch(`http://localhost:5001/user/get_user?id=${studentId}`);
+              const studentResponse = await fetch(`${API_URL}/user/get_user?id=${studentId}`);
               return studentResponse.json();
             });
             setStudentInfo(await Promise.all(studentPromises));
@@ -303,14 +304,14 @@ const FinalDocument = () => {
                   src={audioUrl.startsWith('http') 
                        ? audioUrl 
                        : audioUrl.startsWith('/') 
-                         ? `http://localhost:5001${audioUrl}` 
-                         : `http://localhost:5001/uploads/${audioUrl}`} 
+                         ? `${API_URL}${audioUrl}` 
+                         : `${API_URL}/uploads/${audioUrl}`} 
                   className="w-full fade-in delay-400"
                   onError={(e) => {
                     console.error("Audio loading error:", e);
                     // Try alternative URL format if the first one fails
                     if (audioUrl.includes('/')) {
-                      e.target.src = `http://localhost:5001/uploads/${audioUrl.split('/').pop()}`;
+                      e.target.src = `${API_URL}/uploads/${audioUrl.split('/').pop()}`;
                     }
                   }}
                 >

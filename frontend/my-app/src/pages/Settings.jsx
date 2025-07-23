@@ -1,5 +1,6 @@
 import React, { useEffect, useState } from 'react';
 import apiClient from '../utils/apiClient';
+import { API_URL } from '../apiConfig';
 
 function Settings() {
   const [settings, setSettings] = useState(null);
@@ -9,7 +10,7 @@ function Settings() {
   useEffect(() => {
     const fetchSettings = async () => {
       try {
-        const response = await apiClient.fetch('http://localhost:5001/settings/get_settings');
+        const response = await apiClient.fetch(`${API_URL}/settings/get_settings`);
         setSettings(response);
       } catch (err) {
         setError(err.message);

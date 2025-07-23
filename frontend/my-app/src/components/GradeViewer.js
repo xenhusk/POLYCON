@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from "react";
 import "./gradeViewer.css";
+import API_URL from '../apiConfig';
 
 const GradeViewer = () => {
   const [grades, setGrades] = useState([]);
@@ -14,14 +15,7 @@ const GradeViewer = () => {
   useEffect(() => {
     const fetchLatestFilter = async () => {
       try {
-        const response = await fetch('import API_URL from '../apiConfig';
-
-// ... other imports
-
-// ... component code
-
-L17: const response = await fetch(`${API_URL}/semester/get_latest_filter`);
-L69: const response = await fetch(`${API_URL}/grade/get_student_grades?${queryParams}`);/semester/get_latest_filter');
+        const response = await fetch(`${API_URL}/semester/get_latest_filter`);
         if (response.ok) {
           const data = await response.json();
           setSchoolYear(data.school_year);
@@ -73,14 +67,7 @@ L69: const response = await fetch(`${API_URL}/grade/get_student_grades?${queryPa
          period: period || ""
       }).toString();
 
-      const response = await fetch(`import API_URL from '../apiConfig';
-
-// ... other imports
-
-// ... component code
-
-L17: const response = await fetch(`${API_URL}/semester/get_latest_filter`);
-L69: const response = await fetch(`${API_URL}/grade/get_student_grades?${queryParams}`);/grade/get_student_grades?${queryParams}`);
+      const response = await fetch(`${API_URL}/grade/get_student_grades?${queryParams}`);
       const data = await response.json();
 
       if (response.ok) {

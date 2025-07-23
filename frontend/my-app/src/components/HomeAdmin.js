@@ -1,5 +1,6 @@
 import React, { useEffect, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
+import API_URL from '../apiConfig';
 import {
   LineChart,
   Line,
@@ -111,16 +112,7 @@ const HomeAdmin = () => {
 
   useEffect(() => {
     // Fetch available semesters
-    fetch('import API_URL from '../apiConfig';
-
-// ... other imports
-
-// ... component code
-
-L114: fetch(`${API_URL}/homeadmin/semesters`)
-L139: fetch(`${API_URL}/homeadmin/stats?${params}`)
-L151: fetch(`${API_URL}/homeadmin/consultations_by_date?${params}`)
-L174: fetch(`${API_URL}/bookings/get_all_bookings_admin`)/homeadmin/semesters')
+    fetch(`${API_URL}/homeadmin/semesters`)
       .then(res => res.json())
       .then(data => {
         setSemesters(data);
@@ -145,16 +137,7 @@ L174: fetch(`${API_URL}/bookings/get_all_bookings_admin`)/homeadmin/semesters')
     });
 
     // Fetch stats with semester filter
-    fetch(`import API_URL from '../apiConfig';
-
-// ... other imports
-
-// ... component code
-
-L114: fetch(`${API_URL}/homeadmin/semesters`)
-L139: fetch(`${API_URL}/homeadmin/stats?${params}`)
-L151: fetch(`${API_URL}/homeadmin/consultations_by_date?${params}`)
-L174: fetch(`${API_URL}/bookings/get_all_bookings_admin`)/homeadmin/stats?${params}`)
+    fetch(`${API_URL}/homeadmin/stats?${params}`)
       .then(res => res.json())
       .then(data => {
         setStats({
@@ -166,16 +149,7 @@ L174: fetch(`${API_URL}/bookings/get_all_bookings_admin`)/homeadmin/stats?${para
       .catch(err => console.error("Error fetching stats:", err));
 
     // Fetch consultation data with semester filter
-    fetch(`import API_URL from '../apiConfig';
-
-// ... other imports
-
-// ... component code
-
-L114: fetch(`${API_URL}/homeadmin/semesters`)
-L139: fetch(`${API_URL}/homeadmin/stats?${params}`)
-L151: fetch(`${API_URL}/homeadmin/consultations_by_date?${params}`)
-L174: fetch(`${API_URL}/bookings/get_all_bookings_admin`)/homeadmin/consultations_by_date?${params}`)
+    fetch(`${API_URL}/homeadmin/consultations_by_date?${params}`)
       .then(res => res.json())
       .then(data => {
         const consultationsArr = Object.entries(data.consultations || {})
@@ -198,16 +172,7 @@ L174: fetch(`${API_URL}/bookings/get_all_bookings_admin`)/homeadmin/consultation
   };
 
   useEffect(() => {
-    fetch(`import API_URL from '../apiConfig';
-
-// ... other imports
-
-// ... component code
-
-L114: fetch(`${API_URL}/homeadmin/semesters`)
-L139: fetch(`${API_URL}/homeadmin/stats?${params}`)
-L151: fetch(`${API_URL}/homeadmin/consultations_by_date?${params}`)
-L174: fetch(`${API_URL}/bookings/get_all_bookings_admin`)/bookings/get_all_bookings_admin`)
+    fetch(`${API_URL}/bookings/get_all_bookings_admin`)
       .then(res => res.json())
       .then(data => {
         console.log('Raw booking data:', data); // Debug log

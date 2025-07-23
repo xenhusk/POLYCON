@@ -1,3 +1,4 @@
+import { API_URL } from './apiConfig';
 import { QueryClient } from 'react-query';
 
 const abortControllers = new Map();
@@ -56,44 +57,18 @@ const apiClient = {
   bookings: {
     getStudentBookings: () => {
       const studentID = localStorage.getItem('studentID');
-      return apiClient.fetch(`import API_URL from './apiConfig';
-
-// ... other imports
-
-// ... component code
-
-L59: return apiClient.fetch(`${API_URL}/bookings/get_bookings?role=student&idNumber=${studentID}`);
-L63: return apiClient.fetch(`${API_URL}/bookings/get_bookings?role=faculty&idNumber=${teacherID}`);
-L71: `${API_URL}/consultation/get_history?role=${role}&idNumber=${userID}`/bookings/get_bookings?role=student&idNumber=${studentID}`);
+      return apiClient.fetch(`${API_URL}/bookings/get_bookings?role=student&idNumber=${studentID}`);
     },
     getTeacherBookings: () => {
       const teacherID = localStorage.getItem('teacherID');
-      return apiClient.fetch(`import API_URL from './apiConfig';
-
-// ... other imports
-
-// ... component code
-
-L59: return apiClient.fetch(`${API_URL}/bookings/get_bookings?role=student&idNumber=${studentID}`);
-L63: return apiClient.fetch(`${API_URL}/bookings/get_bookings?role=faculty&idNumber=${teacherID}`);
-L71: `${API_URL}/consultation/get_history?role=${role}&idNumber=${userID}`/bookings/get_bookings?role=faculty&idNumber=${teacherID}`);
+      return apiClient.fetch(`${API_URL}/bookings/get_bookings?role=faculty&idNumber=${teacherID}`);
     },
     // ...add more endpoints as needed
   },
   consultations: {
     getHistory: (role, userID) => {
       // Use idNumber parameter only since that's what the backend needs
-      return apiClient.fetch(
-        `import API_URL from './apiConfig';
-
-// ... other imports
-
-// ... component code
-
-L59: return apiClient.fetch(`${API_URL}/bookings/get_bookings?role=student&idNumber=${studentID}`);
-L63: return apiClient.fetch(`${API_URL}/bookings/get_bookings?role=faculty&idNumber=${teacherID}`);
-L71: `${API_URL}/consultation/get_history?role=${role}&idNumber=${userID}`/consultation/get_history?role=${role}&idNumber=${userID}`
-      );
+      return apiClient.fetch(`${API_URL}/consultation/get_history?role=${role}&idNumber=${userID}`);
     }
   }
 };

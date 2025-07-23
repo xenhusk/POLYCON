@@ -1,5 +1,6 @@
 import React, { useEffect, useState } from 'react';
 import { LineChart, Line, XAxis, YAxis, Tooltip, Legend, ResponsiveContainer, CartesianGrid } from 'recharts';
+import API_URL from '../apiConfig';
 
 const HomeStudent = () => {
   const [studentId, setStudentId] = useState(null);
@@ -22,15 +23,7 @@ const HomeStudent = () => {
     }
 
     // Fetch semesters for filtering
-    fetch('import API_URL from '../apiConfig';
-
-// ... other imports
-
-// ... component code
-
-L25: fetch(`${API_URL}/homeadmin/semesters`)
-L47: fetch(`${API_URL}/homestudent/stats?${params}`)
-L56: fetch(`${API_URL}/homestudent/consultations_by_date?${params}`)/homeadmin/semesters')
+    fetch(`${API_URL}/homeadmin/semesters`)
       .then(res => res.json())
       .then(data => {
         setSemesters(data);
@@ -52,32 +45,18 @@ L56: fetch(`${API_URL}/homestudent/consultations_by_date?${params}`)/homeadmin/s
     });
 
     // Fetch student stats
-    fetch(`import API_URL from '../apiConfig';
-
-// ... other imports
-
-// ... component code
-
-L25: fetch(`${API_URL}/homeadmin/semesters`)
-L47: fetch(`${API_URL}/homestudent/stats?${params}`)
-L56: fetch(`${API_URL}/homestudent/consultations_by_date?${params}`)/homestudent/stats?${params}`)
-      .then(res => res.json())      .then(data => {
+    fetch(`${API_URL}/homestudent/stats?${params}`)
+      .then(res => res.json())
+      .then(data => {
         setStats({
           total_consultations: data.total_consultations || 0,
           total_hours: (isNaN(Number(data.total_hours)) ? 0 : Number(data.total_hours)).toFixed(2),
           latest_topic: data.latest_topic || "No recent consultations"
         });
       })
-      .catch(err => console.error("Error fetching stats:", err));    // Fetch consultation data for charts
-    fetch(`import API_URL from '../apiConfig';
-
-// ... other imports
-
-// ... component code
-
-L25: fetch(`${API_URL}/homeadmin/semesters`)
-L47: fetch(`${API_URL}/homestudent/stats?${params}`)
-L56: fetch(`${API_URL}/homestudent/consultations_by_date?${params}`)/homestudent/consultations_by_date?${params}`)
+      .catch(err => console.error("Error fetching stats:", err));
+    // Fetch consultation data for charts
+    fetch(`${API_URL}/homestudent/consultations_by_date?${params}`)
       .then(res => res.json())
       .then(data => {
         const formattedConsultations = Object.entries(data.consultations || {})

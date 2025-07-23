@@ -4,6 +4,7 @@ import { getProfilePictureUrl, getDisplayProgram } from "../utils/utils";
 import { getUserIdentifiers, validateUserForOperation } from "../utils/userUtils";
 import { useQueryClient } from "react-query";
 import { motion } from "framer-motion";
+import API_URL from '../apiConfig';
 
 function BookingAppointment({ closeModal, role: propRole }) {
   const queryClient = useQueryClient();
@@ -110,18 +111,7 @@ function BookingAppointment({ closeModal, role: propRole }) {
       try {
         console.log(`Fetching students for search term: "${term}"`);
         const res = await fetch(
-          `import API_URL from '../apiConfig';
-
-// ... other imports
-
-// ... component code
-
-L113: `${API_URL}/search/students?query=${encodeURIComponent(
-L187: `${API_URL}/search/teachers?query=${encodeURIComponent(
-L296: `${API_URL}/bookings/create_booking`,
-L367: `${API_URL}/bookings/create_booking`,/search/students?query=${encodeURIComponent(
-            term.toLowerCase()
-          )}&page=${page}`
+          `${API_URL}/search/students?query=${encodeURIComponent(term.toLowerCase())}&page=${page}`
         );
         const data = await res.json();
         
@@ -193,18 +183,7 @@ L367: `${API_URL}/bookings/create_booking`,/search/students?query=${encodeURICom
       try {
         setIsTeacherSearchLoading(true);
         const res = await fetch(
-          `import API_URL from '../apiConfig';
-
-// ... other imports
-
-// ... component code
-
-L113: `${API_URL}/search/students?query=${encodeURIComponent(
-L187: `${API_URL}/search/teachers?query=${encodeURIComponent(
-L296: `${API_URL}/bookings/create_booking`,
-L367: `${API_URL}/bookings/create_booking`,/search/teachers?query=${encodeURIComponent(
-            teacherSearchTerm.toLowerCase()
-          )}`
+          `${API_URL}/search/teachers?query=${encodeURIComponent(teacherSearchTerm.toLowerCase())}`
         );
         const data = await res.json();
         // Handle either paged results or direct array response
@@ -311,16 +290,7 @@ L367: `${API_URL}/bookings/create_booking`,/search/teachers?query=${encodeURICom
       console.log("Faculty bookingData:", bookingData);
       try {
         const response = await fetch(
-          "import API_URL from '../apiConfig';
-
-// ... other imports
-
-// ... component code
-
-L113: `${API_URL}/search/students?query=${encodeURIComponent(
-L187: `${API_URL}/search/teachers?query=${encodeURIComponent(
-L296: `${API_URL}/bookings/create_booking`,
-L367: `${API_URL}/bookings/create_booking`,/bookings/create_booking",
+          `${API_URL}/bookings/create_booking`,
           {
             method: "POST",
             headers: { "Content-Type": "application/json" },
@@ -391,16 +361,7 @@ L367: `${API_URL}/bookings/create_booking`,/bookings/create_booking",
       
       try {
         const response = await fetch(
-          "import API_URL from '../apiConfig';
-
-// ... other imports
-
-// ... component code
-
-L113: `${API_URL}/search/students?query=${encodeURIComponent(
-L187: `${API_URL}/search/teachers?query=${encodeURIComponent(
-L296: `${API_URL}/bookings/create_booking`,
-L367: `${API_URL}/bookings/create_booking`,/bookings/create_booking",
+          `${API_URL}/bookings/create_booking`,
           {
             method: "POST",
             headers: { "Content-Type": "application/json" },

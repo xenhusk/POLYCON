@@ -2,6 +2,7 @@ import React, { useEffect, useState, useRef } from 'react';
 import { ReactComponent as EditIcon } from './icons/Edit.svg';
 import { ReactComponent as DeleteIcon } from './icons/delete.svg';
 import './transitions.css';
+import API_URL from '../apiConfig';
 
 export default function Departments() {
   const [departments, setDepartments] = useState([]);
@@ -38,16 +39,7 @@ export default function Departments() {
         setDepartments(departmentsData);
         setFilteredDepartments(departmentsData);
       } else {
-        const response = await fetch('import API_URL from '../apiConfig';
-
-// ... other imports
-
-// ... component code
-
-L41: const response = await fetch(`${API_URL}/departments/get_departments`);
-L86: ? `${API_URL}/departments/edit_department/${departmentID}`
-L87: : `${API_URL}/departments/add_department`;
-L140: const response = await fetch(`${API_URL}/departments/delete_department/${departmentToDelete}`, {/departments/get_departments');
+        const response = await fetch(`${API_URL}/departments/get_departments`);
         const departmentsData = await response.json();
         console.log("Fetched Departments:", departmentsData);
         setDepartments(departmentsData);
@@ -92,26 +84,8 @@ L140: const response = await fetch(`${API_URL}/departments/delete_department/${d
     setIsAddLoading(true);
     try {
       const endpoint = editing 
-        ? `import API_URL from '../apiConfig';
-
-// ... other imports
-
-// ... component code
-
-L41: const response = await fetch(`${API_URL}/departments/get_departments`);
-L86: ? `${API_URL}/departments/edit_department/${departmentID}`
-L87: : `${API_URL}/departments/add_department`;
-L140: const response = await fetch(`${API_URL}/departments/delete_department/${departmentToDelete}`, {/departments/edit_department/${departmentID}`
-        : `import API_URL from '../apiConfig';
-
-// ... other imports
-
-// ... component code
-
-L41: const response = await fetch(`${API_URL}/departments/get_departments`);
-L86: ? `${API_URL}/departments/edit_department/${departmentID}`
-L87: : `${API_URL}/departments/add_department`;
-L140: const response = await fetch(`${API_URL}/departments/delete_department/${departmentToDelete}`, {/departments/add_department`;
+        ? `${API_URL}/departments/edit_department/${departmentID}`
+        : `${API_URL}/departments/add_department`;
       const method = editing ? 'PUT' : 'POST';
       console.log(`Sending ${method} request to ${endpoint} with data:`, { name: departmentName });
       const response = await fetch(endpoint, {
@@ -164,16 +138,7 @@ L140: const response = await fetch(`${API_URL}/departments/delete_department/${d
   const confirmDelete = async () => {
     setIsDeleteLoading(true);
     try {
-      const response = await fetch(`import API_URL from '../apiConfig';
-
-// ... other imports
-
-// ... component code
-
-L41: const response = await fetch(`${API_URL}/departments/get_departments`);
-L86: ? `${API_URL}/departments/edit_department/${departmentID}`
-L87: : `${API_URL}/departments/add_department`;
-L140: const response = await fetch(`${API_URL}/departments/delete_department/${departmentToDelete}`, {/departments/delete_department/${departmentToDelete}`, {
+      const response = await fetch(`${API_URL}/departments/delete_department/${departmentToDelete}`, {
         method: 'DELETE'
       });
       const respJson = await response.json();

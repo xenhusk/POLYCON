@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from "react";
+import { useState, useEffect } from "react";
 import { ReactComponent as DeleteIcon } from "./icons/delete.svg";
 import { ReactComponent as EditIcon } from "./icons/Edit.svg";
 import { ReactComponent as FilterIcon } from "./icons/FilterAdd.svg";
@@ -9,13 +9,13 @@ export default function AddGrade() {
   const [studentID, setStudentID] = useState("");
   const [studentName, setStudentName] = useState("");
   const [courseID, setCourseID] = useState("");
-  const [courseName, setCourseName] = useState("");
+  // const [courseName, setCourseName] = useState(""); // Removed unused variable
   const [grade, setGrade] = useState("");
   const [grades, setGrades] = useState([]);
   const [period, setPeriod] = useState("");
   const [schoolYear, setSchoolYear] = useState("2024-2025");
   const [semester, setSemester] = useState("");
-  const [students, setStudents] = useState([]);
+  // const [students, setStudents] = useState([]); // Removed unused variable
   const [courses, setCourses] = useState([]);
   const [facultyID, setFacultyID] = useState("");
   const [selectedGradeID, setSelectedGradeID] = useState(null); // For editing
@@ -24,7 +24,7 @@ export default function AddGrade() {
   const [filteredGrades, setFilteredGrades] = useState([]); // Stores filtered grades
   const [selectedPeriods, setSelectedPeriods] = useState([]); // Selected periods for filtering
   const [courseFilter, setCourseFilter] = useState(""); // Course filter input
-  const [filteredCourses, setFilteredCourses] = useState([]); // Filtered courses for predictive dropdown
+  // const [filteredCourses, setFilteredCourses] = useState([]); // Removed unused variable
   const [schoolYearFilter, setSchoolYearFilter] = useState(""); // School year filter input
   const [semesterFilter, setSemesterFilter] = useState(""); // Semester filter input
 
@@ -52,25 +52,7 @@ export default function AddGrade() {
     const fetchLatestSemester = async () => {
       try {
         const response = await fetch(
-          "import API_URL from '../apiConfig';
-
-// ... other imports
-
-// ... component code
-
-L55: `${API_URL}/semester/get_latest_filter`
-L88: `${API_URL}/semester/get_latest_filter`
-L102: const gradesUrl = new URL(`${API_URL}/grade/get_grades`);
-L134: fetch(`${API_URL}/grade/get_students`),
-L137: `${API_URL}/course/get_courses?facultyID=${localStorage.getItem(
-L200: `${API_URL}/grade/search_students?name=${enteredName}`
-L221: `${API_URL}/grade/delete_grade`,
-L229: const gradesUrl = new URL(`${API_URL}/grade/get_grades`);
-L310: const response = await fetch(`${API_URL}/grade/edit_grade`, {
-L325: const gradesUrl = new URL(`${API_URL}/grade/get_grades`);
-L408: const response = await fetch(`${API_URL}/grade/add_grade`, {
-L425: const gradesUrl = new URL(`${API_URL}/grade/get_grades`);
-L596: `${API_URL}/grade/search_students?name=${query}`/semester/get_latest_filter"
+          `${API_URL}/semester/get_latest_filter`
         );
         if (response.ok) {
           const data = await response.json();
@@ -103,25 +85,7 @@ L596: `${API_URL}/grade/search_students?name=${query}`/semester/get_latest_filte
     try {
       // First get the latest semester info
       const latestSemesterResponse = await fetch(
-        "import API_URL from '../apiConfig';
-
-// ... other imports
-
-// ... component code
-
-L55: `${API_URL}/semester/get_latest_filter`
-L88: `${API_URL}/semester/get_latest_filter`
-L102: const gradesUrl = new URL(`${API_URL}/grade/get_grades`);
-L134: fetch(`${API_URL}/grade/get_students`),
-L137: `${API_URL}/course/get_courses?facultyID=${localStorage.getItem(
-L200: `${API_URL}/grade/search_students?name=${enteredName}`
-L221: `${API_URL}/grade/delete_grade`,
-L229: const gradesUrl = new URL(`${API_URL}/grade/get_grades`);
-L310: const response = await fetch(`${API_URL}/grade/edit_grade`, {
-L325: const gradesUrl = new URL(`${API_URL}/grade/get_grades`);
-L408: const response = await fetch(`${API_URL}/grade/add_grade`, {
-L425: const gradesUrl = new URL(`${API_URL}/grade/get_grades`);
-L596: `${API_URL}/grade/search_students?name=${query}`/semester/get_latest_filter"
+        `${API_URL}/semester/get_latest_filter`
       );
       const latestSemesterData = await latestSemesterResponse.json();
 
@@ -135,25 +99,7 @@ L596: `${API_URL}/grade/search_students?name=${query}`/semester/get_latest_filte
       const cachedCourses = localStorage.getItem("courses");
 
       // Fetch ALL grades for this teacher without semester filter
-      const gradesUrl = new URL("import API_URL from '../apiConfig';
-
-// ... other imports
-
-// ... component code
-
-L55: `${API_URL}/semester/get_latest_filter`
-L88: `${API_URL}/semester/get_latest_filter`
-L102: const gradesUrl = new URL(`${API_URL}/grade/get_grades`);
-L134: fetch(`${API_URL}/grade/get_students`),
-L137: `${API_URL}/course/get_courses?facultyID=${localStorage.getItem(
-L200: `${API_URL}/grade/search_students?name=${enteredName}`
-L221: `${API_URL}/grade/delete_grade`,
-L229: const gradesUrl = new URL(`${API_URL}/grade/get_grades`);
-L310: const response = await fetch(`${API_URL}/grade/edit_grade`, {
-L325: const gradesUrl = new URL(`${API_URL}/grade/get_grades`);
-L408: const response = await fetch(`${API_URL}/grade/add_grade`, {
-L425: const gradesUrl = new URL(`${API_URL}/grade/get_grades`);
-L596: `${API_URL}/grade/search_students?name=${query}`/grade/get_grades");
+      const gradesUrl = new URL(`${API_URL}/grade/get_grades`);
       gradesUrl.searchParams.append(
         "facultyID",
         localStorage.getItem("teacherID")
@@ -185,49 +131,9 @@ L596: `${API_URL}/grade/search_students?name=${query}`/grade/get_grades");
       } else {
         const [studentsResponse, gradesResponse, coursesResponse] =
           await Promise.all([
-            fetch("import API_URL from '../apiConfig';
-
-// ... other imports
-
-// ... component code
-
-L55: `${API_URL}/semester/get_latest_filter`
-L88: `${API_URL}/semester/get_latest_filter`
-L102: const gradesUrl = new URL(`${API_URL}/grade/get_grades`);
-L134: fetch(`${API_URL}/grade/get_students`),
-L137: `${API_URL}/course/get_courses?facultyID=${localStorage.getItem(
-L200: `${API_URL}/grade/search_students?name=${enteredName}`
-L221: `${API_URL}/grade/delete_grade`,
-L229: const gradesUrl = new URL(`${API_URL}/grade/get_grades`);
-L310: const response = await fetch(`${API_URL}/grade/edit_grade`, {
-L325: const gradesUrl = new URL(`${API_URL}/grade/get_grades`);
-L408: const response = await fetch(`${API_URL}/grade/add_grade`, {
-L425: const gradesUrl = new URL(`${API_URL}/grade/get_grades`);
-L596: `${API_URL}/grade/search_students?name=${query}`/grade/get_students"),
+            fetch(`${API_URL}/grade/get_students`),
             fetch(gradesUrl),
-            fetch(
-              `import API_URL from '../apiConfig';
-
-// ... other imports
-
-// ... component code
-
-L55: `${API_URL}/semester/get_latest_filter`
-L88: `${API_URL}/semester/get_latest_filter`
-L102: const gradesUrl = new URL(`${API_URL}/grade/get_grades`);
-L134: fetch(`${API_URL}/grade/get_students`),
-L137: `${API_URL}/course/get_courses?facultyID=${localStorage.getItem(
-L200: `${API_URL}/grade/search_students?name=${enteredName}`
-L221: `${API_URL}/grade/delete_grade`,
-L229: const gradesUrl = new URL(`${API_URL}/grade/get_grades`);
-L310: const response = await fetch(`${API_URL}/grade/edit_grade`, {
-L325: const gradesUrl = new URL(`${API_URL}/grade/get_grades`);
-L408: const response = await fetch(`${API_URL}/grade/add_grade`, {
-L425: const gradesUrl = new URL(`${API_URL}/grade/get_grades`);
-L596: `${API_URL}/grade/search_students?name=${query}`/course/get_courses?facultyID=${localStorage.getItem(
-                "teacherID"
-              )}`
-            ),
+            fetch(`${API_URL}/course/get_courses?facultyID=${localStorage.getItem("teacherID")}`),
           ]);
 
         const studentsData = await studentsResponse.json();
@@ -287,25 +193,7 @@ L596: `${API_URL}/grade/search_students?name=${query}`/course/get_courses?facult
 
     try {
       const response = await fetch(
-        `import API_URL from '../apiConfig';
-
-// ... other imports
-
-// ... component code
-
-L55: `${API_URL}/semester/get_latest_filter`
-L88: `${API_URL}/semester/get_latest_filter`
-L102: const gradesUrl = new URL(`${API_URL}/grade/get_grades`);
-L134: fetch(`${API_URL}/grade/get_students`),
-L137: `${API_URL}/course/get_courses?facultyID=${localStorage.getItem(
-L200: `${API_URL}/grade/search_students?name=${enteredName}`
-L221: `${API_URL}/grade/delete_grade`,
-L229: const gradesUrl = new URL(`${API_URL}/grade/get_grades`);
-L310: const response = await fetch(`${API_URL}/grade/edit_grade`, {
-L325: const gradesUrl = new URL(`${API_URL}/grade/get_grades`);
-L408: const response = await fetch(`${API_URL}/grade/add_grade`, {
-L425: const gradesUrl = new URL(`${API_URL}/grade/get_grades`);
-L596: `${API_URL}/grade/search_students?name=${query}`/grade/search_students?name=${enteredName}`
+        `${API_URL}/grade/search_students?name=${enteredName}`
       );
       const data = await response.json();
       setFilteredStudents(Array.isArray(data) ? data : []);
@@ -326,58 +214,22 @@ L596: `${API_URL}/grade/search_students?name=${query}`/grade/search_students?nam
               onClick={async () => {
                 try {
                   const response = await fetch(
-                    "import API_URL from '../apiConfig';
-
-// ... other imports
-
-// ... component code
-
-L55: `${API_URL}/semester/get_latest_filter`
-L88: `${API_URL}/semester/get_latest_filter`
-L102: const gradesUrl = new URL(`${API_URL}/grade/get_grades`);
-L134: fetch(`${API_URL}/grade/get_students`),
-L137: `${API_URL}/course/get_courses?facultyID=${localStorage.getItem(
-L200: `${API_URL}/grade/search_students?name=${enteredName}`
-L221: `${API_URL}/grade/delete_grade`,
-L229: const gradesUrl = new URL(`${API_URL}/grade/get_grades`);
-L310: const response = await fetch(`${API_URL}/grade/edit_grade`, {
-L325: const gradesUrl = new URL(`${API_URL}/grade/get_grades`);
-L408: const response = await fetch(`${API_URL}/grade/add_grade`, {
-L425: const gradesUrl = new URL(`${API_URL}/grade/get_grades`);
-L596: `${API_URL}/grade/search_students?name=${query}`/grade/delete_grade",
+                    `${API_URL}/grade/delete_grade`,
                     {
                       method: "POST",
                       headers: { "Content-Type": "application/json" },
                       body: JSON.stringify({ gradeID: gradeDocID }),
                     }
-                  );                  if (response.ok) {
+                  );
+                  if (response.ok) {
                     // Reload grades
-                    const gradesUrl = new URL("import API_URL from '../apiConfig';
-
-// ... other imports
-
-// ... component code
-
-L55: `${API_URL}/semester/get_latest_filter`
-L88: `${API_URL}/semester/get_latest_filter`
-L102: const gradesUrl = new URL(`${API_URL}/grade/get_grades`);
-L134: fetch(`${API_URL}/grade/get_students`),
-L137: `${API_URL}/course/get_courses?facultyID=${localStorage.getItem(
-L200: `${API_URL}/grade/search_students?name=${enteredName}`
-L221: `${API_URL}/grade/delete_grade`,
-L229: const gradesUrl = new URL(`${API_URL}/grade/get_grades`);
-L310: const response = await fetch(`${API_URL}/grade/edit_grade`, {
-L325: const gradesUrl = new URL(`${API_URL}/grade/get_grades`);
-L408: const response = await fetch(`${API_URL}/grade/add_grade`, {
-L425: const gradesUrl = new URL(`${API_URL}/grade/get_grades`);
-L596: `${API_URL}/grade/search_students?name=${query}`/grade/get_grades");
+                    const gradesUrl = new URL(`${API_URL}/grade/get_grades`);
                     gradesUrl.searchParams.append(
                       "facultyID",
                       localStorage.getItem("teacherID")
                     );
                     const gradesResponse = await fetch(gradesUrl);
                     const gradesData = await gradesResponse.json();
-                    
                     // Update grades state
                     setGrades(Array.isArray(gradesData) ? gradesData : []);
                     setFilteredGrades(Array.isArray(gradesData) ? gradesData.filter(
@@ -451,25 +303,7 @@ L596: `${API_URL}/grade/search_students?name=${query}`/grade/get_grades");
     }
 
     try {
-      const response = await fetch("import API_URL from '../apiConfig';
-
-// ... other imports
-
-// ... component code
-
-L55: `${API_URL}/semester/get_latest_filter`
-L88: `${API_URL}/semester/get_latest_filter`
-L102: const gradesUrl = new URL(`${API_URL}/grade/get_grades`);
-L134: fetch(`${API_URL}/grade/get_students`),
-L137: `${API_URL}/course/get_courses?facultyID=${localStorage.getItem(
-L200: `${API_URL}/grade/search_students?name=${enteredName}`
-L221: `${API_URL}/grade/delete_grade`,
-L229: const gradesUrl = new URL(`${API_URL}/grade/get_grades`);
-L310: const response = await fetch(`${API_URL}/grade/edit_grade`, {
-L325: const gradesUrl = new URL(`${API_URL}/grade/get_grades`);
-L408: const response = await fetch(`${API_URL}/grade/add_grade`, {
-L425: const gradesUrl = new URL(`${API_URL}/grade/get_grades`);
-L596: `${API_URL}/grade/search_students?name=${query}`/grade/edit_grade", {
+      const response = await fetch(`${API_URL}/grade/edit_grade`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
@@ -482,40 +316,21 @@ L596: `${API_URL}/grade/search_students?name=${query}`/grade/edit_grade", {
           school_year: schoolYear,
           semester,
         }),
-      });      if (response.ok) {
+      });
+      if (response.ok) {
         // Reload grades
-        const gradesUrl = new URL("import API_URL from '../apiConfig';
-
-// ... other imports
-
-// ... component code
-
-L55: `${API_URL}/semester/get_latest_filter`
-L88: `${API_URL}/semester/get_latest_filter`
-L102: const gradesUrl = new URL(`${API_URL}/grade/get_grades`);
-L134: fetch(`${API_URL}/grade/get_students`),
-L137: `${API_URL}/course/get_courses?facultyID=${localStorage.getItem(
-L200: `${API_URL}/grade/search_students?name=${enteredName}`
-L221: `${API_URL}/grade/delete_grade`,
-L229: const gradesUrl = new URL(`${API_URL}/grade/get_grades`);
-L310: const response = await fetch(`${API_URL}/grade/edit_grade`, {
-L325: const gradesUrl = new URL(`${API_URL}/grade/get_grades`);
-L408: const response = await fetch(`${API_URL}/grade/add_grade`, {
-L425: const gradesUrl = new URL(`${API_URL}/grade/get_grades`);
-L596: `${API_URL}/grade/search_students?name=${query}`/grade/get_grades");
+        const gradesUrl = new URL(`${API_URL}/grade/get_grades`);
         gradesUrl.searchParams.append(
           "facultyID",
           localStorage.getItem("teacherID")
         );
         const gradesResponse = await fetch(gradesUrl);
         const gradesData = await gradesResponse.json();
-        
         // Update grades state
         setGrades(Array.isArray(gradesData) ? gradesData : []);
         setFilteredGrades(Array.isArray(gradesData) ? gradesData.filter(
           (grade) => grade.school_year === schoolYear && grade.semester === semester
         ) : []);
-
         // Reset form and selected grade
         handleCancelEdit();
         setMessage({ type: "success", content: "Grade updated successfully" });
@@ -585,25 +400,7 @@ L596: `${API_URL}/grade/search_students?name=${query}`/grade/get_grades");
     }
 
     try {
-      const response = await fetch("import API_URL from '../apiConfig';
-
-// ... other imports
-
-// ... component code
-
-L55: `${API_URL}/semester/get_latest_filter`
-L88: `${API_URL}/semester/get_latest_filter`
-L102: const gradesUrl = new URL(`${API_URL}/grade/get_grades`);
-L134: fetch(`${API_URL}/grade/get_students`),
-L137: `${API_URL}/course/get_courses?facultyID=${localStorage.getItem(
-L200: `${API_URL}/grade/search_students?name=${enteredName}`
-L221: `${API_URL}/grade/delete_grade`,
-L229: const gradesUrl = new URL(`${API_URL}/grade/get_grades`);
-L310: const response = await fetch(`${API_URL}/grade/edit_grade`, {
-L325: const gradesUrl = new URL(`${API_URL}/grade/get_grades`);
-L408: const response = await fetch(`${API_URL}/grade/add_grade`, {
-L425: const gradesUrl = new URL(`${API_URL}/grade/get_grades`);
-L596: `${API_URL}/grade/search_students?name=${query}`/grade/add_grade", {
+      const response = await fetch(`${API_URL}/grade/add_grade`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
@@ -616,42 +413,23 @@ L596: `${API_URL}/grade/search_students?name=${query}`/grade/add_grade", {
           school_year: schoolYear,
           semester,
         }),
-      });      const result = await response.json();
+      });
+      const result = await response.json();
 
       if (response.ok) {
         // Reload grades
-        const gradesUrl = new URL("import API_URL from '../apiConfig';
-
-// ... other imports
-
-// ... component code
-
-L55: `${API_URL}/semester/get_latest_filter`
-L88: `${API_URL}/semester/get_latest_filter`
-L102: const gradesUrl = new URL(`${API_URL}/grade/get_grades`);
-L134: fetch(`${API_URL}/grade/get_students`),
-L137: `${API_URL}/course/get_courses?facultyID=${localStorage.getItem(
-L200: `${API_URL}/grade/search_students?name=${enteredName}`
-L221: `${API_URL}/grade/delete_grade`,
-L229: const gradesUrl = new URL(`${API_URL}/grade/get_grades`);
-L310: const response = await fetch(`${API_URL}/grade/edit_grade`, {
-L325: const gradesUrl = new URL(`${API_URL}/grade/get_grades`);
-L408: const response = await fetch(`${API_URL}/grade/add_grade`, {
-L425: const gradesUrl = new URL(`${API_URL}/grade/get_grades`);
-L596: `${API_URL}/grade/search_students?name=${query}`/grade/get_grades");
+        const gradesUrl = new URL(`${API_URL}/grade/get_grades`);
         gradesUrl.searchParams.append(
           "facultyID",
           localStorage.getItem("teacherID")
         );
         const gradesResponse = await fetch(gradesUrl);
         const gradesData = await gradesResponse.json();
-        
         // Update grades state
         setGrades(Array.isArray(gradesData) ? gradesData : []);
         setFilteredGrades(Array.isArray(gradesData) ? gradesData.filter(
           (grade) => grade.school_year === schoolYear && grade.semester === semester
         ) : []);
-
         // Reset form
         setStudentID("");
         setStudentName("");
@@ -660,7 +438,6 @@ L596: `${API_URL}/grade/search_students?name=${query}`/grade/get_grades");
         setPeriod("");
         setSchoolYear("2024-2025");
         setSemester("");
-
         setMessage({ type: "success", content: "Grade added successfully" });
       } else {
         setMessage({
@@ -809,25 +586,7 @@ L596: `${API_URL}/grade/search_students?name=${query}`/grade/get_grades");
     }
     try {
       const response = await fetch(
-        `import API_URL from '../apiConfig';
-
-// ... other imports
-
-// ... component code
-
-L55: `${API_URL}/semester/get_latest_filter`
-L88: `${API_URL}/semester/get_latest_filter`
-L102: const gradesUrl = new URL(`${API_URL}/grade/get_grades`);
-L134: fetch(`${API_URL}/grade/get_students`),
-L137: `${API_URL}/course/get_courses?facultyID=${localStorage.getItem(
-L200: `${API_URL}/grade/search_students?name=${enteredName}`
-L221: `${API_URL}/grade/delete_grade`,
-L229: const gradesUrl = new URL(`${API_URL}/grade/get_grades`);
-L310: const response = await fetch(`${API_URL}/grade/edit_grade`, {
-L325: const gradesUrl = new URL(`${API_URL}/grade/get_grades`);
-L408: const response = await fetch(`${API_URL}/grade/add_grade`, {
-L425: const gradesUrl = new URL(`${API_URL}/grade/get_grades`);
-L596: `${API_URL}/grade/search_students?name=${query}`/grade/search_students?name=${query}`
+        `${API_URL}/grade/search_students?name=${query}`
       );
       const data = await response.json();
       const suggestions = (Array.isArray(data) ? data : []).filter(
@@ -980,9 +739,7 @@ L596: `${API_URL}/grade/search_students?name=${query}`/grade/search_students?nam
                         {student.name}
                       </span>
                       <span
-                        onClick={() =>
-                          handleRemoveFilterStudent(student.studentID)
-                        }
+                        onClick={() => handleRemoveFilterStudent(student.studentID)}
                         className="ml-1 cursor-pointer text-gray-500 hover:text-gray-700"
                       >
                         ×
@@ -1438,6 +1195,6 @@ L596: `${API_URL}/grade/search_students?name=${query}`/grade/search_students?nam
           </div>
         </div>
       </div>
-    </div>
-  );
-}
+      </div>
+    );
+  }

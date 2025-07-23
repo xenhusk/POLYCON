@@ -2,6 +2,7 @@ import { useEffect, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { LineChart, Line, XAxis, YAxis, Tooltip, Legend, ResponsiveContainer, CartesianGrid } from 'recharts';
 import EnrollmentModal from './EnrollmentModal';
+import API_URL from '../apiConfig';
 
 const HomeTeacher = () => {
     const [teacherId, setTeacherId] = useState(null);
@@ -26,16 +27,7 @@ const HomeTeacher = () => {
     }, []);
 
     useEffect(() => {
-        fetch('import API_URL from '../apiConfig';
-
-// ... other imports
-
-// ... component code
-
-L29: fetch(`${API_URL}/homeadmin/semesters`)
-L44: fetch(`${API_URL}/hometeacher/getTeacherId`, {
-L67: fetch(`${API_URL}/hometeacher/stats?${params}`)
-L79: fetch(`${API_URL}/hometeacher/consultations_by_date?${params}`)/homeadmin/semesters')
+        fetch(`${API_URL}/homeadmin/semesters`)
             .then(res => res.json())
             .then(data => {
                 setSemesters(data);
@@ -50,16 +42,7 @@ L79: fetch(`${API_URL}/hometeacher/consultations_by_date?${params}`)/homeadmin/s
         if (storedTeacherID) {
             setTeacherId(storedTeacherID);
         } else {
-            fetch('import API_URL from '../apiConfig';
-
-// ... other imports
-
-// ... component code
-
-L29: fetch(`${API_URL}/homeadmin/semesters`)
-L44: fetch(`${API_URL}/hometeacher/getTeacherId`, {
-L67: fetch(`${API_URL}/hometeacher/stats?${params}`)
-L79: fetch(`${API_URL}/hometeacher/consultations_by_date?${params}`)/hometeacher/getTeacherId', {
+            fetch(`${API_URL}/hometeacher/getTeacherId`, {
                 method: 'GET',
                 credentials: 'include'
             })
@@ -82,16 +65,7 @@ L79: fetch(`${API_URL}/hometeacher/consultations_by_date?${params}`)/hometeacher
             school_year: selectedSchoolYear
         });
 
-        fetch(`import API_URL from '../apiConfig';
-
-// ... other imports
-
-// ... component code
-
-L29: fetch(`${API_URL}/homeadmin/semesters`)
-L44: fetch(`${API_URL}/hometeacher/getTeacherId`, {
-L67: fetch(`${API_URL}/hometeacher/stats?${params}`)
-L79: fetch(`${API_URL}/hometeacher/consultations_by_date?${params}`)/hometeacher/stats?${params}`)
+        fetch(`${API_URL}/hometeacher/stats?${params}`)
             .then(response => response.json())
             .then(data => {
                 console.log("API Response:", data);
@@ -103,16 +77,7 @@ L79: fetch(`${API_URL}/hometeacher/consultations_by_date?${params}`)/hometeacher
             })
             .catch(error => console.error("Error fetching stats:", error));
 
-        fetch(`import API_URL from '../apiConfig';
-
-// ... other imports
-
-// ... component code
-
-L29: fetch(`${API_URL}/homeadmin/semesters`)
-L44: fetch(`${API_URL}/hometeacher/getTeacherId`, {
-L67: fetch(`${API_URL}/hometeacher/stats?${params}`)
-L79: fetch(`${API_URL}/hometeacher/consultations_by_date?${params}`)/hometeacher/consultations_by_date?${params}`)
+        fetch(`${API_URL}/hometeacher/consultations_by_date?${params}`)
             .then(response => response.json())
             .then(data => {
                 console.log("Consultation Data:", data);

@@ -1,4 +1,5 @@
 import React, { useState, useEffect } from 'react';
+import { API_URL } from '../apiConfig';
 import { useNavigate } from 'react-router-dom';
 import AppointmentsCalendar from '../components/AppointmentsCalendar';
 import HomeTeacher from '../components/HomeTeacher';
@@ -24,13 +25,7 @@ function Home() {
     setUserRole(role);
 
     if (email) {
-      fetch(`import API_URL from '../apiConfig';
-
-// ... other imports
-
-// ... component code
-
-L27: fetch(`${API_URL}/user/get_user?email=${email}`)/user/get_user?email=${email}`)
+      fetch(`${API_URL}/user/get_user?email=${email}`)
         .then(res => res.json())
         .then(data => setUserDetails(data))
         .catch(err => console.error('Error fetching user details:', err));

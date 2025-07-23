@@ -1,3 +1,4 @@
+import { API_URL } from './apiConfig';
 import React, { useEffect, useState, useRef, useCallback, Suspense } from 'react';
 import { Routes, Route, useNavigate, useLocation, Navigate } from 'react-router-dom';
 import BookingStudent from './components/BookingStudent';
@@ -223,7 +224,7 @@ function App() {
   const storedEmail = localStorage.getItem('userEmail');
   const { data: userRoleData } = useFetchWithCache(
     ['userRole', storedEmail], 
-    storedEmail ? `http://localhost:5001/account/get_user_role?email=${storedEmail}` : null,
+    storedEmail ? `${API_URL}/account/get_user_role?email=${storedEmail}` : null,
     {
       enabled: !!storedEmail && !noRoleFetchPaths.includes(location.pathname),
       onSuccess: (data) => setUserRole(data.role)
@@ -233,7 +234,7 @@ function App() {
   // Use cached data fetching for user details
   const { data: userData } = useFetchWithCache(
     ['userData', storedEmail],
-    storedEmail ? `http://localhost:5001/user/get_user?email=${storedEmail}` : null,
+    storedEmail ? `${API_URL}/user/get_user?email=${storedEmail}` : null,
     {
       enabled: !!storedEmail,
       onSuccess: (data) => {
@@ -313,7 +314,7 @@ function App() {
     if (!noRoleFetchPaths.includes(location.pathname)) {
       const storedEmail = localStorage.getItem('userEmail');
       if (storedEmail) {
-        fetch(`http://localhost:5001/account/get_user_role?email=${storedEmail}`)
+        fetch(`${API_URL}/account/get_user_role?email=${storedEmail}`)
           .then(res => res.json())
           .then(data => setUserRole(data.role))
           .catch(err => console.error('Error fetching user role:', err));
@@ -325,13 +326,13 @@ function App() {
     const storedEmail = localStorage.getItem('userEmail');
     if (storedEmail) {
       // First get the user role
-      fetch(`http://localhost:5001/account/get_user_role?email=${storedEmail}`)
+      fetch(`${API_URL}/account/get_user_role?email=${storedEmail}`)
         .then(res => res.json())
         .then(roleData => {
           const role = roleData.role;
 
           // Then fetch user details based on role
-          fetch(`http://localhost:5001/user/get_user?email=${storedEmail}`)
+          fetch(`${API_URL}/user/get_user?email=${storedEmail}`)
             .then(response => response.json())
             .then(data => {
               localStorage.setItem('userID', data.id);
@@ -452,7 +453,7 @@ function App() {
           queryClient.prefetchQuery({
             queryKey: ['userData', userEmail],
             queryFn: async () => {
-              const res = await fetch(`http://localhost:5001/user/get_user?email=${userEmail}`);
+              const res = await fetch(`${API_URL}/user/get_user?email=${userEmail}`);
               if (!res.ok) throw new Error('Failed to fetch user data');
               const data = await res.json();
               return data;
@@ -464,8 +465,8 @@ function App() {
           userId ? 
             queryClient.prefetchQuery({
               queryKey: ['bookings', userRole, userId, 'confirmed'],
-              queryFn: async () => {
-                const res = await fetch(`http://localhost:5001/bookings/get_bookings?role=${userRole}&userID=${userId}&status=confirmed`);
+            queryFn: async () => {
+                const res = await fetch(`${API_URL}/bookings/get_bookings?role=${userRole}&userID=${userId}&status=confirmed`);
                 if (!res.ok) throw new Error('Failed to fetch bookings');
                 return res.json();
               },
@@ -477,8 +478,8 @@ function App() {
           studentId ? 
             queryClient.prefetchQuery({
               queryKey: ['grades', studentId],
-              queryFn: async () => {
-                const res = await fetch(`http://localhost:5001/grade/get_student_grades?studentID=${studentId}&schoolYear=&semester=&period=`);
+            queryFn: async () => {
+                const res = await fetch(`${API_URL}/grade/get_student_grades?studentID=${studentId}&schoolYear=&semester=&period=`);
                 if (!res.ok) throw new Error('Failed to fetch grades');
                 return res.json();
               },
@@ -490,7 +491,7 @@ function App() {
           queryClient.prefetchQuery({
             queryKey: ['courses'],
             queryFn: async () => {
-              const res = await fetch(`http://localhost:5001/course/get_courses`);
+              const res = await fetch(`${API_URL}/course/get_courses`);
               if (!res.ok) throw new Error('Failed to fetch courses');
               return res.json();
             },
@@ -501,10 +502,10 @@ function App() {
           userId ? 
             queryClient.prefetchQuery({
               queryKey: ['consultation-history', userRole, userId],
-              queryFn: async () => {
+            queryFn: async () => {
                 // Use idNumber parameter only for backend to filter by id_number
                 const res = await fetch(
-                  `http://localhost:5001/consultation/get_history?role=${userRole}&idNumber=${userId}`
+                  `${API_URL}/consultation/get_history?role=${userRole}&idNumber=${userId}`
                 );
                 if (!res.ok) throw new Error('Failed to fetch consultation history');
                 return res.json();
@@ -517,8 +518,8 @@ function App() {
           userRole === 'student' && studentId ? 
             queryClient.prefetchQuery({
               queryKey: ['enrollment-status', studentId],
-              queryFn: async () => {
-                const res = await fetch(`http://localhost:5001/enrollment/status?studentID=${studentId}`);
+            queryFn: async () => {
+                const res = await fetch(`${API_URL}/enrollment/status?studentID=${studentId}`);
                 if (!res.ok) throw new Error('Failed to fetch enrollment status');
                 const data = await res.json();
                 // Store enrollment status in localStorage for quick access

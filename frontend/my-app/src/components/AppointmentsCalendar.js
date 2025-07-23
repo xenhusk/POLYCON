@@ -1,9 +1,11 @@
+
 import React, { useEffect, useState } from 'react';
 import { useLocation } from 'react-router-dom';
 import { Calendar, momentLocalizer } from 'react-big-calendar';
 import moment from 'moment';
 import 'react-big-calendar/lib/css/react-big-calendar.css';
-import './Calendar.css'; // Add this import after the default styles
+import './Calendar.css';
+import API_URL from '../apiConfig';
 
 const localizer = momentLocalizer(moment);
 
@@ -82,63 +84,15 @@ function AppointmentsCalendar() {
     const [userRole, setUserRole] = useState('');
     const [calendarData, setCalendarData] = useState(null);
 
-    // Simple front-end cache: using localStorage as an example (cached for 30 seconds)
-    const fetchCalendarData = async () => {
-        const studentID = localStorage.getItem('studentID');
-        if (!studentID) {
-            return;
-        }
-        const cacheKey = 'appointmentsCalendar';
-        const cached = localStorage.getItem(cacheKey);
-        if (cached) {
-            const { data, expiry } = JSON.parse(cached);
-            if (Date.now() < expiry) {
-                setCalendarData(data);
-                return;
-            }
-        }
-        try {
-            const response = await fetch(`import API_URL from '../apiConfig';
 
-// ... other imports
-
-// ... component code
-
-L101: const response = await fetch(`${API_URL}/bookings/get_bookings?role=student&userID=${studentID}&status=confirmed`, {
-L123: const response = await fetch(`${API_URL}/account/get_user_role?email=${storedEmail}`);
-L143: const response = await fetch(`${API_URL}/bookings/get_bookings?role=student&userID=${studentID}&status=confirmed`, {
-L167: const response = await fetch(`${API_URL}/bookings/get_bookings?role=faculty&userID=${teacherID}&status=confirmed`);/bookings/get_bookings?role=student&userID=${studentID}&status=confirmed`, {
-                cache: 'force-cache'
-            });
-            const data = await response.json();
-            setCalendarData(data);
-            localStorage.setItem(cacheKey, JSON.stringify({ data, expiry: Date.now() + 30000 }));
-        } catch (error) {
-            console.error('Error fetching calendar data:', error);
-        }
-    };
-
-    useEffect(() => {
-        fetchCalendarData();
-        const intervalId = setInterval(fetchCalendarData, 5000);
-        return () => clearInterval(intervalId);
-    }, []);
+    // (Optional) You can implement caching if needed, but the original code was broken
 
     useEffect(() => {
         const fetchUserRole = async () => {
             const storedEmail = localStorage.getItem('userEmail');
             if (storedEmail) {
                 try {
-                    const response = await fetch(`import API_URL from '../apiConfig';
-
-// ... other imports
-
-// ... component code
-
-L101: const response = await fetch(`${API_URL}/bookings/get_bookings?role=student&userID=${studentID}&status=confirmed`, {
-L123: const response = await fetch(`${API_URL}/account/get_user_role?email=${storedEmail}`);
-L143: const response = await fetch(`${API_URL}/bookings/get_bookings?role=student&userID=${studentID}&status=confirmed`, {
-L167: const response = await fetch(`${API_URL}/bookings/get_bookings?role=faculty&userID=${teacherID}&status=confirmed`);/account/get_user_role?email=${storedEmail}`);
+                    const response = await fetch(`${API_URL}/account/get_user_role?email=${storedEmail}`);
                     const data = await response.json();
                     setUserRole(data.role);
                     console.log('User role:', data.role);
@@ -147,7 +101,6 @@ L167: const response = await fetch(`${API_URL}/bookings/get_bookings?role=facult
                 }
             }
         };
-
         fetchUserRole();
     }, []);
 
@@ -157,19 +110,7 @@ L167: const response = await fetch(`${API_URL}/bookings/get_bookings?role=facult
                 const studentID = localStorage.getItem('studentID');
                 if (studentID) {
                     try {
-                        // Updated endpoint: add booking prefix to URL
-                        const response = await fetch(`import API_URL from '../apiConfig';
-
-// ... other imports
-
-// ... component code
-
-L101: const response = await fetch(`${API_URL}/bookings/get_bookings?role=student&userID=${studentID}&status=confirmed`, {
-L123: const response = await fetch(`${API_URL}/account/get_user_role?email=${storedEmail}`);
-L143: const response = await fetch(`${API_URL}/bookings/get_bookings?role=student&userID=${studentID}&status=confirmed`, {
-L167: const response = await fetch(`${API_URL}/bookings/get_bookings?role=faculty&userID=${teacherID}&status=confirmed`);/bookings/get_bookings?role=student&userID=${studentID}&status=confirmed`, {
-                            cache: 'force-cache'
-                        });
+                        const response = await fetch(`${API_URL}/bookings/get_bookings?role=student&userID=${studentID}&status=confirmed`);
                         const bookings = await response.json();
                         const events = bookings.map(booking => {
                             const teacherName = booking.teacherName;
@@ -190,24 +131,14 @@ L167: const response = await fetch(`${API_URL}/bookings/get_bookings?role=facult
                 const teacherID = localStorage.getItem('teacherID');
                 if (teacherID) {
                     try {
-                        // Updated endpoint: add booking prefix to URL
-                        const response = await fetch(`import API_URL from '../apiConfig';
-
-// ... other imports
-
-// ... component code
-
-L101: const response = await fetch(`${API_URL}/bookings/get_bookings?role=student&userID=${studentID}&status=confirmed`, {
-L123: const response = await fetch(`${API_URL}/account/get_user_role?email=${storedEmail}`);
-L143: const response = await fetch(`${API_URL}/bookings/get_bookings?role=student&userID=${studentID}&status=confirmed`, {
-L167: const response = await fetch(`${API_URL}/bookings/get_bookings?role=faculty&userID=${teacherID}&status=confirmed`);/bookings/get_bookings?role=faculty&userID=${teacherID}&status=confirmed`);
+                        const response = await fetch(`${API_URL}/bookings/get_bookings?role=faculty&userID=${teacherID}&status=confirmed`);
                         const bookings = await response.json();
                         const events = bookings.map(booking => {
                             const studentNamesString = booking.studentNames.join(", ");
                             return {
                                 title: studentNamesString,
                                 start: new Date(booking.schedule),
-                                end: new Date(booking.schedule), // Same as start time for events without duration
+                                end: new Date(booking.schedule),
                                 allDay: false,
                                 agendaTitle: `Appointment with ${studentNamesString}`,
                             };
@@ -219,7 +150,6 @@ L167: const response = await fetch(`${API_URL}/bookings/get_bookings?role=facult
                 }
             }
         };
-
         if (userRole) {
             fetchAppointments();
         }
@@ -245,52 +175,39 @@ L167: const response = await fetch(`${API_URL}/bookings/get_bookings?role=facult
         };
     };
 
-    const eventRenderer = ({ event }) => {
-        return (
-            <span>
-                {event.agendaTitle || event.title}
-            </span>
-        );
-    };
 
-    const monthEventRenderer = ({ event }) => {
-        return (
-            <span>
-                {event.title}
-            </span>
-        );
-    };
+    // Event renderers
+    const eventRenderer = ({ event }) => (
+        <span>{event.agendaTitle || event.title}</span>
+    );
+    const monthEventRenderer = ({ event }) => (
+        <span>{event.title}</span>
+    );
 
-    const weekEventRenderer = ({ event }) => {
-        // Only display the formatted start time
-
-        const startTime = new Date(event.start).toLocaleTimeString([], { hour: 'numeric', minute: '2-digit' });
-        return <span>{startTime}</span>;
-      };
-      
+    // Week event renderer for react-big-calendar
+    const weekEventRenderer = ({ event }) => (
+        <span>{event.agendaTitle || event.title}</span>
+    );
 
     return (
-        // UPDATED: Increase container maxWidth and update background if needed
         <div className="bg-white p-4 rounded-lg shadow-lg" style={{ maxWidth: '1200px', margin: '0 auto', backgroundColor: '#DDE8F2' }}>
             <Calendar
-            localizer={localizer}
-            events={events}
-            startAccessor="start"
-            endAccessor="end"
-            // UPDATED: Increase calendar height from 500 to 700
-            style={{ height: 700 }}
-            views={['month', 'agenda']} // Re-enable all views
-            formats={{
-                // Disable the default time range formatter so that it doesn’t output “start - end”
-                eventTimeRangeFormat: () => ""
-            }}
-            components={{
-                // Use the new custom toolbar
-                toolbar: CustomToolbar,
-                week: { event: weekEventRenderer }
-                // ...existing month and agenda renderers if needed...
-            }}
-            eventPropGetter={eventPropGetter}
+                localizer={localizer}
+                events={events}
+                startAccessor="start"
+                endAccessor="end"
+                style={{ height: 700 }}
+                views={['month', 'agenda']}
+                formats={{
+                    eventTimeRangeFormat: () => ""
+                }}
+                components={{
+                    toolbar: CustomToolbar,
+                    week: { event: weekEventRenderer },
+                    month: { event: monthEventRenderer },
+                    agenda: { event: eventRenderer },
+                }}
+                eventPropGetter={eventPropGetter}
             />
         </div>
     );

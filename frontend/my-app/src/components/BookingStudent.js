@@ -3,6 +3,7 @@ import { useLocation, useNavigate } from 'react-router-dom';
 import ProfilePictureUploader from './ProfilePictureUploader';
 import { fetchStudentDetails } from '../utils/fetchStudentDetails';
 import { getProfilePictureUrl } from '../utils/utils';
+import API_URL from '../apiConfig';
 
 function BookingStudent({ closeModal }) {
   const location = useLocation();
@@ -34,14 +35,8 @@ function BookingStudent({ closeModal }) {
   }, [location.state?.studentID]); // Added location.state?.studentID to dependency array
 
   useEffect(() => {
-    fetch('import API_URL from '../apiConfig';
-
-// ... other imports
-
-// ... component code
-
-L37: fetch(`${API_URL}/get_teachers`)
-L53: fetch(`${API_URL}/get_students`)/get_teachers')
+    // Fetch teachers
+    fetch(`${API_URL}/get_teachers`)
       .then(response => response.json())
       .then(data => {
         // Filter to only show active teachers
@@ -57,14 +52,7 @@ L53: fetch(`${API_URL}/get_students`)/get_teachers')
       });
 
     // Fetch students
-    fetch('import API_URL from '../apiConfig';
-
-// ... other imports
-
-// ... component code
-
-L37: fetch(`${API_URL}/get_teachers`)
-L53: fetch(`${API_URL}/get_students`)/get_students')
+    fetch(`${API_URL}/get_students`)
       .then(response => response.json())
       .then(data => {
         setStudents(data);

@@ -1,4 +1,5 @@
 import React, { useState, useEffect, useRef, useContext } from 'react';
+import { API_URL } from '../apiConfig';
 import { Link, useNavigate, useLocation } from 'react-router-dom'; // Add useLocation import
 import './Sidebar.css'; // Import the CSS file
 // Placeholder imports for SVG icons
@@ -128,7 +129,7 @@ const Sidebar = ({ onExpandChange }) => {
     const userRole = localStorage.getItem('userRole');
 
     if (userEmail && userRole) {
-      fetch(`http://localhost:5001/user/get_user?email=${userEmail}`)
+      fetch(`${API_URL}/user/get_user?email=${userEmail}`)
         .then(res => res.json())
         .then(data => {
           // Store raw profile_picture value
@@ -163,12 +164,12 @@ const Sidebar = ({ onExpandChange }) => {
     if (!email) return;
 
     try {
-      const response = await fetch(`http://localhost:5001/user/get_user?email=${email}`);
+      const response = await fetch(`${API_URL}/user/get_user?email=${email}`);
       let userData = await response.json(); // userData.profile_picture should be raw
       
       if (userRole === 'student' && studentID) {
         try {
-          const studentResponse = await fetch(`http://localhost:5001/user/get_student_details?studentID=${studentID}`);
+          const studentResponse = await fetch(`${API_URL}/user/get_student_details?studentID=${studentID}`);
           if (studentResponse.ok) {
             const studentData = await studentResponse.json();
             userData = { 
@@ -184,7 +185,7 @@ const Sidebar = ({ onExpandChange }) => {
         if (userData.department.includes('/departments/')) {
           try {
             const deptID = userData.department.split('/').pop();
-            const deptResponse = await fetch(`http://localhost:5001/account/departments`);
+            const deptResponse = await fetch(`${API_URL}/account/departments`);
             if (deptResponse.ok) {
               const departments = await deptResponse.json();
               const deptMatch = departments.find(d => d.departmentID === deptID);

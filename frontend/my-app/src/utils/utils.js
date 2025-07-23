@@ -1,3 +1,4 @@
+import { API_URL } from './apiConfig';
 // Add a consistent function to get profile pictures
 export const getProfilePictureUrl = (profilePicture, userName = '') => {
   if (!profilePicture) {
@@ -12,30 +13,24 @@ export const getProfilePictureUrl = (profilePicture, userName = '') => {
   }
   
   // Construct URL for server-stored images
-  return `import API_URL from './apiConfig';
-
-// ... other imports
-
-// ... component code
-
-L15: return `${API_URL}/uploads/${profilePicture}`;/uploads/${profilePicture}`;
+  return `${API_URL}/uploads/${profilePicture}`;
 };
 
 // Helper to get display program name from student data
 export const getDisplayProgram = (student) => {
   if (!student) return 'Unknown Program';
-  
+
   // First check for programName (new field)
   if (student.programName) return student.programName;
-  
+
   // Then check for program (direct name)
   if (student.program) return student.program;
-  
+
   // Fallback to program ID with a message
   if (student.programId || student.program_id) {
     return `Program ${student.programId || student.program_id}`;
   }
-  
+
   // Final fallback
   return 'Unknown Program';
 };

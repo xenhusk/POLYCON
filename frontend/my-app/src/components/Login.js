@@ -5,6 +5,7 @@ import logo from "./icons/DarkLogo.png";
 import { storeUserAuth } from "../utils/authUtils";
 import { fetchAndStoreEnrollmentStatus } from "../utils/enrollmentUtils";
 import ForgotPassword from './ForgotPassword';
+import API_URL from '../apiConfig';
 
 const Login = ({ onLoginSuccess, onSwitchToSignup }) => {
   const [email, setEmail] = useState('');
@@ -32,13 +33,7 @@ const Login = ({ onLoginSuccess, onSwitchToSignup }) => {
     }
   
     try {
-      const response = await fetch("import API_URL from '../apiConfig';
-
-// ... other imports
-
-// ... component code
-
-L35: const response = await fetch(`${API_URL}/account/login`, {/account/login", {
+      const response = await fetch(`${API_URL}/account/login`, {
         method: "POST",
         headers: {
           "Content-Type": "application/json",

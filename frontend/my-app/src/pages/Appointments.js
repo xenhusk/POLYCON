@@ -1,4 +1,5 @@
 import React, { useState, useEffect, useMemo, useCallback } from "react";
+import { API_URL } from '../apiConfig';
 import { useQuery } from "react-query";
 import AppointmentItem from "../components/AppointmentItem";
 import { showErrorNotification } from '../utils/notificationUtils';
@@ -16,18 +17,7 @@ const fetchStudentAppointments = async () => {
   // Artificial 2-second delay:
   await new Promise((resolve) => setTimeout(resolve, 2000));
   const res = await fetch(
-    `import API_URL from '../apiConfig';
-
-// ... other imports
-
-// ... component code
-
-L19: `${API_URL}/bookings/get_bookings?role=student&idNumber=${studentID}`
-L85: const socket = io(API_URL);
-L277: `${API_URL}/bookings/get_bookings?role=faculty&idNumber=${teacherID}`
-L363: const socket = io(API_URL);
-L407: `${API_URL}/bookings/confirm_booking`,
-L438: `${API_URL}/bookings/cancel_booking`,/bookings/get_bookings?role=student&idNumber=${studentID}`
+    `${API_URL}/bookings/get_bookings?role=student&idNumber=${studentID}`
   );
   if (!res.ok) throw new Error("Network response was not ok");
   return res.json();
@@ -93,18 +83,7 @@ function StudentAppointments() {
 
     setAppointments(categorizedAppointments);
   }, [bookings]);  useEffect(() => {
-    const socket = io('import API_URL from '../apiConfig';
-
-// ... other imports
-
-// ... component code
-
-L19: `${API_URL}/bookings/get_bookings?role=student&idNumber=${studentID}`
-L85: const socket = io(API_URL);
-L277: `${API_URL}/bookings/get_bookings?role=faculty&idNumber=${teacherID}`
-L363: const socket = io(API_URL);
-L407: `${API_URL}/bookings/confirm_booking`,
-L438: `${API_URL}/bookings/cancel_booking`,');
+    const socket = io(API_URL);
     
     // Add connection event handlers
     socket.on('connect', () => {
@@ -296,18 +275,7 @@ L438: `${API_URL}/bookings/cancel_booking`,');
 const fetchTeacherAppointments = async () => {
   const teacherID = localStorage.getItem("teacherID");
   const res = await fetch(
-    `import API_URL from '../apiConfig';
-
-// ... other imports
-
-// ... component code
-
-L19: `${API_URL}/bookings/get_bookings?role=student&idNumber=${studentID}`
-L85: const socket = io(API_URL);
-L277: `${API_URL}/bookings/get_bookings?role=faculty&idNumber=${teacherID}`
-L363: const socket = io(API_URL);
-L407: `${API_URL}/bookings/confirm_booking`,
-L438: `${API_URL}/bookings/cancel_booking`,/bookings/get_bookings?role=faculty&idNumber=${teacherID}`
+    `${API_URL}/bookings/get_bookings?role=faculty&idNumber=${teacherID}`
   );
   if (!res.ok) throw new Error("Network response was not ok");
   return res.json();
@@ -393,18 +361,7 @@ function TeacherAppointments() {
     showAppointmentReminder(message);
   }, [showAppointmentReminder]);
   useEffect(() => {
-    const socket = io('import API_URL from '../apiConfig';
-
-// ... other imports
-
-// ... component code
-
-L19: `${API_URL}/bookings/get_bookings?role=student&idNumber=${studentID}`
-L85: const socket = io(API_URL);
-L277: `${API_URL}/bookings/get_bookings?role=faculty&idNumber=${teacherID}`
-L363: const socket = io(API_URL);
-L407: `${API_URL}/bookings/confirm_booking`,
-L438: `${API_URL}/bookings/cancel_booking`,');
+    const socket = io(API_URL);
     
     // Add connection event handlers
     socket.on('connect', () => {
@@ -448,18 +405,7 @@ L438: `${API_URL}/bookings/cancel_booking`,');
     }
     try {
       const response = await fetch(
-        "import API_URL from '../apiConfig';
-
-// ... other imports
-
-// ... component code
-
-L19: `${API_URL}/bookings/get_bookings?role=student&idNumber=${studentID}`
-L85: const socket = io(API_URL);
-L277: `${API_URL}/bookings/get_bookings?role=faculty&idNumber=${teacherID}`
-L363: const socket = io(API_URL);
-L407: `${API_URL}/bookings/confirm_booking`,
-L438: `${API_URL}/bookings/cancel_booking`,/bookings/confirm_booking",
+        `${API_URL}/bookings/confirm_booking`,
         {
           method: "POST",
           headers: { "Content-Type": "application/json" },
@@ -490,18 +436,7 @@ L438: `${API_URL}/bookings/cancel_booking`,/bookings/confirm_booking",
   async function cancelBooking(bookingID) {
     try {
       const response = await fetch(
-        "import API_URL from '../apiConfig';
-
-// ... other imports
-
-// ... component code
-
-L19: `${API_URL}/bookings/get_bookings?role=student&idNumber=${studentID}`
-L85: const socket = io(API_URL);
-L277: `${API_URL}/bookings/get_bookings?role=faculty&idNumber=${teacherID}`
-L363: const socket = io(API_URL);
-L407: `${API_URL}/bookings/confirm_booking`,
-L438: `${API_URL}/bookings/cancel_booking`,/bookings/cancel_booking",
+        `${API_URL}/bookings/cancel_booking`,
         {
           method: "POST",
           headers: { "Content-Type": "application/json" },

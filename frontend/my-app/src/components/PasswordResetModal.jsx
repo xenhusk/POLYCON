@@ -1,4 +1,5 @@
 import React, { useState } from 'react';
+import { API_URL } from '../apiConfig';
 import { motion } from 'framer-motion';
 
 const modalVariants = {
@@ -39,8 +40,8 @@ const PasswordResetModal = ({ isVisible, onClose, userEmail }) => {
     e.preventDefault();
     setIsLoading(true);
     setMessage('');
-      try {
-      const response = await fetch('http://localhost:5001/auth/request-password-reset', {
+    try {
+      const response = await fetch(`${API_URL}/auth/request-password-reset`, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
@@ -79,7 +80,7 @@ const PasswordResetModal = ({ isVisible, onClose, userEmail }) => {
       className="fixed inset-0 flex items-center justify-center z-[1000]"
       onClick={(e) => e.stopPropagation()}
     >
-      <div className="bg-white rounded-xl shadow-2xl w-full max-w-md overflow-hidden">        {/* Modal Header */}
+      <div className="bg-white rounded-xl shadow-2xl w-full max-w-md overflow-hidden"> 
         <div className="bg-[#0065A8] px-6 py-4 flex justify-between items-center">
           <h2 className="text-xl font-semibold text-white">
             Reset Password

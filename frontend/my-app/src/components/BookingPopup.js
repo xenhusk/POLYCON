@@ -3,6 +3,7 @@ import { useLocation } from 'react-router-dom';
 import { motion, AnimatePresence } from 'framer-motion';
 import BookingAppointment from './BookingAppointment';
 import { isStudentEnrolled } from "../utils/enrollmentUtils";
+import API_URL from '../apiConfig';
 
 // Restore original calendar icon
 const BookIcon = () => (
@@ -69,13 +70,7 @@ const BookingPopup = () => {
     }
     
     if (userRole === 'faculty' && email) {
-      fetch(`import API_URL from '../apiConfig';
-
-// ... other imports
-
-// ... component code
-
-L72: fetch(`${API_URL}/user/get_user?email=${encodeURIComponent(email)}`)/user/get_user?email=${encodeURIComponent(email)}`)
+      fetch(`${API_URL}/user/get_user?email=${encodeURIComponent(email)}`)
         .then(res => res.json())
         .then(data => {
           setTeacherActive(data.isActive);

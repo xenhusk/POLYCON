@@ -1,4 +1,5 @@
 import React, { useState, useEffect } from "react";
+import { API_URL } from '../apiConfig';
 import { EyeOutlined, EyeInvisibleOutlined } from "@ant-design/icons";
 import logo from "./icons/DarkLogo.png";
 
@@ -49,15 +50,7 @@ const Signup = ({ onSwitchToLogin }) => {
     const fetchDepartments = async () => {
       try {
         const departmentsRes = await fetch(
-          "import API_URL from '../apiConfig';
-
-// ... other imports
-
-// ... component code
-
-L52: `${API_URL}/account/departments`
-L86: `${API_URL}/account/programs?departmentID=${departmentID}`
-L153: const response = await fetch(`${API_URL}/account/signup`, {/account/departments"
+          `${API_URL}/account/departments`
         );
         const departmentsData = await departmentsRes.json();
         setDepartments(departmentsData);
@@ -91,15 +84,7 @@ L153: const response = await fetch(`${API_URL}/account/signup`, {/account/depart
   const fetchPrograms = async (departmentID) => {
     try {
       const programsRes = await fetch(
-        `import API_URL from '../apiConfig';
-
-// ... other imports
-
-// ... component code
-
-L52: `${API_URL}/account/departments`
-L86: `${API_URL}/account/programs?departmentID=${departmentID}`
-L153: const response = await fetch(`${API_URL}/account/signup`, {/account/programs?departmentID=${departmentID}`
+        `${API_URL}/account/programs?departmentID=${departmentID}`
       );
       const programsData = await programsRes.json();
       setFilteredPrograms(programsData);
@@ -166,15 +151,7 @@ L153: const response = await fetch(`${API_URL}/account/signup`, {/account/progra
     }
 
     try {
-      const response = await fetch("import API_URL from '../apiConfig';
-
-// ... other imports
-
-// ... component code
-
-L52: `${API_URL}/account/departments`
-L86: `${API_URL}/account/programs?departmentID=${departmentID}`
-L153: const response = await fetch(`${API_URL}/account/signup`, {/account/signup", {
+      const response = await fetch(`${API_URL}/account/signup`, {
         method: "POST",
         headers: {
           "Content-Type": "application/json",

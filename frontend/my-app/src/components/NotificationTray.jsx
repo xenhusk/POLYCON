@@ -1,5 +1,6 @@
 import React, { useState, useEffect, useRef } from 'react';
 import io from 'socket.io-client';
+import { API_URL } from '../apiConfig';
 import { 
   showBookingNotification, 
   showAppointmentReminder, 
@@ -39,7 +40,7 @@ const NotificationTray = ({ isVisible, onClose }) => {
     
     // Initialize Socket.IO connection
     if (typeof io !== 'undefined') {
-      socketRef.current = io('http://localhost:5001');
+      socketRef.current = io(API_URL);
       
       socketRef.current.on('connect', () => {
         console.log('Connected to notification server');

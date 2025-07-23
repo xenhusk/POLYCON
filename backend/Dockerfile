@@ -18,4 +18,4 @@ COPY . .
 EXPOSE 5000
 
 # Run the application with eventlet worker for WebSockets support
-CMD ["gunicorn", "-k", "eventlet", "--worker-connections", "1000", "-b", "0.0.0.0:5000", "app:create_app()"]
+CMD ["gunicorn", "-k", "eventlet", "--worker-connections", "1000", "-b", "0.0.0.0:5000", "app:app"]

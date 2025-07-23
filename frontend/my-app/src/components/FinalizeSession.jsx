@@ -1,6 +1,8 @@
+
 import React, { useState, useEffect } from 'react';
 import { useNavigate, useLocation } from 'react-router-dom';
 import { showErrorNotification, showSuccessNotification, showWarningNotification } from '../utils/notificationUtils';
+import { API_URL } from '../apiConfig';
 
 const FinalizeSession = () => {
   const navigate = useNavigate();
@@ -31,7 +33,7 @@ const FinalizeSession = () => {
     try {
       // Call your backend API to store the consultation record.
       // For example:
-      const response = await fetch('http://localhost:5001/consultation/store_consultation', {
+      const response = await fetch(`${API_URL}/consultation/store_consultation`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
@@ -66,7 +68,7 @@ const FinalizeSession = () => {
   };
 
   return (
-    <div className="max-w-2xl mx-auto p-6 bg-white shadow-lg rounded-lg fade-in">
+    <div>
       <header className="flex justify-between items-center mb-4 fade-in delay-100">
         <h1 className="text-3xl font-bold text-gray-800">Finalize Session</h1>
         <button onClick={handleLogout} className="bg-red-500 text-white px-4 py-2 rounded">

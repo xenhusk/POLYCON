@@ -1,5 +1,6 @@
 import React, { useState, useEffect, useRef } from "react";
 import { getProfilePictureUrl } from "../utils/utils";
+import API_URL from '../apiConfig';
 
 function EnrollmentModal({ closeModal }) {
   const [searchTerm, setSearchTerm] = useState("");
@@ -22,17 +23,7 @@ function EnrollmentModal({ closeModal }) {
       try {
         // Use the new enrollment_students endpoint instead of the regular students endpoint
         const res = await fetch(
-          `import API_URL from '../apiConfig';
-
-// ... other imports
-
-// ... component code
-
-L25: `${API_URL}/search/enrollment_students?query=${encodeURIComponent(
-L67: const response = await fetch(`${API_URL}/enrollment/enroll`, {
-L121: const response = await fetch(`${API_URL}/user/get_user?idNumber=${teacherID}`);/search/enrollment_students?query=${encodeURIComponent(
-            term.toLowerCase()
-          )}`
+          `${API_URL}/search/enrollment_students?query=${encodeURIComponent(term.toLowerCase())}`
         );
         const data = await res.json();
         if (data.error) {
@@ -72,15 +63,7 @@ L121: const response = await fetch(`${API_URL}/user/get_user?idNumber=${teacherI
     }
     setIsLoading(true);
     try {
-      const response = await fetch("import API_URL from '../apiConfig';
-
-// ... other imports
-
-// ... component code
-
-L25: `${API_URL}/search/enrollment_students?query=${encodeURIComponent(
-L67: const response = await fetch(`${API_URL}/enrollment/enroll`, {
-L121: const response = await fetch(`${API_URL}/user/get_user?idNumber=${teacherID}`);/enrollment/enroll", {
+      const response = await fetch(`${API_URL}/enrollment/enroll`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
@@ -134,15 +117,7 @@ L121: const response = await fetch(`${API_URL}/user/get_user?idNumber=${teacherI
         // Fetch teacher status to decide on enrollment action
         if (teacherID) {
           // Ensure teacherID is not null or undefined before fetching
-          const response = await fetch(`import API_URL from '../apiConfig';
-
-// ... other imports
-
-// ... component code
-
-L25: `${API_URL}/search/enrollment_students?query=${encodeURIComponent(
-L67: const response = await fetch(`${API_URL}/enrollment/enroll`, {
-L121: const response = await fetch(`${API_URL}/user/get_user?idNumber=${teacherID}`);/user/get_user?idNumber=${teacherID}`);
+          const response = await fetch(`${API_URL}/user/get_user?idNumber=${teacherID}`);
           if (!response.ok) throw new Error('Network response was not ok');
           const data = await response.json();
           if (!data.isActive) {

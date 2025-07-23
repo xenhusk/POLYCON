@@ -2,6 +2,7 @@ import React, { useState, useRef, useEffect } from 'react';
 import { useNavigate, useLocation } from 'react-router-dom';
 import ProfilePictureUploader from './ProfilePictureUploader';
 import { getProfilePictureUrl } from '../utils/utils';
+import API_URL from '../apiConfig';
 
 function BookingTeacher({ closeModal }) {
   const [teacherID, setTeacherID] = useState('');
@@ -49,14 +50,7 @@ function BookingTeacher({ closeModal }) {
 
   const checkTeacherStatus = async (teacherId) => {
     try {
-      const response = await fetch(`import API_URL from '../apiConfig';
-
-// ... other imports
-
-// ... component code
-
-L52: const response = await fetch(`${API_URL}/user/get_user?idNumber=${teacherId}`);
-L67: fetch(`${API_URL}/account/departments`)/user/get_user?idNumber=${teacherId}`);
+      const response = await fetch(`${API_URL}/user/get_user?idNumber=${teacherId}`);
       const data = await response.json();
       setIsTeacherActive(data.isActive);
       if (!data.isActive) {
@@ -71,14 +65,7 @@ L67: fetch(`${API_URL}/account/departments`)/user/get_user?idNumber=${teacherId}
   useEffect(() => {
     if (profileDetails.department && profileDetails.department.startsWith("/departments/")) {
       const deptID = profileDetails.department.split("/").pop();
-      fetch(`import API_URL from '../apiConfig';
-
-// ... other imports
-
-// ... component code
-
-L52: const response = await fetch(`${API_URL}/user/get_user?idNumber=${teacherId}`);
-L67: fetch(`${API_URL}/account/departments`)/account/departments`)
+      fetch(`${API_URL}/account/departments`)
         .then(response => response.json())
         .then(data => {
           const dept = data.find(item => item.departmentID === deptID);

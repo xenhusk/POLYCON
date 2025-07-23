@@ -1,3 +1,4 @@
+import { API_URL } from './apiConfig';
 /**
  * Utility functions for handling student enrollment status
  */
@@ -15,26 +16,16 @@ export const fetchAndStoreEnrollmentStatus = async (studentId) => {
   
   try {
     console.log(`Fetching enrollment status for student: ${studentId}`);
-    const response = await fetch(`import API_URL from './apiConfig';
-
-// ... other imports
-
-// ... component code
-
-L18: const response = await fetch(`${API_URL}/enrollment/status?studentID=${studentId}`);/enrollment/status?studentID=${studentId}`);
-    
+    const response = await fetch(`${API_URL}/enrollment/status?studentID=${studentId}`);
     if (!response.ok) {
       throw new Error(`Error fetching enrollment status: ${response.status}`);
     }
-    
     const data = await response.json();
     console.log("Enrollment status response:", data);
-    
     // Store the enrollment status in localStorage - convert to string regardless of input type
     const isEnrolled = data.isEnrolled === true || data.isEnrolled === "true";
     localStorage.setItem('isEnrolled', isEnrolled ? "true" : "false");
     console.log(`Stored enrollment status in localStorage: ${isEnrolled}`);
-    
     return isEnrolled;
   } catch (error) {
     console.error("Error fetching enrollment status:", error);
