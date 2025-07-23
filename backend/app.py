@@ -2,7 +2,7 @@
 import eventlet
 eventlet.monkey_patch()
 
-from flask import Flask, jsonify, session as flask_session
+from flask import Flask, jsonify, session as flask_session, request
 from flask_cors import CORS # Import CORS
 from flask_migrate import Migrate  # Add this import
 
@@ -40,7 +40,8 @@ import routes.socket_routes  # Register socket event handlers
 
 def create_app():
     app = Flask(__name__)
-    # Enable CORS for all routes, allow all origins and credentials    # Apply CORS to all routes for the React frontend
+    
+    # Configure CORS settings
     cors_origins = os.getenv('CORS_ALLOWED_ORIGINS', 'http://localhost:3000')
     # Handle both single URL and comma-separated URLs
     if ',' in cors_origins:
@@ -49,7 +50,29 @@ def create_app():
         allowed_origins = [cors_origins]
     
     print(f"CORS allowed origins: {allowed_origins}")  # Debug log
-    CORS(app, resources={r"/*": {"origins": allowed_origins}}, supports_credentials=True)
+    
+    # Configure CORS with explicit settings
+    CORS(app, 
+         resources={
+             r"/*": {
+                 "origins": allowed_origins,
+                 "methods": ["GET", "POST", "PUT", "DELETE", "OPTIONS"],
+                 "allow_headers": ["Content-Type", "Authorization", "X-Requested-With"],
+                 "supports_credentials": True
+             }
+         }
+    )
+    
+    # Add manual CORS headers as fallback
+    @app.after_request
+    def after_request(response):
+        origin = request.headers.get('Origin')
+        if origin in allowed_origins:
+            response.headers.add('Access-Control-Allow-Origin', origin)
+            response.headers.add('Access-Control-Allow-Headers', 'Content-Type,Authorization,X-Requested-With')
+            response.headers.add('Access-Control-Allow-Methods', 'GET,PUT,POST,DELETE,OPTIONS')
+            response.headers.add('Access-Control-Allow-Credentials', 'true')
+        return response
 
     app.config.from_object(Config)
 
