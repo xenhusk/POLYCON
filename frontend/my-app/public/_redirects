@@ -1,4 +1,4 @@
-# Handle React Router routes with query parameters
+# Handle React Router routes - preserve query parameters and fragments
 /session*    /index.html   200
 /finaldocument*    /index.html   200
 /dashboard*    /index.html   200
@@ -20,5 +20,5 @@
 /login*    /index.html   200
 /signup*    /index.html   200
 
-# Catch-all for any other routes
+# Catch-all for any other frontend routes only
 /*    /index.html   200
