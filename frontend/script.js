@@ -1,3 +1,4 @@
+import { API_URL } from './my-app/src/apiConfig.js';
 const startButton = document.getElementById("start-recording");
 const stopButton = document.getElementById("stop-recording");
 const finishButton = document.getElementById("finish-session");
@@ -100,7 +101,7 @@ async function uploadAudio(audioBlob) {
 
     console.log(`Calculated speaker count: ${expectedSpeakers}`);
 
-    const response = await fetch('http://localhost:5001/consultation/transcribe', {
+    const response = await fetch(`${API_URL}/consultation/transcribe`, {
         method: 'POST',
         body: formData,
     });
@@ -166,7 +167,7 @@ finishButton.addEventListener("click", async () => {
 
 // Actual Summary Generation
 async function generateSummary(transcription, notes) {
-  const response = await fetch('http://localhost:5001/consultation/summarize', {
+  const response = await fetch(`${API_URL}/consultation/summarize`, {
     method: 'POST',
     headers: {
       'Content-Type': 'application/json',
@@ -190,7 +191,7 @@ async function generateSummary(transcription, notes) {
 }
 
 async function identifyRoles(transcription) {
-    const response = await fetch('http://localhost:5001/consultation/identify_roles', {
+    const response = await fetch(`${API_URL}/consultation/identify_roles`, {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',
@@ -236,7 +237,7 @@ async function identifyRoles(transcription) {
         const audioUploadResponse = await uploadAudio(audioBlob);
         const audioFilePath = audioUploadResponse.audioUrl;
 
-        const response = await fetch('http://localhost:5001/consultation/store_consultation', {
+        const response = await fetch(`${API_URL}/consultation/store_consultation`, {
             method: 'POST',
             headers: {
                 'Content-Type': 'application/json',
@@ -296,7 +297,7 @@ function showToast(message, type = 'info') {
 }
 
 // Initialize Socket.IO client and listen for booking notifications
-const socket = io('http://localhost:5001');
+const socket = io(API_URL);
 socket.on('booking_created', data => showToast(`Booking created: ${data.subject}`, 'success'));
 socket.on('booking_confirmed', data => showToast(`Booking confirmed: ${data.id}`, 'info'));
 socket.on('booking_cancelled', data => showToast(`Booking cancelled: ${data.id}`, 'error'));

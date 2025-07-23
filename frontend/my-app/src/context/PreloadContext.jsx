@@ -1,3 +1,4 @@
+import { API_URL } from '../apiConfig';
 import React, { createContext, useState, useContext, useEffect } from 'react';
 
 const PreloadContext = createContext();
@@ -17,7 +18,7 @@ export function PreloadProvider({ children }) {
           return;
         }
 
-        const response = await fetch(`http://localhost:5001/bookings/get_bookings?role=${userRole}&userID=${userId}&status=confirmed`);
+        const response = await fetch(`${API_URL}/bookings/get_bookings?role=${userRole}&userID=${userId}&status=confirmed`);
         const data = await response.json();
         setAppointments(data);
       } catch (error) {

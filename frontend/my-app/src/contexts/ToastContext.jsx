@@ -1,3 +1,4 @@
+import { API_URL } from '../apiConfig';
 import React, { createContext, useContext, useEffect, useState } from 'react';
 import ToastManager, { useToastManager } from '../components/ToastManager';
 import { playNotificationSound } from '../utils/notificationUtils';
@@ -36,7 +37,7 @@ export const ToastProvider = ({ children }) => {
     console.log('🔔 ToastProvider: Initializing socket connection for user:', userEmail, 'userId:', userId);
 
     // Initialize socket connection
-    const newSocket = io('http://localhost:5001', {
+    const newSocket = io(API_URL, {
       transports: ['websocket', 'polling'],
       timeout: 20000,
       forceNew: true

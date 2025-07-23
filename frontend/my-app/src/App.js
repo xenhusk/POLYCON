@@ -103,7 +103,7 @@ function InlineProfilePictureUploader({ initialFile, onClose }) {
     const userID = localStorage.getItem('userID') || localStorage.getItem('userEmail');
     formData.append('user_id', userID);
     try {
-      const response = await fetch('http://localhost:5001/profile/upload_profile_picture', {
+      const response = await fetch(`${API_URL}/profile/upload_profile_picture`, {
         method: 'POST',
         body: formData,
       });      const data = await response.json();
