@@ -1,4 +1,4 @@
-import { API_URL } from './apiConfig';
+import API_URL from '../apiConfig';
 /**
  * Utility functions for handling student enrollment status
  */

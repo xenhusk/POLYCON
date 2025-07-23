@@ -1,4 +1,4 @@
-import { API_URL } from './my-app/src/apiConfig.js';
+import API_URL from './my-app/src/apiConfig.js';
 const startButton = document.getElementById("start-recording");
 const stopButton = document.getElementById("stop-recording");
 const finishButton = document.getElementById("finish-session");

@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { API_URL } from '../apiConfig';
+import API_URL from '../apiConfig';
 import { motion } from 'framer-motion';
 
 const modalVariants = {

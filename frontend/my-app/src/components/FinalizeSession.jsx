@@ -2,7 +2,7 @@
 import React, { useState, useEffect } from 'react';
 import { useNavigate, useLocation } from 'react-router-dom';
 import { showErrorNotification, showSuccessNotification, showWarningNotification } from '../utils/notificationUtils';
-import { API_URL } from '../apiConfig';
+import API_URL from '../apiConfig';
 
 const FinalizeSession = () => {
   const navigate = useNavigate();

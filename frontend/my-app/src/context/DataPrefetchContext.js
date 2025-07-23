@@ -1,5 +1,6 @@
 import React, { createContext, useContext, useEffect, useState } from 'react';
 import { useQueryClient } from 'react-query';
+import API_URL from '../apiConfig';
 import { apiRequestCounter } from '../utils/queryConfig';
 
 const DataPrefetchContext = createContext({
@@ -47,59 +48,22 @@ export const DataPrefetchProvider = ({ children }) => {
     const prefetchQueries = [
       { 
         queryKey: ['userData', userEmail],
-        url: `import API_URL from '../apiConfig';
-
-// ... other imports
-
-// ... component code
-
-L50: url: `${API_URL}/user/get_user?email=${userEmail}`
-L54: url: `${API_URL}/bookings/get_bookings?role=${userRole}&userID=${userID}&status=confirmed`
-L58: url: `${API_URL}/course/get_courses`
-L66: url: `${API_URL}/grade/get_student_grades?studentID=${userID}&schoolYear=&semester=&period=`/user/get_user?email=${userEmail}`
+        url: `${API_URL}/user/get_user?email=${userEmail}`
       },
       { 
         queryKey: ['bookings', userRole, userID],
-        url: `import API_URL from '../apiConfig';
-
-// ... other imports
-
-// ... component code
-
-L50: url: `${API_URL}/user/get_user?email=${userEmail}`
-L54: url: `${API_URL}/bookings/get_bookings?role=${userRole}&userID=${userID}&status=confirmed`
-L58: url: `${API_URL}/course/get_courses`
-L66: url: `${API_URL}/grade/get_student_grades?studentID=${userID}&schoolYear=&semester=&period=`/bookings/get_bookings?role=${userRole}&userID=${userID}&status=confirmed`
+        url: `${API_URL}/bookings/get_bookings?role=${userRole}&userID=${userID}&status=confirmed`
       },
       { 
         queryKey: ['courses'],
-        url: `import API_URL from '../apiConfig';
-
-// ... other imports
-
-// ... component code
-
-L50: url: `${API_URL}/user/get_user?email=${userEmail}`
-L54: url: `${API_URL}/bookings/get_bookings?role=${userRole}&userID=${userID}&status=confirmed`
-L58: url: `${API_URL}/course/get_courses`
-L66: url: `${API_URL}/grade/get_student_grades?studentID=${userID}&schoolYear=&semester=&period=`/course/get_courses`
+        url: `${API_URL}/course/get_courses`
       }
     ];
-    
     // If user is student, also prefetch grades
     if (userRole === 'student') {
       prefetchQueries.push({
         queryKey: ['grades', userID],
-        url: `import API_URL from '../apiConfig';
-
-// ... other imports
-
-// ... component code
-
-L50: url: `${API_URL}/user/get_user?email=${userEmail}`
-L54: url: `${API_URL}/bookings/get_bookings?role=${userRole}&userID=${userID}&status=confirmed`
-L58: url: `${API_URL}/course/get_courses`
-L66: url: `${API_URL}/grade/get_student_grades?studentID=${userID}&schoolYear=&semester=&period=`/grade/get_student_grades?studentID=${userID}&schoolYear=&semester=&period=`
+        url: `${API_URL}/grade/get_student_grades?studentID=${userID}&schoolYear=&semester=&period=`
       });
     }
     

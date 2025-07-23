@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import io from 'socket.io-client';
-import { API_URL } from '../apiConfig';
+import API_URL from '../apiConfig';
 import { playNotificationSound, areSoundNotificationsEnabled, toggleSoundNotifications } from '../utils/notificationUtils';
 
 const SocketTest = () => {

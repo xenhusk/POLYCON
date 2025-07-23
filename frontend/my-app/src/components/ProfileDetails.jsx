@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { getProfilePictureUrl } from '../utils/utils';
-import { API_URL } from '../apiConfig';
+import API_URL from '../apiConfig';
 
 const ProfileDetails = ({ profileDetails, departmentName, onProfileClick }) => {
   const [profile, setProfile] = useState(null);

@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useMemo, useCallback } from "react";
-import { API_URL } from '../apiConfig';
+import API_URL from '../apiConfig';
 import { useQuery } from "react-query";
 import AppointmentItem from "../components/AppointmentItem";
 import { showErrorNotification } from '../utils/notificationUtils';

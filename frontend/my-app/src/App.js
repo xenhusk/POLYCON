@@ -1,4 +1,4 @@
-import { API_URL } from './apiConfig';
+import API_URL from './apiConfig';
 import React, { useEffect, useState, useRef, useCallback, Suspense } from 'react';
 import { Routes, Route, useNavigate, useLocation, Navigate } from 'react-router-dom';
 import BookingStudent from './components/BookingStudent';

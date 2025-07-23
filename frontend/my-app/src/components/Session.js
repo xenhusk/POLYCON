@@ -1,5 +1,6 @@
 import React, { useState, useRef, useEffect } from "react";
 import { useNavigate, useLocation } from "react-router-dom";
+import API_URL from '../apiConfig';
 import { ReactComponent as PlayIcon } from "./icons/play.svg";
 import { ReactComponent as StopIcon } from "./icons/stop.svg";
 import { ReactComponent as MicrophoneIcon } from "./icons/microphone.svg";
@@ -25,19 +26,7 @@ const formatProgramWithSection = (student) => {
 const fetchUserDetails = async (idNumber) => {
   try {
     console.log(`Fetching user details for ID: ${idNumber}`);
-    const response = await fetch(`import API_URL from '../apiConfig';
-
-// ... other imports
-
-// ... component code
-
-L28: const response = await fetch(`${API_URL}/user/get_user?idNumber=${encodeURIComponent(idNumber)}`);
-L84: `${API_URL}/consultation/get_session?sessionID=${sessionID}`
-L256: `${API_URL}/consultation/transcribe`,
-L351: let url = `${API_URL}/consultation/store_consultation`;
-L390: `${API_URL}/consultation/summarize`,
-L413: `${API_URL}/consultation/identify_roles`,
-L436: `${API_URL}/consultation/store_consultation`,/user/get_user?idNumber=${encodeURIComponent(idNumber)}`);
+    const response = await fetch(`${API_URL}/user/get_user?idNumber=${encodeURIComponent(idNumber)}`);
     if (!response.ok) throw new Error("Failed to fetch user details");
     const data = await response.json();
     console.log(`User details received for ${idNumber}:`, data);
@@ -92,39 +81,21 @@ const Session = () => {
       // Existing session - fetch its details.
       const fetchSessionDetails = async (sessionID) => {
         try {
-          const response = await fetch(
-            `import API_URL from '../apiConfig';
-
-// ... other imports
-
-// ... component code
-
-L28: const response = await fetch(`${API_URL}/user/get_user?idNumber=${encodeURIComponent(idNumber)}`);
-L84: `${API_URL}/consultation/get_session?sessionID=${sessionID}`
-L256: `${API_URL}/consultation/transcribe`,
-L351: let url = `${API_URL}/consultation/store_consultation`;
-L390: `${API_URL}/consultation/summarize`,
-L413: `${API_URL}/consultation/identify_roles`,
-L436: `${API_URL}/consultation/store_consultation`,/consultation/get_session?sessionID=${sessionID}`
-          );
+          const response = await fetch(`${API_URL}/consultation/get_session?sessionID=${sessionID}`);
           const data = await response.json();
-          if (response.ok) {            const teacherIdNum = data.teacher_id.split("/").pop();
+          if (response.ok) {
+            const teacherIdNum = data.teacher_id.split("/").pop();
             setTeacherId(teacherIdNum);
             const studentIdNums = data.student_ids.map((id) => id.split("/").pop());
             setStudentIds(studentIdNums.join(", "));
-            
             console.log("Session teacherIdNum:", teacherIdNum);
             console.log("Session studentIdNums:", studentIdNums);
-            
-            // Fetch teacher info from backend
             fetchUserDetails(teacherIdNum)
               .then(teacherData => {
                 console.log("Teacher info fetched:", teacherData);
                 setTeacherInfo(teacherData);
               })
               .catch(err => console.error("Error fetching teacher info:", err));
-              
-            // Fetch student info from backend
             if (studentIdNums && studentIdNums.length > 0) {
               Promise.all(
                 studentIdNums.map(fetchUserDetails)
@@ -277,19 +248,7 @@ L436: `${API_URL}/consultation/store_consultation`,/consultation/get_session?ses
     console.log(`Calculated speaker count: ${expectedSpeakers}`);
 
     const response = await fetch(
-      "import API_URL from '../apiConfig';
-
-// ... other imports
-
-// ... component code
-
-L28: const response = await fetch(`${API_URL}/user/get_user?idNumber=${encodeURIComponent(idNumber)}`);
-L84: `${API_URL}/consultation/get_session?sessionID=${sessionID}`
-L256: `${API_URL}/consultation/transcribe`,
-L351: let url = `${API_URL}/consultation/store_consultation`;
-L390: `${API_URL}/consultation/summarize`,
-L413: `${API_URL}/consultation/identify_roles`,
-L436: `${API_URL}/consultation/store_consultation`,/consultation/transcribe",
+      `${API_URL}/consultation/transcribe`,
       {
         method: "POST",
         body: formData,
@@ -384,43 +343,29 @@ L436: `${API_URL}/consultation/store_consultation`,/consultation/transcribe",
 
     try {
       // Append booking_id as a query parameter if available.
-      let url = "import API_URL from '../apiConfig';
-
-// ... other imports
-
-// ... component code
-
-L28: const response = await fetch(`${API_URL}/user/get_user?idNumber=${encodeURIComponent(idNumber)}`);
-L84: `${API_URL}/consultation/get_session?sessionID=${sessionID}`
-L256: `${API_URL}/consultation/transcribe`,
-L351: let url = `${API_URL}/consultation/store_consultation`;
-L390: `${API_URL}/consultation/summarize`,
-L413: `${API_URL}/consultation/identify_roles`,
-L436: `${API_URL}/consultation/store_consultation`,/consultation/store_consultation";
+      let url = `${API_URL}/consultation/store_consultation`;
       if (bookingID) {
         url += `?booking_id=${bookingID}`;
-        console.log("🔍 Debug - Using booking_id:", bookingID); // Add debug log
+        console.log("🔍 Debug - Using booking_id:", bookingID);
       }
       const response = await fetch(url, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify(payload),
-      });      if (!response.ok) {
+      });
+      if (!response.ok) {
         const errorData = await response.json();
-        console.error("Server validation error:", errorData); // Add this debug log
+        console.error("Server validation error:", errorData);
         showErrorNotification(`Failed to store consultation: ${errorData.error}`);
         return;
       }
-
       const data = await response.json();
       console.log("🚀 Debug: Server Response", data);
-
       if (response.ok) {
         const newSessionID = data.session_id;
         console.log(
           `✅ Navigating to: /finaldocument?sessionID=${newSessionID}`
         );
-
         setTimeout(() => {
           navigate(`/finaldocument?sessionID=${newSessionID}`);
         }, 100);
@@ -435,19 +380,7 @@ L436: `${API_URL}/consultation/store_consultation`,/consultation/store_consultat
 
   const generateSummary = async (transcription, notes) => {
     const response = await fetch(
-      "import API_URL from '../apiConfig';
-
-// ... other imports
-
-// ... component code
-
-L28: const response = await fetch(`${API_URL}/user/get_user?idNumber=${encodeURIComponent(idNumber)}`);
-L84: `${API_URL}/consultation/get_session?sessionID=${sessionID}`
-L256: `${API_URL}/consultation/transcribe`,
-L351: let url = `${API_URL}/consultation/store_consultation`;
-L390: `${API_URL}/consultation/summarize`,
-L413: `${API_URL}/consultation/identify_roles`,
-L436: `${API_URL}/consultation/store_consultation`,/consultation/summarize",
+      `${API_URL}/consultation/summarize`,
       {
         method: "POST",
         headers: { "Content-Type": "application/json" },
@@ -470,19 +403,7 @@ L436: `${API_URL}/consultation/store_consultation`,/consultation/summarize",
 
   const identifyRoles = async (transcription) => {
     const response = await fetch(
-      "import API_URL from '../apiConfig';
-
-// ... other imports
-
-// ... component code
-
-L28: const response = await fetch(`${API_URL}/user/get_user?idNumber=${encodeURIComponent(idNumber)}`);
-L84: `${API_URL}/consultation/get_session?sessionID=${sessionID}`
-L256: `${API_URL}/consultation/transcribe`,
-L351: let url = `${API_URL}/consultation/store_consultation`;
-L390: `${API_URL}/consultation/summarize`,
-L413: `${API_URL}/consultation/identify_roles`,
-L436: `${API_URL}/consultation/store_consultation`,/consultation/identify_roles",
+      `${API_URL}/consultation/identify_roles`,
       {
         method: "POST",
         headers: { "Content-Type": "application/json" },
@@ -505,19 +426,7 @@ L436: `${API_URL}/consultation/store_consultation`,/consultation/identify_roles"
       const audioUploadResponse = await uploadAudio(audioBlob);
       const audioFilePath = audioUploadResponse.audioUrl;
       const response = await fetch(
-        "import API_URL from '../apiConfig';
-
-// ... other imports
-
-// ... component code
-
-L28: const response = await fetch(`${API_URL}/user/get_user?idNumber=${encodeURIComponent(idNumber)}`);
-L84: `${API_URL}/consultation/get_session?sessionID=${sessionID}`
-L256: `${API_URL}/consultation/transcribe`,
-L351: let url = `${API_URL}/consultation/store_consultation`;
-L390: `${API_URL}/consultation/summarize`,
-L413: `${API_URL}/consultation/identify_roles`,
-L436: `${API_URL}/consultation/store_consultation`,/consultation/store_consultation",
+        `${API_URL}/consultation/store_consultation`,
         {
           method: "POST",
           headers: { "Content-Type": "application/json" },
@@ -536,7 +445,8 @@ L436: `${API_URL}/consultation/store_consultation`,/consultation/store_consultat
       );
       if (!response.ok) {
         throw new Error("Storing consultation session failed");
-      }      const data = await response.json();
+      }
+      const data = await response.json();
       showSuccessNotification(`Session stored successfully with ID: ${data.session_id}`);
     } catch (error) {
       console.error("Error storing consultation session:", error);

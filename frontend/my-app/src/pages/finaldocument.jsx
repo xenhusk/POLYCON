@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useRef } from 'react';
-import { API_URL } from '../apiConfig';
+import API_URL from '../apiConfig';
 import { TransformWrapper, TransformComponent } from 'react-zoom-pan-pinch';
 import jsPDF from 'jspdf';
 import html2canvas from 'html2canvas';

@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from "react";
-import { API_URL } from '../apiConfig';
+import API_URL from '../apiConfig';
 import { EyeOutlined, EyeInvisibleOutlined } from "@ant-design/icons";
 import logo from "./icons/DarkLogo.png";
 

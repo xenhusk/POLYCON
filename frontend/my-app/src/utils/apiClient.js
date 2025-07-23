@@ -1,4 +1,4 @@
-import { API_URL } from './apiConfig';
+import API_URL from '../apiConfig';
 import { QueryClient } from 'react-query';
 
 const abortControllers = new Map();

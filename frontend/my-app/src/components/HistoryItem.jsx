@@ -2,7 +2,7 @@ import React from 'react';
 import { useNavigate } from 'react-router-dom';
 import { getProfilePictureUrl } from '../utils/utils'; // Import profile picture util
 // Set API base URL for image loading
-import { API_URL } from '../apiConfig';
+import API_URL from '../apiConfig';
 
 const HistoryItem = ({ session, className }) => {
   const navigate = useNavigate();

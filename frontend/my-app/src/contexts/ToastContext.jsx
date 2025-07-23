@@ -1,4 +1,4 @@
-import { API_URL } from '../apiConfig';
+import API_URL from '../apiConfig';
 import React, { createContext, useContext, useEffect, useState } from 'react';
 import ToastManager, { useToastManager } from '../components/ToastManager';
 import { playNotificationSound } from '../utils/notificationUtils';

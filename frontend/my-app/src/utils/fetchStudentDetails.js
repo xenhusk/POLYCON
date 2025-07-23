@@ -1,4 +1,4 @@
-import { API_URL } from './apiConfig';
+import API_URL from '../apiConfig';
 export async function fetchStudentDetails(studentID) {
   try {
     const response = await fetch(`${API_URL}/bookings/get_student_details?studentID=${studentID}`);

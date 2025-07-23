@@ -2,6 +2,7 @@ import React, { useEffect, useState } from 'react';
 import { ReactComponent as EditIcon } from './icons/Edit.svg';
 import { ReactComponent as DeleteIcon } from './icons/delete.svg';
 import './transitions.css';
+import API_URL from '../apiConfig';
 
 export default function Programs() {
   const [programs, setPrograms] = useState([]);
@@ -33,28 +34,8 @@ export default function Programs() {
     setIsLoadingPrograms(true);
     try {
       const [programsResponse, departmentsResponse] = await Promise.all([
-        fetch('import API_URL from '../apiConfig';
-
-// ... other imports
-
-// ... component code
-
-L36: fetch(`${API_URL}/program/get_programs`),
-L37: fetch(`${API_URL}/program/get_departments`)
-L72: const response = await fetch(`${API_URL}/program/add_program`, {
-L100: const response = await fetch(`${API_URL}/program/update_program/${editingProgramId}`, {
-L138: const response = await fetch(`${API_URL}/program/delete_program/${programToDelete}`, {/program/get_programs'),
-        fetch('import API_URL from '../apiConfig';
-
-// ... other imports
-
-// ... component code
-
-L36: fetch(`${API_URL}/program/get_programs`),
-L37: fetch(`${API_URL}/program/get_departments`)
-L72: const response = await fetch(`${API_URL}/program/add_program`, {
-L100: const response = await fetch(`${API_URL}/program/update_program/${editingProgramId}`, {
-L138: const response = await fetch(`${API_URL}/program/delete_program/${programToDelete}`, {/program/get_departments')
+        fetch(`${API_URL}/program/get_programs`),
+        fetch(`${API_URL}/program/get_departments`)
       ]);
       const programsData = await programsResponse.json();
       const departmentsData = await departmentsResponse.json();
@@ -89,17 +70,7 @@ L138: const response = await fetch(`${API_URL}/program/delete_program/${programT
     }
     setIsAddLoading(true);
     try {
-      const response = await fetch('import API_URL from '../apiConfig';
-
-// ... other imports
-
-// ... component code
-
-L36: fetch(`${API_URL}/program/get_programs`),
-L37: fetch(`${API_URL}/program/get_departments`)
-L72: const response = await fetch(`${API_URL}/program/add_program`, {
-L100: const response = await fetch(`${API_URL}/program/update_program/${editingProgramId}`, {
-L138: const response = await fetch(`${API_URL}/program/delete_program/${programToDelete}`, {/program/add_program', {
+      const response = await fetch(`${API_URL}/program/add_program`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ programName, departmentID: parseInt(selectedDepartment) })
@@ -127,17 +98,7 @@ L138: const response = await fetch(`${API_URL}/program/delete_program/${programT
     }
     setIsAddLoading(true);
     try {
-      const response = await fetch(`import API_URL from '../apiConfig';
-
-// ... other imports
-
-// ... component code
-
-L36: fetch(`${API_URL}/program/get_programs`),
-L37: fetch(`${API_URL}/program/get_departments`)
-L72: const response = await fetch(`${API_URL}/program/add_program`, {
-L100: const response = await fetch(`${API_URL}/program/update_program/${editingProgramId}`, {
-L138: const response = await fetch(`${API_URL}/program/delete_program/${programToDelete}`, {/program/update_program/${editingProgramId}`, {
+      const response = await fetch(`${API_URL}/program/update_program/${editingProgramId}`, {
         method: 'PUT',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ programName, departmentID: parseInt(selectedDepartment) })
@@ -175,17 +136,7 @@ L138: const response = await fetch(`${API_URL}/program/delete_program/${programT
   const confirmDelete = async () => {
     setIsDeleteLoading(true);
     try {
-      const response = await fetch(`import API_URL from '../apiConfig';
-
-// ... other imports
-
-// ... component code
-
-L36: fetch(`${API_URL}/program/get_programs`),
-L37: fetch(`${API_URL}/program/get_departments`)
-L72: const response = await fetch(`${API_URL}/program/add_program`, {
-L100: const response = await fetch(`${API_URL}/program/update_program/${editingProgramId}`, {
-L138: const response = await fetch(`${API_URL}/program/delete_program/${programToDelete}`, {/program/delete_program/${programToDelete}`, {
+      const response = await fetch(`${API_URL}/program/delete_program/${programToDelete}`, {
         method: 'DELETE'
       });
 

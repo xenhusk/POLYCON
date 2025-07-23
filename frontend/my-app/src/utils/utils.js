@@ -1,4 +1,4 @@
-import { API_URL } from './apiConfig';
+import API_URL from '../apiConfig';
 // Add a consistent function to get profile pictures
 export const getProfilePictureUrl = (profilePicture, userName = '') => {
   if (!profilePicture) {

@@ -1,4 +1,4 @@
-import { API_URL } from '../apiConfig';
+import API_URL from '../apiConfig';
 import React, { createContext, useState, useContext, useEffect } from 'react';
 
 const PreloadContext = createContext();

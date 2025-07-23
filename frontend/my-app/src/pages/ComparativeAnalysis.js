@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from "react";
-import { API_URL } from '../apiConfig';
+import API_URL from '../apiConfig';
 import { getProfilePictureUrl } from "../utils/utils";
 import { motion, AnimatePresence } from "framer-motion";
 import ComparativeAnalysisHeader from "../components/Comparative_Analysis_Header";

@@ -1,4 +1,5 @@
 import { useState, useEffect } from "react";
+import API_URL from '../apiConfig';
 import { ReactComponent as DeleteIcon } from "./icons/delete.svg";
 import { ReactComponent as EditIcon } from "./icons/Edit.svg";
 import { ReactComponent as FilterIcon } from "./icons/FilterAdd.svg";
@@ -9,13 +10,14 @@ export default function AddGrade() {
   const [studentID, setStudentID] = useState("");
   const [studentName, setStudentName] = useState("");
   const [courseID, setCourseID] = useState("");
+  const [courseName, setCourseName] = useState("");
   // const [courseName, setCourseName] = useState(""); // Removed unused variable
   const [grade, setGrade] = useState("");
   const [grades, setGrades] = useState([]);
   const [period, setPeriod] = useState("");
   const [schoolYear, setSchoolYear] = useState("2024-2025");
   const [semester, setSemester] = useState("");
-  // const [students, setStudents] = useState([]); // Removed unused variable
+  const [students, setStudents] = useState([]);
   const [courses, setCourses] = useState([]);
   const [facultyID, setFacultyID] = useState("");
   const [selectedGradeID, setSelectedGradeID] = useState(null); // For editing

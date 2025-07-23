@@ -1,6 +1,6 @@
 import React, { useEffect, useState } from 'react';
 import apiClient from '../utils/apiClient';
-import { API_URL } from '../apiConfig';
+import API_URL from '../apiConfig';
 
 function Settings() {
   const [settings, setSettings] = useState(null);

@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { API_URL } from '../apiConfig';
+import API_URL from '../apiConfig';
 import { useNavigate } from 'react-router-dom';
 import AppointmentsCalendar from '../components/AppointmentsCalendar';
 import HomeTeacher from '../components/HomeTeacher';

@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useRef, useContext } from 'react';
-import { API_URL } from '../apiConfig';
+import API_URL from '../apiConfig';
 import { Link, useNavigate, useLocation } from 'react-router-dom'; // Add useLocation import
 import './Sidebar.css'; // Import the CSS file
 // Placeholder imports for SVG icons

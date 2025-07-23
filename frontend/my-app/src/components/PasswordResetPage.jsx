@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { useLocation, useNavigate } from 'react-router-dom';
-import { API_URL } from '../apiConfig';
+import API_URL from '../apiConfig';
+import { motion } from 'framer-motion';
 
 const PasswordResetPage = () => {
   const [password, setPassword] = useState('');

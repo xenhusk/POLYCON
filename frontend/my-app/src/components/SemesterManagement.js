@@ -1,4 +1,5 @@
 import React, { useState, useEffect, useRef } from 'react';
+import API_URL from '../apiConfig';
 import { format } from 'date-fns';
 import { motion, AnimatePresence } from 'framer-motion'; // NEW: import motion and AnimatePresence from framer-motion
 import { ReactComponent as FilterIcon } from './icons/FilterAdd.svg';
@@ -31,28 +32,10 @@ const SemesterManagement = () => {
   // NEW: function to fetch latest (active) semester
   const fetchLatestSemester = async () => {
     try {
-      const response = await fetch('import API_URL from '../apiConfig';
-
-// ... other imports
-
-// ... component code
-
-L34: const response = await fetch(`${API_URL}/semester/latest`);
-L59: fetch(`${API_URL}/semester/teachers`)
-L141: const response = await fetch(`${API_URL}/semester/start`, {
-L172: const response = await fetch(`${API_URL}/semester/end`, {
-L182: const teachersResponse = await fetch(`${API_URL}/semester/teachers`);
-L204: const response = await fetch(`${API_URL}/semester/end`, {
-L289: ? `${API_URL}/semester/end/schedule`
-L290: : `${API_URL}/semester/end`;
-L338: const res = await fetch(`${API_URL}/semester/delete_duplicate`, {
-L362: const response = await fetch(`${API_URL}/semester/teacher/activate`, {
-L407: const response = await fetch(`${API_URL}/semester/teacher/activate-all`, {
-L450: const res = await fetch(`${API_URL}/semester/teacher/search?query=${encodeURIComponent(term)}`);/semester/latest');
+      const response = await fetch(`${API_URL}/semester/latest`);
       if(response.ok) {
         const data = await response.json();
         setLatestSemester(data);
-        // Use the canEnd flag from backend
         setCanEndSemester(data.canEnd);
       }
     } catch (error) {
@@ -73,28 +56,10 @@ L450: const res = await fetch(`${API_URL}/semester/teacher/search?query=${encode
     }
 
     // Fetch fresh data from the server
-    fetch('import API_URL from '../apiConfig';
-
-// ... other imports
-
-// ... component code
-
-L34: const response = await fetch(`${API_URL}/semester/latest`);
-L59: fetch(`${API_URL}/semester/teachers`)
-L141: const response = await fetch(`${API_URL}/semester/start`, {
-L172: const response = await fetch(`${API_URL}/semester/end`, {
-L182: const teachersResponse = await fetch(`${API_URL}/semester/teachers`);
-L204: const response = await fetch(`${API_URL}/semester/end`, {
-L289: ? `${API_URL}/semester/end/schedule`
-L290: : `${API_URL}/semester/end`;
-L338: const res = await fetch(`${API_URL}/semester/delete_duplicate`, {
-L362: const response = await fetch(`${API_URL}/semester/teacher/activate`, {
-L407: const response = await fetch(`${API_URL}/semester/teacher/activate-all`, {
-L450: const res = await fetch(`${API_URL}/semester/teacher/search?query=${encodeURIComponent(term)}`);/semester/teachers')
+    fetch(`${API_URL}/semester/teachers`)
       .then(res => res.json())
       .then(data => {
         setTeachers(data);
-        // Cache the fresh data
         localStorage.setItem('teachers', JSON.stringify(data));
       })
       .catch(err => console.error('Failed to load teachers', err));
@@ -172,24 +137,7 @@ L450: const res = await fetch(`${API_URL}/semester/teacher/search?query=${encode
       fullSchoolYear = `${schoolYear}-${parseInt(schoolYear) + 1}`;
     }
     try {
-      const response = await fetch('import API_URL from '../apiConfig';
-
-// ... other imports
-
-// ... component code
-
-L34: const response = await fetch(`${API_URL}/semester/latest`);
-L59: fetch(`${API_URL}/semester/teachers`)
-L141: const response = await fetch(`${API_URL}/semester/start`, {
-L172: const response = await fetch(`${API_URL}/semester/end`, {
-L182: const teachersResponse = await fetch(`${API_URL}/semester/teachers`);
-L204: const response = await fetch(`${API_URL}/semester/end`, {
-L289: ? `${API_URL}/semester/end/schedule`
-L290: : `${API_URL}/semester/end`;
-L338: const res = await fetch(`${API_URL}/semester/delete_duplicate`, {
-L362: const response = await fetch(`${API_URL}/semester/teacher/activate`, {
-L407: const response = await fetch(`${API_URL}/semester/teacher/activate-all`, {
-L450: const res = await fetch(`${API_URL}/semester/teacher/search?query=${encodeURIComponent(term)}`);/semester/start', {
+      const response = await fetch(`${API_URL}/semester/start`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
@@ -198,17 +146,14 @@ L450: const res = await fetch(`${API_URL}/semester/teacher/search?query=${encode
           semester: semester
         }),
       });
-      
       const data = await response.json();
       if (!response.ok) {
         setError(data.error || `Failed to start semester. School year ${fullSchoolYear} already exists.`);
         setIsStartingSemester(false);
         return;
       }
-      
       setCurrentSemester(data.semester_id);
       setError("Semester started successfully!");
-      // NEW: refresh the latest active semester display
       fetchLatestSemester();
     } catch (err) {
       setError(`Failed to start semester: ${err}`);
@@ -220,24 +165,7 @@ L450: const res = await fetch(`${API_URL}/semester/teacher/search?query=${encode
   const handleEndSemester = async () => {
     if (!currentSemester || !endDate) return;
     try {
-      const response = await fetch('import API_URL from '../apiConfig';
-
-// ... other imports
-
-// ... component code
-
-L34: const response = await fetch(`${API_URL}/semester/latest`);
-L59: fetch(`${API_URL}/semester/teachers`)
-L141: const response = await fetch(`${API_URL}/semester/start`, {
-L172: const response = await fetch(`${API_URL}/semester/end`, {
-L182: const teachersResponse = await fetch(`${API_URL}/semester/teachers`);
-L204: const response = await fetch(`${API_URL}/semester/end`, {
-L289: ? `${API_URL}/semester/end/schedule`
-L290: : `${API_URL}/semester/end`;
-L338: const res = await fetch(`${API_URL}/semester/delete_duplicate`, {
-L362: const response = await fetch(`${API_URL}/semester/teacher/activate`, {
-L407: const response = await fetch(`${API_URL}/semester/teacher/activate-all`, {
-L450: const res = await fetch(`${API_URL}/semester/teacher/search?query=${encodeURIComponent(term)}`);/semester/end', {
+      const response = await fetch(`${API_URL}/semester/end`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
@@ -247,24 +175,8 @@ L450: const res = await fetch(`${API_URL}/semester/teacher/search?query=${encode
       });
       if (!response.ok) throw new Error('Failed to end semester');
       setCurrentSemester(null);
-      const teachersResponse = await fetch('import API_URL from '../apiConfig';
-
-// ... other imports
-
-// ... component code
-
-L34: const response = await fetch(`${API_URL}/semester/latest`);
-L59: fetch(`${API_URL}/semester/teachers`)
-L141: const response = await fetch(`${API_URL}/semester/start`, {
-L172: const response = await fetch(`${API_URL}/semester/end`, {
-L182: const teachersResponse = await fetch(`${API_URL}/semester/teachers`);
-L204: const response = await fetch(`${API_URL}/semester/end`, {
-L289: ? `${API_URL}/semester/end/schedule`
-L290: : `${API_URL}/semester/end`;
-L338: const res = await fetch(`${API_URL}/semester/delete_duplicate`, {
-L362: const response = await fetch(`${API_URL}/semester/teacher/activate`, {
-L407: const response = await fetch(`${API_URL}/semester/teacher/activate-all`, {
-L450: const res = await fetch(`${API_URL}/semester/teacher/search?query=${encodeURIComponent(term)}`);/semester/teachers');
+      // Fetch updated teachers after ending the semester
+      const teachersResponse = await fetch(`${API_URL}/semester/teachers`);
       if (!teachersResponse.ok) throw new Error('Failed to fetch teachers');
       const teachersData = await teachersResponse.json();
       setTeachers(teachersData);
@@ -286,24 +198,7 @@ L450: const res = await fetch(`${API_URL}/semester/teacher/search?query=${encode
               setIsEndingSemester(true);
               try {
                 const currentDate = format(new Date(), 'yyyy-MM-dd');
-                const response = await fetch('import API_URL from '../apiConfig';
-
-// ... other imports
-
-// ... component code
-
-L34: const response = await fetch(`${API_URL}/semester/latest`);
-L59: fetch(`${API_URL}/semester/teachers`)
-L141: const response = await fetch(`${API_URL}/semester/start`, {
-L172: const response = await fetch(`${API_URL}/semester/end`, {
-L182: const teachersResponse = await fetch(`${API_URL}/semester/teachers`);
-L204: const response = await fetch(`${API_URL}/semester/end`, {
-L289: ? `${API_URL}/semester/end/schedule`
-L290: : `${API_URL}/semester/end`;
-L338: const res = await fetch(`${API_URL}/semester/delete_duplicate`, {
-L362: const response = await fetch(`${API_URL}/semester/teacher/activate`, {
-L407: const response = await fetch(`${API_URL}/semester/teacher/activate-all`, {
-L450: const res = await fetch(`${API_URL}/semester/teacher/search?query=${encodeURIComponent(term)}`);/semester/end', {
+                const response = await fetch(`${API_URL}/semester/end`, {
                   method: 'POST',
                   headers: { 'Content-Type': 'application/json' },
                   body: JSON.stringify({
@@ -311,9 +206,7 @@ L450: const res = await fetch(`${API_URL}/semester/teacher/search?query=${encode
                     endDate: currentDate
                   }),
                 });
-                
                 if (!response.ok) throw new Error('Failed to end semester');
-                
                 // After successfully ending semester, deactivate all teachers
                 const updatedTeachers = teachers.map(teacher => ({
                   ...teacher,
@@ -321,7 +214,6 @@ L450: const res = await fetch(`${API_URL}/semester/teacher/search?query=${encode
                 }));
                 setTeachers(updatedTeachers);
                 localStorage.setItem('teachers', JSON.stringify(updatedTeachers));
-                
                 setSchoolYear('');
                 setSemester('1st');
                 setStartDate('');
@@ -384,68 +276,29 @@ L450: const res = await fetch(`${API_URL}/semester/teacher/search?query=${encode
         <div className="flex gap-2">
           <button
             onClick={async () => {
-              setIsSchedulingEnd(true); // Only set loading when confirmed
+              setIsSchedulingEnd(true);
               try {
                 const endpoint =
                   selectedEndDate > now
-                    ? 'import API_URL from '../apiConfig';
-
-// ... other imports
-
-// ... component code
-
-L34: const response = await fetch(`${API_URL}/semester/latest`);
-L59: fetch(`${API_URL}/semester/teachers`)
-L141: const response = await fetch(`${API_URL}/semester/start`, {
-L172: const response = await fetch(`${API_URL}/semester/end`, {
-L182: const teachersResponse = await fetch(`${API_URL}/semester/teachers`);
-L204: const response = await fetch(`${API_URL}/semester/end`, {
-L289: ? `${API_URL}/semester/end/schedule`
-L290: : `${API_URL}/semester/end`;
-L338: const res = await fetch(`${API_URL}/semester/delete_duplicate`, {
-L362: const response = await fetch(`${API_URL}/semester/teacher/activate`, {
-L407: const response = await fetch(`${API_URL}/semester/teacher/activate-all`, {
-L450: const res = await fetch(`${API_URL}/semester/teacher/search?query=${encodeURIComponent(term)}`);/semester/end/schedule'
-                    : 'import API_URL from '../apiConfig';
-
-// ... other imports
-
-// ... component code
-
-L34: const response = await fetch(`${API_URL}/semester/latest`);
-L59: fetch(`${API_URL}/semester/teachers`)
-L141: const response = await fetch(`${API_URL}/semester/start`, {
-L172: const response = await fetch(`${API_URL}/semester/end`, {
-L182: const teachersResponse = await fetch(`${API_URL}/semester/teachers`);
-L204: const response = await fetch(`${API_URL}/semester/end`, {
-L289: ? `${API_URL}/semester/end/schedule`
-L290: : `${API_URL}/semester/end`;
-L338: const res = await fetch(`${API_URL}/semester/delete_duplicate`, {
-L362: const response = await fetch(`${API_URL}/semester/teacher/activate`, {
-L407: const response = await fetch(`${API_URL}/semester/teacher/activate-all`, {
-L450: const res = await fetch(`${API_URL}/semester/teacher/search?query=${encodeURIComponent(term)}`);/semester/end';
-                // Changed key from end_date to endDate for consistency with the database field
+                    ? `${API_URL}/semester/end/schedule`
+                    : `${API_URL}/semester/end`;
                 const payload = {
                   semester_id: latestSemester?.id || currentSemester,
                   endDate: format(new Date(endDate), 'yyyy-MM-dd')
                 };
-                console.log("DEBUG: Scheduling payload:", payload);
                 const response = await fetch(endpoint, {
                   method: 'POST',
                   headers: { 'Content-Type': 'application/json' },
                   body: JSON.stringify(payload)
                 });
-                console.log("DEBUG: Response status:", response.status);
-                const responseText = await response.text();
-                console.log("DEBUG: Response text:", responseText);
                 if (!response.ok) {
+                  const responseText = await response.text();
                   throw new Error(JSON.parse(responseText).message || 'Failed to schedule semester end');
                 }
                 setCurrentSemester(null);
                 setError("Semester end date scheduled successfully!");
                 fetchLatestSemester();
               } catch (err) {
-                console.error("DEBUG: Error in scheduling semester end:", err);
                 setError(`Failed to schedule semester end: ${err.message}`);
               } finally {
                 setIsSchedulingEnd(false);
@@ -471,24 +324,7 @@ L450: const res = await fetch(`${API_URL}/semester/teacher/search?query=${encode
   const handleDeleteDuplicate = async () => {
     const fullSchoolYear = `20${schoolYear.split('-')[0]}-20${schoolYear.split('-')[1]}`;
     try {
-      const res = await fetch('import API_URL from '../apiConfig';
-
-// ... other imports
-
-// ... component code
-
-L34: const response = await fetch(`${API_URL}/semester/latest`);
-L59: fetch(`${API_URL}/semester/teachers`)
-L141: const response = await fetch(`${API_URL}/semester/start`, {
-L172: const response = await fetch(`${API_URL}/semester/end`, {
-L182: const teachersResponse = await fetch(`${API_URL}/semester/teachers`);
-L204: const response = await fetch(`${API_URL}/semester/end`, {
-L289: ? `${API_URL}/semester/end/schedule`
-L290: : `${API_URL}/semester/end`;
-L338: const res = await fetch(`${API_URL}/semester/delete_duplicate`, {
-L362: const response = await fetch(`${API_URL}/semester/teacher/activate`, {
-L407: const response = await fetch(`${API_URL}/semester/teacher/activate-all`, {
-L450: const res = await fetch(`${API_URL}/semester/teacher/search?query=${encodeURIComponent(term)}`);/semester/delete_duplicate', {
+      const res = await fetch(`${API_URL}/semester/delete_duplicate`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
@@ -512,36 +348,17 @@ L450: const res = await fetch(`${API_URL}/semester/teacher/search?query=${encode
     if (isActivatingTeacher === teacherId) return;
     setIsActivatingTeacher(teacherId);
     try {
-      const response = await fetch('import API_URL from '../apiConfig';
-
-// ... other imports
-
-// ... component code
-
-L34: const response = await fetch(`${API_URL}/semester/latest`);
-L59: fetch(`${API_URL}/semester/teachers`)
-L141: const response = await fetch(`${API_URL}/semester/start`, {
-L172: const response = await fetch(`${API_URL}/semester/end`, {
-L182: const teachersResponse = await fetch(`${API_URL}/semester/teachers`);
-L204: const response = await fetch(`${API_URL}/semester/end`, {
-L289: ? `${API_URL}/semester/end/schedule`
-L290: : `${API_URL}/semester/end`;
-L338: const res = await fetch(`${API_URL}/semester/delete_duplicate`, {
-L362: const response = await fetch(`${API_URL}/semester/teacher/activate`, {
-L407: const response = await fetch(`${API_URL}/semester/teacher/activate-all`, {
-L450: const res = await fetch(`${API_URL}/semester/teacher/search?query=${encodeURIComponent(term)}`);/semester/teacher/activate', {
+      const response = await fetch(`${API_URL}/semester/teacher/activate`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ teacherId })
       });
-      
       let data;
       try {
         data = await response.json();
       } catch (e) {
         data = { error: 'Failed to parse server response' };
       }
-
       if (!response.ok) {
         if (response.status === 400 || response.status === 404) {
           if (data.error && data.error.includes('No active semester')) {
@@ -554,16 +371,13 @@ L450: const res = await fetch(`${API_URL}/semester/teacher/search?query=${encode
         }
         return;
       }
-      
       const updatedTeachers = teachers.map(teacher =>
         teacher.ID === teacherId ? { ...teacher, isActive: true } : teacher
       );
       setTeachers(updatedTeachers);
-      // Update cache
       localStorage.setItem('teachers', JSON.stringify(updatedTeachers));
       setError('Teacher activated successfully');
     } catch (err) {
-      // Error is already set above
       console.error('Error activating teacher:', err);
     } finally {
       setIsActivatingTeacher(null);
@@ -574,35 +388,16 @@ L450: const res = await fetch(`${API_URL}/semester/teacher/search?query=${encode
   const handleActivateAll = async () => {
     setIsActivatingAll(true);
     try {
-      const response = await fetch('import API_URL from '../apiConfig';
-
-// ... other imports
-
-// ... component code
-
-L34: const response = await fetch(`${API_URL}/semester/latest`);
-L59: fetch(`${API_URL}/semester/teachers`)
-L141: const response = await fetch(`${API_URL}/semester/start`, {
-L172: const response = await fetch(`${API_URL}/semester/end`, {
-L182: const teachersResponse = await fetch(`${API_URL}/semester/teachers`);
-L204: const response = await fetch(`${API_URL}/semester/end`, {
-L289: ? `${API_URL}/semester/end/schedule`
-L290: : `${API_URL}/semester/end`;
-L338: const res = await fetch(`${API_URL}/semester/delete_duplicate`, {
-L362: const response = await fetch(`${API_URL}/semester/teacher/activate`, {
-L407: const response = await fetch(`${API_URL}/semester/teacher/activate-all`, {
-L450: const res = await fetch(`${API_URL}/semester/teacher/search?query=${encodeURIComponent(term)}`);/semester/teacher/activate-all', {
+      const response = await fetch(`${API_URL}/semester/teacher/activate-all`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' }
       });
-      
       let data;
       try {
         data = await response.json();
       } catch (e) {
         data = { error: 'Failed to parse server response' };
       }
-
       if (!response.ok) {
         if (response.status === 400 || response.status === 404) {
           if (data.error && data.error.includes('No active semester')) {
@@ -615,14 +410,11 @@ L450: const res = await fetch(`${API_URL}/semester/teacher/search?query=${encode
         }
         return;
       }
-      
       const updatedTeachers = teachers.map(teacher => ({ ...teacher, isActive: true }));
       setTeachers(updatedTeachers);
-      // Update cache
       localStorage.setItem('teachers', JSON.stringify(updatedTeachers));
       setError('All teachers activated successfully');
     } catch (err) {
-      console.error('Error activating all teachers:', err);
       setError('Failed to activate all teachers. Please try again.');
     } finally {
       setIsActivatingAll(false);
@@ -634,24 +426,7 @@ L450: const res = await fetch(`${API_URL}/semester/teacher/search?query=${encode
     if (teacherSearchTimeout.current) clearTimeout(teacherSearchTimeout.current);
     teacherSearchTimeout.current = setTimeout(async () => {
       try {
-        const res = await fetch(`import API_URL from '../apiConfig';
-
-// ... other imports
-
-// ... component code
-
-L34: const response = await fetch(`${API_URL}/semester/latest`);
-L59: fetch(`${API_URL}/semester/teachers`)
-L141: const response = await fetch(`${API_URL}/semester/start`, {
-L172: const response = await fetch(`${API_URL}/semester/end`, {
-L182: const teachersResponse = await fetch(`${API_URL}/semester/teachers`);
-L204: const response = await fetch(`${API_URL}/semester/end`, {
-L289: ? `${API_URL}/semester/end/schedule`
-L290: : `${API_URL}/semester/end`;
-L338: const res = await fetch(`${API_URL}/semester/delete_duplicate`, {
-L362: const response = await fetch(`${API_URL}/semester/teacher/activate`, {
-L407: const response = await fetch(`${API_URL}/semester/teacher/activate-all`, {
-L450: const res = await fetch(`${API_URL}/semester/teacher/search?query=${encodeURIComponent(term)}`);/semester/teacher/search?query=${encodeURIComponent(term)}`);
+        const res = await fetch(`${API_URL}/semester/teacher/search?query=${encodeURIComponent(term)}`);
         const data = await res.json();
         setTeacherResults(data || []);
       } catch (error) {
