@@ -148,22 +148,13 @@ def get_all_bookings_admin():
         })
     return jsonify(result), 200
 
-@booking_bp.route('/create_booking', methods=['POST', 'OPTIONS'])
+@booking_bp.route('/create_booking', methods=['POST'])
 def create_booking():
     """
     Create a new booking/appointment
     Required fields: teacherID, studentIDs (array), schedule, venue
     Optional: subject, description
     """
-    if request.method == 'OPTIONS':
-        # Handle CORS preflight requests
-        headers = {
-            'Access-Control-Allow-Origin': '*',
-            'Access-Control-Allow-Methods': 'POST, OPTIONS',
-            'Access-Control-Allow-Headers': 'Content-Type, Authorization'
-        }
-        return '', 204, headers
-    
     # Get JSON data from request
     data = request.get_json()
     
@@ -289,17 +280,8 @@ def create_booking():
         db.session.rollback()
         return jsonify({"error": f"Failed to create booking: {str(e)}"}), 500
 
-@booking_bp.route('/cancel_booking', methods=['POST', 'OPTIONS'])
+@booking_bp.route('/cancel_booking', methods=['POST'])
 def cancel_booking():
-    if request.method == 'OPTIONS':
-        # Handle CORS preflight requests
-        headers = {
-            'Access-Control-Allow-Origin': '*', # Or your specific frontend origin
-            'Access-Control-Allow-Methods': 'POST, OPTIONS',
-            'Access-Control-Allow-Headers': 'Content-Type, Authorization, X-Requested-With, Accept, Origin'
-        }
-        return '', 204, headers
-
     data = request.get_json()
     booking_id = data.get('bookingID')
 
@@ -342,17 +324,8 @@ def cancel_booking():
         db.session.rollback()
         return jsonify({"error": f"Failed to cancel booking: {str(e)}"}), 500
 
-@booking_bp.route('/confirm_booking', methods=['POST', 'OPTIONS'])
+@booking_bp.route('/confirm_booking', methods=['POST'])
 def confirm_booking():
-    if request.method == 'OPTIONS':
-        # Handle CORS preflight requests
-        headers = {
-            'Access-Control-Allow-Origin': '*', # Or your specific frontend origin
-            'Access-Control-Allow-Methods': 'POST, OPTIONS',
-            'Access-Control-Allow-Headers': 'Content-Type, Authorization, X-Requested-With, Accept, Origin'
-        }
-        return '', 204, headers
-
     data = request.get_json()
     booking_id = data.get('bookingID')
 
