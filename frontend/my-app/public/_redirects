@@ -1,12 +1,1 @@
-# Don't redirect static assets
-/static/* /static/:splat 200
-/favicon.ico /favicon.ico 200
-/manifest.json /manifest.json 200
-/robots.txt /robots.txt 200
-/*.png /:splat 200
-/*.jpg /:splat 200
-/*.css /:splat 200
-/*.js /:splat 200
-
-# Redirect all other requests to index.html for React Router
-/* /index.html 200
+/*    /index.html   200
