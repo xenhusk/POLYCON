@@ -271,6 +271,12 @@ const FinalDocument = () => {
                       {outcome || "Outcome is not available."}
                     </div>
                   </section>
+                  <section className="mb-6">
+                    <h2 className="text-xl font-semibold text-white mb-2">Remarks</h2>
+                    <div className="p-4 bg-white rounded-lg">
+                      {remarks || "Remarks is not available."}
+                    </div>
+                  </section>
                 </div>
               </div>
             </div>
