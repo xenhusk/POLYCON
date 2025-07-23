@@ -18,7 +18,7 @@ import ProfilePictureUploader from './components/ProfilePictureUploader'; // add
 import HomeTeacher from './components/HomeTeacher'; // added import
 import HomeStudent from './components/HomeStudent'; // Update import name and path
 import Programs from './components/Programs';
-import FinalDocument from './pages/finaldocument'; // add import for FinalDocument
+import FinalDocument from './pages/finaldocument.jsx'; // add import for FinalDocument
 import History from './pages/History'; // add import for History
 import Departments from './components/Departments';
 import HomeAdmin from './components/HomeAdmin'; // Update import name and path
