@@ -1,3 +1,7 @@
+# Apply eventlet monkey patch BEFORE importing anything else
+import eventlet
+eventlet.monkey_patch()
+
 from flask import Flask, jsonify, session as flask_session
 from flask_cors import CORS # Import CORS
 from flask_migrate import Migrate  # Add this import

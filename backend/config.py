@@ -1,5 +1,6 @@
 import os
 from dotenv import load_dotenv
+from sqlalchemy.pool import NullPool
 
 load_dotenv()
 
@@ -14,8 +15,9 @@ class Config:
     SECRET_KEY = os.getenv('SECRET_KEY', 'fallback-secret')
     JWT_SECRET_KEY = os.getenv('JWT_SECRET_KEY', 'fallback-jwt-secret')
     
-    # Additional production settings
+    # Database configuration for eventlet compatibility
     SQLALCHEMY_ENGINE_OPTIONS = {
         'pool_pre_ping': True,
         'pool_recycle': 300,
+        'poolclass': NullPool  # Use NullPool to avoid threading issues with eventlet
     }
