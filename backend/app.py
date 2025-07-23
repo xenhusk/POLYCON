@@ -37,7 +37,14 @@ import routes.socket_routes  # Register socket event handlers
 def create_app():
     app = Flask(__name__)
     # Enable CORS for all routes, allow all origins and credentials    # Apply CORS to all routes for the React frontend
-    allowed_origins = os.getenv('CORS_ALLOWED_ORIGINS', 'http://localhost:3000').split(',')
+    cors_origins = os.getenv('CORS_ALLOWED_ORIGINS', 'http://localhost:3000')
+    # Handle both single URL and comma-separated URLs
+    if ',' in cors_origins:
+        allowed_origins = cors_origins.split(',')
+    else:
+        allowed_origins = [cors_origins]
+    
+    print(f"CORS allowed origins: {allowed_origins}")  # Debug log
     CORS(app, resources={r"/*": {"origins": allowed_origins}}, supports_credentials=True)
 
     app.config.from_object(Config)
