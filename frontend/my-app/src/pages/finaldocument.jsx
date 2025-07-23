@@ -20,10 +20,6 @@ const formatDate = (timestamp) => {
 };
 
 const FinalDocument = () => {
-  console.log("FinalDocument component is loading...");
-  console.log("Current URL:", window.location.href);
-  console.log("SessionID from URL:", new URLSearchParams(window.location.search).get('sessionID'));
-  
   const [transcription, setTranscription] = useState("");
   const [summary, setSummary] = useState("");
   const [audioUrl, setAudioUrl] = useState("");
