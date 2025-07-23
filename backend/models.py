@@ -102,6 +102,7 @@ class ConsultationSession(db.Model):
 
     # New fields to be added
     transcription = db.Column(db.Text, nullable=True)
+    transcription_enabled = db.Column(db.Boolean, default=False, nullable=False)  # Track if transcription was enabled
     concern = db.Column(db.Text, nullable=True)
     action_taken = db.Column(db.Text, nullable=True)
     outcome = db.Column(db.Text, nullable=True)

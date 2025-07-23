@@ -57,6 +57,9 @@ const Session = () => {
   const [assessmentModalOpen, setAssessmentModalOpen] = useState(false);
   const [AssessmentClicked, setAssessmentClicked] = useState(false);
   const [FinalizeClicked, setFinalizeClicked] = useState(false);
+  const [transcriptionEnabled, setTranscriptionEnabled] = useState(false);
+  const [showTranscriptionNotice, setShowTranscriptionNotice] = useState(false);
+  const [hasShownNotice, setHasShownNotice] = useState(false);
 
   const audioRef = useRef(null);
   const mediaRecorderRef = useRef(null);
@@ -230,6 +233,31 @@ const Session = () => {
     }
   };
 
+  const toggleTranscription = () => {
+    if (!transcriptionEnabled) {
+      // Only show notice if it hasn't been shown before
+      if (!hasShownNotice) {
+        setShowTranscriptionNotice(true);
+      } else {
+        // If notice was already shown, just enable transcription
+        setTranscriptionEnabled(true);
+      }
+    } else {
+      setTranscriptionEnabled(false);
+    }
+  };
+
+  const handleTranscriptionNoticeAccept = () => {
+    setTranscriptionEnabled(true);
+    setShowTranscriptionNotice(false);
+    setHasShownNotice(true); // Mark that notice has been shown
+  };
+
+  const handleTranscriptionNoticeCancel = () => {
+    setShowTranscriptionNotice(false);
+    setHasShownNotice(true); // Mark that notice has been shown even if cancelled
+  };
+
   // Audio upload function - modify to save quality metrics
   const uploadAudio = async (audioBlob) => {
     const formData = new FormData();
@@ -244,8 +272,10 @@ const Session = () => {
 
     const expectedSpeakers = 1 + studentIdsArray.length; // Teacher + students
     formData.append("speaker_count", expectedSpeakers);
+    formData.append("transcription_enabled", transcriptionEnabled);
 
     console.log(`Calculated speaker count: ${expectedSpeakers}`);
+    console.log(`Transcription enabled: ${transcriptionEnabled}`);
 
     const response = await fetch(
       `${API_URL}/consultation/transcribe`,
@@ -323,6 +353,7 @@ const Session = () => {
       teacher_id: teacherId,
       student_ids: studentIdsArray,
       transcription: transcriptionText,
+      transcription_enabled: transcriptionEnabled,
       summary: generatedSummary,
       concern: concern,
       action_taken: action_taken,
@@ -597,6 +628,28 @@ const Session = () => {
 
             {/* Controls Section */}
             <div className="mt-3 sm:mt-4 space-y-3 fade-in delay-400">
+              {/* Transcription Toggle */}
+              <div className="flex items-center justify-between bg-gray-100 bg-opacity-10 p-2 rounded-lg">
+                <span className="text-xs sm:text-sm text-black text-opacity-85">
+                  Enable Transcription
+                </span>
+                <div className="flex items-center">
+                  <button
+                    onClick={toggleTranscription}
+                    disabled={recording}
+                    className={`relative inline-flex h-5 w-9 sm:h-6 sm:w-11 items-center rounded-full transition-colors duration-200 ease-in-out focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 ${
+                      transcriptionEnabled ? 'bg-blue-600' : 'bg-gray-300'
+                    } ${recording ? 'cursor-not-allowed opacity-50' : 'cursor-pointer'}`}
+                  >
+                    <span
+                      className={`inline-block h-3 w-3 sm:h-4 sm:w-4 transform rounded-full bg-white transition duration-200 ease-in-out ${
+                        transcriptionEnabled ? 'translate-x-5 sm:translate-x-6' : 'translate-x-1'
+                      }`}
+                    />
+                  </button>
+                </div>
+              </div>
+
               <div className="flex items-center justify-between bg-gray-100 bg-opacity-10 p-2 rounded-lg">
                 <div className="flex items-center space-x-2">
                   <button
@@ -676,6 +729,54 @@ const Session = () => {
           </div>
         </div>
       </div>
+      
+      {/* Transcription Notice Modal */}
+      {showTranscriptionNotice && (
+        <div className="fixed top-0 left-0 w-full h-full bg-black bg-opacity-60 flex items-center justify-center z-50 backdrop-blur-sm">
+          <div className="bg-white rounded-xl shadow-2xl p-8 max-w-lg mx-4 transform transition-all duration-300 ease-out scale-100">
+            <div className="flex items-center mb-6">
+              <div className="w-12 h-12 bg-blue-100 rounded-full flex items-center justify-center mr-4">
+                <svg className="w-6 h-6 text-blue-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+                </svg>
+              </div>
+              <h3 className="text-xl font-bold text-gray-800">
+                Transcription Language Notice
+              </h3>
+            </div>
+            
+            <div className="mb-6 space-y-3">
+              <p className="text-gray-700 leading-relaxed">
+                <span className="font-semibold text-blue-600">Important:</span> The transcription feature is optimized for <span className="font-semibold">English language</span> conversations.
+              </p>
+              <div className="bg-amber-50 border-l-4 border-amber-400 p-4 rounded-r-md">
+                <p className="text-amber-800 text-sm">
+                  <span className="font-medium">⚠️ Accuracy Notice:</span> While other languages may be processed, transcription quality and accuracy may be significantly reduced.
+                </p>
+              </div>
+              <p className="text-gray-600 text-sm">
+                For optimal results, we recommend conducting sessions in English when transcription is enabled.
+              </p>
+            </div>
+            
+            <div className="flex gap-3 justify-end">
+              <button
+                onClick={handleTranscriptionNoticeCancel}
+                className="px-6 py-2.5 border border-gray-300 rounded-lg text-gray-700 font-medium hover:bg-gray-50 hover:border-gray-400 transition-all duration-200 focus:outline-none focus:ring-2 focus:ring-gray-300"
+              >
+                Cancel
+              </button>
+              <button
+                onClick={handleTranscriptionNoticeAccept}
+                className="px-6 py-2.5 bg-gradient-to-r from-[#057DCD] to-[#54BEFF] text-white font-medium rounded-lg hover:from-[#046BB8] hover:to-[#42A8E6] transition-all duration-200 focus:outline-none focus:ring-2 focus:ring-blue-500 shadow-lg hover:shadow-xl transform hover:-translate-y-0.5"
+              >
+                I Understand, Enable Transcription
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+      
       {/* Assessment Modal */}
       <AssessmentModal isOpen={assessmentModalOpen} onClose={() => setAssessmentModalOpen(false)}>
       </AssessmentModal>

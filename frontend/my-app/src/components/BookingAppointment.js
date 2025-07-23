@@ -79,22 +79,20 @@ function BookingAppointment({ closeModal, role: propRole }) {
   const [CancelClicked, setCancelClicked] = useState(false);
   const [enrollmentMessage, setEnrollmentMessage] = useState("");
 
-  // Helper function to get minimum date/time (tomorrow)
+  // Helper function to get minimum date/time (today)
   const getMinDateTime = () => {
-    const tomorrow = new Date();
-    tomorrow.setDate(tomorrow.getDate() + 1);
-    tomorrow.setHours(0, 0, 0, 0);
-    return tomorrow.toISOString().slice(0, 16); // Format for datetime-local input
+    const today = new Date();
+    today.setHours(0, 0, 0, 0);
+    return today.toISOString().slice(0, 16); // Format for datetime-local input
   };
 
   // Helper function to validate selected date/time
   const isDateTimeValid = (dateTimeString) => {
     if (!dateTimeString) return false;
     const selectedDateTime = new Date(dateTimeString);
-    const tomorrow = new Date();
-    tomorrow.setDate(tomorrow.getDate() + 1);
-    tomorrow.setHours(0, 0, 0, 0);
-    return selectedDateTime >= tomorrow;
+    const today = new Date();
+    today.setHours(0, 0, 0, 0);
+    return selectedDateTime >= today;
   };
 
   // Check for ID validation issues on component mount with specific error for studentID case issue
@@ -289,7 +287,7 @@ function BookingAppointment({ closeModal, role: propRole }) {
     if (!isDateTimeValid(schedule)) {
       setMessage({
         type: "error",
-        content: "Please select a date and time that is at least tomorrow or later."
+        content: "Please select a date and time that is today or later."
       });
       return;
     }

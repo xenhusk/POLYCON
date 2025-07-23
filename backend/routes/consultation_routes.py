@@ -23,6 +23,7 @@ def transcribe():
 
         audio_file = request.files['audio']
         speaker_count = int(request.form.get('speaker_count', 1))
+        transcription_enabled = request.form.get('transcription_enabled', 'false').lower() == 'true'
 
         # Save the raw audio file to a temporary directory
         temp_dir = tempfile.gettempdir()
@@ -46,30 +47,46 @@ def transcribe():
         # Generate a URL for accessing the audio file
         audio_url = f"/uploads/{audio_filename}"
 
-        # Transcribe the audio using AssemblyAI
-        transcription_data = transcribe_audio_with_assemblyai(converted_path, speaker_count)
-        
-        # Calculate consultation quality
-        duration = float(request.form.get('duration', 0)) if 'duration' in request.form else None
-        quality_score, quality_metrics = calculate_consultation_quality(
-            transcription_data["raw_sentiment_analysis"],
-            transcription_data["transcription_text"],
-            duration
-        )
+        # Initialize default values
+        transcription_data = {
+            "transcription_text": "",
+            "full_text": "",
+            "raw_sentiment_analysis": []
+        }
+        quality_score = 0
+        quality_metrics = {}
+        processed_transcription = ""
+
+        # Only perform transcription if enabled
+        if transcription_enabled:
+            # Transcribe the audio using AssemblyAI
+            transcription_data = transcribe_audio_with_assemblyai(converted_path, speaker_count)
+            
+            # Calculate consultation quality
+            duration = float(request.form.get('duration', 0)) if 'duration' in request.form else None
+            quality_score, quality_metrics = calculate_consultation_quality(
+                transcription_data["raw_sentiment_analysis"],
+                transcription_data["transcription_text"],
+                duration
+            )
+
+            # Process the transcription with Gemini to identify roles
+            processed_transcription = identify_roles_in_transcription(transcription_data["full_text"])
+        else:
+            # When transcription is disabled, provide empty/default values
+            processed_transcription = "Transcription was disabled for this session."
 
         # Clean up temporary files
         os.remove(raw_path)
         os.remove(converted_path)
-
-        # Process the transcription with Gemini to identify roles
-        processed_transcription = identify_roles_in_transcription(transcription_data["full_text"])
 
         return jsonify({
             "audioUrl": audio_url,
             "transcription": processed_transcription,
             "quality_score": quality_score,
             "quality_metrics": quality_metrics,
-            "raw_sentiment_analysis": transcription_data["raw_sentiment_analysis"]
+            "raw_sentiment_analysis": transcription_data["raw_sentiment_analysis"],
+            "transcription_enabled": transcription_enabled
         })
     except Exception as e:
         return jsonify({"error": str(e)}), 500
@@ -159,6 +176,7 @@ def store_consultation_data(): # Renamed function
             duration=data.get('duration'),
             summary=data.get('summary'),
             transcription=data.get('transcription'),
+            transcription_enabled=data.get('transcription_enabled', False),
             concern=data.get('concern'),
             action_taken=data.get('action_taken'),
             outcome=data.get('outcome'),
@@ -330,6 +348,7 @@ def get_session():
         "duration": session.duration,
         "summary": session.summary,
         "transcription": session.transcription,
+        "transcription_enabled": session.transcription_enabled,
         "concern": session.concern,
         "action_taken": session.action_taken,
         "outcome": session.outcome,
@@ -419,6 +438,7 @@ def get_final_document():
         "duration": session.duration,
         "summary": session.summary,
         "transcription": session.transcription,
+        "transcription_enabled": session.transcription_enabled,
         "concern": session.concern,
         "action_taken": session.action_taken,
         "outcome": session.outcome,
