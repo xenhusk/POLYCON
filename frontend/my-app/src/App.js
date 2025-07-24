@@ -35,6 +35,8 @@ import GradeViewer from './components/GradeViewer';
 import PreLoader from './components/PreLoader'; // Add import for PreLoader
 import EnrollmentTestPage from './pages/EnrollmentTestPage'; // new import for testing enrollment modal
 import EnrollmentPopup from './components/EnrollmentPopup';
+import AddGradePopup from './components/AddGradePopup';
+import ActionButtonsToggle from './components/ActionButtonsToggle';
 import { useQueryClient } from 'react-query';
 import { useFetchWithCache } from './hooks/useFetchWithCache';
 import { usePrefetch } from './context/DataPrefetchContext';
@@ -642,9 +644,9 @@ function App() {
   }, [location.pathname]);  const showDebugger = false; // Set this to false to hide the debugger
   return (
     <ToastProvider>
-      <div className={location.pathname.includes('/session') ? '' : 'flex min-h-screen'}>
+      <div className={location.pathname.includes('/session') ? 'overflow-x-hidden' : 'flex min-h-screen overflow-x-hidden'}>
         <PreloadProvider>
-        <div className="app-container flex flex-1">
+        <div className="app-container flex flex-1 overflow-x-hidden">
           {/* Add debugging info to sidebar rendering logic */}
           {(() => {
             const userEmail = localStorage.getItem('userEmail');
@@ -661,7 +663,7 @@ function App() {
             );
           })()}
 
-          <div className={`flex-1 flex flex-col transition-all duration-300 ease-in-out ${
+          <div className={`flex-1 flex flex-col transition-all duration-300 ease-in-out overflow-x-hidden ${
             localStorage.getItem('userEmail') && 
             !location.pathname.includes('/session') && 
             !location.pathname.includes('/finaldocument')
@@ -782,13 +784,16 @@ function App() {
             </AnimatePresence>
           </div>
         
-          {/* Only show BookingPopup and EnrollmentPopup if not on session or finaldocument page */}
+          {/* Only show ActionButtonsToggle with popups if not on session or finaldocument page */}
           {!location.pathname.includes('/session') &&
             !location.pathname.includes('/finaldocument') && (
-              <>
-                <BookingPopup />
-                {userRole === 'faculty' && <EnrollmentPopup />} {/* Only show for faculty */}
-              </>
+              <ActionButtonsToggle isVisible={localStorage.getItem('userEmail')}>
+                {[
+                  <BookingPopup key="booking" />,
+                  ...(userRole === 'faculty' ? [<EnrollmentPopup key="enrollment" />] : []),
+                  ...(userRole === 'faculty' ? [<AddGradePopup key="addgrade" />] : [])
+                ]}
+              </ActionButtonsToggle>
             )}
         </div>
       

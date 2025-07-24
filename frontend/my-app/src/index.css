@@ -4,10 +4,55 @@
 @tailwind components;
 @tailwind utilities;
 
+/* Import mobile responsive utilities */
+@import './styles/mobile-responsive.css';
+
 /* Add global overflow control */
 html, body {
   max-width: 100%;
   overflow-x: hidden;
+}
+
+/* Ensure containers respect overflow limits - exclude SVGs and icons */
+div, section, article, main, header, footer, nav, aside {
+  max-width: 100%;
+}
+
+/* Prevent any fixed positioned elements from causing horizontal scroll */
+.fixed {
+  max-width: 100vw;
+}
+
+/* Ensure SVGs and icons maintain their intended size */
+svg, .icon {
+  max-width: none !important;
+}
+
+/* Protect mobile pointer icon from width constraints */
+.mobile-pointer-icon {
+  max-width: none !important;
+  width: auto !important;
+}
+
+/* Protect mobile pointer icon SVG specifically */
+.mobile-pointer-icon svg {
+  max-width: none !important;
+  width: 48px !important;
+  height: 48px !important;
+}
+
+/* Modal backdrop styling to ensure full coverage */
+.modal-backdrop {
+  position: fixed !important;
+  top: 0 !important;
+  left: 0 !important;
+  right: 0 !important;
+  bottom: 0 !important;
+  width: 100vw !important;
+  height: 100vh !important;
+  z-index: 10000 !important;
+  margin: 0 !important;
+  padding: 0 !important;
 }
 
 /* Width and height of the scrollbar */

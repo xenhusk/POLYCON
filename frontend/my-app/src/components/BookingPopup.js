@@ -115,20 +115,20 @@ const BookingPopup = () => {
   // Calculate button size and position based on screen size
   const buttonSize = windowWidth < 640 ? 'w-12 h-12' : 'w-14 h-14';
   const iconSize = windowWidth < 640 ? 'scale-75' : 'scale-100';
-  const buttonPosition = windowWidth < 640 ? 'bottom-20 right-4' : 'bottom-8 right-8';
 
   return (
     <>
-      {/* Floating Action Button - Responsive */}
+      {/* Floating Action Button - Now without fixed positioning */}
       <button
         onClick={() => {
+          console.log("Booking button clicked!"); // Debug log
           setBookIconClicked(true);
           setTimeout(() => setBookIconClicked(false), 200) 
           setShowModal(true)
         }}
-        className={`fixed ${buttonPosition} ${buttonSize} rounded-full bg-[#397de2] hover:bg-[#54BEFF] 
+        className={`${buttonSize} rounded-full bg-[#397de2] hover:bg-[#54BEFF] 
                    flex items-center justify-center shadow-lg transform hover:scale-110 
-                   transition-all duration-300 ease-in-out z-45
+                   transition-all duration-300 ease-in-out
                    ${BookIconClicked ? "scale-90" : "scale-100"}`}
         title="Book Appointment"
       >
@@ -140,7 +140,17 @@ const BookingPopup = () => {
       {/* Modal - Now responsive */}
       <AnimatePresence>
         {showModal && (
-          <div className="fixed inset-0 bg-black/50 backdrop-blur-sm flex items-center justify-center z-[60] p-4">
+          <div className="fixed bg-black/60 backdrop-blur-md flex items-center justify-center z-[9999] p-4" style={{ 
+            position: 'fixed',
+            top: 0,
+            left: 0,
+            right: 0,
+            bottom: 0,
+            width: '100vw',
+            height: '100vh',
+            margin: 0,
+            padding: '1rem'
+          }}>
             <motion.div
               variants={modalVariants}
               initial="hidden"

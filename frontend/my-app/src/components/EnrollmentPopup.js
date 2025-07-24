@@ -72,25 +72,25 @@ const EnrollmentPopup = () => {
   // Calculate button size and position based on screen size
   const buttonSize = windowWidth < 640 ? 'w-12 h-12' : 'w-14 h-14';
   const iconSize = windowWidth < 640 ? 'scale-75' : 'scale-100';
-  const buttonPosition = windowWidth < 640 ? 'bottom-4 right-4' : 'bottom-24 right-8';
 
   return (
     <>
-      {/* Floating Action Button - Now responsive */}
+      {/* Floating Action Button - Now without fixed positioning */}
       <button
         onClick = {() => {
+          console.log("Enrollment button clicked!"); // Debug log
           setEnrollmentClicked(true);
           setTimeout(() => setEnrollmentClicked(false), 200) 
           setShowModal(true)
         }}
-        className={`fixed ${buttonPosition} ${buttonSize} rounded-full bg-[#00D1B2] hover:bg-[#00F7D4] 
+        className={`${buttonSize} rounded-full bg-[#00D1B2] hover:bg-[#00F7D4] 
                   flex items-center justify-center shadow-lg transform hover:scale-110 
-                  transition-all duration-300 ease-in-out z-[45]
+                  transition-all duration-300 ease-in-out
                   ${EnrollmentClicked ? "scale-90" : "scale-100"}
                   `} 
         title="Enroll Students"
       >
-        <div className={`w-10 h-10 md:w-8 md:h-8 ${iconSize}`}>
+        <div className={`w-8 h-8 ${iconSize}`}>
           <EnrollmentIcon />
         </div>
       </button>
@@ -98,7 +98,17 @@ const EnrollmentPopup = () => {
       {/* Modal Overlay - Now responsive */}
       <AnimatePresence>
         {showModal && (
-          <div className="fixed inset-0 bg-black/50 backdrop-blur-sm flex items-center justify-center z-[60] p-4">
+          <div className="fixed bg-black/60 backdrop-blur-md flex items-center justify-center z-[9999] p-4" style={{ 
+            position: 'fixed',
+            top: 0,
+            left: 0,
+            right: 0,
+            bottom: 0,
+            width: '100vw',
+            height: '100vh',
+            margin: 0,
+            padding: '1rem'
+          }}>
             <motion.div
               variants={modalVariants}
               initial="hidden"

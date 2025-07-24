@@ -65,9 +65,9 @@ function ComparativeAnalysis() {
   const [tempStudents, setTempStudents] = useState([]); // students list for the chosen teacher
   const [isLoadingStudents, setIsLoadingStudents] = useState(false);
 
-  // Animation variants for modal
+  // Animation variants for modal - Enhanced for mobile
   const modalVariants = {
-    hidden: { opacity: 0, scale: 0.95, y: 20 },
+    hidden: { opacity: 0, scale: 0.9, y: 20 },
     visible: {
       opacity: 1,
       scale: 1,
@@ -321,21 +321,50 @@ function ComparativeAnalysis() {
   };
 
   return (
-    <div className="p-6 bg-gradient-to-b from-white to-gray-50 min-h-screen">
+    <div className="p-3 sm:p-6 bg-gradient-to-b from-white to-gray-50 min-h-screen">
       {/* Header Section with Enhanced Design */}
       <ComparativeAnalysisHeader
         openSelectionModal={openSelectionModal}
         allFieldsProvided={allFieldsProvided}
       />
 
-      {/* Display Grades Table */}
+      {/* Display Grades Table - Enhanced mobile responsiveness */}
       {allFieldsProvided && grades.length > 0 && (
         <div className="mb-8">
           <div className="flex items-center mb-4">
-            <h3 className="text-xl font-bold text-[#0065A8]">Student Grades</h3>
+            <h3 className="text-lg sm:text-xl font-bold text-[#0065A8]">Student Grades</h3>
             <div className="h-0.5 flex-grow ml-4 bg-gradient-to-r from-[#0065A8] to-transparent"></div>
           </div>
-          <div className="overflow-x-auto bg-white rounded-xl shadow-md">
+          
+          {/* Mobile Card View */}
+          <div className="block sm:hidden space-y-4">
+            {grades.map((grade, idx) => (
+              <div key={idx} className="bg-white rounded-xl shadow-md p-4">
+                <h4 className="font-semibold text-[#0065A8] mb-3 text-center">{grade.course}</h4>
+                <div className="grid grid-cols-2 gap-3">
+                  <div className="bg-blue-50 rounded-lg p-3 text-center">
+                    <div className="text-xs text-gray-600 mb-1">Prelim</div>
+                    <div className="font-semibold text-lg">{grade.Prelim || '-'}</div>
+                  </div>
+                  <div className="bg-blue-50 rounded-lg p-3 text-center">
+                    <div className="text-xs text-gray-600 mb-1">Midterm</div>
+                    <div className="font-semibold text-lg">{grade.Midterm || '-'}</div>
+                  </div>
+                  <div className="bg-blue-50 rounded-lg p-3 text-center">
+                    <div className="text-xs text-gray-600 mb-1">Pre-Final</div>
+                    <div className="font-semibold text-lg">{grade["Pre-Final"] || '-'}</div>
+                  </div>
+                  <div className="bg-[#0065A8] text-white rounded-lg p-3 text-center">
+                    <div className="text-xs text-blue-100 mb-1">Final</div>
+                    <div className="font-bold text-lg">{grade.Final || '-'}</div>
+                  </div>
+                </div>
+              </div>
+            ))}
+          </div>
+
+          {/* Desktop Table View */}
+          <div className="hidden sm:block overflow-x-auto bg-white rounded-xl shadow-md">
             <table className="min-w-full bg-white text-center">
               <thead className="bg-[#397de2] text-white">
                 <tr>
@@ -394,15 +423,16 @@ function ComparativeAnalysis() {
         academicEvents={academicEvents}
       />
 
+      {/* Enhanced Run Analysis Button */}
       {allFieldsProvided && grades.length > 0 && (
-        <div className="mb-10 text-center">
+        <div className="mb-10 text-center px-4">
           <button
             onClick={runComparativeAnalysis}
-            className="px-6 py-3 bg-[#00D1B2] text-white rounded-lg hover:bg-opacity-90 transition shadow-md transform hover:scale-105 duration-300 font-medium flex items-center mx-auto"
+            className="w-full sm:w-auto px-6 sm:px-8 py-3 sm:py-4 bg-[#00D1B2] text-white rounded-lg hover:bg-opacity-90 transition shadow-md transform hover:scale-105 duration-300 font-medium flex items-center justify-center mx-auto text-sm sm:text-base"
           >
             <svg
               xmlns="http://www.w3.org/2000/svg"
-              className="h-5 w-5 mr-2"
+              className="h-5 w-5 mr-2 flex-shrink-0"
               viewBox="0 0 20 20"
               fill="currentColor"
             >
@@ -412,21 +442,21 @@ function ComparativeAnalysis() {
                 clipRule="evenodd"
               />
             </svg>
-            Run Polycon Analysis
+            <span>Run Polycon Analysis</span>
           </button>
         </div>
       )}
 
-      {/* Analysis Results Section */}
+      {/* Analysis Results Section - Enhanced mobile responsiveness */}
       {analysisResult && (
         <motion.div
           initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
-          className="mt-12 mb-16"
+          className="mt-12 mb-16 px-2 sm:px-0"
         >
           {/* Header */}
           <motion.div
-            className="relative mb-12"
+            className="relative mb-8 sm:mb-12"
             initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}
             transition={{ delay: 0.2 }}
@@ -435,16 +465,16 @@ function ComparativeAnalysis() {
               <div className="h-0.5 w-full bg-gradient-to-r from-transparent via-[#0065A8] to-transparent opacity-30"></div>
             </div>
             <div className="relative flex justify-center">
-              <span className="bg-white px-8 py-3 rounded-full shadow-sm">
-                <h3 className="text-3xl font-bold text-[#0065A8]">
+              <span className="bg-white px-6 sm:px-8 py-3 rounded-full shadow-sm">
+                <h3 className="text-2xl sm:text-3xl font-bold text-[#0065A8]">
                   Analysis Results
                 </h3>
               </span>
             </div>
           </motion.div>
 
-          {/* Cards Grid */}
-          <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
+          {/* Cards Grid - Enhanced mobile layout */}
+          <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 lg:gap-8">
             {/* Student Performance Card */}
             <motion.div
               initial={{ opacity: 0, x: -20 }}
@@ -452,10 +482,10 @@ function ComparativeAnalysis() {
               whileHover={{ scale: 1.01 }}
               className="bg-white rounded-2xl shadow-lg overflow-hidden border border-gray-100 transition-all duration-300"
             >
-              <div className="bg-gradient-to-r from-[#397de2] to-[#54BEFF] p-6">
-                <div className="flex items-start justify-between">
-                  <div>
-                    <h4 className="text-2xl font-bold text-white">
+              <div className="bg-gradient-to-r from-[#397de2] to-[#54BEFF] p-4 sm:p-6">
+                <div className="flex flex-col sm:flex-row items-start justify-between gap-3 sm:gap-0">
+                  <div className="flex-1">
+                    <h4 className="text-xl sm:text-2xl font-bold text-white">
                       Student Performance
                     </h4>
                     <p className="text-blue-100 mt-1 text-sm">
@@ -463,7 +493,7 @@ function ComparativeAnalysis() {
                     </p>
                   </div>
                   <span
-                    className={`px-4 py-2 rounded-full text-white text-sm font-medium ${
+                    className={`px-3 sm:px-4 py-2 rounded-full text-white text-xs sm:text-sm font-medium whitespace-nowrap ${
                       analysisResult.rating === "Excellent"
                         ? "bg-gradient-to-r from-green-500 to-green-400"
                         : analysisResult.rating === "Very Good"
@@ -481,31 +511,31 @@ function ComparativeAnalysis() {
               </div>
 
               {/* Student Info & Performance Metrics */}
-              <div className="p-6 space-y-6">
-                <div className="grid grid-cols-2 gap-4">
-                  <div className="bg-gray-50 rounded-xl p-4">
-                    <p className="text-sm text-gray-500">Student ID</p>
-                    <p className="text-lg font-semibold text-gray-800">
+              <div className="p-4 sm:p-6 space-y-4 sm:space-y-6">
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                  <div className="bg-gray-50 rounded-xl p-3 sm:p-4 text-center sm:text-left">
+                    <p className="text-xs sm:text-sm text-gray-500">Student ID</p>
+                    <p className="text-base sm:text-lg font-semibold text-gray-800">
                       {analysisResult.student_id}
                     </p>
                   </div>
-                  <div className="bg-gray-50 rounded-xl p-4 text-right">
-                    <p className="text-sm text-gray-500">Overall Score</p>
-                    <p className="text-2xl font-bold text-[#397de2]">
+                  <div className="bg-gray-50 rounded-xl p-3 sm:p-4 text-center sm:text-right">
+                    <p className="text-xs sm:text-sm text-gray-500">Overall Score</p>
+                    <p className="text-xl sm:text-2xl font-bold text-[#397de2]">
                       {(analysisResult.overall_score * 100).toFixed(0)}%
                     </p>
                   </div>
                 </div>
 
                 {/* Performance Progress Bars */}
-                <div className="space-y-4">
+                <div className="space-y-3 sm:space-y-4">
                   {/* Add Overall Factor Bar */}
-                  <div className="bg-purple-50 rounded-xl p-4">
+                  <div className="bg-purple-50 rounded-xl p-3 sm:p-4">
                     <div className="flex justify-between mb-2">
-                      <span className="text-sm font-medium text-purple-700">
+                      <span className="text-xs sm:text-sm font-medium text-purple-700">
                         Overall Factor
                       </span>
-                      <span className="text-sm font-bold text-purple-700">
+                      <span className="text-xs sm:text-sm font-bold text-purple-700">
                         {(analysisResult.overall_score * 100).toFixed(0)}%
                       </span>
                     </div>
@@ -854,7 +884,7 @@ function ComparativeAnalysis() {
         </motion.div>
       )}
 
-      {/* Selection Modal */}
+      {/* Selection Modal - Enhanced mobile responsiveness */}
       <AnimatePresence>
         {showSelectionModal && (
           <div
@@ -866,20 +896,28 @@ function ComparativeAnalysis() {
               initial="hidden"
               animate="visible"
               exit="exit"
-              className="bg-white rounded-xl shadow-2xl w-full max-w-md p-6"
+              className="bg-white rounded-xl shadow-2xl w-full max-w-md max-h-[90vh] overflow-y-auto p-4 sm:p-6"
               onClick={(e) => e.stopPropagation()}
             >
-              <h2 className="text-xl font-semibold mb-4 text-[#0065A8]">
-                Select Analysis Options
-              </h2>
+              <div className="flex justify-between items-center mb-4">
+                <h2 className="text-lg sm:text-xl font-semibold text-[#0065A8]">
+                  Select Analysis Options
+                </h2>
+                <button
+                  onClick={() => setShowSelectionModal(false)}
+                  className="text-gray-500 hover:text-gray-700 p-1 sm:hidden"
+                >
+                  ×
+                </button>
+              </div>
 
               {/* Semester Dropdown */}
               <div className="mb-4">
-                <label className="block text-gray-700 mb-1">
+                <label className="block text-gray-700 mb-2 text-sm font-medium">
                   Select Semester:
                 </label>
                 <select
-                  className="w-full px-3 py-2 border-2 border-[#0065A8] rounded-lg focus:outline-none focus:ring-2 focus:ring-[#54BEFF]"
+                  className="w-full px-3 py-2 border-2 border-[#0065A8] rounded-lg focus:outline-none focus:ring-2 focus:ring-[#54BEFF] text-sm"
                   value={
                     tempSemester
                       ? `${tempSemester.school_year}|${tempSemester.semester}`
@@ -890,8 +928,8 @@ function ComparativeAnalysis() {
                       (s) => `${s.school_year}|${s.semester}` === e.target.value
                     );
                     setTempSemester(sem);
-                    setTempStudent(""); // Clear selected student when semester changes
-                    setTempCourse(""); // Clear selected course when semester changes
+                    setTempStudent("");
+                    setTempCourse("");
                   }}
                 >
                   <option value="">Select a semester</option>
@@ -908,19 +946,19 @@ function ComparativeAnalysis() {
 
               {/* Teacher Display */}
               <div className="mb-4">
-                <label className="block text-gray-700 mb-1">Teacher:</label>
-                <div className="w-full px-3 py-2 border-2 border-[#0065A8] rounded-lg ">
+                <label className="block text-gray-700 mb-2 text-sm font-medium">Teacher:</label>
+                <div className="w-full px-3 py-2 border-2 border-[#0065A8] rounded-lg bg-gray-50 text-sm">
                   {teachers[0]?.fullName || "Loading..."}
                 </div>
               </div>
 
               {/* Student Dropdown */}
               <div className="mb-4">
-                <label className="block text-gray-700 mb-1">
+                <label className="block text-gray-700 mb-2 text-sm font-medium">
                   Select Student:
                 </label>
                 <select
-                  className="w-full px-3 py-2 border-2 border-[#0065A8] rounded-lg focus:outline-none focus:ring-2 focus:ring-[#54BEFF]"
+                  className="w-full px-3 py-2 border-2 border-[#0065A8] rounded-lg focus:outline-none focus:ring-2 focus:ring-[#54BEFF] text-sm"
                   value={tempStudent}
                   onChange={(e) => {
                     setTempStudent(e.target.value);
@@ -947,12 +985,12 @@ function ComparativeAnalysis() {
               </div>
 
               {/* Course Dropdown */}
-              <div className="mb-4">
-                <label className="block text-gray-700 mb-1">
+              <div className="mb-6">
+                <label className="block text-gray-700 mb-2 text-sm font-medium">
                   Select Course:
                 </label>
                 <select
-                  className="w-full px-3 py-2 border-2 border-[#0065A8] rounded-lg focus:outline-none focus:ring-2 focus:ring-[#54BEFF]"
+                  className="w-full px-3 py-2 border-2 border-[#0065A8] rounded-lg focus:outline-none focus:ring-2 focus:ring-[#54BEFF] text-sm"
                   value={tempCourse}
                   onChange={(e) => setTempCourse(e.target.value)}
                   disabled={!tempStudent || availableCourses.length === 0}
@@ -966,10 +1004,16 @@ function ComparativeAnalysis() {
                 </select>
               </div>
 
-              <div className="flex justify-end mt-4">
+              <div className="flex justify-end gap-3">
+                <button
+                  onClick={() => setShowSelectionModal(false)}
+                  className="px-4 py-2 bg-gray-500 text-white rounded-lg hover:bg-gray-600 transition text-sm sm:hidden"
+                >
+                  Cancel
+                </button>
                 <button
                   onClick={handleSelectionModalDone}
-                  className="px-4 py-2 bg-[#0065A8] text-white rounded-lg hover:bg-[#54BEFF] transition"
+                  className="flex-1 sm:flex-initial px-4 py-2 bg-[#0065A8] text-white rounded-lg hover:bg-[#54BEFF] transition text-sm disabled:bg-gray-300 disabled:cursor-not-allowed"
                   disabled={
                     !(tempSemester && tempTeacher && tempStudent && tempCourse)
                   }

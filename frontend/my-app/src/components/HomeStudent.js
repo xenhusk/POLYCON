@@ -140,12 +140,45 @@ const HomeStudent = () => {
           <div className="h-[250px] sm:h-[300px]">
             <ResponsiveContainer width="100%" height="100%">
               <LineChart data={consultationData}>
-                <CartesianGrid strokeDasharray="3 3" />
-                <XAxis dataKey="date" />
-                <YAxis />
+                <CartesianGrid vertical={false} stroke="#D3D3D3" />
+                <XAxis 
+                  dataKey="date" 
+                  axisLine={false} 
+                  tickLine={false}
+                  dy={20}
+                  tickFormatter={(date) => {
+                      // Use shorter month format on small screens
+                      const options = window.innerWidth < 640 ? 
+                          { month: 'numeric' } : 
+                          { month: 'short', year: 'numeric' };
+                      return new Date(date).toLocaleDateString('en-US', options);
+                  }} 
+                />
+                <YAxis 
+                  axisLine={false}
+                  tickLine={false}
+                  tickFormatter={(value) => Math.round(value)} 
+                  allowDecimals={false} 
+                  domain={[0, 'dataMax']}
+                  width={30} // Fixed width to avoid layout shifts
+                />
                 <Tooltip />
-                <Legend align="left" wrapperStyle={{ textAlign: 'left', marginTop: '20px', marginBottom: '-20px'}}/>
-                <Line type="monotone" dataKey="consultations" stroke="#397de2" name="Consultations" />
+                <Legend 
+                  align="center" 
+                  verticalAlign="bottom"
+                  wrapperStyle={{ 
+                      paddingTop: '10px',
+                      fontSize: window.innerWidth < 640 ? '12px' : '14px'
+                  }} 
+                />
+                <Line 
+                  type="monotone" 
+                  dataKey="consultations" 
+                  stroke="#397de2" 
+                  strokeWidth={2} 
+                  name="Consultations"
+                  dot={{ r: 3 }} // Smaller dots on mobile
+                />
               </LineChart>
             </ResponsiveContainer>
           </div>
@@ -157,27 +190,53 @@ const HomeStudent = () => {
           <div className="h-[250px] sm:h-[300px]">
             <ResponsiveContainer width="100%" height="100%">
               <LineChart data={consultationHoursData}>
-                <CartesianGrid strokeDasharray="3 3" />
-                <XAxis dataKey="date" />                <YAxis 
-                  tickFormatter={(value) => {
-                    if (isNaN(value)) return "0:00";
-                    const hours = Math.floor(value / 60);
-                    const minutes = value % 60;
-                    return `${hours}:${minutes.toString().padStart(2, '0')}`;
+                <CartesianGrid vertical={false} stroke="#D3D3D3" />
+                <XAxis 
+                  dataKey="date" 
+                  axisLine={false} 
+                  tickLine={false}
+                  dy={20}
+                  tickFormatter={(date) => {
+                      // Use shorter month format on small screens
+                      const options = window.innerWidth < 640 ? 
+                          { month: 'numeric' } : 
+                          { month: 'short', year: 'numeric' };
+                      return new Date(date).toLocaleDateString('en-US', options);
                   }}
+                />
+                <YAxis
+                  axisLine={false}
+                  tickLine={false}
+                  tickFormatter={(minutes) => {
+                      const hh = Math.floor(minutes / 60);
+                      const mm = minutes % 60;
+                      return `${hh}:${mm.toString().padStart(2, '0')}`;
+                  }}
+                  width={40} // Fixed width for time values
                 />
                 <Tooltip 
                   formatter={(value) => {
-                    if (isNaN(value)) return ["0:00", "Hours"];
-                    const hours = Math.floor(value / 60);
-                    const minutes = value % 60;
-                    return [`${hours}:${minutes.toString().padStart(2, '0')}`, "Hours"];
+                      const hh = Math.floor(value / 60);
+                      const mm = value % 60;
+                      return [`${hh}:${mm.toString().padStart(2, '0')}`, "Hours"];
                   }}
-                  labelFormatter={(label) => `Date: ${label}`} // This aligns tooltip label to left
-                  contentStyle={{ textAlign: 'left' }} // This aligns tooltip content to left
                 />
-                <Legend align="left" wrapperStyle={{ textAlign: 'left', marginTop: '20px', marginBottom: '-20px'}}/>
-                <Line type="monotone" dataKey="consultation_hours" stroke="#fc6969" name="Hours" />
+                <Legend 
+                  align="center" 
+                  verticalAlign="bottom"
+                  wrapperStyle={{ 
+                      paddingTop: '10px',
+                      fontSize: window.innerWidth < 640 ? '12px' : '14px'
+                  }}
+                />
+                <Line 
+                  type="monotone" 
+                  dataKey="consultation_hours" 
+                  stroke="#fc6969" 
+                  strokeWidth={2} 
+                  name="Consultation Hours"
+                  dot={{ r: 3 }} // Smaller dots on mobile
+                />
               </LineChart>
             </ResponsiveContainer>
           </div>
