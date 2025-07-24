@@ -1,51 +1,173 @@
-/* Custom Calendar Styles */
+/* Custom Calendar Styles - Enhanced */
 .rbc-calendar {
   background-color: #ffffff;
-  border-radius: 8px;
+  border-radius: 12px;
   padding: 16px;
+  border: 1px solid #e5e7eb;
+  box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1);
 }
 
 .rbc-header {
-  padding: 10px;
-  background-color: #0088FF;
-  color: #f8f9fa;
+  padding: 12px 8px;
+  background-color: #0065A8;
+  color: #ffffff;
   font-weight: 600;
+  border: none;
+  text-align: center;
+  font-size: 0.875rem;
+}
+
+.rbc-header + .rbc-header {
+  border-left: 1px solid rgba(255, 255, 255, 0.2);
 }
 
 .rbc-today {
-  background-color: #7BBCEB !important;
+  background-color: #e3f2fd !important;
+  border: 2px solid #0065A8 !important;
+  border-radius: 4px !important;
+}
+
+.rbc-off-range-bg {
+  background-color: #f8f9fa !important;
+  color: #6c757d !important;
+}
+
+.rbc-date-cell {
+  padding: 8px 4px;
+  text-align: center;
+  font-weight: 500;
+}
+
+.rbc-date-cell > a {
+  color: #374151;
+  text-decoration: none;
+}
+
+.rbc-date-cell.rbc-off-range > a {
+  color: #9ca3af;
 }
 
 .rbc-event {
-  background-color: #00a78e !important;
+  background-color: #0065A8 !important;
   border: none !important;
-  border-radius: 4px !important;
-  transition: transform 0.2s ease;
+  border-radius: 6px !important;
+  padding: 2px 6px !important;
+  font-size: 0.75rem !important;
+  font-weight: 500 !important;
+  transition: all 0.2s ease !important;
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1) !important;
+  overflow: hidden !important;
+  text-overflow: ellipsis !important;
+  white-space: nowrap !important;
 }
 
 .rbc-event:hover {
-  transform: scale(1.02);
-}
-
-.rbc-event {
-  align-items: center !important;
-  text-align: center !important;
-  overflow: hidden !important;
+  transform: scale(1.02) !important;
+  background-color: #004776 !important;
+  box-shadow: 0 4px 8px rgba(0, 0, 0, 0.15) !important;
 }
 
 .rbc-toolbar button {
-  color: #057DCD !important;
-  border: 1px solid #057DCD !important;
+  color: #0065A8 !important;
+  border: 1px solid #0065A8 !important;
+  background-color: #ffffff !important;
+  border-radius: 6px !important;
+  padding: 8px 16px !important;
+  font-weight: 500 !important;
+  transition: all 0.3s ease !important;
+  margin: 0 4px !important;
 }
 
 .rbc-toolbar button:hover {
-  background-color: #057DCD !important;
+  background-color: #0065A8 !important;
   color: white !important;
+  transform: translateY(-1px) !important;
+  box-shadow: 0 4px 8px rgba(0, 101, 168, 0.3) !important;
 }
 
 .rbc-toolbar button.rbc-active {
-  background-color: #057DCD !important;
+  background-color: #0065A8 !important;
   color: white !important;
+  box-shadow: 0 2px 4px rgba(0, 101, 168, 0.3) !important;
+}
+
+/* Month view specific styles */
+.rbc-month-view {
+  border: 1px solid #e5e7eb;
+  border-radius: 8px;
+  overflow: hidden;
+}
+
+.rbc-month-row {
+  border-bottom: 1px solid #e5e7eb;
+}
+
+.rbc-month-row:last-child {
+  border-bottom: none;
+}
+
+.rbc-day-bg {
+  border-right: 1px solid #e5e7eb;
+  min-height: 100px;
+}
+
+.rbc-day-bg:last-child {
+  border-right: none;
+}
+
+.rbc-day-bg.rbc-off-range-bg {
+  background-color: #f9fafb !important;
+}
+
+/* Agenda view styles */
+.rbc-agenda-view {
+  border: 1px solid #e5e7eb;
+  border-radius: 8px;
+  overflow: hidden;
+}
+
+.rbc-agenda-table {
+  width: 100%;
+}
+
+.rbc-agenda-time-cell,
+.rbc-agenda-event-cell {
+  padding: 12px;
+  border-bottom: 1px solid #e5e7eb;
+}
+
+.rbc-agenda-time-cell {
+  background-color: #f8f9fa;
+  font-weight: 600;
+  color: #0065A8;
+  width: 120px;
+}
+
+/* Mobile responsiveness */
+@media (max-width: 768px) {
+  .rbc-calendar {
+    padding: 8px;
+  }
+  
+  .rbc-header {
+    padding: 8px 4px;
+    font-size: 0.75rem;
+  }
+  
+  .rbc-day-bg {
+    min-height: 80px;
+  }
+  
+  .rbc-event {
+    font-size: 0.625rem !important;
+    padding: 1px 3px !important;
+  }
+  
+  .rbc-toolbar button {
+    padding: 6px 12px !important;
+    font-size: 0.875rem !important;
+    margin: 0 2px !important;
+  }
 }
 
 .rbc-time-header {

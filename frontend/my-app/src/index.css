@@ -13,13 +13,24 @@ html, body {
   overflow-x: hidden;
 }
 
-/* Ensure containers respect overflow limits - exclude SVGs and icons */
-div, section, article, main, header, footer, nav, aside {
-  max-width: 100%;
+/* Modal button containers should extend to modal edges */
+.modal-button-container {
+  max-width: none !important;
+  margin-left: -1rem !important;  /* Extends beyond p-4 (1rem) padding */
+  margin-right: -1rem !important;
+  width: calc(100% + 2rem) !important; /* Compensate for the negative margins */
 }
 
-/* Prevent any fixed positioned elements from causing horizontal scroll */
-.fixed {
+@media (min-width: 640px) {
+  .modal-button-container {
+    margin-left: -1.5rem !important;  /* Extends beyond sm:p-6 (1.5rem) padding */
+    margin-right: -1.5rem !important;
+    width: calc(100% + 3rem) !important; /* Compensate for the negative margins */
+  }
+}
+
+/* Prevent any fixed positioned elements from causing horizontal scroll - only for modals */
+.modal-backdrop.fixed, .modal-container.fixed {
   max-width: 100vw;
 }
 
@@ -150,46 +161,6 @@ body {
 
 :-moz-full-screen {
   background: white;
-}
-
-/* Calendar specific styles */
-.calendar-container {
-  width: 100%;
-  overflow-x: auto;
-  padding: 1rem 0;
-}
-
-.custom-calendar {
-  min-width: 900px !important;
-  width: 100% !important;
-}
-
-.rbc-calendar {
-  width: 100% !important;
-  min-width: 800px !important;
-}
-
-.rbc-toolbar {
-  flex-wrap: wrap;
-}
-
-.rbc-toolbar-label {
-  width: auto !important;
-}
-
-.rbc-time-view, 
-.rbc-month-view {
-  min-width: 800px !important;
-  width: 100% !important;
-}
-
-/* Ensure calendar headers and cells maintain proper width */
-.rbc-row {
-  min-width: 800px !important;
-}
-
-.rbc-time-header {
-  min-width: 800px !important;
 }
 
 /* Add fade-in animation utilities */

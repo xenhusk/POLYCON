@@ -79,20 +79,33 @@ function BookingAppointment({ closeModal, role: propRole }) {
   const [CancelClicked, setCancelClicked] = useState(false);
   const [enrollmentMessage, setEnrollmentMessage] = useState("");
 
-  // Helper function to get minimum date/time (today)
+  // Helper function to get minimum date/time (current moment, not just today)
   const getMinDateTime = () => {
+    const now = new Date();
+    // Add a small buffer (e.g., 1 hour) to prevent booking in the immediate past
+    now.setHours(now.getHours() + 1);
+    return now.toISOString().slice(0, 16); // Format for datetime-local input
+  };
+
+  // Helper function to get maximum date/time (one month from today)
+  const getMaxDateTime = () => {
     const today = new Date();
-    today.setHours(0, 0, 0, 0);
-    return today.toISOString().slice(0, 16); // Format for datetime-local input
+    const oneMonthFromToday = new Date(today);
+    oneMonthFromToday.setMonth(today.getMonth() + 1);
+    return oneMonthFromToday.toISOString().slice(0, 16); // Format for datetime-local input
   };
 
   // Helper function to validate selected date/time
   const isDateTimeValid = (dateTimeString) => {
     if (!dateTimeString) return false;
     const selectedDateTime = new Date(dateTimeString);
-    const today = new Date();
-    today.setHours(0, 0, 0, 0);
-    return selectedDateTime >= today;
+    const now = new Date();
+    // Add 1 hour buffer to current time to prevent booking in immediate past
+    const minAllowedTime = new Date(now.getTime() + (60 * 60 * 1000)); // 1 hour from now
+    const oneMonthFromToday = new Date(now);
+    oneMonthFromToday.setMonth(now.getMonth() + 1);
+    
+    return selectedDateTime >= minAllowedTime && selectedDateTime <= oneMonthFromToday;
   };
 
   // Check for ID validation issues on component mount with specific error for studentID case issue
@@ -283,11 +296,11 @@ function BookingAppointment({ closeModal, role: propRole }) {
       return;
     }
 
-    // Validate that the selected date/time is not in the past
+    // Validate that the selected date/time is within the allowed range (at least 1 hour from now to one month from today)
     if (!isDateTimeValid(schedule)) {
       setMessage({
         type: "error",
-        content: "Please select a date and time that is today or later."
+        content: "Please select a date and time at least 1 hour from now and within one month."
       });
       return;
     }
@@ -437,11 +450,11 @@ function BookingAppointment({ closeModal, role: propRole }) {
   // This is now imported from utils.js at the top of the file
 
   return (
-    <div className="pt-2 sm:pt-4 px-2 sm:px-4">
+    <div className="pt-2 sm:pt-4 px-0">
       {role === "faculty" ? (
         <>
           {/* Teacher's Form - Made Responsive */}
-          <div className="space-y-4 sm:space-y-6 mb-8">
+          <div className="space-y-4 sm:space-y-6 mb-8 mx-3 sm:mx-6 md:mx-8">
             {/* Student Selection */}
             <div className="relative">
               <label className="block text-sm font-medium text-gray-700 mb-1 sm:mb-2">
@@ -552,9 +565,13 @@ function BookingAppointment({ closeModal, role: propRole }) {
                 type="datetime-local"
                 value={schedule}
                 min={getMinDateTime()}
+                max={getMaxDateTime()}
                 onChange={(e) => setSchedule(e.target.value)}
                 className="w-full border-2 border-[#397de2] rounded-lg px-2 sm:px-3 py-2 sm:py-2 text-sm sm:text-base focus:outline-none focus:ring-2 focus:ring-[#54BEFF]"
               />
+              <p className="text-xs text-gray-500 mt-1">
+                You can only book appointments at least 1 hour from now, up to one month ahead.
+              </p>
             </div>
 
             {/* Venue Input - Made Responsive */}
@@ -575,7 +592,7 @@ function BookingAppointment({ closeModal, role: propRole }) {
       ) : (
         <>
           {/* Student's Form - Made Responsive */}
-          <div className="space-y-4 sm:space-y-6 mb-12">
+          <div className="space-y-4 sm:space-y-6 mb-12 mx-3 sm:mx-6 md:mx-8">
             {/* Teacher Selection */}
             <div className="relative">
               <label className="block text-sm font-medium text-gray-700 mb-1 sm:mb-2">
@@ -799,9 +816,13 @@ function BookingAppointment({ closeModal, role: propRole }) {
                 type="datetime-local"
                 value={schedule}
                 min={getMinDateTime()}
+                max={getMaxDateTime()}
                 onChange={(e) => setSchedule(e.target.value)}
                 className="w-full border-2 border-[#397de2] rounded-lg px-2 sm:px-3 py-2 text-sm sm:text-base focus:outline-none focus:ring-2 focus:ring-[#54BEFF]"
               />
+              <p className="text-xs text-gray-500 mt-1">
+                You can only book appointments at least 1 hour from now, up to one month ahead.
+              </p>
             </div>
 
             {/* NEW: Venue Selection for Student */}
@@ -824,7 +845,7 @@ function BookingAppointment({ closeModal, role: propRole }) {
       {/* Message display - Made Responsive */}
       {message.content && (
         <div
-          className={` p-2 sm:p-3 rounded-lg text-xs sm:text-sm ${
+          className={`p-2 sm:p-3 rounded-lg text-xs sm:text-sm mb-4 mx-3 sm:mx-6 md:mx-8 ${
             message.type === "success"
               ? "bg-green-100 text-green-700"
               : "bg-red-100 text-red-700"
@@ -834,79 +855,75 @@ function BookingAppointment({ closeModal, role: propRole }) {
         </div>
       )}
 
-      {/* Submit Button - Made Taller */}
-      <div className="relative h-[6vh] md:h-[8vh]">
-        <div className="mt-2 p-2 sm:p-3">
-          {isBookingOverQuota() && (
-            <div className="text-red-500 text-xs sm:text-sm rounded-lg">
-              Warning: You have exceeded the maximum number of 4 students per
-              consultation.
-            </div>
-          )}
+      {/* Booking quota warning */}
+      {isBookingOverQuota() && (
+        <div className="text-red-500 text-xs sm:text-sm rounded-lg mb-4 p-2 bg-red-50 mx-3 sm:mx-6 md:mx-8">
+          Warning: You have exceeded the maximum number of 4 students per
+          consultation.
         </div>
-        <div className="absolute bottom-[0vh] left-[0%] right-[0%] -mx-10">
-          <div className="flex">
-            <button
-              onClick={() =>{
-                setSubmitBookingClicked(true);
-                setTimeout(() =>{ setSubmitBookingClicked(false);
-                  setTimeout(() => submitBooking(), 500);
-                }, 200);
-              }}
-              disabled={isBookingOverQuota() || isLoading}
-              className={`${
-                isBookingOverQuota() || isLoading
-                  ? "opacity-50 cursor-not-allowed"
-                  : ""
-              } bg-[#397de2] hover:bg-[#54BEFF] text-white flex-1 py-4 sm:py-6 md:py-4 rounded-bl-lg justify-center transition-colors flex items-center text-xs sm:text-sm
-              ${SubmitBookingClicked ? "scale-100" : "scale-100"}`}
-            >
-            {isLoading ? (
-                <>
-                  <svg
-                    className="animate-spin h-4 w-4 sm:h-5 sm:w-5 text-white"
-                    xmlns="http://www.w3.org/2000/svg"
-                    fill="none"
-                    viewBox="0 0 24 24"
-                  >
-                    <circle
-                      className="opacity-25"
-                      cx="12"
-                      cy="12"
-                      r="10"
-                      stroke="currentColor"
-                      strokeWidth="4"
-                    ></circle>
-                    <path
-                      className="opacity-75"
-                      fill="currentColor"
-                      d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"
-                    ></path>
-                  </svg>
-                  <span className="ml-2">Processing...</span>
-                </>
-              ) : (
-                <span>
-                  {role === "faculty" ? "Book Appointment" : "Request Appointment"}
-                </span>
-              )}
-            </button>
+      )}
 
-            <button
-              onClick={() => {
-                setCancelClicked(true);
-                setTimeout(() => {
-                  setCancelClicked(false);
-                  setTimeout(() => closeModal());
-                });
-              }}
-              className={`flex-1 py-4 sm:py-6 md:py-4 text-gray-700 bg-gray-100 rounded-br-lg hover:bg-gray-200 transition-colors text-xs sm:text-sm
-                ${CancelClicked ? "scale-100" : "scale-100"}`}
-            >
-              Cancel
-            </button>
-          </div>
-        </div>
+      {/* Submit Button - Now extends to modal edges naturally */}
+      <div className="flex mt-4">
+        <button
+          onClick={() =>{
+            setSubmitBookingClicked(true);
+            setTimeout(() =>{ setSubmitBookingClicked(false);
+              setTimeout(() => submitBooking(), 500);
+            }, 200);
+          }}
+          disabled={isBookingOverQuota() || isLoading}
+          className={`${
+            isBookingOverQuota() || isLoading
+              ? "opacity-50 cursor-not-allowed"
+              : ""
+          } bg-[#397de2] hover:bg-[#54BEFF] text-white flex-1 py-3 sm:py-4 rounded-bl-xl justify-center transition-colors flex items-center text-xs sm:text-sm font-medium
+          ${SubmitBookingClicked ? "scale-100" : "scale-100"}`}
+        >
+        {isLoading ? (
+            <>
+              <svg
+                className="animate-spin h-4 w-4 sm:h-5 sm:w-5 text-white"
+                xmlns="http://www.w3.org/2000/svg"
+                fill="none"
+                viewBox="0 0 24 24"
+              >
+                <circle
+                  className="opacity-25"
+                  cx="12"
+                  cy="12"
+                  r="10"
+                  stroke="currentColor"
+                  strokeWidth="4"
+                ></circle>
+                <path
+                  className="opacity-75"
+                  fill="currentColor"
+                  d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"
+                ></path>
+              </svg>
+              <span className="ml-2">Processing...</span>
+            </>
+          ) : (
+            <span>
+              {role === "faculty" ? "Book Appointment" : "Request Appointment"}
+            </span>
+          )}
+        </button>
+
+        <button
+          onClick={() => {
+            setCancelClicked(true);
+            setTimeout(() => {
+              setCancelClicked(false);
+              setTimeout(() => closeModal());
+            });
+          }}
+          className={`flex-1 py-3 sm:py-4 text-gray-700 bg-gray-100 rounded-br-xl hover:bg-gray-200 transition-colors text-xs sm:text-sm font-medium
+            ${CancelClicked ? "scale-100" : "scale-100"}`}
+        >
+          Cancel
+        </button>
       </div>
     </div>
   );

@@ -123,8 +123,10 @@ const EnrollmentPopup = () => {
               </div>
 
               {/* Modal Content */}
-              <div style={{ paddingBottom: "4px" }} className="p-4 sm:p-6">
-                <EnrollmentModal closeModal={() => setShowModal(false)} />
+              <div style={{ paddingBottom: "0px" }} className="px-0 py-4 sm:py-6">
+                <div className="px-0 sm:px-0">
+                  <EnrollmentModal closeModal={() => setShowModal(false)} />
+                </div>
               </div>
             </motion.div>
           </div>

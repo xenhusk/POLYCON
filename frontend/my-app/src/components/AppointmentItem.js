@@ -225,7 +225,6 @@ function AppointmentItem({ appointment, role, onStartSession, onCancel, onConfir
                       }}
                       disabled={isLoading && actionType === 'cancel'}
                       className={`flex-1 bg-[#FF7171] hover:bg-[#E65A5A] text-white py-3 transition-colors rounded-l-lg flex items-center justify-center gap-2
-                        ${CancelClicked ? "scale-90" : "scale-100"}
                         ${isLoading && actionType === 'cancel' ? 'opacity-50 cursor-not-allowed' : ''}`}
                     >
                       {isLoading && actionType === 'cancel' ? (
@@ -263,7 +262,6 @@ function AppointmentItem({ appointment, role, onStartSession, onCancel, onConfir
                         }}
                         disabled={isLoading}
                         className={`flex-1 bg-[#0065A8] hover:bg-[#00D1B2] text-white py-4 transition-colors rounded-bl-lg rounded-br-none flex items-center justify-center gap-2
-                          ${StartClicked ? "scale-90" : "scale-100"}
                           ${isLoading && actionType === 'start' ? 'opacity-50 cursor-not-allowed' : ''}`}
                       >
                         {isLoading && actionType === 'start' ? (
@@ -284,7 +282,6 @@ function AppointmentItem({ appointment, role, onStartSession, onCancel, onConfir
                         }}
                         disabled={isLoading}
                         className={`flex-1 bg-[#54BEFF] hover:bg-[#FF7171] text-white py-4 transition-colors rounded-br-lg rounded-bl-none flex items-center justify-center gap-2
-                          ${CancelClicked ? "scale-90" : "scale-100"}
                           ${isLoading && actionType === 'cancel' ? 'opacity-50 cursor-not-allowed' : ''}`}
                       >
                         Cancel
@@ -300,7 +297,6 @@ function AppointmentItem({ appointment, role, onStartSession, onCancel, onConfir
                         }}
                         disabled={isLoading}
                         className={`flex-1 bg-[#0065A8] hover:bg-[#0088FF] text-white py-4 transition-colors rounded-bl-lg rounded-br-none flex items-center justify-center gap-2
-                          ${ConfirmClicked ? "scale-90" : "scale-100"}
                           ${isLoading && actionType === 'confirm' ? 'opacity-50 cursor-not-allowed' : ''}`}
                       >
                         {isLoading && actionType === 'confirm' ? (
@@ -321,7 +317,6 @@ function AppointmentItem({ appointment, role, onStartSession, onCancel, onConfir
                         }}
                         disabled={isLoading}
                         className={`flex-1 bg-[#54BEFF] hover:bg-[#FF7171] text-white py-4 transition-colors rounded-br-lg rounded-bl-none flex items-center justify-center gap-2
-                          ${CanceledClicked ? "scale-90" : "scale-100"}
                           ${isLoading && actionType === 'cancel' ? 'opacity-50 cursor-not-allowed' : ''}`}
                       >
                         Cancel
@@ -381,7 +376,6 @@ function AppointmentItem({ appointment, role, onStartSession, onCancel, onConfir
                     }}
                     disabled={isLoading}
                     className={`flex-1 bg-[#0065A8] hover:bg-[#0088FF] text-white py-4 transition-colors rounded-bl-lg rounded-br-none flex items-center justify-center gap-2
-                      ${ConfirmedClicked ? "scale-90" : "scale-100"}
                       ${isLoading && actionType === 'confirm' ? 'opacity-50 cursor-not-allowed' : ''}`}
                   >
                     {isLoading && actionType === 'confirm' ? (
@@ -410,7 +404,6 @@ function AppointmentItem({ appointment, role, onStartSession, onCancel, onConfir
                     }} 
                     disabled={isLoading}
                     className={`flex-1 bg-[#54BEFF] hover:bg-[#FF7171] text-white py-4 transition-colors rounded-br-lg rounded-bl-none flex items-center justify-center gap-2
-                      ${CancelingClicked ? "scale-90" : "scale-100"}
                       ${isLoading && actionType === 'cancel' ? 'opacity-50 cursor-not-allowed' : ''}`}
                   >
                     {isLoading && actionType === 'cancel' ? (

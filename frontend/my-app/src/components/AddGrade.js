@@ -9,6 +9,49 @@ import { motion, AnimatePresence } from 'framer-motion';
 import "./transitions.css";
 import { fetchInitialGradeData } from '../utils/gradeUtils';
 
+// Modal variants for animations (same as AddGradePopup)
+const modalVariants = {
+  hidden: { opacity: 0, scale: 0.95, y: 20 },
+  visible: { 
+    opacity: 1, 
+    scale: 1, 
+    y: 0,
+    transition: {
+      type: "spring",
+      stiffness: 300,
+      damping: 30
+    }
+  },
+  exit: {
+    opacity: 0,
+    scale: 0.95,
+    y: 20,
+    transition: { duration: 0.2 }
+  }
+};
+
+// CSS for hiding scrollbar (same as AddGradePopup)
+const modalStyles = `
+  .modal-no-scrollbar::-webkit-scrollbar {
+    display: none;
+  }
+  .modal-no-scrollbar {
+    -ms-overflow-style: none;
+    scrollbar-width: none;
+  }
+`;
+
+// Inject styles into head if not already present
+if (typeof document !== 'undefined') {
+  const styleElement = document.getElementById('modal-scrollbar-styles');
+  if (!styleElement) {
+    const style = document.createElement('style');
+    style.id = 'modal-scrollbar-styles';
+    style.textContent = modalStyles;
+    document.head.appendChild(style);
+  }
+}
+
 // Edit Grade Modal Component
 const EditGradeModal = ({ grade, onClose, onSave }) => {
   const [formData, setFormData] = useState({
@@ -29,171 +72,170 @@ const EditGradeModal = ({ grade, onClose, onSave }) => {
   };
 
   return createPortal(
-    <motion.div
-      initial={{ opacity: 0 }}
-      animate={{ opacity: 1 }}
-      exit={{ opacity: 0 }}
-      className="fixed inset-0 bg-black/60 backdrop-blur-md flex items-center justify-center z-[10000]"
-      onClick={onClose}
-      style={{ 
-        position: 'fixed',
-        top: 0,
-        left: 0,
-        right: 0,
-        bottom: 0,
-        width: '100vw',
-        height: '100vh',
-        margin: 0,
-        padding: 0,
-        zIndex: 10000
-      }}
-    >
+    <div className="fixed bg-black/60 backdrop-blur-md flex items-center justify-center z-[9999] p-4" style={{ 
+      position: 'fixed',
+      top: 0,
+      left: 0,
+      right: 0,
+      bottom: 0,
+      width: '100vw',
+      height: '100vh',
+      margin: 0,
+      padding: '1rem'
+    }}>
       <motion.div
-        initial={{ opacity: 0, scale: 0.9, y: 20 }}
-        animate={{ opacity: 1, scale: 1, y: 0 }}
-        exit={{ opacity: 0, scale: 0.9, y: 20 }}
-        className="bg-white rounded-xl shadow-2xl w-full max-w-md mx-4 max-h-[85vh] flex flex-col"
+        variants={modalVariants}
+        initial="hidden"
+        animate="visible"
+        exit="exit"
+        className="bg-white rounded-xl shadow-2xl w-full max-w-md max-h-[90vh] overflow-y-auto modal-no-scrollbar"
         onClick={(e) => e.stopPropagation()}
+        style={{
+          scrollbarWidth: 'none', /* Firefox */
+          msOverflowStyle: 'none', /* Internet Explorer 10+ */
+        }}
       >
         {/* Modal Header */}
-        <div className="bg-[#fc6969] text-white p-4 rounded-t-xl flex-shrink-0">
-          <div className="flex justify-between items-center">
-            <h3 className="text-lg font-semibold">Edit Grade</h3>
-            <button
-              onClick={onClose}
-              className="text-white hover:text-gray-200 text-xl font-bold"
-            >
-              ×
-            </button>
-          </div>
+        <div className="bg-[#fc6969] px-6 py-4 flex justify-between items-center sticky top-0 z-10">
+          <h2 className="text-lg font-semibold text-white">
+            Edit Grade
+          </h2>
         </div>
 
-        {/* Modal Body - Scrollable */}
-        <div className="flex-1 overflow-y-auto">
-          <form id="edit-grade-form" onSubmit={handleSubmit} className="p-6 space-y-4">
-          <div>
-            <label className="block text-sm font-medium text-gray-700 mb-1">
-              Student ID
-            </label>
-            <input
-              type="text"
-              value={formData.studentID}
-              disabled
-              className="w-full p-2 border border-gray-300 rounded-md bg-gray-100 text-gray-600"
-            />
-          </div>
+        {/* Modal Body */}
+        <div className="p-6 space-y-4">
+          <form id="edit-grade-form" onSubmit={handleSubmit}>
+            {/* Student ID */}
+            <div>
+              <label className="block text-sm font-medium text-gray-700 mb-2">
+                Student ID
+              </label>
+              <input
+                type="text"
+                value={formData.studentID}
+                disabled
+                className="w-full border-2 border-gray-300 rounded-lg px-3 py-2 bg-gray-100 text-gray-600"
+              />
+            </div>
 
-          <div>
-            <label className="block text-sm font-medium text-gray-700 mb-1">
-              Student Name
-            </label>
-            <input
-              type="text"
-              value={formData.studentName}
-              disabled
-              className="w-full p-2 border border-gray-300 rounded-md bg-gray-100 text-gray-600"
-            />
-          </div>
+            {/* Student Name */}
+            <div>
+              <label className="block text-sm font-medium text-gray-700 mb-2">
+                Student Name
+              </label>
+              <input
+                type="text"
+                value={formData.studentName}
+                disabled
+                className="w-full border-2 border-gray-300 rounded-lg px-3 py-2 bg-gray-100 text-gray-600"
+              />
+            </div>
 
-          <div>
-            <label className="block text-sm font-medium text-gray-700 mb-1">
-              Course
-            </label>
-            <input
-              type="text"
-              value={`${formData.courseID} - ${formData.courseName}`}
-              disabled
-              className="w-full p-2 border border-gray-300 rounded-md bg-gray-100 text-gray-600"
-            />
-          </div>
+            {/* Course */}
+            <div>
+              <label className="block text-sm font-medium text-gray-700 mb-2">
+                Course
+              </label>
+              <input
+                type="text"
+                value={`${formData.courseID} - ${formData.courseName}`}
+                disabled
+                className="w-full border-2 border-gray-300 rounded-lg px-3 py-2 bg-gray-100 text-gray-600"
+              />
+            </div>
 
-          <div>
-            <label className="block text-sm font-medium text-gray-700 mb-1">
-              Grade *
-            </label>
-            <input
-              type="number"
-              min="0"
-              max="100"
-              step="0.01"
-              value={formData.grade}
-              onChange={(e) => setFormData({...formData, grade: e.target.value})}
-              className="w-full p-2 border border-gray-300 rounded-md focus:ring-2 focus:ring-[#fc6969] focus:border-transparent"
-              required
-            />
-          </div>
+            {/* Grade and Period Row */}
+            <div className="grid grid-cols-2 gap-4">
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-2">
+                  Grade *
+                </label>
+                <input
+                  type="number"
+                  placeholder="Enter grade"
+                  min="0"
+                  max="100"
+                  step="0.01"
+                  value={formData.grade}
+                  onChange={(e) => setFormData({...formData, grade: e.target.value})}
+                  className="w-full border-2 border-[#fc6969] rounded-lg px-3 py-2 focus:outline-none focus:ring-2 focus:ring-[#ff7b7b] focus:border-transparent"
+                  required
+                />
+              </div>
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-2">
+                  Period *
+                </label>
+                <select
+                  value={formData.period}
+                  onChange={(e) => setFormData({...formData, period: e.target.value})}
+                  className="w-full border-2 border-[#fc6969] rounded-lg px-3 py-2 focus:outline-none focus:ring-2 focus:ring-[#ff7b7b] focus:border-transparent"
+                  required
+                >
+                  <option value="">Select Period</option>
+                  <option value="Prelim">Prelim</option>
+                  <option value="Midterm">Midterm</option>
+                  <option value="Pre-Final">Pre-Final</option>
+                  <option value="Final">Final</option>
+                </select>
+              </div>
+            </div>
 
-          <div>
-            <label className="block text-sm font-medium text-gray-700 mb-1">
-              Period *
-            </label>
-            <select
-              value={formData.period}
-              onChange={(e) => setFormData({...formData, period: e.target.value})}
-              className="w-full p-2 border border-gray-300 rounded-md focus:ring-2 focus:ring-[#fc6969] focus:border-transparent"
-              required
-            >
-              <option value="">Select Period</option>
-              <option value="Prelim">Prelim</option>
-              <option value="Midterm">Midterm</option>
-              <option value="Pre-Final">Pre-Final</option>
-              <option value="Final">Final</option>
-            </select>
-          </div>
-
-          <div>
-            <label className="block text-sm font-medium text-gray-700 mb-1">
-              School Year *
-            </label>
-            <select
-              value={formData.school_year}
-              onChange={(e) => setFormData({...formData, school_year: e.target.value})}
-              className="w-full p-2 border border-gray-300 rounded-md focus:ring-2 focus:ring-[#fc6969] focus:border-transparent"
-              required
-            >
-              <option value="">Select School Year</option>
-              <option value="2024-2025">2024-2025</option>
-              <option value="2023-2024">2023-2024</option>
-            </select>
-          </div>
-
-          <div>
-            <label className="block text-sm font-medium text-gray-700 mb-1">
-              Semester *
-            </label>
-            <select
-              value={formData.semester}
-              onChange={(e) => setFormData({...formData, semester: e.target.value})}
-              className="w-full p-2 border border-gray-300 rounded-md focus:ring-2 focus:ring-[#fc6969] focus:border-transparent"
-              required
-            >
-              <option value="">Select Semester</option>
-              <option value="1st">1st Semester</option>
-              <option value="2nd">2nd Semester</option>
-            </select>
-          </div>
+            {/* Semester and School Year Row */}
+            <div className="grid grid-cols-2 gap-4">
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-2">
+                  Semester *
+                </label>
+                <select
+                  value={formData.semester}
+                  onChange={(e) => setFormData({...formData, semester: e.target.value})}
+                  className="w-full border-2 border-[#fc6969] rounded-lg px-3 py-2 focus:outline-none focus:ring-2 focus:ring-[#ff7b7b] focus:border-transparent"
+                  required
+                >
+                  <option value="">Select Semester</option>
+                  <option value="1st">1st</option>
+                  <option value="2nd">2nd</option>
+                </select>
+              </div>
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-2">
+                  School Year *
+                </label>
+                <select
+                  value={formData.school_year}
+                  onChange={(e) => setFormData({...formData, school_year: e.target.value})}
+                  className="w-full border-2 border-[#fc6969] rounded-lg px-3 py-2 focus:outline-none focus:ring-2 focus:ring-[#ff7b7b] focus:border-transparent"
+                  required
+                >
+                  <option value="">Select School Year</option>
+                  <option value="2024-2025">2024-2025</option>
+                  <option value="2023-2024">2023-2024</option>
+                </select>
+              </div>
+            </div>
           </form>
         </div>
 
-        {/* Modal Footer - Fixed at bottom */}
-        <div className="flex gap-3 p-6 pt-4 border-t border-gray-200 flex-shrink-0">
-          <button
-            type="button"
-            onClick={onClose}
-            className="flex-1 px-4 py-2 text-sm font-medium text-gray-700 bg-white border border-gray-300 rounded-md hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-gray-500"
-          >
-            Cancel
-          </button>
+        {/* Modal Footer - Now outside the padded container to reach edges */}
+        <div className="flex mt-4">
           <button
             type="submit"
             form="edit-grade-form"
-            className="flex-1 px-4 py-2 text-sm font-medium text-white bg-[#fc6969] border border-transparent rounded-md hover:bg-[#ff7b7b] focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-[#fc6969]"
+            className="flex-1 py-3 sm:py-4 bg-[#fc6969] hover:bg-[#ff7b7b] text-white text-center justify-center rounded-bl-xl transition-colors flex items-center gap-2 text-xs sm:text-sm font-medium"
           >
             Update Grade
           </button>
+          <button
+            type="button"
+            onClick={onClose}
+            className="flex-1 py-3 sm:py-4 text-gray-700 bg-gray-100 rounded-br-xl hover:bg-gray-200 transition-colors text-xs sm:text-sm font-medium"
+          >
+            Cancel
+          </button>
         </div>
       </motion.div>
-    </motion.div>,
+    </div>,
     document.body
   );
 };
@@ -1373,10 +1415,10 @@ export default function AddGrade() {
               initial={{ opacity: 0, scale: 0.9, y: 20 }}
               animate={{ opacity: 1, scale: 1, y: 0 }}
               exit={{ opacity: 0, scale: 0.9, y: 20 }}
-              className="bg-white rounded-xl shadow-2xl p-6 w-full max-w-md mx-4"
+              className="bg-white rounded-xl shadow-2xl w-full max-w-md mx-3 sm:mx-6 md:mx-8"
               onClick={(e) => e.stopPropagation()}
             >
-              <div className="text-center">
+              <div className="px-3 sm:px-6 md:px-8 py-4 sm:py-6 text-center">
                 <div className="mx-auto flex items-center justify-center h-12 w-12 rounded-full bg-red-100 mb-4">
                   <svg className="h-6 w-6 text-red-600" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-2.5L13.732 4c-.77-.833-1.732-.833-2.464 0L3.35 16.5c-.77.833.192 2.5 1.732 2.5z" />
@@ -1386,20 +1428,21 @@ export default function AddGrade() {
                 <p className="text-sm text-gray-500 mb-6">
                   Are you sure you want to delete this grade? This action cannot be undone.
                 </p>
-                <div className="flex gap-3 justify-center">
-                  <button
-                    onClick={() => setShowDeleteModal(false)}
-                    className="px-4 py-2 text-sm font-medium text-gray-700 bg-white border border-gray-300 rounded-md hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-gray-500"
-                  >
-                    Cancel
-                  </button>
-                  <button
-                    onClick={confirmDeleteGrade}
-                    className="px-4 py-2 text-sm font-medium text-white bg-red-600 border border-transparent rounded-md hover:bg-red-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-red-500"
-                  >
-                    Delete
-                  </button>
-                </div>
+              </div>
+              
+              <div className="flex mt-4">
+                <button
+                  onClick={() => setShowDeleteModal(false)}
+                  className="flex-1 py-3 sm:py-4 text-gray-700 bg-gray-100 rounded-bl-xl hover:bg-gray-200 transition-colors text-xs sm:text-sm font-medium"
+                >
+                  Cancel
+                </button>
+                <button
+                  onClick={confirmDeleteGrade}
+                  className="flex-1 py-3 sm:py-4 text-white bg-red-600 hover:bg-red-700 rounded-br-xl transition-colors text-xs sm:text-sm font-medium"
+                >
+                  Delete
+                </button>
               </div>
             </motion.div>
           </motion.div>

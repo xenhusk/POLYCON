@@ -167,11 +167,13 @@ const BookingPopup = () => {
               </div>
 
               {/* Modal Content */}
-              <div style={{ paddingBottom: "0px" }} className="p-4 sm:p-6">
-                <BookingAppointment 
-                  closeModal={handleCloseModal}
-                  role={userRole}
-                />
+              <div style={{ paddingBottom: "0px" }} className="px-0 py-4 sm:py-6">
+                <div className="px-0 sm:px-0">
+                  <BookingAppointment 
+                    closeModal={handleCloseModal}
+                    role={userRole}
+                  />
+                </div>
               </div>
             </motion.div>
           </div>

@@ -3,6 +3,28 @@ import { useLocation } from 'react-router-dom';
 import { motion, AnimatePresence } from 'framer-motion';
 import API_URL from '../apiConfig';
 
+// CSS for hiding scrollbar
+const modalStyles = `
+  .modal-no-scrollbar::-webkit-scrollbar {
+    display: none;
+  }
+  .modal-no-scrollbar {
+    -ms-overflow-style: none;
+    scrollbar-width: none;
+  }
+`;
+
+// Inject styles into head
+if (typeof document !== 'undefined') {
+  const styleElement = document.getElementById('modal-scrollbar-styles');
+  if (!styleElement) {
+    const style = document.createElement('style');
+    style.id = 'modal-scrollbar-styles';
+    style.textContent = modalStyles;
+    document.head.appendChild(style);
+  }
+}
+
 // Add Grade icon SVG
 const AddGradeIcon = () => (
   <svg width="100%" height="100%" viewBox="0 0 18 22" fill="none" xmlns="http://www.w3.org/2000/svg">
@@ -273,20 +295,18 @@ const AddGradePopup = () => {
               initial="hidden"
               animate="visible"
               exit="exit"
-              className="bg-white rounded-xl shadow-2xl w-full max-w-md max-h-[90vh] overflow-y-auto"
+              className="bg-white rounded-xl shadow-2xl w-full max-w-md max-h-[90vh] overflow-y-auto modal-no-scrollbar"
               onClick={(e) => e.stopPropagation()}
+              style={{
+                scrollbarWidth: 'none', /* Firefox */
+                msOverflowStyle: 'none', /* Internet Explorer 10+ */
+              }}
             >
               {/* Modal Header */}
               <div className="bg-[#fc6969] px-6 py-4 flex justify-between items-center sticky top-0 z-10">
                 <h2 className="text-lg font-semibold text-white">
                   {selectedGradeID ? "Edit Grade" : "Add New Grade"}
                 </h2>
-                <button
-                  onClick={handleCloseModal}
-                  className="text-white hover:text-gray-200 text-xl font-bold w-8 h-8 flex items-center justify-center"
-                >
-                  ×
-                </button>
               </div>
 
               {/* Modal Body */}
@@ -312,7 +332,7 @@ const AddGradePopup = () => {
                     placeholder="Enter student name"
                     value={studentName}
                     onChange={handleStudentNameChange}
-                    className="w-full border border-gray-300 rounded-lg px-3 py-2 focus:ring-2 focus:ring-[#fc6969] focus:border-transparent"
+                    className="w-full border-2 border-[#fc6969] rounded-lg px-3 py-2 focus:outline-none focus:ring-2 focus:ring-[#ff7b7b] focus:border-transparent"
                   />
                   {filteredStudents.length > 0 && (
                     <ul className="absolute z-[110] bg-white border border-gray-300 rounded-lg mt-1 max-h-40 overflow-y-auto w-full shadow-lg">
@@ -341,7 +361,7 @@ const AddGradePopup = () => {
                       setCourseID(e.target.value);
                       setCourseName(selectedCourse?.courseName || '');
                     }}
-                    className="w-full border border-gray-300 rounded-lg px-3 py-2 focus:ring-2 focus:ring-[#fc6969] focus:border-transparent"
+                    className="w-full border-2 border-[#fc6969] rounded-lg px-3 py-2 focus:outline-none focus:ring-2 focus:ring-[#ff7b7b] focus:border-transparent"
                   >
                     <option value="">Select Course</option>
                     {courses.map((course) => (
@@ -365,7 +385,7 @@ const AddGradePopup = () => {
                       max="100"
                       value={grade}
                       onChange={(e) => setGrade(e.target.value)}
-                      className="w-full border border-gray-300 rounded-lg px-3 py-2 focus:ring-2 focus:ring-[#fc6969] focus:border-transparent"
+                      className="w-full border-2 border-[#fc6969] rounded-lg px-3 py-2 focus:outline-none focus:ring-2 focus:ring-[#ff7b7b] focus:border-transparent"
                     />
                   </div>
                   <div>
@@ -375,7 +395,7 @@ const AddGradePopup = () => {
                     <select
                       value={period}
                       onChange={(e) => setPeriod(e.target.value)}
-                      className="w-full border border-gray-300 rounded-lg px-3 py-2 focus:ring-2 focus:ring-[#fc6969] focus:border-transparent"
+                      className="w-full border-2 border-[#fc6969] rounded-lg px-3 py-2 focus:outline-none focus:ring-2 focus:ring-[#ff7b7b] focus:border-transparent"
                     >
                       <option value="">Select Period</option>
                       <option value="Prelim">Prelim</option>
@@ -395,7 +415,7 @@ const AddGradePopup = () => {
                     <select
                       value={semester}
                       onChange={(e) => setSemester(e.target.value)}
-                      className="w-full border border-gray-300 rounded-lg px-3 py-2 focus:ring-2 focus:ring-[#fc6969] focus:border-transparent"
+                      className="w-full border-2 border-[#fc6969] rounded-lg px-3 py-2 focus:outline-none focus:ring-2 focus:ring-[#ff7b7b] focus:border-transparent"
                     >
                       <option value="">Select Semester</option>
                       <option value="1st">1st</option>
@@ -411,26 +431,26 @@ const AddGradePopup = () => {
                       placeholder="YYYY-YYYY"
                       value={schoolYear}
                       onChange={handleSchoolYearChange}
-                      className="w-full border border-gray-300 rounded-lg px-3 py-2 focus:ring-2 focus:ring-[#fc6969] focus:border-transparent"
+                      className="w-full border-2 border-[#fc6969] rounded-lg px-3 py-2 focus:outline-none focus:ring-2 focus:ring-[#ff7b7b] focus:border-transparent"
                     />
                   </div>
                 </div>
+              </div>
 
-                {/* Modal Footer */}
-                <div className="flex gap-3 pt-4">
-                  <button
-                    onClick={handleSubmitGrade}
-                    className="flex-1 px-4 py-2 rounded-lg text-white shadow-md transition bg-[#fc6969] hover:bg-[#ff7b7b]"
-                  >
-                    Add Grade
-                  </button>
-                  <button
-                    onClick={handleCloseModal}
-                    className="flex-1 bg-gray-500 text-white px-4 py-2 rounded-lg hover:bg-gray-400 transition"
-                  >
-                    Cancel
-                  </button>
-                </div>
+              {/* Modal Footer - Now outside the padded container to reach edges */}
+              <div className="flex mt-4">
+                <button
+                  onClick={handleSubmitGrade}
+                  className="flex-1 py-3 sm:py-4 bg-[#fc6969] hover:bg-[#ff7b7b] text-white text-center justify-center rounded-bl-xl transition-colors flex items-center gap-2 text-xs sm:text-sm font-medium"
+                >
+                  Add Grade
+                </button>
+                <button
+                  onClick={handleCloseModal}
+                  className="flex-1 py-3 sm:py-4 text-gray-700 bg-gray-100 rounded-br-xl hover:bg-gray-200 transition-colors text-xs sm:text-sm font-medium"
+                >
+                  Cancel
+                </button>
               </div>
             </motion.div>
           </div>

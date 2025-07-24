@@ -144,9 +144,9 @@ function EnrollmentModal({ closeModal }) {
   }, [teacherID]);
 
   return (
-    <div className="pt-2 sm:pt-4 px-2 md:px-4 h-44 md:h-52 flex flex-col">
+    <div className="pt-2 sm:pt-4 px-0 h-44 md:h-52 flex flex-col">
       {/* Student Selection Input - Responsive */}
-      <div className="relative flex-grow">
+      <div className="relative flex-grow mx-3 sm:mx-6 md:mx-8">
         <label className="block text-sm font-medium text-gray-700 mb-1 sm:mb-2">
           Students <span className="text-red-500">*</span>
         </label>
@@ -255,7 +255,7 @@ function EnrollmentModal({ closeModal }) {
 
       <div className="relative mt-2">
         {/* Message display - Responsive */}
-        <div className="mb-[6.5vh] md:mb-[9vh]">
+        <div className="mb-4 mx-3 sm:mx-6 md:mx-8">
           {message.content && (
             <div
               className={`p-2 sm:p-3 rounded-lg text-xs sm:text-sm ${
@@ -269,59 +269,57 @@ function EnrollmentModal({ closeModal }) {
           )}
         </div>
 
-        {/* Button container - Updated positioning to eliminate gap */}
-        <div className="absolute -bottom-1 left-0 right-0 -mx-10">
-          <div className="flex">
-            <button
-              onClick={() => {
-                setEnrollClicked(true);
-                setTimeout(() => { setEnrollClicked(false);
-                  setTimeout(() => submitEnrollment(), 200);
-                }, 100);
-              }}
-              disabled={isLoading}
-              className={`flex-1 py-4 sm:py-6 md:py-4 bg-[#00D1B2] hover:bg-[#00F7D4] text-white text-center justify-center rounded-bl-lg transition-colors flex items-center gap-2 text-xs sm:text-sm
-              ${EnrollClicked ? "scale-100" : "scale-100"}
-              ${isLoading ? "opacity-50 cursor-not-allowed" : ""}`}
-            >
-              {isLoading && (
-                <svg
-                  className="animate-spin h-4 w-4 sm:h-5 sm:w-5 text-white"
-                  xmlns="http://www.w3.org/2000/svg"
-                  fill="none"
-                  viewBox="0 0 24 24"
-                >
-                  <circle
-                    className="opacity-25"
-                    cx="12"
-                    cy="12"
-                    r="10"
-                    stroke="currentColor"
-                    strokeWidth="4"
-                  ></circle>
-                  <path
-                    className="opacity-75"
-                    fill="currentColor"
-                    d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"
-                  ></path>
-                </svg>
-              )}
-              {isLoading ? "Processing..." : "Enroll Students"}
-            </button>
+        {/* Button container - Now extends to modal edges naturally */}
+        <div className="flex mt-4">
+          <button
+            onClick={() => {
+              setEnrollClicked(true);
+              setTimeout(() => { setEnrollClicked(false);
+                setTimeout(() => submitEnrollment(), 200);
+              }, 100);
+            }}
+            disabled={isLoading}
+            className={`flex-1 py-3 sm:py-4 bg-[#00D1B2] hover:bg-[#00F7D4] text-white text-center justify-center rounded-bl-xl transition-colors flex items-center gap-2 text-xs sm:text-sm font-medium
+            ${EnrollClicked ? "scale-100" : "scale-100"}
+            ${isLoading ? "opacity-50 cursor-not-allowed" : ""}`}
+          >
+            {isLoading && (
+              <svg
+                className="animate-spin h-4 w-4 sm:h-5 sm:w-5 text-white"
+                xmlns="http://www.w3.org/2000/svg"
+                fill="none"
+                viewBox="0 0 24 24"
+              >
+                <circle
+                  className="opacity-25"
+                  cx="12"
+                  cy="12"
+                  r="10"
+                  stroke="currentColor"
+                  strokeWidth="4"
+                ></circle>
+                <path
+                  className="opacity-75"
+                  fill="currentColor"
+                  d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"
+                ></path>
+              </svg>
+            )}
+            {isLoading ? "Processing..." : "Enroll Students"}
+          </button>
 
-            <button
-              onClick={() => {
-                setCancelClicked(true);
-                setTimeout(() => { setCancelClicked(false); 
-                  setTimeout(() => closeModal());
-                });
-              }}
-              className={`flex-1 py-4 sm:py-6 md:py-4 text-gray-700 bg-gray-100 rounded-br-lg hover:bg-gray-200 transition-colors text-xs sm:text-sm
-                ${CancelClicked ? "scale-100" : "scale-100"}`}
-            >
-              Cancel
-            </button>
-          </div>
+          <button
+            onClick={() => {
+              setCancelClicked(true);
+              setTimeout(() => { setCancelClicked(false); 
+                setTimeout(() => closeModal());
+              });
+            }}
+            className={`flex-1 py-3 sm:py-4 text-gray-700 bg-gray-100 rounded-br-xl hover:bg-gray-200 transition-colors text-xs sm:text-sm font-medium
+              ${CancelClicked ? "scale-100" : "scale-100"}`}
+          >
+            Cancel
+          </button>
         </div>
       </div>
     </div>
