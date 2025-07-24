@@ -8,6 +8,7 @@ from services.audio_conversion_service import convert_audio
 from services.assemblyai_service import transcribe_audio_with_assemblyai
 from services.google_storage import upload_audio  # upload converted audio for download
 from services.cloudinary_service import upload_audio_cloudinary
+from services.socket_service import emit_booking_status_update
 from sqlalchemy.orm import joinedload
 from sqlalchemy import or_
 from sqlalchemy import or_ # Add or_
@@ -223,6 +224,16 @@ def store_consultation_data(): # Renamed function
             if booking:
                 booking.status = 'completed'
                 db.session.add(booking)
+                
+                # Emit socket event to notify frontend about booking completion
+                socket_data = {
+                    'action': 'completed',
+                    'bookingID': booking_id,
+                    'status': 'completed',
+                    'sessionID': new_session.id
+                }
+                emit_booking_status_update(socket_data)
+                print(f"🚀 Emitted booking completion event for booking {booking_id}")
             else:
                 # Optional: handle case where booking_id is provided but booking not found
                 print(f"Warning: Booking with ID {booking_id} not found, but session created.")

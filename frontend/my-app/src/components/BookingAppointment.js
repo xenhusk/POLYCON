@@ -83,11 +83,10 @@ function BookingAppointment({ closeModal, role: propRole }) {
   const [CancelClicked, setCancelClicked] = useState(false);
   const [enrollmentMessage, setEnrollmentMessage] = useState("");
 
-  // Helper function to get minimum date/time (current moment, not just today)
+  // Helper function to get minimum date/time (current moment to allow walk-ins)
   const getMinDateTime = () => {
     const now = new Date();
-    // Add a small buffer (e.g., 1 hour) to prevent booking in the immediate past
-    now.setHours(now.getHours() + 1);
+    // Allow booking at current time for walk-ins
     return now.toISOString().slice(0, 16); // Format for datetime-local input
   };
 
@@ -104,12 +103,11 @@ function BookingAppointment({ closeModal, role: propRole }) {
     if (!dateTimeString) return false;
     const selectedDateTime = new Date(dateTimeString);
     const now = new Date();
-    // Add 1 hour buffer to current time to prevent booking in immediate past
-    const minAllowedTime = new Date(now.getTime() + (60 * 60 * 1000)); // 1 hour from now
+    // Allow booking from current time to accommodate walk-ins
     const oneMonthFromToday = new Date(now);
     oneMonthFromToday.setMonth(now.getMonth() + 1);
     
-    return selectedDateTime >= minAllowedTime && selectedDateTime <= oneMonthFromToday;
+    return selectedDateTime >= now && selectedDateTime <= oneMonthFromToday;
   };
 
   // Check for ID validation issues on component mount with specific error for studentID case issue
@@ -261,11 +259,11 @@ function BookingAppointment({ closeModal, role: propRole }) {
       return;
     }
 
-    // Validate that the selected date/time is within the allowed range (at least 1 hour from now to one month from today)
+    // Validate that the selected date/time is within the allowed range (current time to one month from today)
     if (!isDateTimeValid(schedule)) {
       setMessage({
         type: "error",
-        content: "Please select a date and time at least 1 hour from now and within one month."
+        content: "Please select a date and time from now to within one month."
       });
       return;
     }
@@ -535,7 +533,7 @@ function BookingAppointment({ closeModal, role: propRole }) {
                 className="w-full border-2 border-[#397de2] rounded-lg px-2 sm:px-3 py-2 sm:py-2 text-sm sm:text-base focus:outline-none focus:ring-2 focus:ring-[#54BEFF]"
               />
               <p className="text-xs text-gray-500 mt-1">
-                You can only book appointments at least 1 hour from now, up to one month ahead.
+                You can book appointments from now up to one month ahead to accommodate walk-ins.
               </p>
             </div>
 
@@ -781,7 +779,7 @@ function BookingAppointment({ closeModal, role: propRole }) {
                 className="w-full border-2 border-[#397de2] rounded-lg px-2 sm:px-3 py-2 text-sm sm:text-base focus:outline-none focus:ring-2 focus:ring-[#54BEFF]"
               />
               <p className="text-xs text-gray-500 mt-1">
-                You can only book appointments at least 1 hour from now, up to one month ahead.
+                You can book appointments from now up to one month ahead to accommodate walk-ins.
               </p>
             </div>
 

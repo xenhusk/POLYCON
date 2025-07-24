@@ -113,22 +113,43 @@ function StudentAppointments() {
       refetch();
     };
 
+    const handleBookingStatusUpdate = data => {
+      console.log("📋 booking_status_update received:", data);
+      if (data.action === 'completed') {
+        console.log(`🎯 Booking ${data.bookingID} completed - Session ${data.sessionID} finalized`);
+        // Immediately refetch to update the UI
+        refetch();
+      }
+    };
+
+    const handleBookingUpdated = data => {
+      console.log("🔄 booking_updated received:", data);
+      if (data.action === 'delete') {
+        console.log(`🗑️ StudentAppointments: Booking ${data.bookingID} deleted - Session finalized`);
+      }
+      refetch();
+    };
+
     const handleAppointmentReminder = data => {
       console.log("⏰ appointment_reminder received:", data);
       const message = `Your appointment with ${data.teacherName || 'your teacher'} is starting in 15 minutes at ${data.venue || 'the scheduled location'}`;
       showAppointmentReminder(message);
     };
 
-    console.log("📱 StudentAppointments: Listening to booking_created/confirmed/cancelled/reminder events");
+    console.log("📱 StudentAppointments: Listening to booking_created/confirmed/cancelled/updated/status_update/reminder events");
     socket.on('booking_created', handleBookingCreated);
     socket.on('booking_confirmed', handleBookingConfirmed);
     socket.on('booking_cancelled', handleBookingCancelled);
+    socket.on('booking_updated', handleBookingUpdated);
+    socket.on('booking_status_update', handleBookingStatusUpdate);
     socket.on('appointment_reminder', handleAppointmentReminder);
       return () => {
       console.log("📱 StudentAppointments: Removing Socket.IO listeners");
       socket.off('booking_created', handleBookingCreated);
       socket.off('booking_confirmed', handleBookingConfirmed);
       socket.off('booking_cancelled', handleBookingCancelled);
+      socket.off('booking_updated', handleBookingUpdated);
+      socket.off('booking_status_update', handleBookingStatusUpdate);
       socket.off('appointment_reminder', handleAppointmentReminder);
       socket.disconnect();
     };
@@ -338,6 +359,22 @@ function TeacherAppointments() {
   }, [sortedData]);  const handleBookingUpdateOrCreate = useCallback((data) => {
     console.log("🔄 TeacherAppointments: booking_updated or booking_created event received:", data);
     
+    // Handle booking completion (session finalized)
+    if (data && data.action === 'completed') {
+      console.log(`🎯 TeacherAppointments: Booking ${data.bookingID} completed - Session ${data.sessionID} finalized`);
+      // Refetch data to update the UI
+      refetch();
+      return;
+    }
+    
+    // Handle booking deletion (session finalized in Firestore version)
+    if (data && data.action === 'delete') {
+      console.log(`🗑️ TeacherAppointments: Booking ${data.bookingID} deleted - Session finalized`);
+      // Refetch data to update the UI
+      refetch();
+      return;
+    }
+    
     // Display notification based on status
     if (data && data.status) {
       if (data.status === 'confirmed') {
@@ -375,16 +412,20 @@ function TeacherAppointments() {
     socket.on('connect_error', (error) => {
       console.error('📡 TeacherAppointments: Socket connection error:', error);
     });
-      console.log("📱 TeacherAppointments: Listening to booking_created/confirmed/cancelled/reminder events");
+      console.log("📱 TeacherAppointments: Listening to booking_created/confirmed/cancelled/updated/status_update/reminder events");
     socket.on('booking_created', handleBookingUpdateOrCreate);
     socket.on('booking_confirmed', handleBookingUpdateOrCreate);
     socket.on('booking_cancelled', handleBookingUpdateOrCreate);
+    socket.on('booking_updated', handleBookingUpdateOrCreate);
+    socket.on('booking_status_update', handleBookingUpdateOrCreate);
     socket.on('appointment_reminder', handleAppointmentReminder);
       return () => {
       console.log("📱 TeacherAppointments: Removing Socket.IO listeners");
       socket.off('booking_created', handleBookingUpdateOrCreate);
       socket.off('booking_confirmed', handleBookingUpdateOrCreate);
       socket.off('booking_cancelled', handleBookingUpdateOrCreate);
+      socket.off('booking_updated', handleBookingUpdateOrCreate);
+      socket.off('booking_status_update', handleBookingUpdateOrCreate);
       socket.off('appointment_reminder', handleAppointmentReminder);
       socket.disconnect();
     };

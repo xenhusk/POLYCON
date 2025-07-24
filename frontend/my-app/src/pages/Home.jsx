@@ -1,4 +1,5 @@
 import React, { useState, useEffect } from "react";
+import { motion, AnimatePresence } from "framer-motion";
 import logo from "../components/icons/logo2.png";
 import Consult1 from "../components/icons/Consult1.jpg";
 import Consult3 from "../components/icons/consult3.webp";
@@ -11,27 +12,26 @@ import Signup from "../components/Signup";
 
 const Home = () => {
   const [animateSection, setAnimateSection] = useState(null);
-  const [XClicked, setXClicked] = useState(null);
+  const [showLoginModal, setShowLoginModal] = useState(false);
+  const [showSignupModal, setShowSignupModal] = useState(false);
+  const [errorMessage, setErrorMessage] = useState("");
 
-  // New handler for section navigation
+  // Animation handler for section navigation
   const handleSectionNavigation = (sectionId) => {
     setAnimateSection(sectionId);
     const section = document.getElementById(sectionId);
     if (section) {
       section.scrollIntoView({ behavior: "smooth" });
-      // Reset animation after completion
       setTimeout(() => setAnimateSection(null), 1000);
     }
   };
 
-  const [showLoginModal, setShowLoginModal] = useState(false);
-  const [showSignupModal, setShowSignupModal] = useState(false);
-  const [errorMessage, setErrorMessage] = useState("");
-
+  // Modal handlers
   const handleLoginClick = () => {
     setShowLoginModal(true);
     setErrorMessage("");
   };
+
   const handleSignupClick = () => {
     setShowSignupModal(true);
     setErrorMessage("");
@@ -64,704 +64,1049 @@ const Home = () => {
   };
 
   return (
-    <div className="min-h-screen bg-white font-poppins">
+    <div className="min-h-screen bg-gradient-to-br from-gray-50 to-blue-50 font-poppins no-scrollbar">
       <Nav
         handleLoginClick={handleLoginClick}
         handleSignupClick={handleSignupClick}
         handleSectionNavigation={handleSectionNavigation}
       />
-      <Body />
-
-      {/* About */}
+      <Hero />
       <About animateSection={animateSection} />
-
-      {/* Contact */}
-      <section
-        id="Contact"
-        className={`flex flex-col lg:flex-row w-full justify-between items-center ${
-          animateSection === "Contact" ? "animate-gentle" : ""
-        }`}
-      >
-        <div className="w-full h-[50rem] sm:h-[50rem] md:h-[40rem] lg:h-[43rem] p-2 relative overflow-hidden bg-[#057DCD]">
-          <h1 className="w-[90%] md:w-[95%] lg:w-[92%] font-bold text-[40px] text-[#ffffff] my-[1rem] mx-auto">
-            Contact
-          </h1>
-          <div className="absolute right-0 left-0 flex flex-col md:flex-row justify-between lg:px-5 text-[#ffffff]">
-            {/* Visit Us */}
-            <div className="w-full md:w-[49%] min-h-[8rem] flex flex-col items-center mt-5 p-2">
-              <h3 className="font-semibold text-lg w-[86%] mx-auto">
-                Visit Us
-              </h3>
-              <p className="font-light text-base w-[86%] mx-auto">
-                Visit us in person at our Department (CICT), Service Bldg.
-              </p>
-              <p className="font-medium text-base w-[86%] mx-auto">
-                <span>📍</span>L N Agustin Dr, Bacolod, 6100 Negros Occidental
-              </p>
-            </div>
-            {/* Contact Form */}
-            <form className="flex flex-col w-full md:w-[46%] mx-auto mt-4 mb-2 lg:mt-0">
-              <h3 className="font-semibold text-base lg:text-lg w-[70%] md:w-full lg:w-[70%] mx-auto">
-                Get in touch with us!
-              </h3>
-              <p className="font-light text-sm lg:text-base w-[70%] md:w-full lg:w-[70%] mx-auto">
-                Tell us about you.
-              </p>
-              <div className="flex flex-col sm:flex-row mx-auto w-[70%] md:w-full lg:w-[70%] gap-2 my-2">
-                <input
-                  type="text"
-                  placeholder="First Name"
-                  className="w-full md:w-[50%] h-[6vh] p-3 rounded-lg border border-gray-200 focus:border-[#057DCD] focus:ring-2 focus:ring-[#057DCD]/50 outline-none transition-all text-black"
-                />
-                <input
-                  type="text"
-                  placeholder="Last Name"
-                  className="w-full md:w-[50%] h-[6vh] p-3 rounded-lg border border-gray-200 focus:border-[#057DCD] focus:ring-2 focus:ring-[#057DCD]/50 outline-none transition-all text-black"
-                />
-              </div>
-              <input
-                type="email"
-                placeholder="Email Address"
-                className="w-[70%] md:w-full lg:w-[70%] h-[6vh] p-3 rounded-lg border border-gray-200 focus:border-[#057DCD] focus:ring-2 focus:ring-[#057DCD]/50 outline-none transition-all text-black my-2 mx-auto"
-              />
-              <textarea
-                placeholder="Leave a message"
-                rows="4"
-                className="w-[70%] md:w-full lg:w-[70%] h-[15vh] p-3 rounded-lg border border-gray-200 focus:border-[#057DCD] focus:ring-2 focus:ring-[#057DCD]/50 outline-none transition-all text-black my-2 mx-auto"
-              ></textarea>
+      <Contact animateSection={animateSection} />
+      <Footer />
+      <HelpButton />
+      
+      {/* Simple Modals with Transitions */}
+      <AnimatePresence>
+        {(showLoginModal || showSignupModal) && (
+          <motion.div
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            exit={{ opacity: 0 }}
+            transition={{ duration: 0.3 }}
+            className="fixed inset-0 bg-black bg-opacity-60 flex items-center justify-center z-50"
+            onClick={closeModal}
+          >
+            <motion.div
+              initial={{ opacity: 0, scale: 0.9, y: 20 }}
+              animate={{ opacity: 1, scale: 1, y: 0 }}
+              exit={{ opacity: 0, scale: 0.9, y: 20 }}
+              transition={{ duration: 0.3, ease: "easeOut" }}
+              className="bg-white rounded-2xl shadow-2xl w-[90%] max-w-lg max-h-[90vh] hidden-scrollbar relative"
+              onClick={(e) => e.stopPropagation()}
+            >
+              {/* Close button */}
               <button
-                type="submit"
-                className="w-[70%] md:w-full lg:w-[70%] h-[6vh] bg-[#ffffff] text-[#057DCD] rounded-[10px] text-lg font-semibold transition-all duration-800 ease-in-out delay-150 hover:bg-[#0464a7] hover:text-[#ffffff] my-2 mx-auto"
+                className="absolute top-4 right-4 z-50 w-8 h-8 flex items-center justify-center rounded-full hover:bg-gray-100 transition-colors duration-200"
+                onClick={closeModal}
               >
-                Submit
+                <svg
+                  className="w-5 h-5 text-gray-500 hover:text-gray-700"
+                  fill="none"
+                  viewBox="0 0 24 24"
+                  stroke="currentColor"
+                >
+                  <path
+                    strokeLinecap="round"
+                    strokeLinejoin="round"
+                    strokeWidth="2"
+                    d="M6 18L18 6M6 6l12 12"
+                  />
+                </svg>
               </button>
-            </form>
-          </div>
-        </div>
-      </section>
 
-      {/* footer */}
-      <footer className="flex flex-col w-full justify-between items-center">
-        <div className="w-full min-h-[15rem] sm:min-h-[16rem] md:min-h-[13.5rem] lg:min-h-[15.5rem] relative overflow-hidden bg-[#005B98]">
-          {/* Main Content Container */}
-          <div className="w-full min-h-[11rem] md:w-[93%] md:min-h-[10rem] lg:min-h-[12rem] px-4 md:px-0 absolute right-0 left-0 mx-auto flex flex-col md:flex-row md:justify-between items-center lg:items-end text-white">
-            {/* Logo & Development Info */}
-            <div className="w-full md:w-[50%] lg:w-[45%] flex flex-col items-center md:items-start justify-end pt-4 md:pt-0 lg:pt-4">
+              {/* Login/Signup content */}
+              <div className="relative">
+                <AnimatePresence mode="wait">
+                  {showLoginModal && (
+                    <motion.div
+                      key="login"
+                      initial={{ opacity: 0, x: -20 }}
+                      animate={{ opacity: 1, x: 0 }}
+                      exit={{ opacity: 0, x: -20 }}
+                      transition={{ duration: 0.2 }}
+                    >
+                      <Login
+                        onLoginSuccess={closeModal}
+                        onSwitchToSignup={switchToSignup}
+                        onError={handleLoginError}
+                      />
+                    </motion.div>
+                  )}
+
+                  {showSignupModal && (
+                    <motion.div
+                      key="signup"
+                      initial={{ opacity: 0, x: 20 }}
+                      animate={{ opacity: 1, x: 0 }}
+                      exit={{ opacity: 0, x: 20 }}
+                      transition={{ duration: 0.2 }}
+                    >
+                      <Signup
+                        onSwitchToLogin={switchToLogin}
+                        onError={handleSignupError}
+                      />
+                    </motion.div>
+                  )}
+                </AnimatePresence>
+              </div>
+
+              {/* Error message display */}
+              <AnimatePresence>
+                {errorMessage && (
+                  <motion.div
+                    initial={{ opacity: 0, y: 10 }}
+                    animate={{ opacity: 1, y: 0 }}
+                    exit={{ opacity: 0, y: 10 }}
+                    className="absolute bottom-4 left-4 right-4 bg-red-50 border border-red-200 rounded-xl p-3"
+                  >
+                    <p className="text-red-700 text-sm text-center">{errorMessage}</p>
+                  </motion.div>
+                )}
+              </AnimatePresence>
+            </motion.div>
+          </motion.div>
+        )}
+      </AnimatePresence>
+    </div>
+  );
+};
+
+// Enhanced Navigation Component
+const Nav = ({ handleLoginClick, handleSignupClick, handleSectionNavigation }) => {
+  const [isMenuOpen, setIsMenuOpen] = useState(false);
+  const [activeButton, setActiveButton] = useState("");
+
+  const handleButtonClick = (buttonType, action) => {
+    setActiveButton(buttonType);
+    setTimeout(() => {
+      setActiveButton("");
+      action();
+      if (isMenuOpen) setIsMenuOpen(false);
+    }, 150);
+  };
+
+  return (
+    <motion.nav 
+      initial={{ opacity: 0, y: -20 }}
+      animate={{ opacity: 1, y: 0 }}
+      transition={{ duration: 0.6 }}
+      className="relative z-50"
+    >
+      <div className="w-full">
+        <div className="bg-[#057DCD] shadow-xl">
+          <div className="flex justify-between items-center h-16 sm:h-20 px-4 sm:px-6 max-w-7xl mx-auto">
+            {/* Logo */}
+            <motion.div
+              whileHover={{ scale: 1.05 }}
+              className="flex items-center space-x-2 sm:space-x-3"
+            >
               <img
                 src={logo}
-                alt="Logo"
-                className="h-[100px] w-[100px] md:h-[85px] md:w-[85px] lg:h-[98px] lg:w-[98px]"
+                alt="POLYCON Logo"
+                className="h-10 w-10 sm:h-14 sm:w-14 object-contain"
               />
-              <div className="text-start md:text-left mt-4 md:mt-4 hidden md:block">
-                <h3 className="font-medium text-base md:text-lg">
-                  We are still development
-                </h3>
-                <p className="font-light text-xs md:text-sm mt-1">
-                  Polycon, 2024
-                </p>
+              <span className="text-white font-bold text-lg sm:text-xl hidden sm:block">
+                POLYCON
+              </span>
+            </motion.div>
+
+            {/* Desktop Navigation */}
+            <div className="hidden md:flex items-center space-x-6 lg:space-x-8">
+              {["About", "Contact"].map((item) => (
+                <motion.button
+                  key={item}
+                  whileHover={{ scale: 1.05 }}
+                  whileTap={{ scale: 0.95 }}
+                  onClick={() => handleSectionNavigation(item)}
+                  className="text-white font-medium hover:text-blue-200 transition-colors duration-200 relative group"
+                >
+                  {item}
+                  <span className="absolute bottom-0 left-0 w-0 h-0.5 bg-white group-hover:w-full transition-all duration-300" />
+                </motion.button>
+              ))}
+              
+              <div className="flex space-x-3 lg:space-x-4">
+                <motion.button
+                  whileHover={{ scale: 1.05 }}
+                  whileTap={{ scale: 0.95 }}
+                  onClick={() => handleButtonClick("login", handleLoginClick)}
+                  className={`bg-white text-[#057DCD] px-4 lg:px-6 py-2 lg:py-2.5 rounded-full font-semibold text-sm lg:text-base hover:bg-blue-50 transition-all duration-200 shadow-lg ${
+                    activeButton === "login" ? "scale-95" : ""
+                  }`}
+                >
+                  Login
+                </motion.button>
+                <motion.button
+                  whileHover={{ scale: 1.05 }}
+                  whileTap={{ scale: 0.95 }}
+                  onClick={() => handleButtonClick("signup", handleSignupClick)}
+                  className={`bg-transparent border-2 border-white text-white px-4 lg:px-6 py-2 lg:py-2.5 rounded-full font-semibold text-sm lg:text-base hover:bg-white hover:text-[#057DCD] transition-all duration-200 ${
+                    activeButton === "signup" ? "scale-95" : ""
+                  }`}
+                >
+                  Sign Up
+                </motion.button>
               </div>
             </div>
 
-            {/* Legal Links - Hidden on Mobile */}
-            <div className="hidden md:flex flex-col md:w-[45%] lg:w-[40%] items-end justify-end pl-14 md:pt-14 lg:pt-0">
-              <h3 className="font-medium text-base lg:text-lg mb-4 md:mr-48 lg:mr-56">
-                Legal
-              </h3>
-              <div className="flex flex-col items-start space-y-3">
-                <div className="flex gap-6 font-light text-sm lg:text-base">
-                  <p className="hover:text-gray-200 cursor-pointer">
-                    Terms of Service
-                  </p>
-                  <p className="hover:text-gray-200 cursor-pointer">
-                    Cookies Policy
-                  </p>
-                </div>
-                <div className="flex gap-8 font-light text-sm lg:text-base">
-                  <p className="hover:text-gray-200 cursor-pointer">
-                    Privacy Policy
-                  </p>
-                  <p className="hover:text-gray-200 cursor-pointer">
-                    Data Processing
-                  </p>
-                </div>
-              </div>
-            </div>
-          </div>
-
-          {/* Footer Bottom Bar */}
-          <div className="w-[95%] absolute bottom-0 left-1/2 transform -translate-x-1/2 border-t border-white/30 flex justify-center items-center">
-            <div className="w-[98%] mx-auto py-4 px-2 lg:px-0">
-              <div className="flex flex-col md:flex-row justify-between items-center gap-6">
-                {/* Copyright */}
-                <p className="text-xs md:text-sm font-light text-white text-left">
-                  © 2024 Polycon Inc. All rights reserved.
-                </p>
-
-                {/* Social Icons */}
-                <div className="flex justify-center md:justify-end gap-6">
-                  <ul className="flex items-center gap-6">
-                    {/* Social Icons with hover effects */}
-                    <li>
-                      <svg
-                        className="w-5 h-5 text-white hover:text-gray-200 transition-colors cursor-pointer"
-                        aria-hidden="true"
-                        xmlns="http://www.w3.org/2000/svg"
-                        fill="currentColor"
-                        viewBox="0 0 24 24"
-                      >
-                        <path
-                          fillRule="evenodd"
-                          d="M12.037 21.998a10.313 10.313 0 0 1-7.168-3.049 9.888 9.888 0 0 1-2.868-7.118 9.947 9.947 0 0 1 3.064-6.949A10.37 10.37 0 0 1 12.212 2h.176a9.935 9.935 0 0 1 6.614 2.564L16.457 6.88a6.187 6.187 0 0 0-4.131-1.566 6.9 6.9 0 0 0-4.794 1.913 6.618 6.618 0 0 0-2.045 4.657 6.608 6.608 0 0 0 1.882 4.723 6.891 6.891 0 0 0 4.725 2.07h.143c1.41.072 2.8-.354 3.917-1.2a5.77 5.77 0 0 0 2.172-3.41l.043-.117H12.22v-3.41h9.678c.075.617.109 1.238.1 1.859-.099 5.741-4.017 9.6-9.746 9.6l-.215-.002Z"
-                          clipRule="evenodd"
-                        />
-                      </svg>
-                    </li>
-                    <li>
-                      <svg
-                        className="w-5 h-5 text-white hover:text-gray-200 transition-colors cursor-pointer"
-                        aria-hidden="true"
-                        xmlns="http://www.w3.org/2000/svg"
-                        fill="currentColor"
-                        viewBox="0 0 24 24"
-                      >
-                        <path
-                          fillRule="evenodd"
-                          d="M13.135 6H15V3h-1.865a4.147 4.147 0 0 0-4.142 4.142V9H7v3h2v9.938h3V12h2.021l.592-3H12V6.591A.6.6 0 0 1 12.592 6h.543Z"
-                          clipRule="evenodd"
-                        />
-                      </svg>
-                    </li>
-                    <li>
-                      <svg
-                        className="w-5 h-5 text-white hover:text-gray-200 transition-colors cursor-pointer"
-                        aria-hidden="true"
-                        xmlns="http://www.w3.org/2000/svg"
-                        fill="currentColor"
-                        viewBox="0 0 24 24"
-                      >
-                        <path
-                          fillRule="evenodd"
-                          d="M21.7 8.037a4.26 4.26 0 0 0-.789-1.964 2.84 2.84 0 0 0-1.984-.839c-2.767-.2-6.926-.2-6.926-.2s-4.157 0-6.928.2a2.836 2.836 0 0 0-1.983.839 4.225 4.225 0 0 0-.79 1.965 30.146 30.146 0 0 0-.2 3.206v1.5a30.12 30.12 0 0 0 .2 3.206c.094.712.364 1.39.784 1.972.604.536 1.38.837 2.187.848 1.583.151 6.731.2 6.731.2s4.161 0 6.928-.2a2.844 2.844 0 0 0 1.985-.84 4.27 4.27 0 0 0 .787-1.965 30.12 30.12 0 0 0 .2-3.206v-1.516a30.672 30.672 0 0 0-.202-3.206Zm-11.692 6.554v-5.62l5.4 2.819-5.4 2.801Z"
-                          clipRule="evenodd"
-                        />
-                      </svg>
-                    </li>
-                  </ul>
-                </div>
-              </div>
-            </div>
-          </div>
-        </div>
-      </footer>
-
-      <div className="fixed bottom-5 right-5 z-50">
-        <button
-          className="w-12 h-12 bg-[#057DCD] hover:bg-[#54BEFF] text-white text-3xl font-bold 
-            rounded-full shadow-lg hover:shadow-xl 
-            transform hover:scale-110
-            transition-all duration-300 ease-in-out
-            flex items-center justify-center
-            border-2 border-white
-            animate-bounce hover:animate-none"
-        >
-          <span>?</span>
-        </button>
-      </div>
-
-      {/* Modals */}
-      {showLoginModal || showSignupModal ? (
-        <div
-          className="fixed inset-0 bg-black bg-opacity-60 flex items-center justify-center animate-modal-fade z-50"
-          onClick={closeModal}
-        >
-          <div
-            className={`bg-white p-2 rounded-[20px] shadow-lg w-[90%] h-[88vh] md:w-[65%] md:h-[90vh] lg:w-[50%] lg:h-[94vh] relative overflow-hidden
-            ${
-              showLoginModal || showSignupModal ? "modal-enter" : "modal-exit"
-            }`}
-            onClick={(e) => e.stopPropagation()}
-          >
-            {/* Close button */}
-            <button
-              className={`absolute top-8 right-7 z-50`}
-              onClick={(e) => {
-                setXClicked(true);
-                setTimeout(() => {
-                  setXClicked(false);
-                  setTimeout(() => e.preventDefault(), closeModal(), 500);
-                }, 200);
-              }}
+            {/* Mobile Menu Button */}
+            <motion.button
+              whileTap={{ scale: 0.9 }}
+              onClick={() => setIsMenuOpen(!isMenuOpen)}
+              className="md:hidden text-white p-2"
             >
-              <svg
-                className="w-6 h-6 text-gray-500 hover:text-[#000000]"
-                aria-hidden="true"
-                xmlns="http://www.w3.org/2000/svg"
-                width="24"
-                height="24"
-                fill="none"
-                viewBox="0 0 24 24"
-              >
-                <path
-                  stroke="currentColor"
-                  strokeLinecap="round"
-                  strokeLinejoin="round"
-                  strokeWidth="4"
-                  d="M6 18 17.94 6M18 18 6.06 6"
-                />
+              <svg className="w-6 h-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                {isMenuOpen ? (
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+                ) : (
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 6h16M4 12h16M4 18h16" />
+                )}
               </svg>
-            </button>
-
-            {/* Login/Signup content */}
-            <div
-              className={`relative h-full ${
-                showSignupModal ? "slide-left" : ""
-              }`}
-            >
-              {showLoginModal && (
-                <div
-                  className={`absolute w-full h-full justify-center items-center ${
-                    showSignupModal ? "-translate-x-full" : "translate-x-0"
-                  } transition-transform duration-300`}
-                >
-                  <Login
-                    onLoginSuccess={closeModal}
-                    onSwitchToSignup={switchToSignup}
-                    onError={handleLoginError}
-                  />
-                </div>
-              )}
-
-              {showSignupModal && (
-                <div
-                  className={`absolute w-full h-full ${
-                    showLoginModal ? "translate-x-full" : "translate-x-0"
-                  } transition-transform duration-300`}
-                >
-                  <Signup
-                    onSwitchToLogin={switchToLogin}
-                    onError={handleSignupError}
-                  />
-                </div>
-              )}
-            </div>
-
-            {/* Error message display */}
-            {errorMessage && (
-              <p className="text-red-500 mt-4 text-center fade-in">
-                {errorMessage}
-              </p>
-            )}
-          </div>
-        </div>
-      ) : null}
-    </div>
-  );
-};
-
-const Nav = ({
-  handleLoginClick,
-  handleSignupClick,
-  handleSectionNavigation,
-}) => {
-  const [isMenuOpen, setIsMenuOpen] = useState(false);
-  const [SignUpClicked, setSignUpClicked] = useState(false);
-  const [LoginClicked, setLoginClicked] = useState(false);
-  const [ContactClicked, setContactClicked] = useState(false);
-  const [AboutClicked, setAboutClicked] = useState(false);
-
-  const toggleMenu = () => setIsMenuOpen(!isMenuOpen);
-
-  return (
-    <nav className="flex w-full justify-between items-center my-3">
-      <div
-        className={`w-[36.5%] sm:w-[30%] md:w-[90%] h-[15vh] lg:h-[18.5vh] relative transition-all duration-300`}
-      >
-        <div
-          className="rounded-br-[30px] md:rounded-br-[45px] lg:rounded-br-[60px] 
-                       rounded-tr-[30px] md:rounded-tr-[45px] lg:rounded-tr-[60px] 
-                       absolute bottom-0 right-0 left-0 
-                       flex justify-between items-center 
-                       h-[12vh] lg:h-[15vh] w-full 
-                       bg-[#057DCD] px-2.5 md:px-6 lg:px-8"
-        >
-          {/* Logo */}
-          <a href="#Body" className="flex-shrink-0">
-            <img
-              src={logo}
-              alt="Logo"
-              className="h-[80px] w-[80px] md:h-[100px] md:w-[100px] lg:h-[130px] lg:w-[130px] 
-                          object-contain transition-all duration-300"
-            />
-          </a>
-
-          {/* Mobile Menu Button */}
-          <button
-            onClick={toggleMenu}
-            className="md:hidden flex items-center justify-center"
-          >
-            <svg
-              className="w-8 h-8 text-white transition-transform duration-700 delay-300 ease-in-out" // Increased duration from 200 to 500
-              fill="none"
-              viewBox="0 0 24 24"
-              stroke="currentColor"
-            >
-              {isMenuOpen ? (
-                <path
-                  strokeLinecap="round"
-                  strokeLinejoin="round"
-                  strokeWidth={2.5}
-                  d="M6 18L18 6M6 6l12 12"
-                />
-              ) : (
-                <path
-                  strokeLinecap="round"
-                  strokeLinejoin="round"
-                  strokeWidth={2.5}
-                  d="M9 5l7 7-7 7"
-                />
-              )}
-            </svg>
-          </button>
-
-          {/* Desktop/Tablet Navigation */}
-          <div className="hidden md:flex items-center gap-6 lg:gap-8">
-            <ul className="flex items-center gap-4 lg:gap-[25px]">
-              <li>
-                <button
-                  onClick={() => {
-                    setContactClicked(true);
-                    setTimeout(() => setContactClicked(false), 200);
-                    handleSectionNavigation("Contact");
-                  }}
-                  className={`text-base lg:text-xl text-white font-medium focus:outline-none relative group 
-                           ${ContactClicked ? "scale-75" : "scale-100"}`}
-                >
-                  Contact
-                  <span
-                    className="block absolute bottom-0 left-0 w-0 h-[2px] bg-white transition-all duration-300 
-                                 ease-in-out group-hover:w-full"
-                  ></span>
-                </button>
-              </li>
-              <li>
-                <button
-                  onClick={() => {
-                    setAboutClicked(true);
-                    setTimeout(() => setAboutClicked(false), 200);
-                    handleSectionNavigation("About");
-                  }}
-                  className={`text-base lg:text-xl text-white font-medium focus:outline-none relative group 
-                           ${AboutClicked ? "scale-75" : "scale-100"}`}
-                >
-                  About
-                  <span
-                    className="block absolute bottom-0 left-0 w-0 h-[2px] bg-white transition-all duration-300 
-                                 ease-in-out group-hover:w-full"
-                  ></span>
-                </button>
-              </li>
-              <li>
-                <button
-                  onClick={() => {
-                    setLoginClicked(true);
-                    setTimeout(() => setLoginClicked(false), 300);
-                    handleLoginClick();
-                  }}
-                  className={`bg-white text-base lg:text-xl text-[#057DCD] w-[6rem] lg:w-[8rem] h-[45px] lg:h-[55px] 
-                           rounded-[50px] font-semibold transition-all duration-100 ease-in delay-50 
-                           hover:bg-[#54BEFF] hover:text-white ${
-                             LoginClicked ? "scale-90" : "scale-100"
-                           }`}
-                >
-                  Login
-                </button>
-              </li>
-              <li>
-                <button
-                  onClick={() => {
-                    setSignUpClicked(true);
-                    setTimeout(() => setSignUpClicked(false), 300);
-                    handleSignupClick();
-                  }}
-                  className={`bg-white text-base lg:text-xl text-[#057DCD] w-[6rem] lg:w-[8rem] h-[45px] lg:h-[55px] 
-                           rounded-[50px] font-semibold transition-all duration-100 ease-in delay-50 
-                           hover:bg-[#54BEFF] hover:text-white ${
-                             SignUpClicked ? "scale-90" : "scale-100"
-                           }`}
-                >
-                  Sign Up
-                </button>
-              </li>
-            </ul>
-          </div>
-        </div>
-
-        {/* Mobile Menu */}
-        <div
-          className={`fixed top-0 left-0 w-full h-screen bg-[#057DCD] transform transition-transform duration-700 delay-300 ease-in-out ${
-            isMenuOpen ? "translate-x-0" : "-translate-x-full"
-          } z-40 md:hidden`}
-        >
-          <button onClick={toggleMenu} className="absolute top-14 right-5 z-50">
-            <svg
-              className="w-8 h-8 text-white transition-transform duration-500 ease-in-out" // Increased duration from 200 to 500
-              fill="none"
-              viewBox="0 0 24 24"
-              stroke="currentColor"
-            >
-              <path
-                strokeLinecap="round"
-                strokeLinejoin="round"
-                strokeWidth={2.5}
-                d="M6 18L18 6M6 6l12 12"
-              />
-            </svg>
-          </button>
-          <div className="relative h-full w-full flex flex-col p-6 justify-center items-center">
-            <ul className="flex flex-col items-center gap-8 w-full">
-              <li>
-                <button
-                  onClick={() => {
-                    setContactClicked(true);
-                    setTimeout(() => {
-                      setContactClicked(false);
-                      handleSectionNavigation("Contact");
-                      setIsMenuOpen(false);
-                    }, 200);
-                  }}
-                  className={`text-lg text-white font-medium focus:outline-none relative group 
-                           ${ContactClicked ? "scale-90" : "scale-100"}`}
-                >
-                  Contact
-                  <span
-                    className="block absolute bottom-0 left-0 w-0 h-[2px] bg-white transition-all duration-300 
-                                 ease-in-out group-hover:w-full"
-                  ></span>
-                </button>
-              </li>
-              <li>
-                <button
-                  onClick={() => {
-                    setAboutClicked(true);
-                    setTimeout(() => {
-                      setAboutClicked(false);
-                      handleSectionNavigation("About");
-                      setIsMenuOpen(false);
-                    }, 200);
-                  }}
-                  className={`text-lg text-white font-medium focus:outline-none relative group 
-                           ${AboutClicked ? "scale-90" : "scale-100"}`}
-                >
-                  About
-                  <span
-                    className="block absolute bottom-0 left-0 w-0 h-[2px] bg-white transition-all duration-300 
-                                 ease-in-out group-hover:w-full"
-                  ></span>
-                </button>
-              </li>
-              <li>
-                <button
-                  onClick={() => {
-                    setLoginClicked(true);
-                    setTimeout(() => {
-                      setLoginClicked(false);
-                      handleLoginClick();
-                      setIsMenuOpen(false);
-                    }, 300);
-                  }}
-                  className={`bg-white text-base text-[#057DCD] w-[12rem] h-[45px] 
-                           rounded-[50px] font-semibold transition-all duration-100 ease-in delay-50 
-                           hover:bg-[#54BEFF] hover:text-white ${
-                             LoginClicked ? "scale-90" : "scale-100"
-                           }`}
-                >
-                  Login
-                </button>
-              </li>
-              <li>
-                <button
-                  onClick={() => {
-                    setSignUpClicked(true);
-                    setTimeout(() => {
-                      setSignUpClicked(false);
-                      handleSignupClick();
-                      setIsMenuOpen(false);
-                    }, 300);
-                  }}
-                  className={`bg-white text-base text-[#057DCD] w-[12rem] h-[45px] 
-                           rounded-[50px] font-semibold transition-all duration-100 ease-in delay-50 
-                           hover:bg-[#54BEFF] hover:text-white ${
-                             SignUpClicked ? "scale-90" : "scale-100"
-                           }`}
-                >
-                  Sign Up
-                </button>
-              </li>
-            </ul>
+            </motion.button>
           </div>
         </div>
       </div>
-    </nav>
+
+      {/* Mobile Menu */}
+      <AnimatePresence>
+        {isMenuOpen && (
+          <motion.div
+            initial={{ opacity: 0, y: -20 }}
+            animate={{ opacity: 1, y: 0 }}
+            exit={{ opacity: 0, y: -20 }}
+            className="md:hidden absolute top-full left-0 w-full bg-white shadow-xl z-40"
+          >
+            <div className="px-4 sm:px-6 py-6 sm:py-8 space-y-4 sm:space-y-6">
+              {["About", "Contact"].map((item) => (
+                <button
+                  key={item}
+                  onClick={() => handleButtonClick(item.toLowerCase(), () => handleSectionNavigation(item))}
+                  className="block w-full text-left text-gray-700 font-medium hover:text-[#057DCD] transition-colors py-2"
+                >
+                  {item}
+                </button>
+              ))}
+              <div className="space-y-3 sm:space-y-4 pt-3 sm:pt-4 border-t">
+                <button
+                  onClick={() => handleButtonClick("login", handleLoginClick)}
+                  className="w-full bg-[#057DCD] text-white py-3 rounded-full font-semibold hover:bg-[#046bb8] transition-colors"
+                >
+                  Login
+                </button>
+                <button
+                  onClick={() => handleButtonClick("signup", handleSignupClick)}
+                  className="w-full border-2 border-[#057DCD] text-[#057DCD] py-3 rounded-full font-semibold hover:bg-[#057DCD] hover:text-white transition-colors"
+                >
+                  Sign Up
+                </button>
+              </div>
+            </div>
+          </motion.div>
+        )}
+      </AnimatePresence>
+    </motion.nav>
   );
 };
 
-const Body = () => {
+// Enhanced Hero Section
+const Hero = () => {
   const images = [Consult1, Consult2, Consult3];
   const [currentImage, setCurrentImage] = useState(0);
-  const [isFading, setIsFading] = useState(false);
 
   useEffect(() => {
     const interval = setInterval(() => {
-      setIsFading(true);
-
-      setTimeout(() => {
-        setCurrentImage((prevIndex) => (prevIndex + 1) % images.length);
-        setIsFading(false);
-      }, 300);
-    }, 3000);
-
+      setCurrentImage((prev) => (prev + 1) % images.length);
+    }, 5000);
     return () => clearInterval(interval);
   }, []);
 
   return (
-    <div
+    <motion.section
+      initial={{ opacity: 0 }}
+      animate={{ opacity: 1 }}
+      transition={{ duration: 0.8 }}
+      className="relative min-h-screen flex items-center justify-center overflow-hidden pt-8 sm:pt-12 md:pt-16"
       id="Body"
-      className="flex flex-col md:flex-row w-full justify-between items-center mt-10"
     >
-      <div className="w-full h-[48rem] sm:h-[45rem] md:h-[38rem] lg:h-[40rem] relative">
-        <div
-          className="rounded-[25px] w-[94%] h-[42rem] sm:h-[40rem] md:h-[35rem] lg:h-[36rem] bg-[#057DCD] mx-auto
-      absolute right-0 left-0 top-0 flex flex-col md:flex-row justify-between items-center p-2"
-        >
-          <div className="w-full md:w-[50%] min-h-[16rem] sm:min-h-[16rem] md:h-[30rem] lg:h-[33rem] md:flex md:flex-col text-[#ffffff] text-justify md:items-center md:justify-center px-2 md:px-0 md:pr-3 mt-6 md:mt-0 mx-auto order-1 md:order-none">
-            <h1 className="text-xl md:text-[2rem] lg:text-[3rem] font-extrabold leading-tight w-full md:w-[90%]">
-              POLYCON:
-              <br /> CONSULTATION <br className="hidden md:block" /> SYSTEM
-            </h1>
-            <h3 className="mt-2 text:base lg:text-lg w-full md:w-[93%]">
-              Our consultation system simplifies the process of booking
-              appointments, whether for individual consultations or group
-              sessions.
-            </h3>
-            <h6 className="mt-3 text-xs lg:text-sm font-light w-full md:w-[93%]">
-              Designed to enhance convenience and efficiency, it ensures
-              seamless scheduling, real-time updates, and a hassle-free
-              experience for both teachers and students. With user-friendly
-              features and an intuitive interface, our system makes managing
-              consultations effortless.
-            </h6>
-          </div>
+      {/* Background Elements */}
+      <div className="absolute inset-0 bg-gradient-to-br from-[#057DCD] via-[#046bb8] to-[#034a94]" />
+      <div className="absolute inset-0 bg-black bg-opacity-20" />
+      
+      {/* Floating Elements */}
+      <motion.div
+        animate={{ 
+          y: [0, -20, 0],
+          rotate: [0, 5, 0]
+        }}
+        transition={{ 
+          duration: 6,
+          repeat: Infinity,
+          ease: "easeInOut"
+        }}
+        className="absolute top-20 left-10 w-20 h-20 bg-blue-400 rounded-full opacity-20"
+      />
+      <motion.div
+        animate={{ 
+          y: [0, 30, 0],
+          rotate: [0, -5, 0]
+        }}
+        transition={{ 
+          duration: 8,
+          repeat: Infinity,
+          ease: "easeInOut"
+        }}
+        className="absolute bottom-20 right-10 w-32 h-32 bg-blue-300 rounded-full opacity-15"
+      />
 
-          <div className="w-[92%] h-[25rem] md:h-[37rem] md:w-[70%] lg:h-[38rem] lg:w-[50%] rounded-[25px] overflow-hidden absolute bottom-[-10vh] md:bottom-0 md:right-3 md:relative md:mt-[4.5rem] lg:mt-[5.2rem] order-2 md:order-none">
-            <img
-              src={images[currentImage]}
-              alt="Consultation Image"
-              className={`absolute top-0 left-0 h-full w-full object-fill transition-opacity duration-1000 ease-in-out ${
-                isFading ? "opacity-0" : "opacity-100"
-              }`}
-            />
-            <div className="absolute inset-0 bg-gradient-to-b from-white to-[#005B98] opacity-50"></div>
-          </div>
+      <div className="relative z-10 max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 pt-4 sm:pt-8">
+        <div className="grid lg:grid-cols-2 gap-8 lg:gap-12 items-center">
+          {/* Content */}
+          <motion.div
+            initial={{ opacity: 0, x: -50 }}
+            animate={{ opacity: 1, x: 0 }}
+            transition={{ duration: 0.8, delay: 0.2 }}
+            className="text-white space-y-4 sm:space-y-6"
+          >
+            <motion.h1
+              initial={{ opacity: 0, y: 30 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ duration: 0.8, delay: 0.4 }}
+              className="text-3xl sm:text-4xl md:text-5xl lg:text-6xl font-bold leading-tight"
+            >
+              POLYCON
+              <span className="block text-2xl sm:text-3xl md:text-4xl lg:text-5xl font-light text-blue-200 mt-1 sm:mt-2">
+                Consultation System
+              </span>
+            </motion.h1>
+            
+            <motion.p
+              initial={{ opacity: 0, y: 30 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ duration: 0.8, delay: 0.6 }}
+              className="text-lg sm:text-xl md:text-2xl text-blue-100"
+            >
+              Simplifying appointment booking for seamless consultations
+            </motion.p>
+            
+            <motion.p
+              initial={{ opacity: 0, y: 30 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ duration: 0.8, delay: 0.8 }}
+              className="text-base sm:text-lg text-blue-200 leading-relaxed"
+            >
+              Experience effortless scheduling with real-time updates, intuitive interface, 
+              and hassle-free appointment management for both teachers and students.
+            </motion.p>
+
+            <motion.div
+              initial={{ opacity: 0, y: 30 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ duration: 0.8, delay: 1 }}
+              className="flex flex-col sm:flex-row gap-3 sm:gap-4 pt-2"
+            >
+              <motion.button
+                whileHover={{ scale: 1.05 }}
+                whileTap={{ scale: 0.95 }}
+                className="bg-white text-[#057DCD] px-6 sm:px-8 py-3 sm:py-4 rounded-full font-semibold text-base sm:text-lg hover:bg-blue-50 transition-all duration-200 shadow-lg"
+              >
+                Get Started
+              </motion.button>
+              <motion.button
+                whileHover={{ scale: 1.05 }}
+                whileTap={{ scale: 0.95 }}
+                className="border-2 border-white text-white px-6 sm:px-8 py-3 sm:py-4 rounded-full font-semibold text-base sm:text-lg hover:bg-white hover:text-[#057DCD] transition-all duration-200"
+              >
+                Learn More
+              </motion.button>
+            </motion.div>
+          </motion.div>
+
+          {/* Image Carousel */}
+          <motion.div
+            initial={{ opacity: 0, x: 50 }}
+            animate={{ opacity: 1, x: 0 }}
+            transition={{ duration: 0.8, delay: 0.4 }}
+            className="relative mt-8 lg:mt-0"
+          >
+            <div className="relative w-full h-80 sm:h-96 lg:h-[500px] rounded-2xl lg:rounded-3xl overflow-hidden shadow-2xl">
+              <AnimatePresence mode="wait">
+                <motion.img
+                  key={currentImage}
+                  src={images[currentImage]}
+                  alt="Consultation"
+                  initial={{ opacity: 0, scale: 1.1 }}
+                  animate={{ opacity: 1, scale: 1 }}
+                  exit={{ opacity: 0, scale: 0.9 }}
+                  transition={{ duration: 0.5 }}
+                  className="absolute inset-0 w-full h-full object-cover"
+                />
+              </AnimatePresence>
+              <div className="absolute inset-0 bg-gradient-to-t from-blue-900/50 to-transparent" />
+            </div>
+            
+            {/* Image Indicators */}
+            <div className="flex justify-center mt-4 sm:mt-6 space-x-2">
+              {images.map((_, index) => (
+                <button
+                  key={index}
+                  onClick={() => setCurrentImage(index)}
+                  className={`w-3 h-3 rounded-full transition-all duration-200 ${
+                    index === currentImage ? 'bg-white' : 'bg-white/40'
+                  }`}
+                />
+              ))}
+            </div>
+          </motion.div>
         </div>
       </div>
-    </div>
+    </motion.section>
   );
 };
 
+// Enhanced About Section
 const About = ({ animateSection }) => {
   const images = [Image1, Image2, Image3];
-  const [currentImgAbout, setCurrentImgAbout] = useState(0);
-  const [isFading, setIsFading] = useState(false);
+  const [currentImage, setCurrentImage] = useState(0);
 
   useEffect(() => {
     const interval = setInterval(() => {
-      setIsFading(true);
-
-      setTimeout(() => {
-        setCurrentImgAbout((prevIndex) => (prevIndex + 1) % images.length);
-        setIsFading(false);
-      }, 300);
-    }, 3000);
-
+      setCurrentImage((prev) => (prev + 1) % images.length);
+    }, 4000);
     return () => clearInterval(interval);
   }, []);
+
   return (
-    <section
+    <motion.section
       id="About"
-      className={`flex w-full justify-between items-center ${
-        animateSection === "About" ? "animate-gentle" : ""
-      }`}
+      className={`py-12 sm:py-16 lg:py-20 bg-white ${animateSection === "About" ? "animate-gentle" : ""}`}
     >
-      <div className="w-full h-[46rem] md:h-[40rem] lg:h-[43rem] relative overflow-hidden items-center text-center">
-        {/* Header */}
-        <h1 className="font-bold text-2xl md:text-3xl lg:text-4xl text-[#057DCD] text-center mt-2 md:mt-8 mb-1">
-          About
-        </h1>
+      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+        <motion.div
+          initial={{ opacity: 0, y: 30 }}
+          whileInView={{ opacity: 1, y: 0 }}
+          transition={{ duration: 0.8 }}
+          viewport={{ once: true }}
+          className="text-center mb-8 sm:mb-12 lg:mb-16"
+        >
+          <h2 className="text-3xl sm:text-4xl lg:text-5xl font-bold text-[#057DCD] mb-4 sm:mb-6">
+            About POLYCON
+          </h2>
+          <div className="w-20 sm:w-24 h-1 bg-[#057DCD] mx-auto"></div>
+        </motion.div>
 
-        {/* Decorative elements with responsive positioning */}
-        <div className="rounded-[25px] bg-[#005B98] h-[10vh] lg:h-[13vh] w-[10%] lg:w-[8%] absolute top-[5%] md:top-[4%] right-[-4%] md:right-[1%] rotate-[30deg]"></div>
-        <div className="rounded-[25px] bg-[#057DCD] h-[25vh] w-[12%] justify-end hidden md:block absolute top-[82%] left-[92%] rotate-[20deg]"></div>
+        <div className="grid lg:grid-cols-2 gap-8 sm:gap-12 lg:gap-16 items-start">
+          <motion.div
+            initial={{ opacity: 0, x: -50 }}
+            whileInView={{ opacity: 1, x: 0 }}
+            transition={{ duration: 0.8 }}
+            viewport={{ once: true }}
+            className="order-2 lg:order-1"
+          >
+            <h3 className="text-xl sm:text-2xl lg:text-3xl font-bold text-gray-800 mb-4 sm:mb-6">
+              Innovative Solutions for Modern Education
+            </h3>
+            
+            <div className="space-y-4 sm:space-y-6 text-gray-600 leading-relaxed">
+              <p className="text-base sm:text-lg">
+                We are a group of passionate individuals dedicated to creating innovative 
+                solutions that address real-world challenges. POLYCON is the result of our 
+                collective effort to design a system that simplifies processes and enhances communication.
+              </p>
+              
+              <p className="text-base sm:text-lg">
+                POLYCON reflects our belief in the potential of technology to bridge gaps 
+                and improve lives. Thank you for supporting our work!
+              </p>
+            </div>
+          </motion.div>
 
-        <div className="absolute right-0 left-0 flex flex-col justify-start md:justify-center items-center px-4 md:px-5 h-[42rem] md:h-[32.5rem] lg:h-[39rem]">
-          {/* Decorative elements */}
-          <div className="rounded-[15px] bg-[#54BEFF] h-[7vh] w-[16%] md:w-[10%] lg:w-[8%] absolute bottom-[41.2vh] md:bottom-[10vh] left-[-3%] md:left-[54%] lg:left-[52%] right-0 rotate-[15deg]"></div>
-          <div className="rounded-[25px] bg-[#057DCD] h-[14vh] md:h-[20vh] lg:h-[12vh] w-[36%] md:w-[36%] lg:w-[32%] justify-end absolute bottom-[-10vh] md:bottom-[-20vh] lg:bottom-[-5vh] left-[80%] md:left-[43%] right-0 rotate-[172deg]"></div>
+          <motion.div
+            initial={{ opacity: 0, x: 50 }}
+            whileInView={{ opacity: 1, x: 0 }}
+            transition={{ duration: 0.8 }}
+            viewport={{ once: true }}
+            className="relative order-1 lg:order-2"
+          >
+            <div className="relative w-full h-64 sm:h-80 lg:h-96 xl:h-[500px] rounded-2xl sm:rounded-3xl overflow-hidden shadow-2xl">
+              <AnimatePresence mode="wait">
+                <motion.img
+                  key={currentImage}
+                  src={images[currentImage]}
+                  alt="About POLYCON"
+                  initial={{ opacity: 0, scale: 1.1 }}
+                  animate={{ opacity: 1, scale: 1 }}
+                  exit={{ opacity: 0, scale: 0.9 }}
+                  transition={{ duration: 0.5 }}
+                  className="absolute inset-0 w-full h-full object-cover"
+                />
+              </AnimatePresence>
+              <div className="absolute inset-0 bg-gradient-to-t from-blue-900/30 to-transparent" />
+            </div>
+            
+            {/* Decorative Elements - Hidden on mobile for cleaner look */}
+            <motion.div
+              animate={{ rotate: 360 }}
+              transition={{ duration: 20, repeat: Infinity, ease: "linear" }}
+              className="hidden sm:block absolute -top-4 -right-4 w-16 h-16 lg:w-20 lg:h-20 bg-gradient-to-r from-blue-400 to-purple-400 rounded-full opacity-20"
+            />
+            <motion.div
+              animate={{ rotate: -360 }}
+              transition={{ duration: 25, repeat: Infinity, ease: "linear" }}
+              className="hidden sm:block absolute -bottom-4 -left-4 w-12 h-12 lg:w-16 lg:h-16 bg-gradient-to-r from-indigo-400 to-blue-400 rounded-full opacity-20"
+            />
+          </motion.div>
+        </div>
 
-          {/* Content Container */}
-          <div className="w-full flex justify-center md:justify-end md:w-full lg:mb-10 z-10">
-            <div className="w-[90%] md:w-[45%] lg:mr-5 flex-col text-justify items-center justify-center space-y-2">
-              <h3 className="font-medium text-base md:text-lg lg:text-2xl text-center w-full mb-2 md:mb-4">
-                POLYCON (Consultation System)
-              </h3>
+        {/* Dedicated Team Section */}
+        <motion.div
+          initial={{ opacity: 0, y: 50 }}
+          whileInView={{ opacity: 1, y: 0 }}
+          transition={{ duration: 0.8 }}
+          viewport={{ once: true }}
+          className="mt-12 sm:mt-16 lg:mt-20"
+        >
+          <div className="bg-gradient-to-r from-blue-50 to-indigo-50 p-4 sm:p-6 lg:p-8 rounded-xl">
+            <h4 className="text-xl sm:text-2xl font-bold text-gray-800 mb-6 sm:mb-8 text-center">Meet Our Team</h4>
+            
+            {/* Team Members Grid */}
+            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 sm:gap-6">
+              {/* David Paul Desuyo */}
+              <motion.div 
+                className="bg-white rounded-lg p-4 sm:p-6 shadow-lg hover:shadow-xl transition-all duration-300 transform hover:-translate-y-2"
+                whileHover={{ scale: 1.02 }}
+                initial={{ opacity: 0, y: 20 }}
+                whileInView={{ opacity: 1, y: 0 }}
+                transition={{ duration: 0.5, delay: 0.1 }}
+                viewport={{ once: true }}
+              >
+                <div className="text-center">
+                  {/* Profile Photo Placeholder */}
+                  <div className="w-16 h-16 sm:w-20 sm:h-20 mx-auto mb-3 sm:mb-4 bg-gradient-to-br from-blue-400 to-blue-600 rounded-full flex items-center justify-center text-white text-lg sm:text-2xl font-bold shadow-lg">
+                    DP
+                  </div>
+                  <h5 className="text-base sm:text-lg font-semibold text-gray-800 mb-1">David Paul Desuyo</h5>
+                  <p className="text-xs sm:text-sm font-medium text-[#057DCD] mb-2 sm:mb-3">Lead Developer & Project Manager</p>
+                  <p className="text-xs text-gray-600 italic leading-relaxed mb-3 sm:mb-4">
+                    "Innovation through dedication and continuous learning."
+                  </p>
+                  
+                  {/* Social Links */}
+                  <div className="flex justify-center space-x-2 sm:space-x-3">
+                    <motion.a
+                      whileHover={{ scale: 1.1 }}
+                      whileTap={{ scale: 0.9 }}
+                      href="https://github.com/xenhusk" // Replace with actual GitHub URL
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      className="bg-gray-800 text-white p-1.5 sm:p-2 rounded-full hover:bg-gray-700 transition-colors duration-200"
+                    >
+                      <svg className="w-3 h-3 sm:w-4 sm:h-4" fill="currentColor" viewBox="0 0 24 24">
+                        <path d="M12 0c-6.626 0-12 5.373-12 12 0 5.302 3.438 9.8 8.207 11.387.599.111.793-.261.793-.577v-2.234c-3.338.726-4.033-1.416-4.033-1.416-.546-1.387-1.333-1.756-1.333-1.756-1.089-.745.083-.729.083-.729 1.205.084 1.839 1.237 1.839 1.237 1.07 1.834 2.807 1.304 3.492.997.107-.775.418-1.305.762-1.604-2.665-.305-5.467-1.334-5.467-5.931 0-1.311.469-2.381 1.236-3.221-.124-.303-.535-1.524.117-3.176 0 0 1.008-.322 3.301 1.23.957-.266 1.983-.399 3.003-.404 1.02.005 2.047.138 3.006.404 2.291-1.552 3.297-1.23 3.297-1.23.653 1.653.242 2.874.118 3.176.77.84 1.235 1.911 1.235 3.221 0 4.609-2.807 5.624-5.479 5.921.43.372.823 1.102.823 2.222v3.293c0 .319.192.694.801.576 4.765-1.589 8.199-6.086 8.199-11.386 0-6.627-5.373-12-12-12z"/>
+                      </svg>
+                    </motion.a>
+                    <motion.a
+                      whileHover={{ scale: 1.1 }}
+                      whileTap={{ scale: 0.9 }}
+                      href="https://linkedin.com/in/xenhusk" // Replace with actual LinkedIn URL
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      className="bg-[#0077B5] text-white p-1.5 sm:p-2 rounded-full hover:bg-[#005885] transition-colors duration-200"
+                    >
+                      <svg className="w-3 h-3 sm:w-4 sm:h-4" fill="currentColor" viewBox="0 0 24 24">
+                        <path d="M20.447 20.452h-3.554v-5.569c0-1.328-.027-3.037-1.852-3.037-1.853 0-2.136 1.445-2.136 2.939v5.667H9.351V9h3.414v1.561h.046c.477-.9 1.637-1.85 3.37-1.85 3.601 0 4.267 2.37 4.267 5.455v6.286zM5.337 7.433c-1.144 0-2.063-.926-2.063-2.065 0-1.138.92-2.063 2.063-2.063 1.14 0 2.064.925 2.064 2.063 0 1.139-.925 2.065-2.064 2.065zm1.782 13.019H3.555V9h3.564v11.452zM22.225 0H1.771C.792 0 0 .774 0 1.729v20.542C0 23.227.792 24 1.771 24h20.451C23.2 24 24 23.227 24 22.271V1.729C24 .774 23.2 0 22.222 0h.003z"/>
+                      </svg>
+                    </motion.a>
+                    <motion.a
+                      whileHover={{ scale: 1.1 }}
+                      whileTap={{ scale: 0.9 }}
+                      href="https://discord.com/users/987379502374084610" // Replace with actual Discord URL
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      className="bg-[#5865F2] text-white p-1.5 sm:p-2 rounded-full hover:bg-[#4752C4] transition-colors duration-200"
+                    >
+                      <svg className="w-3 h-3 sm:w-4 sm:h-4" fill="currentColor" viewBox="0 0 24 24">
+                        <path d="M20.317 4.37a19.791 19.791 0 0 0-4.885-1.515a.074.074 0 0 0-.079.037c-.21.375-.444.864-.608 1.25a18.27 18.27 0 0 0-5.487 0a12.64 12.64 0 0 0-.617-1.25a.077.077 0 0 0-.079-.037A19.736 19.736 0 0 0 3.677 4.37a.07.07 0 0 0-.032.027C.533 9.046-.32 13.58.099 18.057a.082.082 0 0 0 .031.057a19.9 19.9 0 0 0 5.993 3.03a.078.078 0 0 0 .084-.028a14.09 14.09 0 0 0 1.226-1.994a.076.076 0 0 0-.041-.106a13.107 13.107 0 0 1-1.872-.892a.077.077 0 0 1-.008-.128a10.2 10.2 0 0 0 .372-.292a.074.074 0 0 1 .077-.01c3.928 1.793 8.18 1.793 12.062 0a.074.074 0 0 1 .078.01c.12.098.246.198.373.292a.077.077 0 0 1-.006.127a12.299 12.299 0 0 1-1.873.892a.077.077 0 0 0-.041.107c.36.698.772 1.362 1.225 1.993a.076.076 0 0 0 .084.028a19.839 19.839 0 0 0 6.002-3.03a.077.077 0 0 0 .032-.054c.5-5.177-.838-9.674-3.549-13.66a.061.061 0 0 0-.031-.03zM8.02 15.33c-1.183 0-2.157-1.085-2.157-2.419c0-1.333.956-2.419 2.157-2.419c1.21 0 2.176 1.096 2.157 2.42c0 1.333-.956 2.418-2.157 2.418zm7.975 0c-1.183 0-2.157-1.085-2.157-2.419c0-1.333.955-2.419 2.157-2.419c1.21 0 2.176 1.096 2.157 2.42c0 1.333-.946 2.418-2.157 2.418z"/>
+                      </svg>
+                    </motion.a>
+                  </div>
+                </div>
+              </motion.div>
 
-              <p className="text-[0.73rem] md:text-sm lg:text-base leading-relaxed w-full">
-                We are a group of passionate individuals dedicated to creating
-                innovative solutions that address real-world challenges. POLYCON
-                is the result of our collective effort to design a system that
-                simplifies processes and enhances communication.
-                <br />
-                <br className="hidden lg:block" />
-                The team behind POLYCON includes David Paul Desuyo, Kurt
-                Zhynkent Canja, Clark Jim Gabiota, and Kyrell Santillan.
-                Together, as the Develorant group, we are 3rd-year Bachelor of
-                Science in Computer Science students at STI West Negros
-                University.
-                <br />
-                <br className="hidden lg:block" />
-                POLYCON reflects our belief in the potential of technology to
-                bridge gaps and improve lives. Thank you for supporting our
-                work!
+              {/* Kurt Zhynkent Canja */}
+              <motion.div 
+                className="bg-white rounded-lg p-4 sm:p-6 shadow-lg hover:shadow-xl transition-all duration-300 transform hover:-translate-y-2"
+                whileHover={{ scale: 1.02 }}
+                initial={{ opacity: 0, y: 20 }}
+                whileInView={{ opacity: 1, y: 0 }}
+                transition={{ duration: 0.5, delay: 0.2 }}
+                viewport={{ once: true }}
+              >
+                <div className="text-center">
+                  {/* Profile Photo Placeholder */}
+                  <div className="w-16 h-16 sm:w-20 sm:h-20 mx-auto mb-3 sm:mb-4 bg-gradient-to-br from-green-400 to-green-600 rounded-full flex items-center justify-center text-white text-lg sm:text-2xl font-bold shadow-lg">
+                    KZ
+                  </div>
+                  <h5 className="text-base sm:text-lg font-semibold text-gray-800 mb-1">Kurt Zhynkent Canja</h5>
+                  <p className="text-xs sm:text-sm font-medium text-[#057DCD] mb-2 sm:mb-3">Systems Analyst</p>
+                  <p className="text-xs text-gray-600 italic leading-relaxed mb-3 sm:mb-4">
+                    "Building bridges between ideas and reality."
+                  </p>
+                  
+                  {/* Social Links */}
+                  <div className="flex justify-center space-x-3">
+                    <motion.a
+                      whileHover={{ scale: 1.1 }}
+                      whileTap={{ scale: 0.9 }}
+                      href="https://github.com/kurtzhynkentcanja" // Replace with actual GitHub URL
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      className="bg-gray-800 text-white p-2 rounded-full hover:bg-gray-700 transition-colors duration-200"
+                    >
+                      <svg className="w-4 h-4" fill="currentColor" viewBox="0 0 24 24">
+                        <path d="M12 0c-6.626 0-12 5.373-12 12 0 5.302 3.438 9.8 8.207 11.387.599.111.793-.261.793-.577v-2.234c-3.338.726-4.033-1.416-4.033-1.416-.546-1.387-1.333-1.756-1.333-1.756-1.089-.745.083-.729.083-.729 1.205.084 1.839 1.237 1.839 1.237 1.07 1.834 2.807 1.304 3.492.997.107-.775.418-1.305.762-1.604-2.665-.305-5.467-1.334-5.467-5.931 0-1.311.469-2.381 1.236-3.221-.124-.303-.535-1.524.117-3.176 0 0 1.008-.322 3.301 1.23.957-.266 1.983-.399 3.003-.404 1.02.005 2.047.138 3.006.404 2.291-1.552 3.297-1.23 3.297-1.23.653 1.653.242 2.874.118 3.176.77.84 1.235 1.911 1.235 3.221 0 4.609-2.807 5.624-5.479 5.921.43.372.823 1.102.823 2.222v3.293c0 .319.192.694.801.576 4.765-1.589 8.199-6.086 8.199-11.386 0-6.627-5.373-12-12-12z"/>
+                      </svg>
+                    </motion.a>
+                    <motion.a
+                      whileHover={{ scale: 1.1 }}
+                      whileTap={{ scale: 0.9 }}
+                      href="https://linkedin.com/in/kurtzhynkentcanja" // Replace with actual LinkedIn URL
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      className="bg-[#0077B5] text-white p-2 rounded-full hover:bg-[#005885] transition-colors duration-200"
+                    >
+                      <svg className="w-4 h-4" fill="currentColor" viewBox="0 0 24 24">
+                        <path d="M20.447 20.452h-3.554v-5.569c0-1.328-.027-3.037-1.852-3.037-1.853 0-2.136 1.445-2.136 2.939v5.667H9.351V9h3.414v1.561h.046c.477-.9 1.637-1.85 3.37-1.85 3.601 0 4.267 2.37 4.267 5.455v6.286zM5.337 7.433c-1.144 0-2.063-.926-2.063-2.065 0-1.138.92-2.063 2.063-2.063 1.14 0 2.064.925 2.064 2.063 0 1.139-.925 2.065-2.064 2.065zm1.782 13.019H3.555V9h3.564v11.452zM22.225 0H1.771C.792 0 0 .774 0 1.729v20.542C0 23.227.792 24 1.771 24h20.451C23.2 24 24 23.227 24 22.271V1.729C24 .774 23.2 0 22.222 0h.003z"/>
+                      </svg>
+                    </motion.a>
+                    <motion.a
+                      whileHover={{ scale: 1.1 }}
+                      whileTap={{ scale: 0.9 }}
+                      href="https://discord.com/users/kurtzhynkentcanja" // Replace with actual Discord URL
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      className="bg-[#5865F2] text-white p-2 rounded-full hover:bg-[#4752C4] transition-colors duration-200"
+                    >
+                      <svg className="w-4 h-4" fill="currentColor" viewBox="0 0 24 24">
+                        <path d="M20.317 4.37a19.791 19.791 0 0 0-4.885-1.515a.074.074 0 0 0-.079.037c-.21.375-.444.864-.608 1.25a18.27 18.27 0 0 0-5.487 0a12.64 12.64 0 0 0-.617-1.25a.077.077 0 0 0-.079-.037A19.736 19.736 0 0 0 3.677 4.37a.07.07 0 0 0-.032.027C.533 9.046-.32 13.58.099 18.057a.082.082 0 0 0 .031.057a19.9 19.9 0 0 0 5.993 3.03a.078.078 0 0 0 .084-.028a14.09 14.09 0 0 0 1.226-1.994a.076.076 0 0 0-.041-.106a13.107 13.107 0 0 1-1.872-.892a.077.077 0 0 1-.008-.128a10.2 10.2 0 0 0 .372-.292a.074.074 0 0 1 .077-.01c3.928 1.793 8.18 1.793 12.062 0a.074.074 0 0 1 .078.01c.12.098.246.198.373.292a.077.077 0 0 1-.006.127a12.299 12.299 0 0 1-1.873.892a.077.077 0 0 0-.041.107c.36.698.772 1.362 1.225 1.993a.076.076 0 0 0 .084.028a19.839 19.839 0 0 0 6.002-3.03a.077.077 0 0 0 .032-.054c.5-5.177-.838-9.674-3.549-13.66a.061.061 0 0 0-.031-.03zM8.02 15.33c-1.183 0-2.157-1.085-2.157-2.419c0-1.333.956-2.419 2.157-2.419c1.21 0 2.176 1.096 2.157 2.42c0 1.333-.956 2.418-2.157 2.418zm7.975 0c-1.183 0-2.157-1.085-2.157-2.419c0-1.333.955-2.419 2.157-2.419c1.21 0 2.176 1.096 2.157 2.42c0 1.333-.946 2.418-2.157 2.418z"/>
+                      </svg>
+                    </motion.a>
+                  </div>
+                </div>
+              </motion.div>
+
+              {/* Clark Jim Gabiota */}
+              <motion.div 
+                className="bg-white rounded-lg p-6 shadow-lg hover:shadow-xl transition-all duration-300 transform hover:-translate-y-2"
+                whileHover={{ scale: 1.02 }}
+                initial={{ opacity: 0, y: 20 }}
+                whileInView={{ opacity: 1, y: 0 }}
+                transition={{ duration: 0.5, delay: 0.3 }}
+                viewport={{ once: true }}
+              >
+                <div className="text-center">
+                  {/* Profile Photo Placeholder */}
+                  <div className="w-20 h-20 mx-auto mb-4 bg-gradient-to-br from-purple-400 to-purple-600 rounded-full flex items-center justify-center text-white text-2xl font-bold shadow-lg">
+                    CJ
+                  </div>
+                  <h5 className="text-lg font-semibold text-gray-800 mb-1">Clark Jim Gabiota</h5>
+                  <p className="text-sm font-medium text-[#057DCD] mb-3">Fullstack Developer</p>
+                  <p className="text-xs text-gray-600 italic leading-relaxed mb-4">
+                    "Crafting robust solutions with elegant code."
+                  </p>
+                  
+                  {/* Social Links */}
+                  <div className="flex justify-center space-x-3">
+                    <motion.a
+                      whileHover={{ scale: 1.1 }}
+                      whileTap={{ scale: 0.9 }}
+                      href="https://github.com/clarkjimgabiota" // Replace with actual GitHub URL
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      className="bg-gray-800 text-white p-2 rounded-full hover:bg-gray-700 transition-colors duration-200"
+                    >
+                      <svg className="w-4 h-4" fill="currentColor" viewBox="0 0 24 24">
+                        <path d="M12 0c-6.626 0-12 5.373-12 12 0 5.302 3.438 9.8 8.207 11.387.599.111.793-.261.793-.577v-2.234c-3.338.726-4.033-1.416-4.033-1.416-.546-1.387-1.333-1.756-1.333-1.756-1.089-.745.083-.729.083-.729 1.205.084 1.839 1.237 1.839 1.237 1.07 1.834 2.807 1.304 3.492.997.107-.775.418-1.305.762-1.604-2.665-.305-5.467-1.334-5.467-5.931 0-1.311.469-2.381 1.236-3.221-.124-.303-.535-1.524.117-3.176 0 0 1.008-.322 3.301 1.23.957-.266 1.983-.399 3.003-.404 1.02.005 2.047.138 3.006.404 2.291-1.552 3.297-1.23 3.297-1.23.653 1.653.242 2.874.118 3.176.77.84 1.235 1.911 1.235 3.221 0 4.609-2.807 5.624-5.479 5.921.43.372.823 1.102.823 2.222v3.293c0 .319.192.694.801.576 4.765-1.589 8.199-6.086 8.199-11.386 0-6.627-5.373-12-12-12z"/>
+                      </svg>
+                    </motion.a>
+                    <motion.a
+                      whileHover={{ scale: 1.1 }}
+                      whileTap={{ scale: 0.9 }}
+                      href="https://linkedin.com/in/clarkjimgabiota" // Replace with actual LinkedIn URL
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      className="bg-[#0077B5] text-white p-2 rounded-full hover:bg-[#005885] transition-colors duration-200"
+                    >
+                      <svg className="w-4 h-4" fill="currentColor" viewBox="0 0 24 24">
+                        <path d="M20.447 20.452h-3.554v-5.569c0-1.328-.027-3.037-1.852-3.037-1.853 0-2.136 1.445-2.136 2.939v5.667H9.351V9h3.414v1.561h.046c.477-.9 1.637-1.85 3.37-1.85 3.601 0 4.267 2.37 4.267 5.455v6.286zM5.337 7.433c-1.144 0-2.063-.926-2.063-2.065 0-1.138.92-2.063 2.063-2.063 1.14 0 2.064.925 2.064 2.063 0 1.139-.925 2.065-2.064 2.065zm1.782 13.019H3.555V9h3.564v11.452zM22.225 0H1.771C.792 0 0 .774 0 1.729v20.542C0 23.227.792 24 1.771 24h20.451C23.2 24 24 23.227 24 22.271V1.729C24 .774 23.2 0 22.222 0h.003z"/>
+                      </svg>
+                    </motion.a>
+                    <motion.a
+                      whileHover={{ scale: 1.1 }}
+                      whileTap={{ scale: 0.9 }}
+                      href="https://discord.com/users/clarkjimgabiota" // Replace with actual Discord URL
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      className="bg-[#5865F2] text-white p-2 rounded-full hover:bg-[#4752C4] transition-colors duration-200"
+                    >
+                      <svg className="w-4 h-4" fill="currentColor" viewBox="0 0 24 24">
+                        <path d="M20.317 4.37a19.791 19.791 0 0 0-4.885-1.515a.074.074 0 0 0-.079.037c-.21.375-.444.864-.608 1.25a18.27 18.27 0 0 0-5.487 0a12.64 12.64 0 0 0-.617-1.25a.077.077 0 0 0-.079-.037A19.736 19.736 0 0 0 3.677 4.37a.07.07 0 0 0-.032.027C.533 9.046-.32 13.58.099 18.057a.082.082 0 0 0 .031.057a19.9 19.9 0 0 0 5.993 3.03a.078.078 0 0 0 .084-.028a14.09 14.09 0 0 0 1.226-1.994a.076.076 0 0 0-.041-.106a13.107 13.107 0 0 1-1.872-.892a.077.077 0 0 1-.008-.128a10.2 10.2 0 0 0 .372-.292a.074.074 0 0 1 .077-.01c3.928 1.793 8.18 1.793 12.062 0a.074.074 0 0 1 .078.01c.12.098.246.198.373.292a.077.077 0 0 1-.006.127a12.299 12.299 0 0 1-1.873.892a.077.077 0 0 0-.041.107c.36.698.772 1.362 1.225 1.993a.076.076 0 0 0 .084.028a19.839 19.839 0 0 0 6.002-3.03a.077.077 0 0 0 .032-.054c.5-5.177-.838-9.674-3.549-13.66a.061.061 0 0 0-.031-.03zM8.02 15.33c-1.183 0-2.157-1.085-2.157-2.419c0-1.333.956-2.419 2.157-2.419c1.21 0 2.176 1.096 2.157 2.42c0 1.333-.956 2.418-2.157 2.418zm7.975 0c-1.183 0-2.157-1.085-2.157-2.419c0-1.333.955-2.419 2.157-2.419c1.21 0 2.176 1.096 2.157 2.42c0 1.333-.946 2.418-2.157 2.418z"/>
+                      </svg>
+                    </motion.a>
+                  </div>
+                </div>
+              </motion.div>
+
+              {/* Kyrell Santillan */}
+              <motion.div 
+                className="bg-white rounded-lg p-6 shadow-lg hover:shadow-xl transition-all duration-300 transform hover:-translate-y-2"
+                whileHover={{ scale: 1.02 }}
+                initial={{ opacity: 0, y: 20 }}
+                whileInView={{ opacity: 1, y: 0 }}
+                transition={{ duration: 0.5, delay: 0.4 }}
+                viewport={{ once: true }}
+              >
+                <div className="text-center">
+                  {/* Profile Photo Placeholder */}
+                  <div className="w-20 h-20 mx-auto mb-4 bg-gradient-to-br from-orange-400 to-orange-600 rounded-full flex items-center justify-center text-white text-2xl font-bold shadow-lg">
+                    KS
+                  </div>
+                  <h5 className="text-lg font-semibold text-gray-800 mb-1">Kyrell Santillan</h5>
+                  <p className="text-sm font-medium text-[#057DCD] mb-3">Frontend Developer</p>
+                  <p className="text-xs text-gray-600 italic leading-relaxed mb-4">
+                    "Designing experiences that inspire and engage."
+                  </p>
+                  
+                  {/* Social Links */}
+                  <div className="flex justify-center space-x-3">
+                    <motion.a
+                      whileHover={{ scale: 1.1 }}
+                      whileTap={{ scale: 0.9 }}
+                      href="https://github.com/kyrellsantillan" // Replace with actual GitHub URL
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      className="bg-gray-800 text-white p-2 rounded-full hover:bg-gray-700 transition-colors duration-200"
+                    >
+                      <svg className="w-4 h-4" fill="currentColor" viewBox="0 0 24 24">
+                        <path d="M12 0c-6.626 0-12 5.373-12 12 0 5.302 3.438 9.8 8.207 11.387.599.111.793-.261.793-.577v-2.234c-3.338.726-4.033-1.416-4.033-1.416-.546-1.387-1.333-1.756-1.333-1.756-1.089-.745.083-.729.083-.729 1.205.084 1.839 1.237 1.839 1.237 1.07 1.834 2.807 1.304 3.492.997.107-.775.418-1.305.762-1.604-2.665-.305-5.467-1.334-5.467-5.931 0-1.311.469-2.381 1.236-3.221-.124-.303-.535-1.524.117-3.176 0 0 1.008-.322 3.301 1.23.957-.266 1.983-.399 3.003-.404 1.02.005 2.047.138 3.006.404 2.291-1.552 3.297-1.23 3.297-1.23.653 1.653.242 2.874.118 3.176.77.84 1.235 1.911 1.235 3.221 0 4.609-2.807 5.624-5.479 5.921.43.372.823 1.102.823 2.222v3.293c0 .319.192.694.801.576 4.765-1.589 8.199-6.086 8.199-11.386 0-6.627-5.373-12-12-12z"/>
+                      </svg>
+                    </motion.a>
+                    <motion.a
+                      whileHover={{ scale: 1.1 }}
+                      whileTap={{ scale: 0.9 }}
+                      href="https://linkedin.com/in/kyrellsantillan" // Replace with actual LinkedIn URL
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      className="bg-[#0077B5] text-white p-2 rounded-full hover:bg-[#005885] transition-colors duration-200"
+                    >
+                      <svg className="w-4 h-4" fill="currentColor" viewBox="0 0 24 24">
+                        <path d="M20.447 20.452h-3.554v-5.569c0-1.328-.027-3.037-1.852-3.037-1.853 0-2.136 1.445-2.136 2.939v5.667H9.351V9h3.414v1.561h.046c.477-.9 1.637-1.85 3.37-1.85 3.601 0 4.267 2.37 4.267 5.455v6.286zM5.337 7.433c-1.144 0-2.063-.926-2.063-2.065 0-1.138.92-2.063 2.063-2.063 1.14 0 2.064.925 2.064 2.063 0 1.139-.925 2.065-2.064 2.065zm1.782 13.019H3.555V9h3.564v11.452zM22.225 0H1.771C.792 0 0 .774 0 1.729v20.542C0 23.227.792 24 1.771 24h20.451C23.2 24 24 23.227 24 22.271V1.729C24 .774 23.2 0 22.222 0h.003z"/>
+                      </svg>
+                    </motion.a>
+                    <motion.a
+                      whileHover={{ scale: 1.1 }}
+                      whileTap={{ scale: 0.9 }}
+                      href="https://discord.com/users/kyrellsantillan" // Replace with actual Discord URL
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      className="bg-[#5865F2] text-white p-2 rounded-full hover:bg-[#4752C4] transition-colors duration-200"
+                    >
+                      <svg className="w-4 h-4" fill="currentColor" viewBox="0 0 24 24">
+                        <path d="M20.317 4.37a19.791 19.791 0 0 0-4.885-1.515a.074.074 0 0 0-.079.037c-.21.375-.444.864-.608 1.25a18.27 18.27 0 0 0-5.487 0a12.64 12.64 0 0 0-.617-1.25a.077.077 0 0 0-.079-.037A19.736 19.736 0 0 0 3.677 4.37a.07.07 0 0 0-.032.027C.533 9.046-.32 13.58.099 18.057a.082.082 0 0 0 .031.057a19.9 19.9 0 0 0 5.993 3.03a.078.078 0 0 0 .084-.028a14.09 14.09 0 0 0 1.226-1.994a.076.076 0 0 0-.041-.106a13.107 13.107 0 0 1-1.872-.892a.077.077 0 0 1-.008-.128a10.2 10.2 0 0 0 .372-.292a.074.074 0 0 1 .077-.01c3.928 1.793 8.18 1.793 12.062 0a.074.074 0 0 1 .078.01c.12.098.246.198.373.292a.077.077 0 0 1-.006.127a12.299 12.299 0 0 1-1.873.892a.077.077 0 0 0-.041.107c.36.698.772 1.362 1.225 1.993a.076.076 0 0 0 .084.028a19.839 19.839 0 0 0 6.002-3.03a.077.077 0 0 0 .032-.054c.5-5.177-.838-9.674-3.549-13.66a.061.061 0 0 0-.031-.03zM8.02 15.33c-1.183 0-2.157-1.085-2.157-2.419c0-1.333.956-2.419 2.157-2.419c1.21 0 2.176 1.096 2.157 2.42c0 1.333-.956 2.418-2.157 2.418zm7.975 0c-1.183 0-2.157-1.085-2.157-2.419c0-1.333.955-2.419 2.157-2.419c1.21 0 2.176 1.096 2.157 2.42c0 1.333-.946 2.418-2.157 2.418z"/>
+                      </svg>
+                    </motion.a>
+                  </div>
+                </div>
+              </motion.div>
+            </div>
+
+            {/* Team Description */}
+            <div className="mt-8 text-center">
+              <p className="text-sm text-gray-700 leading-relaxed">
+                Together, as the <span className="font-semibold text-[#057DCD]">Develorant group</span>, 
+                we are 3rd-year Bachelor of Science in Computer Science students at 
+                <span className="font-medium"> STI West Negros University</span>.
               </p>
             </div>
           </div>
+        </motion.div>
+      </div>
+    </motion.section>
+  );
+};
 
-          {/* Image Container */}
-          <div className="w-[100%] h-[26rem] md:w-[50%] md:h-[30rem] lg:h-[36rem] absolute bottom-0 right-0 left-0 z-10">
-            <img
-              src={images[currentImgAbout]}
-              alt="Consultation Image"
-              className={`absolute bottom-0 lg:bottom-[9%] left-[5%] md:left-[8%] 
-                h-[22rem] w-[90%]
-                md:h-[32rem] md:w-[96%] 
-                lg:h-[36rem] lg:w-[92%] 
-                rounded-[25px] object-cover transition-opacity duration-1000 ease-in-out ${
-                  isFading ? "opacity-0" : "opacity-100"
-                }`}
-            />
-            <div
-              className={`absolute bottom-0 lg:bottom-[9%] left-[5%] md:left-[8%] 
-                h-[22rem] w-[90%]
-                md:h-[32rem] md:w-[96%] 
-                lg:h-[36rem] lg:w-[92%] 
-                rounded-[25px] bg-gradient-to-b from-white to-[#005B98] opacity-50`}
-            />
-          </div>
+// Enhanced Contact Section
+const Contact = ({ animateSection }) => {
+  const [formData, setFormData] = useState({
+    firstName: '',
+    lastName: '',
+    email: '',
+    message: ''
+  });
 
-          {/* Background Element */}
-          <div className="w-[85%] md:w-[45%] h-[20rem] md:h-[24rem] lg:h-[28rem] bg-[#057DCD] rounded-tr-[20px] absolute bottom-[-15vh] md:bottom-[-12vh] left-0"></div>
+  const handleInputChange = (e) => {
+    setFormData({ ...formData, [e.target.name]: e.target.value });
+  };
+
+  const handleSubmit = (e) => {
+    e.preventDefault();
+    // Handle form submission
+  };
+
+  return (
+    <motion.section
+      id="Contact"
+      className={`py-20 bg-[#057DCD] ${animateSection === "Contact" ? "animate-gentle" : ""}`}
+    >
+      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+        <motion.div
+          initial={{ opacity: 0, y: 30 }}
+          whileInView={{ opacity: 1, y: 0 }}
+          transition={{ duration: 0.8 }}
+          viewport={{ once: true }}
+          className="text-center mb-16"
+        >
+          <h2 className="text-4xl md:text-5xl font-bold text-white mb-6">
+            Get In Touch
+          </h2>
+          <p className="text-xl text-blue-100 max-w-2xl mx-auto">
+            Have questions about POLYCON? We'd love to hear from you.
+          </p>
+        </motion.div>
+
+        <div className="grid lg:grid-cols-2 gap-16">
+          {/* Contact Info */}
+          <motion.div
+            initial={{ opacity: 0, x: -50 }}
+            whileInView={{ opacity: 1, x: 0 }}
+            transition={{ duration: 0.8 }}
+            viewport={{ once: true }}
+            className="space-y-8"
+          >
+            <div className="bg-white/10 backdrop-blur-sm rounded-2xl p-8">
+              <h3 className="text-2xl font-bold text-white mb-6">Visit Us</h3>
+              <div className="space-y-4">
+                <div className="flex items-start space-x-4">
+                  <div className="bg-white/20 p-3 rounded-full">
+                    <svg className="w-6 h-6 text-white" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z" />
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 11a3 3 0 11-6 0 3 3 0 016 0z" />
+                    </svg>
+                  </div>
+                  <div>
+                    <h4 className="text-white font-semibold mb-2">Our Location</h4>
+                    <p className="text-blue-100">
+                      Department (CICT), Service Bldg.<br />
+                      L N Agustin Dr, Bacolod, 6100 Negros Occidental
+                    </p>
+                  </div>
+                </div>
+                
+                <div className="flex items-start space-x-4">
+                  <div className="bg-white/20 p-3 rounded-full">
+                    <svg className="w-6 h-6 text-white" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" />
+                    </svg>
+                  </div>
+                  <div>
+                    <h4 className="text-white font-semibold mb-2">Office Hours</h4>
+                    <p className="text-blue-100">
+                      Monday - Friday: 8:00 AM - 5:00 PM<br />
+                      Saturday: 8:00 AM - 12:00 PM
+                    </p>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </motion.div>
+
+          {/* Contact Form */}
+          <motion.div
+            initial={{ opacity: 0, x: 50 }}
+            whileInView={{ opacity: 1, x: 0 }}
+            transition={{ duration: 0.8 }}
+            viewport={{ once: true }}
+          >
+            <div className="bg-white/10 backdrop-blur-sm rounded-2xl p-8">
+              <h3 className="text-2xl font-bold text-white mb-6">Send us a message</h3>
+              
+              <form onSubmit={handleSubmit} className="space-y-6">
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                  <div>
+                    <input
+                      type="text"
+                      name="firstName"
+                      placeholder="First Name"
+                      value={formData.firstName}
+                      onChange={handleInputChange}
+                      className="w-full px-4 py-3 bg-white/20 border border-white/30 rounded-xl text-white placeholder-white/70 focus:outline-none focus:border-white focus:bg-white/25 transition-all duration-200"
+                      required
+                    />
+                  </div>
+                  <div>
+                    <input
+                      type="text"
+                      name="lastName"
+                      placeholder="Last Name"
+                      value={formData.lastName}
+                      onChange={handleInputChange}
+                      className="w-full px-4 py-3 bg-white/20 border border-white/30 rounded-xl text-white placeholder-white/70 focus:outline-none focus:border-white focus:bg-white/25 transition-all duration-200"
+                      required
+                    />
+                  </div>
+                </div>
+                
+                <div>
+                  <input
+                    type="email"
+                    name="email"
+                    placeholder="Email Address"
+                    value={formData.email}
+                    onChange={handleInputChange}
+                    className="w-full px-4 py-3 bg-white/20 border border-white/30 rounded-xl text-white placeholder-white/70 focus:outline-none focus:border-white focus:bg-white/25 transition-all duration-200"
+                    required
+                  />
+                </div>
+                
+                <div>
+                  <textarea
+                    name="message"
+                    placeholder="Your message..."
+                    rows={5}
+                    value={formData.message}
+                    onChange={handleInputChange}
+                    className="w-full px-4 py-3 bg-white/20 border border-white/30 rounded-xl text-white placeholder-white/70 focus:outline-none focus:border-white focus:bg-white/25 transition-all duration-200 resize-none"
+                    required
+                  />
+                </div>
+                
+                <motion.button
+                  whileHover={{ scale: 1.05 }}
+                  whileTap={{ scale: 0.95 }}
+                  type="submit"
+                  className="w-full bg-white text-[#057DCD] py-4 rounded-xl font-semibold text-lg hover:bg-blue-50 transition-all duration-200 shadow-lg"
+                >
+                  Send Message
+                </motion.button>
+              </form>
+            </div>
+          </motion.div>
         </div>
       </div>
-    </section>
+    </motion.section>
+  );
+};
+
+// Enhanced Footer
+const Footer = () => {
+  return (
+    <footer className="bg-[#003d6b] text-white">
+      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-16">
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-12">
+          {/* Logo & Description */}
+          <div className="space-y-6">
+            <div className="flex items-center space-x-3">
+              <img src={logo} alt="POLYCON" className="h-12 w-12" />
+              <span className="text-2xl font-bold">POLYCON</span>
+            </div>
+            <p className="text-gray-300 leading-relaxed">
+              Streamlining consultation processes through innovative technology. 
+              Making appointment scheduling effortless for educational institutions.
+            </p>
+            <div className="flex space-x-4">
+              {/* Social Icons */}
+              {[
+                { icon: "M24 4.557c-.883.392-1.832.656-2.828.775 1.017-.609 1.798-1.574 2.165-2.724-.951.564-2.005.974-3.127 1.195-.897-.957-2.178-1.555-3.594-1.555-3.179 0-5.515 2.966-4.797 6.045-4.091-.205-7.719-2.165-10.148-5.144-1.29 2.213-.669 5.108 1.523 6.574-.806-.026-1.566-.247-2.229-.616-.054 2.281 1.581 4.415 3.949 4.89-.693.188-1.452.232-2.224.084.626 1.956 2.444 3.379 4.6 3.419-2.07 1.623-4.678 2.348-7.29 2.04 2.179 1.397 4.768 2.212 7.548 2.212 9.142 0 14.307-7.721 13.995-14.646.962-.695 1.797-1.562 2.457-2.549z" },
+                { icon: "M22.46 6c-.77.35-1.6.58-2.46.69.88-.53 1.56-1.37 1.88-2.38-.83.5-1.75.85-2.72 1.05C18.37 4.5 17.26 4 16 4c-2.35 0-4.27 1.92-4.27 4.29 0 .34.04.67.11.98C8.28 9.09 5.11 7.38 3 4.79c-.37.63-.58 1.37-.58 2.15 0 1.49.75 2.81 1.91 3.56-.71 0-1.37-.2-1.95-.5v.03c0 2.08 1.48 3.82 3.44 4.21a4.22 4.22 0 0 1-1.93.07 4.28 4.28 0 0 0 4 2.98 8.521 8.521 0 0 1-5.33 1.84c-.34 0-.68-.02-1.02-.06C3.44 20.29 5.7 21 8.12 21 16 21 20.33 14.46 20.33 8.79c0-.19 0-.37-.01-.56.84-.6 1.56-1.36 2.14-2.23z" },
+                { icon: "M12.017 0C5.396 0 .029 5.367.029 11.987c0 5.079 3.158 9.417 7.618 11.174-.105-.949-.199-2.403.041-3.439.219-.937 1.406-5.957 1.406-5.957s-.359-.72-.359-1.781c0-1.663.967-2.911 2.168-2.911 1.024 0 1.518.769 1.518 1.688 0 1.029-.653 2.567-.992 3.992-.285 1.193.6 2.165 1.775 2.165 2.128 0 3.768-2.245 3.768-5.487 0-2.861-2.063-4.869-5.008-4.869-3.41 0-5.409 2.562-5.409 5.199 0 1.033.394 2.143.889 2.741.099.12.112.225.085.345-.09.375-.293 1.199-.334 1.363-.053.225-.172.271-.402.165-1.495-.69-2.433-2.878-2.433-4.646 0-3.776 2.748-7.252 7.92-7.252 4.158 0 7.392 2.967 7.392 6.923 0 4.135-2.607 7.462-6.233 7.462-1.214 0-2.357-.629-2.75-1.378l-.748 2.853c-.271 1.043-1.002 2.35-1.492 3.146C9.57 23.812 10.763 24.009 12.017 24.009c6.624 0 11.99-5.367 11.99-11.988C24.007 5.367 18.641.001 12.017.001z" }
+              ].map((social, index) => (
+                <motion.a
+                  key={index}
+                  whileHover={{ scale: 1.2, rotate: 5 }}
+                  href="#"
+                  className="bg-white/10 p-3 rounded-full hover:bg-white/20 transition-colors duration-200"
+                >
+                  <svg className="w-5 h-5" fill="currentColor" viewBox="0 0 24 24">
+                    <path d={social.icon} />
+                  </svg>
+                </motion.a>
+              ))}
+            </div>
+          </div>
+
+          {/* Quick Links */}
+          <div>
+            <h3 className="text-xl font-bold mb-6">Quick Links</h3>
+            <ul className="space-y-4">
+              {["About Us", "Contact", "Privacy Policy", "Terms of Service"].map((link) => (
+                <li key={link}>
+                  <motion.a
+                    whileHover={{ x: 5 }}
+                    href="#"
+                    className="text-gray-300 hover:text-white transition-colors duration-200"
+                  >
+                    {link}
+                  </motion.a>
+                </li>
+              ))}
+            </ul>
+          </div>
+
+          {/* Contact Info */}
+          <div>
+            <h3 className="text-xl font-bold mb-6">Contact Info</h3>
+            <div className="space-y-4">
+              <p className="text-gray-300">
+                STI West Negros University<br />
+                Bacolod City, Philippines
+              </p>
+              <p className="text-gray-300">
+                Email: polycon@wnu.sti.edu.ph
+              </p>
+              <p className="text-gray-300">
+                Phone: +63 (034) 123-4567
+              </p>
+            </div>
+          </div>
+        </div>
+
+        <div className="border-t border-gray-600 mt-12 pt-8 text-center">
+          <p className="text-gray-400">
+            © 2024 POLYCON. All rights reserved. | Developed by Develorant Team
+          </p>
+        </div>
+      </div>
+    </footer>
+  );
+};
+
+// Help Button Component
+const HelpButton = () => {
+  return (
+    <motion.div
+      initial={{ scale: 0 }}
+      animate={{ scale: 1 }}
+      transition={{ delay: 1, type: "spring", stiffness: 200 }}
+      className="fixed bottom-8 right-8 z-50"
+    >
+      <motion.button
+        whileHover={{ scale: 1.1 }}
+        whileTap={{ scale: 0.9 }}
+        animate={{ 
+          y: [0, -10, 0],
+        }}
+        transition={{
+          y: {
+            duration: 2,
+            repeat: Infinity,
+            ease: "easeInOut"
+          }
+        }}
+        className="w-16 h-16 bg-[#057DCD] text-white rounded-full shadow-xl hover:shadow-2xl transition-shadow duration-300 flex items-center justify-center text-2xl font-bold"
+      >
+        ?
+      </motion.button>
+    </motion.div>
   );
 };
 

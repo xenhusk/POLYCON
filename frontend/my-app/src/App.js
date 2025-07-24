@@ -823,8 +823,8 @@ function App() {
           )
         }
         
-        {/* Network Monitor with toggle button */}
-        <NetworkMonitor visible={true} />
+        {/* Network Monitor - only visible in development */}
+        <NetworkMonitor visible={process.env.NODE_ENV === 'development'} />
         
         {/* REMOVE OR MODIFY THIS LINE - you can either:
             1. Comment it out entirely: */}

@@ -15,8 +15,7 @@ def generate_summary(text):
     prompt = (
         "Please read the following conversation transcript carefully. "
         "Generate a concise summary that captures the key points discussed during the session. "
-        "At the end of the summary, on a new line, state the overall sentiment of the session "
-        "as one of the following: POSITIVE, NEGATIVE, or NEUTRAL. Do not include the word 'Summary:' "
+        "Do not include the word 'Summary:' "
         "or any extraneous text in your output.\n\n"
         "Conversation Transcript:\n"
         f"{text}"

@@ -138,52 +138,62 @@ const Login = ({ onLoginSuccess, onSwitchToSignup }) => {
   };
 
   return (
-    <div className="w-[100%] h-full flex justify-center items-center font-poppins">
+    <div className="w-full h-full flex justify-center items-center font-poppins">
       {showForgotPassword ? (
         <ForgotPassword onClose={() => setShowForgotPassword(false)} />
       ) : (
-        <form onSubmit={handleLogin} className="flex flex-col w-[90%] md:w-[80%] lg:w-[76%] mx-auto p-4">
-          <img src={logo} alt="Logo" className="h-[100px] w-[100px] md:h-[130px] md:w-[130px] mx-auto"/>
-          <h2 className="text-center text-base md:text-lg font-bold text-[#005B98]">Login</h2>
-          <div className="relative z-0 my-1">
+        <div className="w-full p-6">
+          <form onSubmit={handleLogin} className="space-y-4">
+          <div className="text-center mb-6">
+            <img src={logo} alt="Logo" className="h-[80px] w-[80px] md:h-[100px] md:w-[100px] mx-auto mb-4"/>
+            <h2 className="text-xl md:text-2xl font-bold text-[#057DCD] mb-2">Welcome Back</h2>
+            <p className="text-gray-600 text-sm">Sign in to your POLYCON account</p>
+          </div>
+          <div className="mb-4">
+            <label htmlFor="Email" className="block text-sm font-medium text-gray-700 mb-2">
+              Email Address
+            </label>
             <input 
-              className="block px-1.5 my-2.5 mt-3 mx-auto w-full text-sm md:text-base text-gray-900 bg-transparent border-0 border-b-2 border-[#005B98] appearance-none dark:text-[#000000] dark:border-gray-600 dark:focus:border-blue-500 focus:outline-none focus:ring-0 focus:border-blue-600 peer"
+              className="w-full px-4 py-3 border border-gray-300 rounded-xl focus:outline-none focus:ring-2 focus:ring-[#057DCD] focus:border-transparent transition-all duration-200 text-gray-900"
               type="email" 
               name='email' 
               id='Email' 
-              placeholder=" " 
+              placeholder="Enter your email address" 
               value={email} 
               onChange={(e) => setEmail(e.target.value)} 
               required
             />
-            <label htmlFor="Email" className="absolute text-sm md:text-base text-gray-500 dark:text-gray-400 duration-300 transform -translate-y-6 scale-75 top-3 -z-10 origin-[0] peer-focus:start-0 peer-focus:text-blue-600 peer-focus:dark:text-blue-500 peer-placeholder-shown:scale-100 peer-placeholder-shown:translate-y-0 peer-focus:scale-75 peer-focus:-translate-y-6 rtl:peer-focus:translate-x-1/4 rtl:peer-focus:left-auto">
-              Email
-            </label>
           </div>
-          <div className="relative z-0 my-1">
+          <div className="mb-6 relative">
+            <label htmlFor="Password" className="block text-sm font-medium text-gray-700 mb-2">
+              Password
+            </label>
             <input 
-              className="block px-1.5 my-2.5 mt-3 mx-auto w-full text-sm md:text-base text-gray-900 bg-transparent border-0 border-b-2 border-[#005B98] appearance-none dark:text-[#000000] dark:border-gray-600 dark:focus:border-blue-500 focus:outline-none focus:ring-0 focus:border-blue-600 peer"
+              className="w-full px-4 py-3 pr-12 border border-gray-300 rounded-xl focus:outline-none focus:ring-2 focus:ring-[#057DCD] focus:border-transparent transition-all duration-200 text-gray-900"
               type={showPassword ? "text" : "password"} 
               name='password' 
               id='Password' 
-              placeholder=" " 
+              placeholder="Enter your password" 
               value={password} 
               onChange={(e) => setPassword(e.target.value)} 
               required
             />
-            <label htmlFor="Password" className="absolute text-sm md:text-base text-gray-500 dark:text-gray-400 duration-300 transform -translate-y-6 scale-75 top-3 -z-10 origin-[0] peer-focus:start-[-1] peer-focus:text-blue-600 peer-focus:dark:text-blue-500 peer-placeholder-shown:scale-100 peer-placeholder-shown:translate-y-0 peer-focus:scale-75 peer-focus:-translate-y-6 rtl:peer-focus:translate-x-1/4 rtl:peer-focus:left-auto">
-              Password
-            </label>
             {password && (
-              <span
-                className="absolute right-[3%] top-2.5 md:top-3 cursor-pointer text-gray-600 hover:text-gray-800"
+              <button
+                type="button"
+                className="absolute right-4 top-[38px] text-gray-500 hover:text-[#057DCD] transition-colors duration-200"
                 onClick={() => setShowPassword(!showPassword)}
               >
                 {showPassword ? <EyeOutlined size={20} /> : <EyeInvisibleOutlined size={20} />}
-              </span>
+              </button>
             )}
           </div>
-          {message && <p className="text-center text-red-500 text-base md:text-[0.9rem]">{message}</p>}
+          {message && (
+            <div className="mb-4 p-3 bg-red-50 border border-red-200 rounded-xl">
+              <p className="text-red-700 text-sm text-center">{message}</p>
+            </div>
+          )}
+          
           <button 
             onClick={() => {
               if (!isLoading) {
@@ -193,15 +203,15 @@ const Login = ({ onLoginSuccess, onSwitchToSignup }) => {
             }}
             disabled={isLoading}
             type="submit" 
-            className={`bg-[#057DCD] text-white w-full h-[44.59px] rounded-lg my-2 mx-auto shadow-md hover:bg-[#54BEFF] flex items-center justify-center
-              ${LoginClicked ? "scale-90" : "scale-100"}
+            className={`w-full bg-[#057DCD] text-white py-3 rounded-xl font-semibold text-base transition-all duration-200 hover:bg-[#046bb8] shadow-lg hover:shadow-xl flex items-center justify-center
+              ${LoginClicked ? "scale-95" : "scale-100"}
               ${isLoading ? "cursor-not-allowed opacity-90" : ""}
             `}
           >
             {isLoading ? (
               <>
                 <svg
-                  className="animate-spin h-4 w-4 sm:h-5 sm:w-5 text-white"
+                  className="animate-spin h-5 w-5 text-white mr-2"
                   xmlns="http://www.w3.org/2000/svg"
                   fill="none"
                   viewBox="0 0 24 24"
@@ -220,41 +230,46 @@ const Login = ({ onLoginSuccess, onSwitchToSignup }) => {
                     d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"
                   ></path>
                 </svg>
-                <span className="ml-2">Logging in...</span>
+                Logging in...
               </>
             ) : (
               "Login"
             )}
           </button>
-          <p className="text-center font-light text-[0.8rem] md:text-[0.9rem] mx-auto my-2 text-opacity-50">
+          
+          <div className="mt-4 text-center">
             <button 
+              type="button"
               onClick={(e) => { 
                 e.preventDefault();
                 setShowForgotPassword(true);
               }} 
-              className="text-[#005B98] focus:outline-none hover:underline"
+              className="text-[#057DCD] text-sm hover:text-[#046bb8] hover:underline transition-colors duration-200"
             >
               Forgot your password?
             </button>
-          </p>
-          <div className="border-t-2 border-[#212223] w-[90%] my-2 mx-auto border-opacity-50">
-            <p className="text-center font-light text-[0.8rem] md:text-[0.9rem] mx-auto my-2 text-opacity-50">
-              Don't have an account? 
+          </div>
+          
+          <div className="mt-6 pt-6 border-t border-gray-200">
+            <p className="text-center text-gray-600 text-sm">
+              Don't have an account?{' '}
               <button 
+                type="button"
                 onClick={(e) => { 
                   setSignupClicked(true);
                   setTimeout(() => { 
-                    setSignupClicked(true); 
-                    setTimeout(() => e.preventDefault(), onSwitchToSignup(), 500);
-                  }, 200);
+                    setSignupClicked(false); 
+                    onSwitchToSignup();
+                  }, 150);
                 }} 
-                className={`text-[#005B98] ml-1 focus:outline-none hover:underline ${SignupClicked ? "scale-90" : "scale-100"}`}
+                className={`text-[#057DCD] font-semibold hover:text-[#046bb8] hover:underline transition-all duration-200 ${SignupClicked ? "scale-95" : "scale-100"}`}
               > 
                 Sign up
               </button>
             </p>
           </div>
-        </form>
+          </form>
+        </div>
       )}
     </div>
   );

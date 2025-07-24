@@ -7,6 +7,7 @@ import { ReactComponent as MicrophoneIcon } from "./icons/microphone.svg";
 import { ReactComponent as MicrophoneSlashIcon } from "./icons/microphoneSlash.svg";
 import AnimatedBackground from "./AnimatedBackground";
 import AssessmentModal from "./AssessmentModal";
+import PreLoader from "./PreLoader";
 import { getProfilePictureUrl, getDisplayProgram } from "../utils/utils";
 import { showErrorNotification, showSuccessNotification, showWarningNotification } from "../utils/notificationUtils";
 
@@ -54,6 +55,8 @@ const Session = () => {
   const [audioBlob, setAudioBlob] = useState(null);
   const [micEnabled, setMicEnabled] = useState(true);
   const [processing, setProcessing] = useState(false);
+  const [processingStep, setProcessingStep] = useState("");
+  const [processingProgress, setProcessingProgress] = useState(0);
   const [assessmentModalOpen, setAssessmentModalOpen] = useState(false);
   const [AssessmentClicked, setAssessmentClicked] = useState(false);
   const [FinalizeClicked, setFinalizeClicked] = useState(false);
@@ -297,6 +300,8 @@ const Session = () => {
   // Finish session creates the consultation record and then returns a sessionID.
   const finishSession = async () => {
     setProcessing(true);
+    setProcessingProgress(10);
+    setProcessingStep("Validating consultation data...");
 
     // Add debug logging for required fields
     console.log("Checking required fields:", {
@@ -310,10 +315,13 @@ const Session = () => {
     if (!teacherId || !studentIds || !concern || !action_taken || !outcome) {      console.log("Missing fields detected");
       showWarningNotification("Please fill in all required fields");
       setProcessing(false);
+      setProcessingStep("");
+      setProcessingProgress(0);
       return;
     }
 
     stopTimer();
+    setProcessingProgress(20);
 
     let transcriptionText = "";
     let audioUrl = "";
@@ -323,6 +331,8 @@ const Session = () => {
     
     if (audioBlob) {
       try {
+        setProcessingStep("Processing audio recording...");
+        setProcessingProgress(30);
         const audioUploadResponse = await uploadAudio(audioBlob);
         transcriptionText = audioUploadResponse.transcription || "";
         audioUrl = audioUploadResponse.audioUrl || "";
@@ -330,49 +340,58 @@ const Session = () => {
         qualityScore = audioUploadResponse.quality_score || 0;
         qualityMetrics = audioUploadResponse.quality_metrics || {};
         rawSentimentAnalysis = audioUploadResponse.raw_sentiment_analysis || [];
+        setProcessingProgress(50);
       } catch (error) {        console.error("Error uploading audio:", error);
         showErrorNotification("Audio upload failed. Proceeding without transcription.");
       }
+    } else {
+      setProcessingProgress(50);
     }
 
-    const generatedSummary = await generateSummary(transcriptionText, {
-      concern,
-      actionTaken: action_taken,
-      outcome,
-      remarks,
-    });
-
-    setSummary(generatedSummary);
-
-    // Ensure student_ids is an array
-    let studentIdsArray = Array.isArray(studentIds)
-      ? studentIds
-      : studentIds.split(",").map((id) => id.trim());
-
-    const payload = {
-      teacher_id: teacherId,
-      student_ids: studentIdsArray,
-      transcription: transcriptionText,
-      transcription_enabled: transcriptionEnabled,
-      summary: generatedSummary,
-      concern: concern,
-      action_taken: action_taken,
-      outcome: outcome,
-      remarks: remarks,
-      duration: timer,
-      venue: venueFromQuery,
-      session_date: new Date().toISOString(),
-      audio_file_path: audioUrl,
-      // Include quality data in the payload
-      quality_score: qualityScore,
-      quality_metrics: qualityMetrics,
-      raw_sentiment_analysis: rawSentimentAnalysis
-    };
-
-    console.log("Sending payload:", payload);
-    console.log("Payload being sent:", payload); // Add this debug log
-
     try {
+      setProcessingStep("Generating consultation summary...");
+      setProcessingProgress(60);
+      const generatedSummary = await generateSummary(transcriptionText, {
+        concern,
+        actionTaken: action_taken,
+        outcome,
+        remarks,
+      });
+
+      setSummary(generatedSummary);
+      setProcessingProgress(80);
+
+      // Ensure student_ids is an array
+      let studentIdsArray = Array.isArray(studentIds)
+        ? studentIds
+        : studentIds.split(",").map((id) => id.trim());
+
+      const payload = {
+        teacher_id: teacherId,
+        student_ids: studentIdsArray,
+        transcription: transcriptionText,
+        transcription_enabled: transcriptionEnabled,
+        summary: generatedSummary,
+        concern: concern,
+        action_taken: action_taken,
+        outcome: outcome,
+        remarks: remarks,
+        duration: timer,
+        venue: venueFromQuery,
+        session_date: new Date().toISOString(),
+        audio_file_path: audioUrl,
+        // Include quality data in the payload
+        quality_score: qualityScore,
+        quality_metrics: qualityMetrics,
+        raw_sentiment_analysis: rawSentimentAnalysis
+      };
+
+      console.log("Sending payload:", payload);
+      console.log("Payload being sent:", payload); // Add this debug log
+
+      setProcessingStep("Saving consultation record...");
+      setProcessingProgress(90);
+      
       // Append booking_id as a query parameter if available.
       let url = `${API_URL}/consultation/store_consultation`;
       if (bookingID) {
@@ -384,52 +403,101 @@ const Session = () => {
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify(payload),
       });
+      
       if (!response.ok) {
-        const errorData = await response.json();
+        const errorData = await response.json().catch(() => ({ error: 'Unknown error occurred' }));
         console.error("Server validation error:", errorData);
         showErrorNotification(`Failed to store consultation: ${errorData.error}`);
+        setProcessing(false);
+        setProcessingStep("");
+        setProcessingProgress(0);
         return;
       }
+      
       const data = await response.json();
       console.log("🚀 Debug: Server Response", data);
+      
       if (response.ok) {
         const newSessionID = data.session_id;
-        console.log(
-          `✅ Navigating to: /finaldocument?sessionID=${newSessionID}`
-        );
+        console.log(`✅ Navigating to: /finaldocument?sessionID=${newSessionID}`);
+        setProcessingStep("Consultation completed successfully!");
+        setProcessingProgress(100);
+        showSuccessNotification("Consultation finalized successfully!");
+        
         setTimeout(() => {
           navigate(`/finaldocument?sessionID=${newSessionID}`);
-        }, 100);
+        }, 1500);
       } else {
         console.error("❌ Error: Response from server was not OK", data);
+        showErrorNotification("Failed to save consultation. Please try again.");
       }
     } catch (error) {
-      console.error("🚨 Error finishing session:", error);
+      console.error("🚨 Error during summary generation:", error);
+      if (error.message.includes('timeout') || error.message.includes('timed out')) {
+        showErrorNotification("Summary generation is taking longer than expected. This might be due to AI service issues. Please try again.");
+      } else {
+        showErrorNotification(`Failed to generate summary: ${error.message}`);
+      }
+    } finally {
+      setProcessing(false);
+      setProcessingStep("");
+      setProcessingProgress(0);
     }
-    setProcessing(false);
   };
 
   const generateSummary = async (transcription, notes) => {
-    const response = await fetch(
-      `${API_URL}/consultation/summarize`,
-      {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-          transcription: transcription || "No transcription available.",
-          notes: `Concern: ${notes.concern}\nAction Taken: ${
-            notes.actionTaken
-          }\nOutcome: ${notes.outcome}\nRemarks: ${
-            notes.remarks || "No remarks"
-          }`,
-        }),
+    const controller = new AbortController();
+    const timeoutId = setTimeout(() => controller.abort(), 90000); // 90 second timeout
+    
+    try {
+      const response = await fetch(
+        `${API_URL}/consultation/summarize`,
+        {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({
+            transcription: transcription || "No transcription available.",
+            notes: `Concern: ${notes.concern}\nAction Taken: ${
+              notes.actionTaken
+            }\nOutcome: ${notes.outcome}\nRemarks: ${
+              notes.remarks || "No remarks"
+            }`,
+          }),
+          signal: controller.signal
+        }
+      );
+      
+      clearTimeout(timeoutId);
+      
+      if (!response.ok) {
+        const errorData = await response.json().catch(() => ({}));
+        if (response.status === 500) {
+          // Check if it's likely an AI service configuration issue
+          if (errorData.error && (
+            errorData.error.includes('GEMINI_API_KEY') || 
+            errorData.error.includes('AI service') ||
+            errorData.error.includes('API key')
+          )) {
+            throw new Error("AI summary service is not properly configured. Please contact your system administrator.");
+          }
+          throw new Error("AI summary service is currently unavailable. This might be due to missing configuration or service issues.");
+        }
+        throw new Error(errorData.error || `Summary generation failed with status: ${response.status}`);
       }
-    );
-    if (!response.ok) {
-      throw new Error("Summary generation failed");
+      
+      const data = await response.json();
+      return data.summary;
+    } catch (error) {
+      clearTimeout(timeoutId);
+      
+      if (error.name === 'AbortError') {
+        console.error("Summary generation timed out after 90 seconds");
+        throw new Error("Summary generation timed out. The AI service might be experiencing high load. Please try again.");
+      }
+      
+      console.error("Summary generation error:", error);
+      throw error;
     }
-    const data = await response.json();
-    return data.summary;
   };
 
   const identifyRoles = async (transcription) => {
@@ -494,11 +562,10 @@ const Session = () => {
     <div className="relative min-h-screen p-3 sm:p-6 md:p-8 flex justify-center items-center font-poppins">
       <AnimatedBackground />
       {processing && (
-        <div className="fixed top-0 left-0 w-full h-full bg-black bg-opacity-50 flex items-center justify-center z-50">
-          <div className="text-white text-xl sm:text-2xl">
-            Processing Consultation...
-          </div>
-        </div>
+        <PreLoader 
+          progress={processingProgress} 
+          customText={processingStep}
+        />
       )}
       <div className="relative z-10 backdrop-blur-sm bg-white/5 fade-in w-full">
         <div className="max-w-6xl w-full mx-auto flex flex-col md:grid md:grid-cols-7 gap-4 lg:gap-6">
@@ -685,45 +752,50 @@ const Session = () => {
 
               <button
                 onClick={() => {
-                  setFinalizeClicked(true);
-                  setTimeout(() => { setFinalizeClicked(false);
-                    setTimeout(() => finishSession(), 500);
-                  }, 150);
+                  if (!processing) {
+                    setFinalizeClicked(true);
+                    setTimeout(() => {
+                      setFinalizeClicked(false);
+                      finishSession();
+                    }, 150);
+                  }
                 }}
                 disabled={processing}
                 type="submit"
-                className={`w-full bg-[#057DCD] text-white py-2 sm:py-3 rounded-lg shadow-md hover:bg-[#54BEFF] duration-300ms ease-in-out text-sm sm:text-base
-                ${FinalizeClicked ? "scale-90" : "scale-100"}
-                ${processing ? "opacity-50 cursor-not-allowed" : ""}
+                className={`w-full bg-[#057DCD] text-white py-2 sm:py-3 rounded-lg shadow-md transition-all duration-300 ease-in-out text-sm sm:text-base flex items-center justify-center min-h-[40px] sm:min-h-[44px]
+                ${FinalizeClicked && !processing ? "scale-95" : "scale-100"}
+                ${processing ? "opacity-50 cursor-not-allowed" : "hover:bg-[#54BEFF] active:scale-95"}
                 `}
               >
                 {processing ? (
-                    <>
-                      <svg
-                        className="animate-spin h-4 w-4 sm:h-5 sm:w-5 text-white"
-                        xmlns="http://www.w3.org/2000/svg"
-                        fill="none"
-                        viewBox="0 0 24 24"
-                      >
-                        <circle
-                          className="opacity-25"
-                          cx="12"
-                          cy="12"
-                          r="10"
-                          stroke="currentColor"
-                          strokeWidth="4"
-                        ></circle>
-                        <path
-                          className="opacity-75"
-                          fill="currentColor"
-                          d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"
-                        ></path>
-                      </svg>
-                      <span className="ml-2">Finalizing Consultation...</span>
-                    </>
-                  ) : (
-                    "Finalize Consultation"
-                  )}
+                  <div className="flex items-center justify-center">
+                    <svg
+                      className="animate-spin h-4 w-4 sm:h-5 sm:w-5 text-white mr-2"
+                      xmlns="http://www.w3.org/2000/svg"
+                      fill="none"
+                      viewBox="0 0 24 24"
+                    >
+                      <circle
+                        className="opacity-25"
+                        cx="12"
+                        cy="12"
+                        r="10"
+                        stroke="currentColor"
+                        strokeWidth="4"
+                      ></circle>
+                      <path
+                        className="opacity-75"
+                        fill="currentColor"
+                        d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"
+                      ></path>
+                    </svg>
+                    <span className="text-xs sm:text-sm">
+                      {processingStep || "Finalizing Consultation..."}
+                    </span>
+                  </div>
+                ) : (
+                  "Finalize Consultation"
+                )}
               </button>
             </div>
           </div>

@@ -63,6 +63,12 @@
   transform-origin: center center;
 }
 
+.shapes-wrapper {
+  position: relative;
+  width: 100%;
+  height: 100%;
+}
+
 .shape {
   position: absolute;
   opacity: 0;
@@ -132,7 +138,7 @@
   left: 0;
   right: 0;
   bottom: 0;
-  background-color: #0065A8;
+  background: linear-gradient(135deg, #0065A8 0%, #0052A3 100%);
   z-index: 9999;
   display: flex;
   justify-content: center;
@@ -140,18 +146,145 @@
   flex-direction: column;
 }
 
+/* Responsive design */
+@media (max-width: 768px) {
+  .logo-container {
+    width: 200px;
+    height: 200px;
+  }
+  
+  .loading-text {
+    font-size: 16px;
+  }
+  
+  .progress-percentage {
+    font-size: 12px;
+  }
+  
+  .loading-bar-container {
+    width: 200px;
+    height: 6px;
+  }
+}
+
+@media (max-width: 480px) {
+  .logo-container {
+    width: 150px;
+    height: 150px;
+  }
+  
+  .loading-text {
+    font-size: 14px;
+  }
+  
+  .loading-bar-container {
+    width: 150px;
+    height: 5px;
+  }
+}
+
+/* Accessibility improvements */
+@media (prefers-reduced-motion: reduce) {
+  .logo-container,
+  .shape,
+  .loading-bar::after,
+  .loading-bar-glow {
+    animation: none;
+  }
+}
+
+/* High contrast mode support */
+@media (prefers-contrast: high) {
+  .loading-bar {
+    background: #ffffff;
+    box-shadow: none;
+  }
+  
+  .loading-bar-container {
+    border: 1px solid rgba(255, 255, 255, 0.5);
+  }
+}
+
+.loading-text {
+  color: white;
+  font-size: 18px;
+  font-weight: 500;
+  font-family: 'Poppins', sans-serif;
+  min-height: 22px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  animation: textFade 0.5s ease-in-out;
+}
+
+.progress-percentage {
+  color: rgba(255, 255, 255, 0.8);
+  font-size: 14px;
+  font-weight: 400;
+  font-family: 'Poppins', sans-serif;
+  min-width: 40px;
+  text-align: center;
+}
+
 .loading-bar-container {
-  width: 200px;
-  height: 6px;  /* Increased from 4px */
+  position: relative;
+  width: 250px;
+  height: 8px;
   background: rgba(255, 255, 255, 0.2);
-  border-radius: 3px;  /* Increased from 2px */
+  border-radius: 4px;
   margin-top: 20px;
   overflow: hidden;
+  box-shadow: inset 0 2px 4px rgba(0, 0, 0, 0.1);
 }
 
 .loading-bar {
   height: 100%;
-  background: #ffffff;
-  border-radius: 3px;  /* Increased from 2px */
-  transition: width 0.2s ease-in-out;  /* Made transition faster */
+  background: linear-gradient(90deg, #ffffff 0%, #f0f9ff 50%, #ffffff 100%);
+  border-radius: 4px;
+  transition: width 0.3s ease-in-out;
+  position: relative;
+  box-shadow: 0 0 10px rgba(255, 255, 255, 0.3);
+}
+
+.loading-bar::after {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background: linear-gradient(90deg, transparent 0%, rgba(255, 255, 255, 0.4) 50%, transparent 100%);
+  animation: progressGlow 2s ease-in-out infinite;
+}
+
+.loading-bar-glow {
+  position: absolute;
+  top: -2px;
+  left: -2px;
+  right: -2px;
+  bottom: -2px;
+  background: linear-gradient(90deg, transparent 0%, rgba(255, 255, 255, 0.2) 50%, transparent 100%);
+  border-radius: 6px;
+  opacity: 0;
+  animation: glowPulse 3s ease-in-out infinite;
+}
+
+@keyframes textFade {
+  0% {
+    opacity: 0;
+    transform: translateY(10px);
+  }
+  100% {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+@keyframes glowPulse {
+  0%, 100% {
+    opacity: 0;
+  }
+  50% {
+    opacity: 1;
+  }
 }

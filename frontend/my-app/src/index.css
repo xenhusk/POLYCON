@@ -7,10 +7,20 @@
 /* Import mobile responsive utilities */
 @import './styles/mobile-responsive.css';
 
-/* Add global overflow control */
+/* Add global overflow control and remove scrollbar */
 html, body {
   max-width: 100%;
   overflow-x: hidden;
+}
+
+/* Hide scrollbar globally for cleaner UI */
+html {
+  scrollbar-width: none; /* Firefox */
+  -ms-overflow-style: none; /* Internet Explorer 10+ */
+}
+
+html::-webkit-scrollbar {
+  display: none; /* WebKit */
 }
 
 /* Modal button containers should extend to modal edges */
@@ -178,5 +188,57 @@ body {
 }
 .delay-300 {
   animation-delay: 300ms;
+}
+
+/* Hidden scrollbar - completely invisible but still functional */
+.hidden-scrollbar {
+  /* Firefox */
+  scrollbar-width: none;
+  /* IE and Edge */
+  -ms-overflow-style: none;
+}
+
+/* Hide scrollbar for webkit browsers completely */
+.hidden-scrollbar::-webkit-scrollbar {
+  display: none;
+  width: 0px;
+  background: transparent;
+}
+
+/* Ensure scrolling still works */
+.hidden-scrollbar {
+  overflow-y: auto;
+  scroll-behavior: smooth;
+}
+
+/* Custom scroll indicator */
+.scroll-indicator {
+  position: absolute;
+  right: 8px;
+  top: 50%;
+  transform: translateY(-50%);
+  width: 3px;
+  height: 60%;
+  background: rgba(156, 163, 175, 0.1);
+  border-radius: 2px;
+  opacity: 0;
+  transition: opacity 0.3s ease;
+  pointer-events: none;
+  z-index: 10;
+}
+
+.scroll-indicator.show {
+  opacity: 1;
+}
+
+.scroll-indicator::after {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  background: rgba(5, 125, 205, 0.6);
+  border-radius: 2px;
+  transition: height 0.1s ease;
 }
 

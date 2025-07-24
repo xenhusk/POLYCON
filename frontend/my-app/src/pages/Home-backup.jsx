@@ -1,0 +1,1 @@
+/* Backup of original Home.jsx before complete redesign */
