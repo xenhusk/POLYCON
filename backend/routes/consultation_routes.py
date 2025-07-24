@@ -7,6 +7,7 @@ from services.consultation_quality_service import calculate_consultation_quality
 from services.audio_conversion_service import convert_audio
 from services.assemblyai_service import transcribe_audio_with_assemblyai
 from services.google_storage import upload_audio  # upload converted audio for download
+from services.cloudinary_service import upload_audio_cloudinary
 from sqlalchemy.orm import joinedload
 from sqlalchemy import or_
 from sqlalchemy import or_ # Add or_
@@ -34,28 +35,44 @@ def transcribe():
         # Convert the raw audio file and get the path of the converted file
         converted_path = convert_audio(raw_path)
 
-        # Upload to Google Cloud Storage
+        # Upload to cloud storage (Cloudinary preferred, then GCS, then local)
         try:
-            audio_url = upload_audio(converted_path)
-            current_app.logger.info(f"Audio uploaded to Google Cloud Storage: {audio_url}")
+            # Try Cloudinary first (free tier)
+            audio_url = upload_audio_cloudinary(converted_path)
+            current_app.logger.info(f"Audio uploaded to Cloudinary: {audio_url}")
         except ValueError as e:
-            # Google Cloud Storage not configured, fall back to local storage
-            current_app.logger.warning(f"Google Cloud Storage not available, using local storage: {e}")
-            upload_folder = 'uploads'
-            audio_filename = f"session_audio_{uuid.uuid4().hex}.wav"
-            local_path = os.path.join(upload_folder, audio_filename)
-            
-            # Save a copy to the uploads directory
-            os.makedirs(upload_folder, exist_ok=True)
-            with open(converted_path, 'rb') as src_file:
-                with open(local_path, 'wb') as dst_file:
-                    dst_file.write(src_file.read())
-            
-            # Generate a URL for accessing the audio file
-            audio_url = f"/uploads/{audio_filename}"
+            # Cloudinary not configured, try Google Cloud Storage
+            current_app.logger.warning(f"Cloudinary not available, trying GCS: {e}")
+            try:
+                audio_url = upload_audio(converted_path)
+                current_app.logger.info(f"Audio uploaded to Google Cloud Storage: {audio_url}")
+            except ValueError as e:
+                # Google Cloud Storage not configured, fall back to local storage
+                current_app.logger.warning(f"Google Cloud Storage not available, using local storage: {e}")
+                upload_folder = 'uploads'
+                audio_filename = f"session_audio_{uuid.uuid4().hex}.wav"
+                local_path = os.path.join(upload_folder, audio_filename)
+                
+                # Save a copy to the uploads directory
+                os.makedirs(upload_folder, exist_ok=True)
+                with open(converted_path, 'rb') as src_file:
+                    with open(local_path, 'wb') as dst_file:
+                        dst_file.write(src_file.read())
+                
+                # Generate a URL for accessing the audio file
+                audio_url = f"/uploads/{audio_filename}"
+            except Exception as e:
+                current_app.logger.error(f"Failed to upload to GCS: {e}")
+                return jsonify({"error": f"Failed to upload audio: {str(e)}"}), 500
         except Exception as e:
-            current_app.logger.error(f"Failed to upload audio: {e}")
-            return jsonify({"error": f"Failed to upload audio: {str(e)}"}), 500
+            current_app.logger.error(f"Failed to upload to Cloudinary: {e}")
+            # Try Google Cloud Storage as fallback
+            try:
+                audio_url = upload_audio(converted_path)
+                current_app.logger.info(f"Audio uploaded to Google Cloud Storage: {audio_url}")
+            except Exception as e2:
+                current_app.logger.error(f"All audio upload methods failed: {e2}")
+                return jsonify({"error": f"Failed to upload audio: {str(e2)}"}), 500
 
         # Initialize default values
         transcription_data = {

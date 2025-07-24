@@ -95,7 +95,13 @@ const Login = ({ onLoginSuccess, onSwitchToSignup }) => {
         if (onLoginSuccess) {
           onLoginSuccess(data);
         }
-  
+
+        // Add a 1-second delay then refresh the page to ensure credentials are properly stored
+        setTimeout(() => {
+          console.log("Refreshing page to ensure user credentials are properly loaded...");
+          window.location.reload();
+        }, 1000);
+
         switch (data.role) {
           case "admin":
             navigate("/homeadmin");

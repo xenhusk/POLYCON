@@ -4,7 +4,8 @@ import os
 from models import User
 from extensions import db
 import uuid
-from services.google_storage import upload_profile_picture
+from services.google_storage import upload_profile_picture, gcp_bucket_name
+from services.cloudinary_service import upload_profile_picture_cloudinary
 
 profile_bp = Blueprint('profile', __name__, url_prefix='/profile')
 
@@ -30,31 +31,61 @@ def upload_profile_picture_route():
     if file and allowed_file(file.filename):
         filename = secure_filename(file.filename)
         
+        user = User.query.filter_by(email=user_email).first()
+        if not user:
+            return jsonify({'error': 'User not found'}), 404
+        
         try:
-            # Upload to Google Cloud Storage
-            public_url = upload_profile_picture(file, filename)
+            # Try Cloudinary first (free tier with 25 credits/month)
+            cloudinary_url = upload_profile_picture_cloudinary(file, filename)
             
-            user = User.query.filter_by(email=user_email).first()
-            if not user:
-                return jsonify({'error': 'User not found'}), 404
-
-            # Store the full Google Cloud Storage URL
-            user.profile_picture = public_url
+            # Store the Cloudinary URL
+            user.profile_picture = cloudinary_url
             db.session.commit()
             
-            # Return the public URL for the frontend to use
             return jsonify({
                 'message': 'Profile picture uploaded successfully', 
-                'public_url': public_url
+                'public_url': cloudinary_url
             }), 200
             
         except ValueError as e:
-            # Google Cloud Storage not configured, fall back to local storage
-            current_app.logger.warning(f"Google Cloud Storage not available: {e}")
-            return upload_profile_picture_fallback(file, filename, user_email)
+            # Cloudinary not configured, try Google Cloud Storage
+            current_app.logger.warning(f"Cloudinary not available: {e}")
+            try:
+                # Upload to Google Cloud Storage
+                public_url = upload_profile_picture(file, filename)
+
+                # Store the full Google Cloud Storage URL
+                user.profile_picture = public_url
+                db.session.commit()
+                
+                # Return the public URL for the frontend to use
+                return jsonify({
+                    'message': 'Profile picture uploaded successfully', 
+                    'public_url': public_url
+                }), 200
+                
+            except ValueError as e:
+                # Google Cloud Storage not configured, fall back to local storage
+                current_app.logger.warning(f"Google Cloud Storage not available: {e}")
+                return upload_profile_picture_fallback(file, filename, user_email)
+            except Exception as e:
+                current_app.logger.error(f"Failed to upload to Google Cloud Storage: {e}")
+                return upload_profile_picture_fallback(file, filename, user_email)
         except Exception as e:
-            current_app.logger.error(f"Failed to upload to Google Cloud Storage: {e}")
-            return jsonify({'error': f'Failed to upload file: {str(e)}'}), 500
+            current_app.logger.error(f"Failed to upload to Cloudinary: {e}")
+            # Try Google Cloud Storage as fallback
+            try:
+                public_url = upload_profile_picture(file, filename)
+                user.profile_picture = public_url
+                db.session.commit()
+                return jsonify({
+                    'message': 'Profile picture uploaded successfully', 
+                    'public_url': public_url
+                }), 200
+            except Exception as e2:
+                current_app.logger.error(f"All upload methods failed: {e2}")
+                return upload_profile_picture_fallback(file, filename, user_email)
     else:
         return jsonify({'error': 'File type not allowed'}), 400
 
