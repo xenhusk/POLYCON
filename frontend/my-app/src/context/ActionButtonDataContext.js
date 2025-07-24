@@ -1,5 +1,7 @@
 import React, { createContext, useContext, useEffect, useState } from 'react';
 import { useQueryClient } from 'react-query';
+import { CACHE_KEYS, getCacheInfo, validateCacheData, shouldClearCacheForSpace } from '../utils/cacheUtils';
+import API_URL from '../apiConfig';
 
 const ActionButtonDataContext = createContext({
   studentsData: [],
@@ -7,7 +9,8 @@ const ActionButtonDataContext = createContext({
   isPrefetching: false,
   lastFetchTime: null,
   prefetchActionButtonData: () => {},
-  isDataStale: () => true
+  isDataStale: () => true,
+  clearCache: () => {}
 });
 
 export const ActionButtonDataProvider = ({ children }) => {
@@ -18,6 +21,116 @@ export const ActionButtonDataProvider = ({ children }) => {
   const [lastFetchTime, setLastFetchTime] = useState(null);
 
   const CACHE_DURATION = 5 * 60 * 1000; // 5 minutes cache
+
+  // Load data from localStorage on component mount
+  useEffect(() => {
+    loadFromCache();
+  }, []);
+
+  // Load cached data from localStorage
+  const loadFromCache = () => {
+    try {
+      // Validate cache integrity first
+      const validation = validateCacheData();
+      if (!validation.isValid) {
+        console.warn('ActionButtonData: Cache validation failed:', validation.errors);
+        clearCache();
+        return;
+      }
+
+      // Check if storage space is getting full
+      if (shouldClearCacheForSpace()) {
+        console.warn('ActionButtonData: Storage space low, clearing cache');
+        clearCache();
+        return;
+      }
+
+      const currentUserId = getCurrentUserId();
+      const cachedUserId = localStorage.getItem(CACHE_KEYS.USER_ID);
+      
+      // Clear cache if user has changed
+      if (cachedUserId && cachedUserId !== currentUserId) {
+        console.log('ActionButtonData: User changed, clearing cache');
+        clearCache();
+        return;
+      }
+
+      const cachedStudents = localStorage.getItem(CACHE_KEYS.STUDENTS);
+      const cachedTeachers = localStorage.getItem(CACHE_KEYS.TEACHERS);
+      const cachedLastFetch = localStorage.getItem(CACHE_KEYS.LAST_FETCH);
+
+      if (cachedStudents) {
+        const studentsData = JSON.parse(cachedStudents);
+        setStudentsData(studentsData);
+        console.log(`ActionButtonData: Loaded ${studentsData.length} students from localStorage cache`);
+      }
+
+      if (cachedTeachers) {
+        const teachersData = JSON.parse(cachedTeachers);
+        setTeachersData(teachersData);
+        console.log(`ActionButtonData: Loaded ${teachersData.length} teachers from localStorage cache`);
+      }
+
+      if (cachedLastFetch) {
+        const lastFetch = parseInt(cachedLastFetch);
+        setLastFetchTime(lastFetch);
+        console.log(`ActionButtonData: Last fetch time loaded: ${new Date(lastFetch).toLocaleString()}`);
+        
+        // Log cache info
+        const cacheInfo = getCacheInfo();
+        console.log('ActionButtonData: Cache info:', cacheInfo);
+      }
+
+      // Update stored user ID
+      localStorage.setItem(CACHE_KEYS.USER_ID, currentUserId || '');
+
+    } catch (error) {
+      console.error('ActionButtonData: Error loading from localStorage cache:', error);
+      clearCache();
+    }
+  };
+
+  // Save data to localStorage
+  const saveToCache = (students, teachers, fetchTime) => {
+    try {
+      if (students && students.length > 0) {
+        localStorage.setItem(CACHE_KEYS.STUDENTS, JSON.stringify(students));
+      }
+      if (teachers && teachers.length > 0) {
+        localStorage.setItem(CACHE_KEYS.TEACHERS, JSON.stringify(teachers));
+      }
+      if (fetchTime) {
+        localStorage.setItem(CACHE_KEYS.LAST_FETCH, fetchTime.toString());
+      }
+      
+      const currentUserId = getCurrentUserId();
+      localStorage.setItem(CACHE_KEYS.USER_ID, currentUserId || '');
+      
+      console.log('ActionButtonData: Data saved to cache');
+    } catch (error) {
+      console.error('ActionButtonData: Error saving to cache:', error);
+    }
+  };
+
+  // Clear all cached data
+  const clearCache = () => {
+    Object.values(CACHE_KEYS).forEach(key => {
+      localStorage.removeItem(key);
+    });
+    setStudentsData([]);
+    setTeachersData([]);
+    setLastFetchTime(null);
+    console.log('ActionButtonData: Cache cleared');
+  };
+
+  // Get current user identifier
+  const getCurrentUserId = () => {
+    return localStorage.getItem('userEmail') || 
+           localStorage.getItem('userID') || 
+           localStorage.getItem('studentID') || 
+           localStorage.getItem('teacherID') || 
+           null;
+  };
 
   // Check if data is stale
   const isDataStale = () => {
@@ -35,6 +148,7 @@ export const ActionButtonDataProvider = ({ children }) => {
 
     setIsPrefetching(true);
     console.log('ActionButtonData: Starting prefetch...');
+    console.log('ActionButtonData: Using API URL:', API_URL);
 
     try {
       const userRole = localStorage.getItem('userRole');
@@ -46,13 +160,16 @@ export const ActionButtonDataProvider = ({ children }) => {
       }
 
       const promises = [];
+      let fetchedStudents = [];
+      let fetchedTeachers = [];
 
       // Prefetch students data (for both faculty and students for search)
       promises.push(
-        fetch('http://localhost:5001/search/students?query=')
+        fetch(`${API_URL}/search/students?query=`)
           .then(res => res.json())
           .then(data => {
             if (data.results) {
+              fetchedStudents = data.results;
               setStudentsData(data.results);
               // Cache in React Query as well
               queryClient.setQueryData(['students', 'search', ''], data);
@@ -65,10 +182,11 @@ export const ActionButtonDataProvider = ({ children }) => {
       // Prefetch teachers data (for students)
       if (userRole === 'student') {
         promises.push(
-          fetch('http://localhost:5001/search/teachers?query=')
+          fetch(`${API_URL}/search/teachers?query=`)
             .then(res => res.json())
             .then(data => {
               if (data.results) {
+                fetchedTeachers = data.results;
                 setTeachersData(data.results);
                 // Cache in React Query as well
                 queryClient.setQueryData(['teachers', 'search', ''], data);
@@ -87,7 +205,7 @@ export const ActionButtonDataProvider = ({ children }) => {
       if (userId) {
         const roleForBookings = userRole === 'faculty' ? 'faculty' : 'student';
         promises.push(
-          fetch(`http://localhost:5001/bookings/get_bookings?role=${roleForBookings}&userID=${userId}`)
+          fetch(`${API_URL}/bookings/get_bookings?role=${roleForBookings}&userID=${userId}`)
             .then(res => res.json())
             .then(data => {
               // Cache bookings data
@@ -100,7 +218,13 @@ export const ActionButtonDataProvider = ({ children }) => {
 
       // Wait for all prefetch operations to complete
       await Promise.allSettled(promises);
-      setLastFetchTime(Date.now());
+      
+      const fetchTime = Date.now();
+      setLastFetchTime(fetchTime);
+      
+      // Save to localStorage
+      saveToCache(fetchedStudents, fetchedTeachers, fetchTime);
+      
       console.log('ActionButtonData: Prefetch completed successfully');
 
     } catch (error) {
@@ -113,27 +237,48 @@ export const ActionButtonDataProvider = ({ children }) => {
   // Auto-prefetch on component mount and when user logs in
   useEffect(() => {
     const userEmail = localStorage.getItem('userEmail');
-    if (userEmail && isDataStale()) {
-      // Add a small delay to avoid blocking initial app load
-      const timer = setTimeout(() => {
-        prefetchActionButtonData();
-      }, 1000);
-      
-      return () => clearTimeout(timer);
+    if (userEmail) {
+      // Check if we have cached data first
+      if (studentsData.length === 0 || teachersData.length === 0 || isDataStale()) {
+        // Add a small delay to avoid blocking initial app load
+        const timer = setTimeout(() => {
+          prefetchActionButtonData();
+        }, 1000);
+        
+        return () => clearTimeout(timer);
+      }
     }
-  }, []);
+  }, [studentsData, teachersData]);
 
   // Refresh data when user changes
   useEffect(() => {
-    const handleStorageChange = () => {
-      const userEmail = localStorage.getItem('userEmail');
-      if (userEmail) {
-        prefetchActionButtonData(true); // Force refresh on user change
+    const handleStorageChange = (e) => {
+      // Check if user-related data changed
+      if (['userEmail', 'userRole', 'userID', 'studentID', 'teacherID'].includes(e.key)) {
+        const userEmail = localStorage.getItem('userEmail');
+        if (userEmail) {
+          console.log('ActionButtonData: User data changed, refreshing cache');
+          clearCache();
+          prefetchActionButtonData(true); // Force refresh on user change
+        } else {
+          // User logged out, clear cache
+          clearCache();
+        }
       }
     };
 
     window.addEventListener('storage', handleStorageChange);
     return () => window.removeEventListener('storage', handleStorageChange);
+  }, []);
+
+  // Monitor user logout
+  useEffect(() => {
+    const userEmail = localStorage.getItem('userEmail');
+    if (!userEmail && (studentsData.length > 0 || teachersData.length > 0)) {
+      // User logged out, clear cache
+      console.log('ActionButtonData: User logged out, clearing cache');
+      clearCache();
+    }
   }, []);
 
   const contextValue = {
@@ -142,7 +287,12 @@ export const ActionButtonDataProvider = ({ children }) => {
     isPrefetching,
     lastFetchTime,
     prefetchActionButtonData,
-    isDataStale
+    isDataStale,
+    clearCache,
+    // Additional debugging and utility methods
+    getCacheInfo,
+    refreshCache: () => prefetchActionButtonData(true),
+    hasCachedData: studentsData.length > 0 || teachersData.length > 0
   };
 
   return (

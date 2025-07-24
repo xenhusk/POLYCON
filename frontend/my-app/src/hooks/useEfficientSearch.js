@@ -1,5 +1,6 @@
 import { useState, useEffect, useCallback } from 'react';
 import { useActionButtonData } from '../context/ActionButtonDataContext';
+import API_URL from '../apiConfig';
 
 /**
  * Custom hook for efficient search with prefetched data
@@ -62,12 +63,13 @@ export const useEfficientSearch = (searchType = 'students') => {
 
     // Fall back to API call for complex queries or when prefetched data is insufficient
     console.log(`EfficientSearch: Making API call for ${searchType} search: "${trimmedQuery}"`);
+    console.log('EfficientSearch: Using API URL:', API_URL);
     setIsLoading(true);
     
     try {
       const endpoint = searchType === 'students' 
-        ? `http://localhost:5001/search/students?query=${encodeURIComponent(trimmedQuery)}&page=${page}`
-        : `http://localhost:5001/search/teachers?query=${encodeURIComponent(trimmedQuery)}&page=${page}`;
+        ? `${API_URL}/search/students?query=${encodeURIComponent(trimmedQuery)}&page=${page}`
+        : `${API_URL}/search/teachers?query=${encodeURIComponent(trimmedQuery)}&page=${page}`;
       
       const response = await fetch(endpoint);
       const data = await response.json();
