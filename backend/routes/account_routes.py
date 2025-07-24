@@ -7,11 +7,22 @@ from flask_jwt_extended import create_access_token, decode_token
 import datetime
 import uuid
 import json
+import os
 
 account_bp = Blueprint('account_bp', __name__)
 
+# Get CORS origins from environment variable
+cors_origins = os.getenv('CORS_ALLOWED_ORIGINS', 'http://localhost:3000')
+if ',' in cors_origins:
+    allowed_origins = cors_origins.split(',')
+else:
+    allowed_origins = [cors_origins]
+
+# Get frontend URL for redirects (use the first allowed origin)
+frontend_url = allowed_origins[0]
+
 @account_bp.route('/login', methods=['POST', 'OPTIONS'])
-@cross_origin(origins=["http://localhost:3000", "http://127.0.0.1:3000"], 
+@cross_origin(origins=allowed_origins, 
              methods=["GET", "POST", "OPTIONS"],
              allow_headers=["Content-Type", "Authorization"],
              supports_credentials=True)
@@ -180,20 +191,20 @@ def verify_email():
             db.session.commit()
 
         # Render basic HTML confirmation
-        return '''
+        return f'''
         <html>
           <head>
             <title>Account Verified</title>
             <style>
-              body { background-color: #1e40af; color: white; margin: 0; }
-              a { color: #bfdbfe; }
+              body {{ background-color: #1e40af; color: white; margin: 0; }}
+              a {{ color: #bfdbfe; }}
             </style>
           </head>
           <body style="font-family:sans-serif;text-align:center;padding-top:5rem;">
             <!-- Ensure polyconLogo.png is placed in backend/static/polyconLogo.png -->
             <img src="/static/polyconLogo.png" alt="Polycon Logo" style="width:200px;margin-bottom:2rem;"/>
             <h1>Registration Complete!</h1>
-            <p>Your email has been verified. You can now <a href="http://localhost:3000">log in</a>.</p>
+            <p>Your email has been verified. You can now <a href="{frontend_url}">log in</a>.</p>
           </body>
         </html>
         ''', 200, {'Content-Type': 'text/html'}

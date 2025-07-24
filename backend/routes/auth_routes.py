@@ -5,6 +5,7 @@ from flask_jwt_extended import create_access_token
 import secrets
 from datetime import datetime, timedelta
 from services.email_service_new import send_password_reset_email
+import os
 
 auth_bp = Blueprint('auth', __name__, url_prefix='/auth')
 
@@ -173,7 +174,8 @@ def request_password_reset():
         }
 
         # Create reset link
-        frontend_url = "http://localhost:3000"  # You can make this configurable
+        cors_origins = os.getenv('CORS_ALLOWED_ORIGINS', 'http://localhost:3000')
+        frontend_url = cors_origins.split(',')[0] if ',' in cors_origins else cors_origins
         reset_link = f"{frontend_url}/reset-password?token={reset_token}"
 
         # Send password reset email
