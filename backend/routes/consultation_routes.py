@@ -536,7 +536,7 @@ def get_session():
                 "full_name": teacher_user.full_name,
                 "email": teacher_user.email,
                 "department": teacher_user.department.name if teacher_user.department else "N/A",
-                "profile_picture": getattr(teacher_user, 'profile_image_url', None) # Assuming profile_image_url field exists
+                "profile_picture": teacher_user.profile_picture
             }
 
     # Fetch student details
@@ -563,7 +563,7 @@ def get_session():
                     "department": student_user.department.name if student_user.department else "N/A",
                     "program": program_name,
                     "year_section": year_section,
-                    "profile_picture": getattr(student_user, 'profile_image_url', None) # Assuming profile_image_url field exists
+                    "profile_picture": student_user.profile_picture
                 })
     
     # Frontend expects teacher_id and student_ids at the top level for some reason (from Session.js line 59-63)
@@ -627,7 +627,7 @@ def get_final_document():
                 "full_name": teacher_user.full_name,
                 "email": teacher_user.email,
                 "department": teacher_user.department.name if teacher_user.department else "N/A",
-                "profile_picture": getattr(teacher_user, 'profile_image_url', None), # Assuming profile_image_url field exists
+                "profile_picture": teacher_user.profile_picture,
                 "role": "faculty" # Adding role explicitly to avoid frontend errors
             }
 
@@ -658,7 +658,7 @@ def get_final_document():
                     "department": student_user.department.name if student_user.department else "N/A",
                     "program": program_name,
                     "year_section": year_section,
-                    "profile_picture": getattr(student_user, 'profile_image_url', None) # Assuming profile_image_url field exists
+                    "profile_picture": student_user.profile_picture
                 })
     
     session_dict["teacher_id"] = session.teacher_id

@@ -9,10 +9,10 @@ export const getProfilePictureUrl = (profilePicture, userName = '') => {
   }
   
   if (profilePicture.startsWith('http')) {
-    return profilePicture;  // Already a full URL
+    return profilePicture;  // Already a full URL (Google Cloud Storage)
   }
   
-  // Construct URL for server-stored images
+  // Construct URL for server-stored images (fallback/local development)
   return `${API_URL}/uploads/${profilePicture}`;
 };
 
