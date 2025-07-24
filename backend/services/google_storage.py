@@ -60,3 +60,25 @@ def upload_audio(file_path):
     blob.make_public()
 
     return blob.public_url
+
+def upload_profile_picture(file_stream, filename):
+    """Uploads a profile picture to Google Cloud Storage and returns the public URL."""
+    if not storage_client or not gcp_bucket_name:
+        raise ValueError("Google Cloud Storage is not properly configured. Please check your credentials and bucket name.")
+    
+    # Generate a unique filename for the profile picture
+    unique_id = str(uuid.uuid4())
+    file_extension = os.path.splitext(filename)[1]
+    blob_name = f"profile_pictures/{unique_id}{file_extension}"
+
+    bucket = storage_client.bucket(gcp_bucket_name)
+    blob = bucket.blob(blob_name)
+
+    # Upload the profile picture from file stream
+    file_stream.seek(0)  # Reset stream position
+    blob.upload_from_file(file_stream)
+
+    # Make the file publicly accessible
+    blob.make_public()
+
+    return blob.public_url
