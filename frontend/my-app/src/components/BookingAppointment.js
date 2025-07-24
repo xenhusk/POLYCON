@@ -5,6 +5,8 @@ import { getUserIdentifiers, validateUserForOperation } from "../utils/userUtils
 import { useQueryClient } from "react-query";
 import { motion } from "framer-motion";
 import API_URL from '../apiConfig';
+import useEfficientSearch from '../hooks/useEfficientSearch';
+import { useActionButtonData } from '../context/ActionButtonDataContext';
 
 function BookingAppointment({ closeModal, role: propRole }) {
   const queryClient = useQueryClient();
@@ -44,13 +46,18 @@ function BookingAppointment({ closeModal, role: propRole }) {
   const [searchTerm, setSearchTerm] = useState("");
   // --- Modified: selectedStudents now holds full student objects ---
   const [selectedStudents, setSelectedStudents] = useState([]);
-  const [studentResults, setStudentResults] = useState([]);
+  
+  // Use efficient search hooks for students and teachers
+  const studentSearch = useEfficientSearch('students');
+  const teacherSearch = useEfficientSearch('teachers');
+  
+  // Get prefetch context for monitoring
+  const { isPrefetching } = useActionButtonData();
 
   const [teacherSearchTerm, setTeacherSearchTerm] = useState("");
   const [selectedTeacher, setSelectedTeacher] = useState("");
   const [selectedTeacherName, setSelectedTeacherName] = useState("");
   const [selectedTeacherProfile, setSelectedTeacherProfile] = useState("");
-  const [teacherResults, setTeacherResults] = useState([]);
 
   // Additional teacher states
   const [schedule, setSchedule] = useState("");
@@ -72,9 +79,6 @@ function BookingAppointment({ closeModal, role: propRole }) {
   const [isTeacherInputFocused, setIsTeacherInputFocused] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
   const [message, setMessage] = useState({ type: "", content: "" });
-  const [isStudentSearchLoading, setIsStudentSearchLoading] = useState(false);
-  const [isTeacherSearchLoading, setIsTeacherSearchLoading] = useState(false);
-  const [isFellowStudentSearchLoading, setIsFellowStudentSearchLoading] = useState(false);
   const [SubmitBookingClicked, setSubmitBookingClicked] = useState(false);
   const [CancelClicked, setCancelClicked] = useState(false);
   const [enrollmentMessage, setEnrollmentMessage] = useState("");
@@ -125,75 +129,78 @@ function BookingAppointment({ closeModal, role: propRole }) {
     }
   }, []);
 
-  // Debounced search function
-  const debouncedSearch = (term) => {
-    if (searchTimeout.current) {
-      clearTimeout(searchTimeout.current);
+  // Efficient search handlers using the new hooks
+  const handleStudentSearch = async (term) => {
+    if (!term.trim()) {
+      setEnrollmentMessage("");
+      return;
     }
-    
-    // Set both loading states to ensure UI shows loading properly
-    setIsStudentSearchLoading(true);
-    setIsFellowStudentSearchLoading(true);
-    setEnrollmentMessage("");
-    
-    searchTimeout.current = setTimeout(async () => {
-      try {
-        console.log(`Fetching students for search term: "${term}"`);
-        const res = await fetch(
-          `${API_URL}/search/students?query=${encodeURIComponent(term.toLowerCase())}&page=${page}`
-        );
-        const data = await res.json();
-        
-        console.log("Student search response:", data);
-        
-        if (data.error) {
-          console.error("Search error:", data.error);
-          setEnrollmentMessage("Error fetching students. Please try again.");
-          setStudentResults([]);
-          setHasMore(false);
-        } else if (data.results) {
-          // Log search results for debugging
-          console.log(`Found ${data.results.length} students matching "${term}"`);
-          
-          if (data.results.length === 0 && term.length > 2) {
-            setEnrollmentMessage("No enrolled students found matching your search.");
-          }
-          
-          setStudentResults(
-            page === 0 ? data.results : [...studentResults, ...data.results]
-          );
-          setHasMore(data.hasMore);
-        } else {
-          setStudentResults([]);
-          setHasMore(false);
-        }
-      } catch (error) {
-        console.error("Search error:", error);
-        setStudentResults([]);
-        setHasMore(false);
-        setEnrollmentMessage("Network error. Please try again.");
-      } finally {
-        // Clear both loading states
-        setIsStudentSearchLoading(false);
-        setIsFellowStudentSearchLoading(false);
+
+    try {
+      const result = await studentSearch.searchData(term, 0);
+      if (result.results.length === 0 && term.length > 2) {
+        setEnrollmentMessage("No enrolled students found matching your search.");
+      } else {
+        setEnrollmentMessage("");
       }
-    }, 200);
+      setHasMore(result.hasMore);
+    } catch (error) {
+      console.error("Student search error:", error);
+      setEnrollmentMessage("Search error. Please try again.");
+    }
   };
 
-  // Handle search input change (unchanged logic)
+  const handleTeacherSearch = async (term) => {
+    if (!term.trim()) {
+      return;
+    }
+
+    try {
+      await teacherSearch.searchData(term, 0);
+    } catch (error) {
+      console.error("Teacher search error:", error);
+    }
+  };
+
+  // Handle search input change with debouncing
   const handleSearchChange = (e) => {
     const value = e.target.value;
     setSearchTerm(value);
     setPage(0); // Reset pagination when search term changes
-    setIsStudentSearchLoading(true);
-    debouncedSearch(value);
+    
+    // Debounce the search
+    if (searchTimeout.current) {
+      clearTimeout(searchTimeout.current);
+    }
+    
+    searchTimeout.current = setTimeout(() => {
+      handleStudentSearch(value);
+    }, 300);
+  };
+
+  // Handle teacher search input change with debouncing
+  const handleTeacherSearchChange = (e) => {
+    const value = e.target.value;
+    setTeacherSearchTerm(value);
+    setSelectedTeacher("");
+    setSelectedTeacherName("");
+    setSelectedTeacherProfile("");
+    
+    // Debounce the search
+    if (searchTimeout.current) {
+      clearTimeout(searchTimeout.current);
+    }
+    
+    searchTimeout.current = setTimeout(() => {
+      handleTeacherSearch(value);
+    }, 300);
   };
 
   // Load more results when scrolling
   const loadMore = () => {
-    if (hasMore) {
+    if (hasMore && searchTerm) {
       setPage((prev) => prev + 1);
-      debouncedSearch(searchTerm);
+      studentSearch.searchData(searchTerm, page + 1);
     }
   };
 
@@ -205,48 +212,6 @@ function BookingAppointment({ closeModal, role: propRole }) {
       }
     };
   }, []);
-
-  // Fetch search results for teachers on teacherSearchTerm change
-  useEffect(() => {
-    const fetchTeachers = async () => {
-      try {
-        setIsTeacherSearchLoading(true);
-        const res = await fetch(
-          `${API_URL}/search/teachers?query=${encodeURIComponent(teacherSearchTerm.toLowerCase())}`
-        );
-        const data = await res.json();
-        // Handle either paged results or direct array response
-        if (Array.isArray(data)) {
-          setTeacherResults(data);
-        } else if (data.results) {
-          setTeacherResults(data.results);
-        } else {
-          setTeacherResults([]);
-        }
-      } catch (error) {
-        console.error("Teacher search error:", error);
-        setTeacherResults([]);
-      } finally {
-        setIsTeacherSearchLoading(false);
-      }
-    };
-
-    if (searchTimeout.current) {
-      clearTimeout(searchTimeout.current);
-    }
-
-    if (teacherSearchTerm) {
-      searchTimeout.current = setTimeout(() => {
-        fetchTeachers();
-      }, 200);
-    }
-
-    return () => {
-      if (searchTimeout.current) {
-        clearTimeout(searchTimeout.current);
-      }
-    };
-  }, [teacherSearchTerm]);
 
   // NEW: Helper function to check if booking quota is exceeded.
   const isBookingOverQuota = () => {
@@ -501,7 +466,7 @@ function BookingAppointment({ closeModal, role: propRole }) {
               {/* Student Search Results Dropdown - Made Responsive */}
               {isStudentInputFocused && (
                 <ul className="absolute z-20 w-full mt-1 bg-white border border-gray-200 rounded-lg shadow-lg max-h-40 sm:max-h-60 overflow-y-auto">
-                  {isStudentSearchLoading ? (
+                  {studentSearch.isLoading ? (
                     Array.from({ length: 3 }).map((_, index) => (
                       <li
                         key={index}
@@ -514,12 +479,12 @@ function BookingAppointment({ closeModal, role: propRole }) {
                         </div>
                       </li>
                     ))
-                  ) : studentResults.length === 0 ? (
+                  ) : studentSearch.searchResults.length === 0 ? (
                     <li className="px-2 sm:px-4 py-2 text-center text-gray-500 text-xs sm:text-sm">
                       No students found
                     </li>
                   ) : (
-                    studentResults
+                    studentSearch.searchResults
                       .filter((student) =>
                         // Exclude already selected students and the current student by idNumber
                         student.idNumber !== studentID &&
@@ -641,7 +606,7 @@ function BookingAppointment({ closeModal, role: propRole }) {
               {/* Teacher Search Results Dropdown - Made Responsive */}
               {isTeacherInputFocused && (
                 <ul className="absolute z-20 w-full mt-1 bg-white border border-gray-200 rounded-lg shadow-lg max-h-40 sm:max-h-60 overflow-y-auto">
-                  {isTeacherSearchLoading ? (
+                  {teacherSearch.isLoading ? (
                     Array.from({ length: 3 }).map((_, index) => (
                       <li
                         key={index}
@@ -654,12 +619,12 @@ function BookingAppointment({ closeModal, role: propRole }) {
                         </div>
                       </li>
                     ))
-                  ) : teacherResults.length === 0 ? (
+                  ) : teacherSearch.searchResults.length === 0 ? (
                     <li className="px-2 sm:px-4 py-2 text-center text-gray-500 text-xs sm:text-sm">
                       No teachers found
                     </li>
                   ) : (
-                    teacherResults.map((teacher) => (
+                    teacherSearch.searchResults.map((teacher) => (
                       <li
                         key={teacher.ID}
                         onMouseDown={() => {
@@ -725,17 +690,12 @@ function BookingAppointment({ closeModal, role: propRole }) {
                 <input
                   type="text"
                   value={searchTerm}
-                  onChange={(e) => {
-                    setSearchTerm(e.target.value);
-                    setIsFellowStudentSearchLoading(true);
-                    setPage(0); // Reset pagination when search term changes
-                    debouncedSearch(e.target.value);
-                  }}
+                  onChange={handleSearchChange}
                   onFocus={() => {
                     setIsStudentInputFocused(true);
                     // If we have a search term but no results yet, trigger the search again
-                    if (searchTerm && studentResults.length === 0) {
-                      debouncedSearch(searchTerm);
+                    if (searchTerm && studentSearch.searchResults.length === 0) {
+                      handleStudentSearch(searchTerm);
                     }
                   }}
                   onBlur={() =>
@@ -749,7 +709,7 @@ function BookingAppointment({ closeModal, role: propRole }) {
               {/* Fellow Student Search Results Dropdown - Made Responsive */}
               {isStudentInputFocused && role === "student" && (
                 <ul className="absolute z-20 w-full mt-1 bg-white border border-gray-200 rounded-lg shadow-lg max-h-40 sm:max-h-60 overflow-y-auto">
-                  {isFellowStudentSearchLoading ? (
+                  {studentSearch.isLoading ? (
                     // 🚀 Loading Skeleton for Fellow Students
                     Array.from({ length: 3 }).map((_, index) => (
                       <li
@@ -763,12 +723,12 @@ function BookingAppointment({ closeModal, role: propRole }) {
                         </div>
                       </li>
                     ))
-                  ) : studentResults.length === 0 ? (
+                  ) : studentSearch.searchResults.length === 0 ? (
                     <li className="px-2 sm:px-4 py-2 text-center text-gray-500 text-xs sm:text-sm">
                       No students found
                     </li>
                   ) : (
-                    studentResults
+                    studentSearch.searchResults
                       .filter((student) =>
                         // Exclude current user by matching idNumber, not numeric id
                         student.idNumber !== studentID &&

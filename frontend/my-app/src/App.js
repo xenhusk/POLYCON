@@ -47,6 +47,7 @@ import ComparativeAnalysis from './pages/ComparativeAnalysis';
 import PasswordResetPage from './components/PasswordResetPage';
 import SocketTest from './pages/SocketTest'; // Add SocketTest import
 import { ToastProvider } from './contexts/ToastContext'; // Add ToastProvider import
+import { ActionButtonDataProvider } from './context/ActionButtonDataContext';
 const PreloaderTest = React.lazy(() => import('./components/PagePreloader'));
 
 // Update the variants to only include fade in (no fade out)
@@ -644,8 +645,9 @@ function App() {
   }, [location.pathname]);  const showDebugger = false; // Set this to false to hide the debugger
   return (
     <ToastProvider>
-      <div className={location.pathname.includes('/session') ? 'overflow-x-hidden' : 'flex min-h-screen overflow-x-hidden'}>
-        <PreloadProvider>
+      <ActionButtonDataProvider>
+        <div className={location.pathname.includes('/session') ? 'overflow-x-hidden' : 'flex min-h-screen overflow-x-hidden'}>
+          <PreloadProvider>
         <div className="app-container flex flex-1 overflow-x-hidden">
           {/* Add debugging info to sidebar rendering logic */}
           {(() => {
@@ -831,6 +833,7 @@ function App() {
         {/* {false && <NotificationDebugger />} */}
         {/* OR 3. Pass a prop to make it start hidden: */}        {/* {showDebugger && process.env.NODE_ENV === 'development' && <NotificationDebugger />} */}      </PreloadProvider>
     </div>
+      </ActionButtonDataProvider>
     </ToastProvider>
   );
 }

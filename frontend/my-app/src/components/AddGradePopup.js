@@ -2,6 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { useLocation } from 'react-router-dom';
 import { motion, AnimatePresence } from 'framer-motion';
 import API_URL from '../apiConfig';
+import { getProfilePictureUrl } from '../utils/utils';
 
 // CSS for hiding scrollbar
 const modalStyles = `
@@ -62,6 +63,7 @@ const AddGradePopup = () => {
   // Form states
   const [studentID, setStudentID] = useState("");
   const [studentName, setStudentName] = useState("");
+  const [studentProfilePicture, setStudentProfilePicture] = useState("");
   const [courseID, setCourseID] = useState("");
   const [courseName, setCourseName] = useState("");
   const [grade, setGrade] = useState("");
@@ -167,6 +169,7 @@ const AddGradePopup = () => {
   const handleStudentSelect = (student) => {
     setStudentName(student.name);
     setStudentID(student.studentID);
+    setStudentProfilePicture(student.profilePicture || "");
     setFilteredStudents([]);
   };
 
@@ -220,6 +223,7 @@ const AddGradePopup = () => {
         // Reset form
         setStudentID("");
         setStudentName("");
+        setStudentProfilePicture("");
         setCourseID("");
         setGrade("");
         setPeriod("");
@@ -244,6 +248,7 @@ const AddGradePopup = () => {
     // Reset form when closing
     setStudentID("");
     setStudentName("");
+    setStudentProfilePicture("");
     setCourseID("");
     setGrade("");
     setPeriod("");
@@ -327,22 +332,63 @@ const AddGradePopup = () => {
                   <label className="block text-sm font-medium text-gray-700 mb-2">
                     Student Name *
                   </label>
-                  <input
-                    type="text"
-                    placeholder="Enter student name"
-                    value={studentName}
-                    onChange={handleStudentNameChange}
-                    className="w-full border-2 border-[#fc6969] rounded-lg px-3 py-2 focus:outline-none focus:ring-2 focus:ring-[#ff7b7b] focus:border-transparent"
-                  />
-                  {filteredStudents.length > 0 && (
+                  
+                  {/* Selected Student Display */}
+                  {studentID && studentName && (
+                    <div className="flex items-center gap-3 p-3 bg-gray-50 border-2 border-[#fc6969] rounded-lg mb-2">
+                      <img
+                        src={getProfilePictureUrl(studentProfilePicture, studentName)}
+                        alt={studentName}
+                        className="w-10 h-10 rounded-full object-cover"
+                      />
+                      <div className="flex-1">
+                        <div className="font-medium text-gray-900">{studentName}</div>
+                        <div className="text-sm text-gray-500">ID: {studentID}</div>
+                      </div>
+                      <button
+                        type="button"
+                        onClick={() => {
+                          setStudentName("");
+                          setStudentID("");
+                          setStudentProfilePicture("");
+                        }}
+                        className="text-red-500 hover:text-red-700 text-sm font-medium"
+                      >
+                        Remove
+                      </button>
+                    </div>
+                  )}
+                  
+                  {/* Search Input - Only show when no student is selected */}
+                  {!studentID && (
+                    <input
+                      type="text"
+                      placeholder="Enter student name"
+                      value={studentName}
+                      onChange={handleStudentNameChange}
+                      className="w-full border-2 border-[#fc6969] rounded-lg px-3 py-2 focus:outline-none focus:ring-2 focus:ring-[#ff7b7b] focus:border-transparent"
+                    />
+                  )}
+                  {/* Search Results Dropdown - Only show when searching */}
+                  {!studentID && filteredStudents.length > 0 && (
                     <ul className="absolute z-[110] bg-white border border-gray-300 rounded-lg mt-1 max-h-40 overflow-y-auto w-full shadow-lg">
                       {filteredStudents.map((student) => (
                         <li
                           key={student.studentID}
                           onClick={() => handleStudentSelect(student)}
-                          className="px-3 py-2 cursor-pointer hover:bg-gray-100 text-sm"
+                          className="px-3 py-2 cursor-pointer hover:bg-gray-100 text-sm flex items-center gap-3"
                         >
-                          {student.name}
+                          <img
+                            src={getProfilePictureUrl(student.profilePicture, student.name)}
+                            alt={student.name}
+                            className="w-8 h-8 rounded-full object-cover"
+                          />
+                          <div>
+                            <div className="font-medium">{student.name}</div>
+                            {student.studentID && (
+                              <div className="text-xs text-gray-500">ID: {student.studentID}</div>
+                            )}
+                          </div>
                         </li>
                       ))}
                     </ul>

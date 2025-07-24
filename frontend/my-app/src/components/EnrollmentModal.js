@@ -1,56 +1,32 @@
 import React, { useState, useEffect, useRef } from "react";
 import { getProfilePictureUrl } from "../utils/utils";
 import API_URL from '../apiConfig';
+import { useEfficientSearch } from '../hooks/useEfficientSearch';
+import { useActionButtonData } from '../context/ActionButtonDataContext';
 
 function EnrollmentModal({ closeModal }) {
+  // Get prefetched data context
+  const { prefetchedData } = useActionButtonData();
+  
+  // Use efficient search hook for students
+  const studentSearch = useEfficientSearch('students', '/search/enrollment_students');
+  
   const [searchTerm, setSearchTerm] = useState("");
-  const [studentResults, setStudentResults] = useState([]);
   const [selectedStudents, setSelectedStudents] = useState([]);
-  const [isSearchLoading, setIsSearchLoading] = useState(false);
   const [isInputFocused, setIsInputFocused] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
   const [message, setMessage] = useState({ type: "", content: "" });
   const [EnrollClicked, setEnrollClicked] = useState(false);
   const [CancelClicked, setCancelClicked] = useState(false);
-  const searchTimeout = useRef(null);
   const teacherID = localStorage.getItem("teacherID");
   const [isMobile, setIsMobile] = useState(window.innerWidth < 640);
+  const searchTimeout = useRef(null);
 
-  const debouncedSearch = (term) => {
-    if (searchTimeout.current) clearTimeout(searchTimeout.current);
-    setIsSearchLoading(true);
-    searchTimeout.current = setTimeout(async () => {
-      try {
-        // Use the new enrollment_students endpoint instead of the regular students endpoint
-        const res = await fetch(
-          `${API_URL}/search/enrollment_students?query=${encodeURIComponent(term.toLowerCase())}`
-        );
-        const data = await res.json();
-        if (data.error) {
-          console.error("Search error:", data.error);
-          setStudentResults([]);
-        } else {
-          // The API may return either an array directly or an object with a 'results' array
-          const fetchedStudents = Array.isArray(data)
-            ? data
-            : Array.isArray(data.results)
-            ? data.results
-            : [];
-          setStudentResults(fetchedStudents);
-        }
-      } catch (error) {
-        console.error("Search error:", error);
-        setStudentResults([]);
-      } finally {
-        setIsSearchLoading(false);
-      }
-    }, 200);
-  };
-
+  // Handle search input changes with efficient search
   const handleSearchChange = (e) => {
     const value = e.target.value;
     setSearchTerm(value);
-    debouncedSearch(value);
+    studentSearch.searchData(value);
   };
 
   const submitEnrollment = async () => {
@@ -193,7 +169,7 @@ function EnrollmentModal({ closeModal }) {
           {isInputFocused && (
             <div className="absolute left-0 right-0 mt-1 z-50">
               <ul className="bg-white border border-gray-200 rounded-lg shadow-lg max-h-20 sm:max-h-20 md:max-h-28 overflow-y-auto z-50">
-                {isSearchLoading ? (
+                {studentSearch.isLoading ? (
                   Array.from({ length: 2}).map((_, index) => (
                     <li
                       key={index}
@@ -206,18 +182,18 @@ function EnrollmentModal({ closeModal }) {
                       </div>
                     </li>
                   ))
-                ) : studentResults.filter(
+                ) : studentSearch.searchResults.filter(
                     (student) =>
                       !selectedStudents.some((s) => s.id === student.id) &&
                       !student.isEnrolled
                   ).length === 0 ? (
                   <li className="px-2 sm:px-4 py-2 text-center text-gray-500 text-xs sm:text-sm z-50">
-                    {studentResults.length === 0
+                    {studentSearch.searchResults.length === 0
                       ? "No students found"
                       : "No available students to add"}
                   </li>
                 ) : (
-                  studentResults
+                  studentSearch.searchResults
                     .filter(
                       (student) =>
                         !selectedStudents.some((s) => s.id === student.id) &&
