@@ -23,4 +23,3 @@ bcrypt
 setuptools
 flask-socketio
 flask_migrate
-cloudinary
