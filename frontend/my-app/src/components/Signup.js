@@ -177,8 +177,14 @@ const Signup = ({ onSwitchToLogin }) => {
           "✅ Registration successful! Check your email for the verification link."
         );
         setIsLoading(false);
-        // Optionally, switch to login after a delay
-        // setTimeout(() => onSwitchToLogin(), 3000);
+        
+        // Save email for potential resend verification
+        localStorage.setItem('pendingVerificationEmail', formData.email);
+        
+        // Redirect to verification page after a short delay
+        setTimeout(() => {
+          window.location.href = '/verify-email';
+        }, 2000);
       } else {
         setErrorMessage(data.error || "Signup failed. Please try again.");
         setIsLoading(false);

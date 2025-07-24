@@ -1,46 +1,173 @@
 import React, { useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { BellIcon, XMarkIcon } from '@heroicons/react/24/outline';
+import { 
+  BellIcon, 
+  XMarkIcon, 
+  CheckCircleIcon, 
+  ExclamationTriangleIcon, 
+  InformationCircleIcon,
+  XCircleIcon 
+} from '@heroicons/react/24/outline';
 
-const Toast = ({ message, isVisible, onClose }) => {
+const Toast = ({ message, type = 'info', isVisible, onClose, useSystemNotification = false, title = 'POLYCON' }) => {
+  
+  // System notification function
+  const showSystemNotification = (title, message, type) => {
+    if ('Notification' in window && Notification.permission === 'granted') {
+      const options = {
+        body: message,
+        icon: '/favicon.ico', // You can customize this
+        badge: '/favicon.ico',
+        tag: 'polycon-notification', // Prevents duplicate notifications
+        requireInteraction: false,
+        silent: false,
+      };
+
+      try {
+        const notification = new Notification(title, options);
+        
+        // Auto close system notification after 5 seconds
+        setTimeout(() => {
+          notification.close();
+        }, 5000);
+
+        // Handle notification click
+        notification.onclick = () => {
+          window.focus(); // Bring the app to focus
+          notification.close();
+        };
+      } catch (error) {
+        console.error('Error showing system notification:', error);
+      }
+    }
+  };
+
   useEffect(() => {
     if (isVisible) {
+      // Show system notification if enabled and permission granted
+      if (useSystemNotification) {
+        showSystemNotification(title, message, type);
+      }
+
       const timer = setTimeout(() => {
         onClose();
       }, 5000); // Auto close after 5 seconds
 
       return () => clearTimeout(timer);
     }
-  }, [isVisible, onClose]);
+  }, [isVisible, onClose, useSystemNotification, title, message, type]);
+
+  // Get icon and colors based on type
+  const getToastConfig = (type) => {
+    switch (type) {
+      case 'success':
+        return {
+          icon: CheckCircleIcon,
+          bgColor: 'bg-gradient-to-r from-green-500 to-green-600',
+          borderColor: 'border-green-400',
+          iconColor: 'text-green-100',
+          ringColor: 'ring-green-400/20'
+        };
+      case 'error':
+        return {
+          icon: XCircleIcon,
+          bgColor: 'bg-gradient-to-r from-red-500 to-red-600',
+          borderColor: 'border-red-400',
+          iconColor: 'text-red-100',
+          ringColor: 'ring-red-400/20'
+        };
+      case 'warning':
+        return {
+          icon: ExclamationTriangleIcon,
+          bgColor: 'bg-gradient-to-r from-amber-500 to-orange-500',
+          borderColor: 'border-amber-400',
+          iconColor: 'text-amber-100',
+          ringColor: 'ring-amber-400/20'
+        };
+      case 'info':
+      default:
+        return {
+          icon: InformationCircleIcon,
+          bgColor: 'bg-gradient-to-r from-blue-500 to-blue-600',
+          borderColor: 'border-blue-400',
+          iconColor: 'text-blue-100',
+          ringColor: 'ring-blue-400/20'
+        };
+    }
+  };
+
+  const config = getToastConfig(type);
+  const IconComponent = config.icon;
 
   return (
     <AnimatePresence>
       {isVisible && (
         <motion.div
-          initial={{ x: 100, opacity: 0 }}
-          animate={{ x: 0, opacity: 1 }}
-          exit={{ x: 100, opacity: 0 }}
-          transition={{ type: "spring", stiffness: 100 }}
-          className="fixed top-4 right-4 bg-blue-600 text-white rounded-lg shadow-lg p-4 z-[9999] w-auto max-w-md flex items-center gap-3"
-          style={{ pointerEvents: 'auto' }} // Ensure clickable
+          initial={{ opacity: 0, scale: 0.95, y: -20 }}
+          animate={{ opacity: 1, scale: 1, y: 0 }}
+          exit={{ opacity: 0, scale: 0.95, y: -20 }}
+          transition={{ 
+            type: "spring", 
+            stiffness: 120, 
+            damping: 20,
+            duration: 0.4
+          }}
+          className={`${config.bgColor} text-white rounded-xl shadow-2xl 
+                     p-4 sm:p-6 w-full 
+                     flex items-start gap-3 sm:gap-4 border ${config.borderColor} 
+                     ring-4 ${config.ringColor} backdrop-blur-sm`}
+          style={{ pointerEvents: 'auto' }}
         >
-          <div className="flex-shrink-0">
-            <BellIcon className="h-5 w-5" />
+          {/* Icon */}
+          <div className={`flex-shrink-0 p-1.5 rounded-full bg-white/20 ${config.iconColor}`}>
+            <IconComponent className="h-6 w-6 sm:h-7 sm:w-7" />
           </div>
-          <div className="flex-1 mr-2">
-            <p className="text-sm font-medium break-words">{message}</p>
+          
+          {/* Content */}
+          <div className="flex-1 min-w-0 pt-0.5">
+            <p className="text-base sm:text-lg font-medium break-words leading-relaxed">
+              {message}
+            </p>
           </div>
+          
+          {/* Close Button */}
           <button 
             onClick={onClose}
-            className="flex-shrink-0 hover:text-gray-200"
+            className="flex-shrink-0 p-1 rounded-full hover:bg-white/20 transition-colors duration-200 
+                       focus:outline-none focus:ring-2 focus:ring-white/50 ml-2"
             aria-label="Close notification"
           >
-            <XMarkIcon className="h-5 w-5" />
+            <XMarkIcon className="h-4 w-4 sm:h-5 sm:w-5" />
           </button>
+          
+          {/* Progress bar */}
+          <motion.div
+            initial={{ width: "100%" }}
+            animate={{ width: "0%" }}
+            transition={{ duration: 5, ease: "linear" }}
+            className="absolute bottom-0 left-0 h-1 bg-white/30 rounded-b-xl"
+          />
         </motion.div>
       )}
     </AnimatePresence>
   );
+};
+
+// Utility function to request notification permission
+export const requestNotificationPermission = async () => {
+  if ('Notification' in window) {
+    if (Notification.permission === 'default') {
+      const permission = await Notification.requestPermission();
+      return permission === 'granted';
+    }
+    return Notification.permission === 'granted';
+  }
+  return false;
+};
+
+// Utility function to check if notifications are supported and permitted
+export const canUseSystemNotifications = () => {
+  return 'Notification' in window && Notification.permission === 'granted';
 };
 
 export default Toast;

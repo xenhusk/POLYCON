@@ -12,9 +12,9 @@ const ComparativeAnalysisHeader = ({ openSelectionModal, allFieldsProvided }) =>
 
       <p className="text-gray-600 text-md mb-6 px-4">
         Welcome to the Polycon Analysis tool, your comprehensive solution for
-        evaluating student performance and academic progress. This analysis
-        combines grades, consultation records, and academic events to provide
-        actionable insights.
+        evaluating student improvement and learning progress. This analysis
+        combines grade progression, consultation quality, and academic events to provide
+        insights into how much students have improved and learned over time.
       </p>
 
       <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-8 px-4">
@@ -36,9 +36,9 @@ const ComparativeAnalysisHeader = ({ openSelectionModal, allFieldsProvided }) =>
               />
             </svg>
           </div>
-          <h3 className="font-semibold text-gray-800">Performance Tracking</h3>
+          <h3 className="font-semibold text-gray-800">Improvement Tracking</h3>
           <p className="text-sm text-gray-500">
-            Track academic progress across different periods
+            Track academic improvement and learning progress across different periods
           </p>
         </div>
 
@@ -60,9 +60,9 @@ const ComparativeAnalysisHeader = ({ openSelectionModal, allFieldsProvided }) =>
               />
             </svg>
           </div>
-          <h3 className="font-semibold text-gray-800">Consultation History</h3>
+          <h3 className="font-semibold text-gray-800">Consultation Quality</h3>
           <p className="text-sm text-gray-500">
-            Review past consultations and their outcomes
+            Analyze consultation effectiveness and learning outcomes
           </p>
         </div>
 

@@ -156,55 +156,55 @@ function StudentAppointments() {
   }, [refetch, showBookingCreated, showBookingConfirmed, showBookingCancelled, showAppointmentReminder]);
 
   return (
-    <div className="grid grid-cols-1 gap-5 h-full sm:grid-cols-1 md:grid-cols-1 lg:grid-cols-2">
+    <div className="flex flex-col gap-4 sm:gap-5 h-full lg:grid lg:grid-cols-2">
       {/* Pending Appointments Section */}
-      <section className="bg-white rounded-xl shadow-sm p-6 flex flex-col max-h-[76vh] sm:order-1 md:order-1 lg:order-none">
-        <h3 className="text-xl font-semibold mb-4 text-[#0065A8] border-b-2 border-[#54BEFF] sticky pb-2 top-0 bg-white">
+      <section className="bg-white rounded-xl shadow-sm p-4 sm:p-6 flex flex-col max-h-[76vh] sm:max-h-[80vh] lg:max-h-[76vh] order-1 lg:order-none">
+        <h3 className="text-lg sm:text-xl font-semibold mb-3 sm:mb-4 text-[#0065A8] border-b-2 border-[#54BEFF] sticky pb-2 top-0 bg-white">
           Pending Appointments
         </h3>
         <div className="flex-1 overflow-y-auto min-h-0 Appointments-scroll">
           {isLoading ? (
-            <ul className="space-y-4 pr-2">
+            <ul className="space-y-3 sm:space-y-4 pr-1 sm:pr-2">
               {Array.from({ length: 1 }).map((_, index) => (
                 <li
                   key={index}
-                  className="bg-white rounded-lg shadow-md p-6 my-4 border-l-4 border-[#0065A8] hover:shadow-lg transition-shadow flex flex-col fade-in delay-300 animate-pulse"
+                  className="bg-white rounded-lg shadow-md p-4 sm:p-6 my-3 sm:my-4 border-l-4 border-[#0065A8] hover:shadow-lg transition-shadow flex flex-col fade-in delay-300 animate-pulse"
                 >
                   {/* Teacher Section Skeleton */}
-                  <div className="mb-4 fade-in delay-100">
-                    <p className="h-4 bg-gray-300 rounded w-40 mb-2"></p>
+                  <div className="mb-3 sm:mb-4 fade-in delay-100">
+                    <p className="h-3 sm:h-4 bg-gray-300 rounded w-32 sm:w-40 mb-2"></p>
                     <div className="flex items-center">
-                      <div className="w-8 sm:w-10 md:w-12 h-8 sm:h-10 md:h-12 bg-gray-200 rounded-full mr-3 border-2 border-[#54BEFF]"></div>
-                      <div className="h-4 bg-gray-300 rounded w-40"></div>
+                      <div className="w-10 h-10 sm:w-12 sm:h-12 bg-gray-200 rounded-full mr-2 sm:mr-3 border-2 border-[#54BEFF]"></div>
+                      <div className="h-3 sm:h-4 bg-gray-300 rounded w-32 sm:w-40"></div>
                     </div>
                   </div>
                   {/* Student(s) Section Skeleton */}
-                  <div className="mt-4 fade-in delay-200">
-                    <p className="h-4 bg-gray-300 rounded w-40 mb-2"></p>
-                    <div className="flex flex-wrap items-center gap-3">
+                  <div className="mt-3 sm:mt-4 fade-in delay-200">
+                    <p className="h-3 sm:h-4 bg-gray-300 rounded w-32 sm:w-40 mb-2"></p>
+                    <div className="flex flex-wrap items-center gap-2 sm:gap-3">
                       {Array.from({ length: 3 }).map((_, index) => (
                         <div
                           key={index}
-                          className="flex items-center bg-gray-50 rounded-full px-3 py-1"
+                          className="flex items-center bg-gray-50 rounded-full px-2 sm:px-3 py-1"
                         >
-                          <div className="w-8 sm:w-10 md:w-12 h-8 sm:h-10 md:h-12 bg-gray-200 rounded-full mr-2 border-2 border-gray-200"></div>
-                          <div className="h-3 bg-gray-300 rounded w-20"></div>
+                          <div className="w-6 h-6 sm:w-8 sm:h-8 bg-gray-200 rounded-full mr-1 sm:mr-2 border-2 border-gray-200"></div>
+                          <div className="h-2 sm:h-3 bg-gray-300 rounded w-16 sm:w-20"></div>
                         </div>
                       ))}
                     </div>
                   </div>
                   {/* Details Section Skeleton */}
-                  <div className="grid grid-cols-2 gap-4 mt-4 fade-in delay-300">
+                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 sm:gap-4 mt-3 sm:mt-4 fade-in delay-300">
                     <div>
-                      <div className="h-4 bg-gray-300 rounded w-40 mb-2"></div>
-                      <div className="h-3 bg-gray-200 rounded w-24"></div>
+                      <div className="h-3 sm:h-4 bg-gray-300 rounded w-28 sm:w-40 mb-1 sm:mb-2"></div>
+                      <div className="h-2 sm:h-3 bg-gray-200 rounded w-20 sm:w-24"></div>
                     </div>
                   </div>
                 </li>
               ))}
             </ul>
           ) : appointments?.pending?.length > 0 ? (
-            <ul className="space-y-4 pr-2">
+            <ul className="space-y-3 sm:space-y-4 pr-1 sm:pr-2">
               {appointments.pending.map((app) => (
                 <AppointmentItem
                   key={app.id}
@@ -220,61 +220,61 @@ function StudentAppointments() {
       </section>
 
       {/* Upcoming Appointments Section */}
-      <section className="bg-white rounded-xl shadow-sm p-6 flex flex-col max-h-[76vh] sm:order-2 md:order-2 lg:order-none">
-        <h3 className="text-xl font-semibold mb-4 text-[#0065A8] border-b-2 border-[#54BEFF] pb-2 sticky top-0 bg-white">
+      <section className="bg-white rounded-xl shadow-sm p-4 sm:p-6 flex flex-col max-h-[76vh] sm:max-h-[80vh] lg:max-h-[76vh] order-2 lg:order-none">
+        <h3 className="text-lg sm:text-xl font-semibold mb-3 sm:mb-4 text-[#0065A8] border-b-2 border-[#54BEFF] pb-2 sticky top-0 bg-white">
           Upcoming Appointments
         </h3>
         <div className="flex-1 overflow-y-auto min-h-0 Appointments-scroll">
           {isLoading ? (
-            <ul className="space-y-4 pr-2">
+            <ul className="space-y-3 sm:space-y-4 pr-1 sm:pr-2">
               {Array.from({ length: 1 }).map((_, index) => (
                 <li
                   key={index}
-                  className="bg-white rounded-lg shadow-md p-6 my-4 border-l-4 border-[#0065A8] hover:shadow-lg transition-shadow flex flex-col fade-in delay-300 animate-pulse"
+                  className="bg-white rounded-lg shadow-md p-4 sm:p-6 my-3 sm:my-4 border-l-4 border-[#0065A8] hover:shadow-lg transition-shadow flex flex-col fade-in delay-300 animate-pulse"
                 >
                   {/* Teacher Section Skeleton */}
-                  <div className="mb-4 fade-in delay-100">
-                    <p className="h-4 bg-gray-300 rounded w-40 mb-2"></p>
+                  <div className="mb-3 sm:mb-4 fade-in delay-100">
+                    <p className="h-3 sm:h-4 bg-gray-300 rounded w-32 sm:w-40 mb-2"></p>
                     <div className="flex items-center">
-                      <div className="w-8 sm:w-10 md:w-12 h-8 sm:h-10 md:h-12 bg-gray-200 rounded-full mr-3 border-2 border-gray-200"></div>
-                      <div className="h-4 bg-gray-300 rounded w-40"></div>
+                      <div className="w-10 h-10 sm:w-12 sm:h-12 bg-gray-200 rounded-full mr-2 sm:mr-3 border-2 border-gray-200"></div>
+                      <div className="h-3 sm:h-4 bg-gray-300 rounded w-32 sm:w-40"></div>
                     </div>
                   </div>
                   {/* Student(s) Section Skeleton */}
-                  <div className="mt-4 fade-in delay-200">
-                    <p className="h-4 bg-gray-300 rounded w-40 mb-2">Student(s)</p>
-                    <div className="flex flex-wrap items-center gap-3">
+                  <div className="mt-3 sm:mt-4 fade-in delay-200">
+                    <p className="h-3 sm:h-4 bg-gray-300 rounded w-32 sm:w-40 mb-2">Student(s)</p>
+                    <div className="flex flex-wrap items-center gap-2 sm:gap-3">
                       {Array.from({ length: 3 }).map((_, index) => (
                         <div
                           key={index}
-                          className="flex items-center bg-gray-50 rounded-full px-3 py-1"
+                          className="flex items-center bg-gray-50 rounded-full px-2 sm:px-3 py-1"
                         >
-                          <div className="w-8 sm:w-10 md:w-12 h-8 sm:h-10 md:h-12 bg-gray-200 rounded-full mr-2 border-2 border-gray-200"></div>
-                          <div className="h-3 bg-gray-300 rounded w-20"></div>
+                          <div className="w-6 h-6 sm:w-8 sm:h-8 bg-gray-200 rounded-full mr-1 sm:mr-2 border-2 border-gray-200"></div>
+                          <div className="h-2 sm:h-3 bg-gray-300 rounded w-16 sm:w-20"></div>
                         </div>
                       ))}
                     </div>
                   </div>
                   {/* Details Section Skeleton */}
-                  <div className="grid grid-cols-2 gap-4 mt-4 fade-in delay-300">
+                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 sm:gap-4 mt-3 sm:mt-4 fade-in delay-300">
                     <div>
-                      <div className="h-4 bg-gray-300 rounded w-40 mb-2"></div>
-                      <div className="h-3 bg-gray-200 rounded w-24"></div>
+                      <div className="h-3 sm:h-4 bg-gray-300 rounded w-28 sm:w-40 mb-1 sm:mb-2"></div>
+                      <div className="h-2 sm:h-3 bg-gray-200 rounded w-20 sm:w-24"></div>
                     </div>
                     <div>
-                      <div className="h-4 bg-gray-300 rounded w-40 mb-2"></div>
-                      <div className="h-3 bg-gray-200 rounded w-24"></div>
+                      <div className="h-3 sm:h-4 bg-gray-300 rounded w-28 sm:w-40 mb-1 sm:mb-2"></div>
+                      <div className="h-2 sm:h-3 bg-gray-200 rounded w-20 sm:w-24"></div>
                     </div>
                     <div>
-                      <div className="h-4 bg-gray-300 rounded w-40 mb-2"></div>
-                      <div className="h-3 bg-gray-200 rounded w-24"></div>
+                      <div className="h-3 sm:h-4 bg-gray-300 rounded w-28 sm:w-40 mb-1 sm:mb-2"></div>
+                      <div className="h-2 sm:h-3 bg-gray-200 rounded w-20 sm:w-24"></div>
                     </div>
                   </div>
                 </li>
               ))}
             </ul>
           ) : appointments?.upcoming?.length > 0 ? (
-            <ul className="space-y-4 pr-2">
+            <ul className="space-y-3 sm:space-y-4 pr-1 sm:pr-2">
               {appointments.upcoming.map((app) => (
                 <AppointmentItem
                   key={app.id}
@@ -532,56 +532,54 @@ function TeacherAppointments() {
   }
 
   return (
-    <div
-      className="grid grid-cols-1 gap-5 h-full sm:grid-cols-1 md:grid-cols-1 lg:grid-cols-2"
-    >
-      <section className="bg-white rounded-xl shadow-sm p-6 flex flex-col max-h-[76vh] sm:order-1 md:order-none lg:order-none">
-        <h3 className="text-xl font-semibold mb-4 text-[#0065A8] border-b-2 border-[#54BEFF] sticky pb-2 top-0 bg-white">
+    <div className="flex flex-col gap-4 sm:gap-5 h-full lg:grid lg:grid-cols-2">
+      <section className="bg-white rounded-xl shadow-sm p-4 sm:p-6 flex flex-col max-h-[76vh] sm:max-h-[80vh] lg:max-h-[76vh] order-1 lg:order-none">
+        <h3 className="text-lg sm:text-xl font-semibold mb-3 sm:mb-4 text-[#0065A8] border-b-2 border-[#54BEFF] sticky pb-2 top-0 bg-white">
           Pending Appointments
         </h3>
         <div className="flex-1 overflow-y-auto min-h-0">
           {isLoading ? (
-            <ul className="space-y-4 pr-2">
+            <ul className="space-y-3 sm:space-y-4 pr-1 sm:pr-2">
               {Array.from({ length: 1 }).map((_, index) => (
                 <li
                   key={index}
-                  className="bg-white rounded-lg shadow-md p-6 my-4 border-l-4 border-[#0065A8] hover:shadow-lg transition-shadow flex flex-col fade-in delay-300 animate-pulse"
+                  className="bg-white rounded-lg shadow-md p-4 sm:p-6 my-3 sm:my-4 border-l-4 border-[#0065A8] hover:shadow-lg transition-shadow flex flex-col fade-in delay-300 animate-pulse"
                 >
                   {/* Teacher Section Skeleton */}
-                  <div className="mb-4 fade-in delay-100">
-                    <p className="h-4 bg-gray-300 rounded w-40 mb-2"></p>
+                  <div className="mb-3 sm:mb-4 fade-in delay-100">
+                    <p className="h-3 sm:h-4 bg-gray-300 rounded w-32 sm:w-40 mb-2"></p>
                     <div className="flex items-center">
-                      <div className="w-8 sm:w-10 md:w-12 h-8 sm:h-10 md:h-12 bg-gray-200 rounded-full mr-3 border-2 border-gray-200"></div>
-                      <div className="h-4 bg-gray-300 rounded w-40"></div>
+                      <div className="w-10 h-10 sm:w-12 sm:h-12 bg-gray-200 rounded-full mr-2 sm:mr-3 border-2 border-gray-200"></div>
+                      <div className="h-3 sm:h-4 bg-gray-300 rounded w-32 sm:w-40"></div>
                     </div>
                   </div>
                   {/* Student(s) Section Skeleton */}
-                  <div className="mt-4 fade-in delay-200">
-                    <p className="h-4 bg-gray-300 rounded w-40 mb-2"></p>
-                    <div className="flex flex-wrap items-center gap-3">
+                  <div className="mt-3 sm:mt-4 fade-in delay-200">
+                    <p className="h-3 sm:h-4 bg-gray-300 rounded w-32 sm:w-40 mb-2"></p>
+                    <div className="flex flex-wrap items-center gap-2 sm:gap-3">
                       {Array.from({ length: 3 }).map((_, index) => (
                         <div
                           key={index}
-                          className="flex items-center bg-gray-50 rounded-full px-3 py-1"
+                          className="flex items-center bg-gray-50 rounded-full px-2 sm:px-3 py-1"
                         >
-                          <div className="w-8 sm:w-10 md:w-12 h-8 sm:h-10 md:h-12 bg-gray-200 rounded-full mr-2 border-2 border-gray-200"></div>
-                          <div className="h-3 bg-gray-300 rounded w-20"></div>
+                          <div className="w-6 h-6 sm:w-8 sm:h-8 bg-gray-200 rounded-full mr-1 sm:mr-2 border-2 border-gray-200"></div>
+                          <div className="h-2 sm:h-3 bg-gray-300 rounded w-16 sm:w-20"></div>
                         </div>
                       ))}
                     </div>
                   </div>
                   {/* Details Section Skeleton */}
-                  <div className="grid grid-cols-2 gap-4 mt-4 fade-in delay-300">
+                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 sm:gap-4 mt-3 sm:mt-4 fade-in delay-300">
                     <div>
-                      <div className="h-4 bg-gray-300 rounded w-40 mb-2"></div>
-                      <div className="h-3 bg-gray-200 rounded w-24"></div>
+                      <div className="h-3 sm:h-4 bg-gray-300 rounded w-28 sm:w-40 mb-1 sm:mb-2"></div>
+                      <div className="h-2 sm:h-3 bg-gray-200 rounded w-20 sm:w-24"></div>
                     </div>
                   </div>
                 </li>
               ))}
             </ul>
           ) : sortedAppointments?.pending?.length > 0 ? (
-            <ul className="space-y-4 pr-2">
+            <ul className="space-y-3 sm:space-y-4 pr-1 sm:pr-2">
               {sortedAppointments.pending.map((app) => (
                 <AppointmentItem
                   key={app.id}
@@ -601,61 +599,61 @@ function TeacherAppointments() {
         </div>
       </section>
 
-      <section className="bg-white rounded-xl shadow-sm p-6 flex flex-col max-h-[76vh] sm:order-1 md:order-none lg:order-none">
-        <h3 className="text-xl font-semibold mb-4 text-[#0065A8] border-b-2 border-[#54BEFF] pb-2 sticky top-0 bg-white">
+      <section className="bg-white rounded-xl shadow-sm p-4 sm:p-6 flex flex-col max-h-[76vh] sm:max-h-[80vh] lg:max-h-[76vh] order-2 lg:order-none">
+        <h3 className="text-lg sm:text-xl font-semibold mb-3 sm:mb-4 text-[#0065A8] border-b-2 border-[#54BEFF] pb-2 sticky top-0 bg-white">
           Upcoming Appointments
         </h3>
         <div className="flex-1 overflow-y-auto min-h-0">
           {isLoading ? (
-            <ul className="space-y-4 pr-2">
+            <ul className="space-y-3 sm:space-y-4 pr-1 sm:pr-2">
               {Array.from({ length: 1 }).map((_, index) => (
                 <li
                   key={index}
-                  className="bg-white rounded-lg shadow-md p-6 my-4 border-l-4 border-[#0065A8] hover:shadow-lg transition-shadow flex flex-col fade-in delay-300 animate-pulse"
+                  className="bg-white rounded-lg shadow-md p-4 sm:p-6 my-3 sm:my-4 border-l-4 border-[#0065A8] hover:shadow-lg transition-shadow flex flex-col fade-in delay-300 animate-pulse"
                 >
                   {/* Teacher Section Skeleton */}
-                  <div className="mb-4 fade-in delay-100">
-                    <p className="h-4 bg-gray-300 rounded w-40 mb-2"></p>
+                  <div className="mb-3 sm:mb-4 fade-in delay-100">
+                    <p className="h-3 sm:h-4 bg-gray-300 rounded w-32 sm:w-40 mb-2"></p>
                     <div className="flex items-center">
-                      <div className="w-8 sm:w-10 md:w-12 h-8 sm:h-10 md:h-12 bg-gray-200 rounded-full mr-3 border-2 border-gray-200"></div>
-                      <div className="h-4 bg-gray-300 rounded w-40"></div>
+                      <div className="w-10 h-10 sm:w-12 sm:h-12 bg-gray-200 rounded-full mr-2 sm:mr-3 border-2 border-gray-200"></div>
+                      <div className="h-3 sm:h-4 bg-gray-300 rounded w-32 sm:w-40"></div>
                     </div>
                   </div>
                   {/* Student(s) Section Skeleton */}
-                  <div className="mt-4 fade-in delay-200">
-                    <p className="h-4 bg-gray-300 rounded w-40 mb-2"></p>
-                    <div className="flex flex-wrap items-center gap-3">
+                  <div className="mt-3 sm:mt-4 fade-in delay-200">
+                    <p className="h-3 sm:h-4 bg-gray-300 rounded w-32 sm:w-40 mb-2"></p>
+                    <div className="flex flex-wrap items-center gap-2 sm:gap-3">
                       {Array.from({ length: 3 }).map((_, index) => (
                         <div
                           key={index}
-                          className="flex items-center bg-gray-50 rounded-full px-3 py-1"
+                          className="flex items-center bg-gray-50 rounded-full px-2 sm:px-3 py-1"
                         >
-                          <div className="w-8 sm:w-10 md:w-12 h-8 sm:h-10 md:h-12 bg-gray-200 rounded-full mr-2 border-2 border-gray-200"></div>
-                          <div className="h-3 bg-gray-300 rounded w-20"></div>
+                          <div className="w-6 h-6 sm:w-8 sm:h-8 bg-gray-200 rounded-full mr-1 sm:mr-2 border-2 border-gray-200"></div>
+                          <div className="h-2 sm:h-3 bg-gray-300 rounded w-16 sm:w-20"></div>
                         </div>
                       ))}
                     </div>
                   </div>
                   {/* Details Section Skeleton */}
-                  <div className="grid grid-cols-2 gap-4 mt-4 fade-in delay-300">
+                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 sm:gap-4 mt-3 sm:mt-4 fade-in delay-300">
                     <div>
-                      <div className="h-4 bg-gray-300 rounded w-40 mb-2"></div>
-                      <div className="h-3 bg-gray-200 rounded w-24"></div>
+                      <div className="h-3 sm:h-4 bg-gray-300 rounded w-28 sm:w-40 mb-1 sm:mb-2"></div>
+                      <div className="h-2 sm:h-3 bg-gray-200 rounded w-20 sm:w-24"></div>
                     </div>
                     <div>
-                      <div className="h-4 bg-gray-300 rounded w-40 mb-2"></div>
-                      <div className="h-3 bg-gray-200 rounded w-24"></div>
+                      <div className="h-3 sm:h-4 bg-gray-300 rounded w-28 sm:w-40 mb-1 sm:mb-2"></div>
+                      <div className="h-2 sm:h-3 bg-gray-200 rounded w-20 sm:w-24"></div>
                     </div>
                     <div>
-                      <div className="h-4 bg-gray-300 rounded w-40 mb-2"></div>
-                      <div className="h-3 bg-gray-200 rounded w-24"></div>
+                      <div className="h-3 sm:h-4 bg-gray-300 rounded w-28 sm:w-40 mb-1 sm:mb-2"></div>
+                      <div className="h-2 sm:h-3 bg-gray-200 rounded w-20 sm:w-24"></div>
                     </div>
                   </div>
                 </li>
               ))}
             </ul>
           ) : sortedAppointments?.upcoming?.length > 0 ? (
-            <ul className="">
+            <ul className="space-y-3 sm:space-y-4">
               {sortedAppointments.upcoming.map((app) => (
                 <AppointmentItem
                   key={app.id}
@@ -683,17 +681,17 @@ function Appointments() {
   if (!role) return <p>Loading...</p>;
 
   return (
-    <div className="min-h-screen overflow-hidden p-3 sm:p-5 lg:p-7">
-      <h2 className="text-xl sm:text-2xl lg:text-3xl font-bold 
-                 mb-4 sm:mb-6 lg:mb-8 
+    <div className="min-h-screen overflow-hidden p-2 sm:p-3 lg:p-5 xl:p-7">
+      <h2 className="text-lg sm:text-xl lg:text-2xl xl:text-3xl font-bold 
+                 mb-3 sm:mb-4 lg:mb-6 xl:mb-8 
                  text-center text-[#0065A8]
                  transition-all duration-300">
         Appointments
       </h2>
       <div className="bg-[#dceffa] rounded-lg sm:rounded-xl 
-                  p-4 sm:p-5 lg:p-6 
+                  p-3 sm:p-4 lg:p-5 xl:p-6 
                   shadow-sm overflow-y-auto transparent-scroll
-                  h-[calc(100vh-7rem)] sm:h-[calc(100vh-8rem)]
+                  h-[calc(100vh-6rem)] sm:h-[calc(100vh-7rem)] lg:h-[calc(100vh-8rem)]
                   transition-all duration-300">
         {role === "student" ? (
           <StudentAppointments />

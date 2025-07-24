@@ -1,7 +1,9 @@
 import React, { useState, useEffect } from "react";
+import { createPortal } from "react-dom";
 import API_URL from '../apiConfig';
 import { getProfilePictureUrl } from "../utils/utils";
 import { motion, AnimatePresence } from "framer-motion";
+import { useToast } from '../contexts/ToastContext';
 import ComparativeAnalysisHeader from "../components/Comparative_Analysis_Header";
 import ComparativeConsultationHistory from "../components/Comparative_Consultation_history";
 import ComparativeAcademicEvent from "../components/Comparative_Academic_Events";
@@ -38,7 +40,31 @@ ChartJS.register(
   Filler
 );
 
+// CSS for hiding scrollbar
+const modalStyles = `
+  .modal-no-scrollbar::-webkit-scrollbar {
+    display: none;
+  }
+  .modal-no-scrollbar {
+    -ms-overflow-style: none;
+    scrollbar-width: none;
+  }
+`;
+
+// Inject styles into head
+if (typeof document !== 'undefined') {
+  const styleElement = document.getElementById('comparative-modal-scrollbar-styles');
+  if (!styleElement) {
+    const style = document.createElement('style');
+    style.id = 'comparative-modal-scrollbar-styles';
+    style.textContent = modalStyles;
+    document.head.appendChild(style);
+  }
+}
+
 function ComparativeAnalysis() {
+  const { showSuccess, showError, showWarning, showInfo } = useToast();
+  
   // Main states for filtering
   const [selectedSemester, setSelectedSemester] = useState(null);
   const [selectedTeacher, setSelectedTeacher] = useState("");
@@ -51,6 +77,7 @@ function ComparativeAnalysis() {
   const [students, setStudents] = useState([]);
   const [availableCourses, setAvailableCourses] = useState([]);
   const [analysisResult, setAnalysisResult] = useState(null);
+  const [isRunningAnalysis, setIsRunningAnalysis] = useState(false);
   // New states for academic events
   const [academicEvents, setAcademicEvents] = useState([]);
   const [academicEventName, setAcademicEventName] = useState("");
@@ -64,6 +91,11 @@ function ComparativeAnalysis() {
   const [tempCourse, setTempCourse] = useState("");
   const [tempStudents, setTempStudents] = useState([]); // students list for the chosen teacher
   const [isLoadingStudents, setIsLoadingStudents] = useState(false);
+  
+  // Student search states
+  const [tempStudentName, setTempStudentName] = useState("");
+  const [filteredStudents, setFilteredStudents] = useState([]);
+  const [selectedStudentData, setSelectedStudentData] = useState(null);
 
   // Animation variants for modal - Enhanced for mobile
   const modalVariants = {
@@ -232,12 +264,57 @@ function ComparativeAnalysis() {
     }
   }, [tempTeacher, tempSemester]);
 
+  // Student search functionality
+  const handleStudentNameChange = async (e) => {
+    const enteredName = e.target.value;
+    setTempStudentName(enteredName);
+
+    if (enteredName.length === 0) {
+      setFilteredStudents([]);
+      return;
+    }
+
+    try {
+      const response = await fetch(`${API_URL}/grade/search_students?name=${enteredName}`);
+      const data = await response.json();
+      
+      // Filter students based on the selected teacher and semester
+      let filteredData = Array.isArray(data) ? data : [];
+      
+      // If we have tempStudents from teacher/semester selection, filter to only those
+      if (tempStudents.length > 0) {
+        filteredData = filteredData.filter(student => 
+          tempStudents.some(tempStudent => tempStudent.id === student.studentID)
+        );
+      }
+      
+      setFilteredStudents(filteredData);
+    } catch (error) {
+      console.error("Error searching students:", error);
+      setFilteredStudents([]);
+    }
+  };
+
+  const handleStudentSelect = (student) => {
+    setTempStudentName(`${student.firstName || student.name || ''} ${student.lastName || ''}`.trim());
+    setTempStudent(student.studentID || student.id);
+    setSelectedStudentData(student);
+    setFilteredStudents([]);
+    setTempCourse(""); // Reset course when student changes
+  };
+
   // Open the selection modal and initialize temporary fields from current selections (if any)
   const openSelectionModal = () => {
     setTempSemester(selectedSemester);
     setTempTeacher(selectedTeacher);
     setTempStudent(selectedStudents.length === 1 ? selectedStudents[0] : "");
     setTempCourse(selectedCourse);
+    
+    // Reset search states
+    setTempStudentName("");
+    setFilteredStudents([]);
+    setSelectedStudentData(null);
+    
     setShowSelectionModal(true);
   };
 
@@ -279,6 +356,15 @@ function ComparativeAnalysis() {
   // Function to run comparative analysis using the first grade record as sample
   const runComparativeAnalysis = () => {
     if (grades.length > 0) {
+      setIsRunningAnalysis(true);
+      
+      // Show initial toast notification
+      showInfo(
+        "Starting Polycon Analysis", 
+        "Analyzing student improvement patterns based on consultation quality, academic events, and grade progress...",
+        8000
+      );
+
       // Use the full grades array fetched earlier
       const payload = {
         student_id: selectedStudents[0],
@@ -298,10 +384,30 @@ function ComparativeAnalysis() {
             data.normalized_improvement
           );
           setAnalysisResult(data);
+          setIsRunningAnalysis(false);
+          
+          // Show success toast with improvement focus
+          showSuccess(
+            "Improvement Analysis Complete!", 
+            "Your Polycon analysis reveals student learning progress and growth patterns over time.",
+            6000
+          );
         })
-        .catch((err) =>
-          console.error("Error running comparative analysis:", err)
-        );
+        .catch((err) => {
+          console.error("Error running comparative analysis:", err);
+          setIsRunningAnalysis(false);
+          showError(
+            "Analysis Failed", 
+            "Unable to process improvement analysis. Please check your data and try again.",
+            5000
+          );
+        });
+    } else {
+      showWarning(
+        "Missing Data", 
+        "Please ensure all required fields are selected before running the improvement analysis.",
+        4000
+      );
     }
   };
 
@@ -428,21 +534,54 @@ function ComparativeAnalysis() {
         <div className="mb-10 text-center px-4">
           <button
             onClick={runComparativeAnalysis}
-            className="w-full sm:w-auto px-6 sm:px-8 py-3 sm:py-4 bg-[#00D1B2] text-white rounded-lg hover:bg-opacity-90 transition shadow-md transform hover:scale-105 duration-300 font-medium flex items-center justify-center mx-auto text-sm sm:text-base"
+            disabled={isRunningAnalysis}
+            className={`w-full sm:w-auto px-6 sm:px-8 py-3 sm:py-4 ${
+              isRunningAnalysis 
+                ? 'bg-gray-400 cursor-not-allowed' 
+                : 'bg-[#00D1B2] hover:bg-opacity-90 transform hover:scale-105'
+            } text-white rounded-lg transition shadow-md duration-300 font-medium flex items-center justify-center mx-auto text-sm sm:text-base`}
           >
-            <svg
-              xmlns="http://www.w3.org/2000/svg"
-              className="h-5 w-5 mr-2 flex-shrink-0"
-              viewBox="0 0 20 20"
-              fill="currentColor"
-            >
-              <path
-                fillRule="evenodd"
-                d="M6 2a2 2 0 00-2 2v12a2 2 0 002 2h8a2 2 0 002-2V7.414A2 2 0 0015.414 6L12 2.586A2 2 0 0010.586 2H6zm2 10a1 1 0 10-2 0v3a1 1 0 102 0v-3zm4-1a1 1 0 011 1v3a1 1 0 11-2 0v-3a1 1 0 011-1zm-2-8a1 1 0 00-1 1v.01a1 1 0 002 0V4a1 1 0 00-1-1z"
-                clipRule="evenodd"
-              />
-            </svg>
-            <span>Run Polycon Analysis</span>
+            {isRunningAnalysis ? (
+              <>
+                <svg
+                  className="animate-spin -ml-1 mr-3 h-5 w-5 text-white flex-shrink-0"
+                  xmlns="http://www.w3.org/2000/svg"
+                  fill="none"
+                  viewBox="0 0 24 24"
+                >
+                  <circle
+                    className="opacity-25"
+                    cx="12"
+                    cy="12"
+                    r="10"
+                    stroke="currentColor"
+                    strokeWidth="4"
+                  ></circle>
+                  <path
+                    className="opacity-75"
+                    fill="currentColor"
+                    d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"
+                  ></path>
+                </svg>
+                <span>Analyzing Improvement...</span>
+              </>
+            ) : (
+              <>
+                <svg
+                  xmlns="http://www.w3.org/2000/svg"
+                  className="h-5 w-5 mr-2 flex-shrink-0"
+                  viewBox="0 0 20 20"
+                  fill="currentColor"
+                >
+                  <path
+                    fillRule="evenodd"
+                    d="M6 2a2 2 0 00-2 2v12a2 2 0 002 2h8a2 2 0 002-2V7.414A2 2 0 0015.414 6L12 2.586A2 2 0 0010.586 2H6zm2 10a1 1 0 10-2 0v3a1 1 0 102 0v-3zm4-1a1 1 0 011 1v3a1 1 0 11-2 0v-3a1 1 0 011-1zm-2-8a1 1 0 00-1 1v.01a1 1 0 002 0V4a1 1 0 00-1-1z"
+                    clipRule="evenodd"
+                  />
+                </svg>
+                <span>Run Improvement Analysis</span>
+              </>
+            )}
           </button>
         </div>
       )}
@@ -467,7 +606,7 @@ function ComparativeAnalysis() {
             <div className="relative flex justify-center">
               <span className="bg-white px-6 sm:px-8 py-3 rounded-full shadow-sm">
                 <h3 className="text-2xl sm:text-3xl font-bold text-[#0065A8]">
-                  Analysis Results
+                  Improvement Analysis Results
                 </h3>
               </span>
             </div>
@@ -475,7 +614,7 @@ function ComparativeAnalysis() {
 
           {/* Cards Grid - Enhanced mobile layout */}
           <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 lg:gap-8">
-            {/* Student Performance Card */}
+            {/* Student Improvement Card */}
             <motion.div
               initial={{ opacity: 0, x: -20 }}
               animate={{ opacity: 1, x: 0 }}
@@ -486,10 +625,10 @@ function ComparativeAnalysis() {
                 <div className="flex flex-col sm:flex-row items-start justify-between gap-3 sm:gap-0">
                   <div className="flex-1">
                     <h4 className="text-xl sm:text-2xl font-bold text-white">
-                      Student Performance
+                      Student Improvement
                     </h4>
                     <p className="text-blue-100 mt-1 text-sm">
-                      Academic Achievement Analysis
+                      Learning Progress & Growth Analysis
                     </p>
                   </div>
                   <span
@@ -527,7 +666,7 @@ function ComparativeAnalysis() {
                   </div>
                 </div>
 
-                {/* Performance Progress Bars */}
+                {/* Improvement Progress Bars */}
                 <div className="space-y-3 sm:space-y-4">
                   {/* Add Overall Factor Bar */}
                   <div className="bg-purple-50 rounded-xl p-3 sm:p-4">
@@ -608,7 +747,7 @@ function ComparativeAnalysis() {
                   Grade Progression
                 </h4>
                 <p className="text-red-100 mt-1 text-sm">
-                  Term-by-Term Performance
+                  Term-by-Term Progress
                 </p>
               </div>
               <div className="p-6">
@@ -768,10 +907,10 @@ function ComparativeAnalysis() {
             >
               <div className="bg-gradient-to-r from-[#0065A8] to-[#54BEFF] p-6">
                 <h4 className="text-2xl font-bold text-white">
-                  Performance Metrics
+                  Improvement Metrics
                 </h4>
                 <p className="text-blue-100 mt-1 text-sm">
-                  Comprehensive Performance Analysis
+                  Comprehensive Learning Progress Analysis
                 </p>
               </div>
               <div className="p-6">
@@ -863,10 +1002,10 @@ function ComparativeAnalysis() {
               ) : (
                 <div className="p-4 bg-gray-50 rounded-lg">
                   {analysisResult.rating === "Excellent" && (
-                    <p className="text-gray-700">Congratulations on an excellent performance! Continue with your current strategies, and consider mentoring other students.</p>
+                    <p className="text-gray-700">Congratulations on excellent improvement! Continue with your current learning strategies, and consider mentoring other students to further enhance your growth.</p>
                   )}
                   {analysisResult.rating === "Very Good" && (
-                    <p className="text-gray-700">You're performing very well! Focus on maintaining consistency and explore more advanced concepts in your studies.</p>
+                    <p className="text-gray-700">You're showing great improvement! Focus on maintaining consistency and explore more advanced concepts to accelerate your learning journey.</p>
                   )}
                   {analysisResult.rating === "Good" && (
                     <p className="text-gray-700">You're doing well! Focus on maintaining consistency and identify opportunities for further improvement in specific areas.</p>
@@ -884,37 +1023,45 @@ function ComparativeAnalysis() {
         </motion.div>
       )}
 
-      {/* Selection Modal - Enhanced mobile responsiveness */}
-      <AnimatePresence>
-        {showSelectionModal && (
-          <div
-            className="fixed inset-0 bg-black/50 backdrop-blur-sm flex items-center justify-center z-50 p-4"
-            onClick={() => setShowSelectionModal(false)}
+      {/* Selection Modal - Enhanced with search and profile photos */}
+      {showSelectionModal && (
+        <div 
+          className="fixed inset-0 bg-black bg-opacity-60 flex items-center justify-center z-50 p-4"
+          onClick={() => setShowSelectionModal(false)}
+        >
+          <motion.div
+            variants={modalVariants}
+            initial="hidden"
+            animate="visible"
+            exit="exit"
+            className="bg-white rounded-xl shadow-2xl w-full max-w-lg max-h-[90vh] overflow-y-auto"
+            onClick={(e) => e.stopPropagation()}
+            style={{
+              scrollbarWidth: 'none',
+              msOverflowStyle: 'none',
+            }}
           >
-            <motion.div
-              variants={modalVariants}
-              initial="hidden"
-              animate="visible"
-              exit="exit"
-              className="bg-white rounded-xl shadow-2xl w-full max-w-md max-h-[90vh] overflow-y-auto p-4 sm:p-6"
-              onClick={(e) => e.stopPropagation()}
-            >
-              <div className="flex justify-between items-center mb-4">
-                <h2 className="text-lg sm:text-xl font-semibold text-[#0065A8]">
-                  Select Analysis Options
-                </h2>
-                <button
-                  onClick={() => setShowSelectionModal(false)}
-                  className="text-gray-500 hover:text-gray-700 p-1 sm:hidden"
-                >
-                  ×
-                </button>
-              </div>
+            {/* Modal Header */}
+            <div className="bg-[#0065A8] px-6 py-4 flex justify-between items-center sticky top-0 z-10">
+              <h2 className="text-lg font-semibold text-white">
+                Select Analysis Options
+              </h2>
+              <button
+                onClick={() => setShowSelectionModal(false)}
+                className="text-white hover:text-gray-200 transition-colors"
+              >
+                <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+                </svg>
+              </button>
+            </div>
 
-              {/* Semester Dropdown */}
-              <div className="mb-4">
-                <label className="block text-gray-700 mb-2 text-sm font-medium">
-                  Select Semester:
+            {/* Modal Body */}
+            <div className="p-6 space-y-6">
+              {/* Semester Selection */}
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-2">
+                  Select Semester *
                 </label>
                 <select
                   className="w-full px-3 py-2 border-2 border-[#0065A8] rounded-lg focus:outline-none focus:ring-2 focus:ring-[#54BEFF] text-sm"
@@ -929,6 +1076,9 @@ function ComparativeAnalysis() {
                     );
                     setTempSemester(sem);
                     setTempStudent("");
+                    setTempStudentName("");
+                    setSelectedStudentData(null);
+                    setFilteredStudents([]);
                     setTempCourse("");
                   }}
                 >
@@ -945,49 +1095,109 @@ function ComparativeAnalysis() {
               </div>
 
               {/* Teacher Display */}
-              <div className="mb-4">
-                <label className="block text-gray-700 mb-2 text-sm font-medium">Teacher:</label>
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-2">
+                  Teacher *
+                </label>
                 <div className="w-full px-3 py-2 border-2 border-[#0065A8] rounded-lg bg-gray-50 text-sm">
                   {teachers[0]?.fullName || "Loading..."}
                 </div>
               </div>
 
-              {/* Student Dropdown */}
-              <div className="mb-4">
-                <label className="block text-gray-700 mb-2 text-sm font-medium">
-                  Select Student:
+              {/* Student Search with Profile Photos */}
+              <div className="relative">
+                <label className="block text-sm font-medium text-gray-700 mb-2">
+                  Select Student *
                 </label>
-                <select
-                  className="w-full px-3 py-2 border-2 border-[#0065A8] rounded-lg focus:outline-none focus:ring-2 focus:ring-[#54BEFF] text-sm"
-                  value={tempStudent}
-                  onChange={(e) => {
-                    setTempStudent(e.target.value);
-                    setTempCourse("");
-                  }}
-                  disabled={
-                    !tempTeacher || !tempSemester || tempStudents.length === 0
-                  }
-                >
-                  <option value="">Select a student</option>
-                  {isLoadingStudents ? (
-                    <option value="" disabled>
-                      Loading students...
-                    </option>
-                  ) : (
-                    Array.isArray(tempStudents) &&
-                    tempStudents.map((student) => (
-                      <option key={student.id} value={student.id}>
-                        {student.firstName} {student.lastName}
-                      </option>
-                    ))
-                  )}
-                </select>
+                
+                {/* Selected Student Display */}
+                {tempStudent && selectedStudentData && (
+                  <div className="flex items-center gap-3 p-3 bg-gray-50 border-2 border-[#0065A8] rounded-lg mb-2">
+                    <img
+                      src={getProfilePictureUrl(
+                        selectedStudentData.profilePicture, 
+                        selectedStudentData.firstName || selectedStudentData.name || 'Student'
+                      )}
+                      alt={`${selectedStudentData.firstName || selectedStudentData.name || ''} ${selectedStudentData.lastName || ''}`.trim()}
+                      className="w-10 h-10 rounded-full object-cover"
+                    />
+                    <div className="flex-1">
+                      <div className="font-medium text-gray-900">
+                        {`${selectedStudentData.firstName || selectedStudentData.name || ''} ${selectedStudentData.lastName || ''}`.trim()}
+                      </div>
+                      <div className="text-sm text-gray-500">
+                        ID: {selectedStudentData.studentID || selectedStudentData.id}
+                      </div>
+                    </div>
+                    <button
+                      type="button"
+                      onClick={() => {
+                        setTempStudentName("");
+                        setTempStudent("");
+                        setSelectedStudentData(null);
+                        setTempCourse("");
+                      }}
+                      className="text-red-500 hover:text-red-700 text-sm font-medium"
+                    >
+                      Remove
+                    </button>
+                  </div>
+                )}
+                
+                {/* Search Input - Only show when no student is selected */}
+                {!tempStudent && (
+                  <input
+                    type="text"
+                    placeholder="Search student by name..."
+                    value={tempStudentName}
+                    onChange={handleStudentNameChange}
+                    disabled={!tempSemester || !tempTeacher}
+                    className="w-full border-2 border-[#0065A8] rounded-lg px-3 py-2 focus:outline-none focus:ring-2 focus:ring-[#54BEFF] disabled:bg-gray-100 disabled:cursor-not-allowed text-sm"
+                  />
+                )}
+
+                {/* Search Results Dropdown */}
+                {!tempStudent && filteredStudents.length > 0 && (
+                  <ul className="absolute z-[110] bg-white border border-gray-300 rounded-lg mt-1 max-h-40 overflow-y-auto w-full shadow-lg">
+                    {filteredStudents.map((student) => (
+                      <li
+                        key={student.studentID || student.id}
+                        onClick={() => handleStudentSelect(student)}
+                        className="px-3 py-2 cursor-pointer hover:bg-gray-100 text-sm flex items-center gap-3"
+                      >
+                        <img
+                          src={getProfilePictureUrl(
+                            student.profilePicture, 
+                            student.firstName || student.name || 'Student'
+                          )}
+                          alt={`${student.firstName || student.name || ''} ${student.lastName || ''}`.trim()}
+                          className="w-8 h-8 rounded-full object-cover"
+                        />
+                        <div>
+                          <div className="font-medium">
+                            {`${student.firstName || student.name || ''} ${student.lastName || ''}`.trim()}
+                          </div>
+                          <div className="text-xs text-gray-500">
+                            ID: {student.studentID || student.id}
+                          </div>
+                        </div>
+                      </li>
+                    ))}
+                  </ul>
+                )}
+
+                {/* Loading message */}
+                {isLoadingStudents && (
+                  <div className="text-sm text-gray-500 mt-2">
+                    Loading students...
+                  </div>
+                )}
               </div>
 
-              {/* Course Dropdown */}
-              <div className="mb-6">
-                <label className="block text-gray-700 mb-2 text-sm font-medium">
-                  Select Course:
+              {/* Course Selection */}
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-2">
+                  Select Course *
                 </label>
                 <select
                   className="w-full px-3 py-2 border-2 border-[#0065A8] rounded-lg focus:outline-none focus:ring-2 focus:ring-[#54BEFF] text-sm"
@@ -995,7 +1205,7 @@ function ComparativeAnalysis() {
                   onChange={(e) => setTempCourse(e.target.value)}
                   disabled={!tempStudent || availableCourses.length === 0}
                 >
-                  <option value="">-- Choose a course --</option>
+                  <option value="">Select a course</option>
                   {availableCourses.map((course, index) => (
                     <option key={index} value={course}>
                       {course}
@@ -1003,28 +1213,31 @@ function ComparativeAnalysis() {
                   ))}
                 </select>
               </div>
+            </div>
 
-              <div className="flex justify-end gap-3">
-                <button
-                  onClick={() => setShowSelectionModal(false)}
-                  className="px-4 py-2 bg-gray-500 text-white rounded-lg hover:bg-gray-600 transition text-sm sm:hidden"
-                >
-                  Cancel
-                </button>
-                <button
-                  onClick={handleSelectionModalDone}
-                  className="flex-1 sm:flex-initial px-4 py-2 bg-[#0065A8] text-white rounded-lg hover:bg-[#54BEFF] transition text-sm disabled:bg-gray-300 disabled:cursor-not-allowed"
-                  disabled={
-                    !(tempSemester && tempTeacher && tempStudent && tempCourse)
-                  }
-                >
-                  Done
-                </button>
-              </div>
-            </motion.div>
-          </div>
-        )}
-      </AnimatePresence>
+            {/* Modal Footer */}
+            <div className="flex mt-4">
+              <button
+                onClick={handleSelectionModalDone}
+                disabled={!(tempSemester && tempTeacher && tempStudent && tempCourse)}
+                className={`flex-1 py-3 sm:py-4 text-center justify-center rounded-bl-xl transition-colors flex items-center gap-2 text-xs sm:text-sm font-medium ${
+                  tempSemester && tempTeacher && tempStudent && tempCourse
+                    ? 'bg-[#0065A8] hover:bg-[#54BEFF] text-white'
+                    : 'bg-gray-300 text-gray-500 cursor-not-allowed'
+                }`}
+              >
+                Apply Selection
+              </button>
+              <button
+                onClick={() => setShowSelectionModal(false)}
+                className="flex-1 py-3 sm:py-4 text-gray-700 bg-gray-100 rounded-br-xl hover:bg-gray-200 transition-colors text-xs sm:text-sm font-medium"
+              >
+                Cancel
+              </button>
+            </div>
+          </motion.div>
+        </div>
+      )}
     </div>
   );
 }

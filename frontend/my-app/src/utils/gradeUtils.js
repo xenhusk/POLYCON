@@ -32,11 +32,12 @@ export const fetchInitialGradeData = async (setters) => {
     );
     const latestSemesterData = await latestSemesterResponse.json();
 
-    // Set both form and filter values
+    // Set form values to latest semester for adding new grades
     setSchoolYear(latestSemesterData.school_year);
     setSemester(latestSemesterData.semester);
-    setSchoolYearFilter(latestSemesterData.school_year);
-    setSemesterFilter(latestSemesterData.semester);
+    // Set filter values to show all grades by default (empty string = "All")
+    setSchoolYearFilter("");
+    setSemesterFilter("");
 
     const cachedStudents = localStorage.getItem("students");
     const cachedCourses = localStorage.getItem("courses");
@@ -58,16 +59,8 @@ export const fetchInitialGradeData = async (setters) => {
       // Store all grades
       setGrades(Array.isArray(gradesData) ? gradesData : []);
 
-      // Filter to show only latest semester grades initially
-      const filteredGradesData = (
-        Array.isArray(gradesData) ? gradesData : []
-      ).filter(
-        (grade) =>
-          grade.school_year === latestSemesterData.school_year &&
-          grade.semester === latestSemesterData.semester
-      );
-
-      setFilteredGrades(filteredGradesData);
+      // Show all grades initially (no filtering)
+      setFilteredGrades(Array.isArray(gradesData) ? gradesData : []);
     } else {
       const [studentsResponse, gradesResponse, coursesResponse] =
         await Promise.all([
@@ -85,16 +78,8 @@ export const fetchInitialGradeData = async (setters) => {
       // Store all grades
       setGrades(Array.isArray(gradesData) ? gradesData : []);
 
-      // Filter to show only latest semester grades initially
-      const filteredGradesData = (
-        Array.isArray(gradesData) ? gradesData : []
-      ).filter(
-        (grade) =>
-          grade.school_year === latestSemesterData.school_year &&
-          grade.semester === latestSemesterData.semester
-      );
-
-      setFilteredGrades(filteredGradesData);
+      // Show all grades initially (no filtering)
+      setFilteredGrades(Array.isArray(gradesData) ? gradesData : []);
       setCourses(
         Array.isArray(coursesData.courses) ? coursesData.courses : []
       );

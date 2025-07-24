@@ -1,151 +1,137 @@
-import React, { useState, useCallback } from 'react';
+import React, { useState, useCallback, useEffect } from 'react';
+import Toast from './Toast';
 import { motion, AnimatePresence } from 'framer-motion';
-import { 
-  CheckCircleIcon, 
-  ExclamationCircleIcon, 
-  InformationCircleIcon,
-  XMarkIcon
-} from '@heroicons/react/24/outline';
 
-// Toast component matching SemesterManagement styling
-const Toast = ({ id, type, title, message, onClose }) => {
-  const getToastStyles = () => {
-    switch (type) {
-      case 'success':
-        return 'bg-green-100 text-green-700 border-green-500';
-      case 'error':
-        return 'bg-red-100 text-red-700 border-red-500';
-      case 'warning':
-        return 'bg-yellow-100 text-yellow-700 border-yellow-500';
-      default:
-        return 'bg-blue-100 text-blue-700 border-blue-500';
-    }
-  };
-
-  const getIcon = () => {
-    switch (type) {
-      case 'success':
-        return <CheckCircleIcon className="w-5 h-5 flex-shrink-0" />;
-      case 'error':
-        return <ExclamationCircleIcon className="w-5 h-5 flex-shrink-0" />;
-      case 'warning':
-        return <ExclamationCircleIcon className="w-5 h-5 flex-shrink-0" />;
-      default:
-        return <InformationCircleIcon className="w-5 h-5 flex-shrink-0" />;
-    }
-  };
-
-  return (
-    <motion.div
-      initial={{ x: 300, opacity: 0 }}
-      animate={{ x: 0, opacity: 1 }}
-      exit={{ x: 300, opacity: 0 }}
-      transition={{ type: "spring", stiffness: 300, damping: 30 }}
-      className={`
-        fixed top-5 right-5 z-[9999] rounded-lg shadow-lg max-w-md p-4 border
-        transform transition-all duration-500 ease-in-out
-        ${getToastStyles()}
-      `}
-      style={{ 
-        marginTop: `${id * 80}px` // Stack toasts vertically
-      }}
-    >
-      <div className="flex items-start gap-3">
-        {getIcon()}
-        <div className="flex-1 min-w-0">
-          <div className="font-medium text-sm">
-            {title}
-          </div>
-          {message && (
-            <div className="text-sm mt-1 break-words">
-              {message}
-            </div>
-          )}
-        </div>
-        <button
-          onClick={() => onClose(id)}
-          className="flex-shrink-0 ml-2 text-current hover:opacity-75 transition-opacity"
-          aria-label="Close notification"
-        >
-          <XMarkIcon className="w-4 h-4" />
-        </button>
-      </div>
-    </motion.div>
-  );
-};
-
-// Toast Manager Hook
+// Hook for managing toasts
 export const useToastManager = () => {
   const [toasts, setToasts] = useState([]);
-  const [nextId, setNextId] = useState(0);
 
-  const addToast = useCallback((type, title, message, duration = 5000) => {
-    const id = nextId;
-    setNextId(prev => prev + 1);
-    
-    const newToast = { id, type, title, message };
-    setToasts(prev => [...prev, newToast]);
+  const addToast = useCallback((type, title, message, duration = 5000, useSystemNotification = false) => {
+    const id = Date.now() + Math.random();
+    const toast = {
+      id,
+      type,
+      title,
+      message,
+      duration,
+      useSystemNotification
+    };
 
-    // Auto-remove toast after duration
-    if (duration > 0) {
-      setTimeout(() => {
-        removeToast(id);
-      }, duration);
-    }
+    setToasts(prev => [...prev, toast]);
+
+    // Auto remove after duration
+    setTimeout(() => {
+      removeToast(id);
+    }, duration);
 
     return id;
-  }, [nextId]);
+  }, []);
 
   const removeToast = useCallback((id) => {
     setToasts(prev => prev.filter(toast => toast.id !== id));
   }, []);
 
-  const clearAllToasts = useCallback(() => {
+  const showSuccess = useCallback((title, message, duration = 5000, useSystemNotification = false) => {
+    return addToast('success', title, message, duration, useSystemNotification);
+  }, [addToast]);
+
+  const showError = useCallback((title, message, duration = 8000, useSystemNotification = false) => {
+    return addToast('error', title, message, duration, useSystemNotification);
+  }, [addToast]);
+
+  const showWarning = useCallback((title, message, duration = 6000, useSystemNotification = false) => {
+    return addToast('warning', title, message, duration, useSystemNotification);
+  }, [addToast]);
+
+  const showInfo = useCallback((title, message, duration = 5000, useSystemNotification = false) => {
+    return addToast('info', title, message, duration, useSystemNotification);
+  }, [addToast]);
+
+  const clearAll = useCallback(() => {
     setToasts([]);
   }, []);
 
-  const showSuccess = useCallback((title, message, duration) => {
-    return addToast('success', title, message, duration);
-  }, [addToast]);
-
-  const showError = useCallback((title, message, duration) => {
-    return addToast('error', title, message, duration);
-  }, [addToast]);
-
-  const showWarning = useCallback((title, message, duration) => {
-    return addToast('warning', title, message, duration);
-  }, [addToast]);
-
-  const showInfo = useCallback((title, message, duration) => {
-    return addToast('info', title, message, duration);
-  }, [addToast]);
-
   return {
     toasts,
-    addToast,
-    removeToast,
-    clearAllToasts,
     showSuccess,
     showError,
     showWarning,
-    showInfo
+    showInfo,
+    removeToast,
+    clearAll
   };
 };
 
-// Toast Container Component
+// ToastManager component that renders all toasts
 const ToastManager = ({ toasts, onRemoveToast }) => {
+  const [isMobile, setIsMobile] = useState(false);
+
+  // Detect screen size
+  useEffect(() => {
+    const checkMobile = () => {
+      setIsMobile(window.innerWidth < 640); // sm breakpoint
+    };
+    
+    checkMobile();
+    window.addEventListener('resize', checkMobile);
+    
+    return () => window.removeEventListener('resize', checkMobile);
+  }, []);
+
+  // Different animations based on screen size
+  const getContainerAnimations = (index) => {
+    if (isMobile) {
+      return {
+        initial: { y: -100, opacity: 0 },
+        animate: { y: 0, opacity: 1 },
+        exit: { y: -100, opacity: 0 }
+      };
+    } else {
+      return {
+        initial: { x: 400, opacity: 0 },
+        animate: { x: 0, opacity: 1 },
+        exit: { x: 400, opacity: 0 }
+      };
+    }
+  };
+
   return (
-    <div className="fixed top-0 right-0 z-[9999] pointer-events-none">
+    <div className={`fixed z-[9999] pointer-events-none ${
+      isMobile 
+        ? 'top-4 left-2 right-2' 
+        : 'top-4 right-4 w-auto'
+    }`}>
       <AnimatePresence>
-        {toasts.map((toast, index) => (
-          <div key={toast.id} className="pointer-events-auto">
-            <Toast
-              {...toast}
-              id={index}
-              onClose={onRemoveToast}
-            />
-          </div>
-        ))}
+        {toasts.map((toast, index) => {
+          const animations = getContainerAnimations(index);
+          return (
+            <motion.div
+              key={toast.id}
+              initial={animations.initial}
+              animate={animations.animate}
+              exit={animations.exit}
+              transition={{ 
+                type: "spring", 
+                stiffness: 120, 
+                damping: 20,
+                duration: 0.4,
+                delay: index * 0.1
+              }}
+              className={`pointer-events-auto ${index > 0 ? 'mt-3' : ''} ${
+                isMobile ? 'w-full' : 'min-w-[400px] max-w-[500px]'
+              }`}
+            >
+              <Toast
+                message={toast.title && toast.message ? `${toast.title}: ${toast.message}` : toast.title || toast.message}
+                type={toast.type}
+                isVisible={true}
+                onClose={() => onRemoveToast(toast.id)}
+                useSystemNotification={toast.useSystemNotification}
+                title="POLYCON"
+              />
+            </motion.div>
+          );
+        })}
       </AnimatePresence>
     </div>
   );

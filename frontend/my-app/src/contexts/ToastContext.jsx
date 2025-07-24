@@ -2,6 +2,7 @@ import API_URL from '../apiConfig';
 import React, { createContext, useContext, useEffect, useState } from 'react';
 import ToastManager, { useToastManager } from '../components/ToastManager';
 import { playNotificationSound } from '../utils/notificationUtils';
+import { requestNotificationPermission, canUseSystemNotifications } from '../components/Toast';
 import io from 'socket.io-client';
 
 const ToastContext = createContext();
@@ -114,36 +115,36 @@ export const ToastProvider = ({ children }) => {
     };
   }, [localStorage.getItem('userEmail'), localStorage.getItem('userId')]); // Re-run when user credentials change
 
-  // Enhanced methods that include sound
-  const showSuccess = (title, message, duration = 5000, playSound = true) => {
+  // Enhanced methods that include sound and system notifications
+  const showSuccess = (title, message, duration = 5000, playSound = true, useSystemNotification = false) => {
     if (playSound) {
       playNotificationSound('success', 0.3);
     }
-    return toastManager.showSuccess(title, message, duration);
+    return toastManager.showSuccess(title, message, duration, useSystemNotification);
   };
 
-  const showError = (title, message, duration = 8000, playSound = true) => {
+  const showError = (title, message, duration = 8000, playSound = true, useSystemNotification = false) => {
     if (playSound) {
       playNotificationSound('error', 0.4);
     }
-    return toastManager.showError(title, message, duration);
+    return toastManager.showError(title, message, duration, useSystemNotification);
   };
 
-  const showWarning = (title, message, duration = 6000, playSound = true) => {
+  const showWarning = (title, message, duration = 6000, playSound = true, useSystemNotification = false) => {
     if (playSound) {
       playNotificationSound('warning', 0.3);
     }
-    return toastManager.showWarning(title, message, duration);
+    return toastManager.showWarning(title, message, duration, useSystemNotification);
   };
 
-  const showInfo = (title, message, duration = 5000, playSound = true) => {
+  const showInfo = (title, message, duration = 5000, playSound = true, useSystemNotification = false) => {
     if (playSound) {
       playNotificationSound('message', 0.3);
     }
-    return toastManager.showInfo(title, message, duration);
+    return toastManager.showInfo(title, message, duration, useSystemNotification);
   };
   // Booking-specific notification method
-  const showBookingNotification = (title, message, type = 'info', playSound = true) => {
+  const showBookingNotification = (title, message, type = 'info', playSound = true, useSystemNotification = true) => {
     if (playSound) {
       const soundType = type === 'success' ? 'booking' : type === 'error' ? 'error' : 'message';
       playNotificationSound(soundType, 0.3);
@@ -151,42 +152,43 @@ export const ToastProvider = ({ children }) => {
     
     switch (type) {
       case 'success':
-        return showSuccess(title, message, 5000, false); // Don't play sound again
+        return showSuccess(title, message, 5000, false, useSystemNotification); // Don't play sound again
       case 'error':
-        return showError(title, message, 8000, false);
+        return showError(title, message, 8000, false, useSystemNotification);
       case 'warning':
-        return showWarning(title, message, 6000, false);
+        return showWarning(title, message, 6000, false, useSystemNotification);
       default:
-        return showInfo(title, message, 5000, false);
+        return showInfo(title, message, 5000, false, useSystemNotification);
     }
   };
 
   // Specific booking event methods that Appointments.js expects
-  const showBookingCreated = (message, playSound = true) => {
+  const showBookingCreated = (message, playSound = true, useSystemNotification = true) => {
     if (playSound) {
       playNotificationSound('message', 0.3);
     }
-    return showInfo('New Booking', message || 'A new appointment has been requested', 5000, false);
+    return showInfo('New Booking', message || 'A new appointment has been requested', 5000, false, useSystemNotification);
   };
 
-  const showBookingConfirmed = (message, playSound = true) => {
+  const showBookingConfirmed = (message, playSound = true, useSystemNotification = true) => {
     if (playSound) {
       playNotificationSound('success', 0.3);
     }
-    return showSuccess('Booking Confirmed', message || 'An appointment has been confirmed', 5000, false);
+    return showSuccess('Booking Confirmed', message || 'An appointment has been confirmed', 5000, false, useSystemNotification);
   };
-  const showBookingCancelled = (message, playSound = true) => {
+
+  const showBookingCancelled = (message, playSound = true, useSystemNotification = true) => {
     if (playSound) {
       playNotificationSound('error', 0.3);
     }
-    return showError('Booking Cancelled', message || 'An appointment has been cancelled', 5000, false);
+    return showError('Booking Cancelled', message || 'An appointment has been cancelled', 5000, false, useSystemNotification);
   };
 
-  const showAppointmentReminder = (message, playSound = true) => {
+  const showAppointmentReminder = (message, playSound = true, useSystemNotification = true) => {
     if (playSound) {
       playNotificationSound('appointment', 0.4);
     }
-    return showWarning('Appointment Reminder', message || 'Your appointment is starting soon', 8000, false);
+    return showWarning('Appointment Reminder', message || 'Your appointment is starting soon', 8000, false, useSystemNotification);
   };
   const contextValue = {
     ...toastManager,
@@ -200,7 +202,10 @@ export const ToastProvider = ({ children }) => {
     showBookingCancelled,
     showAppointmentReminder,
     socket,
-    isConnected
+    isConnected,
+    // Notification utilities
+    requestNotificationPermission,
+    canUseSystemNotifications
   };
 
   return (

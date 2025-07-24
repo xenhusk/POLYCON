@@ -128,8 +128,38 @@ def signup():
     token_data_str = json.dumps(token_data)
     # Generate token valid for 1 hour
     token = create_access_token(identity=token_data_str, expires_delta=datetime.timedelta(hours=1))
-    verify_url = f"http://localhost:5001/account/verify?token={token}"
+    verify_url = f"{frontend_url}/verify-email?token={token}"
     send_verification_email(email, verify_url)
+    return jsonify({'message': 'Verification email sent. Please check your email.'}), 200
+
+@account_bp.route('/resend_verification', methods=['POST'])
+def resend_verification():
+    data = request.json
+    email = data.get('email')
+    
+    if not email:
+        return jsonify({'error': 'Email is required'}), 400
+    
+    # Check if user exists but is not verified
+    user = User.query.filter_by(email=email).first()
+    if user and user.is_verified:
+        return jsonify({'error': 'Email is already verified'}), 400
+    
+    if not user:
+        # For security, don't reveal if email exists or not
+        return jsonify({'message': 'If the email exists in our system, a verification email will be sent.'}), 200
+    
+    # Create verification token with user data
+    token_data = {
+        'email': email,
+        'action': 'verify_email'
+    }
+    
+    token_data_str = json.dumps(token_data)
+    token = create_access_token(identity=token_data_str, expires_delta=datetime.timedelta(hours=1))
+    verify_url = f"{frontend_url}/verify-email?token={token}"
+    send_verification_email(email, verify_url)
+    
     return jsonify({'message': 'Verification email sent. Please check your email.'}), 200
 
 @account_bp.route('/verify', methods=['GET'])
@@ -155,9 +185,44 @@ def verify_email():
         if not signup_data or not isinstance(signup_data, dict):
             return f"<h3 style='color:red;text-align:center;'>Error verifying account: Invalid token data format</h3>", 400
 
-        # Check if user already exists
-        if User.query.filter_by(email=signup_data['email']).first():
-            return jsonify({'error': 'User already exists or already verified.'}), 400
+        # Check if user already exists and is verified
+        existing_user = User.query.filter_by(email=signup_data['email']).first()
+        if existing_user and existing_user.is_verified:
+            # Redirect to frontend error page for already verified
+            return f'''
+            <html>
+              <head>
+                <title>Already Verified</title>
+                <script>
+                  window.location.href = "{frontend_url}/verification-error?error=already_verified";
+                </script>
+              </head>
+              <body style="font-family:sans-serif;text-align:center;padding-top:5rem;">
+                <p>Account already verified. Redirecting...</p>
+                <p>If you're not redirected, <a href="{frontend_url}/verification-error?error=already_verified">click here</a>.</p>
+              </body>
+            </html>
+            '''
+        elif existing_user:
+            # User exists but not verified, update verification status
+            existing_user.is_verified = True
+            db.session.commit()
+            
+            # Redirect to success page
+            return f'''
+            <html>
+              <head>
+                <title>Email Verified</title>
+                <script>
+                  window.location.href = "{frontend_url}/verification-success";
+                </script>
+              </head>
+              <body style="font-family:sans-serif;text-align:center;padding-top:5rem;">
+                <p>Redirecting to verification success page...</p>
+                <p>If you're not redirected, <a href="{frontend_url}/verification-success">click here</a>.</p>
+              </body>
+            </html>
+            '''
 
         # Validate program exists and belongs to department
         program = Program.query.filter_by(id=signup_data['program_id'], department_id=signup_data['department_id']).first()
@@ -190,27 +255,49 @@ def verify_email():
             db.session.add(new_student)
             db.session.commit()
 
-        # Render basic HTML confirmation
+        # Redirect to frontend verification success page
         return f'''
         <html>
           <head>
-            <title>Account Verified</title>
-            <style>
-              body {{ background-color: #1e40af; color: white; margin: 0; }}
-              a {{ color: #bfdbfe; }}
-            </style>
+            <title>Email Verified</title>
+            <script>
+              window.location.href = "{frontend_url}/verification-success";
+            </script>
           </head>
           <body style="font-family:sans-serif;text-align:center;padding-top:5rem;">
-            <!-- Ensure polyconLogo.png is placed in backend/static/polyconLogo.png -->
-            <img src="/static/polyconLogo.png" alt="Polycon Logo" style="width:200px;margin-bottom:2rem;"/>
-            <h1>Registration Complete!</h1>
-            <p>Your email has been verified. You can now <a href="{frontend_url}">log in</a>.</p>
+            <p>Redirecting to verification success page...</p>
+            <p>If you're not redirected, <a href="{frontend_url}/verification-success">click here</a>.</p>
           </body>
         </html>
-        ''', 200, {'Content-Type': 'text/html'}
+        '''
 
     except Exception as e:
-        return f"<h3 style='color:red;text-align:center;'>Error verifying account: {e}</h3>", 400
+        error_type = "unknown"
+        error_message = str(e)
+        
+        # Determine error type for better UX
+        if "expired" in error_message.lower() or "signature" in error_message.lower():
+            error_type = "expired"
+        elif "invalid" in error_message.lower() or "decode" in error_message.lower():
+            error_type = "invalid"
+        elif "not found" in error_message.lower():
+            error_type = "user_not_found"
+            
+        # Redirect to frontend error page with specific error type
+        return f'''
+        <html>
+          <head>
+            <title>Verification Failed</title>
+            <script>
+              window.location.href = "{frontend_url}/verification-error?error={error_type}";
+            </script>
+          </head>
+          <body style="font-family:sans-serif;text-align:center;padding-top:5rem;">
+            <p>Verification failed. Redirecting...</p>
+            <p>If you're not redirected, <a href="{frontend_url}/verification-error?error={error_type}">click here</a>.</p>
+          </body>
+        </html>
+        '''
 
 @account_bp.route('/get_user_role', methods=['GET'])
 def get_user_role():

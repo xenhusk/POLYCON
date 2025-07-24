@@ -45,6 +45,9 @@ import { getUserIdentifiers } from "./utils/userUtils"; // Add import for getUse
 import { ensureUserIdPersistence, recoverUserIds } from "./utils/persistUtils";
 import ComparativeAnalysis from './pages/ComparativeAnalysis';
 import PasswordResetPage from './components/PasswordResetPage';
+import EmailVerification from './pages/EmailVerification';
+import EmailVerificationSuccess from './pages/EmailVerificationSuccess';
+import EmailVerificationError from './pages/EmailVerificationError';
 import SocketTest from './pages/SocketTest'; // Add SocketTest import
 import { ToastProvider } from './contexts/ToastContext'; // Add ToastProvider import
 import { ActionButtonDataProvider } from './context/ActionButtonDataContext';
@@ -747,6 +750,11 @@ function App() {
                     
                     {/* Password reset route - publicly accessible */}
                     <Route path="/reset-password" element={<PasswordResetPage />} />
+                    
+                    {/* Email verification routes - publicly accessible */}
+                    <Route path="/verify-email" element={<EmailVerification />} />
+                    <Route path="/verification-success" element={<EmailVerificationSuccess />} />
+                    <Route path="/verification-error" element={<EmailVerificationError />} />
 
                     {/* Protected dashboard route */}
                     <Route path="/dashboard" element={

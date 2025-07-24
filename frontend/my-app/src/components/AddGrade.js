@@ -8,6 +8,7 @@ import { ReactComponent as RedoIcon } from "./icons/redo.svg"; // Add this impor
 import { motion, AnimatePresence } from 'framer-motion';
 import "./transitions.css";
 import { fetchInitialGradeData } from '../utils/gradeUtils';
+import { getProfilePictureUrl } from '../utils/utils';
 
 // Modal variants for animations (same as AddGradePopup)
 const modalVariants = {
@@ -164,20 +165,14 @@ const EditGradeModal = ({ grade, onClose, onSave }) => {
               </div>
               <div>
                 <label className="block text-sm font-medium text-gray-700 mb-2">
-                  Period *
+                  Period
                 </label>
-                <select
+                <input
+                  type="text"
                   value={formData.period}
-                  onChange={(e) => setFormData({...formData, period: e.target.value})}
-                  className="w-full border-2 border-[#fc6969] rounded-lg px-3 py-2 focus:outline-none focus:ring-2 focus:ring-[#ff7b7b] focus:border-transparent"
-                  required
-                >
-                  <option value="">Select Period</option>
-                  <option value="Prelim">Prelim</option>
-                  <option value="Midterm">Midterm</option>
-                  <option value="Pre-Final">Pre-Final</option>
-                  <option value="Final">Final</option>
-                </select>
+                  disabled
+                  className="w-full border-2 border-gray-300 rounded-lg px-3 py-2 bg-gray-100 text-gray-600"
+                />
               </div>
             </div>
 
@@ -185,33 +180,25 @@ const EditGradeModal = ({ grade, onClose, onSave }) => {
             <div className="grid grid-cols-2 gap-4">
               <div>
                 <label className="block text-sm font-medium text-gray-700 mb-2">
-                  Semester *
+                  Semester
                 </label>
-                <select
+                <input
+                  type="text"
                   value={formData.semester}
-                  onChange={(e) => setFormData({...formData, semester: e.target.value})}
-                  className="w-full border-2 border-[#fc6969] rounded-lg px-3 py-2 focus:outline-none focus:ring-2 focus:ring-[#ff7b7b] focus:border-transparent"
-                  required
-                >
-                  <option value="">Select Semester</option>
-                  <option value="1st">1st</option>
-                  <option value="2nd">2nd</option>
-                </select>
+                  disabled
+                  className="w-full border-2 border-gray-300 rounded-lg px-3 py-2 bg-gray-100 text-gray-600"
+                />
               </div>
               <div>
                 <label className="block text-sm font-medium text-gray-700 mb-2">
-                  School Year *
+                  School Year
                 </label>
-                <select
+                <input
+                  type="text"
                   value={formData.school_year}
-                  onChange={(e) => setFormData({...formData, school_year: e.target.value})}
-                  className="w-full border-2 border-[#fc6969] rounded-lg px-3 py-2 focus:outline-none focus:ring-2 focus:ring-[#ff7b7b] focus:border-transparent"
-                  required
-                >
-                  <option value="">Select School Year</option>
-                  <option value="2024-2025">2024-2025</option>
-                  <option value="2023-2024">2023-2024</option>
-                </select>
+                  disabled
+                  className="w-full border-2 border-gray-300 rounded-lg px-3 py-2 bg-gray-100 text-gray-600"
+                />
               </div>
             </div>
           </form>
@@ -257,6 +244,14 @@ export default function AddGrade() {
   const [selectedGradeID, setSelectedGradeID] = useState(null); // For editing
   const [filteredStudents, setFilteredStudents] = useState([]);
   const [showFilters, setShowFilters] = useState(false); // Controls filter visibility
+  const [tempFilters, setTempFilters] = useState({
+    schoolYearFilter: "",
+    semesterFilter: "",
+    selectedPeriods: [],
+    courseFilter: "",
+    selectedFilterStudents: []
+  }); // Temporary filter state for modal
+  const [isApplyingFilters, setIsApplyingFilters] = useState(false); // Loading state for filter application
   const [filteredGrades, setFilteredGrades] = useState([]); // Stores filtered grades
   const [selectedPeriods, setSelectedPeriods] = useState([]); // Selected periods for filtering
   const [courseFilter, setCourseFilter] = useState(""); // Course filter input
@@ -317,6 +312,91 @@ export default function AddGrade() {
     ];
     setUniqueSchoolYears(uniqueSchoolYears);
   }, [grades]);
+
+  // Initialize temp filters when modal opens
+  useEffect(() => {
+    if (showFilters) {
+      setTempFilters({
+        schoolYearFilter,
+        semesterFilter,
+        selectedPeriods: [...selectedPeriods],
+        courseFilter,
+        selectedFilterStudents: [...selectedFilterStudents]
+      });
+    }
+  }, [showFilters, schoolYearFilter, semesterFilter, selectedPeriods, courseFilter, selectedFilterStudents]);
+
+  // Function to apply filters with feedback
+  const applyFilters = async () => {
+    setIsApplyingFilters(true);
+    
+    // Apply temporary filters to actual state
+    setSchoolYearFilter(tempFilters.schoolYearFilter);
+    setSemesterFilter(tempFilters.semesterFilter);
+    setSelectedPeriods([...tempFilters.selectedPeriods]);
+    setCourseFilter(tempFilters.courseFilter);
+    setSelectedFilterStudents([...tempFilters.selectedFilterStudents]);
+    
+    // Apply the filters
+    const filtered = grades.filter((grade) => {
+      // Period filter
+      if (tempFilters.selectedPeriods.length && !tempFilters.selectedPeriods.includes(grade.period))
+        return false;
+
+      // Course filter
+      if (
+        tempFilters.courseFilter &&
+        !grade.courseName.toLowerCase().includes(tempFilters.courseFilter.toLowerCase())
+      )
+        return false;
+
+      // School year filter
+      if (tempFilters.schoolYearFilter && grade.school_year !== tempFilters.schoolYearFilter) return false;
+
+      // Semester filter
+      if (tempFilters.semesterFilter && grade.semester !== tempFilters.semesterFilter) return false;
+
+      // Student filter
+      if (
+        tempFilters.selectedFilterStudents.length &&
+        !tempFilters.selectedFilterStudents.some(
+          (student) =>
+            grade.studentName.toLowerCase() === student.name.toLowerCase()
+        )
+      )
+        return false;
+
+      return true;
+    });
+
+    setFilteredGrades(filtered);
+    setCurrentPage(1);
+    
+    // Show feedback message
+    setTimeout(() => {
+      setMessage({
+        type: "success",
+        content: `Filters applied! Found ${filtered.length} grade${filtered.length !== 1 ? 's' : ''}.`
+      });
+      setTimeout(() => setMessage({ type: "", content: "" }), 3000);
+    }, 500);
+    
+    setTimeout(() => {
+      setIsApplyingFilters(false);
+      setShowFilters(false);
+    }, 600);
+  };
+
+  // Function to reset filters
+  const resetFilters = () => {
+    setTempFilters({
+      schoolYearFilter: "",
+      semesterFilter: "",
+      selectedPeriods: [],
+      courseFilter: "",
+      selectedFilterStudents: []
+    });
+  };
 
   const handleStudentNameChange = async (e) => {
     const enteredName = e.target.value;
@@ -713,7 +793,7 @@ export default function AddGrade() {
       const data = await response.json();
       const suggestions = (Array.isArray(data) ? data : []).filter(
         (student) =>
-          !selectedFilterStudents.some((s) => s.studentID === student.studentID)
+          !tempFilters.selectedFilterStudents.some((s) => s.studentID === student.studentID)
       );
       setFilterStudentSuggestions(suggestions);
     } catch (error) {
@@ -724,16 +804,20 @@ export default function AddGrade() {
 
   // NEW: Handler to add a student to the filter list
   const handleSelectFilterStudent = (student) => {
-    setSelectedFilterStudents((prev) => [...prev, student]);
+    setTempFilters(prev => ({
+      ...prev,
+      selectedFilterStudents: [...prev.selectedFilterStudents, student]
+    }));
     setFilterStudentQuery("");
     setFilterStudentSuggestions([]);
   };
 
   // NEW: Handler to remove a selected student from filter list
   const handleRemoveFilterStudent = (studentID) => {
-    setSelectedFilterStudents((prev) =>
-      prev.filter((s) => s.studentID !== studentID)
-    );
+    setTempFilters(prev => ({
+      ...prev,
+      selectedFilterStudents: prev.selectedFilterStudents.filter((s) => s.studentID !== studentID)
+    }));
   };
 
   // Add this helper function at the top level of your component
@@ -767,47 +851,6 @@ export default function AddGrade() {
     return sanitized;
   };
 
-  // Remove the setTimeout from applyFilters function
-  const applyFilters = () => {
-    setIsFiltering(true);
-
-    const filtered = grades.filter((grade) => {
-      // Period filter
-      if (selectedPeriods.length && !selectedPeriods.includes(grade.period))
-        return false;
-
-      // Course filter
-      if (
-        courseFilter &&
-        !grade.courseName.toLowerCase().includes(courseFilter.toLowerCase())
-      )
-        return false;
-
-      // School year filter
-      if (schoolYearFilter && grade.school_year !== schoolYearFilter)
-        return false;
-
-      // Semester filter
-      if (semesterFilter && grade.semester !== semesterFilter) return false;
-
-      // Student filter
-      if (
-        selectedFilterStudents.length &&
-        !selectedFilterStudents.some(
-          (student) =>
-            grade.studentName.toLowerCase() === student.name.toLowerCase()
-        )
-      )
-        return false;
-
-      return true;
-    });
-
-    setFilteredGrades(filtered);
-    setCurrentPage(1); // Reset to first page when filters change
-    setIsFiltering(false);
-  };
-
   // Add this new handler function
   const handleResetFilters = () => {
     setSelectedPeriods([]);
@@ -819,6 +862,13 @@ export default function AddGrade() {
     setFilterStudentSuggestions([]);
     setFilteredGrades(grades); // Reset to show all grades
     setCurrentPage(1); // Reset to first page when filters change
+    
+    // Show feedback message
+    setMessage({
+      type: "success",
+      content: "All filters have been reset. Showing all grades."
+    });
+    setTimeout(() => setMessage({ type: "", content: "" }), 3000);
   };
 
   // Pagination calculations
@@ -928,14 +978,19 @@ export default function AddGrade() {
                   {selectedFilterStudents.map((student) => (
                     <div
                       key={student.studentID}
-                      className="bg-gray-200 text-gray-700 px-2 py-1 rounded flex items-center text-xs sm:text-sm whitespace-nowrap"
+                      className="bg-[#0065A8] text-white px-2 py-1 rounded-full flex items-center gap-2 text-xs sm:text-sm whitespace-nowrap"
                     >
+                      <img
+                        src={getProfilePictureUrl(student.profile_picture, student.name)}
+                        alt={student.name}
+                        className="w-4 h-4 rounded-full"
+                      />
                       <span className="truncate max-w-[120px] sm:max-w-[150px]">
                         {student.name}
                       </span>
                       <span
                         onClick={() => handleRemoveFilterStudent(student.studentID)}
-                        className="ml-1 cursor-pointer text-gray-500 hover:text-gray-700"
+                        className="ml-1 cursor-pointer text-white hover:text-red-200 transition-colors"
                       >
                         ×
                       </span>
@@ -948,19 +1003,36 @@ export default function AddGrade() {
                     placeholder="Search by Name"
                     className="border-none focus:ring-0 outline-none flex-1 min-w-[120px] text-sm py-1"
                   />
+                  {filterStudentQuery && (
+                    <div className="flex items-center gap-2 text-xs text-gray-500">
+                      {filterStudentSuggestions.length > 0 ? (
+                        <span className="text-green-600">✓ {filterStudentSuggestions.length} found</span>
+                      ) : (
+                        <span className="text-gray-400">Searching...</span>
+                      )}
+                    </div>
+                  )}
                 </div>
               </div>
 
-                            {/* Dropdown Suggestions */}
+              {/* Dropdown Suggestions with Profile Pictures */}
               {filterStudentSuggestions.length > 0 && (
                 <ul className="absolute left-0 right-0 top-full mt-1 bg-white border border-gray-300 rounded-lg max-h-40 overflow-y-auto shadow-lg z-[60]">
                   {filterStudentSuggestions.map((student) => (
                     <li
                       key={student.studentID}
                       onClick={() => handleSelectFilterStudent(student)}
-                      className="px-3 py-2 cursor-pointer hover:bg-gray-100 text-sm"
+                      className="px-3 py-2 cursor-pointer hover:bg-gray-50 text-sm flex items-center gap-3"
                     >
-                      {student.name}
+                      <img
+                        src={getProfilePictureUrl(student.profile_picture, student.name)}
+                        alt={student.name}
+                        className="w-8 h-8 rounded-full"
+                      />
+                      <div>
+                        <div className="font-medium">{student.name}</div>
+                        <div className="text-xs text-gray-500">{student.studentID}</div>
+                      </div>
                     </li>
                   ))}
                 </ul>
@@ -975,7 +1047,20 @@ export default function AddGrade() {
                 onClick={() => {
                   setSearchClicked(true);
                   setTimeout(() => setSearchClicked(false), 300);
-                  applyFilters();
+                  // Apply current name-based search
+                  const filtered = grades.filter((grade) => {
+                    return selectedFilterStudents.length === 0 || 
+                           selectedFilterStudents.some(student => 
+                             grade.studentName.toLowerCase() === student.name.toLowerCase()
+                           );
+                  });
+                  setFilteredGrades(filtered);
+                  setCurrentPage(1);
+                  setMessage({
+                    type: "success",
+                    content: `Search completed! Found ${filtered.length} grade${filtered.length !== 1 ? 's' : ''}.`
+                  });
+                  setTimeout(() => setMessage({ type: "", content: "" }), 3000);
                 }}
               >
                 Search
@@ -1007,129 +1092,236 @@ export default function AddGrade() {
           </div>
         </div>
 
-        {/* Filter Panel - Enhanced mobile responsiveness */}
-        <div className="relative">
-          {showFilters && (
-            <div className="absolute left-0 right-0 sm:right-0 sm:left-auto sm:w-80 lg:w-96 mt-1 rounded-xl shadow-2xl overflow-hidden z-40 max-h-[70vh] flex flex-col mx-2 sm:mx-0">
-              {/* Filter Header */}
-              <div className="bg-[#0065A8] px-4 py-3 flex justify-between items-center flex-shrink-0">
-                <h3 className="text-lg font-semibold text-white">FILTERS</h3>
-                <div className="flex gap-2">
-                  <button
-                    onClick={handleResetFilters}
-                    className="text-white hover:text-gray-200 transition-transform hover:scale-110 p-1"
-                    title="Reset filters"
-                  >
-                    <RedoIcon className="w-5 h-5" />
-                  </button>
-                  <button
-                    onClick={() => setShowFilters(false)}
-                    className="text-white hover:text-gray-200 transition-transform hover:scale-110 p-1 sm:hidden text-xl leading-5"
-                    title="Close filters"
-                  >
-                    ×
-                  </button>
+        {/* Filter Modal - Full screen popup */}
+        {showFilters && createPortal(
+          <AnimatePresence>
+            <motion.div
+              initial={{ opacity: 0 }}
+              animate={{ opacity: 1 }}
+              exit={{ opacity: 0 }}
+              className="fixed inset-0 bg-black/60 backdrop-blur-md flex items-center justify-center z-[9999]"
+              style={{ 
+                position: 'fixed',
+                top: 0,
+                left: 0,
+                right: 0,
+                bottom: 0,
+                width: '100vw',
+                height: '100vh',
+                margin: 0,
+                padding: 0,
+                zIndex: 9999
+              }}
+              onClick={() => setShowFilters(false)}
+            >
+              <motion.div
+                variants={modalVariants}
+                initial="hidden"
+                animate="visible"
+                exit="exit"
+                className="bg-white rounded-xl shadow-2xl w-full max-w-2xl max-h-[90vh] overflow-hidden mx-4"
+                onClick={(e) => e.stopPropagation()}
+              >
+                {/* Modal Header */}
+                <div className="bg-[#0065A8] px-6 py-4 flex justify-between items-center">
+                  <h3 className="text-xl font-semibold text-white">Grade Filters</h3>
+                  <div className="flex gap-2">
+                    <button
+                      onClick={resetFilters}
+                      className="text-white hover:text-gray-200 transition-transform hover:scale-110 p-1"
+                      title="Reset filters"
+                    >
+                      <RedoIcon className="w-5 h-5" />
+                    </button>
+                    <button
+                      onClick={() => setShowFilters(false)}
+                      className="text-white hover:text-gray-200 transition-transform hover:scale-110 p-1 text-xl leading-5"
+                      title="Close filters"
+                    >
+                      ×
+                    </button>
+                  </div>
                 </div>
-              </div>
 
-              {/* Filter Content - Made scrollable */}
-              <div className="bg-white p-4 md:p-6 space-y-4 overflow-y-auto">
-                {/* Period Filter */}
-                <div className="min-h-fit">
-                  <label className="block text-sm font-medium text-gray-700 mb-2">
-                    Period
-                  </label>
-                  <div className="max-h-32 sm:max-h-40 overflow-y-auto border-2 border-[#0065A8] rounded-lg">
-                    {["Prelim", "Midterm", "Pre-Final", "Final"].map(
-                      (period) => (
-                        <div key={period} className="px-2 py-1">
-                          <label
-                            className={`flex items-center p-2 rounded-lg transition-colors duration-200
-                        ${
-                          selectedPeriods.includes(period)
-                            ? "bg-[#0065A8] text-white"
-                            : "hover:bg-[#54BEFF] hover:text-white"
-                        }`}
+                {/* Modal Content */}
+                <div className="p-6 space-y-6 overflow-y-auto max-h-[calc(90vh-140px)]">
+                  {/* Period Filter */}
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700 mb-3">
+                      Period
+                    </label>
+                    <div className="grid grid-cols-2 gap-2">
+                      {["Prelim", "Midterm", "Pre-Final", "Final"].map((period) => (
+                        <label
+                          key={period}
+                          className={`flex items-center p-3 rounded-lg transition-colors duration-200 cursor-pointer border-2
+                            ${tempFilters.selectedPeriods.includes(period)
+                              ? "bg-[#0065A8] text-white border-[#0065A8]"
+                              : "hover:bg-[#54BEFF] hover:text-white border-gray-200 hover:border-[#54BEFF]"
+                            }`}
+                        >
+                          <input
+                            type="checkbox"
+                            value={period}
+                            checked={tempFilters.selectedPeriods.includes(period)}
+                            onChange={() => {
+                              setTempFilters(prev => ({
+                                ...prev,
+                                selectedPeriods: prev.selectedPeriods.includes(period)
+                                  ? prev.selectedPeriods.filter(p => p !== period)
+                                  : [...prev.selectedPeriods, period]
+                              }));
+                            }}
+                            className="mr-3 h-4 w-4 accent-[#0065A8] border-gray-300 rounded"
+                          />
+                          <span>{period}</span>
+                        </label>
+                      ))}
+                    </div>
+                  </div>
+
+                  {/* Course Filter */}
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700 mb-3">
+                      Course
+                    </label>
+                    <input
+                      type="text"
+                      value={tempFilters.courseFilter}
+                      onChange={(e) => setTempFilters(prev => ({ ...prev, courseFilter: e.target.value }))}
+                      placeholder="Search Course"
+                      className="w-full border-2 border-[#0065A8] rounded-lg px-4 py-3 text-gray-700 
+                        focus:outline-none focus:ring-2 focus:ring-[#54BEFF]"
+                    />
+                  </div>
+
+                  {/* School Year Filter */}
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700 mb-3">
+                      School Year
+                    </label>
+                    <select
+                      value={tempFilters.schoolYearFilter}
+                      onChange={(e) => setTempFilters(prev => ({ ...prev, schoolYearFilter: e.target.value }))}
+                      className="w-full border-2 border-[#0065A8] rounded-lg px-4 py-3 text-gray-700
+                        focus:outline-none focus:ring-2 focus:ring-[#54BEFF]"
+                    >
+                      <option value="">All School Years</option>
+                      {uniqueSchoolYears.map((year) => (
+                        <option key={year} value={year}>
+                          {year}
+                        </option>
+                      ))}
+                    </select>
+                  </div>
+
+                  {/* Semester Filter */}
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700 mb-3">
+                      Semester
+                    </label>
+                    <select
+                      value={tempFilters.semesterFilter}
+                      onChange={(e) => setTempFilters(prev => ({ ...prev, semesterFilter: e.target.value }))}
+                      className="w-full border-2 border-[#0065A8] rounded-lg px-4 py-3 text-gray-700
+                        focus:outline-none focus:ring-2 focus:ring-[#54BEFF]"
+                    >
+                      <option value="">All Semesters</option>
+                      <option value="1st">1st</option>
+                      <option value="2nd">2nd</option>
+                    </select>
+                  </div>
+
+                  {/* Student Filter with Profile Pictures */}
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700 mb-3">
+                      Students
+                    </label>
+                    <div className="min-h-[50px] flex flex-wrap items-center gap-2 border-2 border-[#0065A8] rounded-lg px-3 py-2 focus-within:ring-2 focus-within:ring-[#54BEFF]">
+                      {tempFilters.selectedFilterStudents.map((student) => (
+                        <div
+                          key={student.studentID}
+                          className="bg-[#0065A8] text-white px-2 py-1 rounded-full flex items-center gap-2 text-sm"
+                        >
+                          <img
+                            src={getProfilePictureUrl(student.profile_picture, student.name)}
+                            alt={student.name}
+                            className="w-5 h-5 rounded-full"
+                          />
+                          <span className="max-w-[120px] truncate">{student.name}</span>
+                          <button
+                            onClick={() => handleRemoveFilterStudent(student.studentID)}
+                            className="hover:text-red-300 transition-colors"
                           >
-                            <input
-                              type="checkbox"
-                              value={period}
-                              checked={selectedPeriods.includes(period)}
-                              onChange={() => handlePeriodFilterChange(period)}
-                              className="mr-3 h-4 w-4 accent-[#0065A8] border-gray-300 rounded
-                            checked:bg-[#0065A8] checked:hover:bg-[#54BEFF]"
-                            />
-                            <span
-                              className={
-                                selectedPeriods.includes(period)
-                                  ? "text-white"
-                                  : "text-gray-700"
-                              }
-                            >
-                              {period}
-                            </span>
-                          </label>
+                            ×
+                          </button>
                         </div>
-                      )
+                      ))}
+                      <input
+                        type="text"
+                        value={filterStudentQuery}
+                        onChange={handleFilterStudentQueryChange}
+                        placeholder="Search students..."
+                        className="flex-1 min-w-[120px] outline-none bg-transparent"
+                      />
+                    </div>
+                    {/* Student Search Suggestions */}
+                    {filterStudentSuggestions.length > 0 && (
+                      <div className="mt-2 bg-white border border-gray-200 rounded-lg shadow-lg max-h-40 overflow-y-auto">
+                        {filterStudentSuggestions.map((student) => (
+                          <div
+                            key={student.studentID}
+                            onClick={() => handleSelectFilterStudent(student)}
+                            className="px-4 py-3 hover:bg-gray-50 flex items-center gap-3 cursor-pointer"
+                          >
+                            <img
+                              src={getProfilePictureUrl(student.profile_picture, student.name)}
+                              alt={student.name}
+                              className="w-8 h-8 rounded-full"
+                            />
+                            <div>
+                              <div className="font-medium text-sm">{student.name}</div>
+                              <div className="text-xs text-gray-500">{student.studentID}</div>
+                            </div>
+                          </div>
+                        ))}
+                      </div>
                     )}
                   </div>
                 </div>
 
-                {/* Other filters remain the same */}
-                <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-2">
-                    Course
-                  </label>
-                  <input
-                    type="text"
-                    value={courseFilter}
-                    onChange={handleCourseFilterChange}
-                    placeholder="Search Course"
-                    className="w-full border-2 border-[#0065A8] rounded-lg px-3 py-2 text-gray-700
-                    focus:outline-none focus:ring-2 focus:ring-[#54BEFF]"
-                  />
-                </div>
-
-                {/* School Year Filter */}
-                <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-2">
-                    School Year
-                  </label>
-                  <select
-                    value={schoolYearFilter}
-                    onChange={handleSchoolYearFilterChange}
-                    className="w-full border-2 border-[#0065A8] rounded-lg px-3 py-2 text-gray-700
-                    focus:outline-none focus:ring-2 focus:ring-[#54BEFF]"
+                {/* Modal Footer */}
+                <div className="bg-gray-50 px-6 py-4 flex gap-3 justify-end">
+                  <button
+                    onClick={() => setShowFilters(false)}
+                    className="px-4 py-2 text-gray-600 hover:text-gray-800 transition-colors"
                   >
-                    <option value="">All School Years</option>
-                    {uniqueSchoolYears.map((year) => (
-                      <option key={year} value={year}>
-                        {year}
-                      </option>
-                    ))}
-                  </select>
-                </div>
-
-                {/* Semester Filter */}
-                <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-2">
-                    Semester
-                  </label>
-                  <select
-                    value={semesterFilter}
-                    onChange={handleSemesterFilterChange}
-                    className="w-full border-2 border-[#0065A8] rounded-lg px-3 py-2 text-gray-700
-                    focus:outline-none focus:ring-2 focus:ring-[#54BEFF]"
+                    Cancel
+                  </button>
+                  <button
+                    onClick={applyFilters}
+                    disabled={isApplyingFilters}
+                    className="bg-[#0065A8] hover:bg-[#0088FF] text-white px-6 py-2 rounded-lg 
+                      transition-colors flex items-center gap-2 disabled:opacity-50"
                   >
-                    <option value="">All Semesters</option>
-                    <option value="1st">1st</option>
-                    <option value="2nd">2nd</option>
-                  </select>
+                    {isApplyingFilters ? (
+                      <>
+                        <svg className="animate-spin h-4 w-4" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+                          <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
+                          <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+                        </svg>
+                        Applying...
+                      </>
+                    ) : (
+                      'Apply Filters'
+                    )}
+                  </button>
                 </div>
-              </div>
-            </div>
-          )}
-        </div>        {/* Table Section - Enhanced mobile responsiveness */}
+              </motion.div>
+            </motion.div>
+          </AnimatePresence>,
+          document.body
+        )}        {/* Table Section - Enhanced mobile responsiveness */}
         <div className="mt-4 shadow-md overflow-hidden rounded-lg fade-in delay-300 relative z-0">
           {/* Mobile Card View */}
           <div className="block sm:hidden">
@@ -1464,7 +1656,15 @@ export default function AddGrade() {
                 const response = await fetch(`${API_URL}/grade/edit_grade`, {
                   method: "POST",
                   headers: { "Content-Type": "application/json" },
-                  body: JSON.stringify(updatedGrade),
+                  body: JSON.stringify({
+                    gradeID: updatedGrade.id,
+                    studentID: updatedGrade.studentID,
+                    courseID: updatedGrade.courseID,
+                    grade: updatedGrade.grade,
+                    period: updatedGrade.period,
+                    school_year: updatedGrade.school_year,
+                    semester: updatedGrade.semester
+                  }),
                 });
                 
                 if (response.ok) {
