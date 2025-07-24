@@ -1,4 +1,4 @@
-from flask import Blueprint, request, jsonify
+from flask import Blueprint, request, jsonify, current_app
 from datetime import datetime, timedelta
 from extensions import db
 from models import ConsultationSession, User, Student, Faculty, Program, Booking # Add Booking
@@ -34,19 +34,28 @@ def transcribe():
         # Convert the raw audio file and get the path of the converted file
         converted_path = convert_audio(raw_path)
 
-        # Store the audio file locally instead of in Google Cloud
-        upload_folder = 'uploads'
-        audio_filename = f"session_audio_{uuid.uuid4().hex}.wav"
-        local_path = os.path.join(upload_folder, audio_filename)
-        
-        # Save a copy to the uploads directory
-        os.makedirs(upload_folder, exist_ok=True)
-        with open(converted_path, 'rb') as src_file:
-            with open(local_path, 'wb') as dst_file:
-                dst_file.write(src_file.read())
-        
-        # Generate a URL for accessing the audio file
-        audio_url = f"/uploads/{audio_filename}"
+        # Upload to Google Cloud Storage
+        try:
+            audio_url = upload_audio(converted_path)
+            current_app.logger.info(f"Audio uploaded to Google Cloud Storage: {audio_url}")
+        except ValueError as e:
+            # Google Cloud Storage not configured, fall back to local storage
+            current_app.logger.warning(f"Google Cloud Storage not available, using local storage: {e}")
+            upload_folder = 'uploads'
+            audio_filename = f"session_audio_{uuid.uuid4().hex}.wav"
+            local_path = os.path.join(upload_folder, audio_filename)
+            
+            # Save a copy to the uploads directory
+            os.makedirs(upload_folder, exist_ok=True)
+            with open(converted_path, 'rb') as src_file:
+                with open(local_path, 'wb') as dst_file:
+                    dst_file.write(src_file.read())
+            
+            # Generate a URL for accessing the audio file
+            audio_url = f"/uploads/{audio_filename}"
+        except Exception as e:
+            current_app.logger.error(f"Failed to upload audio: {e}")
+            return jsonify({"error": f"Failed to upload audio: {str(e)}"}), 500
 
         # Initialize default values
         transcription_data = {
