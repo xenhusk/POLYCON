@@ -1,6 +1,7 @@
 {
   "short_name": "POLYCON",
-  "name": "POLYCON - Consultation Management",
+  "name": "POLYCON - Polytechnic Consultation Platform",
+  "description": "A comprehensive consultation platform for polytechnic students and faculty",
   "icons": [
     {
       "src": "favicon.ico",
@@ -8,23 +9,29 @@
       "type": "image/x-icon"
     },
     {
-      "src": "android-chrome-192x192.png",
+      "src": "polycon-icon.png",
       "type": "image/png",
-      "sizes": "192x192"
+      "sizes": "192x192",
+      "purpose": "maskable any"
     },
     {
-      "src": "android-chrome-512x512.png",
+      "src": "polycon-icon.png",
       "type": "image/png",
-      "sizes": "512x512"
+      "sizes": "512x512",
+      "purpose": "maskable any"
     },
     {
-      "src": "apple-touch-icon.png",
+      "src": "polycon-icon.png",
       "type": "image/png",
       "sizes": "180x180"
     }
   ],
-  "start_url": ".",
+  "start_url": "/",
   "display": "standalone",
+  "orientation": "portrait-primary",
+  "scope": "/",
   "theme_color": "#057DCD",
-  "background_color": "#ffffff"
+  "background_color": "#ffffff",
+  "lang": "en",
+  "categories": ["education", "productivity"]
 }
