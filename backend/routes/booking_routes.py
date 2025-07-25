@@ -79,7 +79,7 @@ def get_bookings():
             'id': b.id,
             'subject': b.subject,
             'description': b.description,
-            'schedule': b.schedule.isoformat() if b.schedule else None,
+            'schedule': b.schedule.replace(tzinfo=timezone.utc).isoformat().replace('+00:00', 'Z') if b.schedule else None,
             'venue': b.venue,
             'status': b.status,
             'teacherID': b.teacher_id,
@@ -87,7 +87,7 @@ def get_bookings():
             'teacherProfile': teacher_profile,
             'studentNames': student_names,
             'studentProfiles': student_profiles,
-            'created_at': b.created_at.replace(tzinfo=timezone.utc).isoformat() if b.created_at else None,
+            'created_at': b.created_at.replace(tzinfo=timezone.utc).isoformat().replace('+00:00', 'Z') if b.created_at else None,
             'created_by': b.created_by
         })
     return jsonify(result), 200
@@ -274,7 +274,7 @@ def create_booking():
                 'status': status,
                 'teacher_name': teacher_name,
                 'student_names': student_names,
-                'schedule': schedule.isoformat() if schedule else None,
+                'schedule': schedule.replace(tzinfo=timezone.utc).isoformat().replace('+00:00', 'Z') if schedule else None,
                 'venue': venue,
                 'created_by': creator_id
             }
@@ -325,7 +325,7 @@ def cancel_booking():
                 'status': 'cancelled',
                 'teacher_name': teacher_name,
                 'student_names': student_names,
-                'schedule': booking.schedule.isoformat() if booking.schedule else None,
+                'schedule': booking.schedule.replace(tzinfo=timezone.utc).isoformat().replace('+00:00', 'Z') if booking.schedule else None,
                 'venue': booking.venue
             }
             print(f"🔔 Emitting booking_cancelled: {booking_data}")
@@ -381,7 +381,7 @@ def confirm_booking():
                 'status': 'confirmed',
                 'teacher_name': teacher_name,
                 'student_names': student_names,
-                'schedule': booking.schedule.isoformat() if booking.schedule else None,
+                'schedule': booking.schedule.replace(tzinfo=timezone.utc).isoformat().replace('+00:00', 'Z') if booking.schedule else None,
                 'venue': booking.venue
             }
             print(f"🔔 Emitting booking_confirmed: {booking_data}")
