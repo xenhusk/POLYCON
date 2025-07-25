@@ -25,8 +25,12 @@ import { getProfilePictureUrl } from '../utils/utils';
 import ProfilePictureUploader from './ProfilePictureUploader';
 import SettingsPopup from './SettingsPopup';
 import NotificationTray from './NotificationTray'; // Import NotificationTray component
+import { useToast } from '../contexts/ToastContext'; // Import useToast for notification state
 
 const Sidebar = ({ onExpandChange }) => {
+  // Get unread notification count from ToastContext
+  const { notifications } = useToast();
+  const unreadCount = notifications ? notifications.filter(n => !n.read).length : 0;
   const location = useLocation(); // Add this hook
   const [isOpen, setIsOpen] = useState(false);
   const [userRole, setUserRole] = useState('');
@@ -510,6 +514,9 @@ const Sidebar = ({ onExpandChange }) => {
               className={`no-hover-item relative h-8 flex items-center cursor-pointer ${((isOpen && !isMobile) || mobileOpen) ? 'opacity-100' : 'opacity-0'}`}
             >
               <BellIcon className="w-6 h-6 bell-icon -mr-2" />
+              {unreadCount > 0 && (
+                <span className="absolute top-1 left-3 block w-2.5 h-2.5 rounded-full bg-red-500 border-2 border-white"></span>
+              )}
             </li>
             <li 
               ref={settingsButtonRef}

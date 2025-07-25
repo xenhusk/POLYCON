@@ -2,8 +2,9 @@ import React, { useState, useEffect, useMemo, useCallback } from "react";
 import API_URL from '../apiConfig';
 import { useQuery } from "react-query";
 import AppointmentItem from "../components/AppointmentItem";
-import { showErrorNotification } from '../utils/notificationUtils';
+import { showErrorNotification, showAppointmentReminder as browserAppointmentNotification } from '../utils/notificationUtils';
 import { useToast } from '../contexts/ToastContext';
+import { parseUTCTimestamp } from '../utils/timezoneUtils';
 import io from 'socket.io-client';
 
 // Request notification permission on component load
@@ -66,6 +67,7 @@ function StudentAppointments() {
         status: booking.status,
         created_at: booking.created_at,
       };
+      console.log("Appointments.js - Raw booking.created_at:", booking.created_at, typeof booking.created_at);
       console.log("Appointments.js - Constructed appointmentItem:", appointmentItem); // Log constructed item
       if (booking.status === "pending") {
         categorizedAppointments.pending.push(appointmentItem);
@@ -75,19 +77,47 @@ function StudentAppointments() {
     });
 
     categorizedAppointments.pending.sort(
-      (a, b) => new Date(a.created_at) - new Date(b.created_at)
+      (a, b) => parseUTCTimestamp(a.created_at) - parseUTCTimestamp(b.created_at)
     );
     categorizedAppointments.upcoming.sort(
-      (a, b) => new Date(a.schedule) - new Date(b.schedule)
+      (a, b) => parseUTCTimestamp(a.schedule) - parseUTCTimestamp(b.schedule)
     );
 
     setAppointments(categorizedAppointments);
-  }, [bookings]);  useEffect(() => {
+  }, [bookings]);
+
+  // Student appointment reminder handler with browser notifications
+  const handleAppointmentReminder = useCallback((data) => {
+    console.log("⏰ appointment_reminder received:", data);
+    const message = `Your appointment with ${data.teacherName || 'your teacher'} is starting in ${data.timeUntil || data.minutesUntil + ' minutes'} at ${data.venue || 'the scheduled location'}`;
+    
+    // Show in-app toast notification
+    showAppointmentReminder(message);
+    
+    // Show browser/system tray notification
+    browserAppointmentNotification({
+      teacher: data.teacherName || 'your teacher',
+      student: 'You',
+      timeUntil: data.timeUntil || (data.minutesUntil + ' minutes'),
+      venue: data.venue || 'the scheduled location'
+    });
+  }, [showAppointmentReminder]);
+
+  useEffect(() => {
     const socket = io(API_URL);
     
     // Add connection event handlers
     socket.on('connect', () => {
       console.log('📡 StudentAppointments: Socket connected');
+      
+      // Join user-specific room for targeted notifications
+      const userID = localStorage.getItem('studentID') || localStorage.getItem('teacherID') || localStorage.getItem('userID');
+      if (userID) {
+        socket.emit('join_user_room', { userId: userID });
+        console.log(`📡 StudentAppointments: Requesting to join room for user ${userID}`);
+      } else {
+        console.warn('📡 StudentAppointments: No user ID found for room joining');
+      }
     });
     
     socket.on('disconnect', () => {
@@ -98,21 +128,7 @@ function StudentAppointments() {
       console.error('📡 StudentAppointments: Socket connection error:', error);
     });
     
-    const handleBookingCreated = data => {
-      console.log("✨ booking_created received:", data);
-      showBookingCreated(`Appointment Booking Created`);
-      refetch();
-    };
-    const handleBookingConfirmed = data => {
-      console.log("✅ booking_confirmed received:", data);
-      showBookingConfirmed(`Appointment confirmed`);
-      refetch();
-    };    const handleBookingCancelled = data => {
-      console.log("❌ booking_cancelled received:", data);
-      showBookingCancelled(`Appointment cancelled`);
-      refetch();
-    };
-
+    // Only handle events that need immediate UI updates (not toast notifications)
     const handleBookingStatusUpdate = data => {
       console.log("📋 booking_status_update received:", data);
       if (data.action === 'completed') {
@@ -130,30 +146,24 @@ function StudentAppointments() {
       refetch();
     };
 
-    const handleAppointmentReminder = data => {
-      console.log("⏰ appointment_reminder received:", data);
-      const message = `Your appointment with ${data.teacherName || 'your teacher'} is starting in 15 minutes at ${data.venue || 'the scheduled location'}`;
-      showAppointmentReminder(message);
-    };
+    // Handle room join confirmation
+    socket.on('joined_room', (data) => {
+      console.log(`📡 StudentAppointments: Successfully joined room ${data.room} for user ${data.userId}`);
+    });
 
-    console.log("📱 StudentAppointments: Listening to booking_created/confirmed/cancelled/updated/status_update/reminder events");
-    socket.on('booking_created', handleBookingCreated);
-    socket.on('booking_confirmed', handleBookingConfirmed);
-    socket.on('booking_cancelled', handleBookingCancelled);
+    console.log("📱 StudentAppointments: Listening to booking_updated/status_update/reminder events (global toast notifications handled by ToastProvider)");
+    // Note: booking_created, booking_confirmed, booking_cancelled are now handled globally by ToastProvider
     socket.on('booking_updated', handleBookingUpdated);
     socket.on('booking_status_update', handleBookingStatusUpdate);
     socket.on('appointment_reminder', handleAppointmentReminder);
       return () => {
       console.log("📱 StudentAppointments: Removing Socket.IO listeners");
-      socket.off('booking_created', handleBookingCreated);
-      socket.off('booking_confirmed', handleBookingConfirmed);
-      socket.off('booking_cancelled', handleBookingCancelled);
       socket.off('booking_updated', handleBookingUpdated);
       socket.off('booking_status_update', handleBookingStatusUpdate);
       socket.off('appointment_reminder', handleAppointmentReminder);
       socket.disconnect();
     };
-  }, [refetch, showBookingCreated, showBookingConfirmed, showBookingCancelled, showAppointmentReminder]);
+  }, [refetch, showAppointmentReminder, handleAppointmentReminder]);
 
   return (
     <div className="flex flex-col gap-4 sm:gap-5 h-full lg:grid lg:grid-cols-2">
@@ -341,12 +351,12 @@ function TeacherAppointments() {
     const upcomingApps = appointmentsData
       .filter((app) => app.status === "confirmed")
       .map(transformAppointment)
-      .sort((a, b) => new Date(a.schedule) - new Date(b.schedule));
+      .sort((a, b) => parseUTCTimestamp(a.schedule) - parseUTCTimestamp(b.schedule));
 
     const pendingApps = appointmentsData
       .filter((app) => app.status === "pending")
       .map(transformAppointment)
-      .sort((a, b) => new Date(a.created_at) - new Date(b.created_at));
+      .sort((a, b) => parseUTCTimestamp(a.created_at) - parseUTCTimestamp(b.created_at));
 
     return {
       upcoming: upcomingApps,
@@ -375,30 +385,33 @@ function TeacherAppointments() {
       return;
     }
     
-    // Display notification based on status
-    if (data && data.status) {
-      if (data.status === 'confirmed') {
-        showBookingConfirmed(`An appointment has been confirmed.`);
-      } else if (data.status === 'cancelled') {
-        showBookingCancelled(`An appointment has been cancelled.`);
-      } else {
-        showBookingCreated(`An appointment has been requested.`);
-      }
-    }
-    
-    // Refetch data
+    // Note: Toast notifications are now handled globally by ToastProvider
+    // Only handle data refresh here
     console.log("Refetching teacher appointments due to Socket.IO event");
     refetch();
-  }, [refetch, showBookingCreated, showBookingConfirmed, showBookingCancelled]);
+  }, [refetch]);
 
   const handleAppointmentReminder = useCallback((data) => {
     console.log("⏰ appointment_reminder received:", data);
     const studentNames = data.studentNames ? data.studentNames.join(', ') : 'your students';
-    const message = `Your appointment with ${studentNames} is starting in 15 minutes at ${data.venue || 'the scheduled location'}`;
+    const message = `Your appointment with ${studentNames} is starting in ${data.timeUntil || data.minutesUntil + ' minutes'} at ${data.venue || 'the scheduled location'}`;
+    
+    // Show in-app toast notification
     showAppointmentReminder(message);
+    
+    // Show browser/system tray notification
+    browserAppointmentNotification({
+      teacher: data.teacherName || 'Teacher',
+      student: studentNames,
+      timeUntil: data.timeUntil || (data.minutesUntil + ' minutes'),
+      venue: data.venue || 'the scheduled location'
+    });
   }, [showAppointmentReminder]);
   useEffect(() => {
     const socket = io(API_URL);
+    
+    // Get user ID for room joining
+    const userID = localStorage.getItem('studentID') || localStorage.getItem('teacherID') || localStorage.getItem('userID');
     
     // Add connection event handlers
     socket.on('connect', () => {
@@ -412,21 +425,28 @@ function TeacherAppointments() {
     socket.on('connect_error', (error) => {
       console.error('📡 TeacherAppointments: Socket connection error:', error);
     });
-      console.log("📱 TeacherAppointments: Listening to booking_created/confirmed/cancelled/updated/status_update/reminder events");
-    socket.on('booking_created', handleBookingUpdateOrCreate);
-    socket.on('booking_confirmed', handleBookingUpdateOrCreate);
-    socket.on('booking_cancelled', handleBookingUpdateOrCreate);
+
+    // Join user-specific room for receiving targeted notifications
+    if (userID) {
+      socket.emit('join_user_room', { userId: userID });
+      console.log(`📱 TeacherAppointments: Requested to join room for user ${userID}`);
+    }
+
+    socket.on('joined_room', (data) => {
+      console.log('📱 TeacherAppointments: Successfully joined room:', data.room);
+    });
+
+      console.log("📱 TeacherAppointments: Listening to booking_updated/status_update/reminder events (global toast notifications handled by ToastProvider)");
+    // Note: booking_created, booking_confirmed, booking_cancelled are now handled globally by ToastProvider
     socket.on('booking_updated', handleBookingUpdateOrCreate);
     socket.on('booking_status_update', handleBookingUpdateOrCreate);
     socket.on('appointment_reminder', handleAppointmentReminder);
       return () => {
       console.log("📱 TeacherAppointments: Removing Socket.IO listeners");
-      socket.off('booking_created', handleBookingUpdateOrCreate);
-      socket.off('booking_confirmed', handleBookingUpdateOrCreate);
-      socket.off('booking_cancelled', handleBookingUpdateOrCreate);
       socket.off('booking_updated', handleBookingUpdateOrCreate);
       socket.off('booking_status_update', handleBookingUpdateOrCreate);
       socket.off('appointment_reminder', handleAppointmentReminder);
+      socket.off('joined_room');
       socket.disconnect();
     };
   }, [handleBookingUpdateOrCreate, handleAppointmentReminder]);

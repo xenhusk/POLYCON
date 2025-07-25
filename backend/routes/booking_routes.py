@@ -3,7 +3,7 @@ from models import db, Booking, User, Student, Faculty
 from sqlalchemy.orm import joinedload
 from sqlalchemy import or_
 from services.socket_service import emit_booking_created, emit_booking_confirmed, emit_booking_cancelled
-from datetime import datetime
+from datetime import datetime, timezone
 
 booking_bp = Blueprint('booking_bp', __name__, url_prefix='/bookings')
 
@@ -87,7 +87,7 @@ def get_bookings():
             'teacherProfile': teacher_profile,
             'studentNames': student_names,
             'studentProfiles': student_profiles,
-            'created_at': b.created_at.isoformat() if b.created_at else None,
+            'created_at': b.created_at.replace(tzinfo=timezone.utc).isoformat() if b.created_at else None,
             'created_by': b.created_by
         })
     return jsonify(result), 200
@@ -143,7 +143,7 @@ def get_all_bookings_admin():
             'teacherProfile': teacher_profile,
             'studentNames': student_names,
             'studentProfiles': student_profiles,
-            'created_at': b.created_at.isoformat() if b.created_at else None,
+            'created_at': b.created_at.replace(tzinfo=timezone.utc).isoformat() if b.created_at else None,
             'created_by': b.created_by
         })
     return jsonify(result), 200
@@ -180,9 +180,22 @@ def create_booking():
     schedule_str = data.get('schedule')
     if not schedule_str:
         return jsonify({"error": "schedule is required"}), 400
-    from datetime import datetime
+    from datetime import datetime, timezone
     try:
-        schedule = datetime.fromisoformat(schedule_str.replace('Z', '+00:00'))
+        # Handle UTC timestamps properly
+        if schedule_str.endswith('Z'):
+            # ISO format with Z suffix indicates UTC
+            schedule = datetime.fromisoformat(schedule_str.replace('Z', '+00:00'))
+            # Convert to naive UTC datetime for database storage
+            schedule = schedule.replace(tzinfo=None)
+        elif '+' in schedule_str or schedule_str.endswith('+00:00'):
+            # ISO format with timezone offset
+            schedule = datetime.fromisoformat(schedule_str)
+            # Convert to UTC and make naive for database storage
+            schedule = schedule.astimezone(timezone.utc).replace(tzinfo=None)
+        else:
+            # Assume naive datetime is already in UTC
+            schedule = datetime.fromisoformat(schedule_str)
     except ValueError:
         return jsonify({"error": "Invalid schedule format"}), 400
     venue = data.get('venue')

@@ -2,11 +2,26 @@ import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import PasswordResetModal from './PasswordResetModal';
 import { motion, AnimatePresence } from 'framer-motion';
+import { 
+  areBrowserNotificationsSupported, 
+  hasNotificationPermission,
+  requestNotificationPermission,
+  areNotificationsEnabled,
+  toggleNotifications,
+  areSoundNotificationsEnabled,
+  toggleSoundNotifications,
+  showAppointmentReminder
+} from '../utils/notificationUtils';
 
 const SettingsPopup = ({ isVisible, onClose, position, userEmail, onLogout }) => {
   const navigate = useNavigate();
   const [showPasswordModal, setShowPasswordModal] = useState(false);
   const [isMobile, setIsMobile] = useState(window.innerWidth < 640);
+  
+  // Notification states
+  const [notificationsSupported, setNotificationsSupported] = useState(false);
+  const [notificationsEnabled, setNotificationsEnabled] = useState(false);
+  const [soundEnabled, setSoundEnabled] = useState(false);
   
   // Handle responsive behavior
   useEffect(() => {
@@ -14,6 +29,15 @@ const SettingsPopup = ({ isVisible, onClose, position, userEmail, onLogout }) =>
     window.addEventListener('resize', handleResize);
     return () => window.removeEventListener('resize', handleResize);
   }, []);
+
+  // Initialize notification states
+  useEffect(() => {
+    if (isVisible) {
+      setNotificationsSupported(areBrowserNotificationsSupported());
+      setNotificationsEnabled(areNotificationsEnabled());
+      setSoundEnabled(areSoundNotificationsEnabled());
+    }
+  }, [isVisible]);
 
   // Effect to prevent background scrolling when modal is open
   useEffect(() => {
@@ -48,6 +72,47 @@ const SettingsPopup = ({ isVisible, onClose, position, userEmail, onLogout }) =>
   // Handle close for password modal
   const handleClosePasswordModal = () => {
     setShowPasswordModal(false);
+  };
+
+  // Notification handlers
+  const handleToggleNotifications = async () => {
+    if (!notificationsEnabled) {
+      // User wants to enable notifications
+      if (!hasNotificationPermission()) {
+        // Need to request permission first
+        const permission = await requestNotificationPermission();
+        
+        if (permission === 'granted') {
+          const result = toggleNotifications(true);
+          setNotificationsEnabled(result);
+        } else {
+          setNotificationsEnabled(false);
+        }
+      } else {
+        // Already have permission, just enable
+        const result = toggleNotifications(true);
+        setNotificationsEnabled(result);
+      }
+    } else {
+      // User wants to disable notifications
+      const result = toggleNotifications(false);
+      setNotificationsEnabled(result);
+    }
+  };
+
+  const handleToggleSounds = () => {
+    const newStatus = !soundEnabled;
+    toggleSoundNotifications(newStatus);
+    setSoundEnabled(newStatus);
+  };
+
+  const testNotification = () => {
+    showAppointmentReminder({
+      teacher: 'Dr. John Smith',
+      student: 'You',
+      timeUntil: '5 minutes',
+      venue: 'Room 101'
+    });
   };
 
   if (!isVisible && !showPasswordModal) return null;
@@ -104,6 +169,62 @@ const SettingsPopup = ({ isVisible, onClose, position, userEmail, onLogout }) =>
               {/* Divider */}
               <div className="h-[1px] bg-gray-200 my-2" />
 
+              {/* Notifications Section */}
+              {notificationsSupported && (
+                <>
+                  <div className="px-6 py-2">
+                    <p className="text-sm font-semibold text-gray-500 uppercase tracking-wider mb-2">Notifications</p>
+                    
+                    {/* Browser Notifications Toggle */}
+                    <div className="flex items-center justify-between px-4 py-3 hover:bg-gray-50 rounded">
+                      <div className="flex items-center">
+                        <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5 mr-3 text-gray-500" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 17h5l-5 5-5-5h5v-6a2 2 0 00-2-2H9a2 2 0 00-2 2v6z" />
+                        </svg>
+                        <div>
+                          <span className="text-base text-gray-700">Desktop Alerts</span>
+                          <p className="text-xs text-gray-500">System tray notifications</p>
+                        </div>
+                      </div>
+                      <label className="relative inline-flex items-center cursor-pointer">
+                        <input
+                          type="checkbox"
+                          checked={notificationsEnabled}
+                          onChange={handleToggleNotifications}
+                          className="sr-only peer"
+                        />
+                        <div className="w-11 h-6 bg-gray-200 rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-[#0065A8]"></div>
+                      </label>
+                    </div>
+
+                    {/* Sound Notifications Toggle */}
+                    <div className="flex items-center justify-between px-4 py-3 hover:bg-gray-50 rounded">
+                      <div className="flex items-center">
+                        <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5 mr-3 text-gray-500" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15.536 11.293a3 3 0 010 4.414m2.828-7.071a7 7 0 010 9.899M9 9a3 3 0 015.196 2M9 9V7a1 1 0 011-1h4a1 1 0 011 1v2M9 9H7a1 1 0 00-1 1v6a1 1 0 001 1h2m2-8a3 3 0 115.196 2m-5.196-2H9" />
+                        </svg>
+                        <div>
+                          <span className="text-base text-gray-700">Sound Alerts</span>
+                          <p className="text-xs text-gray-500">Play notification sounds</p>
+                        </div>
+                      </div>
+                      <label className="relative inline-flex items-center cursor-pointer">
+                        <input
+                          type="checkbox"
+                          checked={soundEnabled}
+                          onChange={handleToggleSounds}
+                          className="sr-only peer"
+                        />
+                        <div className="w-11 h-6 bg-gray-200 rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-[#0065A8]"></div>
+                      </label>
+                    </div>
+                  </div>
+
+                  {/* Divider */}
+                  <div className="h-[1px] bg-gray-200 my-2" />
+                </>
+              )}
+
               {/* Logout Section */}
               <div className="px-6 py-2">
                 <button 
@@ -122,8 +243,11 @@ const SettingsPopup = ({ isVisible, onClose, position, userEmail, onLogout }) =>
       ) : (
         // Desktop: Small dropdown at the specified position
         <div 
-          className="fixed bg-white rounded-lg shadow-lg w-56 py-2 z-[1000]"
-          style={{ top: position.top, left: position.left }}
+          className="fixed bg-white rounded-lg shadow-lg w-64 py-2 z-[1000]"
+          style={{ 
+            top: Math.max(20, Math.min(position.top, window.innerHeight - 320)), 
+            left: Math.max(20, Math.min(position.left, window.innerWidth - 280))
+          }}
         >
           {/* Security Section */}
           <div className="px-4 py-2">
@@ -138,6 +262,56 @@ const SettingsPopup = ({ isVisible, onClose, position, userEmail, onLogout }) =>
               Change Password
             </button>
           </div>
+
+          {/* Notifications Section */}
+          {notificationsSupported && (
+            <>
+              {/* Divider */}
+              <div className="h-[1px] bg-gray-200 my-2" />
+              
+              <div className="px-4 py-2">
+                <p className="text-sm font-semibold text-gray-500">Notifications</p>
+                
+                {/* Browser Notifications Toggle */}
+                <div className="flex items-center justify-between px-3 py-2 hover:bg-gray-100 rounded">
+                  <div className="flex items-center">
+                    <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4 mr-2 text-gray-500" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 17h5l-5 5-5-5h5v-6a2 2 0 00-2-2H9a2 2 0 00-2 2v6z" />
+                    </svg>
+                    <span className="text-sm text-gray-700">Desktop</span>
+                  </div>
+                  <label className="relative inline-flex items-center cursor-pointer">
+                    <input
+                      type="checkbox"
+                      checked={notificationsEnabled}
+                      onChange={handleToggleNotifications}
+                      className="sr-only peer"
+                    />
+                    <div className="w-9 h-5 bg-gray-200 rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-4 after:w-4 after:transition-all peer-checked:bg-[#0065A8]"></div>
+                  </label>
+                </div>
+
+                {/* Sound Notifications Toggle */}
+                <div className="flex items-center justify-between px-3 py-2 hover:bg-gray-100 rounded">
+                  <div className="flex items-center">
+                    <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4 mr-2 text-gray-500" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15.536 11.293a3 3 0 010 4.414m2.828-7.071a7 7 0 010 9.899M9 9a3 3 0 015.196 2M9 9V7a1 1 0 011-1h4a1 1 0 011 1v2M9 9H7a1 1 0 00-1 1v6a1 1 0 001 1h2m2-8a3 3 0 115.196 2m-5.196-2H9" />
+                    </svg>
+                    <span className="text-sm text-gray-700">Sound</span>
+                  </div>
+                  <label className="relative inline-flex items-center cursor-pointer">
+                    <input
+                      type="checkbox"
+                      checked={soundEnabled}
+                      onChange={handleToggleSounds}
+                      className="sr-only peer"
+                    />
+                    <div className="w-9 h-5 bg-gray-200 rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-4 after:w-4 after:transition-all peer-checked:bg-[#0065A8]"></div>
+                  </label>
+                </div>
+              </div>
+            </>
+          )}
 
           {/* Divider */}
           <div className="h-[1px] bg-gray-200 my-2" />

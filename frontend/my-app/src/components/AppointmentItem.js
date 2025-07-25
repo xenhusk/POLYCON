@@ -1,5 +1,6 @@
 import React, { useState } from 'react';
 import { getProfilePictureUrl } from '../utils/utils';
+import { formatUTCToLocal, debugTimezone } from '../utils/timezoneUtils';
 
 function AppointmentItem({ appointment, role, onStartSession, onCancel, onConfirm, confirmInputs = {}, handleConfirmClick, setConfirmInputs }) {
   const [isLoading, setIsLoading] = useState(false);
@@ -26,10 +27,12 @@ function AppointmentItem({ appointment, role, onStartSession, onCancel, onConfir
   };
   
   const formatDateTime = (dateTime) => {
-    const date = new Date(dateTime);
-    const formattedDate = date.toLocaleDateString();
-    const formattedTime = date.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
-    return `${formattedDate} at ${formattedTime}`;
+    console.log('🕐 AppointmentItem formatDateTime called with:', dateTime);
+    
+    // Use our timezone-aware formatter
+    const result = formatUTCToLocal(dateTime);
+    console.log('🕐 AppointmentItem formatDateTime result:', result);
+    return result;
   };
 
   // Ensure the appointment object contains booking_id (if not, map id accordingly)

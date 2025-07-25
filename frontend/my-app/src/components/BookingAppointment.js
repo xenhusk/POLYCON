@@ -2,6 +2,7 @@ import React, { useState, useEffect, useRef } from "react";
 import { useNavigate, useLocation } from "react-router-dom";
 import { getProfilePictureUrl, getDisplayProgram } from "../utils/utils";
 import { getUserIdentifiers, validateUserForOperation } from "../utils/userUtils";
+import { convertLocalToUTC } from "../utils/timezoneUtils";
 import { useQueryClient } from "react-query";
 import { motion } from "framer-motion";
 import API_URL from '../apiConfig';
@@ -284,7 +285,7 @@ function BookingAppointment({ closeModal, role: propRole }) {
         teacherID,
         // --- Modified: extract student IDs from the selected student objects ---
         studentIDs: selectedStudents.map((s) => s.id),
-        schedule,
+        schedule: convertLocalToUTC(schedule),
         venue,
         createdBy: teacherID,
       };
@@ -353,7 +354,7 @@ function BookingAppointment({ closeModal, role: propRole }) {
       const bookingData = {
         teacherID: selectedTeacher,
         studentIDs: studentIDsArray,
-        schedule, // use the schedule state value
+        schedule: convertLocalToUTC(schedule), // Convert local time to UTC
         venue,    // use the venue state value
         createdBy: studentID,
       };

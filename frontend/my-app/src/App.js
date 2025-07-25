@@ -10,7 +10,7 @@ import AdminPortal from './components/AdminPortal';
 import Courses from './components/Courses';
 import AddGrade from './components/AddGrade';
 import UserHome from './pages/User_Home';  // Update import name and path
-import { showSuccessNotification, showErrorNotification } from './utils/notificationUtils';
+import { showSuccessNotification, showErrorNotification, initializeNotifications } from './utils/notificationUtils';
 import AppointmentsCalendar from './components/AppointmentsCalendar';
 import ReactCrop from 'react-image-crop';
 import 'react-image-crop/dist/ReactCrop.css';
@@ -48,6 +48,7 @@ import PasswordResetPage from './components/PasswordResetPage';
 import EmailVerification from './pages/EmailVerification';
 import EmailVerificationSuccess from './pages/EmailVerificationSuccess';
 import EmailVerificationError from './pages/EmailVerificationError';
+import Settings from './pages/Settings';
 import SocketTest from './pages/SocketTest'; // Add SocketTest import
 import { ToastProvider } from './contexts/ToastContext'; // Add ToastProvider import
 import { ActionButtonDataProvider } from './context/ActionButtonDataContext';
@@ -179,6 +180,11 @@ function App() {
     };
     
     runRecovery();
+  }, []);
+
+  // Initialize browser notifications
+  useEffect(() => {
+    initializeNotifications();
   }, []);
 
   // Run ID persistence check immediately when App loads
@@ -787,6 +793,7 @@ function App() {
                     <Route path="/homeadmin" element={<HomeAdmin />} />
                     <Route path="/homestudent" element={<HomeStudent />} />                    <Route path="/enrollment-test" element={<EnrollmentTestPage />} /> {/* new test route */}
                     <Route path="/semester-management" element={<SemesterManagement />} /> {/* Update this line */}                    <Route path="/comparative-analysis" element={<ComparativeAnalysis />} />
+                    <Route path="/settings" element={<Settings />} /> {/* Settings page with notification controls */}
                     <Route path="/socket-test" element={<SocketTest />} /> {/* Socket.IO test dashboard route */}
                   </Routes>
                 </Suspense>

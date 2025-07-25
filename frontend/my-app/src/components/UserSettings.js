@@ -7,7 +7,8 @@ import {
   areNotificationsEnabled,
   areSoundNotificationsEnabled,
   toggleSoundNotifications,
-  playNotificationSound
+  playNotificationSound,
+  showAppointmentReminder
 } from '../utils/notificationUtils';
 
 const UserSettings = () => {
@@ -57,6 +58,16 @@ const UserSettings = () => {
     if (newStatus) {
       playNotificationSound('success', 0.3);
     }
+  };
+
+  const testNotification = () => {
+    // Test browser notification with appointment reminder format
+    showAppointmentReminder({
+      teacher: 'Dr. John Smith',
+      student: 'You',
+      timeUntil: '5 minutes',
+      venue: 'Room 101'
+    });
   };
 
   if (!notificationsSupported) {
@@ -112,6 +123,24 @@ const UserSettings = () => {
           </label>
         </div>
       </div>
+
+      {/* Test Notification Button */}
+      {notificationsEnabled && (
+        <div className="p-4 bg-blue-50 border border-blue-200 rounded-lg">
+          <div className="text-center">
+            <h3 className="font-medium mb-2">Test Notifications</h3>
+            <p className="text-sm text-gray-600 mb-3">
+              Click below to test browser notifications and sounds
+            </p>
+            <button
+              onClick={testNotification}
+              className="px-4 py-2 bg-[#0065A8] text-white rounded hover:bg-[#004e87] transition-colors text-sm"
+            >
+              🔔 Test Notification
+            </button>
+          </div>
+        </div>
+      )}
     </div>
   );
 };

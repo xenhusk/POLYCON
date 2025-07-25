@@ -3,6 +3,7 @@ import React, { createContext, useContext, useEffect, useState } from 'react';
 import ToastManager, { useToastManager } from '../components/ToastManager';
 import { playNotificationSound } from '../utils/notificationUtils';
 import { requestNotificationPermission, canUseSystemNotifications } from '../components/Toast';
+import { queryClient } from '../utils/queryConfig';
 import io from 'socket.io-client';
 
 const ToastContext = createContext();
@@ -19,6 +20,18 @@ export const ToastProvider = ({ children }) => {
   const toastManager = useToastManager();
   const [socket, setSocket] = useState(null);
   const [isConnected, setIsConnected] = useState(false);
+  const [notifications, setNotifications] = useState([]);
+
+  // Helper function to add notification to tray
+  const addNotificationToTray = (notification) => {
+    const trayNotification = {
+      id: Date.now() + Math.random(), // Ensure unique ID
+      timestamp: new Date(),
+      read: false,
+      ...notification
+    };
+    setNotifications(prev => [trayNotification, ...prev.slice(0, 49)]); // Keep last 50
+  };
 
   // Initialize Socket.IO connection for appointment reminders
   useEffect(() => {
@@ -74,14 +87,23 @@ export const ToastProvider = ({ children }) => {
       console.log('🔔 Full appointment reminder payload:', JSON.stringify(data, null, 2));
       
       try {
+        const message = data.message || 'You have an appointment in 15 minutes';
+        
         // Show toast notification with sound
-        showAppointmentReminder(data.message || 'You have an appointment in 15 minutes', true);
+        showAppointmentReminder(message, true);
+
+        // Add to notification tray
+        addNotificationToTray({
+          type: 'reminder',
+          title: 'Appointment Reminder',
+          message: message
+        });
 
         // Request browser notification permission and show notification
         if ('Notification' in window) {
           if (Notification.permission === 'granted') {
             new Notification('Appointment Reminder', {
-              body: data.message || 'You have an appointment in 15 minutes',
+              body: message,
               icon: '/favicon.ico',
               tag: `appointment-${data.appointment_id}`,
               requireInteraction: true
@@ -90,7 +112,7 @@ export const ToastProvider = ({ children }) => {
             Notification.requestPermission().then(permission => {
               if (permission === 'granted') {
                 new Notification('Appointment Reminder', {
-                  body: data.message || 'You have an appointment in 15 minutes',
+                  body: message,
                   icon: '/favicon.ico',
                   tag: `appointment-${data.appointment_id}`,
                   requireInteraction: true
@@ -103,6 +125,70 @@ export const ToastProvider = ({ children }) => {
         console.log('🔔 ToastProvider: Successfully processed appointment reminder');
       } catch (error) {
         console.error('🔔 ToastProvider: Error processing appointment reminder:', error);
+      }
+    });
+
+    // Listen for global booking events
+    newSocket.on('booking_created', (data) => {
+      console.log('🔔 ToastProvider: Received booking_created:', data);
+      try {
+        const message = data.message || 'A new appointment has been requested';
+        showBookingCreated(message);
+        
+        // Add to notification tray
+        addNotificationToTray({
+          type: 'booking',
+          title: 'Booking Created',
+          message: message
+        });
+        
+        // Invalidate appointments data to refresh UI
+        queryClient.invalidateQueries(['studentAppointments']);
+        queryClient.invalidateQueries(['teacherAppointments']);
+      } catch (error) {
+        console.error('🔔 ToastProvider: Error processing booking_created:', error);
+      }
+    });
+
+    newSocket.on('booking_confirmed', (data) => {
+      console.log('🔔 ToastProvider: Received booking_confirmed:', data);
+      try {
+        const message = data.message || 'An appointment has been confirmed';
+        showBookingConfirmed(message);
+        
+        // Add to notification tray
+        addNotificationToTray({
+          type: 'booking',
+          title: 'Booking Confirmed',
+          message: message
+        });
+        
+        // Invalidate appointments data to refresh UI
+        queryClient.invalidateQueries(['studentAppointments']);
+        queryClient.invalidateQueries(['teacherAppointments']);
+      } catch (error) {
+        console.error('🔔 ToastProvider: Error processing booking_confirmed:', error);
+      }
+    });
+
+    newSocket.on('booking_cancelled', (data) => {
+      console.log('🔔 ToastProvider: Received booking_cancelled:', data);
+      try {
+        const message = data.message || 'An appointment has been cancelled';
+        showBookingCancelled(message);
+        
+        // Add to notification tray
+        addNotificationToTray({
+          type: 'booking',
+          title: 'Booking Cancelled',
+          message: message
+        });
+        
+        // Invalidate appointments data to refresh UI
+        queryClient.invalidateQueries(['studentAppointments']);
+        queryClient.invalidateQueries(['teacherAppointments']);
+      } catch (error) {
+        console.error('🔔 ToastProvider: Error processing booking_cancelled:', error);
       }
     });
 
@@ -190,6 +276,27 @@ export const ToastProvider = ({ children }) => {
     }
     return showWarning('Appointment Reminder', message || 'Your appointment is starting soon', 8000, false, useSystemNotification);
   };
+  // Functions for managing notification tray
+  const clearNotifications = () => {
+    setNotifications([]);
+  };
+
+  const markNotificationAsRead = (id) => {
+    setNotifications(prev => 
+      prev.map(notif => 
+        notif.id === id ? { ...notif, read: true } : notif
+      )
+    );
+  };
+
+  const markAllAsRead = () => {
+    setNotifications(prev => prev.map(notif => ({ ...notif, read: true })));
+  };
+
+  const removeNotification = (id) => {
+    setNotifications(prev => prev.filter(notif => notif.id !== id));
+  };
+
   const contextValue = {
     ...toastManager,
     showSuccess,
@@ -203,6 +310,13 @@ export const ToastProvider = ({ children }) => {
     showAppointmentReminder,
     socket,
     isConnected,
+    // Notification tray management
+    notifications,
+    clearNotifications,
+    markNotificationAsRead,
+    markAllAsRead,
+    removeNotification,
+    addNotificationToTray,
     // Notification utilities
     requestNotificationPermission,
     canUseSystemNotifications

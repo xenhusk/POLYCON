@@ -35,31 +35,31 @@ function TeacherAppointments() {
     fetchAppointments();
   }, [fetchAppointments]);
 
-  // Schedule 15-minute reminder notifications for upcoming appointments
-  useEffect(() => {
-    const REMINDER_MINUTES = 15;
-    const timeoutIds = [];
-    appointments.forEach(booking => {
-      const scheduleMs = new Date(booking.schedule).getTime();
-      const reminderTime = scheduleMs - REMINDER_MINUTES * 60000;
-      const now = Date.now();
-      const msUntil = reminderTime - now;
-      if (msUntil > 0) {
-        const id = setTimeout(() => {
-          // Browser notification
-          browserAppointmentNotification({
-            teacher: booking.teacherName,
-            student: booking.studentNames[0] || '',
-            timeUntil: `${REMINDER_MINUTES} minutes`
-          });
-          // In-app toast
-          toastAppointment(`Your appointment with ${booking.studentNames.join(', ')} starts in ${REMINDER_MINUTES} minutes`);
-        }, msUntil);
-        timeoutIds.push(id);
-      }
-    });
-    return () => timeoutIds.forEach(clearTimeout);
-  }, [appointments, toastAppointment]);
+  // Frontend reminder logic disabled - now using backend SocketIO scheduler for accurate timing
+  // useEffect(() => {
+  //   const REMINDER_MINUTES = 15;
+  //   const timeoutIds = [];
+  //   appointments.forEach(booking => {
+  //     const scheduleMs = new Date(booking.schedule).getTime();
+  //     const reminderTime = scheduleMs - REMINDER_MINUTES * 60000;
+  //     const now = Date.now();
+  //     const msUntil = reminderTime - now;
+  //     if (msUntil > 0) {
+  //       const id = setTimeout(() => {
+  //         // Browser notification
+  //         browserAppointmentNotification({
+  //           teacher: booking.teacherName,
+  //           student: booking.studentNames[0] || '',
+  //           timeUntil: `${REMINDER_MINUTES} minutes`
+  //         });
+  //         // In-app toast
+  //         toastAppointment(`Your appointment with ${booking.studentNames.join(', ')} starts in ${REMINDER_MINUTES} minutes`);
+  //       }, msUntil);
+  //       timeoutIds.push(id);
+  //     }
+  //   });
+  //   return () => timeoutIds.forEach(clearTimeout);
+  // }, [appointments, toastAppointment]);
 
   const events = useMemo(() => {
     if (!appointments?.length) return [];
