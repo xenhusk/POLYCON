@@ -87,8 +87,8 @@ class AppointmentScheduler:
     def _check_and_send_reminders(self):
         """Check for appointments that need reminders and send them."""
         try:
-            # Use local time for schedule comparisons since DB stores naive datetimes in local timezone
-            now = datetime.now()
+            # Use UTC time consistently for all operations
+            now = datetime.utcnow()
             
             # Calculate the time range for reminders: allow a 2-minute buffer
             reminder_start_time = now
@@ -103,7 +103,7 @@ class AppointmentScheduler:
                 )
             ).all()
             
-            logger.info(f"Checking reminders at {now.isoformat()} (local time): Found {len(upcoming_appointments)} appointments to check")
+            logger.info(f"Checking reminders at {now.isoformat()} (UTC time): Found {len(upcoming_appointments)} appointments to check")
             
             for appointment in upcoming_appointments:
                 self._send_reminder_if_needed(appointment, now)
@@ -116,7 +116,7 @@ class AppointmentScheduler:
                     ConsultationSession.session_date <= reminder_end_time
                 )
             ).all()
-            logger.info(f"Checking consultation reminders at {now.isoformat()} (local time): Found {len(sessions)} sessions to check")
+            logger.info(f"Checking consultation reminders at {now.isoformat()} (UTC time): Found {len(sessions)} sessions to check")
             for sess in sessions:
                 reminder_id = f"consult_{sess.id}_{self.reminder_minutes}min"
                 if reminder_id in self.sent_reminders:
@@ -133,7 +133,7 @@ class AppointmentScheduler:
                         'venue': sess.venue,
                         'timeUntil': f"{int(mins)} minutes",
                         'minutesUntil': mins,
-                        'timestamp': datetime.now().isoformat(),
+                        'timestamp': datetime.utcnow().isoformat(),
                         'recipient_type': 'consultation',
                         'recipient_id': sess.teacher_id,
                         'message': f"Your consultation starts in {int(mins)} minutes"
@@ -229,7 +229,7 @@ class AppointmentScheduler:
                 'venue': appointment.venue,
                 'timeUntil': time_until_text,
                 'minutesUntil': minutes_until,
-                'timestamp': datetime.now().isoformat()
+                'timestamp': datetime.utcnow().isoformat()
             }
             
             # Send reminder to teacher

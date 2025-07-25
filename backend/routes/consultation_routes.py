@@ -194,7 +194,7 @@ def store_consultation_data(): # Renamed function
                     except ValueError:
                          return jsonify(error=f"Invalid session_date format: {session_date_str}. Use ISO format."), 400
         else:
-            session_datetime = datetime.utcnow() # Default if not provided
+            session_datetime = datetime.utcnow() # Use UTC consistently
 
 
         new_session = ConsultationSession(
