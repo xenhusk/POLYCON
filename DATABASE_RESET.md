@@ -18,10 +18,10 @@ This guide provides a step-by-step process to safely and efficiently clear all a
 
 * **`psql` client:** Ensure you have the PostgreSQL command-line client (`psql`) installed on your local machine.
 * **Database Credentials:** You will need the full connection string for your Render database:
-    * **URL:** `postgresql://polycon_user:7uIhkAbmDQhPuNZ73GSleiogdEsMxbyc@dpg-d20fdv2li9vc739vsidg-a.singapore-postgres.render.com/polycon_9qxs`
-    * **Host:** `dpg-d20fdv2li9vc739vsidg-a.singapore-postgres.render.com`
+    * **URL:** `postgresql://polycon_user:`
+    * **Host:** `postgres.render.com`
     * **User:** `polycon_user`
-    * **Password:** `7uIhkAbmDQhPuNZ73GSleiogdEsMxbyc`
+    * **Password:** `password`
     * **Database:** `polycon_9qxs`
 
 ---
@@ -39,7 +39,7 @@ Before performing any data deletion, create a complete backup of your production
     pg_dump -h dpg-d20fdv2li9vc739vsidg-a.singapore-postgres.render.com -U polycon_user -d polycon_9qxs -W > polycon_9qxs_backup_20250729_1826.sql
     ```
     * Replace `20250729_1826` with the current date and time (e.g., `YYYYMMDD_HHMM`) to create a unique backup file name.
-    * You will be prompted to enter the database password (`7uIhkAbmDQhPuNZ73GSleiogdEsMxbyc`).
+    * You will be prompted to enter the database password (`password`).
 3.  **Verify the backup:**
     * Ensure the `polycon_9qxs_backup_YYYYMMDD_HHMM.sql` file was created.
     * Check its size to confirm it's not empty.
@@ -50,7 +50,7 @@ Before performing any data deletion, create a complete backup of your production
 2.  **Execute the `psql` command to connect:**
 
     ```bash
-    psql "postgresql://polycon_user:7uIhkAbmDQhPuNZ73GSleiogdEsMxbyc@dpg-d20fdv2li9vc739vsidg-a.singapore-postgres.render.com/polycon_9qxs"
+    psql "postgresql://polycon_user:"
     ```
 3.  Upon successful connection, your terminal prompt will change to `polycon_9qxs=#`. This confirms you are now connected to the production database. **Proceed with extreme caution from this point.**
 
