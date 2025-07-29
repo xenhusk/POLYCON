@@ -70,7 +70,11 @@ const Home = () => {
         handleSignupClick={handleSignupClick}
         handleSectionNavigation={handleSectionNavigation}
       />
-      <Hero />
+      <Hero
+        handleButtonClick={handleSectionNavigation}
+        handleSignupClick={handleSignupClick}
+        handleSectionNavigation={handleSectionNavigation}
+      />
       <About animateSection={animateSection} />
       <Contact animateSection={animateSection} />
       <Footer />
@@ -310,7 +314,7 @@ const Nav = ({ handleLoginClick, handleSignupClick, handleSectionNavigation }) =
 };
 
 // Enhanced Hero Section
-const Hero = () => {
+const Hero = ({ handleSignupClick, handleSectionNavigation, handleButtonClick}) => {
   const images = [Consult1, Consult2, Consult3];
   const [currentImage, setCurrentImage] = useState(0);
 
@@ -408,6 +412,7 @@ const Hero = () => {
               <motion.button
                 whileHover={{ scale: 1.05 }}
                 whileTap={{ scale: 0.95 }}
+                onClick={(handleSignupClick)}
                 className="bg-white text-[#057DCD] px-6 sm:px-8 py-3 sm:py-4 rounded-full font-semibold text-base sm:text-lg hover:bg-blue-50 transition-all duration-200 shadow-lg"
               >
                 Get Started
@@ -415,6 +420,7 @@ const Hero = () => {
               <motion.button
                 whileHover={{ scale: 1.05 }}
                 whileTap={{ scale: 0.95 }}
+                onClick={() => handleSectionNavigation('About')}
                 className="border-2 border-white text-white px-6 sm:px-8 py-3 sm:py-4 rounded-full font-semibold text-base sm:text-lg hover:bg-white hover:text-[#057DCD] transition-all duration-200"
               >
                 Learn More
