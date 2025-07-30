@@ -77,7 +77,7 @@ function Home() {
             ) : (
               /* Desktop view - Calendar shown */
               <div className="overflow-hidden">
-                <h2 className="text-sm sm:text-base md:text-lg text-center font-semibold mb-1 sm:mb-2 text-[#0065A8]">
+                <h2 className="text-lg sm:text-base md:text-lg text-center font-semibold mb-1 sm:mb-2 text-[#0065A8]">
                   Consultation Calendar
                 </h2>
                 <div className="bg-white rounded-lg shadow-lg p-1 sm:p-2 overflow-x-auto">
@@ -95,7 +95,7 @@ function Home() {
             {isMobile ? (
               /* Mobile view for students - Calendar hidden with message */
               <div className="w-full">
-                <h2 className="text-sm sm:text-base md:text-lg text-center font-semibold mb-1 sm:mb-2 text-[#0065A8]">
+                <h2 className="text-lg sm:text-base md:text-lg text-center font-semibold mb-1 sm:mb-2 text-[#0065A8]">
                   Consultation Calendar
                 </h2>
                 <div className="bg-white rounded-lg shadow-lg p-4 text-center">

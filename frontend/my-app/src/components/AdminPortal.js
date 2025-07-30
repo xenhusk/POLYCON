@@ -6,6 +6,25 @@ import { ReactComponent as DeleteIcon } from "./icons/delete.svg";
 import './transitions.css';  // Add this import
 
 export default function AdminPortal() {
+  const navigate = useNavigate();
+  // Detect if on mobile/tablet
+  const [isMobile, setIsMobile] = useState(false);
+  useEffect(() => {
+    const checkMobile = () => setIsMobile(window.innerWidth < 768);
+    checkMobile();
+    window.addEventListener('resize', checkMobile);
+    return () => window.removeEventListener('resize', checkMobile);
+  }, []);
+  const PolyconLogo = require('./icons/Polycon.svg').ReactComponent;
+  // Fix: define userRole from localStorage
+  const userRole = localStorage.getItem('userRole');
+
+  // Logout function
+  const handleLogout = () => {
+    // Clear any tokens or session info if needed
+    localStorage.clear();
+    navigate('/login');
+  };
   const [idNumber, setIdNumber] = useState('');
   const [firstName, setFirstName] = useState('');
   const [lastName, setLastName] = useState('');
@@ -281,6 +300,25 @@ export default function AdminPortal() {
       setProgram("");
     }
   }, [department]);
+
+    if (userRole === 'admin' && isMobile) {
+    return (
+      <div className="flex flex-col pt-10 items-center min-h-screen w-screen bg-[#005B98]">
+        <PolyconLogo style={{ height: '200px', width: 'auto', marginBottom: '24px' }} />
+        <h3 className="text-2xl font-bold text-white mb-4 mx-9 text-center">Faculty Portal Unavailable on Mobile/Tablet</h3>
+        <p className="text-white mb-6 mx-9 text-center">For security and usability, please use a desktop or laptop to access admin features.</p>
+        <button
+          className="bg-[#057DCD] text-white px-6 py-2 rounded-lg shadow-md hover:bg-[#54BEFF] transition"
+          onClick={() => {
+            localStorage.clear();
+            window.location.href = "/login";
+          }}
+        >
+          Logout
+        </button>
+      </div>
+    );
+  }
 
   return (
     <div className="w-full min-h-screen p-6 items-center fade-in">

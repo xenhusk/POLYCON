@@ -1,10 +1,21 @@
 import React, { useEffect, useState } from 'react';
 import { ReactComponent as EditIcon } from './icons/Edit.svg';
+import { ReactComponent as PolyconLogo } from './icons/Polycon.svg';
 import { ReactComponent as DeleteIcon } from './icons/delete.svg';
 import './transitions.css';
 import API_URL from '../apiConfig';
 
 export default function Programs() {
+  // Detect mobile/tablet
+  const [isMobile, setIsMobile] = useState(false);
+  useEffect(() => {
+    const checkMobile = () => setIsMobile(window.innerWidth < 768);
+    checkMobile();
+    window.addEventListener('resize', checkMobile);
+    return () => window.removeEventListener('resize', checkMobile);
+  }, []);
+  const userRole = localStorage.getItem('userRole');
+
   const [programs, setPrograms] = useState([]);
   const [departments, setDepartments] = useState([]);
   const [programName, setProgramName] = useState('');
@@ -186,8 +197,28 @@ export default function Programs() {
     applyFilters();
   };
 
+    if (userRole === 'admin' && isMobile) {
+      return (
+        <div className="flex flex-col pt-10 items-center min-h-screen w-screen bg-[#005B98]">
+          <PolyconLogo style={{ height: '200px', width: 'auto', marginBottom: '24px' }} />
+          <h3 className="text-2xl font-bold text-white mb-4 mx-9 text-center">Faculty Portal Unavailable on Mobile/Tablet</h3>
+          <p className="text-white mb-6 mx-9 text-center">For security and usability, please use a desktop or laptop to access admin features.</p>
+          <button
+            className="bg-[#057DCD] text-white px-6 py-2 rounded-lg shadow-md hover:bg-[#54BEFF] transition"
+            onClick={() => {
+              localStorage.clear();
+              window.location.href = "/";
+            }}
+          >
+            Logout
+          </button>
+        </div>
+      );
+    }
+
   return (
     <div className="mx-auto p-6 bg-white fade-in">
+      {/* Polycon Logo at the top */}
       {message.content && (
         <div className={`fixed top-5 right-5 p-4 rounded-lg shadow-lg z-50 ${
           message.type === 'success' ? 'bg-green-100 text-green-700' : 'bg-red-100 text-red-700'

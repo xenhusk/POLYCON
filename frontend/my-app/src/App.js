@@ -801,15 +801,16 @@ function App() {
             </AnimatePresence>
           </div>
         
-          {/* Only show ActionButtonsToggle with popups if not on session or finaldocument page */}
+          {/* Only show ActionButtonsToggle with popups if not on session/finaldocument page and not admin */}
           {!location.pathname.includes('/session') &&
-            !location.pathname.includes('/finaldocument') && (
+            !location.pathname.includes('/finaldocument') &&
+            userRole !== 'admin' && (
               <ActionButtonsToggle isVisible={localStorage.getItem('userEmail')}>
-                {[
+                [
                   <BookingPopup key="booking" />,
                   ...(userRole === 'faculty' ? [<EnrollmentPopup key="enrollment" />] : []),
                   ...(userRole === 'faculty' ? [<AddGradePopup key="addgrade" />] : [])
-                ]}
+                ]
               </ActionButtonsToggle>
             )}
         </div>
