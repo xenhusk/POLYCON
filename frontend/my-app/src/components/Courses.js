@@ -435,7 +435,7 @@ export default function Courses() {
           className="bg-[#057DCD] text-white px-6 py-2 rounded-lg shadow-md hover:bg-[#54BEFF] transition"
           onClick={() => {
             localStorage.clear();
-            window.location.href = "/login";
+            window.location.href = "/";
           }}
         >
           Logout
