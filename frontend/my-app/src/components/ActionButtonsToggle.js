@@ -43,8 +43,8 @@ const ActionButtonsToggle = ({ children, isVisible = true }) => {
   // Don't render if not visible
   if (!isVisible) return null;
 
-  // Normalize children to array
-  const childrenArray = React.Children.toArray(children);
+  // Normalize children to array and filter out non-elements
+  const childrenArray = React.Children.toArray(children).filter(React.isValidElement);
 
   // Hide if no children
   if (childrenArray.length === 0) return null;
