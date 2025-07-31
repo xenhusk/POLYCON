@@ -1,10 +1,23 @@
 import React, { useEffect, useState, useRef } from 'react';
+import { useNavigate } from 'react-router-dom';
 import { ReactComponent as EditIcon } from './icons/Edit.svg';
 import { ReactComponent as DeleteIcon } from './icons/delete.svg';
 import './transitions.css';
 import API_URL from '../apiConfig';
 
 export default function Departments() {
+  // All hooks at the top
+  const [isMobile, setIsMobile] = useState(false);
+  useEffect(() => {
+    const checkMobile = () => setIsMobile(window.innerWidth < 768);
+    checkMobile();
+    window.addEventListener('resize', checkMobile);
+    return () => window.removeEventListener('resize', checkMobile);
+  }, []);
+  const userRole = localStorage.getItem('userRole');
+  const navigate = useNavigate();
+  const PolyconLogo = require('./icons/Polycon.svg').ReactComponent;
+  const shouldBlockAdminMobile = userRole === 'admin' && isMobile;
   const [departments, setDepartments] = useState([]);
   const [departmentID, setDepartmentID] = useState('');
   const [departmentName, setDepartmentName] = useState('');
@@ -167,226 +180,245 @@ export default function Departments() {
     setDepartmentName('');
     setEditing(false);
   };
-
   return (
-    <div className="items-center mx-auto p-6 bg-white fade-in">
-      {/* Message display */}
-      {message.content && (
-        <div className={`fixed top-5 right-5 p-4 rounded-lg shadow-lg z-50 ${
-          message.type === 'success' ? 'bg-green-100 text-green-700' : 'bg-red-100 text-red-700'
-        }`}>
-          {message.content}
+    <div className="w-full min-h-screen items-center bg-white fade-in">
+      {/* Blocking message for admin on mobile/tablet */}
+      {shouldBlockAdminMobile ? (
+        <div className="fixed inset-0 flex flex-col pt-10 items-center min-h-screen w-screen bg-[#005B98] z-50">
+          <PolyconLogo style={{ height: '200px', width: 'auto', marginBottom: '24px' }} />
+          <h3 className="text-2xl font-bold text-white mb-4 mx-9 text-center">Faculty Portal Unavailable on Mobile/Tablet</h3>
+          <p className="text-white mb-6 mx-9 text-center">For security and usability, please use a desktop or laptop to access admin features.</p>
+          <button
+            className="bg-[#057DCD] text-white px-6 py-2 rounded-lg shadow-md hover:bg-[#54BEFF] transition"
+            onClick={() => {
+              localStorage.clear();
+              navigate('/');
+            }}
+          >
+            Logout
+          </button>
         </div>
-      )}
+      ) : (
+        <>
+          {/* Message display */}
+          {message.content && (
+            <div className={`fixed top-5 right-5 p-4 rounded-lg shadow-lg z-50 ${
+              message.type === 'success' ? 'bg-green-100 text-green-700' : 'bg-red-100 text-red-700'
+            }`}>
+              {message.content}
+            </div>
+          )}
 
-      <h2 className="text-3xl mt-10 font-bold text-center text-[#0065A8] pb-5 fade-in delay-100">Departments</h2>
+          <h2 className="text-3xl mt-10 font-bold text-center text-[#0065A8] pb-5 fade-in delay-100">Departments</h2>
 
-      <div className="flex items-center justify-center space-x-2 w-full mt-4 fade-in delay-200">
-        <div className="relative w-[400px] border border-gray-300 rounded-lg px-3 py-2 shadow-md flex flex-wrap items-center min-h-[42px]">
-          <input 
-            type="text"
-            value={departmentFilter}
-            onChange={handleDepartmentFilterChange}
-            placeholder="Search by Department Name"
-            className="border-none focus:ring-0 outline-none w-[100%]"
-          />
-        </div>
-        <button
-          className={`bg-[#057DCD] text-white px-6 py-2 rounded-lg shadow-md hover:bg-[#54BEFF] transition 
-            ${SearchClicked ? "scale-90" : "scale-100"}`}
-          onClick={() => {
-            setSearchClicked(true);
-            setTimeout(() => setSearchClicked(false), 300);
-            applyFilters(departmentFilter);}}
-        >
-          Search
-        </button>
-      </div>
+          <div className="flex items-center justify-center space-x-2 w-full mt-4 fade-in delay-200">
+            <div className="relative w-[400px] border border-gray-300 rounded-lg px-3 py-2 shadow-md flex flex-wrap items-center min-h-[42px]">
+              <input 
+                type="text"
+                value={departmentFilter}
+                onChange={handleDepartmentFilterChange}
+                placeholder="Search by Department Name"
+                className="border-none focus:ring-0 outline-none w-[100%]"
+              />
+            </div>
+            <button
+              className={`bg-[#057DCD] text-white px-6 py-2 rounded-lg shadow-md hover:bg-[#54BEFF] transition 
+                ${SearchClicked ? "scale-90" : "scale-100"}`}
+              onClick={() => {
+                setSearchClicked(true);
+                setTimeout(() => setSearchClicked(false), 300);
+                applyFilters(departmentFilter);}}
+            >
+              Search
+            </button>
+          </div>
 
-      <div className="flex justify-center w-full fade-in delay-300">
-        <div className="mt-4 shadow-md rounded-lg overflow-hidden w-[90%] mx-auto">
-          <div className="overflow-x-auto">
-            <table className="w-full bg-white text-center table-fixed">
-              {/* Fixed Table Header */}
-              <thead className="bg-[#057DCD] text-white top-0 z-10">
-                <tr className="border-b">
-                  {/* <th className="py-3 ">ID</th> */}
-                  <th className=" py-3  ">Department Name</th>
-                  <th className="pr-5">Actions</th>
-                </tr>
-              </thead>
-            </table>
-            
-            {/* Scrollable Table Body */}
-            <div className="max-h-80 overflow-y-auto">
-              <table className="w-full bg-white text-center table-fixed">
-                <tbody>
-                {(isLoadingDepartment || isFiltering) ? (
-                  // 🚀 Loading Skeleton with Pulse Animation
-                  Array.from({ length: 5 }).map((_, index) => (
-                    <tr key={index} className="animate-pulse border-b h-[50px] align-middle">
-                      {/* <td className="px-4 py-3">
-                        <div className="h-4 w-20 bg-gray-200 rounded mx-auto"></div>
-                      </td> */}
-                      <td className="px-4 py-3">
-                        <div className="h-4 w-32 bg-gray-200 rounded mx-auto"></div>
-                      </td>
-                      <td className="px-4 py-3 text-center">
-                        <div className="flex items-center justify-center space-x-3">
-                          <div className="h-6 w-6 bg-gray-200 rounded-full"></div>
-                          <div className="h-6 w-6 bg-gray-200 rounded-full"></div>
-                        </div>
-                      </td>
+          <div className="flex justify-center w-full fade-in delay-300">
+            <div className="mt-4 shadow-md rounded-lg overflow-hidden w-[90%] mx-auto">
+              <div className="overflow-x-auto">
+                <table className="w-full bg-white text-center table-fixed">
+                  {/* Fixed Table Header */}
+                  <thead className="bg-[#057DCD] text-white top-0 z-10">
+                    <tr className="border-b">
+                      {/* <th className="py-3 ">ID</th> */}
+                      <th className=" py-3  ">Department Name</th>
+                      <th className="pr-5">Actions</th>
                     </tr>
-                  ))
-                ) : filteredDepartments.length > 0 ? (
-                    filteredDepartments.map((department) => (
-                      <tr key={department.id} className="border-b hover:bg-[#DBF1FF] h-[50px] align-middle">
-                        {/* <td className="px-4 py-3">{department.id}</td> */}
-                        <td className="px-4 py-3">{department.name}</td>
-                        <td className="px-4 py-3 text-center">
-                          <div className="flex items-center justify-center space-x-3">
-                            <button
-                              className={`text-gray-500 hover:text-gray-700 ${
-                                EditClicked ? "scale-90" : "scale-100"}`}
-                              onClick={() => {
-                                setEditClicked(true);
-                                setTimeout(() => setEditClicked(false), 300);
-                                handleEdit(department);}}
-                            >
-                              <EditIcon className="w-5 h-5" />
-                            </button>
-                            <button
-                              className={`text-gray-500 hover:text-gray-700 ${
-                                DeleteClicked ? "scale-90" : "scale-100"}`}
-                              onClick={() => { setDeleteClicked(true);
-                                setTimeout(() => setDeleteClicked(false), 300);
-                                handleDelete(department.id);
-                                }}
-                            >
-                              <DeleteIcon className="w-5 h-5" />
-                            </button>
-                          </div>
-                        </td>
-                      </tr>
-                    ))
-                  ) : (
-                    <tr>
-                      <td colSpan="3" className="px-6 py-4 text-center text-gray-500">
-                        No departments found
-                      </td>
-                    </tr>
+                  </thead>
+                </table>
+                
+                {/* Scrollable Table Body */}
+                <div className="max-h-80 overflow-y-auto">
+                  <table className="w-full bg-white text-center table-fixed">
+                    <tbody>
+                    {(isLoadingDepartment || isFiltering) ? (
+                      // 🚀 Loading Skeleton with Pulse Animation
+                      Array.from({ length: 5 }).map((_, index) => (
+                        <tr key={index} className="animate-pulse border-b h-[50px] align-middle">
+                          {/* <td className="px-4 py-3">
+                            <div className="h-4 w-20 bg-gray-200 rounded mx-auto"></div>
+                          </td> */}
+                          <td className="px-4 py-3">
+                            <div className="h-4 w-32 bg-gray-200 rounded mx-auto"></div>
+                          </td>
+                          <td className="px-4 py-3 text-center">
+                            <div className="flex items-center justify-center space-x-3">
+                              <div className="h-6 w-6 bg-gray-200 rounded-full"></div>
+                              <div className="h-6 w-6 bg-gray-200 rounded-full"></div>
+                            </div>
+                          </td>
+                        </tr>
+                      ))
+                    ) : filteredDepartments.length > 0 ? (
+                        filteredDepartments.map((department) => (
+                          <tr key={department.id} className="border-b hover:bg-[#DBF1FF] h-[50px] align-middle">
+                            {/* <td className="px-4 py-3">{department.id}</td> */}
+                            <td className="px-4 py-3">{department.name}</td>
+                            <td className="px-4 py-3 text-center">
+                              <div className="flex items-center justify-center space-x-3">
+                                <button
+                                  className={`text-gray-500 hover:text-gray-700 ${
+                                    EditClicked ? "scale-90" : "scale-100"}`}
+                                  onClick={() => {
+                                    setEditClicked(true);
+                                    setTimeout(() => setEditClicked(false), 300);
+                                    handleEdit(department);}}
+                                >
+                                  <EditIcon className="w-5 h-5" />
+                                </button>
+                                <button
+                                  className={`text-gray-500 hover:text-gray-700 ${
+                                    DeleteClicked ? "scale-90" : "scale-100"}`}
+                                  onClick={() => { setDeleteClicked(true);
+                                    setTimeout(() => setDeleteClicked(false), 300);
+                                    handleDelete(department.id);
+                                    }}
+                                >
+                                  <DeleteIcon className="w-5 h-5" />
+                                </button>
+                              </div>
+                            </td>
+                          </tr>
+                        ))
+                      ) : (
+                        <tr>
+                          <td colSpan="3" className="px-6 py-4 text-center text-gray-500">
+                            No departments found
+                          </td>
+                        </tr>
+                      )}
+                    </tbody>
+                  </table>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <div className="flex justify-center w-full">
+            <div className="relative mt-6 shadow-md rounded-lg p-1 bg-white">
+              <div className="flex flex-wrap items-center gap-4 justify-center">
+                {/* Department Name */}
+                <input 
+                  type="text" 
+                  placeholder="Department Name" 
+                  value={departmentName} 
+                  onChange={(e) => setDepartmentName(e.target.value)} 
+                  className="rounded-lg px-3 py-2 w-80 outline-none focus:ring focus:ring-blue-500 focus:border-blue-500" 
+                />
+
+                {/* Submit and Cancel Buttons */}
+                <div className="flex items-center space-x-2">
+                  <button 
+                    onClick={() => {
+                      setAddClicked(true);
+                      setTimeout(() => setAddClicked(false), 300);
+                      handleSaveDepartment();}}
+                    disabled={isAddLoading}
+                    className={`px-8 py-2 rounded-lg text-white ${
+                      editing ? 'bg-[#057DCD] hover:bg-[#54BEFF]' : 'bg-[#057DCD] hover:bg-[#54BEFF]'
+                    } ${isAddLoading ? 'opacity-50 cursor-not-allowed' : ''}
+                     ${AddClicked ? "scale-90" : "scale-100"}  
+                    flex items-center space-x-2`}
+                  >
+                    {isAddLoading ? (
+                      <>
+                        <svg className="animate-spin h-5 w-5 text-white" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+                          <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
+                          <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+                        </svg>
+                        <span>{editing ? 'Updating...' : 'Adding...'}</span>
+                      </>
+                    ) : (
+                      <span>{editing ? 'UPDATE' : 'ADD'}</span>
+                    )}
+                  </button>
+                  {editing && (
+                    <button 
+                      onClick={() => {
+                        setAddClicked(true);
+                        setTimeout(() => setAddClicked(false), 300);
+                        resetForm();}}
+                      className="bg-gray-500 text-white px-4 py-2 rounded-lg"
+                    >
+                      CANCEL
+                    </button>
                   )}
-                </tbody>
-              </table>
+                </div>
+              </div>
             </div>
           </div>
-        </div>
-      </div>
 
-      <div className="flex justify-center w-full">
-        <div className="relative mt-6 shadow-md rounded-lg p-1 bg-white">
-          <div className="flex flex-wrap items-center gap-4 justify-center">
-            {/* Department Name */}
-            <input 
-              type="text" 
-              placeholder="Department Name" 
-              value={departmentName} 
-              onChange={(e) => setDepartmentName(e.target.value)} 
-              className="rounded-lg px-3 py-2 w-80 outline-none focus:ring focus:ring-blue-500 focus:border-blue-500" 
-            />
-
-            {/* Submit and Cancel Buttons */}
-            <div className="flex items-center space-x-2">
-              <button 
-                onClick={() => {
-                  setAddClicked(true);
-                  setTimeout(() => setAddClicked(false), 300);
-                  handleSaveDepartment();}}
-                disabled={isAddLoading}
-                className={`px-8 py-2 rounded-lg text-white ${
-                  editing ? 'bg-[#057DCD] hover:bg-[#54BEFF]' : 'bg-[#057DCD] hover:bg-[#54BEFF]'
-                } ${isAddLoading ? 'opacity-50 cursor-not-allowed' : ''}
-                 ${AddClicked ? "scale-90" : "scale-100"}  
-                flex items-center space-x-2`}
-              >
-                {isAddLoading ? (
-                  <>
-                    <svg className="animate-spin h-5 w-5 text-white" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
-                      <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
-                      <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
-                    </svg>
-                    <span>{editing ? 'Updating...' : 'Adding...'}</span>
-                  </>
-                ) : (
-                  <span>{editing ? 'UPDATE' : 'ADD'}</span>
-                )}
-              </button>
-              {editing && (
-                <button 
-                  onClick={() => {
-                    setAddClicked(true);
-                    setTimeout(() => setAddClicked(false), 300);
-                    resetForm();}}
-                  className="bg-gray-500 text-white px-4 py-2 rounded-lg"
-                >
-                  CANCEL
-                </button>
-              )}
+          {showDeleteModal && (
+            <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
+              <div className="bg-white rounded-lg p-6 w-96">
+                <h3 className="text-xl font-semibold mb-4">Confirm Delete</h3>
+                <p className="text-gray-700 mb-6">Are you sure you want to delete this department? This action cannot be undone.</p>
+                <div className="flex justify-end space-x-3">
+                  <button
+                    onClick={() => {
+                      setCancelClicked(true); 
+                      setTimeout(() => { setCancelClicked(false); setShowDeleteModal(false); 
+                        setTimeout(() => setDepartmentToDelete(null), 
+                        500);
+                      }, 200);
+                    }}
+                    disabled={isDeleteLoading}
+                    className={`px-4 py-2 rounded-lg bg-gray-300 hover:bg-gray-400 transition-colors
+                      ${CancelClicked ? "scale-90" : "scale-100"}`}
+                  >
+                    Cancel
+                  </button>
+                  <button
+                    onClick={() => {
+                      setDeleteClicked(true); 
+                      setTimeout(() => { setDeleteClicked(false);
+                        setTimeout(() => confirmDelete(), 
+                        500);
+                      }, 200);
+                    }}
+                    disabled={isDeleteLoading}
+                    className={`px-4 py-2 rounded-lg bg-red-500 text-white hover:bg-red-600 transition-colors
+                      ${DeleteClicked ? "scale-90" : "scale-100"}
+                      ${isDeleteLoading ? 'opacity-50 cursor-not-allowed' : ''} 
+                      flex items-center space-x-2`}
+                  >
+                    {isDeleteLoading ? (
+                      <>
+                        <svg className="animate-spin h-5 w-5 text-white" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+                          <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
+                          <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+                        </svg>
+                        <span>Deleting...</span>
+                      </>
+                    ) : (
+                      <span>Delete</span>
+                    )}
+                  </button>
+                </div>
+              </div>
             </div>
-          </div>
-        </div>
-      </div>
-
-      {showDeleteModal && (
-        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
-          <div className="bg-white rounded-lg p-6 w-96">
-            <h3 className="text-xl font-semibold mb-4">Confirm Delete</h3>
-            <p className="text-gray-700 mb-6">Are you sure you want to delete this department? This action cannot be undone.</p>
-            <div className="flex justify-end space-x-3">
-              <button
-                onClick={() => {
-                  setCancelClicked(true); 
-                  setTimeout(() => { setCancelClicked(false); setShowDeleteModal(false); 
-                    setTimeout(() => setDepartmentToDelete(null), 
-                    500);
-                  }, 200);
-                }}
-                disabled={isDeleteLoading}
-                className={`px-4 py-2 rounded-lg bg-gray-300 hover:bg-gray-400 transition-colors
-                  ${CancelClicked ? "scale-90" : "scale-100"}`}
-              >
-                Cancel
-              </button>
-              <button
-                onClick={() => {
-                  setDeleteClicked(true); 
-                  setTimeout(() => { setDeleteClicked(false);
-                    setTimeout(() => confirmDelete(), 
-                    500);
-                  }, 200);
-                }}
-                disabled={isDeleteLoading}
-                className={`px-4 py-2 rounded-lg bg-red-500 text-white hover:bg-red-600 transition-colors
-                  ${DeleteClicked ? "scale-90" : "scale-100"}
-                  ${isDeleteLoading ? 'opacity-50 cursor-not-allowed' : ''} 
-                  flex items-center space-x-2`}
-              >
-                {isDeleteLoading ? (
-                  <>
-                    <svg className="animate-spin h-5 w-5 text-white" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
-                      <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
-                      <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
-                    </svg>
-                    <span>Deleting...</span>
-                  </>
-                ) : (
-                  <span>Delete</span>
-                )}
-              </button>
-            </div>
-          </div>
-        </div>
+          )}
+        </>
       )}
     </div>
   );

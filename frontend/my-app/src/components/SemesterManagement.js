@@ -1,13 +1,25 @@
-import React, { useState, useEffect, useRef } from 'react';
+import React, { useState, useEffect, useRef, use } from 'react';
 import API_URL from '../apiConfig';
 import { format } from 'date-fns';
 import { motion, AnimatePresence } from 'framer-motion'; // NEW: import motion and AnimatePresence from framer-motion
 import { ReactComponent as FilterIcon } from './icons/FilterAdd.svg';
 import './transitions.css'; // Import the transitions CSS
+import { useNavigate } from 'react-router-dom';
 
 const SemesterManagement = () => {
+  const navigate = useNavigate();
   const [schoolYear, setSchoolYear] = useState('');
   const [semester, setSemester] = useState('1st');
+  // Detect mobile/tablet
+  const [isMobile, setIsMobile] = useState(false);
+  useEffect(() => {
+    const checkMobile = () => setIsMobile(window.innerWidth < 768);
+    checkMobile();
+    window.addEventListener('resize', checkMobile);
+    return () => window.removeEventListener('resize', checkMobile);
+  }, []);
+  // userRole already declared above if present, remove duplicate
+  const PolyconLogo = require('./icons/Polycon.svg').ReactComponent;
   const [startDate, setStartDate] = useState('');
   const [endDate, setEndDate] = useState('');
   const [currentSemester, setCurrentSemester] = useState(null);
@@ -113,14 +125,6 @@ const SemesterManagement = () => {
     if (!schoolYear) {
       setError("Please fill in the School Year");
       setIsStartingSemester(false);
-      return;
-    }
-    if (!startDate) {
-      setError("Please select a Start Date");
-      setIsStartingSemester(false);
-      return;
-    }
-    if (!semester) {
       setError("Please select a Semester");
       setIsStartingSemester(false);
       return;
@@ -482,8 +486,28 @@ const SemesterManagement = () => {
     return null; // null means validation passed
   };
 
+  const userRole = localStorage.getItem('userRole');
+  // Render blocking message for admin on mobile/tablet
+  if (userRole === 'admin' && isMobile) {
+    return (
+      <div className="flex flex-col pt-10 items-center min-h-screen w-screen bg-[#005B98]">
+        <PolyconLogo style={{ height: '200px', width: 'auto', marginBottom: '24px' }} />
+        <h3 className="text-2xl font-bold text-white mb-4 mx-9 text-center">Faculty Portal Unavailable on Mobile/Tablet</h3>
+        <p className="text-white mb-6 mx-9 text-center">For security and usability, please use a desktop or laptop to access admin features.</p>
+        <button
+          className="bg-[#057DCD] text-white px-6 py-2 rounded-lg shadow-md hover:bg-[#54BEFF] transition"
+          onClick={() => {
+            localStorage.clear();
+            window.location.href = "/";
+          }}
+        >
+          Logout
+        </button>
+      </div>
+    );
+  }
   return (
-    <div className="p-6 fade-in flex flex-1 flex-col">
+    <div className=" fade-in flex flex-1 flex-col">
       {/* Toasts for specific messages outside the modal */}
       {(error === 'Please start a semester first before activating teachers' || error === 'Teacher activated successfully') && (
         <div className={`fixed top-5 right-5 z-50 rounded-lg shadow-lg max-w-md p-4 

@@ -21,3 +21,4 @@ Thumbs.db
 
 # Keys and Secrets
 /backend/keys/
+backend-python/keys/firebase-key.json

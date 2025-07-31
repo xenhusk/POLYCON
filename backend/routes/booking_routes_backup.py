@@ -296,15 +296,15 @@ def create_booking():
         db.session.rollback()
         return jsonify({"error": f"Failed to create booking: {str(e)}"}), 500
 
-@booking_bp.route('/cancel_booking', methods=['POST', 'OPTIONS'])
-def cancel_booking():
-    if request.method == 'OPTIONS':
-        # Handle CORS preflight requests        headers = {
-            'Access-Control-Allow-Origin': '*', # Or your specific frontend origin
-            'Access-Control-Allow-Methods': 'POST, OPTIONS',
-            'Access-Control-Allow-Headers': 'Content-Type, Authorization, X-Requested-With, Accept, Origin'
-        }
-        return '', 204, headers
+# @booking_bp.route('/cancel_booking', methods=['POST', 'OPTIONS'])
+# def cancel_booking():
+#     if request.method == 'OPTIONS':
+#         # Handle CORS preflight requests        headers = {
+#             'Access-Control-Allow-Origin': '*', # Or your specific frontend origin
+#             'Access-Control-Allow-Methods': 'POST, OPTIONS',
+#             'Access-Control-Allow-Headers': 'Content-Type, Authorization, X-Requested-With, Accept, Origin'
+#         }
+#         return '', 204, headers
 
     data = request.get_json()
     booking_id = data.get('bookingID')

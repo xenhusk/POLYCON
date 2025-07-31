@@ -18,6 +18,37 @@ import uuid
 
 consultation_bp = Blueprint('consultation', __name__, url_prefix='/consultation')
 
+# Admin endpoint: get all consultation sessions for calendar
+@consultation_bp.route('/get_all_sessions', methods=['GET'])
+def get_all_sessions():
+    sessions = db.session.query(ConsultationSession).order_by(ConsultationSession.session_date.desc()).all()
+    result = []
+    for session in sessions:
+        # Get teacher name
+        teacher_name = "Unknown"
+        if session.teacher_id:
+            teacher_user = User.query.filter_by(id_number=session.teacher_id).first()
+            if teacher_user:
+                teacher_name = f"{teacher_user.first_name} {teacher_user.last_name}"
+        # Get student names
+        student_names = []
+        if session.student_ids:
+            for student_id in session.student_ids:
+                student_user = User.query.filter_by(id_number=student_id).first()
+                if student_user:
+                    student_names.append(f"{student_user.first_name} {student_user.last_name}")
+        result.append({
+            "id": session.id,
+            "title": f"{teacher_name} - {', '.join(student_names)}",
+            "teacherName": teacher_name,
+            "studentNames": student_names,
+            "schedule": session.session_date.isoformat() if session.session_date else None,
+            "duration": session.duration,
+            "summary": session.summary,
+            "status": getattr(session, 'status', None),
+        })
+    return jsonify(result)
+
 @consultation_bp.route('/transcribe', methods=['POST'])
 def transcribe():
     try:

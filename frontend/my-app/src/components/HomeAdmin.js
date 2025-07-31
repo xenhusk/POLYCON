@@ -16,6 +16,7 @@ import moment from 'moment';
 import 'react-big-calendar/lib/css/react-big-calendar.css';
 import ReactModal from 'react-modal'; // Add this import
 import './Calendar.css'; // Add this import
+import AdminConsultationCalendar from './AdminConsultationCalendar';
 
 const localizer = momentLocalizer(moment);
 
@@ -89,7 +90,16 @@ const CustomToolbar = ({ label, onNavigate, onView, view, views }) => {
 };
 
 const HomeAdmin = () => {
-  // Add new state for semesters and selected semester
+  // All hooks at the top
+  const [isMobile, setIsMobile] = useState(false);
+  useEffect(() => {
+    const checkMobile = () => setIsMobile(window.innerWidth < 768);
+    checkMobile();
+    window.addEventListener('resize', checkMobile);
+    return () => window.removeEventListener('resize', checkMobile);
+  }, []);
+  const userRole = localStorage.getItem('userRole');
+  const PolyconLogo = require('./icons/Polycon.svg').ReactComponent;
   const [semesters, setSemesters] = useState([]);
   const [selectedSemester, setSelectedSemester] = useState(null);
   const [selectedSchoolYear, setSelectedSchoolYear] = useState(null);
@@ -107,9 +117,21 @@ const HomeAdmin = () => {
     if (selectedSemester && selectedSchoolYear) {
       return `${selectedSemester} Semester, ${selectedSchoolYear}`;
     }
-    return "No semester selected";
+    return "";
   };
 
+  // Use conditional rendering for blocking message
+  const shouldBlockAdminMobile = userRole === 'admin' && isMobile;
+          <button
+            className="bg-[#057DCD] text-white px-6 py-2 rounded-lg shadow-md hover:bg-[#54BEFF] transition"
+            onClick={() => {
+              localStorage.clear();
+              window.location.href = "/login";
+            }}
+          >
+            Logout
+          </button>
+  // ...existing code...
   useEffect(() => {
     // Fetch available semesters
     fetch(`${API_URL}/homeadmin/semesters`)
@@ -210,179 +232,211 @@ const HomeAdmin = () => {
   }, []);
 
   return (
-    <div className="flex flex-col items-center min-h-screen p-6 relative">
-      <h1 className="text-3xl font-bold text-[#0065A8] mb-6">Admin Dashboard</h1>
-      
-      {/* Settings gear icon in top right */}
-      <div className="absolute top-6 right-6">
-        <button 
-          onClick={() => setShowFilters(!showFilters)}
-          className="bg-white p-2 rounded-full shadow-md hover:shadow-lg transition-all duration-300 focus:outline-none"
-          aria-label="Toggle filters"
+    <div className="flex flex-col items-center min-h-screen relative">
+      {/* Blocking message for admin on mobile/tablet */}
+      {shouldBlockAdminMobile ? (
+        <div className="flex flex-col pt-10 items-center min-h-screen w-screen bg-[#005B98]">
+        <PolyconLogo style={{ height: '200px', width: 'auto', marginBottom: '24px' }} />
+        <h3 className="text-2xl font-bold text-white mb-4 mx-9 text-center">Faculty Portal Unavailable on Mobile/Tablet</h3>
+        <p className="text-white mb-6 mx-9 text-center">For security and usability, please use a desktop or laptop to access admin features.</p>
+        <button
+          className="bg-[#057DCD] text-white px-6 py-2 rounded-lg shadow-md hover:bg-[#54BEFF] transition"
+          onClick={() => {
+            localStorage.clear();
+            window.location.href = "/";
+          }}
         >
-          <svg 
-            className={`w-6 h-6 text-[#0065A8] transition-transform duration-500 ${showFilters ? 'transform -rotate-180' : ''}`}
-            fill="currentColor" 
-            viewBox="0 0 20 20" 
-            xmlns="http://www.w3.org/2000/svg"
-          >
-            <path
-              fillRule="evenodd"
-              d="M11.49 3.17c-.38-1.56-2.6-1.56-2.98 0a1.532 1.532 0 01-2.286.948c-1.372-.836-2.942.734-2.106 2.106.54.886.061 2.042-.947 2.287-1.561.379-1.561 2.6 0 2.978a1.532 1.532 0 01.947 2.287c-.836 1.372.734 2.942 2.106 2.106a1.532 1.532 0 012.287.947c.379 1.561 2.6 1.561 2.978 0a1.533 1.533 0 012.287-.947c1.372.836 2.942-.734 2.106-2.106a1.533 1.533 0 01.947-2.287c1.561-.379 1.561-2.6 0-2.978a1.532 1.532 0 01-.947-2.287c.836-1.372-.734-2.942-2.106-2.106a1.532 1.532 0 01-2.287-.947zM10 13a3 3 0 100-6 3 3 0 000 6z"
-              clipRule="evenodd"
-            />
-          </svg>
+          Logout
         </button>
       </div>
+      ) : (
+        <>
+          <h1 className="text-3xl font-bold text-[#0065A8] pt-10 mb-6">Admin Dashboard</h1>
+          {/* Settings gear icon in top right */}
+          <div className="absolute top-6 right-6">
+            <button 
+              onClick={() => setShowFilters(!showFilters)}
+              className="bg-white p-2 rounded-full shadow-md hover:shadow-lg transition-all duration-300 focus:outline-none"
+              aria-label="Toggle filters"
+            >
+              <svg 
+                className={`w-6 h-6 text-[#0065A8] transition-transform duration-500 ${showFilters ? 'transform -rotate-180' : ''}`}
+                fill="currentColor" 
+                viewBox="0 0 20 20" 
+                xmlns="http://www.w3.org/2000/svg"
+              >
+                <path
+                  fillRule="evenodd"
+                  d="M11.49 3.17c-.38-1.56-2.6-1.56-2.98 0a1.532 1.532 0 01-2.286.948c-1.372-.836-2.942.734-2.106 2.106.54.886.061 2.042-.947 2.287-1.561.379-1.561 2.6 0 2.978a1.532 1.532 0 01.947 2.287c-.836 1.372.734 2.942 2.106 2.106a1.532 1.532 0 012.287.947c.379 1.561 2.6 1.561 2.978 0a1.533 1.533 0 012.287-.947c1.372.836 2.942-.734 2.106-2.106a1.533 1.533 0 01.947-2.287c1.561-.379 1.561-2.6 0-2.978a1.532 1.532 0 01-.947-2.287c.836-1.372-.734-2.942-2.106-2.106a1.532 1.532 0 01-2.287-.947zM10 13a3 3 0 100-6 3 3 0 000 6z"
+                  clipRule="evenodd"
+                />
+              </svg>
+            </button>
+          </div>
 
-      {/* Slide-in filter panel - Now has a close button */}
-      <div 
-        className={`fixed top-20 right-6 bg-white shadow-xl rounded-lg border border-gray-200 z-10 transition-all duration-500 transform ${
-          showFilters ? 'translate-x-0 opacity-100' : 'translate-x-full opacity-0'
-        } p-4 w-80`}
-      >
-        <div className="flex justify-between items-center mb-4">
-          <h3 className="text-lg font-semibold text-[#0065A8]">Filter Data</h3>
-          {/* Add close button */}
-          <button 
-            onClick={() => setShowFilters(false)}
-            className="text-gray-500 hover:text-gray-700 p-1"
-            aria-label="Close filters"
+          {/* Slide-in filter panel - Now has a close button */}
+          <div 
+            className={`fixed top-20 right-6 bg-white shadow-xl rounded-lg border border-gray-200 z-10 transition-all duration-500 transform ${
+              showFilters ? 'translate-x-0 opacity-100' : 'translate-x-full opacity-0'
+            } p-4 w-80`}
           >
-            <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
-              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M6 18L18 6M6 6l12 12"></path>
-            </svg>
-          </button>
-        </div>
-        <div className="space-y-4">
-          <div>
-            <label className="block text-sm font-medium text-gray-700 mb-1">Semester</label>
-            <select
-              value={selectedSemester || ''}
-              onChange={(e) => setSelectedSemester(e.target.value)}
-              className="w-full px-4 py-2 border border-[#0065A8] bg-white text-[#0065A8] font-medium rounded-lg focus:outline-none focus:ring-2 focus:ring-[#0088FF] focus:border-transparent appearance-none bg-[url('data:image/svg+xml;charset=US-ASCII,%3Csvg%20xmlns%3D%22http%3A%2F%2Fwww.w3.org%2F2000%2Fsvg%22%20width%3D%2224%22%20height%3D%2224%22%20viewBox%3D%220%200%2024%2024%22%3E%3Cpath%20fill%3D%22%230065A8%22%20d%3D%22M7%2010l5%205%205-5z%22%2F%3E%3C%2Fsvg%3E')] bg-no-repeat bg-[length:24px] [background-position:right_0.5rem_center] pr-10"
-            >
-              <option value="">Select Semester</option>
-              {Array.from(new Set(semesters.map(s => s.semester))).map(sem => (
-                <option key={sem} value={sem}>{sem} Semester</option>
-              ))}
-            </select>
-          </div>
-          <div>
-            <label className="block text-sm font-medium text-gray-700 mb-1">School Year</label>
-            <select
-              value={selectedSchoolYear || ''}
-              onChange={(e) => setSelectedSchoolYear(e.target.value)}
-              className="w-full px-4 py-2 border border-[#0065A8] bg-white text-[#0065A8] font-medium rounded-lg focus:outline-none focus:ring-2 focus:ring-[#0088FF] focus:border-transparent appearance-none bg-[url('data:image/svg+xml;charset=US-ASCII,%3Csvg%20xmlns%3D%22http%3A%2F%2Fwww.w3.org%2F2000%2Fsvg%22%20width%3D%2224%22%20height%3D%2224%22%20viewBox%3D%220%200%2024%2024%22%3E%3Cpath%20fill%3D%22%230065A8%22%20d%3D%22M7%2010l5%205%205-5z%22%2F%3E%3C%2Fsvg%3E')] bg-no-repeat bg-[length:24px] [background-position:right_0.5rem_center] pr-10"
-            >
-              <option value="">Select School Year</option>
-              {Array.from(new Set(semesters.map(s => s.school_year))).map(year => (
-                <option key={year} value={year}>{year}</option>
-              ))}
-            </select>
-          </div>
-          <div className="pt-2">
-            <p className="text-sm text-gray-500">
-              {selectedSemester && selectedSchoolYear 
-                ? `Viewing data for ${selectedSemester} Semester, ${selectedSchoolYear}` 
-                : "Select filters to view specific data"}
-            </p>
-          </div>
-        </div>
-      </div>
-
-      {/* Stats Section */}
-      <div className="flex gap-4 w-full p-10 pb-0">
-        <div className="flex-1 bg-[#0088FF] text-white rounded-lg shadow-lg px-6 py-4">
-          <div className="flex flex-col">
-            <p className="text-sm mb-2 text-left">Total Consultations:</p>
-            <div className="flex items-baseline gap-2 justify-center">
-              <span className="text-7xl font-bold">{stats.total_consultations}</span>
-              <span className="text-lg">Consultations</span>
+            <div className="flex justify-between items-center mb-4">
+              <h3 className="text-lg font-semibold text-[#0065A8]">Filter Data</h3>
+              {/* Add close button */}
+              <button 
+                onClick={() => setShowFilters(false)}
+                className="text-gray-500 hover:text-gray-700 p-1"
+                aria-label="Close filters"
+              >
+                <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M6 18L18 6M6 6l12 12"></path>
+                </svg>
+              </button>
+            </div>
+            <div className="space-y-4">
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-1">Semester</label>
+                <select
+                  value={selectedSemester || ''}
+                  onChange={(e) => setSelectedSemester(e.target.value)}
+                  className="w-full px-4 py-2 border border-[#0065A8] bg-white text-[#0065A8] font-medium rounded-lg focus:outline-none focus:ring-2 focus:ring-[#0088FF] focus:border-transparent appearance-none bg-[url('data:image/svg+xml;charset=US-ASCII,%3Csvg%20xmlns%3D%22http%3A%2F%2Fwww.w3.org%2F2000%2Fsvg%22%20width%3D%2224%22%20height%3D%2224%22%20viewBox%3D%220%200%2024%2024%22%3E%3Cpath%20fill%3D%22%230065A8%22%20d%3D%22M7%2010l5%205%205-5z%22%2F%3E%3C%2Fsvg%3E')] bg-no-repeat bg-[length:24px] [background-position:right_0.5rem_center] pr-10"
+                >
+                  <option value="">Select Semester</option>
+                  {Array.from(new Set(semesters.map(s => s.semester))).map(sem => (
+                    <option key={sem} value={sem}>{sem} Semester</option>
+                  ))}
+                </select>
+              </div>
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-1">School Year</label>
+                <select
+                  value={selectedSchoolYear || ''}
+                  onChange={(e) => setSelectedSchoolYear(e.target.value)}
+                  className="w-full px-4 py-2 border border-[#0065A8] bg-white text-[#0065A8] font-medium rounded-lg focus:outline-none focus:ring-2 focus:ring-[#0088FF] focus:border-transparent appearance-none bg-[url('data:image/svg+xml;charset=US-ASCII,%3Csvg%20xmlns%3D%22http%3A%2F%2Fwww.w3.org%2F2000%2Fsvg%22%20width%3D%2224%22%20height%3D%2224%22%20viewBox%3D%220%200%2024%2024%22%3E%3Cpath%20fill%3D%22%230065A8%22%20d%3D%22M7%2010l5%205%205-5z%22%2F%3E%3C%2Fsvg%3E')] bg-no-repeat bg-[length:24px] [background-position:right_0.5rem_center] pr-10"
+                >
+                  <option value="">Select School Year</option>
+                  {Array.from(new Set(semesters.map(s => s.school_year))).map(year => (
+                    <option key={year} value={year}>{year}</option>
+                  ))}
+                </select>
+              </div>
+              <div className="pt-2">
+                <p className="text-sm text-gray-500">
+                  {selectedSemester && selectedSchoolYear 
+                    ? `Viewing data for ${selectedSemester} Semester, ${selectedSchoolYear}` 
+                    : "Select filters to view specific data"}
+                </p>
+              </div>
             </div>
           </div>
-        </div>
-        <div className="flex-1 bg-[#FF7171] text-white rounded-lg shadow-lg px-6 py-4">
-          <div className="flex flex-col">
-            <p className="text-sm mb-2 text-left">Total Consultation Hours:</p>
-            <div className="flex items-baseline gap-2 justify-center">
-              <span className="text-7xl font-bold">{stats.total_hours}</span>
-              <span className="text-lg">Hours</span>
+
+          {/* Stats Section */}
+          <div className="flex gap-4 w-full p-10 pb-0">
+            <div className="flex-1 bg-[#0088FF] text-white rounded-lg shadow-lg px-6 py-4">
+              <div className="flex flex-col">
+                <p className="text-sm mb-2 text-left">Total Consultations:</p>
+                <div className="flex items-baseline gap-2 justify-center">
+                  <span className="text-7xl font-bold">{stats.total_consultations}</span>
+                  <span className="text-lg">Consultations</span>
+                </div>
+              </div>
+            </div>
+            <div className="flex-1 bg-[#FF7171] text-white rounded-lg shadow-lg px-6 py-4">
+              <div className="flex flex-col">
+                <p className="text-sm mb-2 text-left">Total Consultation Hours:</p>
+                <div className="flex items-baseline gap-2 justify-center">
+                  <span className="text-7xl font-bold">{stats.total_hours}</span>
+                  <span className="text-lg">Hours</span>
+                </div>
+              </div>
+            </div>
+            <div className="flex-1 bg-[#00D1B2] text-white rounded-lg shadow-lg px-6 py-4">
+              <div className="flex flex-col">
+                <p className="text-sm mb-2 text-left">Total Number of Students Consulted:</p>
+                <div className="flex items-baseline gap-2 justify-center">
+                  <span className="text-7xl font-bold">{stats.unique_students}</span>
+                  <span className="text-lg">Students</span>
+                </div>
+              </div>
             </div>
           </div>
-        </div>
-        <div className="flex-1 bg-[#00D1B2] text-white rounded-lg shadow-lg px-6 py-4">
-          <div className="flex flex-col">
-            <p className="text-sm mb-2 text-left">Total Number of Students Consulted:</p>
-            <div className="flex items-baseline gap-2 justify-center">
-              <span className="text-7xl font-bold">{stats.unique_students}</span>
-              <span className="text-lg">Students</span>
+
+          {/* Graphs */}
+          <div className="grid grid-cols-2 w-full gap-6 p-10">
+            <div className="bg-white p-10 rounded-lg shadow-lg">
+              <h2 className="text-xl font-semibold text-[#0065A8] text-center mb-4">Consultations Over Time</h2>
+              <ResponsiveContainer width="105%" height={300}>
+                <LineChart data={consultationData}>
+                  <CartesianGrid vertical={false} stroke="#D3D3D3" />
+                  <XAxis 
+                    dataKey="date" 
+                    axisLine={false}
+                    tickLine={false}
+                    dy={20}
+                    tickFormatter={(date) => date}
+                  />
+                  <YAxis 
+                    axisLine={false}
+                    tickLine={false}
+                    tickFormatter={(value) => Math.round(value)}
+                    allowDecimals={false}
+                  />
+                  <Tooltip />
+                  <Legend align="left" wrapperStyle={{ textAlign: 'left', marginTop: '20px', marginBottom: '-20px'}}/>
+                  <Line type="monotone" dataKey="consultations" stroke="#3B82F6" strokeWidth={3} name="Consultations" />
+                </LineChart>
+              </ResponsiveContainer>
+            </div>
+            <div className="bg-white p-10 rounded-lg shadow-lg">
+              <h2 className="text-xl font-semibold text-red-500 text-center mb-4">Consultation Hours Over Time</h2>
+              <ResponsiveContainer width="105%" height={300}>
+                <LineChart data={consultationHoursData}>
+                  <CartesianGrid vertical={false} stroke="#D3D3D3" />
+                  <XAxis 
+                    dataKey="date" 
+                    axisLine={false}
+                    tickLine={false}
+                    dy={20}
+                    tickFormatter={(date) => date}
+                  />
+                  <YAxis 
+                    axisLine={false}
+                    tickLine={false}
+                    tickFormatter={(minutes) => {
+                      const hh = Math.floor(minutes / 60);
+                      const mm = minutes % 60;
+                      return `${hh}:${mm.toString().padStart(2, '0')}`;
+                    }}
+                  />
+                  <Tooltip formatter={(value) => {
+                    const hh = Math.floor(value / 60);
+                    const mm = value % 60;
+                    return [`${hh}:${mm.toString().padStart(2, '0')}`, "Consultation Hours"];
+                  }} />
+                  <Legend align="left" wrapperStyle={{ textAlign: 'left', marginTop: '20px', marginBottom: '-20px'}}/>
+                  <Line type="monotone" dataKey="consultation_hours" stroke="#EF4444" strokeWidth={3} name="Consultation Hours" />
+                </LineChart>
+              </ResponsiveContainer>
             </div>
           </div>
-        </div>
-      </div>
 
-      {/* Graphs */}
-      <div className="grid grid-cols-2 w-full gap-6 p-10">
-        <div className="bg-white p-10 rounded-lg shadow-lg">
-          <h2 className="text-xl font-semibold text-[#0065A8] text-center mb-4">Consultations Over Time</h2>
-          <ResponsiveContainer width="105%" height={300}>
-            <LineChart data={consultationData}>
-              <CartesianGrid vertical={false} stroke="#D3D3D3" />
-              <XAxis 
-                dataKey="date" 
-                axisLine={false}
-                tickLine={false}
-                dy={20}
-                tickFormatter={(date) => date}
-              />
-              <YAxis 
-                axisLine={false}
-                tickLine={false}
-                tickFormatter={(value) => Math.round(value)}
-                allowDecimals={false}
-              />
-              <Tooltip />
-              <Legend align="left" wrapperStyle={{ textAlign: 'left', marginTop: '20px', marginBottom: '-20px'}}/>
-              <Line type="monotone" dataKey="consultations" stroke="#3B82F6" strokeWidth={3} name="Consultations" />
-            </LineChart>
-          </ResponsiveContainer>
-        </div>
-        <div className="bg-white p-10 rounded-lg shadow-lg">
-          <h2 className="text-xl font-semibold text-red-500 text-center mb-4">Consultation Hours Over Time</h2>
-          <ResponsiveContainer width="105%" height={300}>
-            <LineChart data={consultationHoursData}>
-              <CartesianGrid vertical={false} stroke="#D3D3D3" />
-              <XAxis 
-                dataKey="date" 
-                axisLine={false}
-                tickLine={false}
-                dy={20}
-                tickFormatter={(date) => date}
-              />
-              <YAxis 
-                axisLine={false}
-                tickLine={false}
-                tickFormatter={(minutes) => {
-                  const hh = Math.floor(minutes / 60);
-                  const mm = minutes % 60;
-                  return `${hh}:${mm.toString().padStart(2, '0')}`;
-                }}
-              />
-              <Tooltip formatter={(value) => {
-                const hh = Math.floor(value / 60);
-                const mm = value % 60;
-                return [`${hh}:${mm.toString().padStart(2, '0')}`, "Consultation Hours"];
-              }} />
-              <Legend align="left" wrapperStyle={{ textAlign: 'left', marginTop: '20px', marginBottom: '-20px'}}/>
-              <Line type="monotone" dataKey="consultation_hours" stroke="#EF4444" strokeWidth={3} name="Consultation Hours" />
-            </LineChart>
-          </ResponsiveContainer>
-        </div>
-      </div>
-
-      </div>
+          {/* Admin Consultation Calendar */}
+          <div className="w-full mt-10">
+            <h2 className="text-lg sm:text-base md:text-lg text-center font-semibold mb-1 sm:mb-2 text-[#0065A8]">
+              Consultation Calendar
+            </h2>
+            <div className="bg-white rounded-lg shadow-lg p-1 sm:p-2 overflow-x-auto">
+              <div className="calendar-wrapper">
+                <AdminConsultationCalendar />
+              </div>
+            </div>
+          </div>
+        </>
+      )}
+    </div>
   );
 };
 
+
 export default HomeAdmin;
+
