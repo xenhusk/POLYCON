@@ -36,9 +36,9 @@
     "web-vitals": "^4.2.4"
   },
   "scripts": {
-    "start": "react-scripts start",
-    "build": "react-scripts build",
-    "test": "react-scripts test",
+    "start": "craco start",
+    "build": "craco build",
+    "test": "craco test",
     "eject": "react-scripts eject",
     "tailwind:build": "npx tailwindcss -i ./src/index.css -o ./src/output.css"
   },
@@ -60,20 +60,9 @@
       "last 1 safari version"
     ]
   },
-  "babel": {
-    "presets": [
-      "react-app"
-    ],
-    "env": {
-      "production": {
-        "plugins": [
-          "transform-remove-console"
-        ]
-      }
-    }
-  },
   "devDependencies": {
     "@babel/plugin-proposal-private-property-in-object": "^7.21.11",
+    "@craco/craco": "^7.1.0",
     "autoprefixer": "^10.4.20",
     "babel-plugin-transform-remove-console": "^6.9.4",
     "postcss": "^8.4.35",
