@@ -149,7 +149,7 @@ function AppointmentItem({ appointment, role, onStartSession, onCancel, onConfir
       </div>
 
       <div className="mt-3 sm:mt-4 fade-in delay-200">
-        <p className="text-[#0065A8] font-semibold mb-2 text-sm sm:text-base">Student(s)</p>
+        <p className="text-[#0065A8] font-semibold mb-2 text-sm sm:text-base"></p>
         <div className="flex flex-wrap items-center gap-2 sm:gap-3">
           {/* Log appointment.info before the conditional check */}
           {console.log("AppointmentItem - appointment.info:", appointment.info)}
