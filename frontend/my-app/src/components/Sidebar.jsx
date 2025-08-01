@@ -19,7 +19,7 @@ import { ReactComponent as SemesterAdd } from './icons/Timer.svg';
 import { ReactComponent as ComparativeIcon } from './icons/Comparative.svg';
 import logo from './icons/logo2.png';
 // Import missing icons from react-icons/fa
-import { FaHome, FaGraduationCap, FaClipboardList, FaUser, FaUsers, FaCog } from 'react-icons/fa'; // Added FaUsers, FaCog
+import { ReactComponent as Leaderboard } from './icons/ranking.svg';
 // NEW: helper for profile picture
 import { getProfilePictureUrl } from '../utils/utils';
 import ProfilePictureUploader from './ProfilePictureUploader';
@@ -243,7 +243,8 @@ const Sidebar = ({ onExpandChange }) => {
       add_users: '/admin',
       course: '/courses',
       program: '/programs',
-      department: '/department'
+      department: '/department',
+      leaderboard: '/admin-consultation'
     }
   };
 
@@ -500,6 +501,7 @@ const Sidebar = ({ onExpandChange }) => {
                 {renderMenuItem("program", ProgramAdd, "Programs")}
                 {renderMenuItem("department", DepartmentAdd, "Departments")}
                 {renderMenuItem("semester", SemesterAdd, "Semesters")}
+                {renderMenuItem("leaderboard", Leaderboard, "Leaderboard")}
               </ul>
             )}
             {/* ...existing bell/settings/profile... */}

@@ -1,4 +1,5 @@
 import React, { useEffect, useState } from 'react';
+import { createPortal } from 'react-dom';
 import API_URL from '../apiConfig';
 import { useNavigate } from 'react-router-dom';
 import { ReactComponent as EditIcon } from "./icons/Edit.svg";
@@ -7,16 +8,50 @@ import './transitions.css';  // Add this import
 
 export default function AdminPortal() {
   const navigate = useNavigate();
-  // Detect if on mobile/tablet
-  const [isMobile, setIsMobile] = useState(false);
+  // Detect if on mobile/tablet - persistent check
+  const [isMobile, setIsMobile] = useState(() => window.innerWidth < 768);
+  
   useEffect(() => {
-    const checkMobile = () => setIsMobile(window.innerWidth < 768);
+    const checkMobile = () => {
+      const mobile = window.innerWidth < 768;
+      setIsMobile(mobile);
+    };
+    
+    // Check immediately
     checkMobile();
+    
+    // Add event listener
     window.addEventListener('resize', checkMobile);
-    return () => window.removeEventListener('resize', checkMobile);
+    
+    // Force check on component mount (handles navigation/reload cases)
+    const timer = setTimeout(checkMobile, 100);
+    
+    return () => {
+      window.removeEventListener('resize', checkMobile);
+      clearTimeout(timer);
+    };
   }, []);
+  
+  // Additional check for mobile state on page visibility change (handles browser back/forward)
+  useEffect(() => {
+    const handleVisibilityChange = () => {
+      if (!document.hidden) {
+        const mobile = window.innerWidth < 768;
+        setIsMobile(mobile);
+      }
+    };
+    
+    document.addEventListener('visibilitychange', handleVisibilityChange);
+    window.addEventListener('focus', handleVisibilityChange);
+    
+    return () => {
+      document.removeEventListener('visibilitychange', handleVisibilityChange);
+      window.removeEventListener('focus', handleVisibilityChange);
+    };
+  }, []);
+  
   const PolyconLogo = require('./icons/Polycon.svg').ReactComponent;
-  // Fix: define userRole from localStorage
+  // Fix: define userRole from localStorage - always check fresh
   const userRole = localStorage.getItem('userRole');
 
   // Logout function
@@ -38,6 +73,7 @@ export default function AdminPortal() {
   const [programs, setPrograms] = useState([]);
   const [userList, setUserList] = useState([]);
   const [editUser, setEditUser] = useState(null);
+  const [message, setMessage] = useState({ type: '', content: '' });
   const [AddClicked, setAddClicked] = useState(false);
   const [EditClicked, setEditClicked] = useState(false);
   const [DeleteClicked, setDeleteClicked] = useState(false);
@@ -161,7 +197,7 @@ export default function AdminPortal() {
 
       const data = await response.json();
       if (response.ok) {
-        alert(`${data.message} User has been created and can login immediately.`);
+        setMessage({ type: 'success', content: `${data.message} User has been created and can login immediately.` });
         fetchAllUsers();
         // Clear input fields
         setIdNumber('');
@@ -175,12 +211,22 @@ export default function AdminPortal() {
         setYearSection('');
         // Close the modal
         setShowAddModal(false);
+        // Auto-hide message after 3 seconds
+        setTimeout(() => {
+          setMessage({ type: '', content: '' });
+        }, 3000);
       } else {
-        alert(data.error || 'Failed to add user');
+        setMessage({ type: 'error', content: data.error || 'Failed to add user' });
+        setTimeout(() => {
+          setMessage({ type: '', content: '' });
+        }, 3000);
       }
     } catch (error) {
       console.error('Error adding user:', error);
-      alert('Failed to add user');
+      setMessage({ type: 'error', content: 'Failed to add user' });
+      setTimeout(() => {
+        setMessage({ type: '', content: '' });
+      }, 3000);
     }
   };
 
@@ -243,16 +289,26 @@ export default function AdminPortal() {
         body: JSON.stringify(updateData),
       });
       if (response.ok) {
-        alert('User updated successfully');
+        setMessage({ type: 'success', content: 'User updated successfully' });
         setEditUser(null);
         fetchAllUsers();
+        // Auto-hide message after 3 seconds
+        setTimeout(() => {
+          setMessage({ type: '', content: '' });
+        }, 3000);
       } else {
         const data = await response.json();
-        alert(data.error || 'Failed to update user');
+        setMessage({ type: 'error', content: data.error || 'Failed to update user' });
+        setTimeout(() => {
+          setMessage({ type: '', content: '' });
+        }, 3000);
       }
     } catch (error) {
       console.error('Error updating user:', error);
-      alert('Error updating user');
+      setMessage({ type: 'error', content: 'Error updating user' });
+      setTimeout(() => {
+        setMessage({ type: '', content: '' });
+      }, 3000);
     }
   };
 
@@ -265,17 +321,27 @@ export default function AdminPortal() {
       if (response.ok) {
         // Remove the archived user from the table immediately
         setUserList(prevList => prevList.filter(user => user.ID !== userId));
-        alert('User archived successfully');
+        setMessage({ type: 'success', content: 'User archived successfully' });
+        // Auto-hide message after 3 seconds
+        setTimeout(() => {
+          setMessage({ type: '', content: '' });
+        }, 3000);
       } else {
         const data = await response.json();
-        alert(data.error || 'Failed to archive user');
+        setMessage({ type: 'error', content: data.error || 'Failed to archive user' });
+        setTimeout(() => {
+          setMessage({ type: '', content: '' });
+        }, 3000);
       }
     } catch (error) {
       console.error('Error archiving user:', error);
-      alert('Error archiving user. Please try again.');
+      setMessage({ type: 'error', content: 'Error archiving user. Please try again.' });
+      setTimeout(() => {
+        setMessage({ type: '', content: '' });
+      }, 3000);
     } finally {
       setIsDeleteLoading(false);
-      setShowDeleteModal(false);
+      setUserToDelete(null);
     }
   };
 
@@ -301,27 +367,59 @@ export default function AdminPortal() {
     }
   }, [department]);
 
-    if (userRole === 'admin' && isMobile) {
+  // Always check if user is admin on mobile/tablet - persistent across navigation
+  const isAdminOnMobile = userRole === 'admin' && (isMobile || window.innerWidth < 768);
+  
+  if (isAdminOnMobile) {
     return (
-      <div className="flex flex-col pt-10 items-center min-h-screen w-screen bg-[#005B98]">
-        <PolyconLogo style={{ height: '200px', width: 'auto', marginBottom: '24px' }} />
-        <h3 className="text-2xl font-bold text-white mb-4 mx-9 text-center">Faculty Portal Unavailable on Mobile/Tablet</h3>
-        <p className="text-white mb-6 mx-9 text-center">For security and usability, please use a desktop or laptop to access admin features.</p>
-        <button
-          className="bg-[#057DCD] text-white px-6 py-2 rounded-lg shadow-md hover:bg-[#54BEFF] transition"
-          onClick={() => {
-            localStorage.clear();
-            window.location.href = "/";
-          }}
-        >
-          Logout
-        </button>
+      <div className="fixed inset-0 flex flex-col items-center justify-center bg-[#005B98] overflow-hidden">
+        <div className="flex flex-col items-center justify-center h-full w-full px-6 py-8">
+          <PolyconLogo style={{ height: '200px', width: 'auto', marginBottom: '24px' }} />
+          <h3 className="text-2xl font-bold text-white mb-4 text-center max-w-md">
+            Admin Portal Unavailable on Mobile/Tablet
+          </h3>
+          <p className="text-white mb-8 text-center max-w-md leading-relaxed">
+            For security and usability, please use a desktop or laptop to access admin features.
+          </p>
+          <button
+            className="bg-[#057DCD] text-white px-8 py-3 rounded-lg shadow-md hover:bg-[#54BEFF] transition-all duration-200 font-semibold"
+            onClick={() => {
+              localStorage.clear();
+              window.location.href = "/";
+            }}
+          >
+            Logout
+          </button>
+        </div>
       </div>
     );
   }
 
   return (
     <div className="w-full min-h-screen p-6 items-center fade-in">
+      {message.content && (
+        <div className={`fixed top-5 right-5 z-50 rounded-lg shadow-lg max-w-md p-4 
+          ${message.type === 'success' ? 'bg-green-100 text-green-700' : 
+            message.type === 'warning' ? 'bg-yellow-100 text-yellow-700 border-yellow-500' : 
+            'bg-red-100 text-red-700'}`}
+        >
+          <div className="flex justify-between items-start">
+            <div className="flex-1">
+              {typeof message.content === 'string' ? message.content : message.content}
+            </div>
+            {typeof message.content === 'string' && (
+              <button
+                onClick={() => setMessage({ type: '', content: '' })}
+                className="ml-3 text-current hover:opacity-70"
+              >
+                <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M6 18L18 6M6 6l12 12" />
+                </svg>
+              </button>
+            )}
+          </div>
+        </div>
+      )}
       <header className="w-full bg-white mt-10 flex justify-center  items-center mb-2 fade-in delay-100">
         <h2 className="text-3xl items-center font-bold text-center pb-5 text-[#005B98]">Manage Users</h2>
       </header>      
@@ -434,7 +532,33 @@ export default function AdminPortal() {
                                     setTimeout(() => {
                                       setDeleteClicked(false);
                                       setUserToDelete(u.ID);
-                                      setShowDeleteModal(true);
+                                      // Show confirmation toast instead of modal
+                                      setMessage({
+                                        type: 'warning',
+                                        content: (
+                                          <div className="flex items-center justify-between">
+                                            <span>Are you sure you want to archive this user?</span>
+                                            <div className="flex gap-2 ml-4">
+                                              <button
+                                                onClick={() => handleDeleteUser(u.ID)}
+                                                disabled={isDeleteLoading}
+                                                className="bg-red-500 text-white px-3 py-1 rounded text-sm hover:bg-red-600 disabled:opacity-50"
+                                              >
+                                                {isDeleteLoading ? 'Archiving...' : 'Archive'}
+                                              </button>
+                                              <button
+                                                onClick={() => {
+                                                  setMessage({ type: '', content: '' });
+                                                  setUserToDelete(null);
+                                                }}
+                                                className="bg-gray-300 text-gray-700 px-3 py-1 rounded text-sm hover:bg-gray-400"
+                                              >
+                                                Cancel
+                                              </button>
+                                            </div>
+                                          </div>
+                                        )
+                                      });
                                     }, 300);
                                   }}
                                 >
@@ -454,58 +578,20 @@ export default function AdminPortal() {
         </div>
       </div>
 
-      {showDeleteModal && (
-        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
-          <div className="bg-white rounded-lg p-6 w-96">
-            <h3 className="text-xl font-semibold mb-4">Confirm Delete</h3>
-            <p className="text-gray-700 mb-6">
-              Are you sure you want to delete this user? You can restore them later if needed.
-            </p>
-            <div className="flex justify-end space-x-3">
-              <button
-                onClick={() => {
-                  setCancelClicked(true);
-                  setTimeout(() => {
-                    setCancelClicked(false);
-                    setShowDeleteModal(false);
-                    setUserToDelete(null);
-                  }, 300);
-                }}
-                disabled={isDeleteLoading}
-                className={`px-4 py-2 rounded-lg bg-gray-300 hover:bg-gray-400 transition-colors ${CancelClicked ? "scale-90" : "scale-100"}`}
-              >
-                Cancel
-              </button>
-              <button
-                onClick={() => {
-                  setDeleteClicked(true);
-                  setTimeout(() => {
-                    setDeleteClicked(false);
-                    handleDeleteUser(userToDelete);
-                  }, 300);
-                }}
-                disabled={isDeleteLoading}
-                className={`px-4 py-2 rounded-lg bg-red-500 text-white hover:bg-red-600 transition-colors ${DeleteClicked ? "scale-90" : "scale-100"} ${isDeleteLoading ? 'opacity-50 cursor-not-allowed' : ''} flex items-center space-x-2`}
-              >
-                {isDeleteLoading ? (
-                  <>
-                    <svg className="animate-spin h-5 w-5 text-white" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
-                      <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
-                      <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
-                    </svg>
-                    <span>Archiving...</span>
-                  </>
-                ) : (
-                  <span>Delete</span>
-                )}
-              </button>
-            </div>
-          </div>
-        </div>
-      )}      {showAddModal && (
-        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
-          <div className="bg-white rounded-xl shadow-2xl w-[40rem] overflow-hidden max-h-[90vh] flex flex-col">
-            <div className="bg-[#0065A8] p-4 flex justify-between items-center">
+      {showAddModal && createPortal(
+        <div className="fixed bg-black/60 backdrop-blur-md flex items-center justify-center p-4" style={{ 
+          position: 'fixed',
+          top: 0, left: 0, right: 0, bottom: 0, width: '100vw', height: '100vh', margin: 0, padding: '1rem',
+          zIndex: 9999
+        }}>
+          <div className="bg-white rounded-xl shadow-2xl w-full max-w-2xl max-h-[90vh] overflow-y-auto"
+               onClick={(e) => e.stopPropagation()}
+               style={{
+                 scrollbarWidth: 'none',
+                 msOverflowStyle: 'none',
+                 zIndex: 9999
+               }}>
+            <div className="bg-[#0065A8] p-4 flex justify-between items-center sticky top-0 z-10">
               <h3 className="text-xl font-semibold text-white">Add New User</h3>
               <button
                 onClick={() => {
@@ -533,7 +619,11 @@ export default function AdminPortal() {
               </button>
             </div>
 
-            <div className="flex-1 overflow-y-auto px-8 py-6 space-y-6">
+            <div className="p-6 space-y-6"
+                 style={{
+                   scrollbarWidth: 'none',
+                   msOverflowStyle: 'none'
+                 }}>
               {/* ID Number */}
               <div>
                 <label className="block text-sm font-medium text-gray-700 mb-2">ID Number</label>
@@ -651,9 +741,9 @@ export default function AdminPortal() {
               )}
             </div>
 
-            <div className="px-8 py-4 border-t border-gray-200 flex justify-end space-x-4">
+            <div className="flex mt-4">
               <button
-                className={`bg-[#0065A8] hover:bg-[#54BEFF] text-white px-4 py-2 rounded-lg transition-colors ${
+                className={`flex-1 py-3 sm:py-4 bg-[#0065A8] hover:bg-[#54BEFF] text-white text-center justify-center transition-colors flex items-center gap-2 text-xs sm:text-sm font-medium ${
                   AddClicked ? "scale-90" : "scale-100"
                 }`}
                 onClick={() => {
@@ -668,7 +758,7 @@ export default function AdminPortal() {
                 Add User
               </button>
               <button
-                className={`bg-gray-500 text-white px-4 py-2 rounded-lg transition-colors ${
+                className={`flex-1 py-3 sm:py-4 text-gray-700 bg-gray-100 hover:bg-gray-200 transition-colors text-xs sm:text-sm font-medium ${
                   CancelClicked ? "scale-90" : "scale-100"
                 }`}
                 onClick={() => {
@@ -683,14 +773,31 @@ export default function AdminPortal() {
               </button>
             </div>
           </div>
-        </div>
-      )}      {editUser && (
-        <div
-          className={`fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 transition-opacity duration-500 ${
-            modalClosing ? "opacity-0" : "opacity-100"
-          }`}>
-          <div className="bg-white rounded-xl shadow-2xl w-[40rem] overflow-hidden max-h-[90vh] flex flex-col">
-            <div className="bg-[#0065A8] p-4 flex justify-between items-center">
+        </div>,
+        document.body
+      )}      {editUser && createPortal(
+        <div className="fixed bg-black/60 backdrop-blur-md flex items-center justify-center p-4" style={{ 
+          position: 'fixed',
+          top: 0,
+          left: 0,
+          right: 0,
+          bottom: 0,
+          width: '100vw',
+          height: '100vh',
+          margin: 0,
+          padding: '1rem',
+          zIndex: 9999
+        }}>
+          <div className={`bg-white rounded-xl shadow-2xl w-full max-w-2xl max-h-[90vh] overflow-y-auto transition-opacity duration-500 ${
+            modalClosing ? "opacity-0 pointer-events-none" : "opacity-100"
+          }`}
+               onClick={(e) => e.stopPropagation()}
+               style={{
+                 scrollbarWidth: 'none',
+                 msOverflowStyle: 'none',
+                 zIndex: 9999
+               }}>
+            <div className="bg-[#0065A8] p-4 flex justify-between items-center sticky top-0 z-10">
               <h3 className="text-xl font-semibold text-white">Edit User</h3>
               <button
                 onClick={() => {
@@ -718,7 +825,11 @@ export default function AdminPortal() {
               </button>
             </div>
 
-            <div className="flex-1 overflow-y-auto px-8 py-6 space-y-6">
+            <div className="p-6 space-y-6"
+                 style={{
+                   scrollbarWidth: 'none',
+                   msOverflowStyle: 'none'
+                 }}>
               {/* ID Number */}
               <div>
                 <label className="block text-sm font-medium text-gray-700 mb-2">ID Number</label>
@@ -842,9 +953,9 @@ export default function AdminPortal() {
               )}
             </div>
 
-            <div className="px-8 py-4 border-t border-gray-200 flex justify-end space-x-4">
+            <div className="flex mt-4">
               <button
-                className={`bg-[#0065A8] hover:bg-[#54BEFF] text-white px-4 py-2 rounded-lg transition-colors ${
+                className={`flex-1 py-3 sm:py-4 bg-[#0065A8] hover:bg-[#54BEFF] text-white text-center justify-center transition-colors flex items-center gap-2 text-xs sm:text-sm font-medium ${
                   SaveClicked ? "scale-90" : "scale-100"
                 } ${isEditLoading ? "opacity-50 cursor-not-allowed" : ""}`}
                 disabled={isEditLoading}
@@ -889,7 +1000,7 @@ export default function AdminPortal() {
                 )}
               </button>
               <button
-                className={`bg-gray-500 hover:bg-gray-600 text-white px-4 py-2 rounded-lg transition-colors ${
+                className={`flex-1 py-3 sm:py-4 text-gray-700 bg-gray-100 hover:bg-gray-200 transition-colors text-xs sm:text-sm font-medium ${
                   CancelClicked ? "scale-90" : "scale-100"
                 }`}
                 onClick={() => {
@@ -905,7 +1016,8 @@ export default function AdminPortal() {
               </button>
             </div>
           </div>
-        </div>
+        </div>,
+        document.body
       )}
     </div>
   );

@@ -1,4 +1,5 @@
 import React, { useEffect, useState } from 'react';
+import { createPortal } from 'react-dom';
 import { ReactComponent as EditIcon } from './icons/Edit.svg';
 import { ReactComponent as PolyconLogo } from './icons/Polycon.svg';
 import { ReactComponent as DeleteIcon } from './icons/delete.svg';
@@ -28,6 +29,8 @@ export default function Programs() {
   const [isAddLoading, setIsAddLoading] = useState(false);
   const [message, setMessage] = useState({ type: '', content: '' });
   const [showDeleteModal, setShowDeleteModal] = useState(false);
+  const [showAddModal, setShowAddModal] = useState(false);
+  const [showEditModal, setShowEditModal] = useState(false);
   const [programToDelete, setProgramToDelete] = useState(null);
   const [isDeleteLoading, setIsDeleteLoading] = useState(false);
   const [isFiltering, setIsFiltering] = useState(false);
@@ -137,11 +140,38 @@ export default function Programs() {
     setSelectedDepartment(program.departmentID);
     setEditing(true);
     setEditingProgramId(program.id);
+    setShowEditModal(true);
   };
 
   const handleDelete = (programId) => {
     setProgramToDelete(programId);
-    setShowDeleteModal(true);
+    // Show confirmation toast instead of modal
+    setMessage({
+      type: 'warning',
+      content: (
+        <div className="flex items-center justify-between">
+          <span>Are you sure you want to delete this program?</span>
+          <div className="flex gap-2 ml-4">
+            <button
+              onClick={confirmDelete}
+              disabled={isDeleteLoading}
+              className="bg-red-500 text-white px-3 py-1 rounded text-sm hover:bg-red-600 disabled:opacity-50"
+            >
+              {isDeleteLoading ? 'Deleting...' : 'Delete'}
+            </button>
+            <button
+              onClick={() => {
+                setMessage({ type: '', content: '' });
+                setProgramToDelete(null);
+              }}
+              className="bg-gray-300 text-gray-700 px-3 py-1 rounded text-sm hover:bg-gray-400"
+            >
+              Cancel
+            </button>
+          </div>
+        </div>
+      )
+    });
   };
 
   const confirmDelete = async () => {
@@ -154,15 +184,24 @@ export default function Programs() {
       if (response.ok) {
         await fetchInitialData();
         setMessage({ type: 'success', content: 'Program deleted successfully!' });
-        setShowDeleteModal(false);
         setProgramToDelete(null);
+        // Auto-hide message after 3 seconds
+        setTimeout(() => {
+          setMessage({ type: '', content: '' });
+        }, 3000);
       } else {
         const errorMessage = await response.json();
         setMessage({ type: 'error', content: errorMessage.error || 'Failed to delete program' });
+        setTimeout(() => {
+          setMessage({ type: '', content: '' });
+        }, 3000);
       }
     } catch (error) {
       console.error('Error deleting program:', error);
       setMessage({ type: 'error', content: 'Network error. Please try again.' });
+      setTimeout(() => {
+        setMessage({ type: '', content: '' });
+      }, 3000);
     } finally {
       setIsDeleteLoading(false);
     }
@@ -173,6 +212,8 @@ export default function Programs() {
     setSelectedDepartment('');
     setEditing(false);
     setEditingProgramId(null);
+    setShowAddModal(false);
+    setShowEditModal(false);
   };
 
   const applyFilters = () => {
@@ -220,17 +261,43 @@ export default function Programs() {
     <div className="mx-auto p-6 bg-white fade-in">
       {/* Polycon Logo at the top */}
       {message.content && (
-        <div className={`fixed top-5 right-5 p-4 rounded-lg shadow-lg z-50 ${
-          message.type === 'success' ? 'bg-green-100 text-green-700' : 'bg-red-100 text-red-700'
-        }`}>
-          {message.content}
+        <div className={`fixed top-5 right-5 z-50 rounded-lg shadow-lg max-w-md p-4 
+          ${message.type === 'success' ? 'bg-green-100 text-green-700' : 
+            message.type === 'warning' ? 'bg-yellow-100 text-yellow-700 border-yellow-500' : 
+            'bg-red-100 text-red-700'}`}
+        >
+          <div className="flex justify-between items-start">
+            <div className="flex-1">
+              {typeof message.content === 'string' ? message.content : message.content}
+            </div>
+            {typeof message.content === 'string' && (
+              <button
+                onClick={() => setMessage({ type: '', content: '' })}
+                className="ml-3 text-current hover:opacity-70"
+              >
+                <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M6 18L18 6M6 6l12 12" />
+                </svg>
+              </button>
+            )}
+          </div>
         </div>
       )}
 
       <div className="mx-auto p-4 bg-white mt-6">
         <h2 className="text-3xl font-bold text-center text-[#0065A8] pb-5 mb-4 fade-in delay-100">Programs</h2>
-        <div className="mt-4 fade-in delay-200">
-          <div className="flex items-center justify-center space-x-2 w-full">
+        
+        <div className="flex items-center justify-between space-x-4 w-[90%] mt-4 mx-auto fade-in delay-200">
+          {/* Add Program Button */}
+          <button
+            onClick={() => setShowAddModal(true)}
+            className="px-6 py-2 bg-[#057DCD] text-white rounded-lg hover:bg-[#54BEFF] transition-all duration-300 transform hover:scale-105 active:scale-95 shadow-md"
+          >
+            Add Program
+          </button>
+
+          {/* Search Section */}
+          <div className="flex items-center space-x-2">
             <div className="relative w-[400px] border border-gray-300 rounded-lg px-3 py-2 shadow-md flex flex-wrap items-center min-h-[42px]">
               <input 
                 type="text"
@@ -240,16 +307,6 @@ export default function Programs() {
                 className="border-none focus:ring-0 outline-none w-full"
               />
             </div>
-            <button 
-              className={`bg-[#057DCD] text-white px-6 py-2 rounded-lg shadow-md hover:bg-[#54BEFF] transition 
-                ${SearchClicked ? "scale-90" : "scale-100"}`}
-              onClick={() => {
-                setSearchClicked(true);
-                setTimeout(() => setSearchClicked(false), 300);
-                applyFilters();}}
-            >
-              Search
-            </button>
           </div>
         </div>
 
@@ -334,115 +391,323 @@ export default function Programs() {
             </table>
           </div>
         </div>
+      </div>
 
-        <div className="mt-6 mx-auto w-[50%] shadow-md rounded-lg p-1 bg-white">
-          <div className="flex items-center justify-between space-x-4">
-            <input 
-              type="text" 
-              placeholder="Program Name" 
-              value={programName} 
-              onChange={(e) => setProgramName(e.target.value)} 
-              className="rounded-lg px-4 py-2 w-full outline-none focus:ring focus:ring-blue-300 focus:border-blue-500"
-            />
-            <select 
-              value={selectedDepartment} 
-              onChange={(e) => setSelectedDepartment(e.target.value)} 
-              className="rounded-lg py-2 w-[200px] focus:ring focus:ring-blue-300 focus:border-blue-500"
-            >
-              <option value="">Select Department</option>
-              {departments.map((dept) => (
-                <option key={dept.id} value={dept.id}>
-                  {dept.name || dept.departmentName}
-                </option>
-              ))}
-            </select>
-            <button 
-              onClick={() => {
-                setAddClicked(true);
-                setTimeout(() => setAddClicked(false), 300);
-                editing ? handleUpdateProgram() : handleAddProgram();
-              }}
-              disabled={isAddLoading}
-              className={`px-8 py-2 rounded-lg text-white shadow-md ${
-                editing ? 'bg-[#057DCD] hover:bg-[#54BEFF]' : 'bg-[#057DCD] hover:bg-[#54BEFF]'
-              } ${isAddLoading ? 'opacity-50 cursor-not-allowed' : ''} 
-                 ${AddClicked ? "scale-90" : "scale-100"} flex items-center space-x-2`}
-            >
-              {isAddLoading ? (
-                <>
-                  <svg className="animate-spin h-5 w-5 text-white" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
-                    <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
-                    <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
-                  </svg>
-                  <span>{editing ? 'Updating...' : 'Adding...'}</span>
-                </>
-              ) : (
-                <span>{editing ? 'UPDATE' : 'ADD'}</span>
+      {showAddModal && createPortal(
+        <div className="fixed bg-black/60 backdrop-blur-md flex items-center justify-center p-4" style={{ 
+          position: 'fixed',
+          top: 0,
+          left: 0,
+          right: 0,
+          bottom: 0,
+          width: '100vw',
+          height: '100vh',
+          margin: 0,
+          padding: '1rem',
+          zIndex: 9999
+        }}>
+          <div className="bg-white rounded-xl shadow-2xl w-full max-w-md max-h-[90vh] overflow-y-auto"
+               onClick={(e) => e.stopPropagation()}
+               style={{
+                 scrollbarWidth: 'none',
+                 msOverflowStyle: 'none',
+                 zIndex: 9999
+               }}>
+            <div className="bg-[#0065A8] px-6 py-4 flex justify-between items-center sticky top-0 z-10">
+              <h2 className="text-lg font-semibold text-white">
+                Add New Program
+              </h2>
+              <button
+                onClick={() => setShowAddModal(false)}
+                className="text-white hover:text-gray-200 transition-colors"
+              >
+                <svg
+                  className="w-6 h-6"
+                  fill="none"
+                  stroke="currentColor"
+                  viewBox="0 0 24 24"
+                >
+                  <path
+                    strokeLinecap="round"
+                    strokeLinejoin="round"
+                    strokeWidth="2"
+                    d="M6 18L18 6M6 6l12 12"
+                  />
+                </svg>
+              </button>
+            </div>
+
+            <div className="p-6 space-y-6"
+                 style={{
+                   scrollbarWidth: 'none',
+                   msOverflowStyle: 'none'
+                 }}>
+              {/* Program Name */}
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-2">
+                  Program Name <span className="text-red-500">*</span>
+                </label>
+                <input
+                  type="text"
+                  placeholder="Program Name"
+                  value={programName}
+                  onChange={(e) => setProgramName(e.target.value)}
+                  className="w-full border-2 border-[#0065A8] rounded-lg px-3 py-2 focus:outline-none focus:ring-2 focus:ring-[#54BEFF]"
+                />
+              </div>
+
+              {/* Department */}
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-2">
+                  Department <span className="text-red-500">*</span>
+                </label>
+                <select
+                  value={selectedDepartment}
+                  onChange={(e) => setSelectedDepartment(e.target.value)}
+                  className="w-full border-2 border-[#0065A8] rounded-lg px-3 py-2 focus:outline-none focus:ring-2 focus:ring-[#54BEFF]"
+                >
+                  <option value="">Select Department</option>
+                  {departments.map((dept) => (
+                    <option key={dept.id} value={dept.id}>
+                      {dept.name || dept.departmentName}
+                    </option>
+                  ))}
+                </select>
+              </div>
+
+              {/* Message display */}
+              {message.content && (
+                <div
+                  className={`p-3 rounded-lg ${
+                    message.type === "success"
+                      ? "bg-green-100 text-green-700"
+                      : "bg-red-100 text-red-700"
+                  }`}
+                >
+                  {message.content}
+                </div>
               )}
-            </button>
-            {editing && (
-              <button 
+            </div>
+
+            {/* Buttons */}
+            <div className="flex mt-4">
+              <button
                 onClick={() => {
                   setAddClicked(true);
-                  setTimeout(() => setAddClicked(false), 300);
-                  resetForm();
-                  setEditing(false);
-                  setEditingProgramId(null);
+                  setTimeout(() => {
+                    setAddClicked(false);
+                    handleAddProgram();
+                    setShowAddModal(false);
+                  }, 300);
                 }}
-                className="bg-gray-500 hover:bg-gray-600 text-white px-4 py-2 rounded shadow-md transition duration-300"
+                disabled={isAddLoading}
+                className={`flex-1 py-3 sm:py-4 bg-[#0065A8] hover:bg-[#54BEFF] text-white text-center justify-center transition-colors flex items-center gap-2 text-xs sm:text-sm font-medium
+                ${isAddLoading ? "opacity-50 cursor-not-allowed" : ""} 
+                ${AddClicked ? "scale-90" : "scale-100"}`}
               >
-                Cancel
-              </button>
-            )}
-          </div>
-        </div>
-      </div>
-      {showDeleteModal && (
-        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
-          <div className="bg-white rounded-lg p-6 w-96">
-            <h3 className="text-xl font-semibold mb-4">Confirm Delete</h3>
-            <p className="text-gray-700 mb-6">Are you sure you want to delete this program? This action cannot be undone.</p>
-            <div className="flex justify-end space-x-3">
-              <button
-              onClick={() => {
-                setCancelClicked(true); 
-                setTimeout(() => { setCancelClicked(false); setShowDeleteModal(false); 
-                  setTimeout(() => setProgramToDelete(null), 
-                  500);
-                }, 200);
-              }}
-                disabled={isDeleteLoading}
-                className={`px-4 py-2 rounded-lg bg-gray-300 hover:bg-gray-400 transition-colors 
-                  ${CancelClicked ? 'scale-90' : 'scale-100'}`}
-              >
-                Cancel
+                {isAddLoading ? (
+                  <>
+                    <svg
+                      className="animate-spin h-5 w-5 text-white"
+                      xmlns="http://www.w3.org/2000/svg"
+                      fill="none"
+                      viewBox="0 0 24 24"
+                    >
+                      <circle
+                        className="opacity-25"
+                        cx="12"
+                        cy="12"
+                        r="10"
+                        stroke="currentColor"
+                        strokeWidth="4"
+                      ></circle>
+                      <path
+                        className="opacity-75"
+                        fill="currentColor"
+                        d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"
+                      ></path>
+                    </svg>
+                    <span>Adding...</span>
+                  </>
+                ) : (
+                  <span>Add Program</span>
+                )}
               </button>
               <button
                 onClick={() => {
-                  setEditClicked(true);
-                  setTimeout(() => setEditClicked(false), 300);
-                  confirmDelete();}}
-                disabled={isDeleteLoading}
-                className={`px-4 py-2 rounded-lg bg-red-500 text-white hover:bg-red-600 transition-colors
-                  ${DeleteClicked ? 'scale-90' : 'scale-100'}
-                  ${isDeleteLoading ? 'opacity-50 cursor-not-allowed' : ''} 
-                  flex items-center space-x-2`}
+                  setCancelClicked(true);
+                  setTimeout(() => {
+                    setCancelClicked(false);
+                    setShowAddModal(false);
+                  }, 300);
+                }}
+                className={`flex-1 py-3 sm:py-4 text-gray-700 bg-gray-100 hover:bg-gray-200 transition-colors text-xs sm:text-sm font-medium ${
+                  CancelClicked ? "scale-90" : "scale-100"
+                }`}
               >
-                {isDeleteLoading ? (
-                  <>
-                    <svg className="animate-spin h-5 w-5 text-white" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
-                      <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
-                      <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
-                    </svg>
-                    <span>Deleting...</span>
-                  </>
-                ) : (
-                  <span>Delete</span>
-                )}
+                Cancel
               </button>
             </div>
           </div>
-        </div>
+        </div>,
+        document.body
+      )}
+
+      {showEditModal && createPortal(
+        <div className="fixed bg-black/60 backdrop-blur-md flex items-center justify-center p-4" style={{ 
+          position: 'fixed',
+          top: 0,
+          left: 0,
+          right: 0,
+          bottom: 0,
+          width: '100vw',
+          height: '100vh',
+          margin: 0,
+          padding: '1rem',
+          zIndex: 9999
+        }}>
+          <div className="bg-white rounded-xl shadow-2xl w-full max-w-md max-h-[90vh] overflow-y-auto"
+               onClick={(e) => e.stopPropagation()}
+               style={{
+                 scrollbarWidth: 'none',
+                 msOverflowStyle: 'none',
+                 zIndex: 9999
+               }}>
+            <div className="bg-[#0065A8] px-6 py-4 flex justify-between items-center sticky top-0 z-10">
+              <h2 className="text-lg font-semibold text-white">
+                Edit Program
+              </h2>
+              <button
+                onClick={() => {
+                  setShowEditModal(false);
+                  resetForm();
+                }}
+                className="text-white hover:text-gray-200 transition-colors"
+              >
+                <svg
+                  className="w-6 h-6"
+                  fill="none"
+                  stroke="currentColor"
+                  viewBox="0 0 24 24"
+                >
+                  <path
+                    strokeLinecap="round"
+                    strokeLinejoin="round"
+                    strokeWidth="2"
+                    d="M6 18L18 6M6 6l12 12"
+                  />
+                </svg>
+              </button>
+            </div>
+
+            <div className="p-6 space-y-6"
+                 style={{
+                   scrollbarWidth: 'none',
+                   msOverflowStyle: 'none'
+                 }}>
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-2">
+                  Program Name <span className="text-red-500">*</span>
+                </label>
+                <input
+                  type="text"
+                  placeholder="Program Name"
+                  value={programName}
+                  onChange={(e) => setProgramName(e.target.value)}
+                  className="w-full border-2 border-[#0065A8] rounded-lg px-3 py-2 focus:outline-none focus:ring-2 focus:ring-[#54BEFF]"
+                />
+              </div>
+
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-2">
+                  Department <span className="text-red-500">*</span>
+                </label>
+                <select
+                  value={selectedDepartment}
+                  onChange={(e) => setSelectedDepartment(e.target.value)}
+                  className="w-full border-2 border-[#0065A8] rounded-lg px-3 py-2 focus:outline-none focus:ring-2 focus:ring-[#54BEFF]"
+                >
+                  <option value="">Select a department</option>
+                  {departments.map(department => (
+                    <option key={department.id} value={department.id}>
+                      {department.name}
+                    </option>
+                  ))}
+                </select>
+              </div>
+
+              {message.content && (
+                <div
+                  className={`p-3 rounded-lg ${
+                    message.type === "success"
+                      ? "bg-green-100 text-green-700"
+                      : "bg-red-100 text-red-700"
+                  }`}
+                >
+                  {message.content}
+                </div>
+              )}
+            </div>
+
+            <div className="flex mt-4">
+              <button
+                onClick={() => {
+                  setAddClicked(true);
+                  setTimeout(() => setAddClicked(false), 300);
+                  handleUpdateProgram();
+                }}
+                disabled={isAddLoading}
+                className={`flex-1 py-3 sm:py-4 bg-[#0065A8] hover:bg-[#54BEFF] text-white text-center justify-center transition-colors flex items-center gap-2 text-xs sm:text-sm font-medium
+                ${isAddLoading ? "opacity-50 cursor-not-allowed" : ""} 
+                ${AddClicked ? "scale-90" : "scale-100"}`}
+              >
+                {isAddLoading ? (
+                  <>
+                    <svg
+                      className="animate-spin h-5 w-5 text-white"
+                      xmlns="http://www.w3.org/2000/svg"
+                      fill="none"
+                      viewBox="0 0 24 24"
+                    >
+                      <circle
+                        className="opacity-25"
+                        cx="12"
+                        cy="12"
+                        r="10"
+                        stroke="currentColor"
+                        strokeWidth="4"
+                      ></circle>
+                      <path
+                        className="opacity-75"
+                        fill="currentColor"
+                        d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"
+                      ></path>
+                    </svg>
+                    <span>Updating...</span>
+                  </>
+                ) : (
+                  <span>Update Program</span>
+                )}
+              </button>
+              <button
+                onClick={() => {
+                  setCancelClicked(true);
+                  setTimeout(() => {
+                    setCancelClicked(false);
+                    setShowEditModal(false);
+                    resetForm();
+                  }, 300);
+                }}
+                className={`flex-1 py-3 sm:py-4 text-gray-700 bg-gray-100 hover:bg-gray-200 transition-colors text-xs sm:text-sm font-medium ${
+                  CancelClicked ? "scale-90" : "scale-100"
+                }`}
+              >
+                Cancel
+              </button>
+            </div>
+          </div>
+        </div>,
+        document.body
       )}
     </div>
   );
