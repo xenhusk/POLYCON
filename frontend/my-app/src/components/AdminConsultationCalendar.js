@@ -9,6 +9,8 @@ const localizer = momentLocalizer(moment);
 
 function AdminConsultationCalendar() {
     const [events, setEvents] = useState([]);
+    const [selectedEvent, setSelectedEvent] = useState(null);
+    const [showModal, setShowModal] = useState(false);
 
     useEffect(() => {
         const fetchConsultations = async () => {
@@ -16,6 +18,7 @@ function AdminConsultationCalendar() {
                 const response = await fetch(`${API_URL}/consultation/get_all_sessions`);
                 const sessions = await response.json();
                 const events = sessions.map(session => ({
+                    ...session,
                     title: session.title,
                     start: new Date(session.schedule),
                     end: new Date(session.schedule),
@@ -185,7 +188,64 @@ function AdminConsultationCalendar() {
                 eventPropGetter={eventPropGetter}
                 popup={true}
                 popupOffset={30}
+                onSelectEvent={event => {
+                    setSelectedEvent(event);
+                    setShowModal(true);
+                }}
             />
+
+            {/* Modal for Consultation Info */}
+            {showModal && selectedEvent && (
+                <div style={{
+                    position: 'fixed',
+                    top: 0,
+                    left: 0,
+                    width: '100vw',
+                    height: '100vh',
+                    background: 'rgba(0,0,0,0.3)',
+                    display: 'flex',
+                    alignItems: 'center',
+                    justifyContent: 'center',
+                    zIndex: 1000
+                }}
+                    onClick={() => setShowModal(false)}
+                >
+                    <div style={{
+                        background: 'white',
+                        borderRadius: '0.75rem',
+                        boxShadow: '0 4px 24px rgba(0,0,0,0.2)',
+                        padding: '2rem',
+                        minWidth: '320px',
+                        maxWidth: '90vw',
+                        position: 'relative',
+                        cursor: 'auto'
+                    }}
+                        onClick={e => e.stopPropagation()}
+                    >
+                        <button
+                            style={{
+                                position: 'absolute',
+                                top: '1rem',
+                                right: '1rem',
+                                background: '#057DCD',
+                                color: 'white',
+                                border: 'none',
+                                borderRadius: '0.375rem',
+                                padding: '0.5rem 1rem',
+                                cursor: 'pointer',
+                                fontWeight: '600'
+                            }}
+                            onClick={() => setShowModal(false)}
+                        >Close</button>
+                        <h2 style={{ color: '#057DCD', marginBottom: '1rem' }}>Consultation Information</h2>
+                        <div style={{ marginBottom: '0.5rem' }}><strong>Title:</strong> {selectedEvent.title}</div>
+                        <div style={{ marginBottom: '0.5rem' }}><strong>Date & Time:</strong> {selectedEvent.schedule ? moment(selectedEvent.schedule).format('MMMM D, YYYY h:mm A') : moment(selectedEvent.start).format('MMMM D, YYYY h:mm A')}</div>
+                        {selectedEvent.description && <div style={{ marginBottom: '0.5rem' }}><strong>Description:</strong> {selectedEvent.description}</div>}
+                        {selectedEvent.location && <div style={{ marginBottom: '0.5rem' }}><strong>Location:</strong> {selectedEvent.location}</div>}
+                        {/* Add more fields as needed */}
+                    </div>
+                </div>
+            )}
         </div>
     );
 }

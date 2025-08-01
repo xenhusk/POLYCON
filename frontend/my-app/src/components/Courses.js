@@ -1,4 +1,5 @@
 import React, { useEffect, useState, useRef } from "react";
+import { createPortal } from 'react-dom';
 import { useNavigate } from "react-router-dom";
 import { ReactComponent as FilterIcon } from "./icons/FilterAdd.svg";
 import { ReactComponent as EditIcon } from "./icons/Edit.svg";
@@ -29,6 +30,7 @@ export default function Courses() {
   const [showProgramModal, setShowProgramModal] = useState(false);
   const [selectedDepartmentPrograms, setSelectedDepartmentPrograms] = useState([]);
   const [showEditModal, setShowEditModal] = useState(false);
+  const [showAddModal, setShowAddModal] = useState(false);
   const [editCourse, setEditCourse] = useState(null);
   const filterRef = useRef(null);
   const modalRef = useRef(null);
@@ -252,7 +254,7 @@ export default function Courses() {
 
   const handleDelete = async (courseID) => {
     setMessage({
-      type: "error",
+      type: "warning",
       content: (
         <div className="flex items-center justify-between">
           <span>Are you sure you want to delete this course?</span>
@@ -452,10 +454,12 @@ export default function Courses() {
           className={`fixed top-5 right-5 p-4 rounded-lg shadow-lg z-50 ${
             message.type === "success"
               ? "bg-green-100 text-green-700"
+              : message.type === "warning"
+              ? "bg-yellow-100 text-yellow-700 border-yellow-500"
               : "bg-red-100 text-red-700"
           }`}
         >
-          {message.content}
+          {typeof message.content === 'string' ? message.content : message.content}
         </div>
       )}
 
@@ -463,146 +467,414 @@ export default function Courses() {
         Courses
       </h2>
 
-      <div className="flex items-center justify-center space-x-2 w-full mt-4 fade-in delay-200">
-        {/* Global Message display - Modified position to upper left */}
-
-        {/* Loading overlay
-        {isLoading && (
-          <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
-            <div className="bg-white p-4 rounded-lg flex items-center space-x-3">
-              <svg
-                className="animate-spin h-5 w-5 text-blue-500"
-                xmlns="http://www.w3.org/2000/svg"
-                fill="none"
-                viewBox="0 0 24 24"
-              >
-                <circle
-                  className="opacity-25"
-                  cx="12"
-                  cy="12"
-                  r="10"
-                  stroke="currentColor"
-                  strokeWidth="4"
-                ></circle>
-                <path
-                  className="opacity-75"
-                  fill="currentColor"
-                  d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"
-                ></path>
-              </svg>
-              <span>Processing...</span>
-            </div>
-          </div>
-        )} */}
-        <div className="relative w-[400px] border border-gray-300 rounded-lg px-3 py-2 shadow-md flex flex-wrap items-center min-h-[42px]">
-          <input
-            type="text"
-            value={courseFilter}
-            onChange={handleCourseFilterChange}
-            placeholder="Search by Course Name"
-            className="border-none focus:ring-0 outline-none w-[100%]"
-          />
-        </div>
-        <button 
-          className={`bg-[#057DCD] text-white px-6 py-2 rounded-lg shadow-md hover:bg-[#54BEFF] transition 
-            ${SearchClicked ? "scale-90" : "scale-100"}`}
-          onClick={() => {
-            setSearchClicked(true);
-            setTimeout(() => setSearchClicked(false), 300);
-            applyFilters();}}
-        >
-          Search
-        </button>
+      <div className="flex items-center justify-between space-x-4 w-[90%] mt-4 fade-in delay-200">
+        {/* Add Course Button */}
         <button
-          onClick={() => {setFilterClicked(true); 
-            setTimeout(() => setFilterClicked(false), 300); 
-            setShowFilters(!showFilters);}}
-          className={`bg-[#057DCD] text-white p-3 rounded-full shadow-md flex items-center justify-center hover:bg-[#54BEFF] transition
-            ${FilterClicked ? "scale-90" : "scale-100"}`}
+          onClick={() => setShowAddModal(true)}
+          className="px-6 py-2 bg-[#057DCD] text-white rounded-lg hover:bg-[#54BEFF] transition-all duration-300 transform hover:scale-105 active:scale-95 shadow-md"
         >
-          <FilterIcon className="w-5 h-5" />
+          Add Course
         </button>
+
+        {/* Search and Filter Section */}
+        <div className="flex items-center space-x-2">
+          <div className="relative w-[400px] border border-gray-300 rounded-lg px-3 py-2 shadow-md flex flex-wrap items-center min-h-[42px]">
+            <input
+              type="text"
+              value={courseFilter}
+              onChange={handleCourseFilterChange}
+              placeholder="Search by Course Name"
+              className="border-none focus:ring-0 outline-none w-[100%]"
+            />
+          </div>
+          <button
+            onClick={() => {setFilterClicked(true); 
+              setTimeout(() => setFilterClicked(false), 300); 
+              setShowFilters(!showFilters);}}
+            className={`bg-[#057DCD] text-white p-3 rounded-full shadow-md flex items-center justify-center hover:bg-[#54BEFF] transition
+              ${FilterClicked ? "scale-90" : "scale-100"}`}
+          >
+            <FilterIcon className="w-5 h-5" />
+          </button>
+        </div>
       </div>
 
-      {showFilters && (
-        <div
-          ref={filterRef}
-          className="absolute right-[21rem] top-[12rem] mx-auto w-80 bg-white rounded-xl shadow-2xl overflow-hidden z-40 bg-opacity-80"
-        >
-          {/* Header with Reset Button */}
-          <div className="bg-[#0065A8] px-6 py-4 flex justify-between items-center">
-            <h3 className="text-xl font-semibold text-white">FILTERS</h3>
-            <button
-              onClick={handleResetFilters}
-              className="text-white hover:text-gray-200 transition-transform hover:scale-110"
-              title="Reset filters"
-            >
-              <RedoIcon className="w-5 h-5" />
-            </button>
-          </div>
-
-          {/* Filter Content */}
-          <div className="p-6 space-y-4 bg-opacity-80">
-            {/* Department Filter */}
-            <div>
-              <label className="block text-sm font-medium text-gray-700 mb-2 bg-opacity-80">
-                Department
-              </label>
-              <select
-                value={selectedDepartment}
-                onChange={handleDepartmentFilterChange}
-                className="w-full border-2 border-[#0065A8] rounded-lg px-3 py-2 text-gray-700
-                     focus:outline-none focus:ring-2 focus:ring-[#54BEFF]"
+      {showFilters && createPortal(
+        <div className="fixed bg-black/60 backdrop-blur-md flex items-center justify-center p-4" style={{ 
+          position: 'fixed',
+          top: 0,
+          left: 0,
+          right: 0,
+          bottom: 0,
+          width: '100vw',
+          height: '100vh',
+          margin: 0,
+          padding: '1rem',
+          zIndex: 9999
+        }}>
+          <div className="bg-white rounded-xl shadow-2xl w-full max-w-md max-h-[90vh] overflow-y-auto"
+               onClick={(e) => e.stopPropagation()}
+               style={{
+                 scrollbarWidth: 'none',
+                 msOverflowStyle: 'none',
+                 zIndex: 9999
+               }}>
+            <div className="bg-[#0065A8] px-6 py-4 flex justify-between items-center sticky top-0 z-10">
+              <h2 className="text-lg font-semibold text-white">
+                Course Filters
+              </h2>
+              <button
+                onClick={handleResetFilters}
+                className="text-white hover:text-gray-200 transition-transform hover:scale-110"
+                title="Reset filters"
               >
-                <option value="">All Departments</option>
-                {departments.map((dept) => (
-                  <option key={dept.id} value={dept.name}>
-                    {dept.name}
-                  </option>
-                ))}
-              </select>
+                <RedoIcon className="w-5 h-5" />
+              </button>
             </div>
 
-            {/* Programs Filter */}
-            {selectedDepartment && (
+            <div className="p-6 space-y-4"
+                 style={{
+                   scrollbarWidth: 'none',
+                   msOverflowStyle: 'none'
+                 }}>
+              {/* Department Filter */}
               <div>
                 <label className="block text-sm font-medium text-gray-700 mb-2">
-                  Programs
+                  Department
                 </label>
-                <div className="max-h-40 overflow-y-auto border-2 border-[#0065A8] rounded-lg">
-                  {filteredPrograms.length > 0 ? (
-                    filteredPrograms.map((prog) => (
-                      <div key={prog.id} className="px-2 py-1">
-                        <label className={`flex items-center p-2 rounded-lg transition-colors duration-200
-                          ${filterSelectedPrograms.includes(prog.id)
-                            ? "bg-[#0065A8] text-white"
-                            : "hover:bg-[#54BEFF] hover:text-white"}`}
-                        >
-                          <input
-                            type="checkbox"
-                            value={prog.id}
-                            checked={filterSelectedPrograms.includes(prog.id)}
-                            onChange={() => handleProgramFilterChange(prog.id)}
-                            className="mr-3 h-4 w-4 accent-[#0065A8] border-gray-300 rounded
-                            checked:bg-[#0065A8] checked:hover:bg-[#54BEFF]"
-                          />
-                          <span className={filterSelectedPrograms.includes(prog.id)
-                            ? "text-white"
-                            : "text-gray-700"}
-                          >
-                            {prog.name}
-                          </span>
-                        </label>
-                      </div>
-                    ))
-                  ) : (
-                    <div className="px-4 py-3 text-gray-500 text-center">No programs found</div>
-                  )}
-                </div>
+                <select
+                  value={selectedDepartment}
+                  onChange={handleDepartmentFilterChange}
+                  className="w-full border-2 border-[#0065A8] rounded-lg px-3 py-2 text-gray-700
+                       focus:outline-none focus:ring-2 focus:ring-[#54BEFF]"
+                >
+                  <option value="">All Departments</option>
+                  {departments.map((dept) => (
+                    <option key={dept.id} value={dept.name}>
+                      {dept.name}
+                    </option>
+                  ))}
+                </select>
               </div>
-            )}
+
+              {/* Programs Filter */}
+              {selectedDepartment && (
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-2">
+                    Programs
+                  </label>
+                  <div className="max-h-40 overflow-y-auto border-2 border-[#0065A8] rounded-lg">
+                    {filteredPrograms.length > 0 ? (
+                      filteredPrograms.map((prog) => (
+                        <div key={prog.id} className="px-2 py-1">
+                          <label className={`flex items-center p-2 rounded-lg transition-colors duration-200
+                            ${filterSelectedPrograms.includes(prog.id)
+                              ? "bg-[#0065A8] text-white"
+                              : "hover:bg-[#54BEFF] hover:text-white"}`}
+                          >
+                            <input
+                              type="checkbox"
+                              value={prog.id}
+                              checked={filterSelectedPrograms.includes(prog.id)}
+                              onChange={() => handleProgramFilterChange(prog.id)}
+                              className="mr-3 h-4 w-4 accent-[#0065A8] border-gray-300 rounded
+                              checked:bg-[#0065A8] checked:hover:bg-[#54BEFF]"
+                            />
+                            <span className={filterSelectedPrograms.includes(prog.id)
+                              ? "text-white"
+                              : "text-gray-700"}
+                            >
+                              {prog.name}
+                            </span>
+                          </label>
+                        </div>
+                      ))
+                    ) : (
+                      <div className="px-4 py-3 text-gray-500 text-center">No programs found</div>
+                    )}
+                  </div>
+                </div>
+              )}
+            </div>
+
+            <div className="flex mt-4">
+              <button
+                onClick={() => {
+                  setFilterClicked(true);
+                  setTimeout(() => {
+                    setFilterClicked(false);
+                    applyFilters();
+                  }, 300);
+                }}
+                className={`flex-1 py-3 sm:py-4 bg-[#0065A8] hover:bg-[#54BEFF] text-white text-center justify-center transition-colors flex items-center gap-2 text-xs sm:text-sm font-medium ${
+                  FilterClicked ? "scale-90" : "scale-100"
+                }`}
+              >
+                Apply Filters
+              </button>
+              <button
+                onClick={() => {
+                  setCancelClicked(true);
+                  setTimeout(() => {
+                    setCancelClicked(false);
+                    setShowFilters(false);
+                  }, 300);
+                }}
+                className={`flex-1 py-3 sm:py-4 text-gray-700 bg-gray-100 hover:bg-gray-200 transition-colors text-xs sm:text-sm font-medium ${
+                  CancelClicked ? "scale-90" : "scale-100"
+                }`}
+              >
+                Cancel
+              </button>
+            </div>
           </div>
-        </div>
+        </div>,
+        document.body
+      )}
+
+      {showAddModal && createPortal(
+        <div className="fixed bg-black/60 backdrop-blur-md flex items-center justify-center p-4" style={{ 
+          position: 'fixed',
+          top: 0,
+          left: 0,
+          right: 0,
+          bottom: 0,
+          width: '100vw',
+          height: '100vh',
+          margin: 0,
+          padding: '1rem',
+          zIndex: 9999
+        }}>
+          <div className="bg-white rounded-xl shadow-2xl w-full max-w-2xl max-h-[90vh] overflow-y-auto"
+               onClick={(e) => e.stopPropagation()}
+               style={{
+                 scrollbarWidth: 'none',
+                 msOverflowStyle: 'none',
+                 zIndex: 9999
+               }}>
+            <div className="bg-[#0065A8] px-6 py-4 flex justify-between items-center sticky top-0 z-10">
+              <h2 className="text-lg font-semibold text-white">
+                Add New Course
+              </h2>
+              <button
+                onClick={() => setShowAddModal(false)}
+                className="text-white hover:text-gray-200 transition-colors"
+              >
+                <svg
+                  className="w-6 h-6"
+                  fill="none"
+                  stroke="currentColor"
+                  viewBox="0 0 24 24"
+                >
+                  <path
+                    strokeLinecap="round"
+                    strokeLinejoin="round"
+                    strokeWidth="2"
+                    d="M6 18L18 6M6 6l12 12"
+                  />
+                </svg>
+              </button>
+            </div>
+
+            <div className="p-6 space-y-6"
+                 style={{
+                   scrollbarWidth: 'none',
+                   msOverflowStyle: 'none'
+                 }}>
+              {/* Course Code */}
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-2">
+                  Course Code <span className="text-red-500">*</span>
+                </label>
+                <input
+                  type="text"
+                  placeholder="Course Code"
+                  value={courseID}
+                  onChange={(e) => setCourseID(e.target.value)}
+                  className="w-full border-2 border-[#0065A8] rounded-lg px-3 py-2 focus:outline-none focus:ring-2 focus:ring-[#54BEFF]"
+                />
+              </div>
+
+              {/* Course Name */}
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-2">
+                  Course Name <span className="text-red-500">*</span>
+                </label>
+                <input
+                  type="text"
+                  placeholder="Course Name"
+                  value={courseName}
+                  onChange={(e) => setCourseName(e.target.value)}
+                  className="w-full border-2 border-[#0065A8] rounded-lg px-3 py-2 focus:outline-none focus:ring-2 focus:ring-[#54BEFF]"
+                />
+              </div>
+
+              {/* Credits */}
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-2">
+                  Credits <span className="text-red-500">*</span>
+                </label>
+                <input
+                  type="text"
+                  placeholder="Credits"
+                  value={credits}
+                  onChange={(e) => setCredits(e.target.value)}
+                  className="w-full border-2 border-[#0065A8] rounded-lg px-3 py-2 focus:outline-none focus:ring-2 focus:ring-[#54BEFF]"
+                />
+              </div>
+
+              {/* Department */}
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-2">
+                  Department <span className="text-red-500">*</span>
+                </label>
+                <select
+                  value={department}
+                  onChange={(e) => {
+                    const deptId = e.target.value;
+                    setDepartment(deptId);
+                    setSelectedDepartment(deptId);
+                    if (deptId) {
+                      const departmentPrograms = programs.filter(
+                        (prog) => String(prog.departmentID) === String(deptId)
+                      );
+                      setSelectedDepartmentPrograms(departmentPrograms);
+                    } else {
+                      setSelectedDepartmentPrograms([]);
+                      setSelectedPrograms([]);
+                    }
+                  }}
+                  className="w-full border-2 border-[#0065A8] rounded-lg px-3 py-2 focus:outline-none focus:ring-2 focus:ring-[#54BEFF]"
+                >
+                  <option value="">Select Department</option>
+                  {departments.map((dept) => (
+                    <option key={dept.id} value={dept.id}>
+                      {dept.name}
+                    </option>
+                  ))}
+                </select>
+              </div>
+
+              {/* Programs */}
+              {department && (
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-2">
+                    Programs <span className="text-red-500">*</span>
+                  </label>
+                  <div className="h-[20vh] overflow-y-auto border-2 border-[#0065A8] rounded-lg px-3 pt-2">
+                    {selectedDepartmentPrograms.length > 0 ? (
+                      selectedDepartmentPrograms.map((prog) => (
+                        <div key={prog.id} className="mb-2">
+                          <label
+                            className={`flex items-center p-2 rounded-lg transition-colors duration-200
+                            ${selectedPrograms.includes(prog.id)
+                                ? "bg-[#0065A8] text-white hover:bg-[#54BEFF]"
+                                : "hover:bg-[#54BEFF] hover:text-white"
+                            }`}
+                          >
+                            <input
+                              type="checkbox"
+                              value={prog.id}
+                              checked={selectedPrograms.includes(prog.id)}
+                              onChange={() => handleProgramChange(prog.id)}
+                              className="mr-3 h-4 w-4 accent-[#0065A8] border-gray-300 rounded 
+                              checked:bg-[#0065A8] checked:hover:bg-[#54BEFF] "
+                            />
+                            <span
+                              className={`${
+                                selectedPrograms.includes(prog.id)
+                                  ? "text-white"
+                                  : "text-gray-700"
+                              }`}
+                            >
+                              {prog.name || prog.programName}
+                            </span>
+                          </label>
+                        </div>
+                      ))
+                    ) : (
+                      <div className="px-4 py-3 text-gray-500 text-center">No programs found</div>
+                    )}
+                  </div>
+                </div>
+              )}
+
+              {/* Message display */}
+              {message.content && (
+                <div
+                  className={`p-3 rounded-lg ${
+                    message.type === "success"
+                      ? "bg-green-100 text-green-700"
+                      : "bg-red-100 text-red-700"
+                  }`}
+                >
+                  {message.content}
+                </div>
+              )}
+            </div>
+
+            {/* Buttons */}
+            <div className="flex mt-4">
+              <button
+                onClick={() => {
+                  setAddClicked(true);
+                  setTimeout(() => {
+                    setAddClicked(false);
+                    handleSaveCourse();
+                    setShowAddModal(false);
+                  }, 300);
+                }}
+                disabled={isAddLoading}
+                className={`flex-1 py-3 sm:py-4 bg-[#0065A8] hover:bg-[#54BEFF] text-white text-center justify-center transition-colors flex items-center gap-2 text-xs sm:text-sm font-medium
+                ${isAddLoading ? "opacity-50 cursor-not-allowed" : ""} 
+                ${AddClicked ? "scale-90" : "scale-100"}`}
+              >
+                {isAddLoading ? (
+                  <>
+                    <svg
+                      className="animate-spin h-5 w-5 text-white"
+                      xmlns="http://www.w3.org/2000/svg"
+                      fill="none"
+                      viewBox="0 0 24 24"
+                    >
+                      <circle
+                        className="opacity-25"
+                        cx="12"
+                        cy="12"
+                        r="10"
+                        stroke="currentColor"
+                        strokeWidth="4"
+                      ></circle>
+                      <path
+                        className="opacity-75"
+                        fill="currentColor"
+                        d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"
+                      ></path>
+                    </svg>
+                    <span>Adding...</span>
+                  </>
+                ) : (
+                  <span>Add Course</span>
+                )}
+              </button>
+              <button
+                onClick={() => {
+                  setCancelClicked(true);
+                  setTimeout(() => {
+                    setCancelClicked(false);
+                    setShowAddModal(false);
+                  }, 300);
+                }}
+                className={`flex-1 py-3 sm:py-4 text-gray-700 bg-gray-100 hover:bg-gray-200 transition-colors text-xs sm:text-sm font-medium ${
+                  CancelClicked ? "scale-90" : "scale-100"
+                }`}
+              >
+                Cancel
+              </button>
+            </div>
+          </div>
+        </div>,
+        document.body
       )}
       <div className="flex justify-center w-full fade-in delay-300">
         <div className="mt-4 shadow-md rounded-lg overflow-hidden w-[90%] mx-auto">
@@ -716,349 +988,218 @@ export default function Courses() {
         </div>
       </div>
 
-      <div className="flex justify-center items-center w-full">
-        <div className="relative w-[73%] h-[7vh] mt-6 shadow-md rounded-lg p-1 bg-white">
-          <div className="flex flex-row items-center justify-between">
-            {/* Course Code */}
-            <input
-              type="text"
-              placeholder="Course Code"
-              value={courseID}
-              onChange={(e) => setCourseID(e.target.value)}
-              className="rounded-lg w-[20%] px-3 py-2 outline-none focus:ring focus:ring-blue-500 focus:border-blue-500"
-              disabled={editing}
-            />
-
-            {/* Course Name */}
-            <input
-              type="text"
-              placeholder="Course Name"
-              value={courseName}
-              onChange={(e) => setCourseName(e.target.value)}
-              className="rounded-lg w-[20%] px-3 py-2 outline-none focus:ring focus:ring-blue-500 focus:border-blue-500"
-            />
-
-            {/* Credits */}
-            <input
-              type="text"
-              placeholder="Credits"
-              value={credits}
-              onChange={(e) => setCredits(e.target.value)}
-              className="rounded-lg w-[20%] px-3 py-2 outline-none focus:ring focus:ring-blue-500 focus:border-blue-500"
-            />
-
-            {/* Department Selection */}
-            <select
-              value={selectedDepartment}
-              onChange={(e) => {
-                setSelectedDepartment(e.target.value);
-                setDepartment(e.target.value); // Update department state for validation
-                handleDepartmentClick(e.target.value);
-              }}
-              className="block w-[20%] p-2 outline-none focus:ring focus:ring-blue-500 focus:border-blue-500 text-black rounded-lg"
-            >
-              <option value="">Select Department</option>
-              {departments.map((dept) => (
-                <option key={dept.id} value={dept.id}>
-                  {dept.name}
-                </option>
-              ))}
-            </select>
-            {/* Program Modal - Updated Styles */}
-            {showProgramModal && (
-              <div className="absolute right-[7.7rem] bottom-[4rem] mt-2 w-64 rounded-xl shadow-2xl overflow-hidden z-50">
-                <div ref={modalRef}>
-                  <div className="bg-[#0065A8] px-6 py-4">
-                    <h3 className="text-xl font-semibold text-white">Programs</h3>
-                  </div>
-                  <div className="bg-white p-6 space-y-4">
-                    <div className="max-h-60 overflow-y-auto border-2 border-[#0065A8] rounded-lg">
-                      {selectedDepartmentPrograms.length > 0 ? (
-                        selectedDepartmentPrograms.map((prog) => (
-                          <div key={prog.id} className="px-2 py-1">
-                            <label className={`flex items-center p-2 rounded-lg transition-colors duration-200
-                              ${selectedPrograms.includes(prog.id) 
-                                ? "bg-[#0065A8] text-white" 
-                                : "hover:bg-[#54BEFF] hover:text-white"}`}
-                            >
-                              <input
-                                type="checkbox"
-                                value={prog.id}
-                                checked={selectedPrograms.includes(prog.id)}
-                                onChange={() => handleProgramChange(prog.id)}
-                                className="mr-3 h-4 w-4 accent-[#0065A8] border-gray-300 rounded
-                                checked:bg-[#0065A8] checked:hover:bg-[#54BEFF]"
-                              />
-                              <span className={selectedPrograms.includes(prog.id) ? "text-white" : "text-gray-700"}>
-                                {prog.name || prog.programName}
-                              </span>
-                            </label>
-                          </div>
-                        ))
-                      ) : (
-                        <div className="px-4 py-3 text-gray-500 text-center">No programs found</div>
-                      )}
-                    </div>
-                  </div>
-                </div>
-              </div>
-            )}
-            {showEditModal && editCourse && (
-              <AnimatePresence>
-                <div className="fixed inset-0 bg-black/50 backdrop-blur-sm flex justify-center z-50 p-4">
-                  <motion.div
-                    variants={modalVariants}
-                    initial="hidden"
-                    animate="visible"
-                    exit="exit"
-                    className="bg-white rounded-xl shadow-2xl w-[40rem] overflow-hidden max-h-[90vh] flex flex-col"
-                    onClick={(e) => e.stopPropagation()}
-                  >
-                    {/* Modal Header */}
-                    <div className="bg-[#0065A8] px-8 py-4 flex justify-between items-center">
-                      <h2 className="text-xl font-semibold text-white">
-                        Edit Course
-                      </h2>
-                      <button
-                        onClick={() => {
-                          setShowEditModal(false);
-                          setEditCourse(null);
-                        }}
-                        className="text-white hover:text-gray-200 transition-colors"
-                      >
-                        <svg
-                          className="w-6 h-6"
-                          fill="none"
-                          stroke="currentColor"
-                          viewBox="0 0 24 24"
-                        >
-                          <path
-                            strokeLinecap="round"
-                            strokeLinejoin="round"
-                            strokeWidth="2"
-                            d="M6 18L18 6M6 6l12 12"
-                          />
-                        </svg>
-                      </button>
-                    </div>
-
-                    {/* Modal Body - Make scrollable */}
-                    <div className="p-8 space-y-6 bg-white rounded-b-lg overflow-y-auto flex-1">
-                      {/* Course Code */}
-                      <div>
-                        <label className="block text-sm font-medium text-gray-700 mb-2">
-                          Course Code <span className="text-red-500">*</span>
-                        </label>
-                        <input
-                          type="text"
-                          value={editCourse.code}
-                          onChange={(e) =>
-                            setEditCourse({
-                              ...editCourse,
-                              code: e.target.value,
-                            })
-                          }
-                          className="w-full border-2 border-[#0065A8] rounded-lg px-3 py-2 focus:outline-none focus:ring-2 focus:ring-[#54BEFF]"
-                        />
-                      </div>
-                      {/* Course Name */}
-                      <div>
-                        <label className="block text-sm font-medium text-gray-700 mb-2">
-                          Course Name <span className="text-red-500">*</span>
-                        </label>
-                        <input
-                          type="text"
-                          value={editCourse.courseName}
-                          onChange={(e) =>
-                            setEditCourse({
-                              ...editCourse,
-                              courseName: e.target.value,
-                            })
-                          }
-                          className="w-full border-2 border-[#0065A8] rounded-lg px-3 py-2 focus:outline-none focus:ring-2 focus:ring-[#54BEFF]"
-                        />
-                      </div>
-
-                      {/* Credits */}
-                      <div>
-                        <label className="block text-sm font-medium text-gray-700 mb-2">
-                          Credits <span className="text-red-500">*</span>
-                        </label>
-                        <input
-                          type="text"
-                          value={editCourse.credits}
-                          onChange={(e) =>
-                            setEditCourse({
-                              ...editCourse,
-                              credits: e.target.value,
-                            })
-                          }
-                          className="w-full border-2 border-[#0065A8] rounded-lg px-3 py-2 focus:outline-none focus:ring-2 focus:ring-[#54BEFF]"
-                        />
-                      </div>
-
-                      {/* Department */}
-                      <div>
-                        <label className="block text-sm font-medium text-gray-700 mb-2">
-                          Department <span className="text-red-500">*</span>
-                        </label>
-                        <select
-                          value={department}
-                          onChange={(e) => {
-                            const deptId = parseInt(e.target.value, 10);
-                            setDepartment(deptId);
-                            // Update the list of programs for the selected department
-                            const deptProgs = programs.filter((prog) => prog.departmentID === deptId);
-                            setSelectedDepartmentPrograms(deptProgs);
-                            // Reset selected programs to only those that belong to the new department
-                            setSelectedPrograms([]);
-                          }}
-                          className="w-full border-2 border-[#0065A8] rounded-lg px-3 py-2 focus:outline-none focus:ring-2 focus:ring-[#54BEFF]"
-                        >
-                          <option value="">Select Department</option>
-                          {departments.map((dept) => (
-                            <option key={dept.id} value={dept.id}>
-                              {dept.name}
-                            </option>
-                          ))}
-                        </select>
-                      </div>
-
-                      {/* Programs */}
-                      <div>
-                        <label className="block text-sm font-medium text-gray-700 mb-2">
-                          Programs <span className="text-red-500">*</span>
-                        </label>
-                        <div className="h-[20vh] overflow-y-auto border-2 border-[#0065A8] rounded-lg px-3 pt-2">
-                          {selectedDepartmentPrograms.length > 0 ? (
-                            selectedDepartmentPrograms.map((prog) => (
-                              <div key={prog.id} className="mb-2">
-                                <label
-                                  className={`flex items-center p-2 rounded-lg transition-colors duration-200
-                                  ${selectedPrograms.includes(prog.id)
-                                      ? "bg-[#0065A8] text-white hover:bg-[#54BEFF]"
-                                      : "hover:bg-[#54BEFF] text-white"
-                                  }`}
-                                >
-                                  <input
-                                    type="checkbox"
-                                    value={prog.id}
-                                    checked={selectedPrograms.includes(prog.id)}
-                                    onChange={() => handleProgramChange(prog.id)}
-                                    className="mr-3 h-4 w-4 accent-[#0065A8] border-gray-300 rounded 
-                                    checked:bg-[#0065A8] checked:hover:bg-[#54BEFF] "
-                                  />
-                                  <span
-                                    className={`${
-                                      selectedPrograms.includes(prog.id)
-                                        ? "text-white"
-                                        : "text-gray-700"
-                                    }`}
-                                  >
-                                    {prog.name}
-                                  </span>
-                                </label>
-                              </div>
-                            ))
-                          ) : (
-                            <div className="px-4 py-3 text-gray-500 text-center">No programs found</div>
-                          )}
-                        </div>
-                      </div>
-                    </div>
-
-                    {/* NEW: Message display inside modal - Also moved to left */}
-                    {message.content && (
-                      <div
-                        className={`mt-2 mx-4 p-3 rounded-lg ${
-                          message.type === "success"
-                            ? "bg-green-100 text-green-700"
-                            : "bg-red-100 text-red-700"
-                        }`}
-                      >
-                        {message.content}
-                      </div>
-                    )}
-
-                    {/* Buttons */}
-                    <div className="px-6 py-4 flex justify-end space-x-4 bg-white rounded-b-lg">
-                      <button
-                        onClick={() => {
-                          setSaveClicked(true); 
-                          setTimeout(() => {setSaveClicked(false); 
-                            setTimeout(() => { handleEditSave();
-                            }, 500);
-                          }, 200);
-                        }}
-                        disabled={isEditLoading}
-                        className={`bg-[#0065A8] hover:bg-[#54BEFF] text-white px-4 py-2 rounded-lg transition-colors
-                        ${isEditLoading ? "opacity-50 cursor-not-allowed" : ""} 
-                        ${SaveClicked ? "scale-90" : "scale-100"}
-                        flex items-center space-x-2`}
-                      >
-                        {isEditLoading ? (
-                          <>
-                            <svg
-                              className="animate-spin h-5 w-5 text-white"
-                              xmlns="http://www.w3.org/2000/svg"
-                              fill="none"
-                              viewBox="0 0 24 24"
-                            >
-                              <circle
-                                className="opacity-25"
-                                cx="12"
-                                cy="12"
-                                r="10"
-                                stroke="currentColor"
-                                strokeWidth="4"
-                              ></circle>
-                              <path
-                                className="opacity-75"
-                                fill="currentColor"
-                                d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"
-                              ></path>
-                            </svg>
-                            <span>Saving...</span>
-                          </>
-                        ) : (
-                          <span>Save Changes</span>
-                        )}
-                      </button>
-                      <button
-                        onClick={() => {
-                          setCancelClicked(true); 
-                          setTimeout(() => { setCancelClicked(false); 
-                            setTimeout(() => setEditCourse(null), 
-                            500);
-                          }, 200);
-                        }}
-                        className={`bg-gray-500 text-white px-4 py-2 rounded-lg transition-colors 
-                          ${
-                          CancelClicked ? "scale-90" : "scale-100"
-                        }`}
-                      >
-                        Cancel
-                      </button>
-                    </div>
-                  </motion.div>
-                </div>
-              </AnimatePresence>
-            )}
-
-            {/* Submit and Cancel Buttons */}
-            <div className="flex items-center space-x-2">
+      {showEditModal && editCourse && createPortal(
+        <div className="fixed bg-black/60 backdrop-blur-md flex items-center justify-center p-4" style={{ 
+          position: 'fixed',
+          top: 0,
+          left: 0,
+          right: 0,
+          bottom: 0,
+          width: '100vw',
+          height: '100vh',
+          margin: 0,
+          padding: '1rem',
+          zIndex: 9999
+        }}>
+          <motion.div
+            variants={modalVariants}
+            initial="hidden"
+            animate="visible"
+            exit="exit"
+            className="bg-white rounded-xl shadow-2xl w-full max-w-2xl max-h-[90vh] overflow-y-auto"
+            onClick={(e) => e.stopPropagation()}
+            style={{
+              scrollbarWidth: 'none',
+              msOverflowStyle: 'none',
+              zIndex: 9999
+            }}
+          >
+            {/* Modal Header */}
+            <div className="bg-[#0065A8] px-6 py-4 flex justify-between items-center sticky top-0 z-10">
+              <h2 className="text-lg font-semibold text-white">
+                Edit Course
+              </h2>
               <button
                 onClick={() => {
-                  setAddClicked(true);
-                  setTimeout(() => setAddClicked(false), 300);
-                  handleSaveCourse();}}
-                disabled={isAddLoading}
-                className={`w-full px-10 py-2 rounded-lg bg-[#057DCD] text-white hover:bg-[#54BEFF]
-                ${isAddLoading ? "opacity-50 cursor-not-allowed" : ""} 
-                ${AddClicked ? "scale-90" : "scale-100"} 
-                flex items-center space-x-2`}
+                  setShowEditModal(false);
+                  setEditCourse(null);
+                }}
+                className="text-white hover:text-gray-200 transition-colors"
               >
-                {isAddLoading ? (
+                <svg
+                  className="w-6 h-6"
+                  fill="none"
+                  stroke="currentColor"
+                  viewBox="0 0 24 24"
+                >
+                  <path
+                    strokeLinecap="round"
+                    strokeLinejoin="round"
+                    strokeWidth="2"
+                    d="M6 18L18 6M6 6l12 12"
+                  />
+                </svg>
+              </button>
+            </div>
+
+            {/* Modal Body */}
+            <div className="p-6 space-y-6"
+                 style={{
+                   scrollbarWidth: 'none',
+                   msOverflowStyle: 'none'
+                 }}>
+              {/* Course Code */}
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-2">
+                  Course Code <span className="text-red-500">*</span>
+                </label>
+                <input
+                  type="text"
+                  value={editCourse.code}
+                  onChange={(e) =>
+                    setEditCourse({
+                      ...editCourse,
+                      code: e.target.value,
+                    })
+                  }
+                  className="w-full border-2 border-[#0065A8] rounded-lg px-3 py-2 focus:outline-none focus:ring-2 focus:ring-[#54BEFF]"
+                />
+              </div>
+              {/* Course Name */}
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-2">
+                  Course Name <span className="text-red-500">*</span>
+                </label>
+                <input
+                  type="text"
+                  value={editCourse.courseName}
+                  onChange={(e) =>
+                    setEditCourse({
+                      ...editCourse,
+                      courseName: e.target.value,
+                    })
+                  }
+                  className="w-full border-2 border-[#0065A8] rounded-lg px-3 py-2 focus:outline-none focus:ring-2 focus:ring-[#54BEFF]"
+                />
+              </div>
+
+              {/* Credits */}
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-2">
+                  Credits <span className="text-red-500">*</span>
+                </label>
+                <input
+                  type="text"
+                  value={editCourse.credits}
+                  onChange={(e) =>
+                    setEditCourse({
+                      ...editCourse,
+                      credits: e.target.value,
+                    })
+                  }
+                  className="w-full border-2 border-[#0065A8] rounded-lg px-3 py-2 focus:outline-none focus:ring-2 focus:ring-[#54BEFF]"
+                />
+              </div>
+
+              {/* Department */}
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-2">
+                  Department <span className="text-red-500">*</span>
+                </label>
+                <select
+                  value={department}
+                  onChange={(e) => {
+                    const deptId = parseInt(e.target.value, 10);
+                    setDepartment(deptId);
+                    // Update the list of programs for the selected department
+                    const deptProgs = programs.filter((prog) => prog.departmentID === deptId);
+                    setSelectedDepartmentPrograms(deptProgs);
+                    // Reset selected programs to only those that belong to the new department
+                    setSelectedPrograms([]);
+                  }}
+                  className="w-full border-2 border-[#0065A8] rounded-lg px-3 py-2 focus:outline-none focus:ring-2 focus:ring-[#54BEFF]"
+                >
+                  <option value="">Select Department</option>
+                  {departments.map((dept) => (
+                    <option key={dept.id} value={dept.id}>
+                      {dept.name}
+                    </option>
+                  ))}
+                </select>
+              </div>
+
+              {/* Programs */}
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-2">
+                  Programs <span className="text-red-500">*</span>
+                </label>
+                <div className="h-[20vh] overflow-y-auto border-2 border-[#0065A8] rounded-lg px-3 pt-2">
+                  {selectedDepartmentPrograms.length > 0 ? (
+                    selectedDepartmentPrograms.map((prog) => (
+                      <div key={prog.id} className="mb-2">
+                        <label
+                          className={`flex items-center p-2 rounded-lg transition-colors duration-200
+                          ${selectedPrograms.includes(prog.id)
+                              ? "bg-[#0065A8] text-white hover:bg-[#54BEFF]"
+                              : "hover:bg-[#54BEFF] text-white"
+                          }`}
+                        >
+                          <input
+                            type="checkbox"
+                            value={prog.id}
+                            checked={selectedPrograms.includes(prog.id)}
+                            onChange={() => handleProgramChange(prog.id)}
+                            className="mr-3 h-4 w-4 accent-[#0065A8] border-gray-300 rounded 
+                            checked:bg-[#0065A8] checked:hover:bg-[#54BEFF] "
+                          />
+                          <span
+                            className={`${
+                              selectedPrograms.includes(prog.id)
+                                ? "text-white"
+                                : "text-gray-700"
+                            }`}
+                          >
+                            {prog.name}
+                          </span>
+                        </label>
+                      </div>
+                    ))
+                  ) : (
+                    <div className="px-4 py-3 text-gray-500 text-center">No programs found</div>
+                  )}
+                </div>
+              </div>
+
+              {/* Message display */}
+              {message.content && (
+                <div
+                  className={`p-3 rounded-lg ${
+                    message.type === "success"
+                      ? "bg-green-100 text-green-700"
+                      : "bg-red-100 text-red-700"
+                  }`}
+                >
+                  {message.content}
+                </div>
+              )}
+            </div>
+
+            {/* Buttons */}
+            <div className="flex mt-4">
+              <button
+                onClick={() => {
+                  setSaveClicked(true); 
+                  setTimeout(() => {setSaveClicked(false); 
+                    setTimeout(() => { handleEditSave();
+                    }, 500);
+                  }, 200);
+                }}
+                disabled={isEditLoading}
+                className={`flex-1 py-3 sm:py-4 bg-[#0065A8] hover:bg-[#54BEFF] text-white text-center justify-center transition-colors flex items-center gap-2 text-xs sm:text-sm font-medium
+                ${isEditLoading ? "opacity-50 cursor-not-allowed" : ""} 
+                ${SaveClicked ? "scale-90" : "scale-100"}`}
+              >
+                {isEditLoading ? (
                   <>
                     <svg
                       className="animate-spin h-5 w-5 text-white"
@@ -1080,16 +1221,30 @@ export default function Courses() {
                         d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"
                       ></path>
                     </svg>
-                    <span>Adding...</span>
+                    <span>Saving...</span>
                   </>
                 ) : (
-                  <span>ADD</span>
+                  <span>Save Changes</span>
                 )}
               </button>
+              <button
+                onClick={() => {
+                  setCancelClicked(true); 
+                  setTimeout(() => { setCancelClicked(false); 
+                    setTimeout(() => setEditCourse(null), 
+                    500);
+                  }, 200);
+                }}
+                className={`flex-1 py-3 sm:py-4 text-gray-700 bg-gray-100 hover:bg-gray-200 transition-colors text-xs sm:text-sm font-medium
+                  ${CancelClicked ? "scale-90" : "scale-100"}`}
+              >
+                Cancel
+              </button>
             </div>
-          </div>
-        </div>
-      </div>
+          </motion.div>
+        </div>,
+        document.body
+      )}
     </div>
   );
 }

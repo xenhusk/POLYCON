@@ -48,6 +48,7 @@ import PasswordResetPage from './components/PasswordResetPage';
 import EmailVerification from './pages/EmailVerification';
 import EmailVerificationSuccess from './pages/EmailVerificationSuccess';
 import EmailVerificationError from './pages/EmailVerificationError';
+import AdminConsultation from './components/AdminConsultation';
 import Settings from './pages/Settings';
 import SocketTest from './pages/SocketTest'; // Add SocketTest import
 import { ToastProvider } from './contexts/ToastContext'; // Add ToastProvider import
@@ -791,8 +792,11 @@ function App() {
                     <Route path="/department" element={<Departments />} /> {/* New route */}
                     <Route path="/preloader-test" element={<PreloaderTest />} /> {/* Add this line */}
                     <Route path="/homeadmin" element={<HomeAdmin />} />
-                    <Route path="/homestudent" element={<HomeStudent />} />                    <Route path="/enrollment-test" element={<EnrollmentTestPage />} /> {/* new test route */}
-                    <Route path="/semester-management" element={<SemesterManagement />} /> {/* Update this line */}                    <Route path="/comparative-analysis" element={<ComparativeAnalysis />} />
+                    <Route path="/homestudent" element={<HomeStudent />} />                    
+                    <Route path="/enrollment-test" element={<EnrollmentTestPage />} /> {/* new test route */}
+                    <Route path="/semester-management" element={<SemesterManagement />} /> {/* Update this line */}                    
+                    <Route path="/comparative-analysis" element={<ComparativeAnalysis />} />
+                    <Route path="/admin-consultation" element={<AdminConsultation />} />
                     <Route path="/settings" element={<Settings />} /> {/* Settings page with notification controls */}
                     <Route path="/socket-test" element={<SocketTest />} /> {/* Socket.IO test dashboard route */}
                   </Routes>
