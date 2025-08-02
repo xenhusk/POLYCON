@@ -2,11 +2,13 @@
 import React, { useState, useEffect } from 'react';
 import { useNavigate, useLocation } from 'react-router-dom';
 import { showErrorNotification, showSuccessNotification, showWarningNotification } from '../utils/notificationUtils';
+import { useToast } from '../contexts/ToastContext';
 import API_URL from '../apiConfig';
 
 const FinalizeSession = () => {
   const navigate = useNavigate();
   const location = useLocation();
+  const { clearNotificationsOnLogout } = useToast();
   const state = location.state || {};
 
   // Initialize state from the data passed via navigate
@@ -63,6 +65,10 @@ const FinalizeSession = () => {
   };
 
   const handleLogout = () => {
+    // Clear notifications from localStorage
+    clearNotificationsOnLogout();
+    
+    // Clear user data
     localStorage.removeItem('userEmail');
     navigate('/login');
   };

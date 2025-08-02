@@ -2,19 +2,23 @@ import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import PasswordResetModal from './PasswordResetModal';
 import { motion, AnimatePresence } from 'framer-motion';
+import { useToast } from '../contexts/ToastContext';
 import { 
   areBrowserNotificationsSupported, 
   hasNotificationPermission,
-  requestNotificationPermission,
+  requestNotificationPermissionWithInstructions,
   areNotificationsEnabled,
   toggleNotifications,
   areSoundNotificationsEnabled,
   toggleSoundNotifications,
-  showAppointmentReminder
+  showAppointmentReminder,
+  showNotification,
+  isMobileDevice
 } from '../utils/notificationUtils';
 
 const SettingsPopup = ({ isVisible, onClose, position, userEmail, onLogout }) => {
   const navigate = useNavigate();
+  const { clearNotificationsOnLogout } = useToast();
   const [showPasswordModal, setShowPasswordModal] = useState(false);
   const [isMobile, setIsMobile] = useState(window.innerWidth < 640);
   
@@ -22,6 +26,8 @@ const SettingsPopup = ({ isVisible, onClose, position, userEmail, onLogout }) =>
   const [notificationsSupported, setNotificationsSupported] = useState(false);
   const [notificationsEnabled, setNotificationsEnabled] = useState(false);
   const [soundEnabled, setSoundEnabled] = useState(false);
+  const [permissionStatus, setPermissionStatus] = useState('default');
+  const [deviceType, setDeviceType] = useState('desktop');
   
   // Handle responsive behavior
   useEffect(() => {
@@ -36,6 +42,8 @@ const SettingsPopup = ({ isVisible, onClose, position, userEmail, onLogout }) =>
       setNotificationsSupported(areBrowserNotificationsSupported());
       setNotificationsEnabled(areNotificationsEnabled());
       setSoundEnabled(areSoundNotificationsEnabled());
+      setPermissionStatus(areBrowserNotificationsSupported() ? Notification.permission : 'not-supported');
+      setDeviceType(isMobileDevice() ? 'mobile' : 'desktop');
     }
   }, [isVisible]);
 
@@ -54,7 +62,10 @@ const SettingsPopup = ({ isVisible, onClose, position, userEmail, onLogout }) =>
   // Use fallback from localStorage in case userEmail prop is undefined
   const effectiveEmail = userEmail || localStorage.getItem('userEmail');
   const handleLogout = () => {
-    // Clear localStorage and update global logout state if needed
+    // Clear notifications from localStorage
+    clearNotificationsOnLogout();
+    
+    // Clear all localStorage data
     localStorage.clear();    
     onClose();
     if (typeof onLogout === 'function') {
@@ -74,19 +85,21 @@ const SettingsPopup = ({ isVisible, onClose, position, userEmail, onLogout }) =>
     setShowPasswordModal(false);
   };
 
-  // Notification handlers
+  // Notification handlers with mobile support
   const handleToggleNotifications = async () => {
     if (!notificationsEnabled) {
       // User wants to enable notifications
       if (!hasNotificationPermission()) {
-        // Need to request permission first
-        const permission = await requestNotificationPermission();
+        // Need to request permission first - use mobile-enhanced version
+        const granted = await requestNotificationPermissionWithInstructions(true);
         
-        if (permission === 'granted') {
+        if (granted) {
           const result = toggleNotifications(true);
           setNotificationsEnabled(result);
+          setPermissionStatus(Notification.permission);
         } else {
           setNotificationsEnabled(false);
+          setPermissionStatus(Notification.permission);
         }
       } else {
         // Already have permission, just enable
@@ -107,12 +120,34 @@ const SettingsPopup = ({ isVisible, onClose, position, userEmail, onLogout }) =>
   };
 
   const testNotification = () => {
-    showAppointmentReminder({
-      teacher: 'Dr. John Smith',
-      student: 'You',
-      timeUntil: '5 minutes',
-      venue: 'Room 101'
-    });
+    try {
+      showNotification('Test Notification', {
+        body: `This is a test ${deviceType} notification from POLYCON!`,
+        icon: '/logo192.png',
+        badge: '/logo192.png',
+        tag: 'test-notification',
+        requireInteraction: deviceType === 'mobile',
+        actions: deviceType === 'mobile' ? [
+          { action: 'view', title: '👀 View' },
+          { action: 'dismiss', title: '✖️ Dismiss' }
+        ] : undefined
+      });
+    } catch (error) {
+      console.error('Test notification failed:', error);
+    }
+  };
+
+  const getPermissionStatusInfo = () => {
+    switch (permissionStatus) {
+      case 'granted':
+        return { text: '✅ Enabled', bgColor: 'bg-green-100', color: 'text-green-700' };
+      case 'denied':
+        return { text: '❌ Blocked', bgColor: 'bg-red-100', color: 'text-red-700' };
+      case 'default':
+        return { text: '⚠️ Pending', bgColor: 'bg-yellow-100', color: 'text-yellow-700' };
+      default:
+        return { text: '❓ Unknown', bgColor: 'bg-gray-100', color: 'text-gray-700' };
+    }
   };
 
   if (!isVisible && !showPasswordModal) return null;
@@ -173,17 +208,33 @@ const SettingsPopup = ({ isVisible, onClose, position, userEmail, onLogout }) =>
               {notificationsSupported && (
                 <>
                   <div className="px-6 py-2">
-                    <p className="text-sm font-semibold text-gray-500 uppercase tracking-wider mb-2">Notifications</p>
+                    <div className="flex items-center justify-between mb-2">
+                      <p className="text-sm font-semibold text-gray-500 uppercase tracking-wider">Notifications</p>
+                      <div className="flex items-center space-x-2">
+                        <span className={`text-xs px-2 py-1 rounded-full ${deviceType === 'mobile' ? 'bg-blue-100 text-blue-700' : 'bg-gray-100 text-gray-700'}`}>
+                          {deviceType === 'mobile' ? '📱 Mobile' : '🖥️ Desktop'}
+                        </span>
+                        <span className={`text-xs px-2 py-1 rounded-full ${getPermissionStatusInfo().bgColor} ${getPermissionStatusInfo().color}`}>
+                          {getPermissionStatusInfo().text}
+                        </span>
+                      </div>
+                    </div>
                     
                     {/* Browser Notifications Toggle */}
                     <div className="flex items-center justify-between px-4 py-3 hover:bg-gray-50 rounded">
                       <div className="flex items-center">
                         <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5 mr-3 text-gray-500" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 17h5l-5 5-5-5h5v-6a2 2 0 00-2-2H9a2 2 0 00-2 2v6z" />
+                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 17h5l-1.405-1.405A2.032 2.032 0 0118 14.158V11a6.002 6.002 0 00-4-5.659V5a2 2 0 10-4 0v.341C7.67 6.165 6 8.388 6 11v3.159c0 .538-.214 1.055-.595 1.436L4 17h5m6 0v1a3 3 0 11-6 0v-1m6 0H9" />
                         </svg>
                         <div>
-                          <span className="text-base text-gray-700">Desktop Alerts</span>
-                          <p className="text-xs text-gray-500">System tray notifications</p>
+                          <span className="text-base text-gray-700">
+                            {deviceType === 'mobile' ? 'Push Notifications' : 'Desktop Alerts'}
+                          </span>
+                          <p className="text-xs text-gray-500">
+                            {deviceType === 'mobile' 
+                              ? 'Receive notifications with vibration & actions' 
+                              : 'System tray notifications'}
+                          </p>
                         </div>
                       </div>
                       <label className="relative inline-flex items-center cursor-pointer">
@@ -205,7 +256,11 @@ const SettingsPopup = ({ isVisible, onClose, position, userEmail, onLogout }) =>
                         </svg>
                         <div>
                           <span className="text-base text-gray-700">Sound Alerts</span>
-                          <p className="text-xs text-gray-500">Play notification sounds</p>
+                          <p className="text-xs text-gray-500">
+                            {deviceType === 'mobile' 
+                              ? 'App sounds (vibration handled by system)'
+                              : 'Play notification sounds'}
+                          </p>
                         </div>
                       </div>
                       <label className="relative inline-flex items-center cursor-pointer">
@@ -218,6 +273,18 @@ const SettingsPopup = ({ isVisible, onClose, position, userEmail, onLogout }) =>
                         <div className="w-11 h-6 bg-gray-200 rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-[#0065A8]"></div>
                       </label>
                     </div>
+
+                    {/* Test Notification Button */}
+                    {notificationsEnabled && (
+                      <div className="px-4 py-2">
+                        <button
+                          onClick={testNotification}
+                          className="w-full px-3 py-2 text-sm bg-blue-100 text-blue-700 rounded-lg hover:bg-blue-200 transition-colors"
+                        >
+                          🔔 Test {deviceType === 'mobile' ? 'Mobile' : 'Desktop'} Notification
+                        </button>
+                      </div>
+                    )}
                   </div>
 
                   {/* Divider */}

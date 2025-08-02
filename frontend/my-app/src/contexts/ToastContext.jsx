@@ -1,9 +1,16 @@
 import API_URL from '../apiConfig';
 import React, { createContext, useContext, useEffect, useState } from 'react';
 import ToastManager, { useToastManager } from '../components/ToastManager';
-import { playNotificationSound } from '../utils/notificationUtils';
-import { requestNotificationPermission, canUseSystemNotifications } from '../components/Toast';
+import { playNotificationSound, showNotification, requestNotificationPermissionWithInstructions } from '../utils/notificationUtils';
+import { canUseSystemNotifications } from '../components/Toast';
 import { queryClient } from '../utils/queryConfig';
+import { 
+  formatNotificationTitle, 
+  getUserRole, 
+  getCurrentUserId,
+  generateFallbackMessage,
+  truncateForTray 
+} from '../utils/notificationFormatUtils';
 import io from 'socket.io-client';
 
 const ToastContext = createContext();
@@ -21,6 +28,69 @@ export const ToastProvider = ({ children }) => {
   const [socket, setSocket] = useState(null);
   const [isConnected, setIsConnected] = useState(false);
   const [notifications, setNotifications] = useState([]);
+
+  // localStorage management functions
+  const getStorageKey = () => {
+    const userId = localStorage.getItem('userId') || localStorage.getItem('userID');
+    const key = userId ? `notifications_${userId}` : 'notifications_guest';
+    console.log('🔔 Using storage key:', key);
+    return key;
+  };
+
+  const saveNotificationsToStorage = (notificationsArray) => {
+    try {
+      const storageKey = getStorageKey();
+      localStorage.setItem(storageKey, JSON.stringify(notificationsArray));
+      console.log('🔔 Saved', notificationsArray.length, 'notifications to localStorage');
+    } catch (error) {
+      console.error('❌ Error saving notifications to localStorage:', error);
+    }
+  };
+
+  const loadNotificationsFromStorage = () => {
+    try {
+      const storageKey = getStorageKey();
+      const stored = localStorage.getItem(storageKey);
+      if (stored) {
+        const parsed = JSON.parse(stored);
+        // Convert timestamp strings back to Date objects
+        const notifications = parsed.map(notif => ({
+          ...notif,
+          timestamp: new Date(notif.timestamp)
+        }));
+        console.log('🔔 Loaded', notifications.length, 'notifications from localStorage');
+        return notifications;
+      }
+      console.log('🔔 No stored notifications found');
+      return [];
+    } catch (error) {
+      console.error('❌ Error loading notifications from localStorage:', error);
+      return [];
+    }
+  };
+
+  const clearNotificationsFromStorage = () => {
+    try {
+      const storageKey = getStorageKey();
+      localStorage.removeItem(storageKey);
+      console.log('🔔 Cleared notifications from localStorage');
+    } catch (error) {
+      console.error('❌ Error clearing notifications from localStorage:', error);
+    }
+  };
+
+  // Load notifications from localStorage on component mount and when user changes
+  useEffect(() => {
+    const storedNotifications = loadNotificationsFromStorage();
+    setNotifications(storedNotifications);
+  }, [localStorage.getItem('userId'), localStorage.getItem('userID')]);
+
+  // Save notifications to localStorage whenever notifications state changes
+  useEffect(() => {
+    if (notifications.length >= 0) { // Save even if empty to clear storage
+      saveNotificationsToStorage(notifications);
+    }
+  }, [notifications]);
 
   // Helper function to add notification to tray
   const addNotificationToTray = (notification) => {
@@ -112,88 +182,20 @@ export const ToastProvider = ({ children }) => {
           message: message
         });
 
-        // Request browser notification permission and show notification
-        if ('Notification' in window) {
-          if (Notification.permission === 'granted') {
-            new Notification('Appointment Reminder', {
-              body: message,
-              icon: '/favicon.ico',
-              tag: `appointment-${data.appointment_id}`,
-              requireInteraction: true
-            });
-          } else if (Notification.permission !== 'denied') {
-            Notification.requestPermission().then(permission => {
-              if (permission === 'granted') {
-                new Notification('Appointment Reminder', {
-                  body: message,
-                  icon: '/favicon.ico',
-                  tag: `appointment-${data.appointment_id}`,
-                  requireInteraction: true
-                });
-              }
-            });
-          }
-        }
+        // Show mobile-optimized system notification
+        showNotification('Appointment Reminder', {
+          body: message,
+          tag: `appointment-${data.appointment_id}`,
+          requireInteraction: true,
+          actions: [
+            { action: 'view', title: '👁️ View', icon: '/favicon.ico' },
+            { action: 'dismiss', title: '✖️ Dismiss', icon: '/favicon.ico' }
+          ]
+        }, 'appointment');
 
         console.log('🔔 ToastProvider: Successfully processed appointment reminder');
       } catch (error) {
         console.error('🔔 ToastProvider: Error processing appointment reminder:', error);
-      }
-    });
-
-    // Listen for global appointment reminders (fallback for production)
-    newSocket.on('appointment_reminder_global', (data) => {
-      console.log('🔔 ToastProvider: Received appointment_reminder_global:', data);
-      
-      // Only process if this reminder is for the current user
-      const currentUserId = localStorage.getItem('userId') || localStorage.getItem('userID');
-      const recipientId = data.recipient_id;
-      
-      if (currentUserId === recipientId) {
-        console.log('🔔 ToastProvider: Global reminder is for current user, processing...');
-        
-        try {
-          const message = data.message || 'You have an appointment in 15 minutes';
-          
-          // Show toast notification with sound
-          showAppointmentReminder(message, true);
-
-          // Add to notification tray
-          addNotificationToTray({
-            type: 'reminder',
-            title: 'Appointment Reminder',
-            message: message
-          });
-
-          // Request browser notification permission and show notification
-          if ('Notification' in window) {
-            if (Notification.permission === 'granted') {
-              new Notification('Appointment Reminder', {
-                body: message,
-                icon: '/favicon.ico',
-                tag: `appointment-${data.appointment_id}-global`,
-                requireInteraction: true
-              });
-            } else if (Notification.permission !== 'denied') {
-              Notification.requestPermission().then(permission => {
-                if (permission === 'granted') {
-                  new Notification('Appointment Reminder', {
-                    body: message,
-                    icon: '/favicon.ico',
-                    tag: `appointment-${data.appointment_id}-global`,
-                    requireInteraction: true
-                  });
-                }
-              });
-            }
-          }
-
-          console.log('🔔 ToastProvider: Successfully processed global appointment reminder');
-        } catch (error) {
-          console.error('🔔 ToastProvider: Error processing global appointment reminder:', error);
-        }
-      } else {
-        console.log(`🔔 ToastProvider: Global reminder is for user ${recipientId}, current user is ${currentUserId}, ignoring`);
       }
     });
 
@@ -208,14 +210,20 @@ export const ToastProvider = ({ children }) => {
     newSocket.on('booking_created', (data) => {
       console.log('🔔 ToastProvider: Received booking_created:', data);
       try {
-        const message = data.message || 'A new appointment has been requested';
+        const userRole = getUserRole();
+        const currentUserId = getCurrentUserId();
+        
+        // Use backend-provided message if available, otherwise generate fallback
+        const message = data.message || generateFallbackMessage(data, 'created', userRole);
+        const title = formatNotificationTitle('created', userRole);
+        
         showBookingCreated(message);
         
-        // Add to notification tray
+        // Add to notification tray with contextual title
         addNotificationToTray({
           type: 'booking',
-          title: 'Booking Created',
-          message: message
+          title: title,
+          message: truncateForTray(message, 80)
         });
         
         // Invalidate appointments data to refresh UI
@@ -229,14 +237,20 @@ export const ToastProvider = ({ children }) => {
     newSocket.on('booking_confirmed', (data) => {
       console.log('🔔 ToastProvider: Received booking_confirmed:', data);
       try {
-        const message = data.message || 'An appointment has been confirmed';
+        const userRole = getUserRole();
+        const currentUserId = getCurrentUserId();
+        
+        // Use backend-provided message if available, otherwise generate fallback
+        const message = data.message || generateFallbackMessage(data, 'confirmed', userRole);
+        const title = formatNotificationTitle('confirmed', userRole);
+        
         showBookingConfirmed(message);
         
-        // Add to notification tray
+        // Add to notification tray with contextual title
         addNotificationToTray({
           type: 'booking',
-          title: 'Booking Confirmed',
-          message: message
+          title: title,
+          message: truncateForTray(message, 80)
         });
         
         // Invalidate appointments data to refresh UI
@@ -250,14 +264,20 @@ export const ToastProvider = ({ children }) => {
     newSocket.on('booking_cancelled', (data) => {
       console.log('🔔 ToastProvider: Received booking_cancelled:', data);
       try {
-        const message = data.message || 'An appointment has been cancelled';
+        const userRole = getUserRole();
+        const currentUserId = getCurrentUserId();
+        
+        // Use backend-provided message if available, otherwise generate fallback
+        const message = data.message || generateFallbackMessage(data, 'cancelled', userRole);
+        const title = formatNotificationTitle('cancelled', userRole);
+        
         showBookingCancelled(message);
         
-        // Add to notification tray
+        // Add to notification tray with contextual title
         addNotificationToTray({
           type: 'booking',
-          title: 'Booking Cancelled',
-          message: message
+          title: title,
+          message: truncateForTray(message, 80)
         });
         
         // Invalidate appointments data to refresh UI
@@ -329,21 +349,33 @@ export const ToastProvider = ({ children }) => {
     if (playSound) {
       playNotificationSound('message', 0.3);
     }
-    return showInfo('New Booking', message || 'A new appointment has been requested', 5000, false, useSystemNotification);
+    
+    const userRole = getUserRole();
+    const title = formatNotificationTitle('created', userRole);
+    
+    return showInfo(title, message || 'A new appointment has been requested', 5000, false, useSystemNotification);
   };
 
   const showBookingConfirmed = (message, playSound = true, useSystemNotification = true) => {
     if (playSound) {
       playNotificationSound('success', 0.3);
     }
-    return showSuccess('Booking Confirmed', message || 'An appointment has been confirmed', 5000, false, useSystemNotification);
+    
+    const userRole = getUserRole();
+    const title = formatNotificationTitle('confirmed', userRole);
+    
+    return showSuccess(title, message || 'An appointment has been confirmed', 5000, false, useSystemNotification);
   };
 
   const showBookingCancelled = (message, playSound = true, useSystemNotification = true) => {
     if (playSound) {
       playNotificationSound('error', 0.3);
     }
-    return showError('Booking Cancelled', message || 'An appointment has been cancelled', 5000, false, useSystemNotification);
+    
+    const userRole = getUserRole();
+    const title = formatNotificationTitle('cancelled', userRole);
+    
+    return showError(title, message || 'An appointment has been cancelled', 5000, false, useSystemNotification);
   };
 
   const showAppointmentReminder = (message, playSound = true, useSystemNotification = true) => {
@@ -355,6 +387,7 @@ export const ToastProvider = ({ children }) => {
   // Functions for managing notification tray
   const clearNotifications = () => {
     setNotifications([]);
+    clearNotificationsFromStorage();
   };
 
   const markNotificationAsRead = (id) => {
@@ -371,6 +404,12 @@ export const ToastProvider = ({ children }) => {
 
   const removeNotification = (id) => {
     setNotifications(prev => prev.filter(notif => notif.id !== id));
+  };
+
+  // Function to clear notifications on logout
+  const clearNotificationsOnLogout = () => {
+    setNotifications([]);
+    clearNotificationsFromStorage();
   };
 
   const contextValue = {
@@ -393,8 +432,9 @@ export const ToastProvider = ({ children }) => {
     markAllAsRead,
     removeNotification,
     addNotificationToTray,
-    // Notification utilities
-    requestNotificationPermission,
+    clearNotificationsOnLogout,
+    // Notification utilities (mobile-enhanced)
+    requestNotificationPermission: requestNotificationPermissionWithInstructions,
     canUseSystemNotifications
   };
 

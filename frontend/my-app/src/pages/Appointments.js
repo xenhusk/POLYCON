@@ -151,16 +151,14 @@ function StudentAppointments() {
       console.log(`📡 StudentAppointments: Successfully joined room ${data.room} for user ${data.userId}`);
     });
 
-    console.log("📱 StudentAppointments: Listening to booking_updated/status_update/reminder events (global toast notifications handled by ToastProvider)");
-    // Note: booking_created, booking_confirmed, booking_cancelled are now handled globally by ToastProvider
+    console.log("📱 StudentAppointments: Listening to booking_updated/status_update events (reminders handled globally by ToastProvider)");
+    // Note: booking_created, booking_confirmed, booking_cancelled, appointment_reminder are now handled globally by ToastProvider
     socket.on('booking_updated', handleBookingUpdated);
     socket.on('booking_status_update', handleBookingStatusUpdate);
-    socket.on('appointment_reminder', handleAppointmentReminder);
       return () => {
       console.log("📱 StudentAppointments: Removing Socket.IO listeners");
       socket.off('booking_updated', handleBookingUpdated);
       socket.off('booking_status_update', handleBookingStatusUpdate);
-      socket.off('appointment_reminder', handleAppointmentReminder);
       socket.disconnect();
     };
   }, [refetch, showAppointmentReminder, handleAppointmentReminder]);
@@ -436,16 +434,14 @@ function TeacherAppointments() {
       console.log('📱 TeacherAppointments: Successfully joined room:', data.room);
     });
 
-      console.log("📱 TeacherAppointments: Listening to booking_updated/status_update/reminder events (global toast notifications handled by ToastProvider)");
-    // Note: booking_created, booking_confirmed, booking_cancelled are now handled globally by ToastProvider
+      console.log("📱 TeacherAppointments: Listening to booking_updated/status_update events (reminders handled globally by ToastProvider)");
+    // Note: booking_created, booking_confirmed, booking_cancelled, appointment_reminder are now handled globally by ToastProvider
     socket.on('booking_updated', handleBookingUpdateOrCreate);
     socket.on('booking_status_update', handleBookingUpdateOrCreate);
-    socket.on('appointment_reminder', handleAppointmentReminder);
       return () => {
       console.log("📱 TeacherAppointments: Removing Socket.IO listeners");
       socket.off('booking_updated', handleBookingUpdateOrCreate);
       socket.off('booking_status_update', handleBookingUpdateOrCreate);
-      socket.off('appointment_reminder', handleAppointmentReminder);
       socket.off('joined_room');
       socket.disconnect();
     };

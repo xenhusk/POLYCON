@@ -273,7 +273,9 @@ def create_booking():
                 'subject': data.get('subject', 'Consultation'),
                 'status': status,
                 'teacher_name': teacher_name,
+                'teacher_id': data['teacherID'],  # Teacher's id_number
                 'student_names': student_names,
+                'student_ids': student_ids,  # List of student User.id values
                 'schedule': schedule.replace(tzinfo=timezone.utc).isoformat().replace('+00:00', 'Z') if schedule else None,
                 'venue': venue,
                 'created_by': creator_id
@@ -324,7 +326,9 @@ def cancel_booking():
                 'subject': booking.subject,
                 'status': 'cancelled',
                 'teacher_name': teacher_name,
+                'teacher_id': booking.teacher_id,  # Teacher's id_number
                 'student_names': student_names,
+                'student_ids': booking.student_ids,  # List of student User.id values
                 'schedule': booking.schedule.replace(tzinfo=timezone.utc).isoformat().replace('+00:00', 'Z') if booking.schedule else None,
                 'venue': booking.venue
             }
@@ -380,7 +384,9 @@ def confirm_booking():
                 'subject': booking.subject,
                 'status': 'confirmed',
                 'teacher_name': teacher_name,
+                'teacher_id': booking.teacher_id,  # Teacher's id_number
                 'student_names': student_names,
+                'student_ids': booking.student_ids,  # List of student User.id values
                 'schedule': booking.schedule.replace(tzinfo=timezone.utc).isoformat().replace('+00:00', 'Z') if booking.schedule else None,
                 'venue': booking.venue
             }

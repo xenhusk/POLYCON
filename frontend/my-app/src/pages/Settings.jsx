@@ -1,7 +1,7 @@
 import React, { useEffect, useState } from 'react';
 import apiClient from '../utils/apiClient';
 import API_URL from '../apiConfig';
-import UserSettings from '../components/UserSettings';
+import MobileNotificationTester from '../components/MobileNotificationTester';
 
 function Settings() {
   const [settings, setSettings] = useState(null);
@@ -48,9 +48,9 @@ function Settings() {
     <div className="max-w-4xl mx-auto p-6 space-y-6">
       <h1 className="text-3xl font-bold text-[#0065A8] mb-6">Settings</h1>
       
-      {/* Notification Settings Section */}
+      {/* Mobile Notification Tester */}
       <section>
-        <UserSettings />
+        <MobileNotificationTester />
       </section>
       
       {/* Server Settings Section (if available) */}

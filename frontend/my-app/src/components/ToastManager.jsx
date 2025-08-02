@@ -99,7 +99,7 @@ const ToastManager = ({ toasts, onRemoveToast }) => {
     <div className={`fixed z-[9999] pointer-events-none ${
       isMobile 
         ? 'top-4 left-2 right-2' 
-        : 'top-4 right-4 w-auto'
+        : 'top-4 right-4 w-auto min-w-[320px] max-w-[500px]'
     }`}>
       <AnimatePresence>
         {toasts.map((toast, index) => {
@@ -118,7 +118,7 @@ const ToastManager = ({ toasts, onRemoveToast }) => {
                 delay: index * 0.1
               }}
               className={`pointer-events-auto ${index > 0 ? 'mt-3' : ''} ${
-                isMobile ? 'w-full' : 'min-w-[400px] max-w-[500px]'
+                isMobile ? 'w-full' : 'w-full min-w-[320px] max-w-[500px]'
               }`}
             >
               <Toast

@@ -8,38 +8,72 @@ import {
   InformationCircleIcon,
   XCircleIcon 
 } from '@heroicons/react/24/outline';
+import { isMobileDevice } from '../utils/notificationUtils';
 
 const Toast = ({ message, type = 'info', isVisible, onClose, useSystemNotification = false, title = 'POLYCON' }) => {
   
-  // System notification function
+  // Mobile-optimized system notification function
   const showSystemNotification = (title, message, type) => {
     if ('Notification' in window && Notification.permission === 'granted') {
+      const isMobile = isMobileDevice();
+      
       const options = {
         body: message,
-        icon: '/favicon.ico', // You can customize this
+        icon: '/favicon.ico',
         badge: '/favicon.ico',
-        tag: 'polycon-notification', // Prevents duplicate notifications
-        requireInteraction: false,
+        tag: 'polycon-notification',
+        requireInteraction: isMobile, // Keep mobile notifications until user action
         silent: false,
+        timestamp: Date.now(),
       };
+
+      // Add mobile-specific options
+      if (isMobile) {
+        options.vibrate = [200, 100, 200]; // Vibration pattern
+        options.renotify = true; // Allow re-notification with same tag
+        
+        // Add action buttons for mobile
+        if (type === 'booking' || type === 'appointment') {
+          options.actions = [
+            { action: 'view', title: '👁️ View', icon: '/favicon.ico' },
+            { action: 'dismiss', title: '✖️ Dismiss', icon: '/favicon.ico' }
+          ];
+        }
+      }
 
       try {
         const notification = new Notification(title, options);
         
-        // Auto close system notification after 5 seconds
-        setTimeout(() => {
+        // Handle notification events
+        notification.onclick = (event) => {
+          event.preventDefault();
+          window.focus();
           notification.close();
-        }, 5000);
-
-        // Handle notification click
-        notification.onclick = () => {
-          window.focus(); // Bring the app to focus
-          notification.close();
+          
+          // Handle mobile actions
+          if (event.action === 'view') {
+            window.location.hash = '#/appointments';
+          }
         };
+        
+        notification.onshow = () => {
+          console.log('🔔 System notification shown on', isMobile ? 'mobile' : 'desktop');
+        };
+        
+        // Auto close for desktop only
+        if (!isMobile && !options.requireInteraction) {
+          setTimeout(() => {
+            notification.close();
+          }, 5000);
+        }
+        
+        return notification;
       } catch (error) {
-        console.error('Error showing system notification:', error);
+        console.error('❌ Error showing system notification:', error);
+        return null;
       }
     }
+    return null;
   };
 
   useEffect(() => {
@@ -113,9 +147,9 @@ const Toast = ({ message, type = 'info', isVisible, onClose, useSystemNotificati
             duration: 0.4
           }}
           className={`${config.bgColor} text-white rounded-xl shadow-2xl 
-                     p-4 sm:p-6 w-full 
+                     p-4 sm:p-6 w-full min-w-[320px] max-w-[450px] sm:max-w-[500px]
                      flex items-start gap-3 sm:gap-4 border ${config.borderColor} 
-                     ring-4 ${config.ringColor} backdrop-blur-sm`}
+                     ring-4 ${config.ringColor} backdrop-blur-sm relative`}
           style={{ pointerEvents: 'auto' }}
         >
           {/* Icon */}
@@ -125,7 +159,7 @@ const Toast = ({ message, type = 'info', isVisible, onClose, useSystemNotificati
           
           {/* Content */}
           <div className="flex-1 min-w-0 pt-0.5">
-            <p className="text-base sm:text-lg font-medium break-words leading-relaxed">
+            <p className="text-sm sm:text-base font-medium break-words leading-relaxed hyphens-auto">
               {message}
             </p>
           </div>
@@ -153,12 +187,13 @@ const Toast = ({ message, type = 'info', isVisible, onClose, useSystemNotificati
   );
 };
 
-// Utility function to request notification permission
+// Mobile-aware utility function to request notification permission
 export const requestNotificationPermission = async () => {
   if ('Notification' in window) {
     if (Notification.permission === 'default') {
-      const permission = await Notification.requestPermission();
-      return permission === 'granted';
+      // Import the mobile-optimized function
+      const { requestNotificationPermissionWithInstructions } = await import('../utils/notificationUtils');
+      return await requestNotificationPermissionWithInstructions(true);
     }
     return Notification.permission === 'granted';
   }

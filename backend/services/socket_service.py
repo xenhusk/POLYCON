@@ -1,4 +1,10 @@
 from flask_socketio import SocketIO, emit
+from utils.notification_utils import (
+    generate_booking_created_message,
+    generate_booking_confirmed_message, 
+    generate_booking_cancelled_message,
+    get_user_role_and_id_from_booking
+)
 
 socketio = SocketIO(cors_allowed_origins='*')
 
@@ -18,29 +24,104 @@ def emit_booking_created(data):
         print(f"📡 Connected clients: Unable to count")
     
     try:
-        # Use socketio.emit without broadcast parameter - it broadcasts by default
-        socketio.emit('booking_created', data)
-        print("✅ booking_created emitted successfully")
+        # Send targeted notifications with contextual messages
+        teacher_id = data.get('teacher_id') or data.get('teacherID')  # This is id_number
+        student_ids = data.get('student_ids', [])  # These are User.id values
+        
+        # For teacher: use the id_number for room targeting
+        if teacher_id:
+            teacher_message = generate_booking_created_message(data, 'faculty', teacher_id)
+            teacher_data = {**data, 'message': teacher_message, 'recipient_role': 'faculty'}
+            
+            # Try both possible room formats for reliability
+            teacher_room_by_id_number = f"user_{teacher_id}"
+            socketio.emit('booking_created', teacher_data, room=teacher_room_by_id_number)
+            print(f"✅ booking_created emitted to teacher room {teacher_room_by_id_number}")
+        
+        # For students: use the User.id for room targeting
+        for student_id in student_ids:
+            student_message = generate_booking_created_message(data, 'student', student_id)
+            student_data = {**data, 'message': student_message, 'recipient_role': 'student'}
+            
+            student_room = f"user_{student_id}"
+            socketio.emit('booking_created', student_data, room=student_room)
+            print(f"✅ booking_created emitted to student room {student_room}")
+        
+        print("✅ booking_created targeted notifications sent successfully")
+        
     except Exception as e:
         print(f"❌ Error emitting booking_created: {e}")
+        # Fallback to old behavior only if targeted notifications fail
+        socketio.emit('booking_created', data)
+        print("✅ booking_created emitted successfully (fallback)")
 
 def emit_booking_confirmed(data):
     print(f"📡 Broadcasting booking_confirmed: {data}")
     print(f"📡 SocketIO instance: {socketio}")
     try:
-        socketio.emit('booking_confirmed', data)
-        print("✅ booking_confirmed emitted successfully")
+        # Send targeted notifications with contextual messages
+        teacher_id = data.get('teacher_id') or data.get('teacherID')  # This is id_number
+        student_ids = data.get('student_ids', [])  # These are User.id values
+        
+        # For teacher: use the id_number for room targeting
+        if teacher_id:
+            teacher_message = generate_booking_confirmed_message(data, 'faculty', teacher_id)
+            teacher_data = {**data, 'message': teacher_message, 'recipient_role': 'faculty'}
+            
+            teacher_room = f"user_{teacher_id}"
+            socketio.emit('booking_confirmed', teacher_data, room=teacher_room)
+            print(f"✅ booking_confirmed emitted to teacher room {teacher_room}")
+        
+        # For students: use the User.id for room targeting
+        for student_id in student_ids:
+            student_message = generate_booking_confirmed_message(data, 'student', student_id)
+            student_data = {**data, 'message': student_message, 'recipient_role': 'student'}
+            
+            student_room = f"user_{student_id}"
+            socketio.emit('booking_confirmed', student_data, room=student_room)
+            print(f"✅ booking_confirmed emitted to student room {student_room}")
+        
+        print("✅ booking_confirmed targeted notifications sent successfully")
+        
     except Exception as e:
         print(f"❌ Error emitting booking_confirmed: {e}")
+        # Fallback to old behavior only if targeted notifications fail
+        socketio.emit('booking_confirmed', data)
+        print("✅ booking_confirmed emitted successfully (fallback)")
 
 def emit_booking_cancelled(data):
     print(f"📡 Broadcasting booking_cancelled: {data}")
     print(f"📡 SocketIO instance: {socketio}")
     try:
-        socketio.emit('booking_cancelled', data)
-        print("✅ booking_cancelled emitted successfully")
+        # Send targeted notifications with contextual messages
+        teacher_id = data.get('teacher_id') or data.get('teacherID')  # This is id_number
+        student_ids = data.get('student_ids', [])  # These are User.id values
+        
+        # For teacher: use the id_number for room targeting
+        if teacher_id:
+            teacher_message = generate_booking_cancelled_message(data, 'faculty', teacher_id)
+            teacher_data = {**data, 'message': teacher_message, 'recipient_role': 'faculty'}
+            
+            teacher_room = f"user_{teacher_id}"
+            socketio.emit('booking_cancelled', teacher_data, room=teacher_room)
+            print(f"✅ booking_cancelled emitted to teacher room {teacher_room}")
+        
+        # For students: use the User.id for room targeting
+        for student_id in student_ids:
+            student_message = generate_booking_cancelled_message(data, 'student', student_id)
+            student_data = {**data, 'message': student_message, 'recipient_role': 'student'}
+            
+            student_room = f"user_{student_id}"
+            socketio.emit('booking_cancelled', student_data, room=student_room)
+            print(f"✅ booking_cancelled emitted to student room {student_room}")
+        
+        print("✅ booking_cancelled targeted notifications sent successfully")
+        
     except Exception as e:
         print(f"❌ Error emitting booking_cancelled: {e}")
+        # Fallback to old behavior only if targeted notifications fail
+        socketio.emit('booking_cancelled', data)
+        print("✅ booking_cancelled emitted successfully (fallback)")
 
 def emit_booking_status_update(data):
     """Emit a general booking status update"""
@@ -77,11 +158,6 @@ def emit_appointment_reminder(data):
             # Send to specific room
             socketio.emit('appointment_reminder', data, room=user_room)
             print(f"✅ appointment_reminder emitted successfully to room {user_room}")
-            
-            # Also send as global broadcast as fallback for production reliability
-            print(f"📡 Also broadcasting globally as fallback for production reliability")
-            socketio.emit('appointment_reminder_global', data)
-            print(f"✅ appointment_reminder_global emitted successfully")
             
         except Exception as e:
             print(f"❌ Error emitting appointment_reminder to room {user_room}: {e}")

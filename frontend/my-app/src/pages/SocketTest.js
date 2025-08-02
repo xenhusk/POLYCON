@@ -33,22 +33,9 @@ const SocketTest = () => {
       addEvent(`Connection error: ${error.message}`, 'error');
     });
 
-    // Booking event listeners
-    newSocket.on('booking_created', (data) => {
-      console.log('✨ booking_created received:', data);
-      addEvent(`booking_created: ${JSON.stringify(data)}`, 'info');
-    });
-
-    newSocket.on('booking_confirmed', (data) => {
-      console.log('✅ booking_confirmed received:', data);
-      addEvent(`booking_confirmed: ${JSON.stringify(data)}`, 'info');
-    });
-
-    newSocket.on('booking_cancelled', (data) => {
-      console.log('❌ booking_cancelled received:', data);
-      addEvent(`booking_cancelled: ${JSON.stringify(data)}`, 'info');
-    });
-
+    // Remove duplicate booking event listeners since ToastContext handles these globally
+    // This prevents duplicate toast notifications
+    
     // Connection confirmation
     newSocket.on('connection_confirmed', (data) => {
       console.log('📡 Connection confirmed:', data);
@@ -66,37 +53,8 @@ const SocketTest = () => {
     setEvents(prev => [...prev, { message, type, timestamp }]);
   };
 
-  const testBookingCreated = async () => {
-    try {
-      const response = await fetch(`${API_URL}/socket-test/test-booking-created`);
-      const result = await response.json();
-      setTestResults(prev => ({ ...prev, created: result }));
-      addEvent('Triggered test booking_created', 'info');
-    } catch (error) {
-      addEvent(`Error testing booking_created: ${error.message}`, 'error');
-    }
-  };
-
-  const testBookingConfirmed = async () => {
-    try {
-      const response = await fetch(`${API_URL}/socket-test/test-booking-confirmed`);
-      const result = await response.json();
-      setTestResults(prev => ({ ...prev, confirmed: result }));
-      addEvent('Triggered test booking_confirmed', 'info');
-    } catch (error) {
-      addEvent(`Error testing booking_confirmed: ${error.message}`, 'error');
-    }
-  };
-  const testBookingCancelled = async () => {
-    try {
-      const response = await fetch(`${API_URL}/socket-test/test-booking-cancelled`);
-      const result = await response.json();
-      setTestResults(prev => ({ ...prev, cancelled: result }));
-      addEvent('Triggered test booking_cancelled', 'info');
-    } catch (error) {
-      addEvent(`Error testing booking_cancelled: ${error.message}`, 'error');
-    }
-  };
+  // Booking test functions removed to prevent duplicate notifications
+  // These events are now handled globally by ToastContext
 
   // Sound test functions
   const testNotificationSound = () => {
@@ -166,25 +124,9 @@ const SocketTest = () => {
       </div>      {/* Test Buttons */}
       <div className="mb-6 p-4 border rounded-lg">
         <h2 className="text-lg font-semibold mb-4">Socket Event Tests</h2>
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-          <button
-            onClick={testBookingCreated}
-            className="bg-blue-500 hover:bg-blue-600 text-white px-4 py-2 rounded transition-colors"
-          >
-            Test booking_created
-          </button>
-          <button
-            onClick={testBookingConfirmed}
-            className="bg-green-500 hover:bg-green-600 text-white px-4 py-2 rounded transition-colors"
-          >
-            Test booking_confirmed
-          </button>
-          <button
-            onClick={testBookingCancelled}
-            className="bg-red-500 hover:bg-red-600 text-white px-4 py-2 rounded transition-colors"
-          >
-            Test booking_cancelled
-          </button>
+        <div className="text-sm text-gray-600 mb-4">
+          <p>ℹ️ Booking notification tests have been disabled to prevent duplicate notifications.</p>
+          <p>Booking events are now handled globally by the ToastContext.</p>
         </div>
       </div>
 

@@ -114,19 +114,19 @@ function NotificationSettings() {
             <span className="font-medium">Status:</span> 
             {hasPermission ? (
               notificationsEnabled ? (
-                <span className="text-green-600 ml-1">✓ Desktop notifications enabled</span>
+                <span className="text-green-600 ml-1">Desktop notifications enabled</span>
               ) : (
-                <span className="text-yellow-600 ml-1">⚠ Notifications disabled</span>
+                <span className="text-yellow-600 ml-1">Notifications disabled</span>
               )
             ) : (
-              <span className="text-red-600 ml-1">✗ Permission not granted</span>
+              <span className="text-red-600 ml-1">Permission not granted</span>
             )}
           </p>
           {hasPermission && (
             <p className="text-xs text-gray-600 mt-1">
               <span className="font-medium">Sound:</span>
               <span className={`ml-1 ${soundEnabled ? 'text-green-600' : 'text-gray-500'}`}>
-                {soundEnabled ? '✓ Enabled' : '✗ Disabled'}
+                {soundEnabled ? 'Enabled' : 'Disabled'}
               </span>
             </p>
           )}
@@ -135,7 +135,7 @@ function NotificationSettings() {
         {/* Help Text */}
         <div className="mt-4 p-3 bg-blue-50 rounded-lg border border-blue-200">
           <p className="text-xs text-blue-700">
-            <span className="font-medium">💡 Tip:</span> Desktop notifications will appear in your system's notification tray, 
+            <span className="font-medium">Tip:</span> Desktop notifications will appear in your system's notification tray, 
             allowing you to receive appointment reminders even when POLYCON is not the active browser tab.
           </p>
         </div>

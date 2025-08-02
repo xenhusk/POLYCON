@@ -16,7 +16,16 @@ let audioInstances = {};
  * @returns {boolean}
  */
 export const areBrowserNotificationsSupported = () => {
-  return 'Notification' in window;
+  return 'Notification' in window && 'serviceWorker' in navigator;
+};
+
+/**
+ * Check if we're on a mobile device
+ * @returns {boolean}
+ */
+export const isMobileDevice = () => {
+  return /Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent) ||
+         (window.innerWidth <= 768 && 'ontouchstart' in window);
 };
 
 /**
@@ -28,19 +37,37 @@ export const hasNotificationPermission = () => {
 };
 
 /**
- * Request notification permission from user
+ * Request notification permission from user with mobile-specific handling
  * @returns {Promise<string>} Permission result: 'granted', 'denied', or 'default'
  */
 export const requestNotificationPermission = async () => {
   if (!areBrowserNotificationsSupported()) {
+    console.warn('Notifications not supported on this device');
     return 'denied';
   }
 
   try {
-    const permission = await Notification.requestPermission();
+    // On mobile, we need to ensure the request happens from a user gesture
+    if (isMobileDevice()) {
+      console.log('📱 Requesting notification permission on mobile device');
+    }
+    
+    let permission;
+    
+    // For newer browsers that support the promise-based API
+    if ('requestPermission' in Notification) {
+      permission = await Notification.requestPermission();
+    } else {
+      // Fallback for older browsers
+      permission = await new Promise(resolve => {
+        Notification.requestPermission(resolve);
+      });
+    }
+    
+    console.log('🔔 Notification permission result:', permission);
     return permission;
   } catch (error) {
-    console.error('Error requesting notification permission:', error);
+    console.error('❌ Error requesting notification permission:', error);
     return 'denied';
   }
 };
@@ -134,7 +161,7 @@ export const playNotificationSound = (soundType = 'message', volume = 0.5) => {
 };
 
 /**
- * Show browser notification with optional sound
+ * Show browser notification with mobile-optimized options
  * @param {string} title - Notification title
  * @param {Object} options - Notification options
  * @param {string} soundType - Type of sound to play
@@ -142,26 +169,75 @@ export const playNotificationSound = (soundType = 'message', volume = 0.5) => {
  */
 export const showNotification = (title, options = {}, soundType = 'message') => {
   if (!areNotificationsEnabled()) {
+    console.log('🔔 Notifications disabled or no permission');
     return null;
   }
 
-  const defaultOptions = {
+  // Mobile-optimized notification options
+  const mobileOptimizedOptions = {
     icon: '/favicon.ico',
     badge: '/favicon.ico',
     dir: 'ltr',
     lang: 'en',
-    requireInteraction: false,
+    requireInteraction: isMobileDevice() ? true : false, // Keep mobile notifications visible longer
+    silent: false, // Let the system handle sound on mobile
+    tag: options.tag || 'polycon-notification', // Prevent duplicates
+    timestamp: Date.now(),
     ...options
   };
 
+  // Additional mobile-specific options
+  if (isMobileDevice()) {
+    mobileOptimizedOptions.vibrate = [200, 100, 200]; // Vibration pattern for mobile
+    mobileOptimizedOptions.renotify = true; // Allow re-notification with same tag
+    
+    // Add action buttons for mobile (if supported)
+    if (options.actions) {
+      mobileOptimizedOptions.actions = options.actions;
+    } else if (options.tag === 'appointment-reminder') {
+      mobileOptimizedOptions.actions = [
+        { action: 'view', title: '👁️ View', icon: '/favicon.ico' },
+        { action: 'dismiss', title: '✖️ Dismiss', icon: '/favicon.ico' }
+      ];
+    }
+  }
+
   try {
-    const notification = new Notification(title, defaultOptions);
+    console.log('🔔 Creating notification with options:', mobileOptimizedOptions);
+    const notification = new Notification(title, mobileOptimizedOptions);
     
-    // Play sound if enabled
-    playNotificationSound(soundType);
+    // Play sound if enabled (desktop mostly, mobile handles this automatically)
+    if (!isMobileDevice()) {
+      playNotificationSound(soundType);
+    }
     
-    // Auto-close after 5 seconds unless requireInteraction is true
-    if (!defaultOptions.requireInteraction) {
+    // Handle notification events
+    notification.onclick = (event) => {
+      console.log('🔔 Notification clicked');
+      event.preventDefault();
+      window.focus(); // Bring app to foreground
+      notification.close();
+      
+      // Handle mobile action clicks
+      if (event.action) {
+        console.log('🔔 Notification action clicked:', event.action);
+        if (event.action === 'view') {
+          // Navigate to relevant page
+          window.location.hash = '#/appointments';
+        }
+      }
+    };
+    
+    notification.onshow = () => {
+      console.log('🔔 Notification shown successfully');
+    };
+    
+    notification.onerror = (error) => {
+      console.error('❌ Notification error:', error);
+    };
+    
+    // Auto-close for desktop only (mobile should keep notifications until user action)
+    if (!isMobileDevice() && !mobileOptimizedOptions.requireInteraction) {
       setTimeout(() => {
         notification.close();
       }, 5000);
@@ -169,7 +245,7 @@ export const showNotification = (title, options = {}, soundType = 'message') => 
     
     return notification;
   } catch (error) {
-    console.error('Error showing notification:', error);
+    console.error('❌ Error showing notification:', error);
     return null;
   }
 };
@@ -298,22 +374,95 @@ export const notificationAlert = (message, type = 'info') => {
 };
 
 /**
- * Initialize notification system
+ * Register service worker for better mobile notification support
+ * @returns {Promise<boolean>} Whether service worker was registered successfully
+ */
+export const registerNotificationServiceWorker = async () => {
+  if (!('serviceWorker' in navigator)) {
+    console.warn('📱 Service Worker not supported');
+    return false;
+  }
+
+  try {
+    const registration = await navigator.serviceWorker.register('/sw-notifications.js', {
+      scope: '/'
+    });
+    
+    console.log('📱 Notification Service Worker registered successfully:', registration);
+    return true;
+  } catch (error) {
+    console.error('❌ Service Worker registration failed:', error);
+    return false;
+  }
+};
+
+/**
+ * Initialize notification system with mobile support
  * @returns {Promise<boolean>} Whether notifications were successfully initialized
  */
 export const initializeNotifications = async () => {
+  console.log('🔔 Initializing notification system...');
+  
   if (!areBrowserNotificationsSupported()) {
-    console.warn('Browser notifications are not supported');
+    console.warn('📱 Browser notifications are not supported');
     return false;
+  }
+
+  // Register service worker for better mobile support
+  if (isMobileDevice()) {
+    console.log('📱 Mobile device detected, registering service worker...');
+    await registerNotificationServiceWorker();
   }
 
   // Check if we already have permission
   if (hasNotificationPermission()) {
+    console.log('🔔 Notification permission already granted');
     return true;
   }
 
+  console.log('🔔 Notification permission not granted yet');
   // If no permission yet, don't auto-request - let user choose
   return false;
+};
+
+/**
+ * Request notification permission with user-friendly mobile handling
+ * @param {boolean} showMobileInstructions - Whether to show mobile-specific instructions
+ * @returns {Promise<boolean>} Whether permission was granted
+ */
+export const requestNotificationPermissionWithInstructions = async (showMobileInstructions = true) => {
+  if (!areBrowserNotificationsSupported()) {
+    if (showMobileInstructions && isMobileDevice()) {
+      console.warn('Notifications are not supported on this device. Please try updating your browser or using a different browser.');
+    }
+    return false;
+  }
+
+  if (hasNotificationPermission()) {
+    return true;
+  }
+
+  // Show mobile-specific instructions via console for now
+  if (showMobileInstructions && isMobileDevice()) {
+    const userAgent = navigator.userAgent.toLowerCase();
+    let instructions = '';
+    
+    if (userAgent.includes('safari') && !userAgent.includes('chrome')) {
+      instructions = 'In Safari: Tap "Allow" when prompted, or go to Settings > Safari > Notifications to enable.';
+    } else if (userAgent.includes('chrome')) {
+      instructions = 'In Chrome: Tap "Allow" when prompted, or tap the 🔒 icon in the address bar > Notifications > Allow.';
+    } else if (userAgent.includes('firefox')) {
+      instructions = 'In Firefox: Tap "Allow" when prompted, or go to Settings > Site Settings > Notifications.';
+    } else {
+      instructions = 'Please allow notifications when prompted to receive appointment reminders and booking updates.';
+    }
+    
+    console.log(`📱 Mobile Notification Setup: ${instructions}`);
+  }
+
+  // Standard permission request
+  const permission = await requestNotificationPermission();
+  return permission === 'granted';
 };
 
 /**
@@ -332,6 +481,7 @@ export default {
   areBrowserNotificationsSupported,
   hasNotificationPermission,
   requestNotificationPermission,
+  requestNotificationPermissionWithInstructions,
   areNotificationsEnabled,
   toggleNotifications,
   areSoundNotificationsEnabled,
@@ -345,5 +495,7 @@ export default {
   showWarningNotification,
   notificationAlert,
   initializeNotifications,
+  registerNotificationServiceWorker,
+  isMobileDevice,
   cleanupNotificationSounds
 };

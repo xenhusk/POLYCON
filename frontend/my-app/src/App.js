@@ -10,7 +10,7 @@ import AdminPortal from './components/AdminPortal';
 import Courses from './components/Courses';
 import AddGrade from './components/AddGrade';
 import UserHome from './pages/User_Home';  // Update import name and path
-import { showSuccessNotification, showErrorNotification, initializeNotifications } from './utils/notificationUtils';
+import { showSuccessNotification, showErrorNotification, initializeNotifications, isMobileDevice } from './utils/notificationUtils';
 import AppointmentsCalendar from './components/AppointmentsCalendar';
 import ReactCrop from 'react-image-crop';
 import 'react-image-crop/dist/ReactCrop.css';
@@ -183,9 +183,27 @@ function App() {
     runRecovery();
   }, []);
 
-  // Initialize browser notifications
+  // Initialize browser notifications with mobile support
   useEffect(() => {
-    initializeNotifications();
+    const initNotifications = async () => {
+      console.log('🔔 Initializing notifications system...');
+      const initialized = await initializeNotifications();
+      
+      if (initialized) {
+        console.log('🔔 Notifications system initialized successfully');
+      } else {
+        console.log('🔔 Notifications system initialization pending user permission');
+      }
+      
+      // Log device type for debugging
+      if (isMobileDevice()) {
+        console.log('📱 Mobile device detected - enhanced mobile notification support enabled');
+      } else {
+        console.log('🖥️ Desktop device detected - standard notification support enabled');
+      }
+    };
+    
+    initNotifications();
   }, []);
 
   // Run ID persistence check immediately when App loads

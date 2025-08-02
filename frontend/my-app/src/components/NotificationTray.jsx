@@ -1,9 +1,13 @@
-import React from 'react';
+import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useToast } from '../contexts/ToastContext';
+import { motion, AnimatePresence } from 'framer-motion';
+import './NotificationTray.css'; // Import custom styles
 
 const NotificationTray = ({ isVisible, onClose }) => {
   const navigate = useNavigate();
+  const [viewMode, setViewMode] = useState('all'); // 'all', 'unread'
+  const [selectedNotification, setSelectedNotification] = useState(null); // For detailed view
   const { 
     socket, 
     isConnected, 
@@ -14,13 +18,102 @@ const NotificationTray = ({ isVisible, onClose }) => {
     removeNotification 
   } = useToast();
 
-  // Mark notification as read and navigate
+  // Get notification icon and colors based on type
+  const getNotificationStyle = (type) => {
+    switch (type) {
+      case 'booking':
+        return {
+          icon: (
+            <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z" />
+            </svg>
+          ),
+          bgColor: 'bg-emerald-500',
+          lightBg: 'bg-emerald-50',
+          textColor: 'text-emerald-700',
+          borderColor: 'border-emerald-200'
+        };
+      case 'reminder':
+        return {
+          icon: (
+            <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" />
+            </svg>
+          ),
+          bgColor: 'bg-amber-500',
+          lightBg: 'bg-amber-50',
+          textColor: 'text-amber-700',
+          borderColor: 'border-amber-200'
+        };
+      case 'error':
+        return {
+          icon: (
+            <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-2.5L13.732 4c-.77-.833-1.964-.833-2.732 0L4.082 16.5c-.77.833.192 2.5 1.732 2.5z" />
+            </svg>
+          ),
+          bgColor: 'bg-red-500',
+          lightBg: 'bg-red-50',
+          textColor: 'text-red-700',
+          borderColor: 'border-red-200'
+        };
+      case 'success':
+        return {
+          icon: (
+            <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
+            </svg>
+          ),
+          bgColor: 'bg-green-500',
+          lightBg: 'bg-green-50',
+          textColor: 'text-green-700',
+          borderColor: 'border-green-200'
+        };
+      case 'info':
+        return {
+          icon: (
+            <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+            </svg>
+          ),
+          bgColor: 'bg-blue-500',
+          lightBg: 'bg-blue-50',
+          textColor: 'text-blue-700',
+          borderColor: 'border-blue-200'
+        };
+      default:
+        return {
+          icon: (
+            <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 17h5l-1.405-1.405A2.032 2.032 0 0118 14.158V11a6.002 6.002 0 00-4-5.659V5a2 2 0 10-4 0v.341C7.67 6.165 6 8.388 6 11v3.159c0 .538-.214 1.055-.595 1.436L4 17h5m6 0v1a3 3 0 11-6 0v-1m6 0H9" />
+            </svg>
+          ),
+          bgColor: 'bg-gray-500',
+          lightBg: 'bg-gray-50',
+          textColor: 'text-gray-700',
+          borderColor: 'border-gray-200'
+        };
+    }
+  };
+
+  // Mark notification as read and navigate or show detailed view
   const handleNotificationClick = (notif) => {
     markNotificationAsRead(notif.id);
-    // Route based on notification type
+    setSelectedNotification(notif); // Show detailed view instead of navigating immediately
+  };
+
+  // Navigate from detailed view
+  const handleNavigateFromDetail = (notif) => {
     if (notif.type === 'booking' || notif.type === 'reminder') {
       navigate('/appointments');
     }
+    setSelectedNotification(null);
+    onClose();
+  };
+
+  // Back to list view
+  const handleBackToList = () => {
+    setSelectedNotification(null);
   };
 
   // Format timestamp for display
@@ -35,175 +128,409 @@ const NotificationTray = ({ isVisible, onClose }) => {
     const hours = Math.floor(minutes / 60);
     if (hours < 24) return `${hours}h ago`;
     
-    return timestamp.toLocaleDateString();
+    const days = Math.floor(hours / 24);
+    if (days < 7) return `${days}d ago`;
+    
+    return timestamp.toLocaleDateString('en-US', { 
+      month: 'short', 
+      day: 'numeric',
+      ...(timestamp.getFullYear() !== now.getFullYear() && { year: 'numeric' })
+    });
   };
 
+  // Filter notifications based on view mode
+  const filteredNotifications = viewMode === 'unread' 
+    ? notifications.filter(n => !n.read)
+    : notifications;
+
   const unreadCount = notifications.filter(n => !n.read).length;
+  const hasNotifications = notifications.length > 0;
 
   return (
-    <>
+    <AnimatePresence>
       {isVisible && (
         <>
-          {/* Backdrop and close button only on mobile */}
-          <div className="block sm:hidden">
-            <div 
-              className="fixed inset-0 z-[999] bg-black bg-opacity-60 backdrop-blur-sm"
-              onClick={onClose}
-              style={{position: 'fixed', top: 0, left: 0, right: 0, bottom: 0}}
-            />
-          </div>
-          {/* Notification Tray - Full screen on mobile, positioned on desktop */}
-          <div 
-            className={`
-              fixed inset-0 z-[1000] flex flex-col
-              sm:inset-auto sm:bottom-20 sm:left-6 sm:w-80 sm:max-h-[500px]
-              sm:rounded-lg sm:shadow-xl sm:border sm:border-gray-200
-            `}
+          {/* Mobile backdrop */}
+          <motion.div 
+            className="block sm:hidden"
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            exit={{ opacity: 0 }}
+            transition={{ duration: 0.2 }}
           >
-            <div className={`
-              flex flex-col h-full bg-white
-              sm:rounded-lg overflow-hidden
+            <div 
+              className="fixed inset-0 z-[999] bg-black/50 backdrop-blur-sm"
+              onClick={onClose}
+            />
+          </motion.div>
+
+          {/* Notification Tray Container - Moved to LEFT */}
+          <motion.div 
+            className={`
+              fixed z-[1000]
+              inset-0 sm:inset-auto
+              sm:top-16 sm:left-4 sm:w-96 sm:max-h-[600px]
+              flex flex-col
             `}
-            >
+            initial={{ 
+              opacity: 0, 
+              x: -100,
+              scale: 0.95
+            }}
+            animate={{ 
+              opacity: 1, 
+              x: 0,
+              scale: 1
+            }}
+            exit={{ 
+              opacity: 0, 
+              x: -100,
+              scale: 0.95
+            }}
+            transition={{ 
+              type: "spring",
+              stiffness: 300,
+              damping: 30,
+              duration: 0.3
+            }}
+          >
+            <div className="bg-white sm:rounded-xl sm:shadow-2xl sm:border sm:border-gray-200/80 flex flex-col h-full overflow-hidden">
+              
               {/* Header */}
-              <div className="sticky top-0 bg-white px-6 py-4 border-b border-gray-100 z-10 flex justify-between items-center">
-                <div className="flex items-center">
-                  <h3 className="text-lg font-semibold text-gray-900">
-                    Notifications
-                  </h3>
-                  {unreadCount > 0 && (
-                    <span className="ml-3 bg-blue-500 text-white text-xs font-medium px-2.5 py-1 rounded-full">
-                      {unreadCount} new
-                    </span>
-                  )}
-                </div>
-                <div className="flex items-center space-x-3">
-                  {notifications.length > 0 && (
-                    <>
-                      {unreadCount > 0 && (
-                        <button 
-                          onClick={markAllAsRead}
-                          className="text-xs text-blue-600 hover:text-blue-700 font-medium"
-                        >
-                          Mark all read
-                        </button>
-                      )}
-                      <button 
-                        onClick={clearNotifications}
-                        className="text-xs text-gray-500 hover:text-gray-700 font-medium"
-                      >
-                        Clear all
-                      </button>
-                    </>
-                  )}
-                  <button 
-                    onClick={onClose}
-                    className="p-1.5 text-gray-400 hover:text-gray-600 hover:bg-gray-100 rounded-lg transition-colors"
-                  >
-                    <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
-                    </svg>
-                  </button>
-                </div>
-              </div>
-              {/* Notification List - Scrollable area, latest at top, tray height adjusts from bottom */}
-              <div className="overflow-y-auto flex-grow flex flex-col p-4 space-y-2" style={{ display: 'flex', flexDirection: 'column', justifyContent: 'flex-end' }}>
-                {notifications.length === 0 ? (
-                  <div className="flex flex-col items-center justify-center h-48 text-gray-500 px-6">
-                    <div className="w-16 h-16 bg-gray-100 rounded-full flex items-center justify-center mb-4">
-                      <svg xmlns="http://www.w3.org/2000/svg" className="h-8 w-8 text-gray-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M15 17h5l-1.405-1.405A2.032 2.032 0 0118 14.158V11a6.002 6.002 0 00-4-5.659V5a2 2 0 10-4 0v.341C7.67 6.165 6 8.388 6 11v3.159c0 .538-.214 1.055-.595 1.436L4 17h5m6 0v1a3 3 0 11-6 0v-1m6 0H9" />
+              <div className="px-6 py-4 border-b border-gray-100 bg-gradient-to-r from-blue-50 to-indigo-50">
+                <div className="flex items-center justify-between">
+                  <div className="flex items-center space-x-3">
+                    <div className="flex items-center justify-center w-8 h-8 bg-blue-500 rounded-lg">
+                      <svg className="w-4 h-4 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 17h5l-1.405-1.405A2.032 2.032 0 0118 14.158V11a6.002 6.002 0 00-4-5.659V5a2 2 0 10-4 0v.341C7.67 6.165 6 8.388 6 11v3.159c0 .538-.214 1.055-.595 1.436L4 17h5m6 0v1a3 3 0 11-6 0v-1m6 0H9" />
                       </svg>
                     </div>
-                    <h4 className="text-gray-900 font-medium mb-2">No notifications yet</h4>
-                    <p className="text-sm text-center text-gray-500 leading-relaxed">
-                      You'll receive notifications here for appointment reminders, booking confirmations, and other important updates.
-                    </p>
+                    <div>
+                      <h3 className="text-lg font-semibold text-gray-900">Notifications</h3>
+                      {unreadCount > 0 && (
+                        <p className="text-xs text-gray-600">{unreadCount} unread</p>
+                      )}
+                    </div>
                   </div>
-                ) : (
-                  notifications.map((notification) => (
-                    <div 
-                      key={notification.id}
-                      className={`group relative p-4 rounded-xl border cursor-pointer transition-all duration-200 hover:shadow-md ${
-                        notification.read 
-                          ? 'bg-white border-gray-200 hover:bg-gray-50' 
-                          : 'bg-blue-50 border-blue-200 hover:bg-blue-100 shadow-sm'
-                      }`}
-                      onClick={() => handleNotificationClick(notification)}
+                  <motion.button 
+                    onClick={onClose}
+                    className="p-2 text-gray-400 hover:text-gray-600 hover:bg-white/80 rounded-lg transition-all duration-200"
+                    whileHover={{ scale: 1.1, rotate: 90 }}
+                    whileTap={{ scale: 0.9 }}
+                  >
+                    <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+                    </svg>
+                  </motion.button>
+                </div>
+
+                {/* Animated Toggle Switch */}
+                {hasNotifications && (
+                  <div className="flex items-center justify-between mt-4">
+                    <div className="relative bg-white rounded-full p-1 shadow-sm border border-gray-200">
+                      {/* Toggle Background */}
+                      <motion.div 
+                        className="absolute top-1 h-7 bg-blue-500 rounded-full"
+                        animate={{
+                          left: viewMode === 'all' ? '0.25rem' : '4.75rem',
+                          width: viewMode === 'all' ? '4.5rem' : '5.5rem'
+                        }}
+                        transition={{ 
+                          type: "spring",
+                          stiffness: 300,
+                          damping: 30
+                        }}
+                      />
+                      
+                      {/* Toggle Buttons */}
+                      <div className="relative flex">
+                        <button
+                          onClick={() => setViewMode('all')}
+                          className={`px-4 py-1.5 text-xs font-medium rounded-full transition-all duration-300 z-10 min-w-[4.5rem] ${
+                            viewMode === 'all'
+                              ? 'text-white'
+                              : 'text-gray-600 hover:text-gray-900'
+                          }`}
+                        >
+                          All ({notifications.length})
+                        </button>
+                        <button
+                          onClick={() => setViewMode('unread')}
+                          className={`px-4 py-1.5 text-xs font-medium rounded-full transition-all duration-300 z-10 min-w-[5.5rem] ${
+                            viewMode === 'unread'
+                              ? 'text-white'
+                              : 'text-gray-600 hover:text-gray-900'
+                          }`}
+                        >
+                          Unread ({unreadCount})
+                        </button>
+                      </div>
+                    </div>
+
+                    {/* Action Buttons */}
+                    <motion.div 
+                      className="flex items-center space-x-2"
+                      initial={{ opacity: 0, x: 20 }}
+                      animate={{ opacity: 1, x: 0 }}
+                      transition={{ delay: 0.2 }}
                     >
-                      <div className="flex items-start space-x-3">
-                        <div className={`flex-shrink-0 w-3 h-3 rounded-full mt-1.5 ${
-                          notification.read ? 'bg-gray-300' : 'bg-blue-500'
-                        }`} />
-                        <div className="flex-grow min-w-0">
-                          <div className="flex items-start justify-between mb-1">
-                            <h4 className="text-sm font-semibold text-gray-900 truncate pr-2">
-                              {notification.title}
-                            </h4>
-                            <div className="flex items-center space-x-2 flex-shrink-0">
-                              <span className="text-xs text-gray-500">
-                                {formatTime(notification.timestamp)}
-                              </span>
-                              <button 
-                                onClick={(e) => {
-                                  e.stopPropagation();
-                                  removeNotification(notification.id);
-                                }}
-                                className="opacity-0 group-hover:opacity-100 p-1 text-gray-400 hover:text-gray-600 hover:bg-gray-200 rounded transition-all"
-                              >
-                                <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
-                                </svg>
-                              </button>
-                            </div>
-                          </div>
-                          <p className="text-sm text-gray-700 leading-relaxed mb-3">
-                            {notification.message}
-                          </p>
-                          {notification.type && (
-                            <span className={`inline-flex items-center text-xs font-medium px-2.5 py-1 rounded-full ${
-                              notification.type === 'booking' ? 'bg-green-100 text-green-700' :
-                              notification.type === 'reminder' ? 'bg-yellow-100 text-yellow-700' :
-                              notification.type === 'error' ? 'bg-red-100 text-red-700' :
-                              'bg-gray-100 text-gray-700'
-                            }`}>
-                              {notification.type === 'booking' && '📅'}
-                              {notification.type === 'reminder' && '⏰'}
-                              {notification.type === 'error' && '⚠️'}
-                              <span className="ml-1 capitalize">{notification.type}</span>
+                      {unreadCount > 0 && (
+                        <motion.button 
+                          onClick={markAllAsRead}
+                          className="text-xs text-blue-600 hover:text-blue-700 font-medium px-2 py-1 rounded hover:bg-white/60 transition-all"
+                          whileHover={{ scale: 1.05 }}
+                          whileTap={{ scale: 0.95 }}
+                        >
+                          Mark all read
+                        </motion.button>
+                      )}
+                      <motion.button 
+                        onClick={clearNotifications}
+                        className="text-xs text-gray-500 hover:text-gray-700 font-medium px-2 py-1 rounded hover:bg-white/60 transition-all"
+                        whileHover={{ scale: 1.05 }}
+                        whileTap={{ scale: 0.95 }}
+                      >
+                        Clear all
+                      </motion.button>
+                    </motion.div>
+                  </div>
+                )}
+              </div>
+
+              {/* Notifications List */}
+              <div className="flex-1 overflow-y-auto notification-scroll">
+                <AnimatePresence mode="wait">
+                  {selectedNotification ? (
+                    /* Detailed Notification View */
+                    <motion.div 
+                      className="p-4 sm:p-6 detailed-view"
+                      key="detailed"
+                      initial={{ x: 300, opacity: 0 }}
+                      animate={{ x: 0, opacity: 1 }}
+                      exit={{ x: -300, opacity: 0 }}
+                      transition={{ 
+                        type: "spring",
+                        stiffness: 300,
+                        damping: 30
+                      }}
+                    >
+                    {/* Back Button */}
+                    <motion.button
+                      onClick={handleBackToList}
+                      className="flex items-center space-x-2 text-gray-600 hover:text-gray-900 mb-4 transition-colors p-2 rounded-lg hover:bg-gray-100"
+                      whileHover={{ scale: 1.02 }}
+                      whileTap={{ scale: 0.98 }}
+                    >
+                      <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 19l-7-7 7-7" />
+                      </svg>
+                      <span className="text-sm font-medium">Back to notifications</span>
+                    </motion.button>
+
+                    {/* Detailed Notification Card */}
+                    <div className="bg-gradient-to-r from-blue-50 to-indigo-50 rounded-xl p-4 border border-blue-100">
+                      {/* Header Section */}
+                      <div className="flex items-start space-x-3 mb-4">
+                        <div className={`flex-shrink-0 w-12 h-12 ${getNotificationStyle(selectedNotification.type).bgColor} rounded-xl flex items-center justify-center text-white shadow-md`}>
+                          {getNotificationStyle(selectedNotification.type).icon}
+                        </div>
+                        <div className="flex-1 min-w-0">
+                          <h2 className="text-lg font-bold text-gray-900 leading-tight mb-1">
+                            {selectedNotification.title}
+                          </h2>
+                          <span className="text-sm text-gray-500 bg-white px-3 py-1 rounded-full inline-block">
+                            {formatTime(selectedNotification.timestamp)}
+                          </span>
+                        </div>
+                      </div>
+
+                      {/* Message Section */}
+                      <div className="bg-white rounded-lg p-4 mb-4 shadow-sm">
+                        <p className="text-gray-700 leading-relaxed whitespace-pre-wrap text-sm">
+                          {selectedNotification.message}
+                        </p>
+                      </div>
+
+                      {/* Metadata and Actions */}
+                      <div className="space-y-3">
+                        {/* Badges */}
+                        <div className="flex flex-wrap items-center gap-2">
+                          <span className={`inline-flex items-center text-sm font-medium px-3 py-1.5 rounded-full ${getNotificationStyle(selectedNotification.type).lightBg} ${getNotificationStyle(selectedNotification.type).textColor} ${getNotificationStyle(selectedNotification.type).borderColor} border`}>
+                            <span className="capitalize">{selectedNotification.type}</span>
+                          </span>
+                          {!selectedNotification.read && (
+                            <span className="inline-flex items-center text-xs font-medium px-2 py-1 rounded-full bg-blue-100 text-blue-700">
+                              Unread
                             </span>
                           )}
                         </div>
+
+                        {/* Action Buttons */}
+                        <div className="flex flex-col sm:flex-row gap-3">
+                          {(selectedNotification.type === 'booking' || selectedNotification.type === 'reminder') && (
+                            <motion.button
+                              onClick={() => handleNavigateFromDetail(selectedNotification)}
+                              className="flex-1 bg-blue-500 hover:bg-blue-600 text-white font-medium py-2.5 px-4 rounded-lg transition-colors text-center"
+                              whileHover={{ scale: 1.02 }}
+                              whileTap={{ scale: 0.98 }}
+                            >
+                              View Appointments
+                            </motion.button>
+                          )}
+                          <motion.button
+                            onClick={() => {
+                              removeNotification(selectedNotification.id);
+                              handleBackToList();
+                            }}
+                            className="sm:w-auto px-4 py-2.5 text-red-600 hover:text-red-700 hover:bg-red-50 border border-red-200 rounded-lg transition-colors text-center"
+                            whileHover={{ scale: 1.02 }}
+                            whileTap={{ scale: 0.98 }}
+                          >
+                            Delete
+                          </motion.button>
+                        </div>
                       </div>
                     </div>
-                  ))
+                  </motion.div>
+                ) : filteredNotifications.length === 0 ? (
+                  /* Empty State */
+                  <motion.div 
+                    className="flex flex-col items-center justify-center h-64 px-6 text-center"
+                    key="empty"
+                    initial={{ opacity: 0, y: 20 }}
+                    animate={{ opacity: 1, y: 0 }}
+                    exit={{ opacity: 0, y: -20 }}
+                    transition={{ duration: 0.3 }}
+                  >
+                    <div className="w-16 h-16 bg-gray-100 rounded-full flex items-center justify-center mb-4">
+                      <svg className="w-8 h-8 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M15 17h5l-1.405-1.405A2.032 2.032 0 0118 14.158V11a6.002 6.002 0 00-4-5.659V5a2 2 0 10-4 0v.341C7.67 6.165 6 8.388 6 11v3.159c0 .538-.214 1.055-.595 1.436L4 17h5m6 0v1a3 3 0 11-6 0v-1m6 0H9" />
+                      </svg>
+                    </div>
+                    <h4 className="text-lg font-medium text-gray-900 mb-2">
+                      {viewMode === 'unread' ? 'All caught up!' : 'No notifications yet'}
+                    </h4>
+                    <p className="text-sm text-gray-500 max-w-sm leading-relaxed">
+                      {viewMode === 'unread' 
+                        ? 'You\'ve read all your notifications. New ones will appear here.'
+                        : 'You\'ll receive notifications here for appointments, bookings, and important updates.'
+                      }
+                    </p>
+                  </motion.div>
+                ) : (
+                  /* Notifications List */
+                  <motion.div 
+                    className="divide-y divide-gray-100"
+                    key="list"
+                    initial={{ opacity: 0 }}
+                    animate={{ opacity: 1 }}
+                    exit={{ opacity: 0 }}
+                    transition={{ duration: 0.2 }}
+                  >
+                    {filteredNotifications.map((notification, index) => {
+                      const style = getNotificationStyle(notification.type);
+                      return (
+                        <motion.div 
+                          key={notification.id}
+                          className={`notification-item group relative p-4 cursor-pointer transition-all duration-200 hover:bg-gray-50 ${
+                            !notification.read ? 'bg-blue-50/30' : ''
+                          }`}
+                          onClick={() => handleNotificationClick(notification)}
+                          initial={{ opacity: 0, x: -20 }}
+                          animate={{ opacity: 1, x: 0 }}
+                          transition={{ 
+                            delay: index * 0.05,
+                            duration: 0.3,
+                            ease: "easeOut"
+                          }}
+                          whileHover={{ 
+                            scale: 1.01,
+                            transition: { duration: 0.2 }
+                          }}
+                          whileTap={{ scale: 0.98 }}
+                        >
+                          <div className="flex items-start space-x-3">
+                            {/* Notification Icon */}
+                            <div className={`flex-shrink-0 w-10 h-10 ${style.bgColor} rounded-lg flex items-center justify-center text-white`}>
+                              {style.icon}
+                            </div>
+
+                            {/* Content */}
+                            <div className="flex-1 min-w-0">
+                              <div className="flex items-start justify-between mb-1">
+                                <h4 className="text-sm font-semibold text-gray-900 leading-tight">
+                                  {notification.title}
+                                </h4>
+                                <div className="flex items-center space-x-2 ml-2">
+                                  {!notification.read && (
+                                    <div className="w-2 h-2 bg-blue-500 rounded-full flex-shrink-0"></div>
+                                  )}
+                                  <span className="text-xs text-gray-500 whitespace-nowrap">
+                                    {formatTime(notification.timestamp)}
+                                  </span>
+                                </div>
+                              </div>
+                              
+                              <p className="text-sm text-gray-700 leading-relaxed mb-3 pr-8 line-clamp-2">
+                                {notification.message}
+                              </p>
+
+                              {/* Type Badge and Click to View */}
+                              <div className="flex items-center justify-between">
+                                <span className={`inline-flex items-center text-xs font-medium px-2.5 py-1 rounded-full ${style.lightBg} ${style.textColor} ${style.borderColor} border`}>
+                                  <span className="capitalize">{notification.type}</span>
+                                </span>
+                                <span className="text-xs text-blue-600 font-medium">
+                                  Click to view details →
+                                </span>
+                              </div>
+                            </div>
+
+                            {/* Remove Button */}
+                            <button 
+                              onClick={(e) => {
+                                e.stopPropagation();
+                                removeNotification(notification.id);
+                              }}
+                              className="opacity-0 group-hover:opacity-100 absolute top-3 right-3 p-1.5 text-gray-400 hover:text-gray-600 hover:bg-gray-200 rounded-lg transition-all duration-200"
+                            >
+                              <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+                              </svg>
+                            </button>
+                          </div>
+                        </motion.div>
+                      );
+                    })}
+                  </motion.div>
                 )}
+              </AnimatePresence>
               </div>
-              {/* Footer with connection status */}
-              <div className="px-4 py-2 border-t border-gray-200 bg-gray-50">
-                <div className="flex items-center justify-center text-xs text-gray-500">
-                  <span className="flex items-center">
+
+              {/* Footer */}
+              <div className="px-4 py-3 border-t border-gray-200 bg-gray-50/50">
+                <div className="flex items-center justify-between">
+                  <div className="flex items-center text-xs text-gray-500">
                     <div className={`w-2 h-2 rounded-full mr-2 ${
                       isConnected ? 'bg-green-500' : 'bg-gray-400'
                     }`} />
-                    {isConnected ? 'Real-time notifications active' : 'Connecting...'}
-                  </span>
+                    <span>{isConnected ? 'Live updates' : 'Reconnecting...'}</span>
+                  </div>
+                  
+                  {/* Mobile close button */}
+                  <button 
+                    onClick={onClose}
+                    className="sm:hidden px-4 py-2 bg-gray-900 text-white text-xs font-medium rounded-lg hover:bg-gray-800 transition-colors"
+                  >
+                    Close
+                  </button>
                 </div>
               </div>
-              {/* Footer - Only show on mobile */}
-              <div className="sm:hidden bg-white px-4 py-4 border-t border-gray-200">
-                <button 
-                  onClick={onClose}
-                  className="w-full py-3 bg-gray-900 text-white rounded-lg text-sm font-medium hover:bg-gray-800 transition-colors"
-                >
-                  Close
-                </button>
-              </div>
             </div>
-          </div>
+          </motion.div>
         </>
       )}
-    </>
+    </AnimatePresence>
   );
 };
 
