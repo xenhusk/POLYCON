@@ -207,55 +207,6 @@ export const ToastProvider = ({ children }) => {
       }
     });
 
-    // Listen for global appointment reminders (fallback for production reliability)
-    newSocket.on('appointment_reminder_global', (data) => {
-      console.log('🔔 ToastProvider: Received appointment_reminder_global (fallback):', data);
-      prodLog('🔔 PROD: Received appointment_reminder_global (fallback):', data);
-      console.log('🔔 Full global appointment reminder payload:', JSON.stringify(data, null, 2));
-      
-      try {
-        // Only show notification if it's for the current user
-        const currentUserId = getCurrentUserId();
-        prodLog('🔔 PROD: Checking user IDs - current:', currentUserId, 'data recipient:', data.recipient_id);
-        
-        if (data.recipient_id && data.recipient_id !== currentUserId) {
-          console.log('🔔 ToastProvider: Global reminder not for current user, ignoring');
-          prodLog('🔔 PROD: Global reminder not for current user, ignoring');
-          return;
-        }
-        
-        const message = data.message || 'You have an appointment in 15 minutes';
-        prodLog('🔔 PROD: Processing global reminder for current user with message:', message);
-        
-        // Show toast notification with sound
-        showAppointmentReminder(message, true);
-
-        // Add to notification tray
-        addNotificationToTray({
-          type: 'reminder',
-          title: 'Appointment Reminder',
-          message: message
-        });
-
-        // Show mobile-optimized system notification
-        showNotification('Appointment Reminder', {
-          body: message,
-          tag: `appointment-${data.appointment_id}`,
-          requireInteraction: true,
-          actions: [
-            { action: 'view', title: '👁️ View', icon: '/favicon.ico' },
-            { action: 'dismiss', title: '✖️ Dismiss', icon: '/favicon.ico' }
-          ]
-        }, 'appointment');
-
-        console.log('🔔 ToastProvider: Successfully processed global appointment reminder');
-        prodLog('🔔 PROD: Successfully processed global appointment reminder');
-      } catch (error) {
-        console.error('🔔 ToastProvider: Error processing global appointment reminder:', error);
-        prodLog('🔔 PROD ERROR: Error processing global appointment reminder:', error);
-      }
-    });
-
     // Listen for test notifications (for debugging)
     newSocket.on('test_notification', (data) => {
       console.log('🧪 ToastProvider: Received test_notification:', data);
