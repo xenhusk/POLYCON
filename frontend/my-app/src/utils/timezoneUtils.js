@@ -48,21 +48,26 @@ export const formatForDateTimeInput = (utcTimestamp) => {
   if (!utcTimestamp) return '';
   
   try {
-    const utcString = utcTimestamp.endsWith('Z') ? utcTimestamp : `${utcTimestamp}Z`;
-    const date = new Date(utcString);
+    // Create date object from UTC timestamp
+    const date = new Date(utcTimestamp);
     
     if (isNaN(date.getTime())) {
+      console.warn('Invalid date for datetime input:', utcTimestamp);
       return '';
     }
     
-    // Format for datetime-local input (YYYY-MM-DDTHH:MM)
+    // For datetime-local input, we need to show the time in user's local timezone
+    // The datetime-local input expects local time in YYYY-MM-DDTHH:MM format
     const year = date.getFullYear();
     const month = String(date.getMonth() + 1).padStart(2, '0');
     const day = String(date.getDate()).padStart(2, '0');
     const hours = String(date.getHours()).padStart(2, '0');
     const minutes = String(date.getMinutes()).padStart(2, '0');
     
-    return `${year}-${month}-${day}T${hours}:${minutes}`;
+    const result = `${year}-${month}-${day}T${hours}:${minutes}`;
+    console.log(`Format for input: ${utcTimestamp} (UTC) -> ${result} (local)`);
+    
+    return result;
   } catch (error) {
     console.error('Error formatting for datetime input:', error, utcTimestamp);
     return '';
@@ -78,12 +83,15 @@ export const convertLocalToUTC = (localDateTime) => {
   if (!localDateTime) return '';
   
   try {
-    // datetime-local gives us a local time, convert to UTC
+    // datetime-local gives us a local time in format YYYY-MM-DDTHH:MM
+    // new Date() will interpret this as local time and toISOString() converts to UTC
     const localDate = new Date(localDateTime);
     
     if (isNaN(localDate.getTime())) {
       return '';
     }
+    
+    console.log(`Timezone conversion: ${localDateTime} (local) -> ${localDate.toISOString()} (UTC)`);
     
     // Return ISO string (which is in UTC)
     return localDate.toISOString();

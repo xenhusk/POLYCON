@@ -8,6 +8,13 @@ import logging
 
 logger = logging.getLogger(__name__)
 
+def format_schedule_for_api(schedule_datetime):
+    """Format schedule datetime as UTC ISO string for API responses"""
+    if not schedule_datetime:
+        return None
+    # Treat naive datetime as UTC and add timezone info
+    return schedule_datetime.replace(tzinfo=timezone.utc).isoformat()
+
 booking_bp = Blueprint('booking_bp', __name__, url_prefix='/bookings')
 
 @booking_bp.route('/get_bookings', methods=['GET'])
@@ -82,7 +89,7 @@ def get_bookings():
             'id': b.id,
             'subject': b.subject,
             'description': b.description,
-            'schedule': b.schedule.isoformat() if b.schedule else None,
+            'schedule': format_schedule_for_api(b.schedule),
             'venue': b.venue,
             'status': b.status,
             'teacherID': b.teacher_id,
@@ -138,7 +145,7 @@ def get_all_bookings_admin():
             'id': b.id,
             'subject': b.subject,
             'description': b.description,
-            'schedule': b.schedule.isoformat() if b.schedule else None,
+            'schedule': format_schedule_for_api(b.schedule),
             'venue': b.venue,
             'status': b.status,
             'teacherID': b.teacher_id,
@@ -289,7 +296,7 @@ def create_booking():
                 'teacher_id': data['teacherID'],  # Teacher's id_number
                 'student_names': student_names,
                 'student_ids': student_ids,  # List of student User.id values
-                'schedule': schedule.isoformat() if schedule else None,
+                'schedule': format_schedule_for_api(schedule),
                 'venue': venue,
                 'created_by': creator_id
             }
@@ -342,7 +349,7 @@ def cancel_booking():
                 'teacher_id': booking.teacher_id,  # Teacher's id_number
                 'student_names': student_names,
                 'student_ids': booking.student_ids,  # List of student User.id values
-                'schedule': booking.schedule.isoformat() if booking.schedule else None,
+                'schedule': format_schedule_for_api(booking.schedule),
                 'venue': booking.venue
             }
             print(f"🔔 Emitting booking_cancelled: {booking_data}")
@@ -401,7 +408,7 @@ def confirm_booking():
                 'teacher_id': booking.teacher_id,  # Teacher's id_number
                 'student_names': student_names,
                 'student_ids': booking.student_ids,  # List of student User.id values
-                'schedule': booking.schedule.isoformat() if booking.schedule else None,
+                'schedule': format_schedule_for_api(booking.schedule),
                 'venue': booking.venue
             }
             print(f"🔔 Emitting booking_confirmed: {booking_data}")
