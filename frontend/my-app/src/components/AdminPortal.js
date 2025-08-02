@@ -73,7 +73,6 @@ export default function AdminPortal() {
   const [programs, setPrograms] = useState([]);
   const [userList, setUserList] = useState([]);
   const [editUser, setEditUser] = useState(null);
-  const [message, setMessage] = useState({ type: '', content: '' });
   const [AddClicked, setAddClicked] = useState(false);
   const [EditClicked, setEditClicked] = useState(false);
   const [DeleteClicked, setDeleteClicked] = useState(false);
@@ -197,7 +196,7 @@ export default function AdminPortal() {
 
       const data = await response.json();
       if (response.ok) {
-        setMessage({ type: 'success', content: `${data.message} User has been created and can login immediately.` });
+        alert(`${data.message} User has been created and can login immediately.`);
         fetchAllUsers();
         // Clear input fields
         setIdNumber('');
@@ -211,22 +210,12 @@ export default function AdminPortal() {
         setYearSection('');
         // Close the modal
         setShowAddModal(false);
-        // Auto-hide message after 3 seconds
-        setTimeout(() => {
-          setMessage({ type: '', content: '' });
-        }, 3000);
       } else {
-        setMessage({ type: 'error', content: data.error || 'Failed to add user' });
-        setTimeout(() => {
-          setMessage({ type: '', content: '' });
-        }, 3000);
+        alert(data.error || 'Failed to add user');
       }
     } catch (error) {
       console.error('Error adding user:', error);
-      setMessage({ type: 'error', content: 'Failed to add user' });
-      setTimeout(() => {
-        setMessage({ type: '', content: '' });
-      }, 3000);
+      alert('Failed to add user');
     }
   };
 
@@ -289,26 +278,16 @@ export default function AdminPortal() {
         body: JSON.stringify(updateData),
       });
       if (response.ok) {
-        setMessage({ type: 'success', content: 'User updated successfully' });
+        alert('User updated successfully');
         setEditUser(null);
         fetchAllUsers();
-        // Auto-hide message after 3 seconds
-        setTimeout(() => {
-          setMessage({ type: '', content: '' });
-        }, 3000);
       } else {
         const data = await response.json();
-        setMessage({ type: 'error', content: data.error || 'Failed to update user' });
-        setTimeout(() => {
-          setMessage({ type: '', content: '' });
-        }, 3000);
+        alert(data.error || 'Failed to update user');
       }
     } catch (error) {
       console.error('Error updating user:', error);
-      setMessage({ type: 'error', content: 'Error updating user' });
-      setTimeout(() => {
-        setMessage({ type: '', content: '' });
-      }, 3000);
+      alert('Error updating user');
     }
   };
 
@@ -321,27 +300,17 @@ export default function AdminPortal() {
       if (response.ok) {
         // Remove the archived user from the table immediately
         setUserList(prevList => prevList.filter(user => user.ID !== userId));
-        setMessage({ type: 'success', content: 'User archived successfully' });
-        // Auto-hide message after 3 seconds
-        setTimeout(() => {
-          setMessage({ type: '', content: '' });
-        }, 3000);
+        alert('User archived successfully');
       } else {
         const data = await response.json();
-        setMessage({ type: 'error', content: data.error || 'Failed to archive user' });
-        setTimeout(() => {
-          setMessage({ type: '', content: '' });
-        }, 3000);
+        alert(data.error || 'Failed to archive user');
       }
     } catch (error) {
       console.error('Error archiving user:', error);
-      setMessage({ type: 'error', content: 'Error archiving user. Please try again.' });
-      setTimeout(() => {
-        setMessage({ type: '', content: '' });
-      }, 3000);
+      alert('Error archiving user. Please try again.');
     } finally {
       setIsDeleteLoading(false);
-      setUserToDelete(null);
+      setShowDeleteModal(false);
     }
   };
 
@@ -397,29 +366,6 @@ export default function AdminPortal() {
 
   return (
     <div className="w-full min-h-screen p-6 items-center fade-in">
-      {message.content && (
-        <div className={`fixed top-5 right-5 z-50 rounded-lg shadow-lg max-w-md p-4 
-          ${message.type === 'success' ? 'bg-green-100 text-green-700' : 
-            message.type === 'warning' ? 'bg-yellow-100 text-yellow-700 border-yellow-500' : 
-            'bg-red-100 text-red-700'}`}
-        >
-          <div className="flex justify-between items-start">
-            <div className="flex-1">
-              {typeof message.content === 'string' ? message.content : message.content}
-            </div>
-            {typeof message.content === 'string' && (
-              <button
-                onClick={() => setMessage({ type: '', content: '' })}
-                className="ml-3 text-current hover:opacity-70"
-              >
-                <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M6 18L18 6M6 6l12 12" />
-                </svg>
-              </button>
-            )}
-          </div>
-        </div>
-      )}
       <header className="w-full bg-white mt-10 flex justify-center  items-center mb-2 fade-in delay-100">
         <h2 className="text-3xl items-center font-bold text-center pb-5 text-[#005B98]">Manage Users</h2>
       </header>      
@@ -532,33 +478,7 @@ export default function AdminPortal() {
                                     setTimeout(() => {
                                       setDeleteClicked(false);
                                       setUserToDelete(u.ID);
-                                      // Show confirmation toast instead of modal
-                                      setMessage({
-                                        type: 'warning',
-                                        content: (
-                                          <div className="flex items-center justify-between">
-                                            <span>Are you sure you want to archive this user?</span>
-                                            <div className="flex gap-2 ml-4">
-                                              <button
-                                                onClick={() => handleDeleteUser(u.ID)}
-                                                disabled={isDeleteLoading}
-                                                className="bg-red-500 text-white px-3 py-1 rounded text-sm hover:bg-red-600 disabled:opacity-50"
-                                              >
-                                                {isDeleteLoading ? 'Archiving...' : 'Archive'}
-                                              </button>
-                                              <button
-                                                onClick={() => {
-                                                  setMessage({ type: '', content: '' });
-                                                  setUserToDelete(null);
-                                                }}
-                                                className="bg-gray-300 text-gray-700 px-3 py-1 rounded text-sm hover:bg-gray-400"
-                                              >
-                                                Cancel
-                                              </button>
-                                            </div>
-                                          </div>
-                                        )
-                                      });
+                                      setShowDeleteModal(true);
                                     }, 300);
                                   }}
                                 >
@@ -578,7 +498,81 @@ export default function AdminPortal() {
         </div>
       </div>
 
-      {showAddModal && createPortal(
+      {showDeleteModal && createPortal(
+        <div className="fixed bg-black/60 backdrop-blur-md flex items-center justify-center p-4" style={{ 
+          position: 'fixed',
+          top: 0,
+          left: 0,
+          right: 0,
+          bottom: 0,
+          width: '100vw',
+          height: '100vh',
+          margin: 0,
+          padding: '1rem',
+          zIndex: 9999
+        }}>
+          <div className="bg-white rounded-xl shadow-2xl w-full max-w-md max-h-[90vh] overflow-y-auto"
+               onClick={(e) => e.stopPropagation()}
+               style={{
+                 scrollbarWidth: 'none',
+                 msOverflowStyle: 'none',
+                 zIndex: 9999
+               }}>
+            <div className="bg-red-500 px-6 py-4 flex justify-between items-center sticky top-0 z-10">
+              <h2 className="text-lg font-semibold text-white">
+                Confirm Delete
+              </h2>
+            </div>
+
+            <div className="p-6">
+              <p className="text-gray-700 mb-6">
+                Are you sure you want to delete this user? You can restore them later if needed.
+              </p>
+            </div>
+
+            <div className="flex mt-4">
+              <button
+                onClick={() => {
+                  setDeleteClicked(true);
+                  setTimeout(() => {
+                    setDeleteClicked(false);
+                    handleDeleteUser(userToDelete);
+                  }, 300);
+                }}
+                disabled={isDeleteLoading}
+                className={`flex-1 py-3 sm:py-4 bg-red-500 text-white hover:bg-red-600 transition-colors ${DeleteClicked ? "scale-90" : "scale-100"} ${isDeleteLoading ? 'opacity-50 cursor-not-allowed' : ''} text-center justify-center flex items-center gap-2 text-xs sm:text-sm font-medium`}
+              >
+                {isDeleteLoading ? (
+                  <>
+                    <svg className="animate-spin h-5 w-5 text-white" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+                      <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
+                      <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+                    </svg>
+                    <span>Archiving...</span>
+                  </>
+                ) : (
+                  <span>Delete</span>
+                )}
+              </button>
+              <button
+                onClick={() => {
+                  setCancelClicked(true);
+                  setTimeout(() => {
+                    setCancelClicked(false);
+                    setShowDeleteModal(false);
+                    setUserToDelete(null);
+                  }, 300);
+                }}
+                disabled={isDeleteLoading}
+                className={`flex-1 py-3 sm:py-4 text-gray-700 bg-gray-100 hover:bg-gray-200 transition-colors text-xs sm:text-sm font-medium ${CancelClicked ? "scale-90" : "scale-100"}`}
+              >
+                Cancel
+              </button>
+            </div>
+          </div>
+        </div>,
+        document.body
+      )}      {showAddModal && createPortal(
         <div className="fixed bg-black/60 backdrop-blur-md flex items-center justify-center p-4" style={{ 
           position: 'fixed',
           top: 0, left: 0, right: 0, bottom: 0, width: '100vw', height: '100vh', margin: 0, padding: '1rem',
