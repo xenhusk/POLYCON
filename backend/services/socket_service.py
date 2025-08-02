@@ -66,9 +66,23 @@ def emit_appointment_reminder(data):
         user_room = f"user_{recipient_id}"
         print(f"📡 Targeting user room: {user_room} for {recipient_type}")
         
+        # Check if there are any clients in the target room
         try:
+            room_clients = socketio.server.manager.rooms.get('/', {}).get(user_room, set())
+            print(f"📡 Clients in room {user_room}: {len(room_clients)} - {list(room_clients)}")
+        except Exception as e:
+            print(f"⚠️ Could not check room clients: {e}")
+        
+        try:
+            # Send to specific room
             socketio.emit('appointment_reminder', data, room=user_room)
             print(f"✅ appointment_reminder emitted successfully to room {user_room}")
+            
+            # Also send as global broadcast as fallback for production reliability
+            print(f"📡 Also broadcasting globally as fallback for production reliability")
+            socketio.emit('appointment_reminder_global', data)
+            print(f"✅ appointment_reminder_global emitted successfully")
+            
         except Exception as e:
             print(f"❌ Error emitting appointment_reminder to room {user_room}: {e}")
     else:

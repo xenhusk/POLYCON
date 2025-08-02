@@ -54,7 +54,11 @@ export const ToastProvider = ({ children }) => {
     const newSocket = io(API_URL, {
       transports: ['websocket', 'polling'],
       timeout: 20000,
-      forceNew: true
+      forceNew: true,
+      reconnection: true,
+      reconnectionDelay: 1000,
+      reconnectionAttempts: 5,
+      maxReconnectionAttempts: 5
     });    newSocket.on('connect', () => {
       console.log('🔔 ToastProvider: Socket connected successfully');
       console.log('🔔 Socket ID:', newSocket.id);
@@ -69,6 +73,15 @@ export const ToastProvider = ({ children }) => {
         userEmail: userEmail,
         connected: newSocket.connected
       });
+    });
+
+    newSocket.on('reconnect', () => {
+      console.log('🔔 ToastProvider: Socket reconnected successfully');
+      setIsConnected(true);
+      
+      // Rejoin user-specific room after reconnection
+      newSocket.emit('join_user_room', { userId: userId });
+      console.log('🔔 ToastProvider: Rejoined user room for userId:', userId);
     });
 
     newSocket.on('disconnect', (reason) => {
@@ -126,6 +139,69 @@ export const ToastProvider = ({ children }) => {
       } catch (error) {
         console.error('🔔 ToastProvider: Error processing appointment reminder:', error);
       }
+    });
+
+    // Listen for global appointment reminders (fallback for production)
+    newSocket.on('appointment_reminder_global', (data) => {
+      console.log('🔔 ToastProvider: Received appointment_reminder_global:', data);
+      
+      // Only process if this reminder is for the current user
+      const currentUserId = localStorage.getItem('userId') || localStorage.getItem('userID');
+      const recipientId = data.recipient_id;
+      
+      if (currentUserId === recipientId) {
+        console.log('🔔 ToastProvider: Global reminder is for current user, processing...');
+        
+        try {
+          const message = data.message || 'You have an appointment in 15 minutes';
+          
+          // Show toast notification with sound
+          showAppointmentReminder(message, true);
+
+          // Add to notification tray
+          addNotificationToTray({
+            type: 'reminder',
+            title: 'Appointment Reminder',
+            message: message
+          });
+
+          // Request browser notification permission and show notification
+          if ('Notification' in window) {
+            if (Notification.permission === 'granted') {
+              new Notification('Appointment Reminder', {
+                body: message,
+                icon: '/favicon.ico',
+                tag: `appointment-${data.appointment_id}-global`,
+                requireInteraction: true
+              });
+            } else if (Notification.permission !== 'denied') {
+              Notification.requestPermission().then(permission => {
+                if (permission === 'granted') {
+                  new Notification('Appointment Reminder', {
+                    body: message,
+                    icon: '/favicon.ico',
+                    tag: `appointment-${data.appointment_id}-global`,
+                    requireInteraction: true
+                  });
+                }
+              });
+            }
+          }
+
+          console.log('🔔 ToastProvider: Successfully processed global appointment reminder');
+        } catch (error) {
+          console.error('🔔 ToastProvider: Error processing global appointment reminder:', error);
+        }
+      } else {
+        console.log(`🔔 ToastProvider: Global reminder is for user ${recipientId}, current user is ${currentUserId}, ignoring`);
+      }
+    });
+
+    // Listen for test notifications (for debugging)
+    newSocket.on('test_notification', (data) => {
+      console.log('🧪 ToastProvider: Received test_notification:', data);
+      playNotificationSound('success', 0.3);
+      toastManager.showSuccess('Test Notification', 'Test notification received: ' + data.message);
     });
 
     // Listen for global booking events

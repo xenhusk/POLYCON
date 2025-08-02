@@ -241,9 +241,16 @@ class AppointmentScheduler:
                     'message': f"Your appointment with {', '.join(student_names)} starts in {time_until_text}"
                 }
                 logger.info(f"📤 Sending teacher reminder: {teacher_reminder['message']}")
-                emit_appointment_reminder(teacher_reminder)
+                
+                # Try to emit the reminder and handle any SocketIO connection issues
+                try:
+                    emit_appointment_reminder(teacher_reminder)
+                    logger.info(f"✅ Teacher reminder sent successfully for appointment {appointment.id}")
+                except Exception as emit_error:
+                    logger.error(f"❌ Failed to send teacher reminder for appointment {appointment.id}: {emit_error}")
             
             # Send reminder to each student
+            reminder_count = 0
             for student_id in appointment.student_ids:
                 student = db.session.query(User).filter_by(id=student_id).first()
                 if student:
@@ -254,9 +261,17 @@ class AppointmentScheduler:
                         'message': f"Your appointment with {teacher_name} starts in {time_until_text}"
                     }
                     logger.info(f"📤 Sending student reminder: {student_reminder['message']}")
-                    emit_appointment_reminder(student_reminder)
+                    
+                    # Try to emit the reminder and handle any SocketIO connection issues
+                    try:
+                        emit_appointment_reminder(student_reminder)
+                        reminder_count += 1
+                        logger.info(f"✅ Student reminder sent successfully for appointment {appointment.id}")
+                    except Exception as emit_error:
+                        logger.error(f"❌ Failed to send student reminder for appointment {appointment.id}: {emit_error}")
             
-            logger.info(f"✅ Sent reminders for appointment {appointment.id} to {len(appointment.student_ids) + 1} recipients")
+            total_recipients = len(appointment.student_ids) + (1 if teacher else 0)
+            logger.info(f"✅ Sent reminders for appointment {appointment.id} to {reminder_count + (1 if teacher else 0)}/{total_recipients} recipients")
         
         except Exception as e:
             logger.error(f"❌ Error preparing reminder data for appointment {appointment.id}: {e}")

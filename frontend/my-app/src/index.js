@@ -1,3 +1,6 @@
+// Console override for production (must be imported first)
+import './utils/console-override';
+
 // Add logging to monitor React renders
 import { StrictMode } from 'react';
 import { createRoot } from 'react-dom/client';

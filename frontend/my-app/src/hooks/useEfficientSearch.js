@@ -74,17 +74,34 @@ export const useEfficientSearch = (searchType = 'students') => {
       const response = await fetch(endpoint);
       const data = await response.json();
       
-      if (data.results) {
-        setSearchResults(page === 0 ? data.results : [...searchResults, ...data.results]);
-        setLastQuery(trimmedQuery);
-        return {
-          results: data.results,
-          hasMore: data.hasMore || false,
-          total: data.total || data.results.length
-        };
+      // Handle both response formats: direct array or object with results property
+      let results, hasMore, total;
+      
+      if (Array.isArray(data)) {
+        // API returns direct array
+        results = data;
+        hasMore = false; // Assuming no pagination for direct array responses
+        total = data.length;
+      } else if (data.results) {
+        // API returns object with results property
+        results = data.results;
+        hasMore = data.hasMore || false;
+        total = data.total || data.results.length;
+      } else {
+        results = [];
+        hasMore = false;
+        total = 0;
       }
       
-      return { results: [], hasMore: false, total: 0 };
+      console.log(`EfficientSearch: API response processed - ${results.length} results found`);
+      
+      setSearchResults(page === 0 ? results : [...searchResults, ...results]);
+      setLastQuery(trimmedQuery);
+      return {
+        results: results,
+        hasMore: hasMore,
+        total: total
+      };
     } catch (error) {
       console.error(`EfficientSearch: API call failed for ${searchType}:`, error);
       return { results: [], hasMore: false, total: 0 };

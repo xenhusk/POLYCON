@@ -155,7 +155,10 @@ function BookingAppointment({ closeModal, role: propRole }) {
     }
 
     try {
-      await teacherSearch.searchData(term, 0);
+      console.log("BookingAppointment: Searching for teachers with term:", term);
+      const result = await teacherSearch.searchData(term, 0);
+      console.log("BookingAppointment: Teacher search result:", result);
+      console.log("BookingAppointment: Current teacher search results:", teacherSearch.searchResults);
     } catch (error) {
       console.error("Teacher search error:", error);
     }
@@ -586,12 +589,7 @@ function BookingAppointment({ closeModal, role: propRole }) {
                   <input
                     type="text"
                     value={teacherSearchTerm}
-                    onChange={(e) => {
-                      setTeacherSearchTerm(e.target.value);
-                      setSelectedTeacher("");
-                      setSelectedTeacherName("");
-                      setSelectedTeacherProfile("");
-                    }}
+                    onChange={handleTeacherSearchChange}
                     onFocus={() => setIsTeacherInputFocused(true)}
                     onBlur={() =>
                       setTimeout(() => setIsTeacherInputFocused(false), 200)

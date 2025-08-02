@@ -1,9 +1,9 @@
 import React, { useState, useEffect } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import logo from "../components/icons/logo2.png";
-import Consult1 from "../components/icons/Consult1.jpg";
-import Consult3 from "../components/icons/consult3.webp";
-import Consult2 from "../components/icons/consultation.webp";
+import Consult1 from "../components/icons/Gemini_Generated_Image_glfva1glfva1glfv.png";
+import Consult3 from "../components/icons/Gemini_Generated_Image_zafzvozafzvozafz.png";
+import Consult2 from "../components/icons/Gemini_Generated_Image_xg3floxg3floxg3f.png";
 import Image1 from "../components/icons/ImageAbout.jpg";
 import Image2 from "../components/icons/ImageAbout1.jpg";
 import Image3 from "../components/icons/ImageAbout2.jpg";
