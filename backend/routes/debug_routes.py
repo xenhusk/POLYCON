@@ -14,7 +14,11 @@ def socket_status():
         if hasattr(socketio.server, 'manager'):
             # Get rooms for the default namespace '/'
             namespace_rooms = socketio.server.manager.rooms.get('/', {})
-            total_clients = len(socketio.server.manager.rooms.get('/', {}))
+            # Count unique client SIDs across all rooms
+            all_sids = set()
+            for room_clients in namespace_rooms.values():
+                all_sids.update(room_clients)
+            total_clients = len(all_sids)
             
             for room_name, client_sids in namespace_rooms.items():
                 if room_name.startswith('user_'):
