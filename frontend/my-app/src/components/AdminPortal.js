@@ -87,6 +87,7 @@ export default function AdminPortal() {
   const [showDeleteModal, setShowDeleteModal] = useState(false);
   const [userToDelete, setUserToDelete] = useState(null);
   const [showAddModal, setShowAddModal] = useState(false);
+  const [searchTerm, setSearchTerm] = useState('');
 
   useEffect(() => {
     fetchInitialData();
@@ -426,13 +427,63 @@ export default function AdminPortal() {
       <div className="flex justify-center items-start mb-2 h-[60vh] fade-in delay-200">
         <div className="w-[90%]">
           <div className="max-h-[65vh]">
-            <div className="w-full flex justify-center mb-4 mt-4 ">
+            {/* Search and Add User Controls */}
+            <div className="w-full flex justify-between items-center mb-4 mt-4 gap-4">
+              {/* Add User Button */}
               <button
                 className="px-6 py-2 bg-[#057DCD] text-white rounded-lg hover:bg-[#54BEFF] transition-all duration-300 transform hover:scale-105 active:scale-95 shadow-md"
                 onClick={() => setShowAddModal(true)}
               >
                 Add User
               </button>
+              
+              {/* Search Section */}
+              <div className="flex items-center gap-4">
+                <div className="relative w-[400px]">
+                  <input 
+                    type="text"
+                    value={searchTerm}
+                    onChange={(e) => setSearchTerm(e.target.value)}
+                    placeholder="Search users by name, email, or ID..."
+                    className="w-full border border-gray-300 rounded-lg px-3 py-2 pl-10 shadow-md focus:outline-none focus:ring-2 focus:ring-[#54BEFF] focus:border-[#0065A8] transition-all"
+                  />
+                  <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
+                    <svg className="h-5 w-5 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"></path>
+                    </svg>
+                  </div>
+                  {searchTerm && (
+                    <button
+                      onClick={() => setSearchTerm("")}
+                      className="absolute inset-y-0 right-0 pr-3 flex items-center text-gray-400 hover:text-gray-600"
+                    >
+                      <svg className="h-5 w-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M6 18L18 6M6 6l12 12" />
+                      </svg>
+                    </button>
+                  )}
+                </div>
+                
+                {/* Search Results Count */}
+                {searchTerm && (
+                  <div className="text-sm text-gray-600 bg-blue-50 px-3 py-2 rounded-lg border border-blue-200">
+                    <span className="font-medium">
+                      {userList.filter(user => {
+                        const searchLower = searchTerm.toLowerCase();
+                        return (
+                          user.firstName?.toLowerCase().includes(searchLower) ||
+                          user.lastName?.toLowerCase().includes(searchLower) ||
+                          user.email?.toLowerCase().includes(searchLower) ||
+                          user.idNumber?.toLowerCase().includes(searchLower) ||
+                          user.role?.toLowerCase().includes(searchLower) ||
+                          `${user.firstName} ${user.lastName}`.toLowerCase().includes(searchLower)
+                        );
+                      }).length}
+                    </span>
+                    <span className="text-gray-500"> of {userList.length} users</span>
+                  </div>
+                )}
+              </div>
             </div>
             <div className="overflow-x-auto shadow-md rounded-lg">
               <div className="relative">
@@ -489,7 +540,19 @@ export default function AdminPortal() {
                         </tr>
                       ))
                     ) : (
-                      userList.map((u) => { 
+                      userList
+                        .filter(user => {
+                          const searchLower = searchTerm.toLowerCase();
+                          return (
+                            user.firstName?.toLowerCase().includes(searchLower) ||
+                            user.lastName?.toLowerCase().includes(searchLower) ||
+                            user.email?.toLowerCase().includes(searchLower) ||
+                            user.idNumber?.toLowerCase().includes(searchLower) ||
+                            user.role?.toLowerCase().includes(searchLower) ||
+                            `${user.firstName} ${user.lastName}`.toLowerCase().includes(searchLower)
+                          );
+                        })
+                        .map((u) => { 
                         let departmentDisplay = u.department;
                         if (departmentDisplay && departments.length > 0) {
                           let deptObj = departments.find(d => 
@@ -573,6 +636,40 @@ export default function AdminPortal() {
                   </tbody>
                 </table>
               </div>
+              
+              {/* Empty State for Search Results */}
+              {!loading && userList.filter(user => {
+                const searchLower = searchTerm.toLowerCase();
+                return (
+                  user.firstName?.toLowerCase().includes(searchLower) ||
+                  user.lastName?.toLowerCase().includes(searchLower) ||
+                  user.email?.toLowerCase().includes(searchLower) ||
+                  user.idNumber?.toLowerCase().includes(searchLower) ||
+                  user.role?.toLowerCase().includes(searchLower) ||
+                  `${user.firstName} ${user.lastName}`.toLowerCase().includes(searchLower)
+                );
+              }).length === 0 && (
+                <div className="text-center py-12 bg-white rounded-lg shadow-md">
+                  <svg className="mx-auto h-12 w-12 text-gray-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0zm6 3a2 2 0 11-4 0 2 2 0 014 0zM7 10a2 2 0 11-4 0 2 2 0 014 0z" />
+                  </svg>
+                  <h3 className="mt-2 text-sm font-medium text-gray-900">No users found</h3>
+                  <p className="mt-1 text-sm text-gray-500">
+                    {searchTerm.trim() !== "" 
+                      ? `No users match "${searchTerm}". Try adjusting your search criteria.`
+                      : "No users have been loaded yet."
+                    }
+                  </p>
+                  {searchTerm.trim() !== "" && (
+                    <button
+                      onClick={() => setSearchTerm("")}
+                      className="mt-3 text-sm text-[#057DCD] hover:text-[#0065A8] font-medium"
+                    >
+                      Clear search
+                    </button>
+                  )}
+                </div>
+              )}
             </div>
           </div>
         </div>

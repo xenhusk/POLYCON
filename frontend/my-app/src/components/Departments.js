@@ -222,7 +222,7 @@ export default function Departments() {
     setShowEditModal(false);
   };
   return (
-    <div className="w-full min-h-screen items-center bg-white fade-in">
+    <div className="w-full min-h-screen items-center pt-6 bg-white fade-in">
       {/* Blocking message for admin on mobile/tablet */}
       {shouldBlockAdminMobile ? (
         <div className="fixed inset-0 flex flex-col pt-10 items-center min-h-screen w-screen bg-[#005B98] z-50">

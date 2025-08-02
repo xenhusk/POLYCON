@@ -1,7 +1,7 @@
 import React, { useState, useEffect, useRef, use } from 'react';
 import API_URL from '../apiConfig';
 import { format } from 'date-fns';
-import { motion, AnimatePresence } from 'framer-motion'; // NEW: import motion and AnimatePresence from framer-motion
+import { motion } from 'framer-motion'; // NEW: import motion from framer-motion
 import { ReactComponent as FilterIcon } from './icons/FilterAdd.svg';
 import { ReactComponent as RedoIcon } from './icons/redo.svg';
 import { createPortal } from 'react-dom';
@@ -32,7 +32,7 @@ const SemesterManagement = () => {
   const [teacherResults, setTeacherResults] = useState([]);
   const [isTeacherInputFocused, setIsTeacherInputFocused] = useState(false);
   const teacherSearchTimeout = useRef(null);
-  const [selectedDepartmentFilter, setSelectedDepartmentFilter] = useState('');
+  const [selectedDepartmentFilter, setSelectedDepartmentFilter] = useState([]);
   const [showDepartmentModal, setShowDepartmentModal] = useState(false);
   const [latestSemester, setLatestSemester] = useState(null);
   const [canEndSemester, setCanEndSemester] = useState(false); // Add new state for checking if we can show the end semester button
@@ -459,9 +459,23 @@ const SemesterManagement = () => {
 
   // Add reset filters function
   const handleResetFilters = () => {
-    setSelectedDepartmentFilter("");
+    setSelectedDepartmentFilter([]);
     setTeacherSearchTerm("");
     setTeacherResults([]);
+    setShowDepartmentModal(false);
+  };
+
+  // Add department filter change handler
+  const handleDepartmentFilterChange = (department) => {
+    const updatedDepartments = selectedDepartmentFilter.includes(department)
+      ? selectedDepartmentFilter.filter((dep) => dep !== department)
+      : [...selectedDepartmentFilter, department];
+    
+    setSelectedDepartmentFilter(updatedDepartments);
+  };
+
+  // Apply filters function
+  const applyDepartmentFilters = () => {
     setShowDepartmentModal(false);
   };
 
@@ -517,7 +531,7 @@ const SemesterManagement = () => {
     );
   }
   return (
-    <div className="fade-in flex flex-1 flex-col bg-gradient-to-br from-gray-50 to-blue-50 min-h-screen">
+    <div className="flex flex-col min-h-screen items-center mx-auto p-6 bg-white fade-in">
       {/* Toasts for specific messages outside the modal */}
       {(error === 'Please start a semester first before activating teachers' || error === 'Teacher activated successfully') && (
         <div className={`fixed top-5 right-5 z-50 rounded-lg shadow-lg max-w-md p-4 
@@ -528,202 +542,163 @@ const SemesterManagement = () => {
           </div>
         </div>
       )}
-      
-      {/* Header Section */}
-      <div className="bg-white shadow-sm border-b border-gray-200">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-          <div className="flex justify-between items-center py-6">
-            <h1 className="text-3xl font-bold text-[#0065A8] fade-in delay-100">
-              Semester Management
-            </h1>
+
+      <h2 className="text-3xl mt-10 font-bold text-center text-[#0065A8] pb-5 fade-in delay-100">
+        Semester Management
+      </h2>
+
+      <div className="flex items-center justify-between space-x-4 w-[90%] mt-4 fade-in delay-200">
+        {/* Manage Semester Button */}
+        <button
+          onClick={() => setShowSemesterModal(true)}
+          className="px-6 py-2 bg-[#057DCD] text-white rounded-lg hover:bg-[#54BEFF] transition-all duration-300 transform hover:scale-105 active:scale-95 shadow-md"
+        >
+          Manage Semester
+        </button>
+
+        {/* Search and Filter Section */}
+        <div className="flex items-center space-x-2">
+          <div className="relative w-[400px] border border-gray-300 rounded-lg px-3 py-2 shadow-md flex flex-wrap items-center min-h-[42px]">
+            <input
+              type="text"
+              value={teacherSearchTerm}
+              onChange={handleTeacherSearchChange}
+              placeholder="Search teachers by name..."
+              className="border-none focus:ring-0 outline-none w-[100%]"
+            />
+          </div>
+          <div className="relative">
             <button
-              onClick={() => setShowSemesterModal(true)}
-              className="bg-[#057DCD] text-white px-6 py-3 rounded-lg hover:bg-[#54BEFF] transition-all duration-300 shadow-md hover:shadow-lg transform hover:scale-105"
+              onClick={() => setShowDepartmentModal(!showDepartmentModal)}
+              className={`bg-[#057DCD] text-white p-3 rounded-full shadow-md flex items-center justify-center hover:bg-[#54BEFF] transition
+                ${showDepartmentModal ? "scale-90" : "scale-100"}`}
             >
-              Manage Semester
+              <FilterIcon className="w-5 h-5" />
             </button>
+            {selectedDepartmentFilter.length > 0 && (
+              <div className="absolute -top-2 -right-2 w-5 h-5 bg-red-500 rounded-full flex items-center justify-center">
+                <span className="text-xs text-white font-bold">{selectedDepartmentFilter.length}</span>
+              </div>
+            )}
           </div>
         </div>
       </div>
 
-      {/* Main Content */}
-      <div className="flex-1 max-w-7xl mx-auto w-full px-4 sm:px-6 lg:px-8 py-8 fade-in delay-200">
-        {/* Control Bar */}
-        <div className="bg-white rounded-xl shadow-md p-6 mb-6 border border-gray-100">
-          <div className="flex flex-col lg:flex-row justify-between items-start lg:items-center gap-4">
-            {/* Search Section */}
-            <div className="flex items-center gap-4 flex-1">
-              <div className="relative flex-1 max-w-md">
-                <input 
-                  type="text"
-                  value={teacherSearchTerm}
-                  onChange={handleTeacherSearchChange}
-                  placeholder="Search teachers by name..."
-                  className="w-full border-2 border-gray-300 rounded-lg px-4 py-3 pl-10 focus:outline-none focus:ring-2 focus:ring-[#54BEFF] focus:border-[#0065A8] transition-all"
-                />
-                <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
-                  <svg className="h-5 w-5 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"></path>
-                  </svg>
-                </div>
-              </div>
-              
-              {/* Filter Button */}
-              <div className="relative">
-                <button 
-                  onClick={() => setShowDepartmentModal(!showDepartmentModal)}
-                  className={`p-3 rounded-lg bg-[#057DCD] hover:bg-[#0065A8] shadow-md transition-all duration-300 hover:shadow-lg transform hover:scale-105
-                    ${showDepartmentModal ? 'bg-[#0065A8] scale-105' : ''}`}
-                  title="Filter by Department"
-                >
-                  <FilterIcon className="w-5 h-5 text-white" />
-                </button>
-                {selectedDepartmentFilter && (
-                  <div className="absolute -top-2 -right-2 w-5 h-5 bg-red-500 rounded-full flex items-center justify-center">
-                    <span className="text-xs text-white font-bold">1</span>
-                  </div>
-                )}
-              </div>
-            </div>
-
-            {/* Active Filter Display */}
-            {selectedDepartmentFilter && (
-              <div className="flex items-center gap-2 bg-blue-50 px-3 py-2 rounded-lg border border-blue-200">
-                <span className="text-sm text-blue-700 font-medium">Department:</span>
-                <span className="text-sm text-blue-900">{selectedDepartmentFilter}</span>
-                <button
-                  onClick={() => setSelectedDepartmentFilter("")}
-                  className="ml-1 text-blue-600 hover:text-blue-800"
-                >
-                  <svg className="w-4 h-4" fill="currentColor" viewBox="0 0 20 20">
-                    <path fillRule="evenodd" d="M4.293 4.293a1 1 0 011.414 0L10 8.586l4.293-4.293a1 1 0 111.414 1.414L11.414 10l4.293 4.293a1 1 0 01-1.414 1.414L10 11.414l-4.293 4.293a1 1 0 01-1.414-1.414L8.586 10 4.293 5.707a1 1 0 010-1.414z" clipRule="evenodd"></path>
-                  </svg>
-                </button>
-              </div>
-            )}
-
-            {/* Activate All Button */}
-            <button
-              onClick={handleActivateAll}
-              disabled={isActivatingAll || teachers.every(t => t.isActive)}
-              className={`bg-green-500 text-white px-6 py-3 rounded-lg hover:bg-green-600 transition-all duration-300 shadow-md hover:shadow-lg transform hover:scale-105 font-medium
-                ${(isActivatingAll || teachers.every(t => t.isActive)) ? 'opacity-50 cursor-not-allowed transform-none' : ''}`}
-            >
-              {isActivatingAll ? 'Activating...' : 'Activate All Teachers'}
-            </button>
-          </div>
-        </div>
-        {/* Teacher Table */}
-        <div className="bg-white rounded-xl shadow-md overflow-hidden border border-gray-100">
+      {/* Teacher Table */}
+      <div className="flex justify-center w-full fade-in delay-300">
+        <div className="mt-4 shadow-md rounded-lg overflow-hidden w-[90%] mx-auto">
           <div className="overflow-x-auto">
-            <table className="min-w-full">
-              <thead className="bg-gradient-to-r from-[#057DCD] to-[#0065A8] text-white">
-                <tr>
-                  <th className="py-4 px-6 text-left font-semibold">ID</th>
-                  <th className="py-4 px-6 text-left font-semibold">Name</th>
-                  <th className="py-4 px-6 text-left font-semibold">Department</th>
-                  <th className="py-4 px-6 text-center font-semibold">Status</th>
-                  <th className="py-4 px-6 text-center font-semibold">Actions</th>
+            <table className="w-full bg-white text-center table-fixed">
+              {/* Fixed Table Header */}
+              <thead className="bg-[#057DCD] text-white top-0 z-10">
+                <tr className="border-b">
+                  <th className="px-4 py-3">ID</th>
+                  <th className="px-4 py-3">Name</th>
+                  <th className="px-4 py-3">Department</th>
+                  <th className="px-4 py-3">Status</th>
+                  <th className="pr-5">Actions</th>
                 </tr>
               </thead>
-              <tbody className="divide-y divide-gray-200">
-                {teachers
-                  .filter(teacher => 
-                    (teacherSearchTerm.trim() === "" ||
-                     teacher.fullName.toLowerCase().includes(teacherSearchTerm.toLowerCase())) &&
-                    (selectedDepartmentFilter === "" ||
-                     teacher.department === selectedDepartmentFilter)
-                  )
-                  .map((teacher, index) => (
-                  <tr key={teacher.ID} className={`hover:bg-blue-50 transition-colors duration-200 ${index % 2 === 0 ? 'bg-gray-50' : 'bg-white'}`}>
-                    <td className="py-4 px-6 text-gray-900 font-medium">{teacher.ID}</td>
-                    <td className="py-4 px-6">
-                      <div className="text-gray-900 font-medium">{teacher.fullName}</div>
-                    </td>
-                    <td className="py-4 px-6">
-                      <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-blue-100 text-blue-800">
-                        {teacher.department}
-                      </span>
-                    </td>
-                    <td className="py-4 px-6 text-center">
-                      {teacher.isActive ? (
-                        <span className="inline-flex items-center px-3 py-1 rounded-full text-sm font-medium bg-green-100 text-green-800">
-                          <div className="w-2 h-2 bg-green-500 rounded-full mr-2"></div>
-                          Active
-                        </span>
-                      ) : (
-                        <span className="inline-flex items-center px-3 py-1 rounded-full text-sm font-medium bg-gray-100 text-gray-600">
-                          <div className="w-2 h-2 bg-gray-400 rounded-full mr-2"></div>
-                          Inactive
-                        </span>
-                      )}
-                    </td>
-                    <td className="py-4 px-6 text-center">
-                      {teacher.isActive ? (
-                        <span className="text-green-600 font-medium">✓ Activated</span>
-                      ) : (
-                        <button
-                          onClick={() => handleActivate(teacher.ID)}
-                          className="bg-gradient-to-r from-green-500 to-green-600 text-white px-4 py-2 rounded-lg hover:from-green-600 hover:to-green-700 transition-all duration-300 shadow-md hover:shadow-lg transform hover:scale-105 disabled:opacity-50 disabled:transform-none font-medium"
-                          disabled={isActivatingTeacher === teacher.ID}
-                        >
-                          {isActivatingTeacher === teacher.ID ? 'Activating...' : 'Activate'}
-                        </button>
-                      )}
-                    </td>
-                  </tr>
-                ))}
-              </tbody>
             </table>
+
+            {/* Scrollable Table Body */}
+            <div className="max-h-80 overflow-y-auto">
+              <table className="w-full bg-white text-center table-fixed">
+                <tbody>
+                  {teachers
+                    .filter(teacher => 
+                      (teacherSearchTerm.trim() === "" ||
+                       teacher.fullName.toLowerCase().includes(teacherSearchTerm.toLowerCase())) &&
+                      (selectedDepartmentFilter.length === 0 ||
+                       selectedDepartmentFilter.includes(teacher.department))
+                    )
+                    .map((teacher, index) => (
+                    <tr key={teacher.ID} className="border-b hover:bg-[#edf8ff] transition-all duration-200">
+                      <td className="py-2 px-6">{teacher.ID}</td>
+                      <td className="py-2 px-6">{teacher.fullName}</td>
+                      <td className="py-2 px-6">{teacher.department}</td>
+                      <td className="py-2 px-6">
+                        {teacher.isActive ? (
+                          <span className="text-green-500 font-medium">Active</span>
+                        ) : (
+                          <span className="text-gray-500 font-medium">Inactive</span>
+                        )}
+                      </td>
+                      <td className="py-2 px-6">
+                        {teacher.isActive ? (
+                          <span className="text-green-600 font-medium">✓ Activated</span>
+                        ) : (
+                          <button
+                            onClick={() => handleActivate(teacher.ID)}
+                            className="bg-green-500 text-white px-3 py-1 rounded hover:bg-green-600 transition-colors disabled:opacity-50"
+                            disabled={isActivatingTeacher === teacher.ID}
+                          >
+                            {isActivatingTeacher === teacher.ID ? 'Activating...' : 'Activate'}
+                          </button>
+                        )}
+                      </td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            </div>
           </div>
           
-          {/* Empty State */}
-          {teachers
-            .filter(teacher => 
-              (teacherSearchTerm.trim() === "" ||
-               teacher.fullName.toLowerCase().includes(teacherSearchTerm.toLowerCase())) &&
-              (selectedDepartmentFilter === "" ||
-               teacher.department === selectedDepartmentFilter)
-            ).length === 0 && (
-            <div className="text-center py-12">
-              <svg className="mx-auto h-12 w-12 text-gray-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0zm6 3a2 2 0 11-4 0 2 2 0 014 0zM7 10a2 2 0 11-4 0 2 2 0 014 0z" />
-              </svg>
-              <h3 className="mt-2 text-sm font-medium text-gray-900">No teachers found</h3>
-              <p className="mt-1 text-sm text-gray-500">
-                {teacherSearchTerm || selectedDepartmentFilter 
-                  ? "Try adjusting your search or filter criteria."
-                  : "No teachers have been loaded yet."
-                }
-              </p>
+          {/* Activate All Button moved to after table */}
+          <div className="bg-gray-50 px-6 py-4 border-t border-gray-200">
+            <div className="flex justify-end">
+              <button
+                onClick={handleActivateAll}
+                disabled={isActivatingAll || teachers.every(t => t.isActive)}
+                className={`bg-green-500 text-white px-6 py-2 rounded-lg hover:bg-green-600 transition-all duration-300 shadow-md transform hover:scale-105 font-medium
+                  ${(isActivatingAll || teachers.every(t => t.isActive)) ? 'opacity-50 cursor-not-allowed transform-none' : ''}`}
+              >
+                {isActivatingAll ? 'Activating...' : 'Activate All Teachers'}
+              </button>
             </div>
-          )}
+          </div>
         </div>
       </div>
 
       {/* Semester Management Modal */}
-      <AnimatePresence>
-        {showSemesterModal && (
-          <div 
-            className="fixed inset-0 bg-black/60 backdrop-blur-md flex items-center justify-center z-50 p-4"
-            onClick={() => setShowSemesterModal(false)}
+      {showSemesterModal && createPortal(
+        <div 
+          className="fixed bg-black/60 backdrop-blur-md flex items-center justify-center p-4"
+          style={{ 
+            position: 'fixed',
+            top: 0,
+            left: 0,
+            right: 0,
+            bottom: 0,
+            width: '100vw',
+            height: '100vh',
+            margin: 0,
+            padding: '1rem',
+            zIndex: 9999
+          }}
+          onClick={() => setShowSemesterModal(false)}
+        >
+          <motion.div
+            variants={{
+              hidden: { opacity: 0, scale: 0.95, y: 20 },
+              visible: { opacity: 1, scale: 1, y: 0, transition: { type: "spring", stiffness: 300, damping: 30 } },
+              exit: { opacity: 0, scale: 0.8, y: 20, transition: { duration: 0.3 } }
+            }}
+            initial="hidden"
+            animate="visible"
+            exit="exit"
+            className="bg-white rounded-xl shadow-2xl w-[500px] max-h-[90vh] overflow-y-auto border border-gray-200"
+            onClick={(e) => e.stopPropagation()}
+            style={{
+              scrollbarWidth: 'none',
+              msOverflowStyle: 'none',
+              zIndex: 9999
+            }}
           >
-            <motion.div
-              variants={{
-                hidden: { opacity: 0, scale: 0.95, y: 20 },
-                visible: { opacity: 1, scale: 1, y: 0, transition: { type: "spring", stiffness: 300, damping: 30 } },
-                exit: { opacity: 0, scale: 0.8, y: 20, transition: { duration: 0.3 } }
-              }}
-              initial="hidden"
-              animate="visible"
-              exit="exit"
-              className="bg-white rounded-xl shadow-2xl w-[500px] max-h-[90vh] overflow-y-auto border border-gray-200"
-              onClick={(e) => e.stopPropagation()}
-            >
               {/* Modal Header */}
               <div className="bg-gradient-to-r from-[#0065A8] to-[#057DCD] px-6 py-4 flex justify-between items-center">
                 <h2 className="text-xl font-semibold text-white">
-                  {latestSemester && canEndSemester ? '📅 Current Semester' : '🚀 Start New Semester'}
+                  {latestSemester && canEndSemester ? 'Current Semester' : 'Start New Semester'}
                 </h2>
                 <button
                   onClick={() => setShowSemesterModal(false)}
@@ -770,7 +745,7 @@ const SemesterManagement = () => {
                   <div className="space-y-6">
                     <div className="bg-gradient-to-r from-blue-50 to-indigo-50 p-6 rounded-lg border border-blue-200">
                       <div className="flex items-center mb-4">
-                        <div className="w-3 h-3 bg-green-500 rounded-full mr-3 animate-pulse"></div>
+                        <div className="w-3 h-3 bg-green-500 rounded-full mr-3 mt-3 animate-pulse"></div>
                         <h3 className="text-lg font-semibold text-gray-900">Active Semester</h3>
                       </div>
                       <div className="grid grid-cols-2 gap-4">
@@ -813,13 +788,13 @@ const SemesterManagement = () => {
                               Ending Semester...
                             </div>
                           ) : (
-                            '⚡ End Semester Now'
+                            'End Semester Now'
                           )}
                         </button>
                         
                         <div className="bg-gray-50 p-4 rounded-lg">
                           <label className="block text-sm font-medium text-gray-700 mb-2">
-                            📅 Schedule End Date (Optional)
+                            Schedule End Date (Optional)
                           </label>
                           <input
                             type="date"
@@ -845,7 +820,7 @@ const SemesterManagement = () => {
                                 Scheduling...
                               </div>
                             ) : (
-                              '📅 Schedule End Date'
+                              'Schedule End Date'
                             )}
                           </button>
                         </div>
@@ -857,7 +832,6 @@ const SemesterManagement = () => {
                   <div className="space-y-6">
                     <div className="bg-gradient-to-r from-green-50 to-blue-50 p-6 rounded-lg border border-green-200">
                       <h3 className="text-lg font-semibold text-gray-900 mb-4 flex items-center">
-                        <span className="mr-2">🚀</span>
                         Create New Semester
                       </h3>
                       
@@ -932,7 +906,7 @@ const SemesterManagement = () => {
                             Starting Semester...
                           </div>
                         ) : (
-                          '🚀 Start Semester'
+                          'Start Semester'
                         )}
                       </button>
                     </div>
@@ -940,9 +914,9 @@ const SemesterManagement = () => {
                 )}
               </div>
             </motion.div>
-          </div>
+          </div>,
+          document.body
         )}
-      </AnimatePresence>
 
       {/* Modern Department Filter Modal */}
       {showDepartmentModal && createPortal(
@@ -999,66 +973,50 @@ const SemesterManagement = () => {
                   Department
                 </label>
                 <div className="max-h-60 overflow-y-auto border-2 border-[#0065A8] rounded-lg">
-                  <div className="p-2">
-                    <label 
-                      className={`flex items-center p-3 rounded-lg transition-colors duration-200 cursor-pointer
-                        ${selectedDepartmentFilter === ""
-                          ? "bg-[#0065A8] text-white"
-                          : "hover:bg-[#54BEFF] hover:text-white"}`}
-                      onClick={() => {
-                        setSelectedDepartmentFilter("");
-                        setShowDepartmentModal(false);
-                      }}
-                    >
-                      <div className="w-4 h-4 rounded-full border-2 border-current mr-3 flex items-center justify-center">
-                        {selectedDepartmentFilter === "" && (
-                          <div className="w-2 h-2 rounded-full bg-current"></div>
-                        )}
-                      </div>
-                      <span className={selectedDepartmentFilter === ""
-                        ? "text-white font-medium"
-                        : "text-gray-700"}
-                      >
-                        All Departments
-                      </span>
-                    </label>
-                  </div>
-                  {distinctDepartments.map((dep, index) => (
-                    <div key={index} className="px-2 pb-2">
-                      <label 
-                        className={`flex items-center p-3 rounded-lg transition-colors duration-200 cursor-pointer
-                          ${selectedDepartmentFilter === dep
+                  {distinctDepartments.length > 0 ? (
+                    distinctDepartments.map((dep, index) => (
+                      <div key={index} className="p-2">
+                        <label className={`flex items-center p-2 rounded-lg transition-colors duration-200 cursor-pointer
+                          ${selectedDepartmentFilter.includes(dep)
                             ? "bg-[#0065A8] text-white"
                             : "hover:bg-[#54BEFF] hover:text-white"}`}
-                        onClick={() => {
-                          setSelectedDepartmentFilter(dep);
-                          setShowDepartmentModal(false);
-                        }}
-                      >
-                        <div className="w-4 h-4 rounded-full border-2 border-current mr-3 flex items-center justify-center">
-                          {selectedDepartmentFilter === dep && (
-                            <div className="w-2 h-2 rounded-full bg-current"></div>
-                          )}
-                        </div>
-                        <span className={selectedDepartmentFilter === dep
-                          ? "text-white font-medium"
-                          : "text-gray-700"}
                         >
-                          {dep}
-                        </span>
-                      </label>
-                    </div>
-                  ))}
+                          <input
+                            type="checkbox"
+                            value={dep}
+                            checked={selectedDepartmentFilter.includes(dep)}
+                            onChange={() => handleDepartmentFilterChange(dep)}
+                            className="mr-3 h-4 w-4 accent-[#0065A8] border-gray-300 rounded
+                            checked:bg-[#0065A8] checked:hover:bg-[#54BEFF]"
+                          />
+                          <span className={selectedDepartmentFilter.includes(dep)
+                            ? "text-white"
+                            : "text-gray-700"}
+                          >
+                            {dep}
+                          </span>
+                        </label>
+                      </div>
+                    ))
+                  ) : (
+                    <div className="p-4 text-gray-500 text-center">No departments found</div>
+                  )}
                 </div>
               </div>
             </div>
 
-            <div className="flex justify-end p-6 pt-0">
+            <div className="flex mt-4">
               <button
-                onClick={() => setShowDepartmentModal(false)}
-                className="bg-[#057DCD] text-white px-6 py-2 rounded-lg hover:bg-[#54BEFF] transition-colors"
+                onClick={applyDepartmentFilters}
+                className="flex-1 py-3 sm:py-4 bg-[#0065A8] hover:bg-[#54BEFF] text-white text-center justify-center transition-colors flex items-center gap-2 text-xs sm:text-sm font-medium"
               >
                 Apply Filters
+              </button>
+              <button
+                onClick={() => setShowDepartmentModal(false)}
+                className="flex-1 py-3 sm:py-4 text-gray-700 bg-gray-100 hover:bg-gray-200 transition-colors text-xs sm:text-sm font-medium"
+              >
+                Cancel
               </button>
             </div>
           </motion.div>
