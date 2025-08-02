@@ -38,16 +38,32 @@ def emit_booking_created(data):
             socketio.emit('booking_created', teacher_data, room=teacher_room_by_id_number)
             print(f"✅ booking_created emitted to teacher room {teacher_room_by_id_number}")
         
-        # For students: use the User.id for room targeting
+        # For students: use both User.id and idNumber for room targeting for compatibility
         for student_id in student_ids:
             student_message = generate_booking_created_message(data, 'student', student_id)
             student_data = {**data, 'message': student_message, 'recipient_role': 'student'}
             
-            student_room = f"user_{student_id}"
-            socketio.emit('booking_created', student_data, room=student_room)
-            print(f"✅ booking_created emitted to student room {student_room}")
+            # Send to room based on User.id (primary key)
+            student_room_by_id = f"user_{student_id}"
+            socketio.emit('booking_created', student_data, room=student_room_by_id)
+            print(f"✅ booking_created emitted to student room {student_room_by_id} (User.id)")
+            
+            # Also send to room based on idNumber for frontend compatibility
+            try:
+                from models import User
+                from extensions import db
+                user = db.session.query(User).filter_by(id=student_id).first()
+                if user and user.id_number:
+                    student_room_by_id_number = f"user_{user.id_number}"
+                    socketio.emit('booking_created', student_data, room=student_room_by_id_number)
+                    print(f"✅ booking_created emitted to student room {student_room_by_id_number} (idNumber)")
+            except Exception as e:
+                print(f"⚠️ Could not send to idNumber room for student {student_id}: {e}")
         
         print("✅ booking_created targeted notifications sent successfully")
+        
+        # Also emit booking_updated for Appointments page real-time updates
+        emit_booking_updated({**data, 'action': 'created'})
         
     except Exception as e:
         print(f"❌ Error emitting booking_created: {e}")
@@ -72,16 +88,32 @@ def emit_booking_confirmed(data):
             socketio.emit('booking_confirmed', teacher_data, room=teacher_room)
             print(f"✅ booking_confirmed emitted to teacher room {teacher_room}")
         
-        # For students: use the User.id for room targeting
+        # For students: use both User.id and idNumber for room targeting for compatibility
         for student_id in student_ids:
             student_message = generate_booking_confirmed_message(data, 'student', student_id)
             student_data = {**data, 'message': student_message, 'recipient_role': 'student'}
             
-            student_room = f"user_{student_id}"
-            socketio.emit('booking_confirmed', student_data, room=student_room)
-            print(f"✅ booking_confirmed emitted to student room {student_room}")
+            # Send to room based on User.id (primary key)
+            student_room_by_id = f"user_{student_id}"
+            socketio.emit('booking_confirmed', student_data, room=student_room_by_id)
+            print(f"✅ booking_confirmed emitted to student room {student_room_by_id} (User.id)")
+            
+            # Also send to room based on idNumber for frontend compatibility
+            try:
+                from models import User
+                from extensions import db
+                user = db.session.query(User).filter_by(id=student_id).first()
+                if user and user.id_number:
+                    student_room_by_id_number = f"user_{user.id_number}"
+                    socketio.emit('booking_confirmed', student_data, room=student_room_by_id_number)
+                    print(f"✅ booking_confirmed emitted to student room {student_room_by_id_number} (idNumber)")
+            except Exception as e:
+                print(f"⚠️ Could not send to idNumber room for student {student_id}: {e}")
         
         print("✅ booking_confirmed targeted notifications sent successfully")
+        
+        # Also emit booking_updated for Appointments page real-time updates
+        emit_booking_updated({**data, 'action': 'confirmed'})
         
     except Exception as e:
         print(f"❌ Error emitting booking_confirmed: {e}")
@@ -106,16 +138,32 @@ def emit_booking_cancelled(data):
             socketio.emit('booking_cancelled', teacher_data, room=teacher_room)
             print(f"✅ booking_cancelled emitted to teacher room {teacher_room}")
         
-        # For students: use the User.id for room targeting
+        # For students: use both User.id and idNumber for room targeting for compatibility
         for student_id in student_ids:
             student_message = generate_booking_cancelled_message(data, 'student', student_id)
             student_data = {**data, 'message': student_message, 'recipient_role': 'student'}
             
-            student_room = f"user_{student_id}"
-            socketio.emit('booking_cancelled', student_data, room=student_room)
-            print(f"✅ booking_cancelled emitted to student room {student_room}")
+            # Send to room based on User.id (primary key)
+            student_room_by_id = f"user_{student_id}"
+            socketio.emit('booking_cancelled', student_data, room=student_room_by_id)
+            print(f"✅ booking_cancelled emitted to student room {student_room_by_id} (User.id)")
+            
+            # Also send to room based on idNumber for frontend compatibility
+            try:
+                from models import User
+                from extensions import db
+                user = db.session.query(User).filter_by(id=student_id).first()
+                if user and user.id_number:
+                    student_room_by_id_number = f"user_{user.id_number}"
+                    socketio.emit('booking_cancelled', student_data, room=student_room_by_id_number)
+                    print(f"✅ booking_cancelled emitted to student room {student_room_by_id_number} (idNumber)")
+            except Exception as e:
+                print(f"⚠️ Could not send to idNumber room for student {student_id}: {e}")
         
         print("✅ booking_cancelled targeted notifications sent successfully")
+        
+        # Also emit booking_updated for Appointments page real-time updates
+        emit_booking_updated({**data, 'action': 'cancelled'})
         
     except Exception as e:
         print(f"❌ Error emitting booking_cancelled: {e}")
@@ -123,15 +171,89 @@ def emit_booking_cancelled(data):
         socketio.emit('booking_cancelled', data)
         print("✅ booking_cancelled emitted successfully (fallback)")
 
+def emit_booking_updated(data):
+    """Emit a booking updated event for real-time updates to Appointments page"""
+    print(f"📡 Broadcasting booking_updated: {data}")
+    print(f"📡 SocketIO instance: {socketio}")
+    try:
+        # Send targeted notifications to all affected users
+        teacher_id = data.get('teacher_id') or data.get('teacherID')  # This is id_number
+        student_ids = data.get('student_ids', [])  # These are User.id values
+        
+        # For teacher: use the id_number for room targeting
+        if teacher_id:
+            teacher_room = f"user_{teacher_id}"
+            socketio.emit('booking_updated', data, room=teacher_room)
+            print(f"✅ booking_updated emitted to teacher room {teacher_room}")
+        
+        # For students: use both User.id and idNumber for room targeting for compatibility
+        for student_id in student_ids:
+            # Send to room based on User.id (primary key)
+            student_room_by_id = f"user_{student_id}"
+            socketio.emit('booking_updated', data, room=student_room_by_id)
+            print(f"✅ booking_updated emitted to student room {student_room_by_id} (User.id)")
+            
+            # Also send to room based on idNumber for frontend compatibility
+            try:
+                from models import User
+                from extensions import db
+                user = db.session.query(User).filter_by(id=student_id).first()
+                if user and user.id_number:
+                    student_room_by_id_number = f"user_{user.id_number}"
+                    socketio.emit('booking_updated', data, room=student_room_by_id_number)
+                    print(f"✅ booking_updated emitted to student room {student_room_by_id_number} (idNumber)")
+            except Exception as e:
+                print(f"⚠️ Could not send to idNumber room for student {student_id}: {e}")
+        
+        print("✅ booking_updated targeted notifications sent successfully")
+        
+    except Exception as e:
+        print(f"❌ Error emitting booking_updated: {e}")
+        # Fallback to global broadcast if targeted notifications fail
+        socketio.emit('booking_updated', data)
+        print("✅ booking_updated emitted successfully (fallback)")
+
 def emit_booking_status_update(data):
     """Emit a general booking status update"""
     print(f"📡 Broadcasting booking_status_update: {data}")
     print(f"📡 SocketIO instance: {socketio}")
     try:
-        socketio.emit('booking_status_update', data)
-        print("✅ booking_status_update emitted successfully")
+        # Send targeted notifications to all affected users
+        teacher_id = data.get('teacher_id') or data.get('teacherID')  # This is id_number
+        student_ids = data.get('student_ids', [])  # These are User.id values
+        
+        # For teacher: use the id_number for room targeting
+        if teacher_id:
+            teacher_room = f"user_{teacher_id}"
+            socketio.emit('booking_status_update', data, room=teacher_room)
+            print(f"✅ booking_status_update emitted to teacher room {teacher_room}")
+        
+        # For students: use both User.id and idNumber for room targeting for compatibility
+        for student_id in student_ids:
+            # Send to room based on User.id (primary key)
+            student_room_by_id = f"user_{student_id}"
+            socketio.emit('booking_status_update', data, room=student_room_by_id)
+            print(f"✅ booking_status_update emitted to student room {student_room_by_id} (User.id)")
+            
+            # Also send to room based on idNumber for frontend compatibility
+            try:
+                from models import User
+                from extensions import db
+                user = db.session.query(User).filter_by(id=student_id).first()
+                if user and user.id_number:
+                    student_room_by_id_number = f"user_{user.id_number}"
+                    socketio.emit('booking_status_update', data, room=student_room_by_id_number)
+                    print(f"✅ booking_status_update emitted to student room {student_room_by_id_number} (idNumber)")
+            except Exception as e:
+                print(f"⚠️ Could not send to idNumber room for student {student_id}: {e}")
+        
+        print("✅ booking_status_update targeted notifications sent successfully")
+        
     except Exception as e:
         print(f"❌ Error emitting booking_status_update: {e}")
+        # Fallback to global broadcast if targeted notifications fail
+        socketio.emit('booking_status_update', data)
+        print("✅ booking_status_update emitted successfully (fallback)")
 
 def emit_appointment_reminder(data):
     """Emit appointment reminder notifications to specific user room"""

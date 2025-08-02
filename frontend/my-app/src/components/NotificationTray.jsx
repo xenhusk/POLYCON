@@ -224,47 +224,40 @@ const NotificationTray = ({ isVisible, onClose }) => {
                   </motion.button>
                 </div>
 
-                {/* Animated Toggle Switch */}
+                {/* Enhanced Toggle Switch */}
                 {hasNotifications && (
                   <div className="flex items-center justify-between mt-4">
-                    <div className="relative bg-white rounded-full p-1 shadow-sm border border-gray-200">
-                      {/* Toggle Background */}
-                      <motion.div 
-                        className="absolute top-1 h-7 bg-blue-500 rounded-full"
+                    <div className="relative flex bg-gray-100 rounded-lg p-1 shadow-sm">
+                      {/* Simple sliding background */}
+                      <motion.div
+                        className="absolute top-1 bottom-1 bg-blue-500 rounded-md shadow-sm"
                         animate={{
-                          left: viewMode === 'all' ? '0.25rem' : '4.75rem',
-                          width: viewMode === 'all' ? '4.5rem' : '5.5rem'
+                          left: viewMode === 'all' ? '0.25rem' : '50%',
+                          width: viewMode === 'all' ? '50%' : 'calc(50% - 0.25rem)'
                         }}
-                        transition={{ 
+                        transition={{
                           type: "spring",
-                          stiffness: 300,
+                          stiffness: 400,
                           damping: 30
                         }}
                       />
                       
-                      {/* Toggle Buttons */}
-                      <div className="relative flex">
-                        <button
-                          onClick={() => setViewMode('all')}
-                          className={`px-4 py-1.5 text-xs font-medium rounded-full transition-all duration-300 z-10 min-w-[4.5rem] ${
-                            viewMode === 'all'
-                              ? 'text-white'
-                              : 'text-gray-600 hover:text-gray-900'
-                          }`}
-                        >
-                          All ({notifications.length})
-                        </button>
-                        <button
-                          onClick={() => setViewMode('unread')}
-                          className={`px-4 py-1.5 text-xs font-medium rounded-full transition-all duration-300 z-10 min-w-[5.5rem] ${
-                            viewMode === 'unread'
-                              ? 'text-white'
-                              : 'text-gray-600 hover:text-gray-900'
-                          }`}
-                        >
-                          Unread ({unreadCount})
-                        </button>
-                      </div>
+                      <button
+                        onClick={() => setViewMode('all')}
+                        className={`relative z-10 flex-1 px-3 py-2 text-xs font-medium text-center transition-colors duration-200 ${
+                          viewMode === 'all' ? 'text-white' : 'text-gray-600 hover:text-gray-900'
+                        }`}
+                      >
+                        All ({notifications.length})
+                      </button>
+                      <button
+                        onClick={() => setViewMode('unread')}
+                        className={`relative z-10 flex-1 px-3 py-2 text-xs font-medium text-center transition-colors duration-200 ${
+                          viewMode === 'unread' ? 'text-white' : 'text-gray-600 hover:text-gray-900'
+                        }`}
+                      >
+                        Unread ({unreadCount})
+                      </button>
                     </div>
 
                     {/* Action Buttons */}

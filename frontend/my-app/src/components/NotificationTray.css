@@ -13,6 +13,77 @@
   transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
 }
 
+/* Toggle switch container improvements */
+.toggle-container {
+  position: relative;
+  background: white;
+  border-radius: 9999px;
+  padding: 0.25rem;
+  box-shadow: 0 1px 2px 0 rgba(0, 0, 0, 0.05);
+  border: 1px solid #e5e7eb;
+  overflow: hidden;
+  display: flex;
+  align-items: center;
+  min-width: fit-content;
+  max-width: 100%;
+  isolation: isolate; /* Create new stacking context */
+}
+
+.toggle-button {
+  position: relative;
+  z-index: 20;
+  flex: 1;
+  padding: 0.375rem 0.5rem;
+  font-size: 0.75rem;
+  font-weight: 500;
+  border-radius: 9999px;
+  transition: color 0.3s ease;
+  white-space: nowrap;
+  text-align: center;
+  min-width: fit-content;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  background: transparent;
+  border: none;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+@media (min-width: 640px) {
+  .toggle-button {
+    padding: 0.375rem 1rem;
+  }
+}
+
+@media (min-width: 1024px) {
+  .toggle-button {
+    padding: 0.375rem 1.25rem;
+    font-size: 0.875rem;
+  }
+}
+
+.toggle-active {
+  color: white !important;
+  display: flex !important;
+  align-items: center !important;
+  justify-content: center !important;
+  text-align: center !important;
+}
+
+.toggle-inactive {
+  color: #4b5563;
+  display: flex !important;
+  align-items: center !important;
+  justify-content: center !important;
+  text-align: center !important;
+}
+
+.toggle-inactive:hover {
+  color: #111827;
+}
+
 /* Enhanced hover effects */
 .notification-item {
   transition: all 0.2s ease-in-out;
