@@ -11,6 +11,7 @@ import {
   generateFallbackMessage,
   truncateForTray 
 } from '../utils/notificationFormatUtils';
+import { prodLog } from '../utils/productionLogger';
 import io from 'socket.io-client';
 
 const ToastContext = createContext();
@@ -132,11 +133,13 @@ export const ToastProvider = ({ children }) => {
     });    newSocket.on('connect', () => {
       console.log('🔔 ToastProvider: Socket connected successfully');
       console.log('🔔 Socket ID:', newSocket.id);
+      prodLog('🔔 PROD: Socket connected successfully - ID:', newSocket.id);
       setIsConnected(true);
       
       // Join user-specific room
       newSocket.emit('join_user_room', { userId: userId });
       console.log('🔔 ToastProvider: Joined user room for userId:', userId);
+      prodLog('🔔 PROD: Joined user room for userId:', userId);
       console.log('🔔 ToastProvider: Socket connection details:', {
         socketId: newSocket.id,
         userId: userId,
@@ -156,17 +159,20 @@ export const ToastProvider = ({ children }) => {
 
     newSocket.on('disconnect', (reason) => {
       console.log('🔔 ToastProvider: Socket disconnected:', reason);
+      prodLog('🔔 PROD: Socket disconnected:', reason);
       setIsConnected(false);
     });
 
     newSocket.on('connect_error', (error) => {
       console.error('🔔 ToastProvider: Socket connection error:', error);
+      prodLog('🔔 PROD ERROR: Socket connection error:', error);
       setIsConnected(false);
     });
 
     // Listen for appointment reminders from backend scheduler
     newSocket.on('appointment_reminder', (data) => {
       console.log('🔔 ToastProvider: Received appointment_reminder:', data);
+      prodLog('🔔 PROD: Received appointment_reminder:', data);
       console.log('🔔 Full appointment reminder payload:', JSON.stringify(data, null, 2));
       
       try {
@@ -194,25 +200,32 @@ export const ToastProvider = ({ children }) => {
         }, 'appointment');
 
         console.log('🔔 ToastProvider: Successfully processed appointment reminder');
+        prodLog('🔔 PROD: Successfully processed appointment reminder');
       } catch (error) {
         console.error('🔔 ToastProvider: Error processing appointment reminder:', error);
+        prodLog('🔔 PROD ERROR: Error processing appointment reminder:', error);
       }
     });
 
     // Listen for global appointment reminders (fallback for production reliability)
     newSocket.on('appointment_reminder_global', (data) => {
       console.log('🔔 ToastProvider: Received appointment_reminder_global (fallback):', data);
+      prodLog('🔔 PROD: Received appointment_reminder_global (fallback):', data);
       console.log('🔔 Full global appointment reminder payload:', JSON.stringify(data, null, 2));
       
       try {
         // Only show notification if it's for the current user
         const currentUserId = getCurrentUserId();
+        prodLog('🔔 PROD: Checking user IDs - current:', currentUserId, 'data recipient:', data.recipient_id);
+        
         if (data.recipient_id && data.recipient_id !== currentUserId) {
           console.log('🔔 ToastProvider: Global reminder not for current user, ignoring');
+          prodLog('🔔 PROD: Global reminder not for current user, ignoring');
           return;
         }
         
         const message = data.message || 'You have an appointment in 15 minutes';
+        prodLog('🔔 PROD: Processing global reminder for current user with message:', message);
         
         // Show toast notification with sound
         showAppointmentReminder(message, true);
@@ -236,8 +249,10 @@ export const ToastProvider = ({ children }) => {
         }, 'appointment');
 
         console.log('🔔 ToastProvider: Successfully processed global appointment reminder');
+        prodLog('🔔 PROD: Successfully processed global appointment reminder');
       } catch (error) {
         console.error('🔔 ToastProvider: Error processing global appointment reminder:', error);
+        prodLog('🔔 PROD ERROR: Error processing global appointment reminder:', error);
       }
     });
 
