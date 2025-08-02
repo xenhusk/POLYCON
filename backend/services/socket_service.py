@@ -52,13 +52,18 @@ def emit_booking_created(data):
             try:
                 from models import User
                 from extensions import db
-                user = db.session.query(User).filter_by(id=student_id).first()
-                if user and user.id_number:
-                    student_room_by_id_number = f"user_{user.id_number}"
-                    socketio.emit('booking_created', student_data, room=student_room_by_id_number)
-                    print(f"✅ booking_created emitted to student room {student_room_by_id_number} (idNumber)")
+                with db.session.no_autoflush:
+                    user = User.query.filter_by(id=student_id).first()
+                    if user and user.id_number:
+                        student_room_by_id_number = f"user_{user.id_number}"
+                        socketio.emit('booking_created', student_data, room=student_room_by_id_number)
+                        print(f"✅ booking_created emitted to student room {student_room_by_id_number} (idNumber)")
+                    else:
+                        print(f"⚠️ Student {student_id} not found or missing id_number")
             except Exception as e:
                 print(f"⚠️ Could not send to idNumber room for student {student_id}: {e}")
+                import traceback
+                traceback.print_exc()
         
         print("✅ booking_created targeted notifications sent successfully")
         
@@ -102,13 +107,18 @@ def emit_booking_confirmed(data):
             try:
                 from models import User
                 from extensions import db
-                user = db.session.query(User).filter_by(id=student_id).first()
-                if user and user.id_number:
-                    student_room_by_id_number = f"user_{user.id_number}"
-                    socketio.emit('booking_confirmed', student_data, room=student_room_by_id_number)
-                    print(f"✅ booking_confirmed emitted to student room {student_room_by_id_number} (idNumber)")
+                with db.session.no_autoflush:
+                    user = User.query.filter_by(id=student_id).first()
+                    if user and user.id_number:
+                        student_room_by_id_number = f"user_{user.id_number}"
+                        socketio.emit('booking_confirmed', student_data, room=student_room_by_id_number)
+                        print(f"✅ booking_confirmed emitted to student room {student_room_by_id_number} (idNumber)")
+                    else:
+                        print(f"⚠️ Student {student_id} not found or missing id_number")
             except Exception as e:
                 print(f"⚠️ Could not send to idNumber room for student {student_id}: {e}")
+                import traceback
+                traceback.print_exc()
         
         print("✅ booking_confirmed targeted notifications sent successfully")
         
@@ -152,13 +162,18 @@ def emit_booking_cancelled(data):
             try:
                 from models import User
                 from extensions import db
-                user = db.session.query(User).filter_by(id=student_id).first()
-                if user and user.id_number:
-                    student_room_by_id_number = f"user_{user.id_number}"
-                    socketio.emit('booking_cancelled', student_data, room=student_room_by_id_number)
-                    print(f"✅ booking_cancelled emitted to student room {student_room_by_id_number} (idNumber)")
+                with db.session.no_autoflush:
+                    user = User.query.filter_by(id=student_id).first()
+                    if user and user.id_number:
+                        student_room_by_id_number = f"user_{user.id_number}"
+                        socketio.emit('booking_cancelled', student_data, room=student_room_by_id_number)
+                        print(f"✅ booking_cancelled emitted to student room {student_room_by_id_number} (idNumber)")
+                    else:
+                        print(f"⚠️ Student {student_id} not found or missing id_number")
             except Exception as e:
                 print(f"⚠️ Could not send to idNumber room for student {student_id}: {e}")
+                import traceback
+                traceback.print_exc()
         
         print("✅ booking_cancelled targeted notifications sent successfully")
         
@@ -197,13 +212,18 @@ def emit_booking_updated(data):
             try:
                 from models import User
                 from extensions import db
-                user = db.session.query(User).filter_by(id=student_id).first()
-                if user and user.id_number:
-                    student_room_by_id_number = f"user_{user.id_number}"
-                    socketio.emit('booking_updated', data, room=student_room_by_id_number)
-                    print(f"✅ booking_updated emitted to student room {student_room_by_id_number} (idNumber)")
+                with db.session.no_autoflush:
+                    user = User.query.filter_by(id=student_id).first()
+                    if user and user.id_number:
+                        student_room_by_id_number = f"user_{user.id_number}"
+                        socketio.emit('booking_updated', data, room=student_room_by_id_number)
+                        print(f"✅ booking_updated emitted to student room {student_room_by_id_number} (idNumber)")
+                    else:
+                        print(f"⚠️ Student {student_id} not found or missing id_number")
             except Exception as e:
                 print(f"⚠️ Could not send to idNumber room for student {student_id}: {e}")
+                import traceback
+                traceback.print_exc()
         
         print("✅ booking_updated targeted notifications sent successfully")
         
@@ -239,13 +259,18 @@ def emit_booking_status_update(data):
             try:
                 from models import User
                 from extensions import db
-                user = db.session.query(User).filter_by(id=student_id).first()
-                if user and user.id_number:
-                    student_room_by_id_number = f"user_{user.id_number}"
-                    socketio.emit('booking_status_update', data, room=student_room_by_id_number)
-                    print(f"✅ booking_status_update emitted to student room {student_room_by_id_number} (idNumber)")
+                with db.session.no_autoflush:
+                    user = User.query.filter_by(id=student_id).first()
+                    if user and user.id_number:
+                        student_room_by_id_number = f"user_{user.id_number}"
+                        socketio.emit('booking_status_update', data, room=student_room_by_id_number)
+                        print(f"✅ booking_status_update emitted to student room {student_room_by_id_number} (idNumber)")
+                    else:
+                        print(f"⚠️ Student {student_id} not found or missing id_number")
             except Exception as e:
                 print(f"⚠️ Could not send to idNumber room for student {student_id}: {e}")
+                import traceback
+                traceback.print_exc()
         
         print("✅ booking_status_update targeted notifications sent successfully")
         

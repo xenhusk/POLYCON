@@ -5,7 +5,6 @@ import AppointmentItem from "../components/AppointmentItem";
 import { showErrorNotification, showAppointmentReminder as browserAppointmentNotification } from '../utils/notificationUtils';
 import { useToast } from '../contexts/ToastContext';
 import { parseUTCTimestamp } from '../utils/timezoneUtils';
-import io from 'socket.io-client';
 
 // Request notification permission on component load
 if ('Notification' in window && Notification.permission !== 'granted' && Notification.permission !== 'denied') {
@@ -25,7 +24,7 @@ const fetchStudentAppointments = async () => {
 };
 
 function StudentAppointments() {
-  const { showBookingCreated, showBookingConfirmed, showBookingCancelled, showAppointmentReminder } = useToast();
+  const { showBookingCreated, showBookingConfirmed, showBookingCancelled, showAppointmentReminder, socket, isConnected } = useToast();
   
   const {
     data: bookings = [],
@@ -104,29 +103,13 @@ function StudentAppointments() {
   }, [showAppointmentReminder]);
 
   useEffect(() => {
-    const socket = io(API_URL);
-    
-    // Add connection event handlers
-    socket.on('connect', () => {
-      console.log('📡 StudentAppointments: Socket connected');
-      
-      // Join user-specific room for targeted notifications
-      const userID = localStorage.getItem('studentID') || localStorage.getItem('teacherID') || localStorage.getItem('userID');
-      if (userID) {
-        socket.emit('join_user_room', { userId: userID });
-        console.log(`📡 StudentAppointments: Requesting to join room for user ${userID}`);
-      } else {
-        console.warn('📡 StudentAppointments: No user ID found for room joining');
-      }
-    });
-    
-    socket.on('disconnect', () => {
-      console.log('📡 StudentAppointments: Socket disconnected');
-    });
-    
-    socket.on('connect_error', (error) => {
-      console.error('📡 StudentAppointments: Socket connection error:', error);
-    });
+    // Only set up event listeners if socket is available and connected
+    if (!socket || !isConnected) {
+      console.log('� StudentAppointments: Socket not ready, waiting...', { socket: !!socket, isConnected });
+      return;
+    }
+
+    console.log('� StudentAppointments: Setting up socket event listeners');
     
     // Only handle events that need immediate UI updates (not toast notifications)
     const handleBookingStatusUpdate = data => {
@@ -146,22 +129,20 @@ function StudentAppointments() {
       refetch();
     };
 
-    // Handle room join confirmation
-    socket.on('joined_room', (data) => {
-      console.log(`📡 StudentAppointments: Successfully joined room ${data.room} for user ${data.userId}`);
-    });
-
-    console.log("📱 StudentAppointments: Listening to booking_updated/status_update events (reminders handled globally by ToastProvider)");
-    // Note: booking_created, booking_confirmed, booking_cancelled, appointment_reminder are now handled globally by ToastProvider
+    // Note: booking_created, booking_confirmed, booking_cancelled, appointment_reminder are handled globally by ToastProvider
     socket.on('booking_updated', handleBookingUpdated);
     socket.on('booking_status_update', handleBookingStatusUpdate);
-      return () => {
+
+    console.log("📱 StudentAppointments: Socket event listeners attached");
+
+    return () => {
       console.log("📱 StudentAppointments: Removing Socket.IO listeners");
-      socket.off('booking_updated', handleBookingUpdated);
-      socket.off('booking_status_update', handleBookingStatusUpdate);
-      socket.disconnect();
+      if (socket) {
+        socket.off('booking_updated', handleBookingUpdated);
+        socket.off('booking_status_update', handleBookingStatusUpdate);
+      }
     };
-  }, [refetch, showAppointmentReminder, handleAppointmentReminder]);
+  }, [socket, isConnected, refetch]);
 
   return (
     <div className="flex flex-col gap-4 sm:gap-5 h-full lg:grid lg:grid-cols-2">
@@ -311,7 +292,7 @@ const fetchTeacherAppointments = async () => {
 };
 
 function TeacherAppointments() {
-  const { showBookingCreated, showBookingConfirmed, showBookingCancelled, showAppointmentReminder } = useToast();
+  const { showBookingCreated, showBookingConfirmed, showBookingCancelled, showAppointmentReminder, socket, isConnected } = useToast();
   
   const {
     data: appointmentsData = [], // Renamed to avoid conflict
@@ -406,46 +387,28 @@ function TeacherAppointments() {
     });
   }, [showAppointmentReminder]);
   useEffect(() => {
-    const socket = io(API_URL);
-    
-    // Get user ID for room joining
-    const userID = localStorage.getItem('studentID') || localStorage.getItem('teacherID') || localStorage.getItem('userID');
-    
-    // Add connection event handlers
-    socket.on('connect', () => {
-      console.log('📡 TeacherAppointments: Socket connected');
-    });
-    
-    socket.on('disconnect', () => {
-      console.log('📡 TeacherAppointments: Socket disconnected');
-    });
-    
-    socket.on('connect_error', (error) => {
-      console.error('📡 TeacherAppointments: Socket connection error:', error);
-    });
-
-    // Join user-specific room for receiving targeted notifications
-    if (userID) {
-      socket.emit('join_user_room', { userId: userID });
-      console.log(`📱 TeacherAppointments: Requested to join room for user ${userID}`);
+    // Only set up event listeners if socket is available and connected
+    if (!socket || !isConnected) {
+      console.log('� TeacherAppointments: Socket not ready, waiting...', { socket: !!socket, isConnected });
+      return;
     }
 
-    socket.on('joined_room', (data) => {
-      console.log('📱 TeacherAppointments: Successfully joined room:', data.room);
-    });
+    console.log('📱 TeacherAppointments: Setting up socket event listeners');
 
-      console.log("📱 TeacherAppointments: Listening to booking_updated/status_update events (reminders handled globally by ToastProvider)");
-    // Note: booking_created, booking_confirmed, booking_cancelled, appointment_reminder are now handled globally by ToastProvider
+    // Note: booking_created, booking_confirmed, booking_cancelled, appointment_reminder are handled globally by ToastProvider
     socket.on('booking_updated', handleBookingUpdateOrCreate);
     socket.on('booking_status_update', handleBookingUpdateOrCreate);
-      return () => {
+
+    console.log("📱 TeacherAppointments: Socket event listeners attached");
+
+    return () => {
       console.log("📱 TeacherAppointments: Removing Socket.IO listeners");
-      socket.off('booking_updated', handleBookingUpdateOrCreate);
-      socket.off('booking_status_update', handleBookingUpdateOrCreate);
-      socket.off('joined_room');
-      socket.disconnect();
+      if (socket) {
+        socket.off('booking_updated', handleBookingUpdateOrCreate);
+        socket.off('booking_status_update', handleBookingUpdateOrCreate);
+      }
     };
-  }, [handleBookingUpdateOrCreate, handleAppointmentReminder]);
+  }, [socket, isConnected, handleBookingUpdateOrCreate]);
 
   const handleConfirmClick = (bookingID) => {
     setConfirmInputs((prev) => ({

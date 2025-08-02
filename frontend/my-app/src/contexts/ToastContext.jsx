@@ -221,7 +221,7 @@ export const ToastProvider = ({ children }) => {
         
         // Add to notification tray with contextual title
         addNotificationToTray({
-          type: 'booking',
+          type: 'info',  // Use 'info' type for created bookings to get blue color
           title: title,
           message: truncateForTray(message, 80)
         });
@@ -248,7 +248,7 @@ export const ToastProvider = ({ children }) => {
         
         // Add to notification tray with contextual title
         addNotificationToTray({
-          type: 'booking',
+          type: 'success',  // Use 'success' type for confirmed bookings to get green color
           title: title,
           message: truncateForTray(message, 80)
         });
@@ -275,7 +275,7 @@ export const ToastProvider = ({ children }) => {
         
         // Add to notification tray with contextual title
         addNotificationToTray({
-          type: 'booking',
+          type: 'error',  // Use 'error' type for cancelled bookings to get red color
           title: title,
           message: truncateForTray(message, 80)
         });

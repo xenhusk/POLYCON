@@ -79,7 +79,7 @@ def get_bookings():
             'id': b.id,
             'subject': b.subject,
             'description': b.description,
-            'schedule': b.schedule.replace(tzinfo=timezone.utc).isoformat().replace('+00:00', 'Z') if b.schedule else None,
+            'schedule': b.schedule.isoformat() if b.schedule else None,
             'venue': b.venue,
             'status': b.status,
             'teacherID': b.teacher_id,
@@ -87,7 +87,7 @@ def get_bookings():
             'teacherProfile': teacher_profile,
             'studentNames': student_names,
             'studentProfiles': student_profiles,
-            'created_at': b.created_at.replace(tzinfo=timezone.utc).isoformat().replace('+00:00', 'Z') if b.created_at else None,
+            'created_at': b.created_at.isoformat() if b.created_at else None,
             'created_by': b.created_by
         })
     return jsonify(result), 200
@@ -143,7 +143,7 @@ def get_all_bookings_admin():
             'teacherProfile': teacher_profile,
             'studentNames': student_names,
             'studentProfiles': student_profiles,
-            'created_at': b.created_at.replace(tzinfo=timezone.utc).isoformat() if b.created_at else None,
+            'created_at': b.created_at.isoformat() if b.created_at else None,
             'created_by': b.created_by
         })
     return jsonify(result), 200
@@ -276,7 +276,7 @@ def create_booking():
                 'teacher_id': data['teacherID'],  # Teacher's id_number
                 'student_names': student_names,
                 'student_ids': student_ids,  # List of student User.id values
-                'schedule': schedule.replace(tzinfo=timezone.utc).isoformat().replace('+00:00', 'Z') if schedule else None,
+                'schedule': schedule.isoformat() if schedule else None,
                 'venue': venue,
                 'created_by': creator_id
             }
@@ -329,7 +329,7 @@ def cancel_booking():
                 'teacher_id': booking.teacher_id,  # Teacher's id_number
                 'student_names': student_names,
                 'student_ids': booking.student_ids,  # List of student User.id values
-                'schedule': booking.schedule.replace(tzinfo=timezone.utc).isoformat().replace('+00:00', 'Z') if booking.schedule else None,
+                'schedule': booking.schedule.isoformat() if booking.schedule else None,
                 'venue': booking.venue
             }
             print(f"🔔 Emitting booking_cancelled: {booking_data}")
@@ -361,7 +361,8 @@ def confirm_booking():
         if data.get('schedule'):
             try:
                 schedule = datetime.fromisoformat(data.get('schedule').replace('Z', '+00:00'))
-                booking.schedule = schedule
+                # Convert to naive UTC datetime for database storage (consistent with creation)
+                booking.schedule = schedule.astimezone(timezone.utc).replace(tzinfo=None)
             except ValueError:
                 return jsonify({"error": "Invalid schedule format"}), 400
                 
@@ -387,7 +388,7 @@ def confirm_booking():
                 'teacher_id': booking.teacher_id,  # Teacher's id_number
                 'student_names': student_names,
                 'student_ids': booking.student_ids,  # List of student User.id values
-                'schedule': booking.schedule.replace(tzinfo=timezone.utc).isoformat().replace('+00:00', 'Z') if booking.schedule else None,
+                'schedule': booking.schedule.isoformat() if booking.schedule else None,
                 'venue': booking.venue
             }
             print(f"🔔 Emitting booking_confirmed: {booking_data}")
