@@ -36,6 +36,7 @@ from routes.settings_routes import settings_bp
 from routes.socket_test_routes import socket_test_bp # Import socket test routes
 from routes.scheduler_routes import scheduler_bp # Import scheduler routes
 from routes.notification_test_routes import notification_test_bp # Import notification test routes
+from routes.debug_routes import debug_bp # Import debug routes
 import routes.socket_routes  # Register socket event handlers
 
 
@@ -108,6 +109,7 @@ def create_app():
     app.register_blueprint(socket_test_bp) # Register socket test routes
     app.register_blueprint(scheduler_bp, url_prefix='/scheduler') # Register scheduler routes
     app.register_blueprint(notification_test_bp, url_prefix='/test') # Register notification test routes
+    app.register_blueprint(debug_bp, url_prefix='/debug') # Register debug routes
 
     # Configure static folder for uploads
     UPLOAD_FOLDER = os.path.join(os.path.dirname(os.path.abspath(__file__)), 'uploads')

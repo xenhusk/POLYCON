@@ -15,6 +15,16 @@ def format_schedule_for_api(schedule_datetime):
     # Treat naive datetime as UTC and add timezone info
     return schedule_datetime.replace(tzinfo=timezone.utc).isoformat()
 
+def format_created_at_for_api(created_datetime):
+    """Format created_at datetime as UTC ISO string for API responses"""
+    if not created_datetime:
+        return None
+    # If already timezone-aware, convert to UTC; if naive, treat as UTC
+    if created_datetime.tzinfo is None:
+        return created_datetime.replace(tzinfo=timezone.utc).isoformat()
+    else:
+        return created_datetime.astimezone(timezone.utc).isoformat()
+
 booking_bp = Blueprint('booking_bp', __name__, url_prefix='/bookings')
 
 @booking_bp.route('/get_bookings', methods=['GET'])
@@ -97,7 +107,7 @@ def get_bookings():
             'teacherProfile': teacher_profile,
             'studentNames': student_names,
             'studentProfiles': student_profiles,
-            'created_at': b.created_at.isoformat() if b.created_at else None,
+            'created_at': format_created_at_for_api(b.created_at),
             'created_by': b.created_by
         })
     return jsonify(result), 200
@@ -153,7 +163,7 @@ def get_all_bookings_admin():
             'teacherProfile': teacher_profile,
             'studentNames': student_names,
             'studentProfiles': student_profiles,
-            'created_at': b.created_at.isoformat() if b.created_at else None,
+            'created_at': format_created_at_for_api(b.created_at),
             'created_by': b.created_by
         })
     return jsonify(result), 200
