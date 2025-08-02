@@ -108,13 +108,22 @@ export const ToastProvider = ({ children }) => {
   useEffect(() => {
     // Only initialize socket if user is authenticated
     const userEmail = localStorage.getItem('userEmail');
-    const userId = localStorage.getItem('userId') || localStorage.getItem('userID');
+    // For socket room joining, prefer id_number format to match scheduler
+    const userIdNumber = localStorage.getItem('userIdNumber') || localStorage.getItem('userId');
+    const userDbId = localStorage.getItem('userID') || localStorage.getItem('userDbId');
+    
+    // Use id_number if available, otherwise fall back to database ID
+    const userId = userIdNumber || userDbId;
     
     console.log('🔔 ToastProvider socket init:', {
       userEmail,
       userId,
+      userIdNumber,
+      userDbId,
       localStorage_userId: localStorage.getItem('userId'),
-      localStorage_userID: localStorage.getItem('userID')
+      localStorage_userIdNumber: localStorage.getItem('userIdNumber'),
+      localStorage_userID: localStorage.getItem('userID'),
+      localStorage_userDbId: localStorage.getItem('userDbId')
     });
     
     if (!userEmail || !userId) {
@@ -145,13 +154,22 @@ export const ToastProvider = ({ children }) => {
       prodLog('🔔 PROD: Socket connected successfully - ID:', newSocket.id);
       setIsConnected(true);
       
-      // Join user-specific room
+      // Join user-specific room with primary userId (preferring id_number)
       newSocket.emit('join_user_room', { userId: userId });
       console.log('🔔 ToastProvider: Joined user room for userId:', userId);
       prodLog('🔔 PROD: Joined user room for userId:', userId);
+      
+      // Also join room with database ID for compatibility if different
+      if (userDbId && userDbId !== userId) {
+        newSocket.emit('join_user_room', { userId: userDbId });
+        console.log('🔔 ToastProvider: Also joined user room for userDbId:', userDbId);
+        prodLog('🔔 PROD: Also joined user room for userDbId:', userDbId);
+      }
+      
       console.log('🔔 ToastProvider: Socket connection details:', {
         socketId: newSocket.id,
         userId: userId,
+        userDbId: userDbId,
         userEmail: userEmail,
         connected: newSocket.connected
       });

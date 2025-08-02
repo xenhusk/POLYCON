@@ -276,6 +276,8 @@ function App() {
           if (data.idNumber) {
             localStorage.setItem('userID', data.idNumber);
             localStorage.setItem('userId', data.idNumber);
+            // Store the database ID separately for other functionality
+            localStorage.setItem('userDbId', data.id);
           } else {
             console.error("Fetched user data has no valid idNumber:", data);
           }
@@ -367,8 +369,11 @@ function App() {
           fetch(`${API_URL}/user/get_user?email=${storedEmail}`)
             .then(response => response.json())
             .then(data => {
-              // Use idNumber for socket connections, not the database ID
-              localStorage.setItem('userID', data.idNumber || data.id);
+              localStorage.setItem('userID', data.id);
+              // Also store the idNumber for socket room targeting
+              if (data.idNumber) {
+                localStorage.setItem('userIdNumber', data.idNumber);
+              }
 
               if (role === 'faculty') {
                 setProfile({
