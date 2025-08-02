@@ -1,7 +1,31 @@
 from flask import Blueprint, jsonify
+import os
 from services.socket_service import socketio
 
 debug_bp = Blueprint('debug', __name__, url_prefix='/debug')
+
+@debug_bp.route('/worker_info', methods=['GET'])
+def worker_info():
+    """Debug endpoint to check worker process information"""
+    try:
+        return jsonify({
+            'current_process': {
+                'pid': os.getpid(),
+            },
+            'environment': {
+                'WEB_CONCURRENCY': os.getenv('WEB_CONCURRENCY'),
+                'PORT': os.getenv('PORT'),
+                'GUNICORN_CMD_ARGS': os.getenv('GUNICORN_CMD_ARGS'),
+                'WORKERS': os.getenv('WORKERS')
+            },
+            'note': 'Check if multiple requests to this endpoint return different PIDs'
+        })
+        
+    except Exception as e:
+        return jsonify({
+            'error': str(e),
+            'current_pid': os.getpid()
+        }), 500
 
 @debug_bp.route('/socket_status', methods=['GET'])
 def socket_status():
