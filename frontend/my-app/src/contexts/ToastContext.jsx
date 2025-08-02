@@ -108,7 +108,16 @@ export const ToastProvider = ({ children }) => {
   useEffect(() => {
     // Only initialize socket if user is authenticated
     const userEmail = localStorage.getItem('userEmail');
-    const userId = localStorage.getItem('userId') || localStorage.getItem('userID');    if (!userEmail || !userId) {
+    const userId = localStorage.getItem('userId') || localStorage.getItem('userID');
+    
+    console.log('🔔 ToastProvider socket init:', {
+      userEmail,
+      userId,
+      localStorage_userId: localStorage.getItem('userId'),
+      localStorage_userID: localStorage.getItem('userID')
+    });
+    
+    if (!userEmail || !userId) {
       console.log('🔔 ToastProvider: No user credentials, skipping socket connection');
       console.log('🔔 LocalStorage check:', {
         userEmail: localStorage.getItem('userEmail'),

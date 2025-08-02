@@ -367,7 +367,8 @@ function App() {
           fetch(`${API_URL}/user/get_user?email=${storedEmail}`)
             .then(response => response.json())
             .then(data => {
-              localStorage.setItem('userID', data.id);
+              // Use idNumber for socket connections, not the database ID
+              localStorage.setItem('userID', data.idNumber || data.id);
 
               if (role === 'faculty') {
                 setProfile({
