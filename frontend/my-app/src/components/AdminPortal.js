@@ -73,6 +73,7 @@ export default function AdminPortal() {
   const [programs, setPrograms] = useState([]);
   const [userList, setUserList] = useState([]);
   const [editUser, setEditUser] = useState(null);
+  const [message, setMessage] = useState({ type: '', content: '' });
   const [AddClicked, setAddClicked] = useState(false);
   const [EditClicked, setEditClicked] = useState(false);
   const [DeleteClicked, setDeleteClicked] = useState(false);
@@ -86,6 +87,7 @@ export default function AdminPortal() {
   const [showDeleteModal, setShowDeleteModal] = useState(false);
   const [userToDelete, setUserToDelete] = useState(null);
   const [showAddModal, setShowAddModal] = useState(false);
+  const [searchTerm, setSearchTerm] = useState('');
 
   useEffect(() => {
     fetchInitialData();
@@ -196,7 +198,7 @@ export default function AdminPortal() {
 
       const data = await response.json();
       if (response.ok) {
-        alert(`${data.message} User has been created and can login immediately.`);
+        setMessage({ type: 'success', content: `${data.message} User has been created and can login immediately.` });
         fetchAllUsers();
         // Clear input fields
         setIdNumber('');
@@ -210,12 +212,22 @@ export default function AdminPortal() {
         setYearSection('');
         // Close the modal
         setShowAddModal(false);
+        // Auto-hide message after 3 seconds
+        setTimeout(() => {
+          setMessage({ type: '', content: '' });
+        }, 3000);
       } else {
-        alert(data.error || 'Failed to add user');
+        setMessage({ type: 'error', content: data.error || 'Failed to add user' });
+        setTimeout(() => {
+          setMessage({ type: '', content: '' });
+        }, 3000);
       }
     } catch (error) {
       console.error('Error adding user:', error);
-      alert('Failed to add user');
+      setMessage({ type: 'error', content: 'Failed to add user' });
+      setTimeout(() => {
+        setMessage({ type: '', content: '' });
+      }, 3000);
     }
   };
 
@@ -278,16 +290,26 @@ export default function AdminPortal() {
         body: JSON.stringify(updateData),
       });
       if (response.ok) {
-        alert('User updated successfully');
+        setMessage({ type: 'success', content: 'User updated successfully' });
         setEditUser(null);
         fetchAllUsers();
+        // Auto-hide message after 3 seconds
+        setTimeout(() => {
+          setMessage({ type: '', content: '' });
+        }, 3000);
       } else {
         const data = await response.json();
-        alert(data.error || 'Failed to update user');
+        setMessage({ type: 'error', content: data.error || 'Failed to update user' });
+        setTimeout(() => {
+          setMessage({ type: '', content: '' });
+        }, 3000);
       }
     } catch (error) {
       console.error('Error updating user:', error);
-      alert('Error updating user');
+      setMessage({ type: 'error', content: 'Error updating user' });
+      setTimeout(() => {
+        setMessage({ type: '', content: '' });
+      }, 3000);
     }
   };
 
@@ -300,17 +322,27 @@ export default function AdminPortal() {
       if (response.ok) {
         // Remove the archived user from the table immediately
         setUserList(prevList => prevList.filter(user => user.ID !== userId));
-        alert('User archived successfully');
+        setMessage({ type: 'success', content: 'User archived successfully' });
+        // Auto-hide message after 3 seconds
+        setTimeout(() => {
+          setMessage({ type: '', content: '' });
+        }, 3000);
       } else {
         const data = await response.json();
-        alert(data.error || 'Failed to archive user');
+        setMessage({ type: 'error', content: data.error || 'Failed to archive user' });
+        setTimeout(() => {
+          setMessage({ type: '', content: '' });
+        }, 3000);
       }
     } catch (error) {
       console.error('Error archiving user:', error);
-      alert('Error archiving user. Please try again.');
+      setMessage({ type: 'error', content: 'Error archiving user. Please try again.' });
+      setTimeout(() => {
+        setMessage({ type: '', content: '' });
+      }, 3000);
     } finally {
       setIsDeleteLoading(false);
-      setShowDeleteModal(false);
+      setUserToDelete(null);
     }
   };
 
@@ -366,19 +398,92 @@ export default function AdminPortal() {
 
   return (
     <div className="w-full min-h-screen p-6 items-center fade-in">
+      {message.content && (
+        <div className={`fixed top-5 right-5 z-50 rounded-lg shadow-lg max-w-md p-4 
+          ${message.type === 'success' ? 'bg-green-100 text-green-700' : 
+            message.type === 'warning' ? 'bg-yellow-100 text-yellow-700 border-yellow-500' : 
+            'bg-red-100 text-red-700'}`}
+        >
+          <div className="flex justify-between items-start">
+            <div className="flex-1">
+              {typeof message.content === 'string' ? message.content : message.content}
+            </div>
+            {typeof message.content === 'string' && (
+              <button
+                onClick={() => setMessage({ type: '', content: '' })}
+                className="ml-3 text-current hover:opacity-70"
+              >
+                <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M6 18L18 6M6 6l12 12" />
+                </svg>
+              </button>
+            )}
+          </div>
+        </div>
+      )}
       <header className="w-full bg-white mt-10 flex justify-center  items-center mb-2 fade-in delay-100">
         <h2 className="text-3xl items-center font-bold text-center pb-5 text-[#005B98]">Manage Users</h2>
       </header>      
       <div className="flex justify-center items-start mb-2 h-[60vh] fade-in delay-200">
         <div className="w-[90%]">
           <div className="max-h-[65vh]">
-            <div className="w-full flex justify-center mb-4 mt-4 ">
+            {/* Search and Add User Controls */}
+            <div className="w-full flex justify-between items-center mb-4 mt-4 gap-4">
+              {/* Add User Button */}
               <button
                 className="px-6 py-2 bg-[#057DCD] text-white rounded-lg hover:bg-[#54BEFF] transition-all duration-300 transform hover:scale-105 active:scale-95 shadow-md"
                 onClick={() => setShowAddModal(true)}
               >
                 Add User
               </button>
+              
+              {/* Search Section */}
+              <div className="flex items-center gap-4">
+                <div className="relative w-[400px]">
+                  <input 
+                    type="text"
+                    value={searchTerm}
+                    onChange={(e) => setSearchTerm(e.target.value)}
+                    placeholder="Search users by name, email, or ID..."
+                    className="w-full border border-gray-300 rounded-lg px-3 py-2 pl-10 shadow-md focus:outline-none focus:ring-2 focus:ring-[#54BEFF] focus:border-[#0065A8] transition-all"
+                  />
+                  <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
+                    <svg className="h-5 w-5 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"></path>
+                    </svg>
+                  </div>
+                  {searchTerm && (
+                    <button
+                      onClick={() => setSearchTerm("")}
+                      className="absolute inset-y-0 right-0 pr-3 flex items-center text-gray-400 hover:text-gray-600"
+                    >
+                      <svg className="h-5 w-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M6 18L18 6M6 6l12 12" />
+                      </svg>
+                    </button>
+                  )}
+                </div>
+                
+                {/* Search Results Count */}
+                {searchTerm && (
+                  <div className="text-sm text-gray-600 bg-blue-50 px-3 py-2 rounded-lg border border-blue-200">
+                    <span className="font-medium">
+                      {userList.filter(user => {
+                        const searchLower = searchTerm.toLowerCase();
+                        return (
+                          user.firstName?.toLowerCase().includes(searchLower) ||
+                          user.lastName?.toLowerCase().includes(searchLower) ||
+                          user.email?.toLowerCase().includes(searchLower) ||
+                          user.idNumber?.toLowerCase().includes(searchLower) ||
+                          user.role?.toLowerCase().includes(searchLower) ||
+                          `${user.firstName} ${user.lastName}`.toLowerCase().includes(searchLower)
+                        );
+                      }).length}
+                    </span>
+                    <span className="text-gray-500"> of {userList.length} users</span>
+                  </div>
+                )}
+              </div>
             </div>
             <div className="overflow-x-auto shadow-md rounded-lg">
               <div className="relative">
@@ -435,7 +540,19 @@ export default function AdminPortal() {
                         </tr>
                       ))
                     ) : (
-                      userList.map((u) => { 
+                      userList
+                        .filter(user => {
+                          const searchLower = searchTerm.toLowerCase();
+                          return (
+                            user.firstName?.toLowerCase().includes(searchLower) ||
+                            user.lastName?.toLowerCase().includes(searchLower) ||
+                            user.email?.toLowerCase().includes(searchLower) ||
+                            user.idNumber?.toLowerCase().includes(searchLower) ||
+                            user.role?.toLowerCase().includes(searchLower) ||
+                            `${user.firstName} ${user.lastName}`.toLowerCase().includes(searchLower)
+                          );
+                        })
+                        .map((u) => { 
                         let departmentDisplay = u.department;
                         if (departmentDisplay && departments.length > 0) {
                           let deptObj = departments.find(d => 
@@ -478,7 +595,33 @@ export default function AdminPortal() {
                                     setTimeout(() => {
                                       setDeleteClicked(false);
                                       setUserToDelete(u.ID);
-                                      setShowDeleteModal(true);
+                                      // Show confirmation toast instead of modal
+                                      setMessage({
+                                        type: 'warning',
+                                        content: (
+                                          <div className="flex items-center justify-between">
+                                            <span>Are you sure you want to archive this user?</span>
+                                            <div className="flex gap-2 ml-4">
+                                              <button
+                                                onClick={() => handleDeleteUser(u.ID)}
+                                                disabled={isDeleteLoading}
+                                                className="bg-red-500 text-white px-3 py-1 rounded text-sm hover:bg-red-600 disabled:opacity-50"
+                                              >
+                                                {isDeleteLoading ? 'Archiving...' : 'Archive'}
+                                              </button>
+                                              <button
+                                                onClick={() => {
+                                                  setMessage({ type: '', content: '' });
+                                                  setUserToDelete(null);
+                                                }}
+                                                className="bg-gray-300 text-gray-700 px-3 py-1 rounded text-sm hover:bg-gray-400"
+                                              >
+                                                Cancel
+                                              </button>
+                                            </div>
+                                          </div>
+                                        )
+                                      });
                                     }, 300);
                                   }}
                                 >
@@ -493,86 +636,46 @@ export default function AdminPortal() {
                   </tbody>
                 </table>
               </div>
+              
+              {/* Empty State for Search Results */}
+              {!loading && userList.filter(user => {
+                const searchLower = searchTerm.toLowerCase();
+                return (
+                  user.firstName?.toLowerCase().includes(searchLower) ||
+                  user.lastName?.toLowerCase().includes(searchLower) ||
+                  user.email?.toLowerCase().includes(searchLower) ||
+                  user.idNumber?.toLowerCase().includes(searchLower) ||
+                  user.role?.toLowerCase().includes(searchLower) ||
+                  `${user.firstName} ${user.lastName}`.toLowerCase().includes(searchLower)
+                );
+              }).length === 0 && (
+                <div className="text-center py-12 bg-white rounded-lg shadow-md">
+                  <svg className="mx-auto h-12 w-12 text-gray-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0zm6 3a2 2 0 11-4 0 2 2 0 014 0zM7 10a2 2 0 11-4 0 2 2 0 014 0z" />
+                  </svg>
+                  <h3 className="mt-2 text-sm font-medium text-gray-900">No users found</h3>
+                  <p className="mt-1 text-sm text-gray-500">
+                    {searchTerm.trim() !== "" 
+                      ? `No users match "${searchTerm}". Try adjusting your search criteria.`
+                      : "No users have been loaded yet."
+                    }
+                  </p>
+                  {searchTerm.trim() !== "" && (
+                    <button
+                      onClick={() => setSearchTerm("")}
+                      className="mt-3 text-sm text-[#057DCD] hover:text-[#0065A8] font-medium"
+                    >
+                      Clear search
+                    </button>
+                  )}
+                </div>
+              )}
             </div>
           </div>
         </div>
       </div>
 
-      {showDeleteModal && createPortal(
-        <div className="fixed bg-black/60 backdrop-blur-md flex items-center justify-center p-4" style={{ 
-          position: 'fixed',
-          top: 0,
-          left: 0,
-          right: 0,
-          bottom: 0,
-          width: '100vw',
-          height: '100vh',
-          margin: 0,
-          padding: '1rem',
-          zIndex: 9999
-        }}>
-          <div className="bg-white rounded-xl shadow-2xl w-full max-w-md max-h-[90vh] overflow-y-auto"
-               onClick={(e) => e.stopPropagation()}
-               style={{
-                 scrollbarWidth: 'none',
-                 msOverflowStyle: 'none',
-                 zIndex: 9999
-               }}>
-            <div className="bg-red-500 px-6 py-4 flex justify-between items-center sticky top-0 z-10">
-              <h2 className="text-lg font-semibold text-white">
-                Confirm Delete
-              </h2>
-            </div>
-
-            <div className="p-6">
-              <p className="text-gray-700 mb-6">
-                Are you sure you want to delete this user? You can restore them later if needed.
-              </p>
-            </div>
-
-            <div className="flex mt-4">
-              <button
-                onClick={() => {
-                  setDeleteClicked(true);
-                  setTimeout(() => {
-                    setDeleteClicked(false);
-                    handleDeleteUser(userToDelete);
-                  }, 300);
-                }}
-                disabled={isDeleteLoading}
-                className={`flex-1 py-3 sm:py-4 bg-red-500 text-white hover:bg-red-600 transition-colors ${DeleteClicked ? "scale-90" : "scale-100"} ${isDeleteLoading ? 'opacity-50 cursor-not-allowed' : ''} text-center justify-center flex items-center gap-2 text-xs sm:text-sm font-medium`}
-              >
-                {isDeleteLoading ? (
-                  <>
-                    <svg className="animate-spin h-5 w-5 text-white" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
-                      <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
-                      <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
-                    </svg>
-                    <span>Archiving...</span>
-                  </>
-                ) : (
-                  <span>Delete</span>
-                )}
-              </button>
-              <button
-                onClick={() => {
-                  setCancelClicked(true);
-                  setTimeout(() => {
-                    setCancelClicked(false);
-                    setShowDeleteModal(false);
-                    setUserToDelete(null);
-                  }, 300);
-                }}
-                disabled={isDeleteLoading}
-                className={`flex-1 py-3 sm:py-4 text-gray-700 bg-gray-100 hover:bg-gray-200 transition-colors text-xs sm:text-sm font-medium ${CancelClicked ? "scale-90" : "scale-100"}`}
-              >
-                Cancel
-              </button>
-            </div>
-          </div>
-        </div>,
-        document.body
-      )}      {showAddModal && createPortal(
+      {showAddModal && createPortal(
         <div className="fixed bg-black/60 backdrop-blur-md flex items-center justify-center p-4" style={{ 
           position: 'fixed',
           top: 0, left: 0, right: 0, bottom: 0, width: '100vw', height: '100vh', margin: 0, padding: '1rem',
