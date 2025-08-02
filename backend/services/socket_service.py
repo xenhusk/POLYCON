@@ -281,7 +281,7 @@ def emit_booking_status_update(data):
         print("✅ booking_status_update emitted successfully (fallback)")
 
 def emit_appointment_reminder(data):
-    """Emit appointment reminder notifications to specific user room"""
+    """Emit appointment reminder notifications to specific user room with global fallback"""
     print(f"📡 Broadcasting appointment_reminder: {data}")
     print(f"📡 SocketIO instance: {socketio}")
     
@@ -295,8 +295,10 @@ def emit_appointment_reminder(data):
         print(f"📡 Targeting user room: {user_room} for {recipient_type}")
         
         # Check if there are any clients in the target room
+        room_has_clients = False
         try:
             room_clients = socketio.server.manager.rooms.get('/', {}).get(user_room, set())
+            room_has_clients = len(room_clients) > 0
             print(f"📡 Clients in room {user_room}: {len(room_clients)} - {list(room_clients)}")
         except Exception as e:
             print(f"⚠️ Could not check room clients: {e}")
@@ -306,8 +308,20 @@ def emit_appointment_reminder(data):
             socketio.emit('appointment_reminder', data, room=user_room)
             print(f"✅ appointment_reminder emitted successfully to room {user_room}")
             
+            # If no clients in target room, also send as global broadcast for production reliability
+            if not room_has_clients:
+                print(f"⚠️ No clients in room {user_room}, sending global fallback for production reliability")
+                socketio.emit('appointment_reminder_global', data)
+                print("✅ appointment_reminder_global emitted as fallback")
+            
         except Exception as e:
             print(f"❌ Error emitting appointment_reminder to room {user_room}: {e}")
+            # Fallback to global broadcast on error
+            try:
+                socketio.emit('appointment_reminder_global', data)
+                print("✅ appointment_reminder_global emitted as error fallback")
+            except Exception as fallback_e:
+                print(f"❌ Error emitting global fallback: {fallback_e}")
     else:
         # Fallback to global broadcast if no recipient_id provided
         print("⚠️ No recipient_id provided, falling back to global broadcast")
