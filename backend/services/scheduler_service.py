@@ -3,11 +3,13 @@ Scheduler Service for Appointment Reminders
 
 This service handles scheduled tasks for sending appointment reminder notifications
 to users before their appointments start.
+Production-compatible with eventlet/gevent workers.
 """
 
 import threading
 import time
 import logging
+import os
 from datetime import datetime, timedelta
 from typing import List, Dict, Any
 from sqlalchemy import and_
@@ -19,9 +21,21 @@ from services.socket_service import emit_appointment_reminder
 logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger(__name__)
 
+# Production environment detection
+IS_PRODUCTION = os.getenv('FLASK_ENV') == 'production'
+EVENTLET_AVAILABLE = False
+
+try:
+    import eventlet
+    EVENTLET_AVAILABLE = True
+    logger.info("Eventlet detected - using eventlet for scheduling")
+except ImportError:
+    logger.info("Eventlet not available - using threading for scheduling")
+
 class AppointmentScheduler:
     """
     Handles scheduling and sending appointment reminder notifications.
+    Production-compatible with eventlet/gevent environments.
     """
     def __init__(self, reminder_minutes: int = 15, app=None):
         """
@@ -34,11 +48,13 @@ class AppointmentScheduler:
         self.reminder_minutes = reminder_minutes
         self.running = False
         self.scheduler_thread = None
+        self.greenthread = None  # For eventlet
         self.check_interval = 10  # Check every 10 seconds for due reminders (reduced from 60)
         self.sent_reminders = set()  # Track sent reminders to avoid duplicates
         self.app = app  # Store Flask app for context
         
         logger.info(f"AppointmentScheduler initialized with {reminder_minutes} minute reminders, checking every {self.check_interval} seconds")
+        logger.info(f"Production mode: {IS_PRODUCTION}, Eventlet available: {EVENTLET_AVAILABLE}")
 
     def start(self):
         """Start the scheduler in a background thread."""
@@ -47,9 +63,17 @@ class AppointmentScheduler:
             return
         
         self.running = True
-        self.scheduler_thread = threading.Thread(target=self._scheduler_loop, daemon=True)
-        self.scheduler_thread.start()
-        logger.info("Appointment scheduler started")
+        
+        if EVENTLET_AVAILABLE and IS_PRODUCTION:
+            # Use eventlet green threads in production
+            import eventlet
+            self.greenthread = eventlet.spawn(self._scheduler_loop)
+            logger.info("Appointment scheduler started with eventlet greenthread")
+        else:
+            # Use regular threading for development
+            self.scheduler_thread = threading.Thread(target=self._scheduler_loop, daemon=True)
+            self.scheduler_thread.start()
+            logger.info("Appointment scheduler started with standard threading")
 
     def stop(self):
         """Stop the scheduler."""
@@ -58,12 +82,24 @@ class AppointmentScheduler:
             return
         
         self.running = False
-        if self.scheduler_thread:
+        
+        if EVENTLET_AVAILABLE and IS_PRODUCTION and self.greenthread:
+            # Kill eventlet greenthread
+            try:
+                import eventlet
+                self.greenthread.kill()
+                logger.info("Eventlet greenthread stopped")
+            except Exception as e:
+                logger.error(f"Error stopping eventlet greenthread: {e}")
+        elif self.scheduler_thread:
+            # Stop regular thread
             self.scheduler_thread.join(timeout=5)
+            logger.info("Standard thread stopped")
+        
         logger.info("Appointment scheduler stopped")
 
     def _scheduler_loop(self):
-        """Main scheduler loop that runs in background thread."""
+        """Main scheduler loop that runs in background thread/greenthread."""
         logger.info(f"Scheduler loop started - checking every {self.check_interval} seconds")
         
         while self.running:
@@ -75,13 +111,23 @@ class AppointmentScheduler:
                 else:
                     self._check_and_send_reminders()
                 
-                # Wait before next check
-                time.sleep(self.check_interval)
+                # Wait before next check - use eventlet-compatible sleep if available
+                if EVENTLET_AVAILABLE and IS_PRODUCTION:
+                    import eventlet
+                    eventlet.sleep(self.check_interval)
+                else:
+                    time.sleep(self.check_interval)
                 
             except Exception as e:
                 logger.error(f"Error in scheduler loop: {e}")
                 import traceback
                 logger.error(f"Traceback: {traceback.format_exc()}")
+                # Sleep on error to prevent tight error loops
+                if EVENTLET_AVAILABLE and IS_PRODUCTION:
+                    import eventlet
+                    eventlet.sleep(5)
+                else:
+                    time.sleep(5)
                 time.sleep(self.check_interval)
 
     def _check_and_send_reminders(self):
@@ -94,6 +140,36 @@ class AppointmentScheduler:
             reminder_start_time = now
             reminder_end_time = now + timedelta(minutes=self.reminder_minutes + 2)
             
+            # DEBUG: Check all confirmed appointments first
+            all_confirmed = db.session.query(Booking).filter(Booking.status == 'confirmed').all()
+            all_cancelled = db.session.query(Booking).filter(Booking.status == 'cancelled').all()
+            all_pending = db.session.query(Booking).filter(Booking.status == 'pending').all()
+            
+            logger.info(f"DEBUG: Database stats - Confirmed: {len(all_confirmed)}, Cancelled: {len(all_cancelled)}, Pending: {len(all_pending)}")
+            
+            if all_confirmed:
+                # Show a few example appointments for debugging
+                for i, apt in enumerate(all_confirmed[:3]):  # Show first 3
+                    apt_time = apt.schedule
+                    apt_tz_info = getattr(apt_time, 'tzinfo', None)
+                    time_diff = (apt_time - now).total_seconds() / 60 if apt_time > now else (now - apt_time).total_seconds() / 60
+                    logger.info(f"DEBUG Confirmed Apt {i+1}: ID={apt.id}, Schedule={apt_time}, TZ={apt_tz_info}, Diff={time_diff:.1f}min from now")
+            
+            # Also show cancelled appointments in the time window for debugging
+            cancelled_in_window = db.session.query(Booking).filter(
+                and_(
+                    Booking.status == 'cancelled',
+                    Booking.schedule >= reminder_start_time,
+                    Booking.schedule <= reminder_end_time
+                )
+            ).all()
+            
+            if cancelled_in_window:
+                logger.info(f"DEBUG: Found {len(cancelled_in_window)} cancelled appointments in reminder window (these won't get reminders)")
+                for apt in cancelled_in_window:
+                    time_diff = (apt.schedule - now).total_seconds() / 60
+                    logger.info(f"  - Cancelled ID={apt.id}, Schedule={apt.schedule}, Diff={time_diff:.1f}min from now")
+            
             # Find confirmed appointments that start within the reminder window
             upcoming_appointments = db.session.query(Booking).filter(
                 and_(
@@ -104,6 +180,7 @@ class AppointmentScheduler:
             ).all()
             
             logger.info(f"Checking reminders at {now.isoformat()} (UTC time): Found {len(upcoming_appointments)} appointments to check")
+            logger.info(f"DEBUG: Reminder window: {reminder_start_time.isoformat()} to {reminder_end_time.isoformat()}")
             
             for appointment in upcoming_appointments:
                 self._send_reminder_if_needed(appointment, now)
@@ -285,13 +362,28 @@ class AppointmentScheduler:
         Returns:
             Dict containing scheduler status information
         """
+        thread_status = False
+        greenthread_status = False
+        
+        if EVENTLET_AVAILABLE and IS_PRODUCTION:
+            try:
+                greenthread_status = self.greenthread is not None and not self.greenthread.dead
+            except:
+                greenthread_status = False
+        else:
+            thread_status = self.scheduler_thread.is_alive() if self.scheduler_thread else False
+        
         return {
             'running': self.running,
             'reminder_minutes': self.reminder_minutes,
             'check_interval': self.check_interval,
             'sent_reminders_count': len(self.sent_reminders),
             'sent_reminders': list(self.sent_reminders),
-            'thread_alive': self.scheduler_thread.is_alive() if self.scheduler_thread else False
+            'thread_alive': thread_status,
+            'greenthread_alive': greenthread_status,
+            'is_production': IS_PRODUCTION,
+            'eventlet_available': EVENTLET_AVAILABLE,
+            'mode': 'eventlet' if (EVENTLET_AVAILABLE and IS_PRODUCTION) else 'threading'
         }
     
     def force_check(self):

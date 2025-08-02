@@ -72,6 +72,100 @@ def debug_scheduler():
     except Exception as e:
         return jsonify({'error': str(e)}), 500
 
+@scheduler_bp.route('/timezone_debug', methods=['GET'])
+def timezone_debug():
+    """Debug timezone and appointment scheduling issues"""
+    try:
+        from datetime import datetime, timezone, timedelta
+        import pytz
+        
+        now_utc = datetime.utcnow()
+        now_aware = datetime.now(timezone.utc)
+        
+        # Get some recent appointments for debugging
+        recent_appointments = db.session.query(Booking).filter(
+            Booking.status == 'confirmed'
+        ).order_by(Booking.created_at.desc()).limit(5).all()
+        
+        appointment_details = []
+        for apt in recent_appointments:
+            apt_schedule = apt.schedule
+            apt_created = apt.created_at
+            
+            # Calculate time differences
+            if apt_schedule:
+                schedule_diff = (apt_schedule - now_utc).total_seconds() / 60
+                schedule_in_future = apt_schedule > now_utc
+            else:
+                schedule_diff = None
+                schedule_in_future = None
+            
+            appointment_details.append({
+                'id': apt.id,
+                'status': apt.status,
+                'schedule': apt_schedule.isoformat() if apt_schedule else None,
+                'schedule_tzinfo': str(getattr(apt_schedule, 'tzinfo', None)),
+                'created_at': apt_created.isoformat() if apt_created else None,
+                'created_tzinfo': str(getattr(apt_created, 'tzinfo', None)),
+                'minutes_from_now': round(schedule_diff, 2) if schedule_diff is not None else None,
+                'is_future': schedule_in_future,
+                'teacher_id': apt.teacher_id,
+                'student_ids': apt.student_ids
+            })
+        
+        debug_data = {
+            'current_times': {
+                'utc_naive': now_utc.isoformat(),
+                'utc_aware': now_aware.isoformat(),
+                'local_naive': datetime.now().isoformat(),
+            },
+            'database_info': {
+                'total_bookings': db.session.query(Booking).count(),
+                'confirmed_bookings': db.session.query(Booking).filter(Booking.status == 'confirmed').count(),
+                'cancelled_bookings': db.session.query(Booking).filter(Booking.status == 'cancelled').count(),
+                'pending_bookings': db.session.query(Booking).filter(Booking.status == 'pending').count(),
+            },
+            'recent_appointments': appointment_details,
+            'scheduler_settings': {
+                'reminder_minutes': 15,
+                'check_interval': 10,
+                'reminder_window_start': now_utc.isoformat(),
+                'reminder_window_end': (now_utc + timedelta(minutes=17)).isoformat()
+            },
+            'appointments_in_reminder_window': {
+                'confirmed': db.session.query(Booking).filter(
+                    and_(
+                        Booking.status == 'confirmed',
+                        Booking.schedule >= now_utc,
+                        Booking.schedule <= now_utc + timedelta(minutes=17)
+                    )
+                ).count(),
+                'cancelled': db.session.query(Booking).filter(
+                    and_(
+                        Booking.status == 'cancelled',
+                        Booking.schedule >= now_utc,
+                        Booking.schedule <= now_utc + timedelta(minutes=17)
+                    )
+                ).count(),
+                'pending': db.session.query(Booking).filter(
+                    and_(
+                        Booking.status == 'pending',
+                        Booking.schedule >= now_utc,
+                        Booking.schedule <= now_utc + timedelta(minutes=17)
+                    )
+                ).count()
+            }
+        }
+        
+        return jsonify(debug_data)
+        
+    except Exception as e:
+        import traceback
+        return jsonify({
+            'error': str(e),
+            'traceback': traceback.format_exc()
+        }), 500
+
 @scheduler_bp.route('/force_check', methods=['POST'])
 def force_check():
     """Force the scheduler to check for reminders now"""

@@ -4,6 +4,9 @@ from sqlalchemy.orm import joinedload
 from sqlalchemy import or_
 from services.socket_service import emit_booking_created, emit_booking_confirmed, emit_booking_cancelled
 from datetime import datetime, timezone
+import logging
+
+logger = logging.getLogger(__name__)
 
 booking_bp = Blueprint('booking_bp', __name__, url_prefix='/bookings')
 
@@ -196,7 +199,12 @@ def create_booking():
         else:
             # Assume naive datetime is already in UTC
             schedule = datetime.fromisoformat(schedule_str)
-    except ValueError:
+            
+        # Log the schedule conversion for debugging
+        logger.info(f"Schedule conversion: '{schedule_str}' -> {schedule} (UTC naive)")
+        
+    except ValueError as e:
+        logger.error(f"Invalid schedule format: {schedule_str}, error: {e}")
         return jsonify({"error": "Invalid schedule format"}), 400
     venue = data.get('venue')
     # Validate venue only for confirmed faculty bookings
@@ -242,7 +250,9 @@ def create_booking():
     try:
         # Generate a unique ID using UUID
         import uuid
+        from datetime import datetime, timezone
         booking_id = str(uuid.uuid4())
+        current_utc_time = datetime.now(timezone.utc)
         
         # Create new booking (schedule/venue only for confirmed)
         new_booking = Booking(
@@ -256,6 +266,9 @@ def create_booking():
             student_ids=student_ids,
             created_by=creator_id
         )
+        
+        # Explicitly set created_at to ensure correct timestamp
+        new_booking.created_at = current_utc_time
         
         # Add to database
         db.session.add(new_booking)
