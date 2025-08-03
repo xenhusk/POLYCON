@@ -39,7 +39,7 @@ class ProductionAppointmentScheduler:
         self.reminder_minutes = reminder_minutes
         self.running = False
         self.scheduler_thread = None
-        self.check_interval = 30  # Check every 30 seconds in production (less frequent)
+        self.check_interval = 10  # TEMPORARY: Faster checking for debugging (was 30)
         self.sent_reminders = set()  # Track sent reminders to avoid duplicates
         self.app = app  # Store Flask app for context
         self.last_cleanup = datetime.utcnow()
@@ -57,11 +57,18 @@ class ProductionAppointmentScheduler:
         self.running = True
         self.scheduler_thread = threading.Thread(
             target=self._scheduler_loop,
-            daemon=True,  # Important: Make thread daemon so it doesn't prevent app shutdown
-            name="AppointmentScheduler"
+            daemon=False,  # CHANGE: Make thread non-daemon to prevent premature termination
+            name="ProductionAppointmentScheduler"
         )
         self.scheduler_thread.start()
         logger.info("✅ Production appointment scheduler started successfully")
+        
+        # Wait a moment to ensure the thread actually starts
+        time.sleep(0.5)
+        if self.scheduler_thread.is_alive():
+            logger.info("✅ Scheduler thread confirmed alive after startup")
+        else:
+            logger.error("❌ Scheduler thread died immediately after startup!")
 
     def stop(self):
         """Stop the scheduler."""
@@ -298,18 +305,22 @@ class ProductionAppointmentScheduler:
         """Clean up old reminder records periodically."""
         try:
             now = datetime.utcnow()
+            logger.info(f"🧹 Periodic cleanup called at {now.isoformat()}")
+            
+            # ALWAYS update last_cleanup to prove the loop is running
+            self.last_cleanup = now
+            logger.info(f"✅ Updated last_cleanup timestamp to {now.isoformat()}")
+            
             # Clean up every hour
-            if (now - self.last_cleanup).total_seconds() > 3600:
-                # Remove reminders older than 24 hours
+            if len(self.sent_reminders) > 1000:  # Arbitrary threshold
                 old_size = len(self.sent_reminders)
-                # In production, just clear all to avoid memory buildup
-                if old_size > 1000:  # Arbitrary threshold
-                    self.sent_reminders.clear()
-                    logger.info(f"🧹 Cleared {old_size} old reminder records for memory management")
+                self.sent_reminders.clear()
+                logger.info(f"🧹 Cleared {old_size} old reminder records for memory management")
                 
-                self.last_cleanup = now
         except Exception as e:
             logger.error(f"Error in periodic cleanup: {e}")
+            import traceback
+            logger.error(f"Traceback: {traceback.format_exc()}")
 
     def get_status(self) -> Dict[str, Any]:
         """Get current scheduler status."""
