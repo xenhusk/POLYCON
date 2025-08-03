@@ -42,7 +42,6 @@ export const ToastProvider = ({ children }) => {
     try {
       const storageKey = getStorageKey();
       localStorage.setItem(storageKey, JSON.stringify(notificationsArray));
-      console.log('🔔 Saved', notificationsArray.length, 'notifications to localStorage');
     } catch (error) {
       console.error('❌ Error saving notifications to localStorage:', error);
     }
@@ -59,10 +58,8 @@ export const ToastProvider = ({ children }) => {
           ...notif,
           timestamp: new Date(notif.timestamp)
         }));
-        console.log('🔔 Loaded', notifications.length, 'notifications from localStorage');
         return notifications;
       }
-      console.log('🔔 No stored notifications found');
       return [];
     } catch (error) {
       console.error('❌ Error loading notifications from localStorage:', error);

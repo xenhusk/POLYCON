@@ -41,7 +41,6 @@ import { useQueryClient } from 'react-query';
 import { useFetchWithCache } from './hooks/useFetchWithCache';
 import { usePrefetch } from './context/DataPrefetchContext';
 import NetworkMonitor from './components/NetworkMonitor';
-import ProductionDebugger from './components/ProductionDebugger';
 import { getUserIdentifiers } from "./utils/userUtils"; // Add import for getUserIdentifiers
 import { ensureUserIdPersistence, recoverUserIds } from "./utils/persistUtils";
 import ComparativeAnalysis from './pages/ComparativeAnalysis';
@@ -870,9 +869,6 @@ function App() {
         
         {/* Network Monitor - only visible in development */}
         <NetworkMonitor visible={process.env.NODE_ENV === 'development'} />
-        
-        {/* Production Debugger - always available for debugging production issues */}
-        <ProductionDebugger />
         
         {/* REMOVE OR MODIFY THIS LINE - you can either:
             1. Comment it out entirely: */}
