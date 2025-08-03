@@ -82,28 +82,40 @@ class ProductionAppointmentScheduler:
 
     def _scheduler_loop(self):
         """Main scheduler loop that runs in background thread."""
-        logger.info(f"Production scheduler loop started - checking every {self.check_interval} seconds")
+        logger.info(f"🚀 Production scheduler loop STARTING - checking every {self.check_interval} seconds")
         
+        loop_count = 0
         while self.running:
             try:
+                loop_count += 1
+                logger.info(f"🔄 Production scheduler loop iteration #{loop_count}")
+                
                 if self.app:
                     # Use Flask app context for database operations
                     with self.app.app_context():
+                        logger.info("📱 Using Flask app context for database operations")
                         self._check_and_send_reminders()
                         self._periodic_cleanup()
+                        logger.info("✅ Completed reminder check and cleanup within app context")
                 else:
+                    logger.warning("⚠️ No Flask app context available - running without it")
                     self._check_and_send_reminders()
                     self._periodic_cleanup()
+                    logger.info("✅ Completed reminder check and cleanup without app context")
                 
+                logger.info(f"😴 Sleeping for {self.check_interval} seconds before next check...")
                 # Wait before next check
                 time.sleep(self.check_interval)
                 
             except Exception as e:
-                logger.error(f"❌ Error in production scheduler loop: {e}")
+                logger.error(f"❌ CRITICAL ERROR in production scheduler loop: {e}")
                 import traceback
-                logger.error(f"Traceback: {traceback.format_exc()}")
+                logger.error(f"🔍 Full traceback: {traceback.format_exc()}")
+                logger.info(f"🔄 Continuing scheduler loop after error (iteration #{loop_count})")
                 # Continue running even if there's an error
                 time.sleep(self.check_interval)
+        
+        logger.info(f"🛑 Production scheduler loop ENDED after {loop_count} iterations")
 
     def _check_and_send_reminders(self):
         """Check for appointments that need reminders and send them."""
