@@ -91,17 +91,15 @@ class ProductionAppointmentScheduler:
                 logger.info(f"🔄 Production scheduler loop iteration #{loop_count}")
                 
                 if self.app:
-                    # Use Flask app context for database operations
+                    # Use Flask app context for ALL database operations in this iteration
                     with self.app.app_context():
                         logger.info("📱 Using Flask app context for database operations")
                         self._check_and_send_reminders()
                         self._periodic_cleanup()
                         logger.info("✅ Completed reminder check and cleanup within app context")
                 else:
-                    logger.warning("⚠️ No Flask app context available - running without it")
-                    self._check_and_send_reminders()
-                    self._periodic_cleanup()
-                    logger.info("✅ Completed reminder check and cleanup without app context")
+                    logger.error("⚠️ No Flask app context available - CANNOT run database operations")
+                    logger.error("⚠️ Scheduler will not work without app context!")
                 
                 logger.info(f"😴 Sleeping for {self.check_interval} seconds before next check...")
                 # Wait before next check
@@ -128,6 +126,7 @@ class ProductionAppointmentScheduler:
             reminder_end_time = now + timedelta(minutes=self.reminder_minutes + 5)  # 5-minute buffer
             
             # Find confirmed appointments that start within the reminder window
+            # Database operations should be done within the app context established by caller
             upcoming_appointments = db.session.query(Booking).filter(
                 and_(
                     Booking.status == 'confirmed',
