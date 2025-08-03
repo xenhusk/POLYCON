@@ -29,13 +29,19 @@ def status():
         'timestamp': datetime.utcnow().isoformat()
     })
 
-@alt_reminders_bp.route('/trigger', methods=['POST'])
+@alt_reminders_bp.route('/trigger', methods=['POST', 'GET'])
 def trigger_reminders():
     """
     Endpoint to trigger reminder checks - can be called by external cron services
+    Supports both POST and GET requests for flexibility with different cron services
     """
     try:
-        reminder_minutes = request.json.get('reminder_minutes', 15) if request.json else 15
+        # Handle both POST with JSON body and GET requests
+        if request.method == 'POST' and request.json:
+            reminder_minutes = request.json.get('reminder_minutes', 15)
+        else:
+            # Default for GET requests or POST without JSON
+            reminder_minutes = 15
         
         # Get current time
         now = datetime.utcnow()

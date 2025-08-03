@@ -88,9 +88,13 @@ def create_app():
         
         if is_production:
             # Use production-optimized scheduler for Render deployment
+            # NOTE: Background threading is broken in Render production environment
+            # This scheduler is kept for development/testing but doesn't work in production
+            # ACTUAL PRODUCTION REMINDERS: Use /alternative-reminders/trigger endpoint 
+            # triggered by external cron service (cron-job.org)
             from services.scheduler_service_production import initialize_production_scheduler
             initialize_production_scheduler(app, reminder_minutes=15)
-            print("✅ Production scheduler initialized for Render deployment")
+            print("✅ Production scheduler initialized (NOTE: Background threads don't work - use alternative reminders)")
         else:
             # Use regular scheduler for development
             from services.scheduler_service import initialize_scheduler
