@@ -393,3 +393,32 @@ def initialize_production_scheduler(app=None, reminder_minutes: int = 15):
         logger.info("Production scheduler already initialized")
         
     return _production_scheduler_instance
+
+def restart_production_scheduler(app=None, reminder_minutes: int = 15):
+    """
+    Restart the production scheduler by stopping the old one and creating a new instance.
+    """
+    global _production_scheduler_instance
+    
+    logger.info("🔄 Restarting production scheduler...")
+    
+    # Stop the existing scheduler if it exists
+    if _production_scheduler_instance:
+        try:
+            _production_scheduler_instance.stop()
+            logger.info("Old production scheduler stopped")
+        except Exception as e:
+            logger.error(f"Error stopping old scheduler: {e}")
+    
+    # Clear the global instance to force recreation
+    _production_scheduler_instance = None
+    
+    # Create and start new scheduler
+    _production_scheduler_instance = ProductionAppointmentScheduler(
+        reminder_minutes=reminder_minutes, 
+        app=app
+    )
+    _production_scheduler_instance.start()
+    logger.info(f"✅ Production scheduler restarted successfully with {reminder_minutes} minute reminders")
+    
+    return _production_scheduler_instance
