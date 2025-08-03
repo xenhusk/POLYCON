@@ -234,7 +234,11 @@ def restart_scheduler():
         from flask import current_app
         
         # Get reminder minutes from request
-        reminder_minutes = request.json.get('reminder_minutes', 15) if request.json else 15
+        reminder_minutes = 15  # Default value
+        if request.json:
+            reminder_minutes = request.json.get('reminder_minutes', 15)
+        elif request.form:
+            reminder_minutes = int(request.form.get('reminder_minutes', 15))
         
         if is_production_env() and PRODUCTION_SCHEDULER_AVAILABLE:
             # Use restart function for production scheduler
