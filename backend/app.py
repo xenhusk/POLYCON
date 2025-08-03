@@ -37,6 +37,7 @@ from routes.socket_test_routes import socket_test_bp # Import socket test routes
 from routes.scheduler_routes import scheduler_bp # Import scheduler routes
 from routes.notification_test_routes import notification_test_bp # Import notification test routes
 from routes.debug_routes import debug_bp # Import debug routes
+from routes.alternative_reminders import alt_reminders_bp # Import alternative reminders
 import routes.socket_routes  # Register socket event handlers
 
 
@@ -120,9 +121,10 @@ def create_app():
     app.register_blueprint(profile_bp)
     app.register_blueprint(settings_bp) # Ensure this is present
     app.register_blueprint(socket_test_bp) # Register socket test routes
-    app.register_blueprint(scheduler_bp, url_prefix='/scheduler') # Register scheduler routes
-    app.register_blueprint(notification_test_bp, url_prefix='/test') # Register notification test routes
-    app.register_blueprint(debug_bp, url_prefix='/debug') # Register debug routes
+    app.register_blueprint(scheduler_bp, url_prefix='/scheduler') # Register scheduler routes with prefix
+    app.register_blueprint(notification_test_bp, url_prefix='/notification-test') # Register notification test routes
+    app.register_blueprint(debug_bp, url_prefix='/debug') # Register debug routes with prefix
+    app.register_blueprint(alt_reminders_bp, url_prefix='/alternative-reminders') # Register alternative reminder routes
 
     # Configure static folder for uploads
     UPLOAD_FOLDER = os.path.join(os.path.dirname(os.path.abspath(__file__)), 'uploads')
@@ -134,8 +136,6 @@ def create_app():
     @app.route('/uploads/<filename>')
     def uploaded_file(filename):
         return send_from_directory(app.config['UPLOADS_FOLDER'], filename)
-
-    
 
     return app
 
