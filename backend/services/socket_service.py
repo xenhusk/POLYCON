@@ -5,13 +5,30 @@ from utils.notification_utils import (
     generate_booking_cancelled_message,
     get_user_role_and_id_from_booking
 )
+import os
 
-socketio = SocketIO(cors_allowed_origins='*')
+# Get CORS origins from environment, same as Flask app
+cors_origins = os.getenv('CORS_ALLOWED_ORIGINS', 'http://localhost:3000')
+if ',' in cors_origins:
+    allowed_origins = cors_origins.split(',')
+else:
+    allowed_origins = [cors_origins]
+
+# Add localhost for development/testing
+if 'http://localhost:3000' not in allowed_origins:
+    allowed_origins.append('http://localhost:3000')
+
+print(f"🔌 SocketIO CORS allowed origins: {allowed_origins}")
+
+socketio = SocketIO(cors_allowed_origins=allowed_origins)
 
 def init_app(app):
-    # Initialize SocketIO with the Flask app
-    socketio.init_app(app, cors_allowed_origins='*')
-    print("🔌 SocketIO initialized with CORS enabled")
+    # Initialize SocketIO with the Flask app using the same CORS origins
+    socketio.init_app(app, 
+                     cors_allowed_origins=allowed_origins,
+                     logger=True, 
+                     engineio_logger=True)
+    print(f"🔌 SocketIO initialized with CORS enabled for: {allowed_origins}")
 
 def emit_booking_created(data):
     print(f"📡 Broadcasting booking_created: {data}")
