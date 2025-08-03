@@ -13,10 +13,13 @@ def worker_info():
                 'pid': os.getpid(),
             },
             'environment': {
+                'FLASK_ENV': os.getenv('FLASK_ENV'),
                 'WEB_CONCURRENCY': os.getenv('WEB_CONCURRENCY'),
                 'PORT': os.getenv('PORT'),
                 'GUNICORN_CMD_ARGS': os.getenv('GUNICORN_CMD_ARGS'),
-                'WORKERS': os.getenv('WORKERS')
+                'WORKERS': os.getenv('WORKERS'),
+                'RENDER': os.getenv('RENDER'),  # Render-specific env var
+                'PYTHON_VERSION': os.getenv('PYTHON_VERSION')
             },
             'note': 'Check if multiple requests to this endpoint return different PIDs'
         })
@@ -35,29 +38,35 @@ def socket_status():
         rooms_info = {}
         total_clients = 0
         
-        if hasattr(socketio.server, 'manager'):
+        if hasattr(socketio, 'server') and hasattr(socketio.server, 'manager'):
             # Get rooms for the default namespace '/'
             namespace_rooms = socketio.server.manager.rooms.get('/', {})
-            total_clients = len(socketio.server.manager.rooms.get('/', {}))
             
-            for room_name, client_sids in namespace_rooms.items():
-                if room_name.startswith('user_'):
-                    rooms_info[room_name] = {
-                        'client_count': len(client_sids),
-                        'client_sids': list(client_sids)
-                    }
+            if namespace_rooms:
+                total_clients = len(namespace_rooms)
+                
+                for room_name, client_sids in namespace_rooms.items():
+                    # Safely check if room_name is a string and starts with 'user_'
+                    if isinstance(room_name, str) and room_name.startswith('user_'):
+                        rooms_info[room_name] = {
+                            'client_count': len(client_sids) if client_sids else 0,
+                            'client_sids': list(client_sids) if client_sids else []
+                        }
         
         return jsonify({
             'total_connected_clients': total_clients,
             'user_rooms': rooms_info,
             'socketio_instance': str(socketio),
             'server_available': hasattr(socketio, 'server'),
-            'manager_available': hasattr(socketio.server, 'manager') if hasattr(socketio, 'server') else False
+            'manager_available': hasattr(socketio.server, 'manager') if hasattr(socketio, 'server') else False,
+            'namespace_rooms_available': bool(namespace_rooms) if 'namespace_rooms' in locals() else False
         })
         
     except Exception as e:
+        import traceback
         return jsonify({
             'error': str(e),
+            'traceback': traceback.format_exc(),
             'socketio_available': socketio is not None
         }), 500
 

@@ -79,9 +79,22 @@ def create_app():
         # Ensure is_verified column exists for login
         from sqlalchemy import text
         db.session.execute(text("ALTER TABLE users ADD COLUMN IF NOT EXISTS is_verified BOOLEAN DEFAULT FALSE"))
-        db.session.commit()        # Start the appointment reminder scheduler
-        from services.scheduler_service import initialize_scheduler  # Import here to avoid circular import
-        initialize_scheduler(app)  # Pass the Flask app instance
+        db.session.commit()
+        
+        # Initialize appointment reminder scheduler based on environment
+        flask_env = os.getenv('FLASK_ENV', 'development')
+        is_production = flask_env == 'production'
+        
+        if is_production:
+            # Use production-optimized scheduler for Render deployment
+            from services.scheduler_service_production import initialize_production_scheduler
+            initialize_production_scheduler(app, reminder_minutes=15)
+            print("✅ Production scheduler initialized for Render deployment")
+        else:
+            # Use regular scheduler for development
+            from services.scheduler_service import initialize_scheduler
+            initialize_scheduler(app)
+            print("✅ Development scheduler initialized")
 
     # Register blueprints
     app.register_blueprint(health_bp)

@@ -1,16 +1,51 @@
 from flask import Blueprint, jsonify, request
 from datetime import datetime, timedelta
+import os
+
+# Import both scheduler services
 from services.scheduler_service import get_scheduler_status, get_scheduler, initialize_scheduler
+try:
+    from services.scheduler_service_production import (
+        get_production_scheduler_status, 
+        get_production_scheduler, 
+        initialize_production_scheduler
+    )
+    PRODUCTION_SCHEDULER_AVAILABLE = True
+except ImportError:
+    PRODUCTION_SCHEDULER_AVAILABLE = False
+
 from models import Booking, User
 from extensions import db
 from sqlalchemy import and_
 
 scheduler_bp = Blueprint('scheduler', __name__)
 
+def is_production_env():
+    """Check if we're running in production"""
+    return os.getenv('FLASK_ENV') == 'production'
+
+def get_current_scheduler():
+    """Get the appropriate scheduler based on environment"""
+    if is_production_env() and PRODUCTION_SCHEDULER_AVAILABLE:
+        return get_production_scheduler()
+    else:
+        return get_scheduler()
+
+def get_current_scheduler_status():
+    """Get status from the appropriate scheduler"""
+    if is_production_env() and PRODUCTION_SCHEDULER_AVAILABLE:
+        return get_production_scheduler_status()
+    else:
+        return get_scheduler_status()
+
+scheduler_bp = Blueprint('scheduler', __name__)
+
 @scheduler_bp.route('/status', methods=['GET'])
 def get_status():
     """Get current scheduler status"""
-    status = get_scheduler_status()
+    status = get_current_scheduler_status()
+    status['environment'] = 'production' if is_production_env() else 'development'
+    status['production_scheduler_available'] = PRODUCTION_SCHEDULER_AVAILABLE
     return jsonify(status)
 
 @scheduler_bp.route('/debug', methods=['GET'])
@@ -35,12 +70,13 @@ def debug_scheduler():
         ).all()
         
         # Get scheduler instance
-        scheduler = get_scheduler()
+        scheduler = get_current_scheduler()
         
         debug_info = {
             'current_utc_time': now.isoformat(),
             'current_local_time': datetime.now().isoformat(),
-            'scheduler_status': get_scheduler_status(),
+            'scheduler_status': get_current_scheduler_status(),
+            'environment': 'production' if is_production_env() else 'development',
             'total_confirmed_appointments': len(all_appointments),
             'upcoming_24h_appointments': len(upcoming_appointments),
             'appointments_details': []
@@ -170,34 +206,65 @@ def timezone_debug():
 def force_check():
     """Force the scheduler to check for reminders now"""
     try:
-        scheduler = get_scheduler()
+        scheduler = get_current_scheduler()
         if scheduler and scheduler.running:
-            # Access the private method to force a check
-            with scheduler.app.app_context():
-                scheduler._check_and_send_reminders()
-            return jsonify({'message': 'Forced reminder check completed'})
+            if is_production_env() and PRODUCTION_SCHEDULER_AVAILABLE:
+                # Use production scheduler's force check method
+                result = scheduler.force_check()
+                return jsonify(result)
+            else:
+                # Use development scheduler's method
+                with scheduler.app.app_context():
+                    scheduler._check_and_send_reminders()
+                return jsonify({'message': 'Forced reminder check completed'})
         else:
             return jsonify({'error': 'Scheduler is not running'}), 400
     except Exception as e:
-        return jsonify({'error': str(e)}), 500
+        import traceback
+        return jsonify({
+            'error': str(e),
+            'traceback': traceback.format_exc()
+        }), 500
 
 @scheduler_bp.route('/restart', methods=['POST'])
 def restart_scheduler():
     """Restart the scheduler"""
     try:
         from flask import current_app
-        # Stop existing scheduler
-        scheduler = get_scheduler()
-        if scheduler:
-            scheduler.stop()
         
-        # Start new scheduler
+        # Get reminder minutes from request
         reminder_minutes = request.json.get('reminder_minutes', 15) if request.json else 15
-        new_scheduler = initialize_scheduler(current_app, reminder_minutes)
         
-        return jsonify({
-            'message': 'Scheduler restarted successfully',
-            'status': new_scheduler.get_status()
-        })
+        if is_production_env() and PRODUCTION_SCHEDULER_AVAILABLE:
+            # Stop existing production scheduler
+            scheduler = get_production_scheduler()
+            if scheduler:
+                scheduler.stop()
+            
+            # Start new production scheduler
+            new_scheduler = initialize_production_scheduler(current_app, reminder_minutes)
+            return jsonify({
+                'message': 'Production scheduler restarted successfully',
+                'environment': 'production',
+                'status': new_scheduler.get_status()
+            })
+        else:
+            # Stop existing development scheduler
+            scheduler = get_scheduler()
+            if scheduler:
+                scheduler.stop()
+            
+            # Start new development scheduler
+            new_scheduler = initialize_scheduler(current_app, reminder_minutes)
+            return jsonify({
+                'message': 'Development scheduler restarted successfully',
+                'environment': 'development',
+                'status': new_scheduler.get_status()
+            })
+            
     except Exception as e:
-        return jsonify({'error': str(e)}), 500
+        import traceback
+        return jsonify({
+            'error': str(e),
+            'traceback': traceback.format_exc()
+        }), 500
