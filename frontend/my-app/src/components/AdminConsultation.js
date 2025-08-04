@@ -100,9 +100,16 @@ const AdminConsultation = () => {
 
   if (loading && leaderboardData.length === 0) {
     return (
-      <div className="p-8 max-w-6xl mx-auto min-h-screen bg-gradient-to-br from-slate-50 via-blue-50 to-indigo-50 flex flex-col">
-        <div className="flex flex-col items-center justify-center h-96 gap-6">
-          <div className="relative">
+      <div className="p-8 max-w-6xl mx-auto min-h-screen flex flex-col">
+        {/* Header Section */}
+        <div className="text-center mb-8 flex-shrink-0">
+          <h1 className="text-[#0065A8] text-4xl font-bold mb-2">Teachers Consultation Leaderboard</h1>
+          <p className="text-slate-500 text-lg">Top teachers ranked by consultation engagement</p>
+        </div>
+
+        {/* Loading Container */}
+        <div className="flex-1 flex flex-col items-center justify-center">
+          <div className="relative mb-6">
             <div className="w-16 h-16 border-4 border-gray-200 border-t-[#0065A8] rounded-full animate-spin"></div>
             <div className="absolute inset-0 w-16 h-16 border-4 border-transparent border-r-[#057DCD] rounded-full animate-spin" style={{animationDirection: 'reverse', animationDuration: '1.5s'}}></div>
           </div>
@@ -115,14 +122,12 @@ const AdminConsultation = () => {
     );
   }
 
-  return (
-    <div className="p-8 max-w-6xl mx-auto min-h-screen flex flex-col">
-      <div className="text-center mb-8 flex-shrink-0">
-        <h1 className="text-[#0065A8] text-4xl font-bold mb-2">Teachers Consultation Leaderboard</h1>
-        <p className="text-slate-500 text-lg">Top teachers ranked by consultation engagement</p>
-      </div>
-
-      {/* Semester Filter */}
+    return (
+      <div className="p-8 max-w-6xl mx-auto min-h-screen flex flex-col">
+        <div className="text-center mb-8 flex-shrink-0">
+          <h1 className="text-[#0065A8] text-4xl font-bold mb-2">Teachers Consultation Leaderboard</h1>
+          <p className="text-slate-500 text-lg">Top teachers ranked by consultation engagement</p>
+        </div>      {/* Semester Filter */}
       <div className="mb-8 flex-shrink-0">
         <div className="bg-white/90 backdrop-blur-sm rounded-2xl shadow-xl border border-white/50 overflow-hidden max-w-6xl mx-auto">
           {/* Filter Header */}
@@ -144,7 +149,7 @@ const AdminConsultation = () => {
           <div className="p-6">
             <div className="flex flex-col lg:flex-row items-start lg:items-center gap-6">
               {/* Label Section */}
-              <div className="flex items-center min-w-[180px]">
+              <div className="flex items-center min-w-[180px] mb-8">
                 <div className="w-10 h-10 bg-gradient-to-br from-blue-100 to-indigo-100 rounded-xl flex items-center justify-center mr-3">
                   <svg className="w-5 h-5 text-[#0065A8]" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z" />
@@ -245,18 +250,18 @@ const AdminConsultation = () => {
       {/* Leaderboard */}
       <div className="bg-white/90 backdrop-blur-sm rounded-2xl shadow-xl border border-white/50 overflow-hidden flex-1 flex flex-col min-h-0">
         {loading ? (
-          <div className="flex flex-col items-center justify-center py-20">
+          <div className="flex flex-col items-center justify-center py-32">
             <div className="relative mb-6">
               <div className="w-12 h-12 border-4 border-gray-200 border-t-[#0065A8] rounded-full animate-spin"></div>
               <div className="absolute inset-0 w-12 h-12 border-4 border-transparent border-r-[#057DCD] rounded-full animate-spin" style={{animationDirection: 'reverse', animationDuration: '1.5s'}}></div>
             </div>
             <div className="text-center">
-              <p className="text-lg font-semibold text-slate-700 mb-2">Loading Data...</p>
+              <p className="text-lg font-semibold text-slate-700 mb-2">Updating Data...</p>
               <p className="text-slate-500 text-sm">Fetching consultation statistics</p>
             </div>
           </div>
         ) : leaderboardData.length === 0 ? (
-          <div className="flex flex-col items-center justify-center px-[16rem] py-10">
+          <div className="flex flex-col items-center justify-center py-10">
             <div className="w-20 h-20 bg-slate-100 rounded-full flex items-center justify-center mb-6">
               <svg className="w-10 h-10 text-slate-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />

@@ -815,7 +815,7 @@ function App() {
                     <Route path="/history" element={<History />} /> {/* New route */}
                     <Route path="/department" element={<Departments />} /> {/* New route */}
                     <Route path="/preloader-test" element={<PreloaderTest />} /> {/* Add this line */}
-                    <Route path="/homeadmin" element={<HomeAdmin />} />
+                    <Route path="/homeadmin" element={<UserHome />} />
                     <Route path="/homestudent" element={<HomeStudent />} />                    
                     <Route path="/enrollment-test" element={<EnrollmentTestPage />} /> {/* new test route */}
                     <Route path="/semester-management" element={<SemesterManagement />} /> {/* Update this line */}                    
