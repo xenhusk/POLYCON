@@ -1,6 +1,6 @@
 from flask import Blueprint, request, jsonify
 from datetime import datetime
-from models import Semester, ConsultationSession, User
+from models import Semester, ConsultationSession, User, Department
 from extensions import db
 from sqlalchemy import func
 
@@ -111,6 +111,7 @@ def get_teacher_leaderboard():
     try:
         semester_val = request.args.get('semester')
         school_year = request.args.get('school_year')
+        department_name = request.args.get('department')
         
         # Base query for consultation sessions
         query = ConsultationSession.query
@@ -137,11 +138,17 @@ def get_teacher_leaderboard():
             if not teacher:
                 continue
             
+            # Filter by department if provided
+            if department_name and teacher.department and teacher.department.name != department_name:
+                continue
+            
             teacher_key = session.teacher_id
             if teacher_key not in teacher_stats:
                 teacher_stats[teacher_key] = {
                     'teacher_id': session.teacher_id,
                     'teacher_name': f"{teacher.first_name} {teacher.last_name}",
+                    'department_name': teacher.department.name if teacher.department else None,
+                    'department_id': teacher.department_id,
                     'total_consultations': 0,
                     'total_students': 0,
                     'total_duration_seconds': 0,
@@ -186,6 +193,37 @@ def get_teacher_leaderboard():
             teacher['total_duration_formatted'] = f"{hours}h {minutes}m"
         
         return jsonify(leaderboard), 200
+        
+    except Exception as e:
+        return jsonify({"error": str(e)}), 500
+
+@homeadmin_bp.route('/teacher_departments', methods=['GET'])
+def get_teacher_departments():
+    """Get departments that have teachers with consultation sessions"""
+    try:
+        # Get unique departments of teachers who have consultation sessions
+        teacher_ids = db.session.query(ConsultationSession.teacher_id).distinct().all()
+        teacher_ids = [tid[0] for tid in teacher_ids if tid[0]]
+        
+        if not teacher_ids:
+            return jsonify([]), 200
+        
+        # Get departments of these teachers
+        departments = db.session.query(Department.id, Department.name)\
+            .join(User, User.department_id == Department.id)\
+            .filter(User.id_number.in_(teacher_ids))\
+            .distinct()\
+            .order_by(Department.name)\
+            .all()
+        
+        result = []
+        for dept_id, dept_name in departments:
+            result.append({
+                'id': dept_id,
+                'name': dept_name
+            })
+        
+        return jsonify(result), 200
         
     except Exception as e:
         return jsonify({"error": str(e)}), 500

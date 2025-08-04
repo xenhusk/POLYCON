@@ -5,6 +5,7 @@ import AppointmentsCalendar from '../components/AppointmentsCalendar';
 import HomeTeacher from '../components/HomeTeacher';
 import HomeStudent from '../components/HomeStudent';
 import HomeAdmin from '../components/HomeAdmin';
+import AdminConsultationCalendar from '../components/AdminConsultationCalendar';
 
 function Home() {
   const [userRole, setUserRole] = useState('');
@@ -58,6 +59,17 @@ function Home() {
         {userRole === 'admin' ? (
           <div className="space-y-2 sm:space-y-4">
             <HomeAdmin />
+            {/* Admin Consultation Calendar */}
+                      <div className="w-full mt-10">
+                        <h2 className="text-lg sm:text-base md:text-lg text-center font-semibold mb-1 sm:mb-2 text-[#0065A8]">
+                          Consultation Calendar
+                        </h2>
+                        <div className="bg-white rounded-lg shadow-lg p-1 sm:p-2 overflow-x-auto">
+                          <div className="calendar-wrapper">
+                            <AdminConsultationCalendar />
+                          </div>
+                        </div>
+                      </div>
           </div>
         ) : userRole === 'faculty' ? (
           <div className="space-y-2 sm:space-y-4">
