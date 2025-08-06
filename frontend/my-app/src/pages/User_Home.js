@@ -3,7 +3,9 @@ import API_URL from '../apiConfig';
 import { useNavigate } from 'react-router-dom';
 import AppointmentsCalendar from '../components/AppointmentsCalendar';
 import HomeTeacher from '../components/HomeTeacher';
-import HomeStudent from '../components/HomeStudent';  // Add this import
+import HomeStudent from '../components/HomeStudent';
+import HomeAdmin from '../components/HomeAdmin';
+import AdminConsultationCalendar from '../components/AdminConsultationCalendar';
 
 function Home() {
   const [userRole, setUserRole] = useState('');
@@ -44,7 +46,9 @@ function Home() {
             Welcome, {userDetails?.firstName} {userDetails?.lastName}
           </h1>
           <p className="text-xs sm:text-sm text-gray-600">
-            {userRole === 'student' ? 'Student Dashboard' : 'Faculty Dashboard'}
+            {userRole === 'student' ? 'Student Dashboard' : 
+             userRole === 'faculty' ? 'Faculty Dashboard' : 
+             userRole === 'admin' ? 'Admin Dashboard' : 'Dashboard'}
           </p>
         </div>
       </div>
@@ -52,7 +56,22 @@ function Home() {
 
 
       <div className="w-full px-1 sm:px-3 py-1 sm:py-3 lg:py-4 flex-grow">
-        {userRole === 'faculty' ? (
+        {userRole === 'admin' ? (
+          <div className="space-y-2 sm:space-y-4">
+            <HomeAdmin />
+            {/* Admin Consultation Calendar */}
+                      <div className="w-full mt-10">
+                        <h2 className="text-lg sm:text-base md:text-lg text-center font-semibold mb-1 sm:mb-2 text-[#0065A8]">
+                          Consultation Calendar
+                        </h2>
+                        <div className="bg-white rounded-lg shadow-lg p-1 sm:p-2 overflow-x-auto">
+                          <div className="calendar-wrapper">
+                            <AdminConsultationCalendar />
+                          </div>
+                        </div>
+                      </div>
+          </div>
+        ) : userRole === 'faculty' ? (
           <div className="space-y-2 sm:space-y-4">
             <HomeTeacher />
             
