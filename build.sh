@@ -25,10 +25,4 @@ fi
 echo "Applying database migrations..."
 flask db upgrade
 
-# Update database schema for new features
-echo "Updating database schema for consultation schedules..."
-cd ..
-python update_render_database.py || echo "Database update script completed with warnings (table may already exist)"
-cd backend
-
 echo "Build completed successfully!"
