@@ -38,6 +38,7 @@ from routes.scheduler_routes import scheduler_bp # Import scheduler routes
 from routes.notification_test_routes import notification_test_bp # Import notification test routes
 from routes.debug_routes import debug_bp # Import debug routes
 from routes.alternative_reminders import alt_reminders_bp # Import alternative reminders
+from routes.teacher_schedule_routes import teacher_schedule_bp # Import teacher schedule routes
 import routes.socket_routes  # Register socket event handlers
 
 
@@ -129,6 +130,7 @@ def create_app():
     app.register_blueprint(notification_test_bp, url_prefix='/notification-test') # Register notification test routes
     app.register_blueprint(debug_bp, url_prefix='/debug') # Register debug routes with prefix
     app.register_blueprint(alt_reminders_bp, url_prefix='/alternative-reminders') # Register alternative reminder routes
+    app.register_blueprint(teacher_schedule_bp, url_prefix='/teacher_schedule') # Register teacher schedule routes
 
     # Configure static folder for uploads
     UPLOAD_FOLDER = os.path.join(os.path.dirname(os.path.abspath(__file__)), 'uploads')

@@ -132,6 +132,26 @@ class Booking(db.Model):
     created_at = db.Column(db.DateTime, server_default=db.text("(now() AT TIME ZONE 'UTC')"))
     created_by = db.Column(db.String(50), nullable=True)  # ID of the user who created the booking
 
+class TeacherSchedule(db.Model):
+    __tablename__ = 'teacher_schedules'
+
+    id = db.Column(db.Integer, primary_key=True)
+    teacher_id = db.Column(db.String(50), nullable=False)  # User.id_number
+    day_of_week = db.Column(db.Integer, nullable=False)  # 0=Monday, 1=Tuesday, ..., 6=Sunday
+    start_time = db.Column(db.Time, nullable=False)
+    end_time = db.Column(db.Time, nullable=False)
+    venue = db.Column(db.String(255), nullable=True)
+    is_available = db.Column(db.Boolean, default=True)
+    semester_id = db.Column(db.Integer, db.ForeignKey('semesters.id'), nullable=True)
+    created_at = db.Column(db.DateTime, server_default=db.text("(now() AT TIME ZONE 'UTC')"))
+    updated_at = db.Column(db.DateTime, onupdate=db.text("(now() AT TIME ZONE 'UTC')"))
+
+    # Relationships
+    semester = db.relationship('Semester', backref=db.backref('teacher_schedules', lazy=True))
+
+    def __repr__(self):
+        return f'<TeacherSchedule {self.teacher_id} - Day {self.day_of_week}>'
+
 class Notification(db.Model):
     __tablename__ = 'notifications'
 

@@ -23,6 +23,8 @@ import History from './pages/History'; // add import for History
 import Departments from './components/Departments';
 import HomeAdmin from './components/HomeAdmin'; // Update import name and path
 import SemesterManagement from './components/SemesterManagement'; // Update import name and path
+import ConsultationSchedules from './pages/ConsultationSchedules'; // Add import for public consultation schedules
+import TeacherScheduleManager from './components/TeacherScheduleManager'; // Add import for teacher schedule management
 
 import SidebarPreview from './components/SidebarPreview'; // Import the SidebarPreview component
 import Appointments from './pages/Appointments'; // Import the Appointments page
@@ -786,6 +788,9 @@ function App() {
                     <Route path="/verify-email" element={<EmailVerification />} />
                     <Route path="/verification-success" element={<EmailVerificationSuccess />} />
                     <Route path="/verification-error" element={<EmailVerificationError />} />
+                    
+                    {/* Public consultation schedules - accessible without login */}
+                    <Route path="/consultation-schedules" element={<ConsultationSchedules />} />
 
                     {/* Protected dashboard route */}
                     <Route path="/dashboard" element={
@@ -821,6 +826,7 @@ function App() {
                     <Route path="/semester-management" element={<SemesterManagement />} /> {/* Update this line */}                    
                     <Route path="/comparative-analysis" element={<ComparativeAnalysis />} />
                     <Route path="/admin-consultation" element={<AdminConsultation />} />
+                    <Route path="/teacher-schedule" element={<TeacherScheduleManager />} /> {/* Teacher schedule management */}
                     <Route path="/settings" element={<Settings />} /> {/* Settings page with notification controls */}
                     <Route path="/socket-test" element={<SocketTest />} /> {/* Socket.IO test dashboard route */}
                   </Routes>

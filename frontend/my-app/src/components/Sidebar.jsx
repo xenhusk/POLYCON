@@ -234,6 +234,7 @@ const Sidebar = ({ onExpandChange }) => {
       dashboard: '/dashboard',
       classRecord: '/addgrade',
       appointments: '/appointments',
+      schedule: '/teacher-schedule',
       history: '/history', // FIX: was 'past', should be 'history' to match menu item
       comparative: '/comparative-analysis'
     },
@@ -488,6 +489,7 @@ const Sidebar = ({ onExpandChange }) => {
               <ul className="mt-2 space-y-3 relative"> {/* Changed from mt-6 to mt-2 */}
                 {renderMenuItem("dashboard", HomeIcon, "Home")}
                 {renderMenuItem("appointments", UpcomingIcon, "Appointments")}
+                {renderMenuItem("schedule", SemesterAdd, "Schedule")}
                 {renderMenuItem("history", PastIcon, "History")}
                 {renderMenuItem("classRecord", ClassRecorderIcon, "Class Record")}
                 {renderMenuItem("comparative", ComparativeIcon, "Polycon Analysis")}
