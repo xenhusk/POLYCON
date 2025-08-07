@@ -11,6 +11,12 @@ const ConsultationSchedules = () => {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState('');
   const [semesterInfo, setSemesterInfo] = useState(null);
+  const [teachers, setTeachers] = useState([]);
+  const [selectedTeacher, setSelectedTeacher] = useState('');
+  const [selectedTeacherName, setSelectedTeacherName] = useState('');
+  const [selectedTeacherProfile, setSelectedTeacherProfile] = useState('');
+  const [selectedTeacherDepartment, setSelectedTeacherDepartment] = useState('');
+  const [teacherSearchTerm, setTeacherSearchTerm] = useState('');
 
   const dayNames = {
     0: 'Monday',
@@ -25,11 +31,39 @@ const ConsultationSchedules = () => {
   useEffect(() => {
     fetchDepartments();
     fetchSchedules();
+    fetchTeachers();
   }, []);
 
   useEffect(() => {
     fetchSchedules();
-  }, [selectedDepartment]);
+  }, [selectedDepartment, selectedTeacher]);
+
+  const fetchTeachers = async () => {
+    try {
+      // Use search endpoint with empty query to get all teachers with profile pictures
+      const response = await fetch(`${API_URL}/search/teachers?query=`);
+      if (response.ok) {
+        const data = await response.json();
+        // Filter to only show active teachers and transform the data format
+        const activeTeachers = data
+          .filter(teacher => teacher.isActive)
+          .map(teacher => {
+            const nameParts = teacher.fullName.split(' ');
+            return {
+              id: teacher.ID,
+              firstName: nameParts[0] || '',
+              lastName: nameParts.slice(1).join(' ') || '',
+              department: teacher.department,
+              profile_picture: teacher.profilePicture,
+              isActive: teacher.isActive
+            };
+          });
+        setTeachers(activeTeachers);
+      }
+    } catch (error) {
+      console.error('Error fetching teachers:', error);
+    }
+  };
 
   const fetchDepartments = async () => {
     try {
@@ -46,9 +80,19 @@ const ConsultationSchedules = () => {
   const fetchSchedules = async () => {
     try {
       setLoading(true);
-      const url = selectedDepartment 
-        ? `${API_URL}/teacher_schedule/public?department_id=${selectedDepartment}`
-        : `${API_URL}/teacher_schedule/public`;
+      let url = `${API_URL}/teacher_schedule/public`;
+      
+      // Add filters based on selected teacher or department
+      const params = new URLSearchParams();
+      if (selectedTeacher) {
+        params.append('teacher_id', selectedTeacher);
+      } else if (selectedDepartment) {
+        params.append('department_id', selectedDepartment);
+      }
+      
+      if (params.toString()) {
+        url += `?${params.toString()}`;
+      }
       
       const response = await fetch(url);
       if (response.ok) {
@@ -240,15 +284,26 @@ const ConsultationSchedules = () => {
           initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ delay: 0.3 }}
-          className="mb-12 flex justify-center"
+          className="mb-12 grid grid-cols-1 lg:grid-cols-2 gap-8 max-w-6xl mx-auto"
         >
-          <div className="bg-white rounded-2xl shadow-2xl p-8 w-full max-w-lg border border-gray-100">
+          {/* Department Filter */}
+          <div className="bg-white rounded-2xl shadow-2xl p-8 border border-gray-100">
             <label className="block text-lg font-semibold text-[#057DCD] mb-4 text-center">
               Filter by Department
             </label>
             <select
               value={selectedDepartment}
-              onChange={(e) => setSelectedDepartment(e.target.value)}
+              onChange={(e) => {
+                setSelectedDepartment(e.target.value);
+                // Clear teacher selection when department changes
+                if (selectedTeacher) {
+                  setSelectedTeacher('');
+                  setSelectedTeacherName('');
+                  setSelectedTeacherProfile('');
+                  setSelectedTeacherDepartment('');
+                  setTeacherSearchTerm('');
+                }
+              }}
               className="w-full px-4 py-3 border-2 border-gray-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-[#057DCD] focus:border-transparent transition-all duration-200 text-lg"
             >
               <option value="">All Departments</option>
@@ -258,6 +313,106 @@ const ConsultationSchedules = () => {
                 </option>
               ))}
             </select>
+          </div>
+
+          {/* Teacher Search */}
+          <div className="bg-white rounded-2xl shadow-2xl p-8 border border-gray-100">
+            <label className="block text-lg font-semibold text-[#057DCD] mb-4 text-center">
+              Search by Teacher
+            </label>
+            <div className="relative">
+              <div className="flex items-center border-2 border-gray-200 rounded-xl px-4 py-3 focus-within:ring-2 focus-within:ring-[#057DCD] focus-within:border-transparent transition-all duration-200">
+                {selectedTeacher && !teacherSearchTerm ? (
+                  // Show selected teacher info when a teacher is selected and not searching
+                  <div className="flex items-center gap-4 flex-grow bg-gradient-to-r from-[#057DCD] to-[#046bb8] text-white px-4 py-3 rounded-lg -mx-4 -my-3">
+                    <img
+                      src={getProfilePictureUrl(selectedTeacherProfile, selectedTeacherName)}
+                      alt={selectedTeacherName}
+                      className="rounded-full w-12 h-12 border-3 border-white shadow-lg"
+                    />
+                    <div className="flex flex-col flex-grow">
+                      <span className="text-base font-bold text-white">{selectedTeacherName}</span>
+                      <span className="text-sm text-blue-100">{selectedTeacherDepartment}</span>
+                    </div>
+                    <button 
+                      onClick={() => {
+                        setSelectedTeacher('');
+                        setSelectedTeacherName('');
+                        setSelectedTeacherProfile('');
+                        setSelectedTeacherDepartment('');
+                      }}
+                      className="text-white hover:text-red-200 ml-2 p-2 rounded-full hover:bg-white hover:bg-opacity-20 transition-all duration-200"
+                    >
+                      <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+                      </svg>
+                    </button>
+                  </div>
+                ) : (
+                  // Show search input when no teacher is selected or when searching
+                  <>
+                    <input
+                      type="text"
+                      value={teacherSearchTerm}
+                      onChange={(e) => {
+                        setTeacherSearchTerm(e.target.value);
+                        if (selectedTeacher) {
+                          setSelectedTeacher('');
+                          setSelectedTeacherName('');
+                          setSelectedTeacherProfile('');
+                          setSelectedTeacherDepartment('');
+                        }
+                      }}
+                      placeholder="Search by teacher name..."
+                      className="flex-grow focus:outline-none text-lg"
+                    />
+                    <svg className="w-5 h-5 text-gray-400 ml-2" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
+                    </svg>
+                  </>
+                )}
+              </div>
+              {teacherSearchTerm && (
+                <ul className="absolute z-10 bg-white border-2 border-gray-200 rounded-xl mt-2 max-h-60 overflow-y-auto w-full shadow-2xl">
+                  {teachers
+                    .filter(teacher => {
+                      const fullName = `${teacher.firstName} ${teacher.lastName}`.toLowerCase();
+                      return fullName.includes(teacherSearchTerm.toLowerCase());
+                    })
+                    .map(teacher => (
+                      <li 
+                        key={teacher.id} 
+                        onClick={() => {
+                          setSelectedTeacher(teacher.id);
+                          setSelectedTeacherName(`${teacher.firstName} ${teacher.lastName}`);
+                          setSelectedTeacherProfile(teacher.profile_picture);
+                          setSelectedTeacherDepartment(teacher.department);
+                          setTeacherSearchTerm('');
+                        }} 
+                        className="px-4 py-3 cursor-pointer hover:bg-blue-50 flex items-center transition-colors border-b border-gray-100 last:border-b-0"
+                      >
+                        <img 
+                          src={getProfilePictureUrl(teacher.profile_picture, `${teacher.firstName} ${teacher.lastName}`)}
+                          alt={`${teacher.firstName} ${teacher.lastName}`}
+                          className="rounded-full w-10 h-10 mr-3 border-2 border-white" 
+                        />
+                        <div className="flex flex-col">
+                          <span className="font-semibold text-gray-800">{teacher.firstName} {teacher.lastName}</span>
+                          <span className="text-sm text-gray-500">{teacher.department}</span>
+                        </div>
+                      </li>
+                    ))}
+                  {teachers.filter(teacher => {
+                    const fullName = `${teacher.firstName} ${teacher.lastName}`.toLowerCase();
+                    return fullName.includes(teacherSearchTerm.toLowerCase());
+                  }).length === 0 && (
+                    <li className="px-4 py-3 text-gray-500 text-center">
+                      No teachers found matching "{teacherSearchTerm}"
+                    </li>
+                  )}
+                </ul>
+              )}
+            </div>
           </div>
         </motion.div>
 
