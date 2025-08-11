@@ -1,0 +1,16 @@
+{
+  "name": "polycon-keep-alive",
+  "version": "1.0.0",
+  "description": "Keep-alive cron job for Polycon on Render",
+  "main": "keep_alive_cron.js",
+  "scripts": {
+    "start": "node keep_alive_cron.js",
+    "test": "node keep_alive_cron.js"
+  },
+  "dependencies": {
+    "node-fetch": "^2.6.7"
+  },
+  "keywords": ["cron", "keep-alive", "render", "ping"],
+  "author": "Polycon Team",
+  "license": "MIT"
+}

@@ -37,6 +37,9 @@ from routes.socket_test_routes import socket_test_bp # Import socket test routes
 from routes.scheduler_routes import scheduler_bp # Import scheduler routes
 from routes.notification_test_routes import notification_test_bp # Import notification test routes
 from routes.debug_routes import debug_bp # Import debug routes
+from routes.alternative_reminders import alt_reminders_bp # Import alternative reminders
+from routes.teacher_schedule_routes import teacher_schedule_bp # Import teacher schedule routes
+from routes.keep_alive import keep_alive_bp # Import keep-alive routes
 import routes.socket_routes  # Register socket event handlers
 
 
@@ -87,9 +90,13 @@ def create_app():
         
         if is_production:
             # Use production-optimized scheduler for Render deployment
+            # NOTE: Background threading is broken in Render production environment
+            # This scheduler is kept for development/testing but doesn't work in production
+            # ACTUAL PRODUCTION REMINDERS: Use /alternative-reminders/trigger endpoint 
+            # triggered by external cron service (cron-job.org)
             from services.scheduler_service_production import initialize_production_scheduler
             initialize_production_scheduler(app, reminder_minutes=15)
-            print("✅ Production scheduler initialized for Render deployment")
+            print("✅ Production scheduler initialized (NOTE: Background threads don't work - use alternative reminders)")
         else:
             # Use regular scheduler for development
             from services.scheduler_service import initialize_scheduler
@@ -120,9 +127,12 @@ def create_app():
     app.register_blueprint(profile_bp)
     app.register_blueprint(settings_bp) # Ensure this is present
     app.register_blueprint(socket_test_bp) # Register socket test routes
-    app.register_blueprint(scheduler_bp, url_prefix='/scheduler') # Register scheduler routes
-    app.register_blueprint(notification_test_bp, url_prefix='/test') # Register notification test routes
-    app.register_blueprint(debug_bp, url_prefix='/debug') # Register debug routes
+    app.register_blueprint(scheduler_bp, url_prefix='/scheduler') # Register scheduler routes with prefix
+    app.register_blueprint(notification_test_bp, url_prefix='/notification-test') # Register notification test routes
+    app.register_blueprint(debug_bp, url_prefix='/debug') # Register debug routes with prefix
+    app.register_blueprint(alt_reminders_bp, url_prefix='/alternative-reminders') # Register alternative reminder routes
+    app.register_blueprint(teacher_schedule_bp, url_prefix='/teacher_schedule') # Register teacher schedule routes
+    app.register_blueprint(keep_alive_bp) # Register keep-alive routes (no prefix for simple /ping)
 
     # Configure static folder for uploads
     UPLOAD_FOLDER = os.path.join(os.path.dirname(os.path.abspath(__file__)), 'uploads')
@@ -134,8 +144,6 @@ def create_app():
     @app.route('/uploads/<filename>')
     def uploaded_file(filename):
         return send_from_directory(app.config['UPLOADS_FOLDER'], filename)
-
-    
 
     return app
 

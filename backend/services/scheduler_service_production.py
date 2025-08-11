@@ -39,7 +39,7 @@ class ProductionAppointmentScheduler:
         self.reminder_minutes = reminder_minutes
         self.running = False
         self.scheduler_thread = None
-        self.check_interval = 30  # Check every 30 seconds in production (less frequent)
+        self.check_interval = 10  # TEMPORARY: Faster checking for debugging (was 30)
         self.sent_reminders = set()  # Track sent reminders to avoid duplicates
         self.app = app  # Store Flask app for context
         self.last_cleanup = datetime.utcnow()
@@ -57,11 +57,18 @@ class ProductionAppointmentScheduler:
         self.running = True
         self.scheduler_thread = threading.Thread(
             target=self._scheduler_loop,
-            daemon=True,  # Important: Make thread daemon so it doesn't prevent app shutdown
-            name="AppointmentScheduler"
+            daemon=False,  # CHANGE: Make thread non-daemon to prevent premature termination
+            name="ProductionAppointmentScheduler"
         )
         self.scheduler_thread.start()
         logger.info("✅ Production appointment scheduler started successfully")
+        
+        # Wait a moment to ensure the thread actually starts
+        time.sleep(0.5)
+        if self.scheduler_thread.is_alive():
+            logger.info("✅ Scheduler thread confirmed alive after startup")
+        else:
+            logger.error("❌ Scheduler thread died immediately after startup!")
 
     def stop(self):
         """Stop the scheduler."""
@@ -82,28 +89,38 @@ class ProductionAppointmentScheduler:
 
     def _scheduler_loop(self):
         """Main scheduler loop that runs in background thread."""
-        logger.info(f"Production scheduler loop started - checking every {self.check_interval} seconds")
+        logger.info(f"🚀 Production scheduler loop STARTING - checking every {self.check_interval} seconds")
         
+        loop_count = 0
         while self.running:
             try:
+                loop_count += 1
+                logger.info(f"🔄 Production scheduler loop iteration #{loop_count}")
+                
                 if self.app:
-                    # Use Flask app context for database operations
+                    # Use Flask app context for ALL database operations in this iteration
                     with self.app.app_context():
+                        logger.info("📱 Using Flask app context for database operations")
                         self._check_and_send_reminders()
                         self._periodic_cleanup()
+                        logger.info("✅ Completed reminder check and cleanup within app context")
                 else:
-                    self._check_and_send_reminders()
-                    self._periodic_cleanup()
+                    logger.error("⚠️ No Flask app context available - CANNOT run database operations")
+                    logger.error("⚠️ Scheduler will not work without app context!")
                 
+                logger.info(f"😴 Sleeping for {self.check_interval} seconds before next check...")
                 # Wait before next check
                 time.sleep(self.check_interval)
                 
             except Exception as e:
-                logger.error(f"❌ Error in production scheduler loop: {e}")
+                logger.error(f"❌ CRITICAL ERROR in production scheduler loop: {e}")
                 import traceback
-                logger.error(f"Traceback: {traceback.format_exc()}")
+                logger.error(f"🔍 Full traceback: {traceback.format_exc()}")
+                logger.info(f"🔄 Continuing scheduler loop after error (iteration #{loop_count})")
                 # Continue running even if there's an error
                 time.sleep(self.check_interval)
+        
+        logger.info(f"🛑 Production scheduler loop ENDED after {loop_count} iterations")
 
     def _check_and_send_reminders(self):
         """Check for appointments that need reminders and send them."""
@@ -116,6 +133,7 @@ class ProductionAppointmentScheduler:
             reminder_end_time = now + timedelta(minutes=self.reminder_minutes + 5)  # 5-minute buffer
             
             # Find confirmed appointments that start within the reminder window
+            # Database operations should be done within the app context established by caller
             upcoming_appointments = db.session.query(Booking).filter(
                 and_(
                     Booking.status == 'confirmed',
@@ -287,18 +305,22 @@ class ProductionAppointmentScheduler:
         """Clean up old reminder records periodically."""
         try:
             now = datetime.utcnow()
+            logger.info(f"🧹 Periodic cleanup called at {now.isoformat()}")
+            
+            # ALWAYS update last_cleanup to prove the loop is running
+            self.last_cleanup = now
+            logger.info(f"✅ Updated last_cleanup timestamp to {now.isoformat()}")
+            
             # Clean up every hour
-            if (now - self.last_cleanup).total_seconds() > 3600:
-                # Remove reminders older than 24 hours
+            if len(self.sent_reminders) > 1000:  # Arbitrary threshold
                 old_size = len(self.sent_reminders)
-                # In production, just clear all to avoid memory buildup
-                if old_size > 1000:  # Arbitrary threshold
-                    self.sent_reminders.clear()
-                    logger.info(f"🧹 Cleared {old_size} old reminder records for memory management")
+                self.sent_reminders.clear()
+                logger.info(f"🧹 Cleared {old_size} old reminder records for memory management")
                 
-                self.last_cleanup = now
         except Exception as e:
             logger.error(f"Error in periodic cleanup: {e}")
+            import traceback
+            logger.error(f"Traceback: {traceback.format_exc()}")
 
     def get_status(self) -> Dict[str, Any]:
         """Get current scheduler status."""
@@ -392,4 +414,33 @@ def initialize_production_scheduler(app=None, reminder_minutes: int = 15):
     else:
         logger.info("Production scheduler already initialized")
         
+    return _production_scheduler_instance
+
+def restart_production_scheduler(app=None, reminder_minutes: int = 15):
+    """
+    Restart the production scheduler by stopping the old one and creating a new instance.
+    """
+    global _production_scheduler_instance
+    
+    logger.info("🔄 Restarting production scheduler...")
+    
+    # Stop the existing scheduler if it exists
+    if _production_scheduler_instance:
+        try:
+            _production_scheduler_instance.stop()
+            logger.info("Old production scheduler stopped")
+        except Exception as e:
+            logger.error(f"Error stopping old scheduler: {e}")
+    
+    # Clear the global instance to force recreation
+    _production_scheduler_instance = None
+    
+    # Create and start new scheduler
+    _production_scheduler_instance = ProductionAppointmentScheduler(
+        reminder_minutes=reminder_minutes, 
+        app=app
+    )
+    _production_scheduler_instance.start()
+    logger.info(f"✅ Production scheduler restarted successfully with {reminder_minutes} minute reminders")
+    
     return _production_scheduler_instance

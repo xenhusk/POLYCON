@@ -16,6 +16,7 @@ import { ReactComponent as CourseAdd } from './icons/CourseAdd.svg';
 import { ReactComponent as ProgramAdd } from './icons/Code.svg'; // NEW: import profile icon
 import { ReactComponent as DepartmentAdd } from './icons/Briefcase.svg';
 import { ReactComponent as SemesterAdd } from './icons/Timer.svg';
+import { ReactComponent as ScheduleIcon } from './icons/schedule.svg';
 import { ReactComponent as ComparativeIcon } from './icons/Comparative.svg';
 import logo from './icons/logo2.png';
 // Import missing icons from react-icons/fa
@@ -234,6 +235,7 @@ const Sidebar = ({ onExpandChange }) => {
       dashboard: '/dashboard',
       classRecord: '/addgrade',
       appointments: '/appointments',
+      schedule: '/teacher-schedule',
       history: '/history', // FIX: was 'past', should be 'history' to match menu item
       comparative: '/comparative-analysis'
     },
@@ -488,6 +490,7 @@ const Sidebar = ({ onExpandChange }) => {
               <ul className="mt-2 space-y-3 relative"> {/* Changed from mt-6 to mt-2 */}
                 {renderMenuItem("dashboard", HomeIcon, "Home")}
                 {renderMenuItem("appointments", UpcomingIcon, "Appointments")}
+                {renderMenuItem("schedule", ScheduleIcon, "Schedule")}
                 {renderMenuItem("history", PastIcon, "History")}
                 {renderMenuItem("classRecord", ClassRecorderIcon, "Class Record")}
                 {renderMenuItem("comparative", ComparativeIcon, "Polycon Analysis")}

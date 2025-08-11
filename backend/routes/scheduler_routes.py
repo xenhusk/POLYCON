@@ -8,7 +8,8 @@ try:
     from services.scheduler_service_production import (
         get_production_scheduler_status, 
         get_production_scheduler, 
-        initialize_production_scheduler
+        initialize_production_scheduler,
+        restart_production_scheduler
     )
     PRODUCTION_SCHEDULER_AVAILABLE = True
 except ImportError:
@@ -233,16 +234,19 @@ def restart_scheduler():
         from flask import current_app
         
         # Get reminder minutes from request
-        reminder_minutes = request.json.get('reminder_minutes', 15) if request.json else 15
+        reminder_minutes = 15  # Default value
+        try:
+            if request.content_type == 'application/json' and request.json:
+                reminder_minutes = request.json.get('reminder_minutes', 15)
+            elif request.form:
+                reminder_minutes = int(request.form.get('reminder_minutes', 15))
+        except Exception:
+            # Use default if there's any issue parsing the request
+            reminder_minutes = 15
         
         if is_production_env() and PRODUCTION_SCHEDULER_AVAILABLE:
-            # Stop existing production scheduler
-            scheduler = get_production_scheduler()
-            if scheduler:
-                scheduler.stop()
-            
-            # Start new production scheduler
-            new_scheduler = initialize_production_scheduler(current_app, reminder_minutes)
+            # Use restart function for production scheduler
+            new_scheduler = restart_production_scheduler(current_app, reminder_minutes)
             return jsonify({
                 'message': 'Production scheduler restarted successfully',
                 'environment': 'production',

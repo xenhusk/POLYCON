@@ -36,6 +36,8 @@ import History from './pages/History'; // add import for History
 import Departments from './components/Departments';
 import HomeAdmin from './components/HomeAdmin'; // Update import name and path
 import SemesterManagement from './components/SemesterManagement'; // Update import name and path
+import ConsultationSchedules from './pages/ConsultationSchedules'; // Add import for public consultation schedules
+import TeacherScheduleManager from './components/TeacherScheduleManager'; // Add import for teacher schedule management
 
 import SidebarPreview from './components/SidebarPreview'; // Import the SidebarPreview component
 import Appointments from './pages/Appointments'; // Import the Appointments page
@@ -54,7 +56,6 @@ import { useQueryClient } from 'react-query';
 import { useFetchWithCache } from './hooks/useFetchWithCache';
 import { usePrefetch } from './context/DataPrefetchContext';
 import NetworkMonitor from './components/NetworkMonitor';
-import ProductionDebugger from './components/ProductionDebugger';
 import { getUserIdentifiers } from "./utils/userUtils"; // Add import for getUserIdentifiers
 import { ensureUserIdPersistence, recoverUserIds } from "./utils/persistUtils";
 import ComparativeAnalysis from './pages/ComparativeAnalysis';
@@ -800,6 +801,9 @@ function App() {
                     <Route path="/verify-email" element={<EmailVerification />} />
                     <Route path="/verification-success" element={<EmailVerificationSuccess />} />
                     <Route path="/verification-error" element={<EmailVerificationError />} />
+                    
+                    {/* Public consultation schedules - accessible without login */}
+                    <Route path="/consultation-schedules" element={<ConsultationSchedules />} />
 
                     {/* Protected dashboard route */}
                     <Route path="/dashboard" element={
@@ -850,12 +854,13 @@ function App() {
                     <Route path="/history" element={<History />} /> {/* New route */}
                     <Route path="/department" element={<Departments />} /> {/* New route */}
                     <Route path="/preloader-test" element={<PreloaderTest />} /> {/* Add this line */}
-                    <Route path="/homeadmin" element={<HomeAdmin />} />
+                    <Route path="/homeadmin" element={<UserHome />} />
                     <Route path="/homestudent" element={<HomeStudent />} />                    
                     <Route path="/enrollment-test" element={<EnrollmentTestPage />} /> {/* new test route */}
                     <Route path="/semester-management" element={<SemesterManagement />} /> {/* Update this line */}                    
                     <Route path="/comparative-analysis" element={<ComparativeAnalysis />} />
                     <Route path="/admin-consultation" element={<AdminConsultation />} />
+                    <Route path="/teacher-schedule" element={<TeacherScheduleManager />} /> {/* Teacher schedule management */}
                     <Route path="/settings" element={<Settings />} /> {/* Settings page with notification controls */}
                     <Route path="/socket-test" element={<SocketTest />} /> {/* Socket.IO test dashboard route */}
                   </Routes>
@@ -904,9 +909,6 @@ function App() {
         
         {/* Network Monitor - only visible in development */}
         <NetworkMonitor visible={process.env.NODE_ENV === 'development'} />
-        
-        {/* Production Debugger - always available for debugging production issues */}
-        <ProductionDebugger />
         
         {/* REMOVE OR MODIFY THIS LINE - you can either:
             1. Comment it out entirely: */}

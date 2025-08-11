@@ -231,7 +231,7 @@ function StudentAppointments() {
                   </div>
                   {/* Student(s) Section Skeleton */}
                   <div className="mt-3 sm:mt-4 fade-in delay-200">
-                    <p className="h-3 sm:h-4 bg-gray-300 rounded w-32 sm:w-40 mb-2">Student(s)</p>
+                    <p className="h-3 sm:h-4 bg-gray-300 rounded w-32 sm:w-40 mb-2"></p>
                     <div className="flex flex-wrap items-center gap-2 sm:gap-3">
                       {Array.from({ length: 3 }).map((_, index) => (
                         <div
