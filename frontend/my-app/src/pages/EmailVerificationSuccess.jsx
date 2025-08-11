@@ -7,7 +7,7 @@ const EmailVerificationSuccess = () => {
   const navigate = useNavigate();
 
   const handleLoginRedirect = () => {
-    navigate('/login');
+    navigate('/');
   };
 
   return (

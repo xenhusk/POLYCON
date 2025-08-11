@@ -38,4 +38,4 @@ console.log(`⏰ Started at: ${new Date().toISOString()}`);
 
 // Ping immediately, then every 5 minutes
 ping();
-setInterval(ping, 5 * 60 * 1000); // 5 minutes
+setInterval(ping, 3 * 60 * 1000); // 5 minutes
