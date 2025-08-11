@@ -7,6 +7,11 @@ const Help_Main_Content = () => {
   const [onThisPageLinks, setOnThisPageLinks] = useState([]);
   const [activeSection, setActiveSection] = useState("");
 
+  const sidebarActive = (to) =>
+  location.pathname === to
+    ? "text-[#057DCD] bg-blue-50 font-md border-[#057DCD]"
+    : "text-gray-600 hover:text-[#057DCD] hover:bg-blue-50 border-transparent";
+
   React.useEffect(() => {
     const handleScroll = () => {
       const sections = document.querySelectorAll("[id]");
@@ -81,16 +86,10 @@ const Help_Main_Content = () => {
 
     // Info pages section links
     const infoPages = {
-      Info_Bookings: [
-        "#booking_features", 
-        "#tips_section_bookings"
-      ],
-      Info_History: [
-        "#history_features", 
-        "#tips_section_history"
-      ],
+      Info_Bookings: ["#booking_features", "#tips_section_bookings"],
+      Info_History: ["#history_features", "#tips_section_history"],
       Info_Appointments: [
-        "#appointments_features",
+        "#appointment_features",
         "#tips_section_appointments",
       ],
       Info_Student_Dashboard: [
@@ -111,7 +110,7 @@ const Help_Main_Content = () => {
           label: "Tips",
           href: infoPages[currentPage][1],
           className: "text-gray-600 hover:text-[#057DCD]",
-        },
+        }
       );
     }
 
@@ -160,7 +159,7 @@ const Help_Main_Content = () => {
   };
 
   return (
-    <motion.div 
+    <motion.div
       initial={{ opacity: 0, y: 20 }}
       animate={{ opacity: 1, y: 0 }}
       transition={{ duration: 0.5 }}
@@ -178,43 +177,43 @@ const Help_Main_Content = () => {
                 <nav className="space-y-2">
                   <Link
                     to="/help/getstarted/"
-                    className="block text-sm text-gray-600 hover:text-[#057DCD]"
+                    className={`block px-3 py-1 text-sm rounded-md transition-colors ${sidebarActive("/help/getstarted/")}`}
                   >
                     Overview
                   </Link>
                   <Link
                     to="/help/getstarted/Info_Login"
-                    className="block text-sm text-gray-600 hover:text-[#057DCD]"
+                    className={`block px-3 py-1 text-sm rounded-md transition-colors ${sidebarActive("/help/getstarted/Info_Login")}`}
                   >
                     Account Login
                   </Link>
                   <Link
                     to="/help/getstarted/Info_Signup"
-                    className="block text-sm text-gray-600 hover:text-[#057DCD]"
+                    className={`block px-3 py-1 text-sm rounded-md transition-colors ${sidebarActive("/help/getstarted/Info_Signup")}`}
                   >
                     Account Registration
                   </Link>
                   <Link
                     to="/help/getstarted/Info_Student_Dashboard"
-                    className="block text-sm text-gray-600 hover:text-[#057DCD]"
+                    className={`block px-3 py-1 text-sm rounded-md transition-colors ${sidebarActive("/help/getstarted/Info_Student_Dashboard")}`}
                   >
                     Student Dashboard
                   </Link>
                   <Link
                     to="/help/getstarted/Info_History"
-                    className="block text-sm text-gray-600 hover:text-[#057DCD]"
+                    className={`block px-3 py-1 text-sm rounded-md transition-colors ${sidebarActive("/help/getstarted/Info_History")}`}
                   >
                     History
                   </Link>
                   <Link
                     to="/help/getstarted/Info_Appointments"
-                    className="block text-sm text-gray-600 hover:text-[#057DCD]"
+                    className={`block px-3 py-1 text-sm rounded-md transition-colors ${sidebarActive("/help/getstarted/Info_Appointments")}`}
                   >
                     Appointments
                   </Link>
                   <Link
                     to="/help/getstarted/Info_Bookings"
-                    className="block text-sm text-gray-600 hover:text-[#057DCD]"
+                    className={`block px-3 py-1 text-sm rounded-md transition-colors ${sidebarActive("/help/getstarted/Info_Bookings")}`}
                   >
                     Booking Consultations
                   </Link>
@@ -226,19 +225,19 @@ const Help_Main_Content = () => {
                 <nav className="space-y-2">
                   <Link
                     to="/help/studentfeatures/Info_Consultation_Booking"
-                    className="block text-sm text-gray-600 hover:text-[#057DCD]"
+                    className={`block px-3 py-1 text-sm rounded-md transition-colors ${sidebarActive("/help/getstarted/Info_Consultation_Booking")}`}
                   >
                     Consultation Booking
                   </Link>
                   <Link
                     to="/help/studentfeatures/Info_Calendar_Management"
-                    className="block text-sm text-gray-600 hover:text-[#057DCD]"
+                    className={`block px-3 py-1 text-sm rounded-md transition-colors ${sidebarActive("/help/getstarted/Info_Calendar_Management")}`}
                   >
                     Calendar Management
                   </Link>
                   <Link
                     to="/help/studentfeatures/Info_Notifications"
-                    className="block text-sm text-gray-600 hover:text-[#057DCD]"
+                    className={`block px-3 py-1 text-sm rounded-md transition-colors ${sidebarActive("/help/getstarted/Info_Notifications")}`}
                   >
                     Notifications
                   </Link>
@@ -250,13 +249,13 @@ const Help_Main_Content = () => {
                 <nav className="space-y-2">
                   <Link
                     to="/help/support/FAQ"
-                    className="block text-sm text-gray-600 hover:text-[#057DCD]"
+                    className={`block px-3 py-1 text-sm rounded-md transition-colors ${sidebarActive("/help/getstarted/FAQ")}`}
                   >
                     FAQ
                   </Link>
                   <Link
-                    to="/help/support/Contact"
-                    className="block text-sm text-gray-600 hover:text-[#057DCD]"
+                    to="/help/getstarted/Contact"
+                    className={`block px-3 py-1 text-sm rounded-md transition-colors ${sidebarActive("/help/getstarted/Contact")}`}
                   >
                     Contact Support
                   </Link>
@@ -269,7 +268,10 @@ const Help_Main_Content = () => {
           <div className="flex-1">
             <Outlet />
           </div>
-          {!(location.pathname.toLowerCase().includes("/faq") || location.pathname.toLowerCase().includes("/contact")) && (
+          {!(
+            location.pathname.toLowerCase().includes("/faq") ||
+            location.pathname.toLowerCase().includes("/contact")
+          ) && (
             <div className="hidden lg:block ml-4 w-64 flex-shrink-0">
               <div className="sticky top-8">
                 <div className="bg-white rounded-lg shadow-sm border border-gray-200 p-6">
