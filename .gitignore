@@ -3,6 +3,7 @@
 .venv
 env/
 venv/
+envbackend/
 
 # Python
 __pycache__/
@@ -21,4 +22,5 @@ Thumbs.db
 
 # Keys and Secrets
 /backend/keys/
+/backend-python/keys/
 backend-python/keys/firebase-key.json

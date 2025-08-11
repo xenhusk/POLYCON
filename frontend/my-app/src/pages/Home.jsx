@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from "react";
 import { motion, AnimatePresence } from "framer-motion";
+import { useNavigate } from "react-router-dom";
 import logo from "../components/icons/logo2.png";
 import Consult1 from "../components/icons/Gemini_Generated_Image_glfva1glfva1glfv.png";
 import Consult3 from "../components/icons/Gemini_Generated_Image_zafzvozafzvozafz.png";
@@ -1088,6 +1089,8 @@ const Footer = () => {
 
 // Help Button Component
 const HelpButton = () => {
+  const navigate = useNavigate();
+
   return (
     <motion.div
       initial={{ scale: 0 }}
@@ -1109,6 +1112,7 @@ const HelpButton = () => {
           }
         }}
         className="w-16 h-16 bg-[#057DCD] text-white rounded-full shadow-xl hover:shadow-2xl transition-shadow duration-300 flex items-center justify-center text-2xl font-bold"
+        onClick={() => navigate("/help/getstarted/")}
       >
         ?
       </motion.button>

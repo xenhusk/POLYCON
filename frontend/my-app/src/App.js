@@ -6,6 +6,19 @@ import BookingTeacher from './components/BookingTeacher';
 import Session from './components/Session';
 import Signup from './components/Signup';
 import Login from './components/Login';
+import Help from './components/help/Helpbar';
+import Help_Overview from './components/help/getstarted/Help_Overview';
+import Help_Login from './components/help/getstarted/Help_Login';
+import Help_SignUp from './components/help/getstarted/Help_SignUp';
+import Help_Student_Dashboard from './components/help/getstarted/Help_Student_Dashboard';
+import Help_History from './components/help/getstarted/Help_History';
+import Help_Appointments from './components/help/getstarted/Help_Appointment';
+import Help_Bookings from './components/help/getstarted/Help_Bookings';
+import Help_Consultation_Booking from './components/help/studentfeatures/Help_Consultation_Booking';
+import Help_Calendar_Management from './components/help/studentfeatures/Help_Calendar_Management';
+import Help_Notifications from './components/help/studentfeatures/Help_Notifications';
+import Contact_Support from './components/help/Support/Contact_Support.jsx';
+import FAQ from './components/help/Support/FAQ.jsx';
 import AdminPortal from './components/AdminPortal';
 import Courses from './components/Courses';
 import AddGrade from './components/AddGrade';
@@ -801,6 +814,27 @@ function App() {
                         <BookingStudent /> :
                         <Navigate to="/login" replace />
                     } />
+                    <Route>
+                      <Route path="/help/getstarted/" element={<Help />}>
+                        <Route index element={<Help_Overview />} />
+                        <Route path="Info_Login" element={<Help_Login />} />
+                        <Route path="Info_SignUp" element={<Help_SignUp />} />
+                        <Route path="Info_Student_Dashboard" element={<Help_Student_Dashboard />} />
+                        <Route path="Info_History" element={<Help_History />} />
+                        <Route path="Info_Appointments" element={<Help_Appointments />} />
+                        <Route path="Info_Bookings" element={<Help_Bookings />} />
+                      </Route>
+                      { /* Nested route for student features */ }
+                      <Route path="/help/studentfeatures" element={<Help />}>
+                        <Route path="Info_Consultation_Booking" element={<Help_Consultation_Booking />}/>
+                        <Route path="Info_Calendar_Management" element={<Help_Calendar_Management />}/>
+                        <Route path="Info_Notifications" element={<Help_Notifications />}/>
+                      </Route>
+                      <Route path="/help/support" element={<Help />}>
+                        <Route path="Contact" element={<Contact_Support />} />
+                        <Route path="FAQ" element={<FAQ />} />
+                      </Route>
+                    </Route>
                     <Route path="/booking-teacher" element={<BookingTeacher />} />
                     <Route path="/session" element={<Session />} />
                     <Route path="/admin" element={<AdminPortal />} />
