@@ -251,7 +251,7 @@ const HomeAdmin = () => {
       </div>
       ) : (
         <>
-          <h1 className="text-3xl font-bold text-[#0065A8] pt-10 mb-6">Admin Dashboard</h1>
+          <h1 className="text-3xl font-bold text-[#0065A8] mb-6">Admin Dashboard</h1>
           {/* Settings gear icon in top right */}
           <div className="absolute top-6 right-6">
             <button 
