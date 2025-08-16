@@ -22,7 +22,7 @@ function AdminConsultationCalendar() {
                     title: session.title,
                     start: new Date(session.schedule),
                     end: new Date(session.schedule),
-                    allDay: false,
+                    allDay: true,
                     agendaTitle: `Consultation: ${session.title}`,
                 }));
                 setEvents(events);
@@ -215,7 +215,7 @@ function AdminConsultationCalendar() {
                         borderRadius: '0.75rem',
                         boxShadow: '0 4px 24px rgba(0,0,0,0.2)',
                         padding: '2rem',
-                        minWidth: '320px',
+                        minWidth: '500px',
                         maxWidth: '90vw',
                         position: 'relative',
                         cursor: 'auto'
@@ -237,8 +237,8 @@ function AdminConsultationCalendar() {
                             }}
                             onClick={() => setShowModal(false)}
                         >Close</button>
-                        <h2 style={{ color: '#057DCD', marginBottom: '1rem' }}>Consultation Information</h2>
-                        <div style={{ marginBottom: '0.5rem' }}><strong>Title:</strong> {selectedEvent.title}</div>
+                        <h2 style={{ color: '#057DCD', marginBottom: '1rem', paddingBottom: '0.5rem', paddingRight: '2rem' }}>Consultation Information</h2>
+                        <div style={{ marginBottom: '0.5rem' }}><strong>Teacher:</strong> {selectedEvent.title}</div>
                         <div style={{ marginBottom: '0.5rem' }}><strong>Date & Time:</strong> {selectedEvent.schedule ? moment(selectedEvent.schedule).format('MMMM D, YYYY h:mm A') : moment(selectedEvent.start).format('MMMM D, YYYY h:mm A')}</div>
                         {selectedEvent.description && <div style={{ marginBottom: '0.5rem' }}><strong>Description:</strong> {selectedEvent.description}</div>}
                         {selectedEvent.location && <div style={{ marginBottom: '0.5rem' }}><strong>Location:</strong> {selectedEvent.location}</div>}

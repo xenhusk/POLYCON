@@ -22,7 +22,7 @@ consultation_bp = Blueprint('consultation', __name__, url_prefix='/consultation'
 @consultation_bp.route('/get_all_sessions', methods=['GET'])
 def get_all_sessions():
     import logging
-    sessions = db.session.query(ConsultationSession).order_by(ConsultationSession.session_date.desc()).all()
+    sessions = db.session.query(ConsultationSession).all()
     result = []
     for session in sessions:
         try:
@@ -34,7 +34,7 @@ def get_all_sessions():
                     teacher_name = f"{teacher_user.first_name} {teacher_user.last_name}"
             # Get student names
             student_names = []
-            # Defensive: ensure student_ids is a list
+            # Always treat student_ids as a list of id_number strings
             student_ids = session.student_ids if isinstance(session.student_ids, list) else []
             if session.student_ids and not isinstance(session.student_ids, list):
                 # Try to parse comma-separated string
@@ -42,11 +42,12 @@ def get_all_sessions():
                     student_ids = [sid.strip() for sid in session.student_ids.split(',') if sid.strip()]
             for student_id in student_ids:
                 try:
+                    # Always fetch by id_number (string)
                     student_user = User.query.filter_by(id_number=student_id).first()
                     if student_user:
                         student_names.append(f"{student_user.first_name} {student_user.last_name}")
                 except Exception as e:
-                    logging.warning(f"Error fetching student user for id {student_id}: {e}")
+                    logging.warning(f"Error fetching student user for id_number {student_id}: {e}")
             result.append({
                 "id": session.id,
                 "title": f"{teacher_name} - {', '.join(student_names)}",

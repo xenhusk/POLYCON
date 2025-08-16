@@ -393,7 +393,9 @@ const SettingsPopup = ({
                   </>
                 )}
 
-                <div className="px-6 py-2">
+                
+
+                {/* <div className="px-6 py-2">
                   <p className="text-sm font-semibold text-gray-500 uppercase tracking-wider mb-2">
                     Help
                   </p>
@@ -403,7 +405,7 @@ const SettingsPopup = ({
                   >
                     ?
                   </button>
-                </div>
+                </div> */}
 
                 {/* Logout Section */}
                 <div className="px-6 py-2">
@@ -434,7 +436,7 @@ const SettingsPopup = ({
         ) : (
           // Desktop: Small dropdown at the specified position
           <div
-            className="fixed bg-white rounded-lg shadow-lg w-64 h-80 py-2 z-[1000] overflow-y-auto"
+            className="fixed bg-white rounded-lg shadow-lg w-64 py-2 z-[1000] overflow-y-auto"
             style={{
               top: Math.max(
                 20,
@@ -544,7 +546,7 @@ const SettingsPopup = ({
                 </div>
               </>
             )}
-
+{/* 
             <div className="h-[1px] bg-gray-200 my-2" />
 
             <div className="px-4 py-2">
@@ -587,7 +589,7 @@ const SettingsPopup = ({
                 </svg>
                 Get Help
               </a>
-            </div>
+            </div> */}
 
             {/* Divider */}
             <div className="h-[1px] bg-gray-200 my-2" />
