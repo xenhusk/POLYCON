@@ -22,15 +22,17 @@ import Help from "./components/help/Helpbar";
 import Help_Overview from "./components/help/getstarted/Help_Overview";
 import Help_Login from "./components/help/getstarted/Help_Login";
 import Help_SignUp from "./components/help/getstarted/Help_SignUp";
-import Help_Student_Dashboard from "./components/help/getstarted/Help_Student_Dashboard";
+import Help_Dashboard from "./components/help/getstarted/Help_Dashboard";
 import Help_History from "./components/help/getstarted/Help_History";
 import Help_Appointments from "./components/help/getstarted/Help_Appointment";
-import Help_Bookings from "./components/help/getstarted/Help_Bookings";
-import Help_Consultation_Booking from "./components/help/studentfeatures/Help_Consultation_Booking";
-import Help_Calendar_Management from "./components/help/studentfeatures/Help_Calendar_Management";
-import Help_Notifications from "./components/help/studentfeatures/Help_Notifications";
-import Contact_Support from "./components/help/Support/Contact_Support.jsx";
-import FAQ from "./components/help/Support/FAQ.jsx";
+import Help_Set_Schedule from "./components/help/getstarted/Help_Set_Schedule";
+import Help_Grade from "./components/help/getstarted/Help_Grade";
+import Help_Polycon_Analysis from "./components/help/getstarted/Help_Polycon_Analysis.jsx";
+import Help_Consultation_Booking from "./components/help/features/Help_Consultation_Booking";
+import Help_Calendar_Management from "./components/help/features/Help_Calendar_Management";
+import Help_Notifications from "./components/help/features/Help_Notifications";
+import Contact_Support from "./components/help/Support/Contact_Support";
+import FAQ from "./components/help/Support/FAQ";
 import AdminPortal from "./components/AdminPortal";
 import Courses from "./components/Courses";
 import AddGrade from "./components/AddGrade";
@@ -957,8 +959,8 @@ function App() {
                               element={<Help_SignUp />}
                             />
                             <Route
-                              path="Info_Student_Dashboard"
-                              element={<Help_Student_Dashboard />}
+                              path="Info_Dashboard"
+                              element={<Help_Dashboard />}
                             />
                             <Route
                               path="Info_History"
@@ -969,13 +971,21 @@ function App() {
                               element={<Help_Appointments />}
                             />
                             <Route
-                              path="Info_Bookings"
-                              element={<Help_Bookings />}
+                              path="Info_Grade"
+                              element={<Help_Grade />}
+                            />
+                            <Route
+                              path="Info_Set_Schedule"
+                              element={<Help_Set_Schedule />}
+                            />
+                            <Route 
+                              path="Info_Polycon_Analysis"
+                              element={<Help_Polycon_Analysis />}
                             />
                           </Route>
                           {/* Nested route for student features */}
                           <Route
-                            path="/help/studentfeatures"
+                            path="/help/features"
                             element={<Help />}
                           >
                             <Route

@@ -11,6 +11,7 @@ const Help = () => {
   const [SignInClicked, setSignInClicked] = useState(false);
   const [isMenuOpen, setIsMenuOpen] = useState(false);
   const [isSearchOpen, setIsSearchOpen] = useState(false);
+  const [isTeacher, setIsTeacher] = React.useState(false);
 
   useEffect(() => {
     if (isMenuOpen && window.innerWidth < 1024) {
@@ -36,7 +37,13 @@ const Help = () => {
     };
   }, [isMenuOpen]);
 
-  const hideHeader = location.pathname !== "/help" && location.pathname !== "/help/";
+  const hideHeader =
+    location.pathname !== "/help" && location.pathname !== "/help/";
+
+  React.useEffect(() => {
+    const role = localStorage.getItem("userRole");
+    setIsTeacher(role === "faculty");
+  }, []);
 
   return (
     <div className="min-h-screen flex flex-col bg-gray-50 overflow-hidden">
@@ -102,10 +109,10 @@ const Help = () => {
                     navigate("/login");
                   }}
                   className={`hidden lg:block bg-white text-base lg:text-xl text-[#0056a6] w-[6rem] lg:w-[8rem] px-4 py-2
-            rounded-[50px] font-semibold transition-all duration-200
-            hover:bg-[#e6f3ff] hover:text-[#0078e7] hover:shadow-md ${
-              SignInClicked ? "scale-90" : "scale-100"
-            }`}
+                    rounded-[50px] font-semibold transition-all duration-200
+                  hover:bg-[#e6f3ff] hover:text-[#0078e7] hover:shadow-md ${
+                    SignInClicked ? "scale-90" : "scale-100"
+                  }`}
                 >
                   Sign In
                 </motion.button>
@@ -194,33 +201,30 @@ const Help = () => {
               >
                 Overview
               </Link>
+              { !isTeacher && (
+                <>
+                <Link
+                  to="/help/getstarted/Info_Login"
+                  onClick={() => setIsMenuOpen(false)}
+                  className="block text-sm text-gray-600 hover:text-[#0056a6] hover:bg-blue-50 p-2 rounded-md transition-colors"
+                >
+                  Account Login
+                </Link>
+                <Link
+                  to="/help/getstarted/Info_Signup"
+                  onClick={() => setIsMenuOpen(false)}
+                  className="block text-sm text-gray-600 hover:text-[#0056a6] hover:bg-blue-50 p-2 rounded-md transition-colors"
+                >
+                  Account Registration
+                </Link>
+                </>
+              )}
               <Link
-                to="/help/getstarted/Info_Login"
+                to="/help/getstarted/Info_Dashboard"
                 onClick={() => setIsMenuOpen(false)}
                 className="block text-sm text-gray-600 hover:text-[#0056a6] hover:bg-blue-50 p-2 rounded-md transition-colors"
               >
-                Account Login
-              </Link>
-              <Link
-                to="/help/getstarted/Info_Signup"
-                onClick={() => setIsMenuOpen(false)}
-                className="block text-sm text-gray-600 hover:text-[#0056a6] hover:bg-blue-50 p-2 rounded-md transition-colors"
-              >
-                Account Registration
-              </Link>
-              <Link
-                to="/help/getstarted/Info_Student_Dashboard"
-                onClick={() => setIsMenuOpen(false)}
-                className="block text-sm text-gray-600 hover:text-[#0056a6] hover:bg-blue-50 p-2 rounded-md transition-colors"
-              >
-                Student Dashboard
-              </Link>
-              <Link
-                to="/help/getstarted/Info_History"
-                onClick={() => setIsMenuOpen(false)}
-                className="block text-sm text-gray-600 hover:text-[#0056a6] hover:bg-blue-50 p-2 rounded-md transition-colors"
-              >
-                History
+                Dashboard
               </Link>
               <Link
                 to="/help/getstarted/Info_Appointments"
@@ -229,36 +233,61 @@ const Help = () => {
               >
                 Appointments
               </Link>
+              { !isTeacher && (
+                <Link
+                  to="/help/getstarted/Info_Set_Schedule"
+                  onClick={() => setIsMenuOpen(false)}
+                  className="block text-sm text-gray-600 hover:text-[#0056a6] hover:bg-blue-50 p-2 rounded-md transition-colors"
+                >
+                  Schedule
+                </Link>
+              )}
               <Link
-                to="/help/getstarted/Info_Bookings"
+                to="/help/getstarted/Info_History"
                 onClick={() => setIsMenuOpen(false)}
                 className="block text-sm text-gray-600 hover:text-[#0056a6] hover:bg-blue-50 p-2 rounded-md transition-colors"
               >
-                Booking Consultations
+                History
               </Link>
+              <Link
+                to="/help/getstarted/Info_Grade"
+                onClick={() => setIsMenuOpen(false)}
+                className="block text-sm text-gray-600 hover:text-[#0056a6] hover:bg-blue-50 p-2 rounded-md transition-colors"
+              >
+                Grade
+              </Link>
+              { !isTeacher && (
+                <Link
+                  to="/help/getstarted/Info_Polycon_Analysis"
+                  onClick={() => setIsMenuOpen(false)}
+                  className="block text-sm text-gray-600 hover:text-[#0056a6] hover:bg-blue-50 p-2 rounded-md transition-colors"
+                >
+                  Polycon Analysis
+                </Link>
+              )}
             </div>
 
-            {/* Student Features Section */}
+            {/* Features Section */}
             <h3 className="text-sm font-semibold text-gray-900 uppercase tracking-wide mb-3 pb-2 border-b border-gray-100">
-              Student Features
+              Features
             </h3>
             <div className="space-y-2 mb-6">
               <Link
-                to="/help/studentfeatures/Info_Consultation_Booking"
+                to="/help/features/Info_Consultation_Booking"
                 onClick={() => setIsMenuOpen(false)}
                 className="block text-sm text-gray-600 hover:text-[#0056a6] hover:bg-blue-50 p-2 rounded-md transition-colors"
               >
                 Consultation Booking
               </Link>
               <Link
-                to="/help/studentfeatures/Info_Calendar_Management"
+                to="/help/features/Info_Calendar_Management"
                 onClick={() => setIsMenuOpen(false)}
                 className="block text-sm text-gray-600 hover:text-[#0056a6] hover:bg-blue-50 p-2 rounded-md transition-colors"
               >
                 Calendar Management
               </Link>
               <Link
-                to="/help/studentfeatures/Info_Notifications"
+                to="/help/features/Info_Notifications"
                 onClick={() => setIsMenuOpen(false)}
                 className="block text-sm text-gray-600 hover:text-[#0056a6] hover:bg-blue-50 p-2 rounded-md transition-colors"
               >

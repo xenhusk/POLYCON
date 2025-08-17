@@ -2,6 +2,15 @@ import React from "react";
 import { motion } from "framer-motion";
 
 const Help_Consultation_Booking = () => {
+
+  const [isTeacher, setIsTeacher] = React.useState(false);
+
+  React.useEffect(() => {
+    // Simulate a check to see if the user is a teacher
+    const role = localStorage.getItem("userRole"); // This would come from your auth logic
+    setIsTeacher(role === "faculty");
+  }, []);
+
   return (
     <motion.div 
       initial={{ opacity: 0, y: 20 }}
@@ -25,6 +34,56 @@ const Help_Consultation_Booking = () => {
             </p>
           </div>
         </div>
+        
+        {/* Teacher-specific section */}
+        { isTeacher && (
+          <div className="p-4 sm:p-6 lg:p-8 bg-gradient-to-r from-[#e6f3ff] to-[#fafdff] border-b border-[#54BEFF]">
+            <div className="mb-2">
+              <span className="text-sm text-[#00A3FF] font-medium">Teachers</span>
+            </div>
+            <h2 className="text-xl sm:text-2xl font-bold text-[#057DCD] mb-3">
+              Manage Consultation Bookings
+            </h2>
+            <p className="text-base sm:text-lg text-gray-700 mb-4">
+              You can set your available consultation slots, review and approve student requests, and keep your schedule organized.
+            </p>
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4 sm:gap-6">
+              <div className="bg-blue-50 rounded-lg p-4 border border-blue-200">
+                <h4 className="font-semibold text-gray-900 mb-2">Set Available Slots</h4>
+                <p className="text-gray-600 text-sm">
+                  Define your consultation hours so students can book sessions that fit your availability.
+                </p>
+              </div>
+              <div className="bg-blue-50 rounded-lg p-4 border border-blue-200">
+                <h4 className="font-semibold text-gray-900 mb-2">Approve or Decline Requests</h4>
+                <p className="text-gray-600 text-sm">
+                  Review student booking requests and approve or decline them directly from your dashboard.
+                </p>
+              </div>
+              <div className="bg-blue-50 rounded-lg p-4 border border-blue-200">
+                <h4 className="font-semibold text-gray-900 mb-2">Send Reminders</h4>
+                <p className="text-gray-600 text-sm">
+                  Notify students about upcoming consultations or changes to the schedule.
+                </p>
+              </div>
+              <div className="bg-blue-50 rounded-lg p-4 border border-blue-200">
+                <h4 className="font-semibold text-gray-900 mb-2">Manage Group Sessions</h4>
+                <p className="text-gray-600 text-sm">
+                  Organize group consultations and communicate with all participants efficiently.
+                </p>
+              </div>
+            </div>
+            <div className="mt-6 bg-white rounded-lg p-4 border-l-4 border-[#00A3FF]">
+              <h4 className="font-semibold text-[#00A3FF] mb-2">Tips for Teachers</h4>
+              <ul className="list-disc ml-6 text-gray-700 text-sm">
+                <li>Update your available slots regularly to reflect your true schedule.</li>
+                <li>Use reminders to reduce no-shows and keep students informed.</li>
+                <li>Communicate expectations and required materials to students ahead of time.</li>
+                <li>Check your dashboard notifications for new booking requests.</li>
+              </ul>
+            </div>
+          </div>
+        )}
 
         {/* Quick Access */}
         <div className="p-4 sm:p-6 lg:p-8 border-b border-gray-200">
@@ -124,23 +183,6 @@ const Help_Consultation_Booking = () => {
                 <li>• Late arrival: Max 10 minutes grace period</li>
                 <li>• No-shows may affect future bookings</li>
               </ul>
-            </div>
-          </div>
-        </div>
-
-        {/* Footer Navigation */}
-        <div className="p-4 sm:p-6 lg:p-8 border-t border-gray-200">
-          <div className="flex flex-col sm:flex-row justify-between items-center gap-4">
-            <a href="/help/studentfeatures" className="text-[#057DCD] hover:text-[#54BEFF] text-sm">
-              ← Back to Student Features
-            </a>
-            <div className="flex gap-4">
-              <a href="#booking_steps" className="text-[#057DCD] hover:text-[#54BEFF] text-sm">
-                Jump to Steps
-              </a>
-              <a href="/help/contact" className="text-[#057DCD] hover:text-[#54BEFF] text-sm">
-                Need Help? →
-              </a>
             </div>
           </div>
         </div>

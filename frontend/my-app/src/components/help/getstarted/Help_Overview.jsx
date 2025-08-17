@@ -19,22 +19,11 @@ const Overview = () => {
             </span>
           </div>
           <h1 className="text-2xl sm:text-3xl font-bold text-gray-900 mb-3 sm:mb-4">
-            Polycon Student System Documentation
+            Polycon System Documentation
           </h1>
           <p className="text-base sm:text-lg text-gray-600 mb-4 sm:mb-6">
             Build with our comprehensive student consultation platform
           </p>
-          <button className="inline-flex items-center px-3 py-2 sm:px-4 sm:py-2 border border-transparent text-sm font-medium rounded-md text-white bg-[#057DCD] hover:bg-[#54BEFF] transition-colors duration-200">
-            Copy page
-            <svg
-              className="ml-2 -mr-1 w-4 h-4"
-              fill="currentColor"
-              viewBox="0 0 20 20"
-            >
-              <path d="M8 3a1 1 0 011-1h2a1 1 0 110 2H9a1 1 0 01-1-1z"></path>
-              <path d="M6 3a2 2 0 00-2 2v11a2 2 0 002 2h8a2 2 0 002-2V5a2 2 0 00-2-2 3 3 0 01-3 3H9a3 3 0 01-3-3z"></path>
-            </svg>
-          </button>
         </div>
 
         {/* Feature highlight */}
@@ -42,7 +31,7 @@ const Overview = () => {
           <div className="flex flex-col sm:flex-row items-center justify-between gap-6">
             <div className="w-full sm:w-2/3">
               <h2 className="text-xl sm:text-2xl font-bold mb-3 sm:mb-4">
-                Student-first consultation platform
+                Consultation platform
               </h2>
               <p className="text-base sm:text-lg opacity-90 mb-4">
                 Your academic success depends on effective communication. Make
@@ -140,7 +129,7 @@ const Overview = () => {
                 <span className="text-white text-lg sm:text-xl">📊</span>
               </div>
               <h3 className="text-base sm:text-lg font-semibold mb-2">
-                Student Dashboard
+                Dashboard
               </h3>
               <p className="text-xs sm:text-sm text-gray-600">
                 Modules for managing your academic journey with personalized
