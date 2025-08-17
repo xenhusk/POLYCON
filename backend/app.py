@@ -47,7 +47,7 @@ def create_app():
     app = Flask(__name__)
     
     # Configure CORS settings
-    cors_origins = os.getenv('CORS_ALLOWED_ORIGINS', 'http://localhost:3000')
+    cors_origins = os.getenv('CORS_ALLOWED_ORIGINS', 'http://localhost:3000,http://localhost:3001')
     # Handle both single URL and comma-separated URLs
     if ',' in cors_origins:
         allowed_origins = cors_origins.split(',')

@@ -49,3 +49,69 @@ def identify_roles_in_transcription(transcription):
         return response.text.strip()  # Return the formatted role-annotated conversation
     except Exception as e:
         return f"Error identifying roles: {str(e)}"
+
+def generate_concern_insights_and_recommendations(concerns_data, category_stats, total_sessions):
+    """
+    Generate NLP-powered insights and recommendations based on student concern patterns
+    """
+    # Prepare the concern data for analysis
+    concern_list = []
+    for concern, count in concerns_data[:10]:  # Top 10 concerns
+        concern_list.append(f"'{concern}' (mentioned {count} times)")
+    
+    category_list = []
+    for category, data in category_stats.items():
+        if data['count'] > 0:
+            percentage = round((data['count'] / total_sessions) * 100, 1)
+            category_list.append(f"{category}: {data['count']} cases ({percentage}%)")
+    
+    prompt = f"""
+You are an educational data analyst specializing in student welfare and academic support. Analyze the following student concern patterns from consultation sessions and provide actionable insights and recommendations.
+
+CONSULTATION DATA:
+- Total Sessions: {total_sessions}
+- Sessions with Documented Concerns: {len(concerns_data)}
+
+TOP STUDENT CONCERNS:
+{chr(10).join(concern_list)}
+
+CONCERN CATEGORIES:
+{chr(10).join(category_list)}
+
+Please provide:
+
+1. KEY INSIGHTS (3-4 insights):
+   - Identify the most critical patterns in student concerns
+   - Highlight any concerning trends or priority areas
+   - Note any interconnections between different concern types
+   - Comment on the overall student welfare landscape
+
+2. ACTIONABLE RECOMMENDATIONS (4-5 recommendations):
+   - Specific interventions for the most common concern categories
+   - Proactive measures to address emerging patterns
+   - Resource allocation suggestions
+   - Support system improvements
+   - Preventive strategies
+
+Format your response as:
+INSIGHTS:
+• [insight 1]
+• [insight 2]
+• [insight 3]
+• [insight 4]
+
+RECOMMENDATIONS:
+• [recommendation 1]
+• [recommendation 2]
+• [recommendation 3]
+• [recommendation 4]
+• [recommendation 5]
+
+Focus on practical, evidence-based suggestions that can be implemented by educational institutions to improve student support services.
+"""
+
+    try:
+        response = model.generate_content(prompt)
+        return response.text.strip()
+    except Exception as e:
+        return f"Error generating insights: {str(e)}"
