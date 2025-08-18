@@ -10,11 +10,13 @@ const StudentConcernAnalytics = ({ teacherId, selectedSemester, selectedSchoolYe
   const [isAnimating, setIsAnimating] = useState(false);
   const [windowWidth, setWindowWidth] = useState(window.innerWidth);
   const [highlightedConcern, setHighlightedConcern] = useState(null);
+  const [hoveredArrow, setHoveredArrow] = useState(null);
 
-  // Color palette for charts
+  // Color palette for charts - Extended for top 10 + others
   const COLORS = [
     '#0088FE', '#00C49F', '#FFBB28', '#FF8042', '#8884D8', 
-    '#82CA9D', '#FFC658', '#FF7C7C', '#8DD1E1', '#D084D0'
+    '#82CA9D', '#FFC658', '#FF7C7C', '#8DD1E1', '#D084D0',
+    '#A28B8D', '#B8860B', '#CD853F', '#DAA520'
   ];
 
   const views = [
@@ -23,6 +25,13 @@ const StudentConcernAnalytics = ({ teacherId, selectedSemester, selectedSchoolYe
     'demographics',
     'insights'
   ];
+
+  const viewTitles = {
+    'overview': 'Student Concern Distribution',
+    'rankings': 'Concern Categories',
+    'demographics': 'Demographic Breakdown',
+    'insights': 'Insights and Recommendations'
+  };
 
   // Helper function to parse markdown bold syntax (**text**) and convert to JSX
   const parseMarkdownBold = (text) => {
@@ -141,10 +150,29 @@ const StudentConcernAnalytics = ({ teacherId, selectedSemester, selectedSchoolYe
     if (concernName) {
       console.log('Highlighting concern:', concernName); // Debug log
       setHighlightedConcern(concernName);
-      // Clear highlight after 3 seconds
+      
+      // Scroll to the specific concern in the summary
+      setTimeout(() => {
+        const concernElement = document.querySelector(`[data-concern="${encodeURIComponent(concernName)}"]`);
+        if (concernElement) {
+          concernElement.scrollIntoView({ 
+            behavior: 'smooth', 
+            block: 'center',
+            inline: 'nearest'
+          });
+          
+          // Add a subtle pulse animation to draw attention
+          concernElement.style.animation = 'pulse 0.5s ease-in-out';
+          setTimeout(() => {
+            concernElement.style.animation = '';
+          }, 500);
+        }
+      }, 100); // Small delay to ensure highlighting is set first
+      
+      // Clear highlight after 5 seconds (increased from 3)
       setTimeout(() => {
         setHighlightedConcern(null);
-      }, 3000);
+      }, 5000);
     }
   };
 
@@ -269,8 +297,8 @@ const StudentConcernAnalytics = ({ teacherId, selectedSemester, selectedSchoolYe
 
     // Always use individual concern rankings for distribution
     const allConcerns = concernData.concern_rankings;
-    const topConcerns = allConcerns.slice(0, 6);
-    const otherConcerns = allConcerns.slice(6);
+    const topConcerns = allConcerns.slice(0, 10);
+    const otherConcerns = allConcerns.slice(10);
     
     let pieData = topConcerns.map(([concern, count], index) => ({
       name: concern, // Keep full name for summary display
@@ -313,14 +341,27 @@ const StudentConcernAnalytics = ({ teacherId, selectedSemester, selectedSchoolYe
                 .recharts-pie-sector:active {
                   outline: none !important;
                   box-shadow: none !important;
+                  stroke: none !important;
                 }
                 .recharts-pie-sector {
                   cursor: pointer;
                   outline: none !important;
+                  stroke: none !important;
+                }
+                .recharts-pie-sector:hover {
+                  filter: brightness(1.05);
+                  stroke: none !important;
                 }
                 .recharts-wrapper:focus,
                 .recharts-wrapper:focus-visible {
                   outline: none !important;
+                }
+                .recharts-surface {
+                  outline: none !important;
+                }
+                @keyframes pulse {
+                  0%, 100% { transform: scale(1); }
+                  50% { transform: scale(1.02); }
                 }
               `}
             </style>
@@ -331,12 +372,9 @@ const StudentConcernAnalytics = ({ teacherId, selectedSemester, selectedSchoolYe
                   cx="50%"
                   cy="50%"
                   labelLine={false}
-                  label={({ percentage, value }) => {
-                    // Show percentage for all segments, but with better positioning
-                    if (percentage >= 3) {
-                      return `${percentage}%`;
-                    }
-                    return '';
+                  label={({ percentage, value, index }) => {
+                    // Show percentage for all segments, displayed outside the pie chart
+                    return `${percentage}%`;
                   }}
                   outerRadius={windowWidth < 768 ? 120 : windowWidth < 1024 ? 150 : windowWidth < 1280 ? 170 : 190}
                   innerRadius={windowWidth < 768 ? 50 : windowWidth < 1024 ? 65 : windowWidth < 1280 ? 75 : 85}
@@ -350,7 +388,12 @@ const StudentConcernAnalytics = ({ teacherId, selectedSemester, selectedSchoolYe
                     <Cell 
                       key={`cell-${index}`} 
                       fill={COLORS[index % COLORS.length]}
+                      stroke="none"
                       onClick={() => handlePieChartClick(entry)}
+                      style={{
+                        outline: 'none',
+                        filter: highlightedConcern === entry.fullName ? 'brightness(1.1)' : 'none'
+                      }}
                     />
                   ))}
                 </Pie>
@@ -380,17 +423,19 @@ const StudentConcernAnalytics = ({ teacherId, selectedSemester, selectedSchoolYe
           {/* Summary Stats - Better proportions */}
           <div className="xl:col-span-1 space-y-3 order-1 xl:order-2">
             <h5 className="font-semibold text-gray-700 text-base md:text-lg">
-              Top Concerns Summary
+              Top 10 Concerns Summary
             </h5>
             <div className="space-y-3">
               {pieData.map((item, index) => (
                 <div 
                   key={item.name} 
-                  className={`rounded-lg p-3 transition-all duration-300 ${
+                  data-concern={encodeURIComponent(item.fullName)}
+                  className={`rounded-lg p-3 transition-all duration-300 cursor-pointer ${
                     highlightedConcern === item.fullName 
                       ? 'bg-blue-100 border-2 border-blue-300 shadow-md transform scale-105' 
-                      : 'bg-gray-50 border-2 border-transparent'
+                      : 'bg-gray-50 border-2 border-transparent hover:bg-gray-100'
                   }`}
+                  onClick={() => handlePieChartClick(item)}
                 >
                   <div className="flex items-start justify-between">
                     <div className="flex items-start space-x-3 flex-1 min-w-0">
@@ -1012,45 +1057,6 @@ const StudentConcernAnalytics = ({ teacherId, selectedSemester, selectedSchoolYe
               )}
             </div>
           </div>
-
-          {/* Category Definitions */}
-          <div className="space-y-4 md:space-y-5">
-            <div className="flex items-center space-x-3 mb-4">
-              <svg className="w-6 h-6 text-indigo-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 11H5m14 0a2 2 0 012 2v6a2 2 0 01-2 2H5a2 2 0 01-2-2v-6a2 2 0 012-2m14 0V9a2 2 0 00-2-2M5 11V9a2 2 0 012-2m0 0V5a2 2 0 012-2h6a2 2 0 012 2v2M7 7h10" />
-              </svg>
-              <h5 className="font-semibold text-gray-700 text-base md:text-lg">Concern Categories</h5>
-            </div>
-            
-            {/* Mobile: Stack cards vertically, Desktop: Grid */}
-            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4 md:gap-5">
-              {concernData.category_definitions && Object.entries(concernData.category_definitions).map(([category, keywords]) => (
-                <div key={category} className="group hover:shadow-md transition-shadow duration-200">
-                  <div className="p-4 md:p-5 bg-white rounded-lg border border-gray-200 hover:border-indigo-300">
-                    <div className="flex items-start space-x-3">
-                      <div className="flex-shrink-0">
-                        <div className="w-8 h-8 bg-indigo-100 rounded-lg flex items-center justify-center group-hover:bg-indigo-200 transition-colors">
-                          <svg className="w-4 h-4 text-indigo-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M7 7h.01M7 3h5c.512 0 1.024.195 1.414.586l7 7a2 2 0 010 2.828l-7 7a2 2 0 01-2.828 0l-7-7A1.994 1.994 0 013 12V7a4 4 0 014-4z" />
-                          </svg>
-                        </div>
-                      </div>
-                      <div className="flex-1 min-w-0">
-                        <h6 className="font-semibold text-sm md:text-base text-gray-800 mb-2 leading-tight">{category}</h6>
-                        <p className="text-xs md:text-sm text-gray-600 leading-relaxed">
-                          <span className="font-medium text-gray-700">Keywords:</span>{' '}
-                          {Array.isArray(keywords) ? keywords.slice(0, 3).join(', ') : 'No keywords available'}
-                          {Array.isArray(keywords) && keywords.length > 3 && (
-                            <span className="text-gray-400"> +{keywords.length - 3} more</span>
-                          )}
-                        </p>
-                      </div>
-                    </div>
-                  </div>
-                </div>
-              ))}
-            </div>
-          </div>
         </div>
 
         {/* Mobile helper text */}
@@ -1078,15 +1084,8 @@ const StudentConcernAnalytics = ({ teacherId, selectedSemester, selectedSchoolYe
     }
   };
 
-  const viewTitles = {
-    'overview': 'Overview',
-    'rankings': 'Rankings',
-    'demographics': 'Demographics',
-    'insights': 'Insights'
-  };
-
   return (
-    <div className="bg-white p-3 md:p-6 rounded-lg shadow-lg relative overflow-hidden animate-fade-in">
+    <div className="bg-white p-3 rounded-lg shadow-lg relative animate-fade-in">
       {/* Custom CSS for fade-in animation */}
       <style jsx>{`
         @keyframes fade-in {
@@ -1104,44 +1103,118 @@ const StudentConcernAnalytics = ({ teacherId, selectedSemester, selectedSchoolYe
         }
       `}</style>
       {/* Header with navigation - Mobile Optimized */}
-      <div className="flex flex-col space-y-3 md:space-y-0 md:flex-row md:items-center md:justify-center mb-4 md:mb-6">
-        {/* Navigation buttons - Mobile Optimized */}
-        <div className="flex items-center justify-center space-x-3">
-          <button
-            onClick={prevView}
-            className="p-2 md:p-2 rounded-full bg-[#0065A8] text-white hover:bg-[#004785] transition-colors duration-200 disabled:opacity-50 touch-manipulation"
-            disabled={isAnimating}
-            aria-label="Previous view"
-          >
-            <svg className="w-4 h-4 md:w-5 md:h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 19l-7-7 7-7" />
-            </svg>
-          </button>
+      <div className="flex flex-col space-y-3 md:space-y-0 md:flex-row md:items-center md:justify-center mb-4 md:mb-6 relative">
+        {/* Navigation buttons - Enhanced Design */}
+        <div className="flex items-center justify-center space-x-3 relative z-10">
+          {/* Previous Button */}
+          <div className="relative">
+            <button
+              onClick={prevView}
+              onMouseEnter={() => setHoveredArrow("left")}
+              onMouseLeave={() => setHoveredArrow(null)}
+              className="group flex items-center justify-center w-12 h-12 bg-white/90 backdrop-blur-sm border-2 border-blue-200 rounded-full shadow-lg hover:shadow-xl transition-all duration-300 hover:scale-110 hover:bg-blue-50 disabled:opacity-50 disabled:cursor-not-allowed"
+              disabled={isAnimating}
+              aria-label="Previous view"
+            >
+              <svg className="w-6 h-6 text-blue-600 group-hover:text-blue-700 transition-colors duration-200" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 19l-7-7 7-7" />
+              </svg>
+            </button>
 
-          {/* View indicators - Mobile Optimized */}
-          <div className="flex space-x-1 md:space-x-2">
+            {/* Enhanced Hover Message */}
+            <div
+              className={`absolute right-16 top-1/2 -translate-y-1/2 transition-all duration-300 ${
+                hoveredArrow === "left" ? "opacity-100 translate-x-0" : "opacity-0 translate-x-4 pointer-events-none"
+              }`}
+            >
+              <div className="bg-white/95 backdrop-blur-sm border border-blue-200 rounded-lg shadow-xl p-4 min-w-64 max-w-80">
+                <div className="flex items-center gap-3">
+                  <div className="w-2 h-2 bg-blue-500 rounded-full animate-pulse" />
+                  <div>
+                    <h3 className="font-semibold text-blue-900 text-sm mb-1">Previous Section</h3>
+                    <p className="text-blue-700 font-medium">{viewTitles[views[(currentView - 1 + views.length) % views.length]]}</p>
+                    <p className="text-blue-600 text-xs mt-1 leading-relaxed">
+                      {views[(currentView - 1 + views.length) % views.length] === 'overview' && "View pie charts and concern distribution"}
+                      {views[(currentView - 1 + views.length) % views.length] === 'rankings' && "Explore detailed concern categories and trends"}
+                      {views[(currentView - 1 + views.length) % views.length] === 'demographics' && "Analyze concerns by department and year level"}
+                      {views[(currentView - 1 + views.length) % views.length] === 'insights' && "Get AI-powered insights and recommendations"}
+                    </p>
+                  </div>
+                </div>
+                {/* Arrow pointer */}
+                <div className="absolute right-0 top-1/2 -translate-y-1/2 translate-x-full">
+                  <div className="w-0 h-0 border-l-8 border-l-white/95 border-t-4 border-t-transparent border-b-4 border-b-transparent" />
+                </div>
+              </div>
+            </div>
+          </div>
+
+          {/* View indicators - Enhanced Design */}
+          <div className="flex space-x-2 md:space-x-3 bg-white/80 backdrop-blur-sm rounded-full px-4 py-2 border border-blue-100 shadow-md">
             {views.map((_, index) => (
-              <button
-                key={index}
-                onClick={() => !isAnimating && setCurrentView(index)}
-                className={`w-2 h-2 md:w-3 md:h-3 rounded-full transition-colors duration-200 touch-manipulation ${
-                  index === currentView ? 'bg-[#0065A8]' : 'bg-gray-300'
-                }`}
-                aria-label={`Go to ${viewTitles[views[index]]}`}
-              />
+              <div key={index} className="relative group mt-1">
+                <button
+                  onClick={() => !isAnimating && setCurrentView(index)}
+                  className={`w-3 h-3 md:w-4 md:h-4 rounded-full transition-all duration-300 touch-manipulation transform hover:scale-125 ${
+                    index === currentView 
+                      ? 'bg-blue-600 shadow-lg ring-2 ring-blue-200' 
+                      : 'bg-gray-300 hover:bg-blue-400 hover:shadow-md'
+                  }`}
+                  aria-label={`Go to ${viewTitles[views[index]]}`}
+                />
+                {/* Mini tooltip for dots */}
+                <div className="absolute bottom-full left-1/2 transform -translate-x-1/2 mb-3 opacity-0 group-hover:opacity-100 transition-all duration-200 pointer-events-none z-50">
+                  <div className="bg-gray-900/95 backdrop-blur-sm text-white px-3 py-2 rounded-lg text-xs font-medium whitespace-nowrap shadow-xl border border-gray-700">
+                    {viewTitles[views[index]]}
+                    <div className="absolute top-full left-1/2 transform -translate-x-1/2 w-0 h-0 border-l-4 border-r-4 border-t-4 border-transparent border-t-gray-900/95"></div>
+                  </div>
+                </div>
+              </div>
             ))}
           </div>
 
-          <button
-            onClick={nextView}
-            className="p-2 md:p-2 rounded-full bg-[#0065A8] text-white hover:bg-[#004785] transition-colors duration-200 disabled:opacity-50 touch-manipulation"
-            disabled={isAnimating}
-            aria-label="Next view"
-          >
-            <svg className="w-4 h-4 md:w-5 md:h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
-            </svg>
-          </button>
+          {/* Next Button */}
+          <div className="relative">
+            <button
+              onClick={nextView}
+              onMouseEnter={() => setHoveredArrow("right")}
+              onMouseLeave={() => setHoveredArrow(null)}
+              className="group flex items-center justify-center w-12 h-12 bg-white/90 backdrop-blur-sm border-2 border-blue-200 rounded-full shadow-lg hover:shadow-xl transition-all duration-300 hover:scale-110 hover:bg-blue-50 disabled:opacity-50 disabled:cursor-not-allowed"
+              disabled={isAnimating}
+              aria-label="Next view"
+            >
+              <svg className="w-6 h-6 text-blue-600 group-hover:text-blue-700 transition-colors duration-200" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
+              </svg>
+            </button>
+
+            {/* Enhanced Hover Message */}
+            <div
+              className={`absolute left-16 top-1/2 -translate-y-1/2 transition-all duration-300 ${
+                hoveredArrow === "right" ? "opacity-100 translate-x-0" : "opacity-0 -translate-x-4 pointer-events-none"
+              }`}
+            >
+              <div className="bg-white/95 backdrop-blur-sm border border-blue-200 rounded-lg shadow-xl p-4 min-w-64 max-w-80">
+                <div className="flex items-center gap-3">
+                  <div className="w-2 h-2 bg-blue-500 rounded-full animate-pulse" />
+                  <div>
+                    <h3 className="font-semibold text-blue-900 text-sm mb-1">Next Section</h3>
+                    <p className="text-blue-700 font-medium">{viewTitles[views[(currentView + 1) % views.length]]}</p>
+                    <p className="text-blue-600 text-xs mt-1 leading-relaxed">
+                      {views[(currentView + 1) % views.length] === 'overview' && "View pie charts and concern distribution"}
+                      {views[(currentView + 1) % views.length] === 'rankings' && "Explore detailed concern categories and trends"}
+                      {views[(currentView + 1) % views.length] === 'demographics' && "Analyze concerns by department and year level"}
+                      {views[(currentView + 1) % views.length] === 'insights' && "Get AI-powered insights and recommendations"}
+                    </p>
+                  </div>
+                </div>
+                {/* Arrow pointer */}
+                <div className="absolute left-0 top-1/2 -translate-y-1/2 -translate-x-full">
+                  <div className="w-0 h-0 border-r-8 border-r-white/95 border-t-4 border-t-transparent border-b-4 border-b-transparent" />
+                </div>
+              </div>
+            </div>
+          </div>
         </div>
       </div>
 

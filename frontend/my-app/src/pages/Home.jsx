@@ -242,6 +242,17 @@ const Nav = ({ handleLoginClick, handleSignupClick, handleSectionNavigation }) =
                 <span className="absolute bottom-0 left-0 w-0 h-0.5 bg-white group-hover:w-full transition-all duration-300" />
               </motion.button>
               
+              {/* Teacher Leaderboard Link */}
+              <motion.button
+                whileHover={{ scale: 1.05 }}
+                whileTap={{ scale: 0.95 }}
+                onClick={() => window.location.href = '/admin-consultation'}
+                className="text-white font-medium hover:text-blue-200 transition-colors duration-200 relative group"
+              >
+                Teacher Leaderboard
+                <span className="absolute bottom-0 left-0 w-0 h-0.5 bg-white group-hover:w-full transition-all duration-300" />
+              </motion.button>
+              
               <div className="flex space-x-3 lg:space-x-4">
                 <motion.button
                   whileHover={{ scale: 1.05 }}
@@ -310,6 +321,14 @@ const Nav = ({ handleLoginClick, handleSignupClick, handleSectionNavigation }) =
                 className="block w-full text-left text-gray-700 font-medium hover:text-[#057DCD] transition-colors py-2"
               >
                 Consultation Schedule
+              </button>
+              
+              {/* Teacher Leaderboard Link for Mobile */}
+              <button
+                onClick={() => window.location.href = '/admin-consultation'}
+                className="block w-full text-left text-gray-700 font-medium hover:text-[#057DCD] transition-colors py-2"
+              >
+                Teacher Leaderboard
               </button>
               
               <div className="space-y-3 sm:space-y-4 pt-3 sm:pt-4 border-t">

@@ -198,10 +198,21 @@ const ConsultationSchedules = () => {
                   Home
                   <span className="absolute bottom-0 left-0 w-0 h-0.5 bg-white group-hover:w-full transition-all duration-300" />
                 </motion.button>
-                
+
                 <span className="text-blue-200 font-medium">
                   Consultation Schedule
                 </span>
+                
+                <motion.button
+                  whileHover={{ scale: 1.05 }}
+                  whileTap={{ scale: 0.95 }}
+                  onClick={() => window.location.href = '/admin-consultation'}
+                  className="text-white font-medium hover:text-blue-200 transition-colors duration-200 relative group"
+                >
+                  Teacher Leaderboard
+                  <span className="absolute bottom-0 left-0 w-0 h-0.5 bg-white group-hover:w-full transition-all duration-300" />
+                </motion.button>
+            
               </div>
 
               {/* Mobile Menu Button */}

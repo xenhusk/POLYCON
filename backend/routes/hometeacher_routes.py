@@ -309,16 +309,16 @@ def get_student_concern_analytics():
         
         # Subject-Specific - specific subjects, course content, curriculum
         subject_keywords = [
-            'mathematics', 'math', 'programming', 'physics', 'chemistry', 'biology', 'english',
-            'statistics', 'calculus', 'algebra', 'computer science', 'course content', 'curriculum',
-            'subject matter', 'course material', 'coursework', 'specific subject', 'laboratory',
+            'mathematics', 'math', 'programming', 'physics', 'chemistry', 'biology', 'english', 'coursework',
+            'statistics', 'calculus', 'algebra', 'computer science', 'course content', 'curriculum', 'course',
+            'subject matter', 'course material', 'coursework', 'specific subject', 'laboratory', "subjects",
             'lab work', 'practicals', 'experiments', 'research methodology', 'thesis', 'dissertation'
         ]
         
         # Mental Health - stress, anxiety, depression, emotional wellbeing
         mental_health_keywords = [
-            'stress', 'anxiety', 'depression', 'mental health', 'emotional', 'overwhelmed',
-            'burnout', 'wellbeing', 'mental wellbeing', 'psychological', 'panic', 'worried',
+            'stress', 'anxiety', 'depression', 'mental health', 'emotional', 'overwhelmed', 'low self-esteem',
+            'burnout', 'wellbeing', 'mental wellbeing', 'psychological', 'panic', 'worried', 'esteem',
             'anxious', 'sad', 'depressed', 'emotional support', 'counseling', 'therapy',
             'mental state', 'emotional health', 'psychological support', 'feeling down'
         ]
@@ -328,7 +328,7 @@ def get_student_concern_analytics():
             'time management', 'deadline', 'schedule', 'scheduling', 'organization', 'planning',
             'time', 'managing time', 'prioritizing', 'work-life balance', 'time allocation',
             'time pressure', 'time constraints', 'organizing', 'time planning', 'productivity',
-            'efficiency', 'procrastination', 'time-related', 'time issues'
+            'efficiency', 'procrastination', 'time-related', 'time issues', 'late', 'late submission', 'time management issues', 'time management skills',
         ]
         
         # Motivation - lack of motivation, engagement, purpose, goals

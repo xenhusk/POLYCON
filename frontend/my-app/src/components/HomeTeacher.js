@@ -177,7 +177,7 @@ const HomeTeacher = () => {
     };
 
     return (
-        <div className="flex flex-col items-center min-h-screen p-6 relative">
+        <div className="flex flex-col items-center min-h-screen relative">
             <h1 className="text-3xl font-bold text-[#0065A8] mb-6">Dashboard</h1>
 
             {/* Settings gear icon in top right */}
@@ -288,38 +288,55 @@ const HomeTeacher = () => {
 
             {/* Stats Section - Now responsive with swipe navigation */}
             <div className="w-full px-4 sm:px-6 lg:px-10 mb-6">
-                {/* Stats Section Header with Navigation */}
-                <div className="flex items-center justify-between mb-4">
-                    <div className="flex items-center gap-4">
-                        <h2 className="text-2xl font-semibold text-[#0065A8]">
-                            {currentStatsView === 0 ? 'Consultation Stats' : 'Student Concern Analytics'}
-                        </h2>
-                        <div className="flex gap-2">
+                {/* Stats Section Header with Toggle Navigation */}
+                <div className="flex flex-col items-center justify-center mb-6 gap-4">
+                    
+                    {/* Toggle Button Group */}
+                    <div className="relative bg-gray-100 rounded-lg p-1 shadow-inner">
+                        <div className="flex">
                             <button
-                                onClick={prevStatsView}
+                                onClick={() => currentStatsView !== 0 && nextStatsView()}
                                 disabled={isTransitioning}
-                                className={`p-2 rounded-full bg-white shadow-md hover:shadow-lg transition-all duration-300 group ${
-                                    isTransitioning ? 'opacity-50 cursor-not-allowed' : ''
-                                }`}
-                                aria-label="Previous view"
+                                className={`relative px-4 py-2 text-sm font-medium rounded-md transition-all duration-300 flex-1 sm:flex-none ${
+                                    currentStatsView === 0
+                                        ? 'bg-white text-[#0065A8] shadow-sm'
+                                        : 'text-gray-600 hover:text-[#0065A8] hover:bg-gray-50'
+                                } ${isTransitioning ? 'cursor-not-allowed opacity-50' : 'cursor-pointer'}`}
                             >
-                                <svg className="w-5 h-5 text-[#0065A8] group-hover:text-[#004d82] transition-colors" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 19l-7-7 7-7" />
-                                </svg>
+                                <div className="flex items-center justify-center gap-2">
+                                    <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z" />
+                                    </svg>
+                                    <span className="hidden sm:inline">Consultation Stats</span>
+                                    <span className="sm:hidden">Stats</span>
+                                </div>
                             </button>
                             <button
-                                onClick={nextStatsView}
+                                onClick={() => currentStatsView !== 1 && nextStatsView()}
                                 disabled={isTransitioning}
-                                className={`p-2 rounded-full bg-white shadow-md hover:shadow-lg transition-all duration-300 group ${
-                                    isTransitioning ? 'opacity-50 cursor-not-allowed' : ''
-                                }`}
-                                aria-label="Next view"
+                                className={`relative px-4 py-2 text-sm font-medium rounded-md transition-all duration-300 flex-1 sm:flex-none ${
+                                    currentStatsView === 1
+                                        ? 'bg-white text-[#0065A8] shadow-sm'
+                                        : 'text-gray-600 hover:text-[#0065A8] hover:bg-gray-50'
+                                } ${isTransitioning ? 'cursor-not-allowed opacity-50' : 'cursor-pointer'}`}
                             >
-                                <svg className="w-5 h-5 text-[#0065A8] group-hover:text-[#004d82] transition-colors" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
-                                </svg>
+                                <div className="flex items-center justify-center gap-2">
+                                    <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M11 3.055A9.001 9.001 0 1020.945 13H11V3.055z" />
+                                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M11 3.055V11h8.055" />
+                                    </svg>
+                                    <span className="hidden sm:inline">Concern Analytics</span>
+                                    <span className="sm:hidden">Analytics</span>
+                                </div>
                             </button>
                         </div>
+                        
+                        {/* Loading indicator overlay */}
+                        {isTransitioning && (
+                            <div className="absolute inset-0 bg-white bg-opacity-50 rounded-lg flex items-center justify-center">
+                                <div className="w-5 h-5 border-2 border-[#0065A8] border-t-transparent rounded-full animate-spin"></div>
+                            </div>
+                        )}
                     </div>
                 </div>
 
