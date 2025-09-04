@@ -225,28 +225,40 @@ const HomeTeacher = () => {
                     <div>
                         <label className="block text-sm font-medium text-gray-700 mb-1">Semester</label>
                         <select
-                            value={selectedSemester || ''}
-                            onChange={(e) => setSelectedSemester(e.target.value === '' ? null : e.target.value)}
-                            className="w-full px-4 py-2 border border-[#0065A8] bg-white text-[#0065A8] font-medium rounded-lg focus:outline-none focus:ring-2 focus:ring-[#0088FF] focus:border-transparent appearance-none bg-[url('data:image/svg+xml;charset=US-ASCII,%3Csvg%20xmlns%3D%22http%3A%2F%2Fwww.w3.org%2F2000%2Fsvg%22%20width%3D%2224%22%20height%3D%2224%22%20viewBox%3D%220%200%2024%2024%22%3E%3Cpath%20fill%3D%22%230065A8%22%20d%3D%22M7%2010l5%205%205-5z%22%2F%3E%3C%2Fsvg%3E')] bg-no-repeat bg-[length:24px] [background-position:right_0.5rem_center] pr-10"
+                            value={currentStatsView === 1 ? '' : (selectedSemester || '')}
+                            onChange={(e) => currentStatsView === 0 && setSelectedSemester(e.target.value === '' ? null : e.target.value)}
+                            disabled={currentStatsView === 1}
+                            className={`w-full px-4 py-2 border border-[#0065A8] bg-white font-medium rounded-lg focus:outline-none focus:ring-2 focus:ring-[#0088FF] focus:border-transparent appearance-none bg-[url('data:image/svg+xml;charset=US-ASCII,%3Csvg%20xmlns%3D%22http%3A%2F%2Fwww.w3.org%2F2000%2Fsvg%22%20width%3D%2224%22%20height%3D%2224%22%20viewBox%3D%220%200%2024%2024%22%3E%3Cpath%20fill%3D%22%230065A8%22%20d%3D%22M7%2010l5%205%205-5z%22%2F%3E%3C%2Fsvg%3E')] bg-no-repeat bg-[length:24px] [background-position:right_0.5rem_center] pr-10 ${
+                                currentStatsView === 1 ? 'text-gray-400 cursor-not-allowed opacity-60' : 'text-[#0065A8] cursor-pointer'
+                            }`}
                         >
                             <option value="">All Semesters</option>
                             {Array.from(new Set(semesters.map(s => s.semester))).map(sem => (
                                 <option key={sem} value={sem}>{sem} Semester</option>
                             ))}
                         </select>
+                        {currentStatsView === 1 && (
+                            <p className="text-xs text-gray-500 mt-1">Filter locked to "All"</p>
+                        )}
                     </div>
                     <div>
                         <label className="block text-sm font-medium text-gray-700 mb-1">School Year</label>
                         <select
-                            value={selectedSchoolYear || ''}
-                            onChange={(e) => setSelectedSchoolYear(e.target.value === '' ? null : e.target.value)}
-                            className="w-full px-4 py-2 border border-[#0065A8] bg-white text-[#0065A8] font-medium rounded-lg focus:outline-none focus:ring-2 focus:ring-[#0088FF] focus:border-transparent appearance-none bg-[url('data:image/svg+xml;charset=US-ASCII,%3Csvg%20xmlns%3D%22http%3A%2F%2Fwww.w3.org%2F2000%2Fsvg%22%20width%3D%2224%22%20height%3D%2224%22%20viewBox%3D%220%200%2024%2024%22%3E%3Cpath%20fill%3D%22%230065A8%22%20d%3D%22M7%2010l5%205%205-5z%22%2F%3E%3C%2Fsvg%3E')] bg-no-repeat bg-[length:24px] [background-position:right_0.5rem_center] pr-10"
+                            value={currentStatsView === 1 ? '' : (selectedSchoolYear || '')}
+                            onChange={(e) => currentStatsView === 0 && setSelectedSchoolYear(e.target.value === '' ? null : e.target.value)}
+                            disabled={currentStatsView === 1}
+                            className={`w-full px-4 py-2 border border-[#0065A8] bg-white font-medium rounded-lg focus:outline-none focus:ring-2 focus:ring-[#0088FF] focus:border-transparent appearance-none bg-[url('data:image/svg+xml;charset=US-ASCII,%3Csvg%20xmlns%3D%22http%3A%2F%2Fwww.w3.org%2F2000%2Fsvg%22%20width%3D%2224%22%20height%3D%2224%22%20viewBox%3D%220%200%2024%2024%22%3E%3Cpath%20fill%3D%22%230065A8%22%20d%3D%22M7%2010l5%205%205-5z%22%2F%3E%3C%2Fsvg%3E')] bg-no-repeat bg-[length:24px] [background-position:right_0.5rem_center] pr-10 ${
+                                currentStatsView === 1 ? 'text-gray-400 cursor-not-allowed opacity-60' : 'text-[#0065A8] cursor-pointer'
+                            }`}
                         >
                             <option value="">All School Years</option>
                             {Array.from(new Set(semesters.map(s => s.school_year))).map(year => (
                                 <option key={year} value={year}>{year}</option>
                             ))}
                         </select>
+                        {currentStatsView === 1 && (
+                            <p className="text-xs text-gray-500 mt-1">Filter locked to "All"</p>
+                        )}
                     </div>
                     
                     {/* Department filter - only show for Student Concern Analytics */}
@@ -254,9 +266,10 @@ const HomeTeacher = () => {
                         <div>
                             <label className="block text-sm font-medium text-gray-700 mb-1">Department</label>
                             <select
-                                value={selectedDepartment || 'all'}
-                                onChange={(e) => setSelectedDepartment(e.target.value)}
-                                className="w-full px-4 py-2 border border-[#0065A8] bg-white text-[#0065A8] font-medium rounded-lg focus:outline-none focus:ring-2 focus:ring-[#0088FF] focus:border-transparent appearance-none bg-[url('data:image/svg+xml;charset=US-ASCII,%3Csvg%20xmlns%3D%22http%3A%2F%2Fwww.w3.org%2F2000%2Fsvg%22%20width%3D%2224%22%20height%3D%2224%22%20viewBox%3D%220%200%2024%2024%22%3E%3Cpath%20fill%3D%22%230065A8%22%20d%3D%22M7%2010l5%205%205-5z%22%2F%3E%3C%2Fsvg%3E')] bg-no-repeat bg-[length:24px] [background-position:right_0.5rem_center] pr-10"
+                                value={'all'}
+                                onChange={() => {}} // No-op since it's locked
+                                disabled={true}
+                                className="w-full px-4 py-2 border border-[#0065A8] bg-white text-gray-400 font-medium rounded-lg focus:outline-none focus:ring-2 focus:ring-[#0088FF] focus:border-transparent appearance-none bg-[url('data:image/svg+xml;charset=US-ASCII,%3Csvg%20xmlns%3D%22http%3A%2F%2Fwww.w3.org%2F2000%2Fsvg%22%20width%3D%2224%22%20height%3D%2224%22%20viewBox%3D%220%200%2024%2024%22%3E%3Cpath%20fill%3D%22%230065A8%22%20d%3D%22M7%2010l5%205%205-5z%22%2F%3E%3C%2Fsvg%3E')] bg-no-repeat bg-[length:24px] [background-position:right_0.5rem_center] pr-10 cursor-not-allowed opacity-60"
                             >
                                 <option value="all">All Departments</option>
                                 {departments.map(dept => (
@@ -265,6 +278,7 @@ const HomeTeacher = () => {
                                     </option>
                                 ))}
                             </select>
+                            <p className="text-xs text-gray-500 mt-1">Filter locked to "All"</p>
                         </div>
                     )}
                     
@@ -276,10 +290,7 @@ const HomeTeacher = () => {
                                     ? `Viewing: ${selectedSemester} Semester ${selectedSchoolYear}` 
                                     : "Select filters to view specific data"
                             ) : (
-                                // Student concern analytics view - show all filters including department
-                                selectedSemester && selectedSchoolYear 
-                                    ? `Viewing: ${selectedSemester} Semester ${selectedSchoolYear}${selectedDepartment && selectedDepartment !== 'all' ? `, ${departments.find(d => d.id == selectedDepartment)?.name || 'Selected Dept'}` : ', All Departments'}` 
-                                    : `Viewing: All Data${selectedDepartment && selectedDepartment !== 'all' ? `, ${departments.find(d => d.id == selectedDepartment)?.name || 'Selected Dept'}` : ', All Departments'}`
+                                ""
                             )}
                         </p>
                     </div>

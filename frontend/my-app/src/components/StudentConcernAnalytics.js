@@ -27,8 +27,8 @@ const StudentConcernAnalytics = ({ teacherId, selectedSemester, selectedSchoolYe
   ];
 
   const viewTitles = {
-    'overview': 'Student Concern Distribution',
-    'rankings': 'Concern Categories',
+    'overview': 'Thematic Concern Category',
+    'rankings': 'General Concern Rankings',
     'demographics': 'Demographic Breakdown',
     'insights': 'Insights and Recommendations'
   };
@@ -287,7 +287,7 @@ const StudentConcernAnalytics = ({ teacherId, selectedSemester, selectedSchoolYe
   }
 
   const renderOverview = () => {
-    if (!concernData || !concernData.concern_rankings) {
+    if (!concernData) {
       return (
         <div className="text-center py-8">
           <p className="text-gray-500">No concern data available</p>
@@ -295,39 +295,72 @@ const StudentConcernAnalytics = ({ teacherId, selectedSemester, selectedSchoolYe
       );
     }
 
-    // Always use individual concern rankings for distribution
-    const allConcerns = concernData.concern_rankings;
-    const topConcerns = allConcerns.slice(0, 10);
-    const otherConcerns = allConcerns.slice(10);
+    // Check if we have categorized data (dynamic clustering results)
+    const hasCategories = concernData?.nlp_categories && Object.keys(concernData.nlp_categories).length > 0;
     
-    let pieData = topConcerns.map(([concern, count], index) => ({
-      name: concern, // Keep full name for summary display
-      fullName: concern,
-      value: count,
-      percentage: concernData.concern_percentages?.[concern] || 0
-    }));
-
-    // Add "Others" category if there are more concerns
-    if (otherConcerns.length > 0) {
-      const othersCount = otherConcerns.reduce((sum, [, count]) => sum + count, 0);
-      const othersPercentage = otherConcerns.reduce((sum, [concern]) => 
-        sum + (concernData.concern_percentages?.[concern] || 0), 0);
+    let pieData = [];
+    let chartTitle = "Thematic Concern Category";
+    let chartSubtitle = "Dynamically identified concern patterns using machine learning";
+    
+    if (hasCategories) {
+      // Use categorized data for better insights
+      pieData = Object.entries(concernData.nlp_categories)
+        .sort(([,a], [,b]) => (b.count || 0) - (a.count || 0)) // Sort by count descending
+        .map(([category, data], index) => ({
+          name: category,
+          fullName: category,
+          value: data.count || 0,
+          percentage: data.percentage || 0,
+          topTerms: data.top_terms || [],
+          sampleConcerns: data.sample_concerns || [],
+          themeStrength: data.theme_strength || 0.5
+        }));
+    } else if (concernData.concern_rankings) {
+      // Fallback to individual concerns if categories not available
+      chartTitle = "Top 10 Individual Concerns";
+      chartSubtitle = "Most frequently mentioned specific concerns";
       
-      pieData.push({
-        name: `Others (${otherConcerns.length} more)`,
-        fullName: `Others (${otherConcerns.length} more concerns)`,
-        value: othersCount,
-        percentage: Math.round(othersPercentage * 10) / 10
-      });
+      const allConcerns = concernData.concern_rankings;
+      const topConcerns = allConcerns.slice(0, 10);
+      const otherConcerns = allConcerns.slice(10);
+      
+      pieData = topConcerns.map(([concern, count], index) => ({
+        name: concern.length > 30 ? concern.substring(0, 30) + '...' : concern,
+        fullName: concern,
+        value: count,
+        percentage: concernData.concern_percentages?.[concern] || 0
+      }));
+
+      // Add "Others" category if there are more concerns
+      if (otherConcerns.length > 0) {
+        const othersCount = otherConcerns.reduce((sum, [, count]) => sum + count, 0);
+        const othersPercentage = otherConcerns.reduce((sum, [concern]) => 
+          sum + (concernData.concern_percentages?.[concern] || 0), 0);
+        
+        pieData.push({
+          name: `Others (${otherConcerns.length} more)`,
+          fullName: `Others (${otherConcerns.length} more concerns)`,
+          value: othersCount,
+          percentage: Math.round(othersPercentage * 10) / 10
+        });
+      }
+    } else {
+      return (
+        <div className="text-center py-8">
+          <p className="text-gray-500">No concern data available</p>
+        </div>
+      );
     }
 
     return (
       <div className="space-y-6 md:space-y-8">
         <div className="text-center">
-          <h4 className="text-xl md:text-2xl font-semibold text-gray-700 mb-2">Top 10 Concern Distribution</h4>
+          <h4 className="text-xl md:text-2xl font-semibold text-gray-700 mb-2">{chartTitle}</h4>
           <p className="text-sm text-gray-600">
+            {chartSubtitle}
+          </p>
+          <p className="text-sm text-gray-500 mt-2">
             Total Consultations with Concerns: <span className="font-semibold">{concernData.sessions_with_concerns || 0}</span>
-            <span className="text-gray-500 ml-2">• Showing Top {concernData.concern_rankings ? concernData.concern_rankings.length : 0} Most Frequent Concerns</span>
           </p>
         </div>
         
@@ -404,7 +437,25 @@ const StudentConcernAnalytics = ({ teacherId, selectedSemester, selectedSchoolYe
                   }}
                   labelFormatter={(label, payload) => {
                     if (payload && payload.length > 0) {
-                      return payload[0].payload.fullName;
+                      const data = payload[0].payload;
+                      let result = data.fullName;
+                      
+                      // Add theme strength indicator if available
+                      if (hasCategories && data.themeStrength) {
+                        const strength = data.themeStrength > 0.7 ? 'Strong' : data.themeStrength > 0.4 ? 'Moderate' : 'Weak';
+                        result += `\n\nTheme Strength: ${strength}`;
+                      }
+            
+                      
+                      // Add sample concerns if available
+                      if (data.sampleConcerns && data.sampleConcerns.length > 0) {
+                        result += `\n\nExample Concerns:\n• ${data.sampleConcerns.slice(0, 2).join('\n• ')}`;
+                        if (data.sampleConcerns.length > 2) {
+                          result += `\n• And ${data.sampleConcerns.length - 2} more...`;
+                        }
+                      }
+                      
+                      return result;
                     }
                     return label;
                   }}
@@ -413,17 +464,18 @@ const StudentConcernAnalytics = ({ teacherId, selectedSemester, selectedSchoolYe
                     border: '1px solid #dee2e6',
                     borderRadius: '8px',
                     fontSize: windowWidth < 768 ? '12px' : '14px',
-                    maxWidth: windowWidth < 768 ? '280px' : '350px'
+                    maxWidth: windowWidth < 768 ? '320px' : '400px',
+                    whiteSpace: 'pre-line'
                   }}
                 />
               </PieChart>
             </ResponsiveContainer>
           </div>
 
-          {/* Summary Stats - Better proportions */}
+          {/* Summary Stats - Enhanced for categories */}
           <div className="xl:col-span-1 space-y-3 order-1 xl:order-2">
             <h5 className="font-semibold text-gray-700 text-base md:text-lg">
-              Top 10 Concerns Summary
+              {hasCategories ? 'Top Categories Summary' : 'Top 10 Concerns Summary'}
             </h5>
             <div className="space-y-3">
               {pieData.map((item, index) => (
@@ -443,9 +495,18 @@ const StudentConcernAnalytics = ({ teacherId, selectedSemester, selectedSchoolYe
                         className="w-4 h-4 rounded-full flex-shrink-0 mt-1" 
                         style={{ backgroundColor: COLORS[index % COLORS.length] }}
                       ></div>
-                      <span className="font-medium text-sm leading-tight" title={item.fullName}>
-                        {item.fullName}
-                      </span>
+                      <div className="flex-1 min-w-0">
+                        <span className="font-medium text-sm leading-tight block" title={item.fullName}>
+                          {item.fullName}
+                        </span>
+                        {/* Show sample concerns for categorized data */}
+                        {hasCategories && item.sampleConcerns && item.sampleConcerns.length > 0 && (
+                          <div className="text-xs text-gray-600 mt-1">
+                            <span className="font-medium">Examples:</span> {item.sampleConcerns.slice(0, 1)[0]}
+                            {item.sampleConcerns.length > 1 && '...'}
+                          </div>
+                        )}
+                      </div>
                     </div>
                     <div className="text-right flex-shrink-0 ml-3">
                       <div className="font-semibold text-lg">{item.value}</div>
@@ -456,13 +517,16 @@ const StudentConcernAnalytics = ({ teacherId, selectedSemester, selectedSchoolYe
               ))}
             </div>
             
-            {/* Chart Legend Helper */}
+            {/* Enhanced Chart Legend Helper */}
             <div className="mt-4 xl:hidden">
               <div className="text-xs text-gray-500 text-center p-3 bg-blue-50 rounded-lg">
                 <svg className="w-4 h-4 inline mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
                 </svg>
-                Hover over chart segments for detailed information
+                {hasCategories ? 
+                  'Thematic categories automatically generated from concern patterns using AI clustering' : 
+                  'Hover over chart segments for detailed information'
+                }
               </div>
             </div>
           </div>
@@ -472,10 +536,10 @@ const StudentConcernAnalytics = ({ teacherId, selectedSemester, selectedSchoolYe
   };
 
   const renderRankings = () => {
-    // Check for categorized data first, fallback to concern rankings
-    const hasCategories = concernData?.nlp_categories && Object.keys(concernData.nlp_categories).length > 0;
+    // Use traditional categories for page 2 (rankings/categories)
+    const hasNLPCategories = concernData?.traditional_categories && Object.keys(concernData.traditional_categories).length > 0;
     
-    if (!concernData || (!hasCategories && !concernData.concern_rankings)) {
+    if (!concernData || (!hasNLPCategories && !concernData.concern_rankings)) {
       return (
         <div className="text-center py-8">
           <p className="text-gray-500">No ranking data available</p>
@@ -484,12 +548,12 @@ const StudentConcernAnalytics = ({ teacherId, selectedSemester, selectedSchoolYe
     }
 
     let barData = [];
-    let chartTitle = "Concern Categories";
-    let chartSubtitle = "Categories ordered by frequency with statistical analysis";
+    let chartTitle = "General Concern Rankings";
+    let chartSubtitle = "General concerns ordered by frequency with statistical analysis";
     
-    if (hasCategories) {
-      // Use categorized data for rankings page
-      barData = Object.entries(concernData.nlp_categories)
+    if (hasNLPCategories) {
+      // Use Gemini AI general categorized data for rankings page (page 2)
+      barData = Object.entries(concernData.traditional_categories)
         .sort(([,a], [,b]) => (b.count || 0) - (a.count || 0)) // Sort by count descending
         .map(([category, data]) => ({
           concern: category,
@@ -606,7 +670,7 @@ const StudentConcernAnalytics = ({ teacherId, selectedSemester, selectedSchoolYe
         {/* Mobile-Optimized Table */}
         <div id="category-analysis-section" className="mt-4 md:mt-6">
           <h5 className="font-semibold text-gray-700 mb-3 text-sm md:text-base">
-            {hasCategories ? 'Category Analysis' : 'Most Common Concerns'}
+            {hasNLPCategories ? 'Category Analysis' : 'Most Common Concerns'}
           </h5>
           
           {/* Mobile Card Layout */}
@@ -630,7 +694,7 @@ const StudentConcernAnalytics = ({ teacherId, selectedSemester, selectedSchoolYe
                     </div>
                     <p className="text-sm font-medium text-gray-900 leading-tight">{item.fullConcern}</p>
                     {/* Show sample concerns for categorized data */}
-                    {hasCategories && item.sampleConcerns && item.sampleConcerns.length > 0 && (
+                    {hasNLPCategories && item.sampleConcerns && item.sampleConcerns.length > 0 && (
                       <p className="text-xs text-gray-600 mt-1">
                         <span className="font-medium">Examples:</span> {item.sampleConcerns.slice(0, 2).join(', ')}
                         {item.sampleConcerns.length > 2 && '...'}
@@ -653,7 +717,7 @@ const StudentConcernAnalytics = ({ teacherId, selectedSemester, selectedSchoolYe
                 <tr>
                   <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Rank</th>
                   <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                    {hasCategories ? 'Category' : 'Concern'}
+                    {hasNLPCategories ? 'Category' : 'Concern'}
                   </th>
                   <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Frequency</th>
                   <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Percentage</th>
@@ -677,7 +741,7 @@ const StudentConcernAnalytics = ({ teacherId, selectedSemester, selectedSchoolYe
                     <td className="px-4 py-3 text-sm text-gray-900 max-w-xs">
                       <div className="font-medium" title={item.fullConcern}>{item.fullConcern}</div>
                       {/* Show sample concerns for categorized data */}
-                      {hasCategories && item.sampleConcerns && item.sampleConcerns.length > 0 && (
+                      {hasNLPCategories && item.sampleConcerns && item.sampleConcerns.length > 0 && (
                         <div className="text-xs text-gray-600 mt-1">
                           <span className="font-medium">Examples:</span> {item.sampleConcerns.slice(0, 2).join(', ')}
                           {item.sampleConcerns.length > 2 && '...'}
@@ -706,6 +770,19 @@ const StudentConcernAnalytics = ({ teacherId, selectedSemester, selectedSchoolYe
         </div>
       );
     }
+
+    // Get all unique categories from the data dynamically
+    const allCategories = new Set();
+    Object.values(concernData.demographic_breakdown).forEach(concerns => {
+      Object.keys(concerns).forEach(category => allCategories.add(category));
+    });
+    const categories = Array.from(allCategories).sort();
+
+    // Generate colors for categories dynamically
+    const categoryColors = {};
+    categories.forEach((category, index) => {
+      categoryColors[category] = COLORS[index % COLORS.length];
+    });
 
     const yearData = Object.entries(concernData.demographic_breakdown)
       .map(([year, concerns]) => {
@@ -738,7 +815,9 @@ const StudentConcernAnalytics = ({ teacherId, selectedSemester, selectedSchoolYe
       <div className="space-y-4 md:space-y-6">
         <div className="text-center">
           <h4 className="text-lg md:text-xl font-semibold text-gray-700 mb-2">Demographic Breakdown</h4>
-          <p className="text-sm text-gray-500">Concerns by student year level</p>
+          <p className="text-sm text-gray-500">
+            Concerns by student year level
+          </p>
         </div>
 
         {/* Mobile-First Bar Chart with Larger Size */}
@@ -769,12 +848,16 @@ const StudentConcernAnalytics = ({ teacherId, selectedSemester, selectedSchoolYe
                   fontSize: windowWidth < 768 ? 11 : 13
                 }}
               />
-              <Bar dataKey="Academic Performance" stackId="a" fill="#FF8042" />
-              <Bar dataKey="Subject-Specific" stackId="a" fill="#0088FE" />
-              <Bar dataKey="Mental Health" stackId="a" fill="#00C49F" />
-              <Bar dataKey="Time Management" stackId="a" fill="#FFBB28" />
-              <Bar dataKey="Motivation" stackId="a" fill="#8884D8" />
-              <Bar dataKey="Other" stackId="a" fill="#82CA9D" />
+              {/* Render bars dynamically based on available categories */}
+              {categories.map((category, index) => (
+                <Bar 
+                  key={category}
+                  dataKey={category} 
+                  stackId="a" 
+                  fill={categoryColors[category]}
+                  name={category}
+                />
+              ))}
             </BarChart>
           </ResponsiveContainer>
         </div>
@@ -911,13 +994,66 @@ const StudentConcernAnalytics = ({ teacherId, selectedSemester, selectedSchoolYe
 
         {/* Mobile-First Layout */}
         <div className="space-y-8">
+          {/* AI Themes Section */}
+          {concernData.ai_themes && concernData.ai_themes.length > 0 && (
+            <div className="space-y-4 md:space-y-5">
+              <div className="flex items-center space-x-3 mb-4">
+                <svg className="w-6 h-6 text-purple-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9.663 17h4.673M12 3v1m6.364 1.636l-.707.707M21 12h-1M4 12H3m3.343-5.657l-.707-.707m2.828 9.9a5 5 0 117.072 0l-.548.547A3.374 3.374 0 0014 18.469V19a2 2 0 11-4 0v-.531c0-.895-.356-1.754-.988-2.386l-.548-.547z" />
+                </svg>
+                <h5 className="font-semibold text-gray-700 text-base md:text-lg">
+                  AI-Identified Themes
+                </h5>
+              </div>
+              
+              <div className="grid gap-4">
+                {concernData.ai_themes.map((theme, index) => (
+                  <div key={index} className="relative">
+                    <div className="p-5 bg-gradient-to-r from-purple-50 to-indigo-50 border border-purple-200 rounded-lg shadow-sm">
+                      <div className="flex items-start justify-between mb-3">
+                        <h6 className="font-semibold text-purple-800 text-sm md:text-base">
+                          {theme.theme}
+                        </h6>
+                        <span className={`px-2 py-1 text-xs rounded-full ${
+                          theme.frequency === 'high' 
+                            ? 'bg-red-100 text-red-700' 
+                            : theme.frequency === 'medium'
+                            ? 'bg-yellow-100 text-yellow-700'
+                            : 'bg-green-100 text-green-700'
+                        }`}>
+                          {theme.frequency}
+                        </span>
+                      </div>
+                      <p className="text-sm md:text-base text-gray-700 leading-relaxed mb-3">
+                        {theme.description}
+                      </p>
+                      <div className="text-xs text-gray-600 mb-2">
+                        <strong>Keywords:</strong> {theme.keywords.join(', ')}
+                      </div>
+                      <div className="text-xs text-gray-600">
+                        <strong>Cases:</strong> {theme.count} sessions
+                        {theme.examples && theme.examples.length > 0 && (
+                          <span className="ml-2">
+                            | <strong>Examples:</strong> {theme.examples.slice(0, 2).join('; ')}
+                          </span>
+                        )}
+                      </div>
+                    </div>
+                  </div>
+                ))}
+              </div>
+            </div>
+          )}
+
           {/* Key Insights */}
           <div className="space-y-4 md:space-y-5">
             <div className="flex items-center space-x-3 mb-4">
               <svg className="w-6 h-6 text-blue-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z" />
               </svg>
-              <h5 className="font-semibold text-gray-700 text-base md:text-lg">Key Findings</h5>
+              <h5 className="font-semibold text-gray-700 text-base md:text-lg">
+                Key Findings
+              </h5>
             </div>
             <div className="grid gap-4">
               {concernData.insights.map((insight, index) => (
@@ -932,7 +1068,7 @@ const StudentConcernAnalytics = ({ teacherId, selectedSemester, selectedSchoolYe
                     </div>
                     <div className="ml-4 flex-1">
                       <div className="p-4 bg-gradient-to-r from-blue-50 to-indigo-50 border border-blue-200 rounded-lg shadow-sm">
-                        <p className="text-sm md:text-base text-gray-700 leading-relaxed font-medium">
+                        <p className="text-sm md:text-base text-gray-700 leading-relaxed">
                           {parseMarkdownBold(insight)}
                         </p>
                       </div>
@@ -943,7 +1079,7 @@ const StudentConcernAnalytics = ({ teacherId, selectedSemester, selectedSchoolYe
             </div>
           </div>
 
-          {/* NLP-Powered Recommendations */}
+          {/* Enhanced Recommendations */}
           <div className="space-y-4 md:space-y-5">
             <div className="flex items-center space-x-3 mb-4">
               <svg className="w-6 h-6 text-green-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -951,11 +1087,6 @@ const StudentConcernAnalytics = ({ teacherId, selectedSemester, selectedSchoolYe
               </svg>
               <h5 className="font-semibold text-gray-700 text-base md:text-lg">
                 AI-Powered Recommendations
-                {concernData.analysis_method && concernData.analysis_method.includes('AI') && (
-                  <span className="ml-2 px-2 py-1 bg-green-100 text-green-700 text-xs rounded-full">
-                    NLP Enhanced
-                  </span>
-                )}
               </h5>
             </div>
             
@@ -973,7 +1104,7 @@ const StudentConcernAnalytics = ({ teacherId, selectedSemester, selectedSchoolYe
                       </div>
                       <div className="ml-4 flex-1">
                         <div className="p-4 bg-gradient-to-r from-green-50 to-emerald-50 border border-green-200 rounded-lg shadow-sm">
-                          <p className="text-sm md:text-base text-gray-700 leading-relaxed font-medium">
+                          <p className="text-sm md:text-base text-gray-700 leading-relaxed">
                             {parseMarkdownBold(recommendation)}
                           </p>
                         </div>
@@ -984,8 +1115,8 @@ const StudentConcernAnalytics = ({ teacherId, selectedSemester, selectedSchoolYe
               ) : (
                 // Fallback to category-based recommendations if NLP recommendations aren't available
                 <div className="space-y-4">
-                  {concernData.nlp_categories && concernData.nlp_categories['Mental Health'] && 
-                   concernData.nlp_categories['Mental Health'].percentage > 20 && (
+                  {concernData.nlp_categories && concernData.nlp_categories['Personal'] && 
+                   concernData.nlp_categories['Personal'].percentage > 20 && (
                     <div className="flex">
                       <div className="flex-shrink-0 mt-3">
                         <div className="w-8 h-8 bg-red-100 rounded-full flex items-center justify-center">
@@ -997,21 +1128,21 @@ const StudentConcernAnalytics = ({ teacherId, selectedSemester, selectedSchoolYe
                       <div className="ml-4 flex-1">
                         <div className="p-4 bg-gradient-to-r from-red-50 to-pink-50 border border-red-200 rounded-lg shadow-sm">
                           <h6 className="font-semibold text-red-800 text-sm md:text-base mb-2 flex items-center">
-                            High Mental Health Concerns
+                            High Personal Concerns
                             <span className="ml-2 px-2 py-1 bg-red-200 text-red-800 text-xs rounded-full">
-                              {concernData.nlp_categories['Mental Health'].percentage}%
+                              {concernData.nlp_categories['Personal'].percentage}%
                             </span>
                           </h6>
                           <p className="text-sm md:text-base text-gray-700">
-                            Consider implementing stress management workshops and counseling services.
+                            Consider implementing stress management workshops, counseling services, and time management support.
                           </p>
                         </div>
                       </div>
                     </div>
                   )}
 
-                  {concernData.nlp_categories && concernData.nlp_categories['Academic Performance'] && 
-                   concernData.nlp_categories['Academic Performance'].percentage > 30 && (
+                  {concernData.nlp_categories && concernData.nlp_categories['Academic'] && 
+                   concernData.nlp_categories['Academic'].percentage > 30 && (
                     <div className="flex">
                       <div className="flex-shrink-0">
                         <div className="w-8 h-8 bg-yellow-100 rounded-full flex items-center justify-center">
@@ -1025,11 +1156,115 @@ const StudentConcernAnalytics = ({ teacherId, selectedSemester, selectedSchoolYe
                           <h6 className="font-semibold text-yellow-800 text-sm md:text-base mb-2 flex items-center">
                             Academic Performance Issues
                             <span className="ml-2 px-2 py-1 bg-yellow-200 text-yellow-800 text-xs rounded-full">
-                              {concernData.nlp_categories['Academic Performance'].percentage}%
+                              {concernData.nlp_categories['Academic'].percentage}%
                             </span>
                           </h6>
                           <p className="text-sm md:text-base text-gray-700">
                             Develop targeted tutoring programs and study skills workshops.
+                          </p>
+                        </div>
+                      </div>
+                    </div>
+                  )}
+
+                  {concernData.nlp_categories && concernData.nlp_categories['Financial'] && 
+                   concernData.nlp_categories['Financial'].percentage > 15 && (
+                    <div className="flex">
+                      <div className="flex-shrink-0">
+                        <div className="w-8 h-8 bg-green-100 rounded-full flex items-center justify-center">
+                          <svg className="w-4 h-4 text-green-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8c1.11 0 2.08.402 2.599 1M12 8V7m0 1v8m0 0v1m0-1c-1.11 0-2.08-.402-2.599-1" />
+                          </svg>
+                        </div>
+                      </div>
+                      <div className="ml-4 flex-1">
+                        <div className="p-4 bg-gradient-to-r from-green-50 to-emerald-50 border border-green-200 rounded-lg shadow-sm">
+                          <h6 className="font-semibold text-green-800 text-sm md:text-base mb-2 flex items-center">
+                            Financial Concerns
+                            <span className="ml-2 px-2 py-1 bg-green-200 text-green-800 text-xs rounded-full">
+                              {concernData.nlp_categories['Financial'].percentage}%
+                            </span>
+                          </h6>
+                          <p className="text-sm md:text-base text-gray-700">
+                            Provide information about financial aid, scholarships, and emergency funding options.
+                          </p>
+                        </div>
+                      </div>
+                    </div>
+                  )}
+
+                  {concernData.nlp_categories && concernData.nlp_categories['Social'] && 
+                   concernData.nlp_categories['Social'].percentage > 15 && (
+                    <div className="flex">
+                      <div className="flex-shrink-0">
+                        <div className="w-8 h-8 bg-blue-100 rounded-full flex items-center justify-center">
+                          <svg className="w-4 h-4 text-blue-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0zm6 3a2 2 0 11-4 0 2 2 0 014 0zM7 10a2 2 0 11-4 0 2 2 0 014 0z" />
+                          </svg>
+                        </div>
+                      </div>
+                      <div className="ml-4 flex-1">
+                        <div className="p-4 bg-gradient-to-r from-blue-50 to-cyan-50 border border-blue-200 rounded-lg shadow-sm">
+                          <h6 className="font-semibold text-blue-800 text-sm md:text-base mb-2 flex items-center">
+                            Social Concerns
+                            <span className="ml-2 px-2 py-1 bg-blue-200 text-blue-800 text-xs rounded-full">
+                              {concernData.nlp_categories['Social'].percentage}%
+                            </span>
+                          </h6>
+                          <p className="text-sm md:text-base text-gray-700">
+                            Facilitate social integration programs and peer support groups.
+                          </p>
+                        </div>
+                      </div>
+                    </div>
+                  )}
+
+                  {concernData.nlp_categories && concernData.nlp_categories['Health'] && 
+                   concernData.nlp_categories['Health'].percentage > 10 && (
+                    <div className="flex">
+                      <div className="flex-shrink-0">
+                        <div className="w-8 h-8 bg-pink-100 rounded-full flex items-center justify-center">
+                          <svg className="w-4 h-4 text-pink-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4.318 6.318a4.5 4.5 0 000 6.364L12 20.364l7.682-7.682a4.5 4.5 0 00-6.364-6.364L12 7.636l-1.318-1.318a4.5 4.5 0 00-6.364 0z" />
+                          </svg>
+                        </div>
+                      </div>
+                      <div className="ml-4 flex-1">
+                        <div className="p-4 bg-gradient-to-r from-pink-50 to-rose-50 border border-pink-200 rounded-lg shadow-sm">
+                          <h6 className="font-semibold text-pink-800 text-sm md:text-base mb-2 flex items-center">
+                            Health Concerns
+                            <span className="ml-2 px-2 py-1 bg-pink-200 text-pink-800 text-xs rounded-full">
+                              {concernData.nlp_categories['Health'].percentage}%
+                            </span>
+                          </h6>
+                          <p className="text-sm md:text-base text-gray-700">
+                            Connect students with health services and wellness programs.
+                          </p>
+                        </div>
+                      </div>
+                    </div>
+                  )}
+
+                  {concernData.nlp_categories && concernData.nlp_categories['Other'] && 
+                   concernData.nlp_categories['Other'].percentage > 10 && (
+                    <div className="flex">
+                      <div className="flex-shrink-0">
+                        <div className="w-8 h-8 bg-gray-100 rounded-full flex items-center justify-center">
+                          <svg className="w-4 h-4 text-gray-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8.228 9c.549-1.165 2.03-2 3.772-2 2.21 0 4 1.343 4 3 0 1.4-1.278 2.575-3.006 2.907-.542.104-.994.54-.994 1.093m0 3h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+                          </svg>
+                        </div>
+                      </div>
+                      <div className="ml-4 flex-1">
+                        <div className="p-4 bg-gradient-to-r from-gray-50 to-slate-50 border border-gray-200 rounded-lg shadow-sm">
+                          <h6 className="font-semibold text-gray-800 text-sm md:text-base mb-2 flex items-center">
+                            Other Concerns
+                            <span className="ml-2 px-2 py-1 bg-gray-200 text-gray-800 text-xs rounded-full">
+                              {concernData.nlp_categories['Other'].percentage}%
+                            </span>
+                          </h6>
+                          <p className="text-sm md:text-base text-gray-700">
+                            Review miscellaneous concerns and technology issues that may need attention.
                           </p>
                         </div>
                       </div>
@@ -1134,8 +1369,8 @@ const StudentConcernAnalytics = ({ teacherId, selectedSemester, selectedSchoolYe
                     <h3 className="font-semibold text-blue-900 text-sm mb-1">Previous Section</h3>
                     <p className="text-blue-700 font-medium">{viewTitles[views[(currentView - 1 + views.length) % views.length]]}</p>
                     <p className="text-blue-600 text-xs mt-1 leading-relaxed">
-                      {views[(currentView - 1 + views.length) % views.length] === 'overview' && "View pie charts and concern distribution"}
-                      {views[(currentView - 1 + views.length) % views.length] === 'rankings' && "Explore detailed concern categories and trends"}
+                      {views[(currentView - 1 + views.length) % views.length] === 'overview' && "View pie charts and thematic concern "}
+                      {views[(currentView - 1 + views.length) % views.length] === 'rankings' && "Explore general concern categories and short analysis"}
                       {views[(currentView - 1 + views.length) % views.length] === 'demographics' && "Analyze concerns by department and year level"}
                       {views[(currentView - 1 + views.length) % views.length] === 'insights' && "Get AI-powered insights and recommendations"}
                     </p>
