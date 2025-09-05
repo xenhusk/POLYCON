@@ -2,6 +2,7 @@ import React, { useState, useEffect } from "react";
 import API_URL from '../apiConfig';
 import { EyeOutlined, EyeInvisibleOutlined } from "@ant-design/icons";
 import logo from "./icons/DarkLogo.png";
+import TermsModal from "./TermsModal";
 
 const Signup = ({ onSwitchToLogin }) => {
   const [step, setStep] = useState(1);
@@ -14,6 +15,7 @@ const Signup = ({ onSwitchToLogin }) => {
   const [showPassword, setShowPassword] = useState(false);
   const [showConfirmPassword, setShowConfirmPassword] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
+  const [showTerms, setShowTerms] = useState(false);
   const [formData, setFormData] = useState({
     idNumber: "",
     firstName: "",
@@ -40,6 +42,7 @@ const Signup = ({ onSwitchToLogin }) => {
     program: "",
     year_section: "",
     sex: "",
+    termsAccepted: "",
   });
 
   useEffect(() => {
@@ -62,11 +65,13 @@ const Signup = ({ onSwitchToLogin }) => {
   }, [formData.department]);
 
   const handleChange = (e) => {
-    const { name, value } = e.target;
+    const { name, value, type, checked } = e.target;
+    // Determine the new value based on the input type
+    const newValue = type === "checkbox" ? checked : value;
 
     setFormData((prev) => ({
       ...prev,
-      [name]: value,
+      [name]: newValue,
       ...(name === "department" && { program: "" }),
     }));
 
@@ -131,6 +136,8 @@ const Signup = ({ onSwitchToLogin }) => {
       if (!formData.program) errors.program = "Program is required";
       if (!formData.year_section)
         errors.year_section = "Year & Section is required";
+      if (!formData.termsAccepted)
+        errors.termsAccepted = "You must agree to the Terms and Conditions.";
     }
 
     return errors;
@@ -210,6 +217,7 @@ const Signup = ({ onSwitchToLogin }) => {
   return (
     <div className="w-full min-h-full flex justify-center items-start font-poppins py-6">
       <div className="w-full px-6 pb-6">
+        {/* Step 1: Personal Information */}
         {step === 1 ? (
           <div className="space-y-3 mt-2">
             <div className="text-center mb-4">
@@ -355,6 +363,7 @@ const Signup = ({ onSwitchToLogin }) => {
             </div>
           </div>
         ) : (
+          // Step 2: Account & Academic Details
           <div
             className={`w-full flex justify-center items-start ${
               step === 2 ? "slide-left" : "slide-right"
@@ -567,6 +576,29 @@ const Signup = ({ onSwitchToLogin }) => {
                     {errorMessage}
                   </p>
                 )}
+
+                <label className={`my-4 mx-auto flex justify-center items-center text-sm md:text-sx text-gray-600 ${fieldErrors.termsAccepted ? 'text-red-500' : ''}`}>
+                  <input
+                    className="mr-2 w-4 h-4 border-gray-300 peer"
+                    type="checkbox"
+                    name="termsAccepted"
+                    checked={formData.termsAccepted}
+                    onChange={handleChange}
+                    required
+                  />
+                  <span className="leading-5">
+                    I have read and agree to the
+                    <button
+                      type="button"
+                      className="ml-1 text-[#057DCD] border-b-2 border-transparent hover:border-[#057DCD] transition-colors focus:outline-none"
+                      onClick={() => setShowTerms(true)}
+                    >
+                      Terms and Conditions
+                    </button>.
+                  </span>
+                </label>
+                {renderFieldError("termsAccepted")}
+                <TermsModal open={showTerms} onClose={() => setShowTerms(false)} />
 
                 {/* Action Buttons */}
                 <div className="flex gap-3 mt-4">
