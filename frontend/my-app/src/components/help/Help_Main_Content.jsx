@@ -289,6 +289,16 @@ const Help_Main_Content = () => {
                   >
                     Consultation Booking
                   </Link>
+                  {isTeacher && (
+                    <Link
+                      to="/help/features/Info_Enrolled_Student"
+                      className={`block px-3 py-1 text-sm rounded-md transition-colors ${sidebarActive(
+                        "/help/features/Info_Enrolled_Student"
+                      )}`}
+                    >
+                      Enrolled Students
+                    </Link>
+                  )}
                   <Link
                     to="/help/features/Info_Calendar_Management"
                     className={`block px-3 py-1 text-sm rounded-md transition-colors ${sidebarActive(

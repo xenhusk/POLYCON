@@ -29,6 +29,7 @@ import Help_Set_Schedule from "./components/help/getstarted/Help_Set_Schedule";
 import Help_Grade from "./components/help/getstarted/Help_Grade";
 import Help_Polycon_Analysis from "./components/help/getstarted/Help_Polycon_Analysis.jsx";
 import Help_Consultation_Booking from "./components/help/features/Help_Consultation_Booking";
+import Help_Enrolled_Student from "./components/help/features/Help_Enrolled_Student";
 import Help_Calendar_Management from "./components/help/features/Help_Calendar_Management";
 import Help_Notifications from "./components/help/features/Help_Notifications";
 import Contact_Support from "./components/help/Support/Contact_Support";
@@ -991,6 +992,10 @@ function App() {
                             <Route
                               path="Info_Consultation_Booking"
                               element={<Help_Consultation_Booking />}
+                            />
+                            <Route
+                              path="Info_Enrolled_Student"
+                              element={<Help_Enrolled_Student />}
                             />
                             <Route
                               path="Info_Calendar_Management"

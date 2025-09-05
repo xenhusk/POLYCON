@@ -201,22 +201,22 @@ const Help = () => {
               >
                 Overview
               </Link>
-              { !isTeacher && (
+              {!isTeacher && (
                 <>
-                <Link
-                  to="/help/getstarted/Info_Login"
-                  onClick={() => setIsMenuOpen(false)}
-                  className="block text-sm text-gray-600 hover:text-[#0056a6] hover:bg-blue-50 p-2 rounded-md transition-colors"
-                >
-                  Account Login
-                </Link>
-                <Link
-                  to="/help/getstarted/Info_Signup"
-                  onClick={() => setIsMenuOpen(false)}
-                  className="block text-sm text-gray-600 hover:text-[#0056a6] hover:bg-blue-50 p-2 rounded-md transition-colors"
-                >
-                  Account Registration
-                </Link>
+                  <Link
+                    to="/help/getstarted/Info_Login"
+                    onClick={() => setIsMenuOpen(false)}
+                    className="block text-sm text-gray-600 hover:text-[#0056a6] hover:bg-blue-50 p-2 rounded-md transition-colors"
+                  >
+                    Account Login
+                  </Link>
+                  <Link
+                    to="/help/getstarted/Info_Signup"
+                    onClick={() => setIsMenuOpen(false)}
+                    className="block text-sm text-gray-600 hover:text-[#0056a6] hover:bg-blue-50 p-2 rounded-md transition-colors"
+                  >
+                    Account Registration
+                  </Link>
                 </>
               )}
               <Link
@@ -233,7 +233,7 @@ const Help = () => {
               >
                 Appointments
               </Link>
-              { !isTeacher && (
+              {!isTeacher && (
                 <Link
                   to="/help/getstarted/Info_Set_Schedule"
                   onClick={() => setIsMenuOpen(false)}
@@ -256,7 +256,7 @@ const Help = () => {
               >
                 Grade
               </Link>
-              { !isTeacher && (
+              {!isTeacher && (
                 <Link
                   to="/help/getstarted/Info_Polycon_Analysis"
                   onClick={() => setIsMenuOpen(false)}
@@ -286,6 +286,15 @@ const Help = () => {
               >
                 Calendar Management
               </Link>
+              {isTeacher && (
+                <Link
+                  to="/help/features/Info_Calendar_Management"
+                  onClick={() => setIsMenuOpen(false)}
+                  className="block text-sm text-gray-600 hover:text-[#0056a6] hover:bg-blue-50 p-2 rounded-md transition-colors"
+                >
+                  Enrolled Students
+                </Link>
+              )}
               <Link
                 to="/help/features/Info_Notifications"
                 onClick={() => setIsMenuOpen(false)}
