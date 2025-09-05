@@ -54,8 +54,7 @@ import Departments from "./components/Departments";
 import HomeAdmin from "./components/HomeAdmin"; // Update import name and path
 import SemesterManagement from "./components/SemesterManagement"; // Update import name and path
 import ConsultationSchedules from "./pages/ConsultationSchedules"; // Add import for public consultation schedules
-import TeacherAppointments from "./components/TeacherAppointments"; // Add import for teacher schedule management
-
+import TeacherScheduleManager from "./components/TeacherScheduleManager"; // Add import for teacher schedule management
 import SidebarPreview from "./components/SidebarPreview"; // Import the SidebarPreview component
 import Appointments from "./pages/Appointments"; // Import the Appointments page
 import Sidebar from "./components/Sidebar";
@@ -1072,7 +1071,7 @@ function App() {
                         />
                         <Route
                           path="/teacher-schedule"
-                          element={<TeacherAppointments />}
+                          element={<TeacherScheduleManager />}
                         />{" "}
                         {/* Teacher schedule management */}
                         <Route path="/settings" element={<Settings />} />{" "}
