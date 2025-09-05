@@ -47,7 +47,7 @@ const SemesterManagement = () => {
   const fetchLatestSemester = async () => {
     try {
       const response = await fetch(`${API_URL}/semester/latest`);
-      if(response.ok) {
+      if (response.ok) {
         const data = await response.json();
         setLatestSemester(data);
         setCanEndSemester(data.canEnd);
@@ -86,14 +86,14 @@ const SemesterManagement = () => {
       const timer = setTimeout(() => setError(''), 5000);
       return () => clearTimeout(timer);
     }
-  }, [error]);  const validateSchoolYear = (input) => {
+  }, [error]); const validateSchoolYear = (input) => {
     if (!input) {
       setError('');
       return false;
     }
 
     const year = parseInt(input);
-    
+
     // For partially entered year
     if (input.length < 4) {
       setError('Please enter a complete 4-digit year');
@@ -131,7 +131,7 @@ const SemesterManagement = () => {
       setIsStartingSemester(false);
       return;
     }
-    
+
     if (!validateSchoolYear(schoolYear)) {
       setIsStartingSemester(false);
       return;
@@ -194,7 +194,7 @@ const SemesterManagement = () => {
   // Modified handleEndSemesterNow function with confirmation
   const handleEndSemesterNow = async () => {
     if (!latestSemester) return;
-    
+
     setError(
       <div className="flex items-center justify-between bg-yellow-100 text-yellow-700 border-yellow-500 p-4 rounded">
         <span>Are you sure you want to end the current semester? This cannot be undone. </span>
@@ -253,7 +253,7 @@ const SemesterManagement = () => {
   // Modified handleEndSemesterScheduled function with extra logging for debugging
   const handleEndSemesterScheduled = async () => {
     const selectedEndDate = new Date(endDate);
-    
+
     // Validate end date
     const validationError = validateEndDate(endDate, latestSemester.startDate);
     if (validationError) {
@@ -470,7 +470,7 @@ const SemesterManagement = () => {
     const updatedDepartments = selectedDepartmentFilter.includes(department)
       ? selectedDepartmentFilter.filter((dep) => dep !== department)
       : [...selectedDepartmentFilter, department];
-    
+
     setSelectedDepartmentFilter(updatedDepartments);
   };
 
@@ -493,7 +493,7 @@ const SemesterManagement = () => {
     const selectedDateObj = new Date(selectedDate);
     const startDateObj = new Date(startDate);
     const todayObj = new Date();
-    
+
     // Reset time portions for accurate date comparison
     selectedDateObj.setHours(0, 0, 0, 0);
     startDateObj.setHours(0, 0, 0, 0);
@@ -502,7 +502,7 @@ const SemesterManagement = () => {
     if (selectedDateObj < startDateObj) {
       return "End date cannot be earlier than the start date";
     }
-    
+
     if (selectedDateObj < todayObj) {
       return "End date cannot be earlier than today";
     }
@@ -606,44 +606,44 @@ const SemesterManagement = () => {
               <table className="w-full bg-white text-center table-fixed">
                 <tbody>
                   {teachers
-                    .filter(teacher => 
+                    .filter(teacher =>
                       (teacherSearchTerm.trim() === "" ||
-                       teacher.fullName.toLowerCase().includes(teacherSearchTerm.toLowerCase())) &&
+                        teacher.fullName.toLowerCase().includes(teacherSearchTerm.toLowerCase())) &&
                       (selectedDepartmentFilter.length === 0 ||
-                       selectedDepartmentFilter.includes(teacher.department))
+                        selectedDepartmentFilter.includes(teacher.department))
                     )
                     .map((teacher, index) => (
-                    <tr key={teacher.ID} className="border-b hover:bg-[#edf8ff] transition-all duration-200">
-                      <td className="py-2 px-6">{teacher.ID}</td>
-                      <td className="py-2 px-6">{teacher.fullName}</td>
-                      <td className="py-2 px-6">{teacher.department}</td>
-                      <td className="py-2 px-6">
-                        {teacher.isActive ? (
-                          <span className="text-green-500 font-medium">Active</span>
-                        ) : (
-                          <span className="text-gray-500 font-medium">Inactive</span>
-                        )}
-                      </td>
-                      <td className="py-2 px-6">
-                        {teacher.isActive ? (
-                          <span className="text-green-600 font-medium">✓ Activated</span>
-                        ) : (
-                          <button
-                            onClick={() => handleActivate(teacher.ID)}
-                            className="bg-green-500 text-white px-3 py-1 rounded hover:bg-green-600 transition-colors disabled:opacity-50"
-                            disabled={isActivatingTeacher === teacher.ID}
-                          >
-                            {isActivatingTeacher === teacher.ID ? 'Activating...' : 'Activate'}
-                          </button>
-                        )}
-                      </td>
-                    </tr>
-                  ))}
+                      <tr key={teacher.ID} className="border-b hover:bg-[#edf8ff] transition-all duration-200">
+                        <td className="py-2 px-6">{teacher.ID}</td>
+                        <td className="py-2 px-6">{teacher.fullName}</td>
+                        <td className="py-2 px-6">{teacher.department}</td>
+                        <td className="py-2 px-6">
+                          {teacher.isActive ? (
+                            <span className="text-green-500 font-medium">Active</span>
+                          ) : (
+                            <span className="text-gray-500 font-medium">Inactive</span>
+                          )}
+                        </td>
+                        <td className="py-2 px-6">
+                          {teacher.isActive ? (
+                            <span className="text-green-600 font-medium">✓ Activated</span>
+                          ) : (
+                            <button
+                              onClick={() => handleActivate(teacher.ID)}
+                              className="bg-green-500 text-white px-3 py-1 rounded hover:bg-green-600 transition-colors disabled:opacity-50"
+                              disabled={isActivatingTeacher === teacher.ID}
+                            >
+                              {isActivatingTeacher === teacher.ID ? 'Activating...' : 'Activate'}
+                            </button>
+                          )}
+                        </td>
+                      </tr>
+                    ))}
                 </tbody>
               </table>
             </div>
           </div>
-          
+
           {/* Activate All Button moved to after table */}
           <div className="bg-gray-50 px-6 py-4 border-t border-gray-200">
             <div className="flex justify-end">
@@ -662,9 +662,9 @@ const SemesterManagement = () => {
 
       {/* Semester Management Modal */}
       {showSemesterModal && createPortal(
-        <div 
+        <div
           className="fixed bg-black/60 backdrop-blur-md flex items-center justify-center p-4"
-          style={{ 
+          style={{
             position: 'fixed',
             top: 0,
             left: 0,
@@ -695,232 +695,231 @@ const SemesterManagement = () => {
               zIndex: 9999
             }}
           >
-              {/* Modal Header */}
-              <div className="bg-gradient-to-r from-[#0065A8] to-[#057DCD] px-6 py-4 flex justify-between items-center">
-                <h2 className="text-xl font-semibold text-white">
-                  {latestSemester && canEndSemester ? 'Current Semester' : 'Start New Semester'}
-                </h2>
-                <button
-                  onClick={() => setShowSemesterModal(false)}
-                  className="text-white hover:text-gray-200 transition-all duration-200 hover:scale-110"
-                >
-                  <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M6 18L18 6M6 6l12 12" />
-                  </svg>
-                </button>
-              </div>
+            {/* Modal Header */}
+            <div className=" bg-gradient-to-r from-[#0065A8] to-[#057DCD] px-6 py-4 flex justify-between items-center">
+              <h2 className="text-xl font-semibold text-white">
+                {latestSemester && canEndSemester ? 'Current Semester' : 'Start New Semester'}
+              </h2>
+              <button
+                onClick={() => setShowSemesterModal(false)}
+                className="text-white hover:text-gray-200 transition-all duration-200 hover:scale-110"
+              >
+                <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M6 18L18 6M6 6l12 12" />
+                </svg>
+              </button>
+            </div>
 
-              {/* Modal Body */}
-              <div className="p-6">
-                {/* All other error/success messages inside the modal */}
-                {error && error !== 'Please start a semester first before activating teachers' && error !== 'Teacher activated successfully' && (
-                  <div className={`fixed top-5 right-5 z-50 rounded p-4 transform transition-all duration-500 ease-in-out 
-          ${
-            typeof error === 'string'
-              ? error.toLowerCase().includes('successfully')
-                ? 'bg-green-100 text-green-700'
-                : error.toLowerCase().includes('no active semester') || error.toLowerCase().includes('please start a semester') || error.toLowerCase().includes('please enter a complete')
-                ? 'bg-yellow-100 text-yellow-700'
-                : 'bg-red-100 text-red-700'
-              : ''
-          }
+            {/* Modal Body */}
+            <div className="p-6">
+              {/* All other error/success messages inside the modal */}
+              {error && error !== 'Please start a semester first before activating teachers' && error !== 'Teacher activated successfully' && (
+                <div className={`fixed top-5 right-5 z-50 rounded p-4 transform transition-all duration-500 ease-in-out 
+          ${typeof error === 'string'
+                    ? error.toLowerCase().includes('successfully')
+                      ? 'bg-green-100 text-green-700'
+                      : error.toLowerCase().includes('no active semester') || error.toLowerCase().includes('please start a semester') || error.toLowerCase().includes('please enter a complete')
+                        ? 'bg-yellow-100 text-yellow-700'
+                        : 'bg-red-100 text-red-700'
+                    : ''
+                  }
         `}>
-                    <div className="flex justify-between items-start">
-                      <div className="flex-1">
-                        {error}
-                        {typeof error === 'string' && error.includes('already exists') && (
-                          <button
-                            onClick={handleDeleteDuplicate}
-                            className="ml-4 bg-red-500 text-white px-3 py-1 rounded-lg hover:bg-red-600"
-                          >
-                            Delete Duplicate?
-                          </button>
-                        )}
-                      </div>
+                  <div className="flex justify-between items-start">
+                    <div className="flex-1">
+                      {error}
+                      {typeof error === 'string' && error.includes('already exists') && (
+                        <button
+                          onClick={handleDeleteDuplicate}
+                          className="ml-4 bg-red-500 text-white px-3 py-1 rounded-lg hover:bg-red-600"
+                        >
+                          Delete Duplicate?
+                        </button>
+                      )}
                     </div>
                   </div>
-                )}
-                {/* Semester Management Content */}
-                {latestSemester && canEndSemester ? (
-                  <div className="space-y-6">
-                    <div className="bg-gradient-to-r from-blue-50 to-indigo-50 p-6 rounded-lg border border-blue-200">
-                      <div className="flex items-center mb-4">
-                        <div className="w-3 h-3 bg-green-500 rounded-full mr-3 mt-3 animate-pulse"></div>
-                        <h3 className="text-lg font-semibold text-gray-900">Active Semester</h3>
-                      </div>
-                      <div className="grid grid-cols-2 gap-4">
-                        <div className="bg-white p-3 rounded-lg shadow-sm">
-                          <p className="text-sm text-gray-500 font-medium">Semester</p>
-                          <p className="text-lg font-bold text-blue-900">{latestSemester.semester} Semester</p>
-                        </div>
-                        <div className="bg-white p-3 rounded-lg shadow-sm">
-                          <p className="text-sm text-gray-500 font-medium">School Year</p>
-                          <p className="text-lg font-bold text-blue-900">{latestSemester.school_year}</p>
-                        </div>
-                        <div className="bg-white p-3 rounded-lg shadow-sm">
-                          <p className="text-sm text-gray-500 font-medium">Start Date</p>
-                          <p className="text-lg font-bold text-blue-900">{new Date(latestSemester.startDate).toLocaleDateString()}</p>
-                        </div>
-                        {latestSemester.endDate && (
-                          <div className="bg-white p-3 rounded-lg shadow-sm">
-                            <p className="text-sm text-gray-500 font-medium">End Date</p>
-                            <p className="text-lg font-bold text-blue-900">{new Date(latestSemester.endDate).toLocaleDateString()}</p>
-                          </div>
-                        )}
-                      </div>
+                </div>
+              )}
+              {/* Semester Management Content */}
+              {latestSemester && canEndSemester ? (
+                <div className="space-y-6">
+                  <div className="bg-gradient-to-r from-blue-50 to-indigo-50 p-6 rounded-lg border border-blue-200">
+                    <div className="flex items-center mb-4">
+                      <div className="w-3 h-3 bg-green-500 rounded-full mr-3 mt-3 animate-pulse"></div>
+                      <h3 className="text-lg font-semibold text-gray-900">Active Semester</h3>
                     </div>
-                    
-                    <div className="space-y-4">
-                      <div className="border-t border-gray-200 pt-4">
-                        <h4 className="text-lg font-medium text-gray-900 mb-4">Semester Actions</h4>
-                        
+                    <div className="grid grid-cols-2 gap-4">
+                      <div className="bg-white p-3 rounded-lg shadow-sm">
+                        <p className="text-sm text-gray-500 font-medium">Semester</p>
+                        <p className="text-lg font-bold text-blue-900">{latestSemester.semester} Semester</p>
+                      </div>
+                      <div className="bg-white p-3 rounded-lg shadow-sm">
+                        <p className="text-sm text-gray-500 font-medium">School Year</p>
+                        <p className="text-lg font-bold text-blue-900">{latestSemester.school_year}</p>
+                      </div>
+                      <div className="bg-white p-3 rounded-lg shadow-sm">
+                        <p className="text-sm text-gray-500 font-medium">Start Date</p>
+                        <p className="text-lg font-bold text-blue-900">{new Date(latestSemester.startDate).toLocaleDateString()}</p>
+                      </div>
+                      {latestSemester.endDate && (
+                        <div className="bg-white p-3 rounded-lg shadow-sm">
+                          <p className="text-sm text-gray-500 font-medium">End Date</p>
+                          <p className="text-lg font-bold text-blue-900">{new Date(latestSemester.endDate).toLocaleDateString()}</p>
+                        </div>
+                      )}
+                    </div>
+                  </div>
+
+                  <div className="space-y-4">
+                    <div className="border-t border-gray-200 pt-4">
+                      <h4 className="text-lg font-medium text-gray-900 mb-4">Semester Actions</h4>
+
+                      <button
+                        onClick={handleEndSemesterNow}
+                        className="w-full bg-gradient-to-r from-red-500 to-red-600 text-white px-4 py-3 mb-4 rounded-lg hover:from-red-600 hover:to-red-700 disabled:opacity-50 transition-all duration-300 shadow-md hover:shadow-lg transform hover:scale-105 disabled:transform-none font-medium"
+                        disabled={isEndingSemester}
+                      >
+                        {isEndingSemester ? (
+                          <div className="flex items-center justify-center">
+                            <svg className="animate-spin -ml-1 mr-3 h-5 w-5 text-white" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+                              <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
+                              <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+                            </svg>
+                            Ending Semester...
+                          </div>
+                        ) : (
+                          'End Semester Now'
+                        )}
+                      </button>
+
+                      <div className="bg-gray-50 p-4 rounded-lg">
+                        <label className="block text-sm font-medium text-gray-700 mb-2">
+                          Schedule End Date (Optional)
+                        </label>
+                        <input
+                          type="date"
+                          value={endDate}
+                          onChange={(e) => setEndDate(e.target.value)}
+                          min={new Date(Math.max(
+                            new Date(latestSemester?.startDate).getTime(),
+                            new Date(getTodayString()).getTime()
+                          )).toISOString().split('T')[0]}
+                          className="w-full rounded-lg border-2 border-gray-300 shadow-sm px-4 py-3 focus:outline-none focus:ring-2 focus:ring-[#54BEFF] focus:border-[#0065A8] mb-4 transition-all"
+                        />
                         <button
-                          onClick={handleEndSemesterNow}
-                          className="w-full bg-gradient-to-r from-red-500 to-red-600 text-white px-4 py-3 mb-4 rounded-lg hover:from-red-600 hover:to-red-700 disabled:opacity-50 transition-all duration-300 shadow-md hover:shadow-lg transform hover:scale-105 disabled:transform-none font-medium"
-                          disabled={isEndingSemester}
+                          onClick={handleEndSemesterScheduled}
+                          className="w-full bg-gradient-to-r from-orange-500 to-red-500 text-white px-4 py-3 rounded-lg hover:from-orange-600 hover:to-red-600 disabled:opacity-50 transition-all duration-300 shadow-md hover:shadow-lg transform hover:scale-105 disabled:transform-none font-medium"
+                          disabled={isSchedulingEnd || !endDate}
                         >
-                          {isEndingSemester ? (
+                          {isSchedulingEnd ? (
                             <div className="flex items-center justify-center">
                               <svg className="animate-spin -ml-1 mr-3 h-5 w-5 text-white" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
                                 <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
                                 <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
                               </svg>
-                              Ending Semester...
+                              Scheduling...
                             </div>
                           ) : (
-                            'End Semester Now'
+                            'Schedule End Date'
                           )}
                         </button>
-                        
-                        <div className="bg-gray-50 p-4 rounded-lg">
-                          <label className="block text-sm font-medium text-gray-700 mb-2">
-                            Schedule End Date (Optional)
-                          </label>
-                          <input
-                            type="date"
-                            value={endDate}
-                            onChange={(e) => setEndDate(e.target.value)}
-                            min={new Date(Math.max(
-                              new Date(latestSemester?.startDate).getTime(),
-                              new Date(getTodayString()).getTime()
-                            )).toISOString().split('T')[0]}
-                            className="w-full rounded-lg border-2 border-gray-300 shadow-sm px-4 py-3 focus:outline-none focus:ring-2 focus:ring-[#54BEFF] focus:border-[#0065A8] mb-4 transition-all"
-                          />
-                          <button
-                            onClick={handleEndSemesterScheduled}
-                            className="w-full bg-gradient-to-r from-orange-500 to-red-500 text-white px-4 py-3 rounded-lg hover:from-orange-600 hover:to-red-600 disabled:opacity-50 transition-all duration-300 shadow-md hover:shadow-lg transform hover:scale-105 disabled:transform-none font-medium"
-                            disabled={isSchedulingEnd || !endDate}
-                          >
-                            {isSchedulingEnd ? (
-                              <div className="flex items-center justify-center">
-                                <svg className="animate-spin -ml-1 mr-3 h-5 w-5 text-white" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
-                                  <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
-                                  <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
-                                </svg>
-                                Scheduling...
-                              </div>
-                            ) : (
-                              'Schedule End Date'
-                            )}
-                          </button>
-                        </div>
                       </div>
                     </div>
                   </div>
-                ) : (
-                  /* Start New Semester Form */
-                  <div className="space-y-6">
-                    <div className="bg-gradient-to-r from-green-50 to-blue-50 p-6 rounded-lg border border-green-200">
-                      <h3 className="text-lg font-semibold text-gray-900 mb-4 flex items-center">
-                        Create New Semester
-                      </h3>
-                      
-                      <div className="space-y-4">
-                        <div>
-                          <label className="block text-sm font-medium text-gray-700 mb-2">School Year</label>
-                          <div className="flex items-center gap-2">
-                            <input
-                              type="text"
-                              maxLength={4}
-                              placeholder="XXXX"
-                              value={schoolYear || ''}
-                              onChange={e => {
-                                let val = e.target.value.replace(/[^0-9]/g, '');
-                                if (val.length > 4) val = val.slice(0, 4);
-                                setSchoolYear(val);
-                                validateSchoolYear(val);
-                              }}
-                              disabled={shouldDisableInputs()}
-                              className="block w-24 px-4 py-3 rounded-lg border-2 border-gray-300 shadow-sm focus:outline-none focus:ring-2 focus:ring-[#54BEFF] focus:border-[#0065A8] text-center font-medium transition-all"
-                            />
-                            <span className="text-gray-700 text-lg font-medium">-</span>
-                            <input
-                              type="text"
-                              readOnly
-                              value={schoolYear && schoolYear.length === 4 && !isNaN(parseInt(schoolYear)) ? (parseInt(schoolYear) + 1).toString() : ''}
-                              className="w-24 px-4 py-3 bg-gray-100 text-gray-700 text-center rounded-lg border-2 border-gray-200 font-medium"
-                            />
-                            <span className="ml-2 text-gray-500 text-sm">(Enter start year)</span>
-                          </div>
-                        </div>
-                        
-                        <div>
-                          <label className="block text-sm font-medium text-gray-700 mb-2">Semester</label>
-                          <select
-                            value={semester}
-                            onChange={(e) => setSemester(e.target.value)}
-                            disabled={shouldDisableInputs()}
-                            className="w-full rounded-lg border-2 border-gray-300 px-4 py-3 shadow-sm focus:outline-none focus:ring-2 focus:ring-[#54BEFF] focus:border-[#0065A8] transition-all"
-                          >
-                            <option value="1st">1st Semester</option>
-                            <option value="2nd">2nd Semester</option>
-                          </select>
-                        </div>
-                        
-                        <div>
-                          <label className="block text-sm font-medium text-gray-700 mb-2">Start Date</label>
+                </div>
+              ) : (
+                /* Start New Semester Form */
+                <div className="space-y-6">
+                  <div className="bg-gradient-to-r from-green-50 to-blue-50 p-6 rounded-lg border border-green-200">
+                    <h3 className="text-lg font-semibold text-gray-900 mb-4 flex items-center">
+                      Create New Semester
+                    </h3>
+
+                    <div className="space-y-4">
+                      <div>
+                        <label className="block text-sm font-medium text-gray-700 mb-2">School Year</label>
+                        <div className="flex items-center gap-2">
                           <input
-                            type="date"
-                            value={startDate}
-                            onChange={(e) => setStartDate(e.target.value)}
-                            min={getTodayString()}
+                            type="text"
+                            maxLength={4}
+                            placeholder="XXXX"
+                            value={schoolYear || ''}
+                            onChange={e => {
+                              let val = e.target.value.replace(/[^0-9]/g, '');
+                              if (val.length > 4) val = val.slice(0, 4);
+                              setSchoolYear(val);
+                              validateSchoolYear(val);
+                            }}
                             disabled={shouldDisableInputs()}
-                            className="w-full rounded-lg border-2 border-gray-300 shadow-sm px-4 py-3 focus:outline-none focus:ring-2 focus:ring-[#54BEFF] focus:border-[#0065A8] transition-all"
+                            className="block w-24 px-4 py-3 rounded-lg border-2 border-gray-300 shadow-sm focus:outline-none focus:ring-2 focus:ring-[#54BEFF] focus:border-[#0065A8] text-center font-medium transition-all"
                           />
+                          <span className="text-gray-700 text-lg font-medium">-</span>
+                          <input
+                            type="text"
+                            readOnly
+                            value={schoolYear && schoolYear.length === 4 && !isNaN(parseInt(schoolYear)) ? (parseInt(schoolYear) + 1).toString() : ''}
+                            className="w-24 px-4 py-3 bg-gray-100 text-gray-700 text-center rounded-lg border-2 border-gray-200 font-medium"
+                          />
+                          <span className="ml-2 text-gray-500 text-sm">(Enter start year)</span>
                         </div>
                       </div>
-                    </div>
-                    
-                    <div className="pt-4">
-                      <button
-                        onClick={handleStartSemester}
-                        className="w-full bg-gradient-to-r from-[#057DCD] to-[#0065A8] text-white px-6 py-4 rounded-lg hover:from-[#54BEFF] hover:to-[#057DCD] disabled:opacity-50 transition-all duration-300 shadow-lg hover:shadow-xl transform hover:scale-105 disabled:transform-none font-semibold text-lg"
-                        disabled={!schoolYear || !startDate || isStartingSemester}
-                      >
-                        {isStartingSemester ? (
-                          <div className="flex items-center justify-center">
-                            <svg className="animate-spin -ml-1 mr-3 h-6 w-6 text-white" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
-                              <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
-                              <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
-                            </svg>
-                            Starting Semester...
-                          </div>
-                        ) : (
-                          'Start Semester'
-                        )}
-                      </button>
+
+                      <div>
+                        <label className="block text-sm font-medium text-gray-700 mb-2">Semester</label>
+                        <select
+                          value={semester}
+                          onChange={(e) => setSemester(e.target.value)}
+                          disabled={shouldDisableInputs()}
+                          className="w-full rounded-lg border-2 border-gray-300 px-4 py-3 shadow-sm focus:outline-none focus:ring-2 focus:ring-[#54BEFF] focus:border-[#0065A8] transition-all"
+                        >
+                          <option value="1st">1st Semester</option>
+                          <option value="2nd">2nd Semester</option>
+                        </select>
+                      </div>
+
+                      <div>
+                        <label className="block text-sm font-medium text-gray-700 mb-2">Start Date</label>
+                        <input
+                          type="date"
+                          value={startDate}
+                          onChange={(e) => setStartDate(e.target.value)}
+                          min={getTodayString()}
+                          disabled={shouldDisableInputs()}
+                          className="w-full rounded-lg border-2 border-gray-300 shadow-sm px-4 py-3 focus:outline-none focus:ring-2 focus:ring-[#54BEFF] focus:border-[#0065A8] transition-all"
+                        />
+                      </div>
                     </div>
                   </div>
-                )}
-              </div>
-            </motion.div>
-          </div>,
-          document.body
-        )}
+
+                  <div className="pt-4">
+                    <button
+                      onClick={handleStartSemester}
+                      className="w-full bg-gradient-to-r from-[#057DCD] to-[#0065A8] text-white px-6 py-4 rounded-lg hover:from-[#54BEFF] hover:to-[#057DCD] disabled:opacity-50 transition-all duration-300 shadow-lg hover:shadow-xl transform hover:scale-105 disabled:transform-none font-semibold text-lg"
+                      disabled={!schoolYear || !startDate || isStartingSemester}
+                    >
+                      {isStartingSemester ? (
+                        <div className="flex items-center justify-center">
+                          <svg className="animate-spin -ml-1 mr-3 h-6 w-6 text-white" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+                            <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
+                            <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+                          </svg>
+                          Starting Semester...
+                        </div>
+                      ) : (
+                        'Start Semester'
+                      )}
+                    </button>
+                  </div>
+                </div>
+              )}
+            </div>
+          </motion.div>
+        </div>,
+        document.body
+      )}
 
       {/* Modern Department Filter Modal */}
       {showDepartmentModal && createPortal(
-        <div className="fixed bg-black/60 backdrop-blur-md flex items-center justify-center p-4" style={{ 
+        <div className="fixed bg-black/60 backdrop-blur-md flex items-center justify-center p-4" style={{
           position: 'fixed',
           top: 0,
           left: 0,
@@ -932,7 +931,7 @@ const SemesterManagement = () => {
           padding: '1rem',
           zIndex: 9999
         }}>
-          <motion.div 
+          <motion.div
             variants={{
               hidden: { opacity: 0, scale: 0.95, y: 20 },
               visible: { opacity: 1, scale: 1, y: 0, transition: { type: "spring", stiffness: 300, damping: 30 } },
@@ -963,10 +962,10 @@ const SemesterManagement = () => {
             </div>
 
             <div className="p-6 space-y-4"
-                 style={{
-                   scrollbarWidth: 'none',
-                   msOverflowStyle: 'none'
-                 }}>
+              style={{
+                scrollbarWidth: 'none',
+                msOverflowStyle: 'none'
+              }}>
               {/* Department Filter */}
               <div>
                 <label className="block text-sm font-medium text-gray-700 mb-2">

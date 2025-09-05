@@ -58,7 +58,6 @@ import HomeAdmin from "./components/HomeAdmin"; // Update import name and path
 import SemesterManagement from "./components/SemesterManagement"; // Update import name and path
 import ConsultationSchedules from "./pages/ConsultationSchedules"; // Add import for public consultation schedules
 import TeacherScheduleManager from "./components/TeacherScheduleManager"; // Add import for teacher schedule management
-
 import SidebarPreview from "./components/SidebarPreview"; // Import the SidebarPreview component
 import Appointments from "./pages/Appointments"; // Import the Appointments page
 import Sidebar from "./components/Sidebar";

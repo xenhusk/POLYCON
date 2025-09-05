@@ -1,0 +1,1480 @@
+import React, { useState, useEffect } from 'react';
+import { PieChart, Pie, Cell, BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, Legend, ResponsiveContainer } from 'recharts';
+import API_URL from '../apiConfig';
+import cacheManager from '../utils/cacheManager';
+
+const StudentConcernAnalytics = ({ teacherId, selectedSemester, selectedSchoolYear, selectedDepartment, apiEndpoint = '/hometeacher/student_concern_analytics' }) => {
+  const [concernData, setConcernData] = useState(null);
+  const [loading, setLoading] = useState(true);
+  const [currentView, setCurrentView] = useState(0);
+  const [isAnimating, setIsAnimating] = useState(false);
+  const [windowWidth, setWindowWidth] = useState(window.innerWidth);
+  const [highlightedConcern, setHighlightedConcern] = useState(null);
+  const [hoveredArrow, setHoveredArrow] = useState(null);
+
+  // Color palette for charts - Extended for top 10 + others
+  const COLORS = [
+    '#0088FE', '#00C49F', '#FFBB28', '#FF8042', '#8884D8', 
+    '#82CA9D', '#FFC658', '#FF7C7C', '#8DD1E1', '#D084D0',
+    '#A28B8D', '#B8860B', '#CD853F', '#DAA520'
+  ];
+
+  const views = [
+    'overview',
+    'rankings', 
+    'demographics',
+    'insights'
+  ];
+
+  const viewTitles = {
+    'overview': 'Thematic Concern Category',
+    'rankings': 'General Concern Rankings',
+    'demographics': 'Demographic Breakdown',
+    'insights': 'Insights and Recommendations'
+  };
+
+  // Helper function to parse markdown bold syntax (**text**) and convert to JSX
+  const parseMarkdownBold = (text) => {
+    if (!text || typeof text !== 'string') return text;
+    
+    const parts = text.split(/(\*\*.*?\*\*)/g);
+    return parts.map((part, index) => {
+      if (part.startsWith('**') && part.endsWith('**')) {
+        // Remove the ** markers and wrap in bold
+        const boldText = part.slice(2, -2);
+        return <strong key={index} className="font-bold">{boldText}</strong>;
+      }
+      return part;
+    });
+  };
+
+  useEffect(() => {
+    fetchConcernAnalytics();
+  }, [selectedSemester, selectedSchoolYear, teacherId, selectedDepartment]);
+
+  useEffect(() => {
+    const handleResize = () => {
+      setWindowWidth(window.innerWidth);
+    };
+
+    window.addEventListener('resize', handleResize);
+    return () => window.removeEventListener('resize', handleResize);
+  }, []);
+
+  const fetchConcernAnalytics = async () => {
+    try {
+      setLoading(true);
+      
+      // Try to get cached data first
+      const cachedData = await cacheManager.getCachedData(
+        teacherId, 
+        selectedDepartment, 
+        selectedSemester, 
+        selectedSchoolYear, 
+        API_URL
+      );
+      
+      if (cachedData) {
+        setConcernData(cachedData);
+        setLoading(false);
+        return;
+      }
+      
+      // Cache miss or invalid - fetch fresh data
+      console.log('Fetching fresh concern analytics data');
+      const params = new URLSearchParams();
+      if (teacherId) params.append('teacher_id', teacherId);
+      if (selectedDepartment && selectedDepartment !== 'all') params.append('department_id', selectedDepartment);
+      if (selectedSemester) params.append('semester', selectedSemester);
+      if (selectedSchoolYear) params.append('school_year', selectedSchoolYear);
+
+      const response = await fetch(`${API_URL}${apiEndpoint}?${params}`);
+      const data = await response.json();
+      
+      if (response.ok) {
+        setConcernData(data);
+        
+        // Cache the fresh data
+        await cacheManager.setCachedData(
+          teacherId, 
+          selectedDepartment, 
+          selectedSemester, 
+          selectedSchoolYear, 
+          data, 
+          API_URL
+        );
+      } else {
+        console.error('API Error:', data);
+        setConcernData(null);
+      }
+    } catch (error) {
+      console.error('Error fetching concern analytics:', error);
+      setConcernData(null);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const nextView = () => {
+    if (isAnimating) return;
+    setIsAnimating(true);
+    setTimeout(() => {
+      setCurrentView((prev) => (prev + 1) % views.length);
+      setIsAnimating(false);
+    }, 300);
+  };
+
+  const prevView = () => {
+    if (isAnimating) return;
+    setIsAnimating(true);
+    setTimeout(() => {
+      setCurrentView((prev) => (prev - 1 + views.length) % views.length);
+      setIsAnimating(false);
+    }, 300);
+  };
+
+  // Function to handle pie chart click and highlight corresponding concern
+  const handlePieChartClick = (data) => {
+    console.log('Pie chart clicked:', data); // Debug log
+    let concernName = null;
+    
+    // Handle pie chart data structure
+    if (data && data.fullName) {
+      concernName = data.fullName;
+    }
+    // Handle direct click event data
+    else if (data && data.payload) {
+      concernName = data.payload.fullName;
+    }
+    
+    if (concernName) {
+      console.log('Highlighting concern:', concernName); // Debug log
+      setHighlightedConcern(concernName);
+      
+      // Scroll to the specific concern in the summary
+      setTimeout(() => {
+        const concernElement = document.querySelector(`[data-concern="${encodeURIComponent(concernName)}"]`);
+        if (concernElement) {
+          concernElement.scrollIntoView({ 
+            behavior: 'smooth', 
+            block: 'center',
+            inline: 'nearest'
+          });
+          
+          // Add a subtle pulse animation to draw attention
+          concernElement.style.animation = 'pulse 0.5s ease-in-out';
+          setTimeout(() => {
+            concernElement.style.animation = '';
+          }, 500);
+        }
+      }, 100); // Small delay to ensure highlighting is set first
+      
+      // Clear highlight after 5 seconds (increased from 3)
+      setTimeout(() => {
+        setHighlightedConcern(null);
+      }, 5000);
+    }
+  };
+
+  // Function to handle bar chart click with auto-scroll to Category Analysis
+  const handleBarChartClick = (data) => {
+    console.log('Bar chart clicked:', data); // Debug log
+    let concernName = null;
+    
+    // Handle bar chart data structure
+    if (data && data.fullConcern) {
+      concernName = data.fullConcern;
+    }
+    // Handle direct click event data
+    else if (data && data.payload) {
+      concernName = data.payload.fullConcern;
+    }
+    
+    if (concernName) {
+      console.log('Highlighting concern and scrolling:', concernName); // Debug log
+      setHighlightedConcern(concernName);
+      
+      // Scroll to Category Analysis section
+      setTimeout(() => {
+        const categoryAnalysisElement = document.getElementById('category-analysis-section');
+        if (categoryAnalysisElement) {
+          categoryAnalysisElement.scrollIntoView({
+            behavior: 'smooth',
+            block: 'start'
+          });
+        }
+      }, 100); // Small delay to ensure highlighting is set
+      
+      // Clear highlight after 3 seconds
+      setTimeout(() => {
+        setHighlightedConcern(null);
+      }, 3000);
+    }
+  };
+
+  if (loading) {
+    return (
+      <div className="bg-white p-6 rounded-lg shadow-lg">
+        <div className="flex flex-col items-center justify-center py-8 space-y-6">
+          {/* Enhanced loading animation */}
+          <div className="relative">
+            <div className="w-16 h-16 border-4 border-gray-200 border-t-[#0065A8] rounded-full animate-spin"></div>
+            <div className="absolute inset-0 w-16 h-16 border-4 border-transparent border-b-[#397de2] rounded-full animate-spin" style={{animationDirection: 'reverse', animationDuration: '1.5s'}}></div>
+          </div>
+          
+          {/* Loading text with animation */}
+          <div className="text-center space-y-3">
+            <h3 className="text-xl font-semibold text-[#0065A8]">Student Concern Analytics</h3>
+            <p className="text-lg font-medium text-gray-700 animate-pulse">Analyzing consultation data...</p>
+            <p className="text-sm text-gray-500">Processing student concerns and generating insights</p>
+          </div>
+          
+          {/* Animated dots */}
+          <div className="flex space-x-1">
+            <div className="w-3 h-3 bg-[#0065A8] rounded-full animate-bounce" style={{animationDelay: '0ms'}}></div>
+            <div className="w-3 h-3 bg-[#397de2] rounded-full animate-bounce" style={{animationDelay: '200ms'}}></div>
+            <div className="w-3 h-3 bg-[#0065A8] rounded-full animate-bounce" style={{animationDelay: '400ms'}}></div>
+          </div>
+          
+          {/* Progress-like animation */}
+          <div className="w-64 bg-gray-200 rounded-full h-2 overflow-hidden">
+            <div className="bg-gradient-to-r from-[#0065A8] to-[#397de2] h-2 rounded-full animate-pulse"></div>
+          </div>
+        </div>
+      </div>
+    );
+  }
+
+  if (!concernData || concernData.total_concerns === 0) {
+    return (
+      <div className="bg-white p-6 rounded-lg shadow-lg text-center">
+        <h3 className="text-xl font-semibold text-[#0065A8] mb-4">Student Concern Analytics</h3>
+        <div className="text-gray-500 space-y-3">
+          <p>No concern data available for the selected period.</p>
+          
+          {/* Show available semesters if provided */}
+          {concernData?.available_semesters && concernData.available_semesters.length > 0 && (
+            <div className="mt-4 p-4 bg-blue-50 rounded-lg">
+              <p className="text-sm font-medium text-blue-800 mb-2">Data available in other semesters:</p>
+              <div className="space-y-1">
+                {concernData.available_semesters.map((sem, index) => (
+                  <div key={index} className="text-sm text-blue-700">
+                    {sem.semester} Semester {sem.school_year} ({sem.session_count} sessions)
+                  </div>
+                ))}
+              </div>
+              {concernData.suggested_semester && (
+                <p className="text-xs text-blue-600 mt-2 italic">
+                  Suggestion: Try "{concernData.suggested_semester.semester} Semester {concernData.suggested_semester.school_year}"
+                </p>
+              )}
+            </div>
+          )}
+          
+          {/* Show insights if any */}
+          {concernData?.insights && concernData.insights.length > 0 && (
+            <div className="mt-4 space-y-2">
+              {concernData.insights.map((insight, index) => (
+                <p key={index} className="text-sm text-gray-600 italic">
+                  {parseMarkdownBold(insight)}
+                </p>
+              ))}
+            </div>
+          )}
+        </div>
+      </div>
+    );
+  }
+
+  const renderOverview = () => {
+    if (!concernData) {
+      return (
+        <div className="text-center py-8">
+          <p className="text-gray-500">No concern data available</p>
+        </div>
+      );
+    }
+
+    // Check if we have categorized data (dynamic clustering results)
+    const hasCategories = concernData?.nlp_categories && Object.keys(concernData.nlp_categories).length > 0;
+    
+    let pieData = [];
+    let chartTitle = "Thematic Concern Category";
+    let chartSubtitle = "Dynamically identified concern patterns using machine learning";
+    
+    if (hasCategories) {
+      // Use categorized data for better insights
+      pieData = Object.entries(concernData.nlp_categories)
+        .sort(([,a], [,b]) => (b.count || 0) - (a.count || 0)) // Sort by count descending
+        .map(([category, data], index) => ({
+          name: category,
+          fullName: category,
+          value: data.count || 0,
+          percentage: data.percentage || 0,
+          topTerms: data.top_terms || [],
+          sampleConcerns: data.sample_concerns || [],
+          themeStrength: data.theme_strength || 0.5
+        }));
+    } else if (concernData.concern_rankings) {
+      // Fallback to individual concerns if categories not available
+      chartTitle = "Top 10 Individual Concerns";
+      chartSubtitle = "Most frequently mentioned specific concerns";
+      
+      const allConcerns = concernData.concern_rankings;
+      const topConcerns = allConcerns.slice(0, 10);
+      const otherConcerns = allConcerns.slice(10);
+      
+      pieData = topConcerns.map(([concern, count], index) => ({
+        name: concern.length > 30 ? concern.substring(0, 30) + '...' : concern,
+        fullName: concern,
+        value: count,
+        percentage: concernData.concern_percentages?.[concern] || 0
+      }));
+
+      // Add "Others" category if there are more concerns
+      if (otherConcerns.length > 0) {
+        const othersCount = otherConcerns.reduce((sum, [, count]) => sum + count, 0);
+        const othersPercentage = otherConcerns.reduce((sum, [concern]) => 
+          sum + (concernData.concern_percentages?.[concern] || 0), 0);
+        
+        pieData.push({
+          name: `Others (${otherConcerns.length} more)`,
+          fullName: `Others (${otherConcerns.length} more concerns)`,
+          value: othersCount,
+          percentage: Math.round(othersPercentage * 10) / 10
+        });
+      }
+    } else {
+      return (
+        <div className="text-center py-8">
+          <p className="text-gray-500">No concern data available</p>
+        </div>
+      );
+    }
+
+    return (
+      <div className="space-y-6 md:space-y-8">
+        <div className="text-center">
+          <h4 className="text-xl md:text-2xl font-semibold text-gray-700 mb-2">{chartTitle}</h4>
+          <p className="text-sm text-gray-600">
+            {chartSubtitle}
+          </p>
+          <p className="text-sm text-gray-500 mt-2">
+            Total Consultations with Concerns: <span className="font-semibold">{concernData.sessions_with_concerns || 0}</span>
+          </p>
+        </div>
+        
+        <div className="flex flex-col xl:grid xl:grid-cols-3 gap-4 md:gap-6">
+          {/* Pie Chart - Better sizing and positioning */}
+          <div className="xl:col-span-2 h-96 md:h-[450px] lg:h-[500px] order-2 xl:order-1">
+            <style>
+              {`
+                .recharts-pie-sector:focus,
+                .recharts-pie-sector:focus-visible,
+                .recharts-pie-sector:active {
+                  outline: none !important;
+                  box-shadow: none !important;
+                  stroke: none !important;
+                }
+                .recharts-pie-sector {
+                  cursor: pointer;
+                  outline: none !important;
+                  stroke: none !important;
+                }
+                .recharts-pie-sector:hover {
+                  filter: brightness(1.05);
+                  stroke: none !important;
+                }
+                .recharts-wrapper:focus,
+                .recharts-wrapper:focus-visible {
+                  outline: none !important;
+                }
+                .recharts-surface {
+                  outline: none !important;
+                }
+                @keyframes pulse {
+                  0%, 100% { transform: scale(1); }
+                  50% { transform: scale(1.02); }
+                }
+              `}
+            </style>
+            <ResponsiveContainer width="100%" height="100%">
+              <PieChart>
+                <Pie
+                  data={pieData}
+                  cx="50%"
+                  cy="50%"
+                  labelLine={false}
+                  label={({ percentage, value, index }) => {
+                    // Show percentage for all segments, displayed outside the pie chart
+                    return `${percentage}%`;
+                  }}
+                  outerRadius={windowWidth < 768 ? 120 : windowWidth < 1024 ? 150 : windowWidth < 1280 ? 170 : 190}
+                  innerRadius={windowWidth < 768 ? 50 : windowWidth < 1024 ? 65 : windowWidth < 1280 ? 75 : 85}
+                  fill="#8884d8"
+                  dataKey="value"
+                  startAngle={90}
+                  endAngle={450}
+                  onClick={handlePieChartClick}
+                >
+                  {pieData.map((entry, index) => (
+                    <Cell 
+                      key={`cell-${index}`} 
+                      fill={COLORS[index % COLORS.length]}
+                      stroke="none"
+                      onClick={() => handlePieChartClick(entry)}
+                      style={{
+                        outline: 'none',
+                        filter: highlightedConcern === entry.fullName ? 'brightness(1.1)' : 'none'
+                      }}
+                    />
+                  ))}
+                </Pie>
+                <Tooltip 
+                  formatter={(value, name, props) => {
+                    const payload = props.payload;
+                    return [`${value} cases (${payload.percentage}%)`];
+                  }}
+                  labelFormatter={(label, payload) => {
+                    if (payload && payload.length > 0) {
+                      const data = payload[0].payload;
+                      let result = data.fullName;
+                      
+                      // Add theme strength indicator if available
+                      if (hasCategories && data.themeStrength) {
+                        const strength = data.themeStrength > 0.7 ? 'Strong' : data.themeStrength > 0.4 ? 'Moderate' : 'Weak';
+                        result += `\n\nTheme Strength: ${strength}`;
+                      }
+            
+                      
+                      // Add sample concerns if available
+                      if (data.sampleConcerns && data.sampleConcerns.length > 0) {
+                        result += `\n\nExample Concerns:\n• ${data.sampleConcerns.slice(0, 2).join('\n• ')}`;
+                        if (data.sampleConcerns.length > 2) {
+                          result += `\n• And ${data.sampleConcerns.length - 2} more...`;
+                        }
+                      }
+                      
+                      return result;
+                    }
+                    return label;
+                  }}
+                  contentStyle={{
+                    backgroundColor: '#f8f9fa',
+                    border: '1px solid #dee2e6',
+                    borderRadius: '8px',
+                    fontSize: windowWidth < 768 ? '12px' : '14px',
+                    maxWidth: windowWidth < 768 ? '320px' : '400px',
+                    whiteSpace: 'pre-line'
+                  }}
+                />
+              </PieChart>
+            </ResponsiveContainer>
+          </div>
+
+          {/* Summary Stats - Enhanced for categories */}
+          <div className="xl:col-span-1 space-y-3 order-1 xl:order-2">
+            <h5 className="font-semibold text-gray-700 text-base md:text-lg">
+              {hasCategories ? 'Top Categories Summary' : 'Top 10 Concerns Summary'}
+            </h5>
+            <div className="space-y-3">
+              {pieData.map((item, index) => (
+                <div 
+                  key={item.name} 
+                  data-concern={encodeURIComponent(item.fullName)}
+                  className={`rounded-lg p-3 transition-all duration-300 cursor-pointer ${
+                    highlightedConcern === item.fullName 
+                      ? 'bg-blue-100 border-2 border-blue-300 shadow-md transform scale-105' 
+                      : 'bg-gray-50 border-2 border-transparent hover:bg-gray-100'
+                  }`}
+                  onClick={() => handlePieChartClick(item)}
+                >
+                  <div className="flex items-start justify-between">
+                    <div className="flex items-start space-x-3 flex-1 min-w-0">
+                      <div 
+                        className="w-4 h-4 rounded-full flex-shrink-0 mt-1" 
+                        style={{ backgroundColor: COLORS[index % COLORS.length] }}
+                      ></div>
+                      <div className="flex-1 min-w-0">
+                        <span className="font-medium text-sm leading-tight block" title={item.fullName}>
+                          {item.fullName}
+                        </span>
+                        {/* Show sample concerns for categorized data */}
+                        {hasCategories && item.sampleConcerns && item.sampleConcerns.length > 0 && (
+                          <div className="text-xs text-gray-600 mt-1">
+                            <span className="font-medium">Examples:</span> {item.sampleConcerns.slice(0, 1)[0]}
+                            {item.sampleConcerns.length > 1 && '...'}
+                          </div>
+                        )}
+                      </div>
+                    </div>
+                    <div className="text-right flex-shrink-0 ml-3">
+                      <div className="font-semibold text-lg">{item.value}</div>
+                      <div className="text-sm text-gray-600 font-medium">{item.percentage}%</div>
+                    </div>
+                  </div>
+                </div>
+              ))}
+            </div>
+            
+            {/* Enhanced Chart Legend Helper */}
+            <div className="mt-4 xl:hidden">
+              <div className="text-xs text-gray-500 text-center p-3 bg-blue-50 rounded-lg">
+                <svg className="w-4 h-4 inline mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+                </svg>
+                {hasCategories ? 
+                  'Thematic categories automatically generated from concern patterns using AI clustering' : 
+                  'Hover over chart segments for detailed information'
+                }
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    );
+  };
+
+  const renderRankings = () => {
+    // Use traditional categories for page 2 (rankings/categories)
+    const hasNLPCategories = concernData?.traditional_categories && Object.keys(concernData.traditional_categories).length > 0;
+    
+    if (!concernData || (!hasNLPCategories && !concernData.concern_rankings)) {
+      return (
+        <div className="text-center py-8">
+          <p className="text-gray-500">No ranking data available</p>
+        </div>
+      );
+    }
+
+    let barData = [];
+    let chartTitle = "General Concern Rankings";
+    let chartSubtitle = "General concerns ordered by frequency with statistical analysis";
+    
+    if (hasNLPCategories) {
+      // Use Gemini AI general categorized data for rankings page (page 2)
+      barData = Object.entries(concernData.traditional_categories)
+        .sort(([,a], [,b]) => (b.count || 0) - (a.count || 0)) // Sort by count descending
+        .map(([category, data]) => ({
+          concern: category,
+          fullConcern: category,
+          count: data.count || 0,
+          percentage: data.percentage || 0,
+          sampleConcerns: data.sample_concerns || []
+        }));
+    } else {
+      // Fallback to individual concerns if categories not available
+      const topConcerns = concernData.concern_rankings.slice(0, 8);
+      barData = topConcerns.map(([concern, count]) => ({
+        concern: concern.length > 25 ? concern.substring(0, 25) + '...' : concern,
+        fullConcern: concern,
+        count,
+        percentage: concernData.concern_percentages?.[concern] || 0
+      }));
+      chartTitle = "Concern Rankings";
+      chartSubtitle = "Top concerns ordered by frequency";
+    }
+
+    return (
+      <div className="space-y-4 md:space-y-6">
+        <div className="text-center">
+          <h4 className="text-lg md:text-xl font-semibold text-gray-700 mb-2">{chartTitle}</h4>
+          <p className="text-sm text-gray-500">{chartSubtitle}</p>
+        </div>
+
+        {/* Bar Chart - Mobile Optimized with Larger Size */}
+        <div className="h-80 md:h-96 lg:h-[400px] xl:h-[450px]">
+          <style>
+            {`
+              .recharts-bar-rectangle:focus,
+              .recharts-bar-rectangle:focus-visible,
+              .recharts-bar-rectangle:active {
+                outline: none !important;
+                box-shadow: none !important;
+              }
+              .recharts-bar-rectangle {
+                outline: none !important;
+              }
+              .recharts-wrapper:focus,
+              .recharts-wrapper:focus-visible {
+                outline: none !important;
+              }
+            `}
+          </style>
+          <ResponsiveContainer width="100%" height="100%">
+            <BarChart 
+              data={barData} 
+              margin={{ 
+                top: 30, 
+                right: windowWidth < 768 ? 15 : 30, 
+                left: windowWidth < 768 ? 15 : 30, 
+                bottom: windowWidth < 768 ? 120 : 100 
+              }}
+            >
+              <XAxis 
+                dataKey="concern" 
+                angle={windowWidth < 768 ? -60 : -45}
+                textAnchor="end"
+                height={windowWidth < 768 ? 140 : 100}
+                fontSize={windowWidth < 768 ? 11 : 13}
+                interval={0}
+              />
+              <YAxis fontSize={windowWidth < 768 ? 11 : 13} />
+              <Tooltip 
+                formatter={(value) => {
+                  const result = [`${value} cases`];
+                  return result;
+                }}
+                labelFormatter={(label, payload) => {
+                  if (payload && payload.length > 0) {
+                    const data = payload[0].payload;
+                    let result = data.fullConcern;
+                    
+                    // Add percentage
+                    if (data.percentage) {
+                      result += ` (${data.percentage}%)`;
+                    }
+                    
+                    // Add sample concerns for categorized data
+                    if (data.sampleConcerns && data.sampleConcerns.length > 0) {
+                      result += `\n\nExamples: ${data.sampleConcerns.slice(0, 2).join(', ')}${data.sampleConcerns.length > 2 ? '...' : ''}`;
+                    }
+                    
+                    return result;
+                  }
+                  return label;
+                }}
+                contentStyle={{
+                  fontSize: windowWidth < 768 ? '12px' : '14px',
+                  minWidth: windowWidth < 768 ? '300px' : '450px',
+                  maxWidth: windowWidth < 768 ? '350px' : '550px',
+                  backgroundColor: '#f8f9fa',
+                  border: '1px solid #dee2e6',
+                  borderRadius: '8px',
+                  padding: '12px',
+                  whiteSpace: 'pre-line',
+                  wordWrap: 'break-word'
+                }}
+              />
+              <Bar 
+                dataKey="count" 
+                fill="#0088FE"
+                radius={[2, 2, 0, 0]}
+                onClick={handleBarChartClick}
+                style={{ cursor: 'pointer', outline: 'none' }}
+              />
+            </BarChart>
+          </ResponsiveContainer>
+        </div>
+
+        {/* Mobile-Optimized Table */}
+        <div id="category-analysis-section" className="mt-4 md:mt-6">
+          <h5 className="font-semibold text-gray-700 mb-3 text-sm md:text-base">
+            {hasNLPCategories ? 'Category Analysis' : 'Most Common Concerns'}
+          </h5>
+          
+          {/* Mobile Card Layout */}
+          <div className="block md:hidden space-y-2">
+            {barData.slice(0, 6).map((item, index) => (
+              <div 
+                key={index} 
+                className={`p-3 border border-gray-200 rounded-lg shadow-sm transition-all duration-300 ${
+                  highlightedConcern === item.fullConcern 
+                    ? 'bg-blue-100 border-blue-300 shadow-md transform scale-105' 
+                    : 'bg-white'
+                }`}
+              >
+                <div className="flex items-start justify-between">
+                  <div className="flex-1 min-w-0">
+                    <div className="flex items-center space-x-2 mb-1">
+                      <span className="inline-flex items-center justify-center w-6 h-6 bg-blue-100 text-blue-800 text-xs font-medium rounded-full">
+                        #{index + 1}
+                      </span>
+                      <span className="text-xs text-gray-500">Rank</span>
+                    </div>
+                    <p className="text-sm font-medium text-gray-900 leading-tight">{item.fullConcern}</p>
+                    {/* Show sample concerns for categorized data */}
+                    {hasNLPCategories && item.sampleConcerns && item.sampleConcerns.length > 0 && (
+                      <p className="text-xs text-gray-600 mt-1">
+                        <span className="font-medium">Examples:</span> {item.sampleConcerns.slice(0, 2).join(', ')}
+                        {item.sampleConcerns.length > 2 && '...'}
+                      </p>
+                    )}
+                  </div>
+                  <div className="text-right ml-3 flex-shrink-0">
+                    <div className="text-lg font-bold text-blue-600">{item.count}</div>
+                    <div className="text-xs text-gray-500">cases</div>
+                  </div>
+                </div>
+              </div>
+            ))}
+          </div>
+
+          {/* Desktop Table Layout */}
+          <div className="hidden md:block overflow-x-auto">
+            <table className="min-w-full bg-white border border-gray-200 rounded-lg">
+              <thead className="bg-gray-50">
+                <tr>
+                  <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Rank</th>
+                  <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                    {hasNLPCategories ? 'Category' : 'Concern'}
+                  </th>
+                  <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Frequency</th>
+                  <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Percentage</th>
+                </tr>
+              </thead>
+              <tbody className="divide-y divide-gray-200">
+                {barData.slice(0, 10).map((item, index) => (
+                  <tr 
+                    key={index} 
+                    className={`transition-all duration-300 ${
+                      highlightedConcern === item.fullConcern 
+                        ? 'bg-blue-100 border-l-4 border-blue-500' 
+                        : 'hover:bg-gray-50'
+                    }`}
+                  >
+                    <td className="px-4 py-3 text-sm">
+                      <span className="inline-flex items-center justify-center w-6 h-6 bg-blue-100 text-blue-800 text-xs font-medium rounded-full">
+                        #{index + 1}
+                      </span>
+                    </td>
+                    <td className="px-4 py-3 text-sm text-gray-900 max-w-xs">
+                      <div className="font-medium" title={item.fullConcern}>{item.fullConcern}</div>
+                      {/* Show sample concerns for categorized data */}
+                      {hasNLPCategories && item.sampleConcerns && item.sampleConcerns.length > 0 && (
+                        <div className="text-xs text-gray-600 mt-1">
+                          <span className="font-medium">Examples:</span> {item.sampleConcerns.slice(0, 2).join(', ')}
+                          {item.sampleConcerns.length > 2 && '...'}
+                        </div>
+                      )}
+                    </td>
+                    <td className="px-4 py-3 text-sm items-center font-semibold text-gray-900">{item.count}</td>
+                    <td className="px-4 py-3 text-sm text-gray-600">
+                      {item.percentage}%
+                    </td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </div>
+        </div>
+      </div>
+    );
+  };
+
+  const renderDemographics = () => {
+    if (!concernData || !concernData.demographic_breakdown) {
+      return (
+        <div className="text-center py-8">
+          <p className="text-gray-500">No demographic data available</p>
+        </div>
+      );
+    }
+
+    // Get all unique categories from the data dynamically
+    const allCategories = new Set();
+    Object.values(concernData.demographic_breakdown).forEach(concerns => {
+      Object.keys(concerns).forEach(category => allCategories.add(category));
+    });
+    const categories = Array.from(allCategories).sort();
+
+    // Generate colors for categories dynamically
+    const categoryColors = {};
+    categories.forEach((category, index) => {
+      categoryColors[category] = COLORS[index % COLORS.length];
+    });
+
+    const yearData = Object.entries(concernData.demographic_breakdown)
+      .map(([year, concerns]) => {
+        const total = Object.values(concerns).reduce((sum, count) => sum + count, 0);
+        let displayYear;
+        
+        if (year === 'Unknown') {
+          displayYear = 'Year Not Specified';
+        } else if (year.includes('unknown') || year.includes('Unknown')) {
+          displayYear = 'Year Not Specified';
+        } else {
+          displayYear = ` ${year}`;
+        }
+        
+        return {
+          year: displayYear,
+          total,
+          ...concerns
+        };
+      })
+      .filter(item => item.total > 0) // Only show years with data
+      .sort((a, b) => {
+        // Sort by total, but put "Year Not Specified" at the end
+        if (a.year === 'Year Not Specified') return 1;
+        if (b.year === 'Year Not Specified') return -1;
+        return b.total - a.total;
+      });
+
+    return (
+      <div className="space-y-4 md:space-y-6">
+        <div className="text-center">
+          <h4 className="text-lg md:text-xl font-semibold text-gray-700 mb-2">Demographic Breakdown</h4>
+          <p className="text-sm text-gray-500">
+            Concerns by student year level
+          </p>
+        </div>
+
+        {/* Mobile-First Bar Chart with Larger Size */}
+        <div className="h-80 md:h-96 lg:h-[400px] xl:h-[450px]">
+          <ResponsiveContainer width="100%" height="100%">
+            <BarChart 
+              data={yearData} 
+              margin={{ 
+                top: 30, 
+                right: windowWidth < 768 ? 15 : 30, 
+                left: windowWidth < 768 ? 15 : 30, 
+                bottom: 40 
+              }}
+            >
+              <XAxis 
+                dataKey="year" 
+                fontSize={windowWidth < 768 ? 12 : 14}
+              />
+              <YAxis fontSize={windowWidth < 768 ? 12 : 14} />
+              <Tooltip 
+                contentStyle={{
+                  fontSize: windowWidth < 768 ? '12px' : '14px',
+                  maxWidth: windowWidth < 768 ? '220px' : '300px'
+                }}
+              />
+              <Legend 
+                wrapperStyle={{
+                  fontSize: windowWidth < 768 ? 11 : 13
+                }}
+              />
+              {/* Render bars dynamically based on available categories */}
+              {categories.map((category, index) => (
+                <Bar 
+                  key={category}
+                  dataKey={category} 
+                  stackId="a" 
+                  fill={categoryColors[category]}
+                  name={category}
+                />
+              ))}
+            </BarChart>
+          </ResponsiveContainer>
+        </div>
+
+        {/* Mobile-Optimized Breakdown */}
+        <div className="mt-4 md:mt-6">
+          <h5 className="font-semibold text-gray-700 mb-3 text-sm md:text-base">Year-wise Summary</h5>
+          
+          {/* Mobile Card Layout */}
+          <div className="block md:hidden space-y-3">
+            {yearData.map((yearInfo) => {
+              const concerns = { ...yearInfo };
+              delete concerns.year;
+              delete concerns.total;
+              const sortedConcerns = Object.entries(concerns).sort((a, b) => {
+                if (b[1] === a[1]) return a[0].localeCompare(b[0]); // Alphabetical for ties
+                return b[1] - a[1]; // Highest to lowest
+              });
+              const topConcern = sortedConcerns[0];
+              const secondConcern = sortedConcerns[1];
+              
+              return (
+                <div key={yearInfo.year} className="p-4 bg-white border border-gray-200 rounded-lg shadow-sm">
+                  <div className="flex items-center justify-between mb-3">
+                    <h6 className="font-semibold text-gray-900">{yearInfo.year}</h6>
+                    <span className="inline-flex items-center px-2 py-1 rounded-full text-xs font-medium bg-blue-100 text-blue-800">
+                      {yearInfo.total} total
+                    </span>
+                  </div>
+                  <div className="space-y-3">
+                    <div className="space-y-1">
+                      <div className="flex justify-between text-sm">
+                        <span className="text-gray-600">Primary:</span>
+                        <span className="font-medium text-gray-900">{topConcern[0]}</span>
+                      </div>
+                      <div className="flex items-center space-x-2">
+                        <span className="text-sm font-medium">{topConcern[1]} cases</span>
+                        <div className="flex-1 bg-gray-200 rounded-full h-2 min-w-[60px]">
+                          <div 
+                            className="bg-blue-500 h-2 rounded-full transition-all" 
+                            style={{ width: `${Math.round((topConcern[1] / yearInfo.total) * 100)}%` }}
+                          ></div>
+                        </div>
+                        <span className="text-xs text-gray-500">{Math.round((topConcern[1] / yearInfo.total) * 100)}%</span>
+                      </div>
+                    </div>
+                    {secondConcern && secondConcern[1] > 0 && (
+                      <div className="flex justify-between text-sm text-gray-600">
+                        <span>Secondary:</span>
+                        <span>{secondConcern[0]} ({secondConcern[1]})</span>
+                      </div>
+                    )}
+                  </div>
+                </div>
+              );
+            })}
+          </div>
+
+          {/* Desktop Table Layout */}
+          <div className="hidden md:block overflow-x-auto">
+            <table className="min-w-full bg-white border border-gray-200 rounded-lg">
+              <thead className="bg-gray-50">
+                <tr>
+                  <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Year Level</th>
+                  <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Total Cases</th>
+                  <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Primary Concern</th>
+                  <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Distribution</th>
+                </tr>
+              </thead>
+              <tbody className="divide-y divide-gray-200">
+                {yearData.map((yearInfo) => {
+                  const concerns = { ...yearInfo };
+                  delete concerns.year;
+                  delete concerns.total;
+                  const sortedConcerns = Object.entries(concerns).sort((a, b) => {
+                    if (b[1] === a[1]) return a[0].localeCompare(b[0]); // Alphabetical for ties
+                    return b[1] - a[1]; // Highest to lowest
+                  });
+                  const topConcern = sortedConcerns[0];
+                  const secondConcern = sortedConcerns[1];
+                  
+                  return (
+                    <tr key={yearInfo.year} className="hover:bg-gray-50 transition-colors">
+                      <td className="px-4 py-3 text-sm font-medium text-gray-900">{yearInfo.year}</td>
+                      <td className="px-4 py-3 text-sm text-gray-600">
+                        <span className="inline-flex items-center px-2 py-1 rounded-full text-xs font-medium bg-blue-100 text-blue-800">
+                          {yearInfo.total}
+                        </span>
+                      </td>
+                      <td className="px-4 py-3 text-sm text-gray-600">{topConcern[0]}</td>
+                      <td className="px-4 py-3 text-sm text-gray-600">
+                        <div className="flex items-center space-x-3">
+                          <div className="flex-1 bg-gray-200 rounded-full h-2 min-w-[80px] max-w-[120px]">
+                            <div 
+                              className="bg-blue-500 h-2 rounded-full transition-all" 
+                              style={{ width: `${Math.round((topConcern[1] / yearInfo.total) * 100)}%` }}
+                            ></div>
+                          </div>
+                          <span className="font-medium">{topConcern[1]}</span>
+                          <span className="text-xs text-gray-400">({Math.round((topConcern[1] / yearInfo.total) * 100)}%)</span>
+                        </div>
+                      </td>
+                    </tr>
+                  );
+                })}
+              </tbody>
+            </table>
+          </div>
+        </div>
+      </div>
+    );
+  };
+
+  const renderInsights = () => {
+    if (!concernData || !concernData.insights) {
+      return (
+        <div className="text-center py-8">
+          <div className="flex flex-col items-center space-y-3">
+            <svg className="w-12 h-12 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z" />
+            </svg>
+            <p className="text-gray-500">No insights available</p>
+          </div>
+        </div>
+      );
+    }
+
+    return (
+      <div className="space-y-6 md:space-y-8">
+        <div className="text-center">
+          <h4 className="text-lg md:text-xl font-semibold text-gray-700 mb-2">Key Insights & Analysis</h4>
+          <p className="text-sm text-gray-500">Statistical patterns and data-driven recommendations</p>
+        </div>
+
+        {/* Mobile-First Layout */}
+        <div className="space-y-8">
+          {/* AI Themes Section */}
+          {concernData.ai_themes && concernData.ai_themes.length > 0 && (
+            <div className="space-y-4 md:space-y-5">
+              <div className="flex items-center space-x-3 mb-4">
+                <svg className="w-6 h-6 text-purple-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9.663 17h4.673M12 3v1m6.364 1.636l-.707.707M21 12h-1M4 12H3m3.343-5.657l-.707-.707m2.828 9.9a5 5 0 117.072 0l-.548.547A3.374 3.374 0 0014 18.469V19a2 2 0 11-4 0v-.531c0-.895-.356-1.754-.988-2.386l-.548-.547z" />
+                </svg>
+                <h5 className="font-semibold text-gray-700 text-base md:text-lg">
+                  AI-Identified Themes
+                </h5>
+              </div>
+              
+              <div className="grid gap-4">
+                {concernData.ai_themes.map((theme, index) => (
+                  <div key={index} className="relative">
+                    <div className="p-5 bg-gradient-to-r from-purple-50 to-indigo-50 border border-purple-200 rounded-lg shadow-sm">
+                      <div className="flex items-start justify-between mb-3">
+                        <h6 className="font-semibold text-purple-800 text-sm md:text-base">
+                          {theme.theme}
+                        </h6>
+                        <span className={`px-2 py-1 text-xs rounded-full ${
+                          theme.frequency === 'high' 
+                            ? 'bg-red-100 text-red-700' 
+                            : theme.frequency === 'medium'
+                            ? 'bg-yellow-100 text-yellow-700'
+                            : 'bg-green-100 text-green-700'
+                        }`}>
+                          {theme.frequency}
+                        </span>
+                      </div>
+                      <p className="text-sm md:text-base text-gray-700 leading-relaxed mb-3">
+                        {theme.description}
+                      </p>
+                      <div className="text-xs text-gray-600 mb-2">
+                        <strong>Keywords:</strong> {theme.keywords.join(', ')}
+                      </div>
+                      <div className="text-xs text-gray-600">
+                        <strong>Cases:</strong> {theme.count} sessions
+                        {theme.examples && theme.examples.length > 0 && (
+                          <span className="ml-2">
+                            | <strong>Examples:</strong> {theme.examples.slice(0, 2).join('; ')}
+                          </span>
+                        )}
+                      </div>
+                    </div>
+                  </div>
+                ))}
+              </div>
+            </div>
+          )}
+
+          {/* Key Insights */}
+          <div className="space-y-4 md:space-y-5">
+            <div className="flex items-center space-x-3 mb-4">
+              <svg className="w-6 h-6 text-blue-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z" />
+              </svg>
+              <h5 className="font-semibold text-gray-700 text-base md:text-lg">
+                Key Findings
+              </h5>
+            </div>
+            <div className="grid gap-4">
+              {concernData.insights.map((insight, index) => (
+                <div key={index} className="relative">
+                  <div className="flex">
+                    <div className="flex-shrink-0 mt-3">
+                      <div className="w-8 h-8 bg-blue-100 rounded-full flex items-center justify-center">
+                        <svg className="w-4 h-4 text-blue-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+                        </svg>
+                      </div>
+                    </div>
+                    <div className="ml-4 flex-1">
+                      <div className="p-4 bg-gradient-to-r from-blue-50 to-indigo-50 border border-blue-200 rounded-lg shadow-sm">
+                        <p className="text-sm md:text-base text-gray-700 leading-relaxed">
+                          {parseMarkdownBold(insight)}
+                        </p>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              ))}
+            </div>
+          </div>
+
+          {/* Enhanced Recommendations */}
+          <div className="space-y-4 md:space-y-5">
+            <div className="flex items-center space-x-3 mb-4">
+              <svg className="w-6 h-6 text-green-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9.663 17h4.673M12 3v1m6.364 1.636l-.707.707M21 12h-1M4 12H3m3.343-5.657l-.707-.707m2.828 9.9a5 5 0 117.072 0l-.548.547A3.374 3.374 0 0014 18.469V19a2 2 0 11-4 0v-.531c0-.895-.356-1.754-.988-2.386l-.548-.547z" />
+              </svg>
+              <h5 className="font-semibold text-gray-700 text-base md:text-lg">
+                AI-Powered Recommendations
+              </h5>
+            </div>
+            
+            <div className="grid gap-4">
+              {concernData.recommendations && concernData.recommendations.length > 0 ? (
+                concernData.recommendations.map((recommendation, index) => (
+                  <div key={index} className="relative">
+                    <div className="flex">
+                      <div className="flex-shrink-0 mt-3">
+                        <div className="w-8 h-8 bg-green-100 rounded-full flex items-center justify-center">
+                          <svg className="w-4 h-4 text-green-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 10V3L4 14h7v7l9-11h-7z" />
+                          </svg>
+                        </div>
+                      </div>
+                      <div className="ml-4 flex-1">
+                        <div className="p-4 bg-gradient-to-r from-green-50 to-emerald-50 border border-green-200 rounded-lg shadow-sm">
+                          <p className="text-sm md:text-base text-gray-700 leading-relaxed">
+                            {parseMarkdownBold(recommendation)}
+                          </p>
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+                ))
+              ) : (
+                // Fallback to category-based recommendations if NLP recommendations aren't available
+                <div className="space-y-4">
+                  {concernData.nlp_categories && concernData.nlp_categories['Personal'] && 
+                   concernData.nlp_categories['Personal'].percentage > 20 && (
+                    <div className="flex">
+                      <div className="flex-shrink-0 mt-3">
+                        <div className="w-8 h-8 bg-red-100 rounded-full flex items-center justify-center">
+                          <svg className="w-4 h-4 text-red-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-2.5L13.732 4c-.77-.833-1.964-.833-2.732 0L3.34 16.5c-.77.833.192 2.5 1.732 2.5z" />
+                          </svg>
+                        </div>
+                      </div>
+                      <div className="ml-4 flex-1">
+                        <div className="p-4 bg-gradient-to-r from-red-50 to-pink-50 border border-red-200 rounded-lg shadow-sm">
+                          <h6 className="font-semibold text-red-800 text-sm md:text-base mb-2 flex items-center">
+                            High Personal Concerns
+                            <span className="ml-2 px-2 py-1 bg-red-200 text-red-800 text-xs rounded-full">
+                              {concernData.nlp_categories['Personal'].percentage}%
+                            </span>
+                          </h6>
+                          <p className="text-sm md:text-base text-gray-700">
+                            Consider implementing stress management workshops, counseling services, and time management support.
+                          </p>
+                        </div>
+                      </div>
+                    </div>
+                  )}
+
+                  {concernData.nlp_categories && concernData.nlp_categories['Academic'] && 
+                   concernData.nlp_categories['Academic'].percentage > 30 && (
+                    <div className="flex">
+                      <div className="flex-shrink-0">
+                        <div className="w-8 h-8 bg-yellow-100 rounded-full flex items-center justify-center">
+                          <svg className="w-4 h-4 text-yellow-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 6.253v13m0-13C10.832 5.477 9.246 5 7.5 5S4.168 5.477 3 6.253v13C4.168 18.477 5.754 18 7.5 18s3.332.477 4.5 1.253m0-13C13.168 5.477 14.754 5 16.5 5c1.747 0 3.332.477 4.5 1.253v13C19.832 18.477 18.247 18 16.5 18c-1.746 0-3.332.477-4.5 1.253" />
+                          </svg>
+                        </div>
+                      </div>
+                      <div className="ml-4 flex-1">
+                        <div className="p-4 bg-gradient-to-r from-yellow-50 to-orange-50 border border-yellow-200 rounded-lg shadow-sm">
+                          <h6 className="font-semibold text-yellow-800 text-sm md:text-base mb-2 flex items-center">
+                            Academic Performance Issues
+                            <span className="ml-2 px-2 py-1 bg-yellow-200 text-yellow-800 text-xs rounded-full">
+                              {concernData.nlp_categories['Academic'].percentage}%
+                            </span>
+                          </h6>
+                          <p className="text-sm md:text-base text-gray-700">
+                            Develop targeted tutoring programs and study skills workshops.
+                          </p>
+                        </div>
+                      </div>
+                    </div>
+                  )}
+
+                  {concernData.nlp_categories && concernData.nlp_categories['Financial'] && 
+                   concernData.nlp_categories['Financial'].percentage > 15 && (
+                    <div className="flex">
+                      <div className="flex-shrink-0">
+                        <div className="w-8 h-8 bg-green-100 rounded-full flex items-center justify-center">
+                          <svg className="w-4 h-4 text-green-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8c1.11 0 2.08.402 2.599 1M12 8V7m0 1v8m0 0v1m0-1c-1.11 0-2.08-.402-2.599-1" />
+                          </svg>
+                        </div>
+                      </div>
+                      <div className="ml-4 flex-1">
+                        <div className="p-4 bg-gradient-to-r from-green-50 to-emerald-50 border border-green-200 rounded-lg shadow-sm">
+                          <h6 className="font-semibold text-green-800 text-sm md:text-base mb-2 flex items-center">
+                            Financial Concerns
+                            <span className="ml-2 px-2 py-1 bg-green-200 text-green-800 text-xs rounded-full">
+                              {concernData.nlp_categories['Financial'].percentage}%
+                            </span>
+                          </h6>
+                          <p className="text-sm md:text-base text-gray-700">
+                            Provide information about financial aid, scholarships, and emergency funding options.
+                          </p>
+                        </div>
+                      </div>
+                    </div>
+                  )}
+
+                  {concernData.nlp_categories && concernData.nlp_categories['Social'] && 
+                   concernData.nlp_categories['Social'].percentage > 15 && (
+                    <div className="flex">
+                      <div className="flex-shrink-0">
+                        <div className="w-8 h-8 bg-blue-100 rounded-full flex items-center justify-center">
+                          <svg className="w-4 h-4 text-blue-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0zm6 3a2 2 0 11-4 0 2 2 0 014 0zM7 10a2 2 0 11-4 0 2 2 0 014 0z" />
+                          </svg>
+                        </div>
+                      </div>
+                      <div className="ml-4 flex-1">
+                        <div className="p-4 bg-gradient-to-r from-blue-50 to-cyan-50 border border-blue-200 rounded-lg shadow-sm">
+                          <h6 className="font-semibold text-blue-800 text-sm md:text-base mb-2 flex items-center">
+                            Social Concerns
+                            <span className="ml-2 px-2 py-1 bg-blue-200 text-blue-800 text-xs rounded-full">
+                              {concernData.nlp_categories['Social'].percentage}%
+                            </span>
+                          </h6>
+                          <p className="text-sm md:text-base text-gray-700">
+                            Facilitate social integration programs and peer support groups.
+                          </p>
+                        </div>
+                      </div>
+                    </div>
+                  )}
+
+                  {concernData.nlp_categories && concernData.nlp_categories['Health'] && 
+                   concernData.nlp_categories['Health'].percentage > 10 && (
+                    <div className="flex">
+                      <div className="flex-shrink-0">
+                        <div className="w-8 h-8 bg-pink-100 rounded-full flex items-center justify-center">
+                          <svg className="w-4 h-4 text-pink-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4.318 6.318a4.5 4.5 0 000 6.364L12 20.364l7.682-7.682a4.5 4.5 0 00-6.364-6.364L12 7.636l-1.318-1.318a4.5 4.5 0 00-6.364 0z" />
+                          </svg>
+                        </div>
+                      </div>
+                      <div className="ml-4 flex-1">
+                        <div className="p-4 bg-gradient-to-r from-pink-50 to-rose-50 border border-pink-200 rounded-lg shadow-sm">
+                          <h6 className="font-semibold text-pink-800 text-sm md:text-base mb-2 flex items-center">
+                            Health Concerns
+                            <span className="ml-2 px-2 py-1 bg-pink-200 text-pink-800 text-xs rounded-full">
+                              {concernData.nlp_categories['Health'].percentage}%
+                            </span>
+                          </h6>
+                          <p className="text-sm md:text-base text-gray-700">
+                            Connect students with health services and wellness programs.
+                          </p>
+                        </div>
+                      </div>
+                    </div>
+                  )}
+
+                  {concernData.nlp_categories && concernData.nlp_categories['Other'] && 
+                   concernData.nlp_categories['Other'].percentage > 10 && (
+                    <div className="flex">
+                      <div className="flex-shrink-0">
+                        <div className="w-8 h-8 bg-gray-100 rounded-full flex items-center justify-center">
+                          <svg className="w-4 h-4 text-gray-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8.228 9c.549-1.165 2.03-2 3.772-2 2.21 0 4 1.343 4 3 0 1.4-1.278 2.575-3.006 2.907-.542.104-.994.54-.994 1.093m0 3h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+                          </svg>
+                        </div>
+                      </div>
+                      <div className="ml-4 flex-1">
+                        <div className="p-4 bg-gradient-to-r from-gray-50 to-slate-50 border border-gray-200 rounded-lg shadow-sm">
+                          <h6 className="font-semibold text-gray-800 text-sm md:text-base mb-2 flex items-center">
+                            Other Concerns
+                            <span className="ml-2 px-2 py-1 bg-gray-200 text-gray-800 text-xs rounded-full">
+                              {concernData.nlp_categories['Other'].percentage}%
+                            </span>
+                          </h6>
+                          <p className="text-sm md:text-base text-gray-700">
+                            Review miscellaneous concerns and technology issues that may need attention.
+                          </p>
+                        </div>
+                      </div>
+                    </div>
+                  )}
+
+                  <div className="flex">
+                    <div className="flex-shrink-0">
+                      <div className="w-8 h-8 bg-purple-100 rounded-full flex items-center justify-center">
+                        <svg className="w-4 h-4 text-purple-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
+                        </svg>
+                      </div>
+                    </div>
+                    <div className="ml-4 flex-1">
+                      <div className="p-4 bg-gradient-to-r from-purple-50 to-violet-50 border border-purple-200 rounded-lg shadow-sm">
+                        <h6 className="font-semibold text-purple-800 text-sm md:text-base mb-2">Regular Monitoring</h6>
+                        <p className="text-sm md:text-base text-gray-700">
+                          Track these metrics monthly to identify emerging trends and intervention needs.
+                        </p>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              )}
+            </div>
+          </div>
+        </div>
+
+        {/* Mobile helper text */}
+        <div className="mt-8 md:hidden">
+          <div className="flex items-center justify-center space-x-2 p-4 bg-gradient-to-r from-gray-50 to-blue-50 rounded-lg border border-gray-200">
+            <svg className="w-4 h-4 text-blue-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+            </svg>
+            <p className="text-xs text-gray-600 text-center">
+              Tip: Scroll horizontally on charts for better view on smaller screens
+            </p>
+          </div>
+        </div>
+      </div>
+    );
+  };
+
+  const renderCurrentView = () => {
+    switch (views[currentView]) {
+      case 'overview': return renderOverview();
+      case 'rankings': return renderRankings();
+      case 'demographics': return renderDemographics();
+      case 'insights': return renderInsights();
+      default: return renderOverview();
+    }
+  };
+
+  return (
+    <div className="bg-white p-3 rounded-lg shadow-lg relative animate-fade-in">
+      {/* Custom CSS for fade-in animation */}
+      <style jsx>{`
+        @keyframes fade-in {
+          from {
+            opacity: 0;
+            transform: translateY(10px);
+          }
+          to {
+            opacity: 1;
+            transform: translateY(0);
+          }
+        }
+        .animate-fade-in {
+          animation: fade-in 0.5s ease-out;
+        }
+      `}</style>
+      {/* Header with navigation - Mobile Optimized */}
+      <div className="flex flex-col space-y-3 md:space-y-0 md:flex-row md:items-center md:justify-center mb-4 md:mb-6 relative">
+        {/* Navigation buttons - Enhanced Design */}
+        <div className="flex items-center justify-center space-x-3 relative z-10">
+          {/* Previous Button */}
+          <div className="relative">
+            <button
+              onClick={prevView}
+              onMouseEnter={() => setHoveredArrow("left")}
+              onMouseLeave={() => setHoveredArrow(null)}
+              className="group flex items-center justify-center w-12 h-12 bg-white/90 backdrop-blur-sm border-2 border-blue-200 rounded-full shadow-lg hover:shadow-xl transition-all duration-300 hover:scale-110 hover:bg-blue-50 disabled:opacity-50 disabled:cursor-not-allowed"
+              disabled={isAnimating}
+              aria-label="Previous view"
+            >
+              <svg className="w-6 h-6 text-blue-600 group-hover:text-blue-700 transition-colors duration-200" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 19l-7-7 7-7" />
+              </svg>
+            </button>
+
+            {/* Enhanced Hover Message */}
+            <div
+              className={`absolute right-16 top-1/2 -translate-y-1/2 transition-all duration-300 ${
+                hoveredArrow === "left" ? "opacity-100 translate-x-0" : "opacity-0 translate-x-4 pointer-events-none"
+              }`}
+            >
+              <div className="bg-white/95 backdrop-blur-sm border border-blue-200 rounded-lg shadow-xl p-4 min-w-64 max-w-80">
+                <div className="flex items-center gap-3">
+                  <div className="w-2 h-2 bg-blue-500 rounded-full animate-pulse" />
+                  <div>
+                    <h3 className="font-semibold text-blue-900 text-sm mb-1">Previous Section</h3>
+                    <p className="text-blue-700 font-medium">{viewTitles[views[(currentView - 1 + views.length) % views.length]]}</p>
+                    <p className="text-blue-600 text-xs mt-1 leading-relaxed">
+                      {views[(currentView - 1 + views.length) % views.length] === 'overview' && "View pie charts and thematic concern "}
+                      {views[(currentView - 1 + views.length) % views.length] === 'rankings' && "Explore general concern categories and short analysis"}
+                      {views[(currentView - 1 + views.length) % views.length] === 'demographics' && "Analyze concerns by department and year level"}
+                      {views[(currentView - 1 + views.length) % views.length] === 'insights' && "Get AI-powered insights and recommendations"}
+                    </p>
+                  </div>
+                </div>
+                {/* Arrow pointer */}
+                <div className="absolute right-0 top-1/2 -translate-y-1/2 translate-x-full">
+                  <div className="w-0 h-0 border-l-8 border-l-white/95 border-t-4 border-t-transparent border-b-4 border-b-transparent" />
+                </div>
+              </div>
+            </div>
+          </div>
+
+          {/* View indicators - Enhanced Design */}
+          <div className="flex space-x-2 md:space-x-3 bg-white/80 backdrop-blur-sm rounded-full px-4 py-2 border border-blue-100 shadow-md">
+            {views.map((_, index) => (
+              <div key={index} className="relative group mt-1">
+                <button
+                  onClick={() => !isAnimating && setCurrentView(index)}
+                  className={`w-3 h-3 md:w-4 md:h-4 rounded-full transition-all duration-300 touch-manipulation transform hover:scale-125 ${
+                    index === currentView 
+                      ? 'bg-blue-600 shadow-lg ring-2 ring-blue-200' 
+                      : 'bg-gray-300 hover:bg-blue-400 hover:shadow-md'
+                  }`}
+                  aria-label={`Go to ${viewTitles[views[index]]}`}
+                />
+                {/* Mini tooltip for dots */}
+                <div className="absolute bottom-full left-1/2 transform -translate-x-1/2 mb-3 opacity-0 group-hover:opacity-100 transition-all duration-200 pointer-events-none z-50">
+                  <div className="bg-gray-900/95 backdrop-blur-sm text-white px-3 py-2 rounded-lg text-xs font-medium whitespace-nowrap shadow-xl border border-gray-700">
+                    {viewTitles[views[index]]}
+                    <div className="absolute top-full left-1/2 transform -translate-x-1/2 w-0 h-0 border-l-4 border-r-4 border-t-4 border-transparent border-t-gray-900/95"></div>
+                  </div>
+                </div>
+              </div>
+            ))}
+          </div>
+
+          {/* Next Button */}
+          <div className="relative">
+            <button
+              onClick={nextView}
+              onMouseEnter={() => setHoveredArrow("right")}
+              onMouseLeave={() => setHoveredArrow(null)}
+              className="group flex items-center justify-center w-12 h-12 bg-white/90 backdrop-blur-sm border-2 border-blue-200 rounded-full shadow-lg hover:shadow-xl transition-all duration-300 hover:scale-110 hover:bg-blue-50 disabled:opacity-50 disabled:cursor-not-allowed"
+              disabled={isAnimating}
+              aria-label="Next view"
+            >
+              <svg className="w-6 h-6 text-blue-600 group-hover:text-blue-700 transition-colors duration-200" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
+              </svg>
+            </button>
+
+            {/* Enhanced Hover Message */}
+            <div
+              className={`absolute left-16 top-1/2 -translate-y-1/2 transition-all duration-300 ${
+                hoveredArrow === "right" ? "opacity-100 translate-x-0" : "opacity-0 -translate-x-4 pointer-events-none"
+              }`}
+            >
+              <div className="bg-white/95 backdrop-blur-sm border border-blue-200 rounded-lg shadow-xl p-4 min-w-64 max-w-80">
+                <div className="flex items-center gap-3">
+                  <div className="w-2 h-2 bg-blue-500 rounded-full animate-pulse" />
+                  <div>
+                    <h3 className="font-semibold text-blue-900 text-sm mb-1">Next Section</h3>
+                    <p className="text-blue-700 font-medium">{viewTitles[views[(currentView + 1) % views.length]]}</p>
+                    <p className="text-blue-600 text-xs mt-1 leading-relaxed">
+                      {views[(currentView + 1) % views.length] === 'overview' && "View pie charts and concern distribution"}
+                      {views[(currentView + 1) % views.length] === 'rankings' && "Explore detailed concern categories and trends"}
+                      {views[(currentView + 1) % views.length] === 'demographics' && "Analyze concerns by department and year level"}
+                      {views[(currentView + 1) % views.length] === 'insights' && "Get AI-powered insights and recommendations"}
+                    </p>
+                  </div>
+                </div>
+                {/* Arrow pointer */}
+                <div className="absolute left-0 top-1/2 -translate-y-1/2 -translate-x-full">
+                  <div className="w-0 h-0 border-r-8 border-r-white/95 border-t-4 border-t-transparent border-b-4 border-b-transparent" />
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      {/* Content with animation - Mobile Optimized */}
+      <div className={`transition-all duration-300 ${
+        isAnimating ? 'opacity-0 transform translate-x-4' : 'opacity-100 transform translate-x-0'
+      }`}>
+        {renderCurrentView()}
+      </div>
+
+      {/* Mobile Navigation Help */}
+      <div className="mt-4 md:hidden">
+        <div className="flex items-center justify-center space-x-4 text-xs text-gray-400">
+          <div className="flex items-center space-x-1">
+            <span>👈</span>
+            <span>Swipe</span>
+          </div>
+          <div className="w-1 h-1 bg-gray-300 rounded-full"></div>
+          <div className="flex items-center space-x-1">
+            <span>Tap dots to navigate</span>
+          </div>
+        </div>
+      </div>
+    </div>
+  );
+};
+
+export default StudentConcernAnalytics;

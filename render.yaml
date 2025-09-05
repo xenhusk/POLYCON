@@ -37,5 +37,5 @@ services:
 
 databases:
   - name: polycon-db
-    databaseName: polycon
+    databaseName: polycondb
     user: polycon_user

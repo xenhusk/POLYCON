@@ -152,6 +152,21 @@ class TeacherSchedule(db.Model):
     def __repr__(self):
         return f'<TeacherSchedule {self.teacher_id} - Day {self.day_of_week}>'
 
+class ConcernCategory(db.Model):
+    __tablename__ = 'concern_categories'
+
+    id = db.Column(db.Integer, primary_key=True)
+    normalized_concern = db.Column(db.String(500), unique=True, nullable=False, index=True)
+    original_concern = db.Column(db.String(500), nullable=False)
+    sentencing_category = db.Column(db.String(300), nullable=True)  # Page 1 categories
+    general_category = db.Column(db.String(100), nullable=True)     # Page 2-3 categories
+    frequency_count = db.Column(db.Integer, default=1)
+    created_at = db.Column(db.DateTime, server_default=db.text("(now() AT TIME ZONE 'UTC')"))
+    updated_at = db.Column(db.DateTime, onupdate=db.text("(now() AT TIME ZONE 'UTC')"))
+
+    def __repr__(self):
+        return f'<ConcernCategory {self.normalized_concern[:50]}...>'
+
 class Notification(db.Model):
     __tablename__ = 'notifications'
 

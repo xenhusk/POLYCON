@@ -24,3 +24,5 @@ setuptools
 flask-socketio
 flask_migrate
 cloudinary
+scikit-learn
+nltk

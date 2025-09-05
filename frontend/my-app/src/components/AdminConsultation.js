@@ -1,5 +1,7 @@
 import React, { useState, useEffect } from 'react';
+import { motion } from 'framer-motion';
 import API_URL from '../apiConfig';
+import logo from '../components/icons/logo2.png';
 
 const AdminConsultation = () => {
   const [leaderboardData, setLeaderboardData] = useState([]);
@@ -14,6 +16,13 @@ const AdminConsultation = () => {
   const [searchTeacher, setSearchTeacher] = useState('');
   const [currentPage, setCurrentPage] = useState(1);
   const [itemsPerPage] = useState(10);
+  const [userRole, setUserRole] = useState('');
+
+  useEffect(() => {
+    // Get user role from localStorage
+    const role = localStorage.getItem('userRole');
+    setUserRole(role || '');
+  }, []);
 
   useEffect(() => {
     fetchSemesters();
@@ -82,9 +91,8 @@ const AdminConsultation = () => {
       
       const data = await response.json();
       
-      // Sort by total consultations descending
-      data.sort((a, b) => b.total_consultations - a.total_consultations);
-      
+      // Backend already provides sorted data with original_rank, no need to re-sort
+      // The original_rank field maintains true ranking regardless of filters
       setLeaderboardData(data);
     } catch (err) {
       setError('Failed to fetch leaderboard data: ' + err.message);
@@ -161,33 +169,158 @@ const AdminConsultation = () => {
 
   if (loading && leaderboardData.length === 0) {
     return (
-      <div className="p-8 max-w-6xl mx-auto min-h-screen flex flex-col">
-        {/* Header Section */}
-        <div className="text-center mb-8 flex-shrink-0">
-          <h1 className="text-[#0065A8] text-3xl font-bold mb-2">Teachers Consultation Leaderboard</h1>
-          <p className="text-slate-500 text-lg">Top teachers ranked by consultation engagement</p>
-        </div>
+      <div className="min-h-screen bg-gradient-to-br from-gray-50 to-blue-50 font-poppins flex items-center justify-center">
+        {/* Navigation Header - Only show if user is not admin */}
+        {userRole !== 'admin' && (
+          <motion.nav 
+            initial={{ opacity: 0, y: -20 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ duration: 0.6 }}
+            className="absolute top-0 left-0 right-0 z-50"
+          >
+            <div className="w-full">
+              <div className="bg-[#057DCD] shadow-xl">
+                <div className="flex justify-between items-center h-20 px-6 max-w-7xl mx-auto">
+                  {/* Logo */}
+                  <motion.div
+                    whileHover={{ scale: 1.05 }}
+                    className="flex items-center space-x-3"
+                  >
+                    <img
+                      src={logo}
+                      alt="POLYCON Logo"
+                      className="h-14 w-14 object-contain"
+                    />
+                    <span className="text-white font-bold text-xl">
+                      POLYCON
+                    </span>
+                  </motion.div>
 
-        {/* Loading Container */}
-        <div className="flex-1 flex flex-col items-center justify-center">
-          <div className="relative mb-6">
-            <div className="w-16 h-16 border-4 border-gray-200 border-t-[#0065A8] rounded-full animate-spin"></div>
-            <div className="absolute inset-0 w-16 h-16 border-4 border-transparent border-r-[#057DCD] rounded-full animate-spin" style={{animationDirection: 'reverse', animationDuration: '1.5s'}}></div>
-          </div>
-          <div className="text-center">
-            <p className="text-xl font-semibold text-slate-700 mb-2">Loading Teacher Leaderboard</p>
-            <p className="text-slate-500">Gathering consultation data...</p>
-          </div>
+                  {/* Navigation Items */}
+                  <div className="hidden md:flex items-center space-x-8">
+                    <motion.button
+                      whileHover={{ scale: 1.05 }}
+                      whileTap={{ scale: 0.95 }}
+                      onClick={() => window.location.href = '/'}
+                      className="text-white font-medium hover:text-blue-200 transition-colors duration-200 relative group"
+                    >
+                      Home
+                      <span className="absolute bottom-0 left-0 w-0 h-0.5 bg-white group-hover:w-full transition-all duration-300" />
+                    </motion.button>
+                    
+                    <motion.button
+                      whileHover={{ scale: 1.05 }}
+                      whileTap={{ scale: 0.95 }}
+                      onClick={() => window.location.href = '/consultation-schedules'}
+                      className="text-white font-medium hover:text-blue-200 transition-colors duration-200 relative group"
+                    >
+                      Consultation Schedule
+                      <span className="absolute bottom-0 left-0 w-0 h-0.5 bg-white group-hover:w-full transition-all duration-300" />
+                    </motion.button>
+                    
+                    <span className="text-blue-200 font-medium">
+                      Teacher Leaderboard
+                    </span>
+                  </div>
+
+                  {/* Mobile Menu Button */}
+                  <motion.button
+                    whileTap={{ scale: 0.9 }}
+                    onClick={() => window.location.href = '/'}
+                    className="md:hidden text-white p-2"
+                  >
+                    <svg className="w-6 h-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M10 19l-7-7m0 0l7-7m-7 7h18" />
+                    </svg>
+                  </motion.button>
+                </div>
+              </div>
+            </div>
+          </motion.nav>
+        )}
+
+        <div className="text-center">
+          <div className="animate-spin rounded-full h-16 w-16 border-4 border-[#057DCD] border-t-transparent mx-auto"></div>
+          <p className="mt-6 text-lg text-gray-600 font-medium">Loading teacher leaderboard...</p>
         </div>
       </div>
     );
   }
 
     return (
-      <div className="h-full overflow-hidden bg-gray-50">
+      <div className="min-h-screen bg-gradient-to-br from-gray-50 to-blue-50 font-poppins">
+        {/* Navigation Header - Only show if user is not admin */}
+        {userRole !== 'admin' && (
+          <motion.nav 
+            initial={{ opacity: 0, y: -20 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ duration: 0.6 }}
+            className="relative z-50"
+          >
+            <div className="w-full">
+              <div className="bg-[#057DCD] shadow-xl">
+                <div className="flex justify-between items-center h-20 px-6 max-w-7xl mx-auto">
+                  {/* Logo */}
+                  <motion.div
+                    whileHover={{ scale: 1.05 }}
+                    className="flex items-center space-x-3"
+                  >
+                    <img
+                      src={logo}
+                      alt="POLYCON Logo"
+                      className="h-14 w-14 object-contain"
+                    />
+                    <span className="text-white font-bold text-xl">
+                      POLYCON
+                    </span>
+                  </motion.div>
+
+                  {/* Navigation Items */}
+                  <div className="hidden md:flex items-center space-x-8">
+                    <motion.button
+                      whileHover={{ scale: 1.05 }}
+                      whileTap={{ scale: 0.95 }}
+                      onClick={() => window.location.href = '/'}
+                      className="text-white font-medium hover:text-blue-200 transition-colors duration-200 relative group"
+                    >
+                      Home
+                      <span className="absolute bottom-0 left-0 w-0 h-0.5 bg-white group-hover:w-full transition-all duration-300" />
+                    </motion.button>
+                    
+                    <motion.button
+                      whileHover={{ scale: 1.05 }}
+                      whileTap={{ scale: 0.95 }}
+                      onClick={() => window.location.href = '/consultation-schedules'}
+                      className="text-white font-medium hover:text-blue-200 transition-colors duration-200 relative group"
+                    >
+                      Consultation Schedule
+                      <span className="absolute bottom-0 left-0 w-0 h-0.5 bg-white group-hover:w-full transition-all duration-300" />
+                    </motion.button>
+                    
+                    <span className="text-blue-200 font-medium">
+                      Teacher Leaderboard
+                    </span>
+                  </div>
+
+                  {/* Mobile Menu Button */}
+                  <motion.button
+                    whileTap={{ scale: 0.9 }}
+                    onClick={() => window.location.href = '/'}
+                    className="md:hidden text-white p-2"
+                  >
+                    <svg className="w-6 h-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M10 19l-7-7m0 0l7-7m-7 7h18" />
+                    </svg>
+                  </motion.button>
+                </div>
+              </div>
+            </div>
+          </motion.nav>
+        )}
+
         <div className="pt-6 pb-2 max-w-6xl mx-auto">
           <div className="text-center mb-6">
-            <h1 className="text-[#0065A8] text-2xl font-bold mb-1">Teachers Consultation Leaderboard</h1>
+            <h2 className="text-[#0065A8] text-2xl font-bold mb-1">Teachers Consultation Leaderboard</h2>
             <p className="text-slate-500 text-sm">Top teachers ranked by consultation engagement and consultation overview  </p>
           </div>
             
@@ -393,17 +526,19 @@ const AdminConsultation = () => {
                 {/* Leaderboard List */}
                 <div className="max-h-[18.5rem] overflow-y-auto">
                   {paginatedLeaderboardData.map((teacher, index) => {
-                    const globalIndex = startIndex + index; // Calculate global ranking
+                    // Use original_rank from backend instead of calculating from pagination
+                    const displayRank = teacher.original_rank || (startIndex + index + 1);
+                    const isTopThree = displayRank <= 3;
                     return (
                       <div 
                         key={teacher.teacher_id} 
                         className={`
                           relative flex flex-col lg:flex-row items-start lg:items-center p-4 border-b border-gray-100 cursor-pointer 
                           transition-all duration-300 group hover:shadow-lg hover:bg-gradient-to-r hover:from-blue-50 hover:to-indigo-50
-                          ${globalIndex < 3 ? 'bg-gradient-to-r from-yellow-50 to-orange-50' : 'bg-white hover:bg-gradient-to-r hover:from-blue-50 hover:to-indigo-50'}
-                          ${globalIndex === 0 ? 'border-l-4 border-l-yellow-400' : ''}
-                          ${globalIndex === 1 ? 'border-l-4 border-l-gray-400' : ''}
-                          ${globalIndex === 2 ? 'border-l-4 border-l-amber-600' : ''}
+                          ${isTopThree ? 'bg-gradient-to-r from-yellow-50 to-orange-50' : 'bg-white hover:bg-gradient-to-r hover:from-blue-50 hover:to-indigo-50'}
+                          ${displayRank === 1 ? 'border-l-4 border-l-yellow-400' : ''}
+                          ${displayRank === 2 ? 'border-l-4 border-l-gray-400' : ''}
+                          ${displayRank === 3 ? 'border-l-4 border-l-amber-600' : ''}
                           last:border-b-0
                         `}
                         onClick={() => handleTeacherClick(teacher)}
@@ -412,12 +547,12 @@ const AdminConsultation = () => {
                         <div className="flex items-center mb-3 lg:mb-0 lg:mr-4">
                           <div className={`
                             flex items-center justify-center w-10 h-10 rounded-full font-bold text-sm
-                            ${globalIndex === 0 ? 'bg-gradient-to-br from-yellow-400 to-yellow-600 text-white shadow-lg' : ''}
-                            ${globalIndex === 1 ? 'bg-gradient-to-br from-gray-400 to-gray-600 text-white shadow-lg' : ''}
-                            ${globalIndex === 2 ? 'bg-gradient-to-br from-amber-500 to-amber-700 text-white shadow-lg' : ''}
-                            ${globalIndex > 2 ? 'bg-gradient-to-br from-slate-500 to-slate-700 text-white' : ''}
+                            ${displayRank === 1 ? 'bg-gradient-to-br from-yellow-400 to-yellow-600 text-white shadow-lg' : ''}
+                            ${displayRank === 2 ? 'bg-gradient-to-br from-gray-400 to-gray-600 text-white shadow-lg' : ''}
+                            ${displayRank === 3 ? 'bg-gradient-to-br from-amber-500 to-amber-700 text-white shadow-lg' : ''}
+                            ${displayRank > 3 ? 'bg-gradient-to-br from-slate-500 to-slate-700 text-white' : ''}
                           `}>
-                            #{globalIndex + 1}
+                            #{displayRank}
                           </div>
                         </div>
 
