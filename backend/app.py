@@ -40,6 +40,8 @@ from routes.debug_routes import debug_bp # Import debug routes
 from routes.alternative_reminders import alt_reminders_bp # Import alternative reminders
 from routes.teacher_schedule_routes import teacher_schedule_bp # Import teacher schedule routes
 from routes.keep_alive import keep_alive_bp # Import keep-alive routes
+from routes.prefetch_routes import prefetch_bp # Import prefetch routes
+from routes.cache_warm_routes import cache_warm_bp # Import cache warming routes
 import routes.socket_routes  # Register socket event handlers
 
 
@@ -102,6 +104,15 @@ def create_app():
             from services.scheduler_service import initialize_scheduler
             initialize_scheduler(app)
             print("✅ Development scheduler initialized")
+        
+        # Initialize concern analytics prefetch service
+        try:
+            from services.concern_analytics_prefetch import initialize_concern_analytics_prefetcher
+            # Prefetch every 30 minutes to keep cache warm
+            initialize_concern_analytics_prefetcher(app, prefetch_interval_minutes=30)
+            print("✅ Concern analytics prefetch service initialized")
+        except Exception as e:
+            print(f"⚠️ Failed to initialize concern analytics prefetch service: {e}")
 
     # Register blueprints
     app.register_blueprint(health_bp)
@@ -133,6 +144,8 @@ def create_app():
     app.register_blueprint(alt_reminders_bp, url_prefix='/alternative-reminders') # Register alternative reminder routes
     app.register_blueprint(teacher_schedule_bp, url_prefix='/teacher_schedule') # Register teacher schedule routes
     app.register_blueprint(keep_alive_bp) # Register keep-alive routes (no prefix for simple /ping)
+    app.register_blueprint(prefetch_bp, url_prefix='/prefetch') # Register prefetch routes
+    app.register_blueprint(cache_warm_bp, url_prefix='/cache') # Register cache warming routes
 
     # Configure static folder for uploads
     UPLOAD_FOLDER = os.path.join(os.path.dirname(os.path.abspath(__file__)), 'uploads')
