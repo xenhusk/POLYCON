@@ -609,7 +609,9 @@ const AdminConsultation = () => {
                               {teacher.teacher_name}
                             </h3>
                           </div>
-                          <p className="text-slate-500 text-xs">Teacher ID: {teacher.teacher_id}</p>
+                          {userRole === 'admin' && (
+                            <p className="text-slate-500 text-xs">Teacher ID: {teacher.teacher_id}</p>
+                          )}
                         </div>
 
                         {/* Stats Grid */}
