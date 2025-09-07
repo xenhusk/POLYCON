@@ -2,7 +2,7 @@ from flask import Blueprint, request, jsonify, current_app
 from datetime import datetime, timedelta
 from extensions import db
 from models import ConsultationSession, User, Student, Faculty, Program, Booking # Add Booking
-from services.google_gemini import generate_summary, identify_roles_in_transcription
+from services.google_gemini import generate_summary, identify_roles_in_transcription, generate_concern_based_summary
 from services.consultation_quality_service import calculate_consultation_quality
 from services.audio_conversion_service import convert_audio
 from services.assemblyai_service import transcribe_audio_with_assemblyai
@@ -240,13 +240,34 @@ def store_consultation_data(): # Renamed function
         else:
             session_datetime = datetime.utcnow() # Use UTC consistently
 
+        # Auto-generate concern-based summary if concern data is available
+        summary_to_use = data.get('summary')
+        if data.get('concern') and not summary_to_use:
+            try:
+                # Determine session type based on student count
+                student_count = len(data.get('student_ids', [])) if data.get('student_ids') else 1
+                session_type = "Group" if student_count > 1 else "Individual"
+                
+                # Generate concern-based summary
+                summary_to_use = generate_concern_based_summary(
+                    concern=data.get('concern'),
+                    action_taken=data.get('action_taken') or "Provided counseling and guidance",
+                    outcome=data.get('outcome') or "Positive session outcome achieved",
+                    duration=data.get('duration'),
+                    session_type=session_type,
+                    student_count=student_count
+                )
+                print(f"Auto-generated concern-based summary: {summary_to_use[:100]}...")
+            except Exception as e:
+                print(f"Failed to auto-generate summary, using provided or None: {str(e)}")
+                summary_to_use = data.get('summary')
 
         new_session = ConsultationSession(
             teacher_id=data.get('teacher_id'), # User.id_number
             student_ids=data.get('student_ids'), # List of User PKs
             session_date=session_datetime,
             duration=data.get('duration'),
-            summary=data.get('summary'),
+            summary=summary_to_use,
             transcription=data.get('transcription'),
             transcription_enabled=data.get('transcription_enabled', False),
             concern=data.get('concern'),
@@ -737,3 +758,130 @@ def get_final_document():
     session_dict["student_ids"] = session.student_ids
 
     return jsonify(session_dict), 200
+
+@consultation_bp.route('/update_all_summaries', methods=['POST'])
+def update_all_summaries():
+    """
+    Update all consultation session summaries to be based on concerns data using Gemini AI.
+    This replaces generic summaries with concern-specific, meaningful summaries.
+    """
+    try:
+        # Get all consultation sessions
+        sessions = db.session.query(ConsultationSession).all()
+        
+        if not sessions:
+            return jsonify(message="No consultation sessions found"), 200
+        
+        updated_count = 0
+        skipped_count = 0
+        error_count = 0
+        
+        print(f"Starting to update summaries for {len(sessions)} consultation sessions...")
+        
+        for session in sessions:
+            try:
+                # Skip if essential data is missing
+                if not session.concern:
+                    print(f"Skipping session {session.id}: No concern data")
+                    skipped_count += 1
+                    continue
+                
+                # Determine session type based on student count
+                student_count = len(session.student_ids) if session.student_ids else 1
+                session_type = "Group" if student_count > 1 else "Individual"
+                
+                # Generate new summary based on concern data
+                new_summary = generate_concern_based_summary(
+                    concern=session.concern,
+                    action_taken=session.action_taken or "Provided counseling and guidance",
+                    outcome=session.outcome or "Positive session outcome achieved",
+                    duration=session.duration,
+                    session_type=session_type,
+                    student_count=student_count
+                )
+                
+                # Update the session summary
+                old_summary = session.summary
+                session.summary = new_summary
+                
+                print(f"Updated session {session.id}:")
+                print(f"  Old: {old_summary[:100] if old_summary else 'None'}...")
+                print(f"  New: {new_summary[:100]}...")
+                
+                updated_count += 1
+                
+            except Exception as e:
+                print(f"Error updating session {session.id}: {str(e)}")
+                error_count += 1
+                continue
+        
+        # Commit all changes
+        db.session.commit()
+        
+        result_message = f"Summary update complete! Updated: {updated_count}, Skipped: {skipped_count}, Errors: {error_count}"
+        print(result_message)
+        
+        return jsonify({
+            "message": result_message,
+            "updated": updated_count,
+            "skipped": skipped_count,
+            "errors": error_count,
+            "total_sessions": len(sessions)
+        }), 200
+        
+    except Exception as e:
+        db.session.rollback()
+        error_message = f"Failed to update summaries: {str(e)}"
+        print(error_message)
+        return jsonify(error=error_message), 500
+
+@consultation_bp.route('/update_session_summary', methods=['POST'])
+def update_session_summary():
+    """
+    Update a specific consultation session summary based on its concern data.
+    """
+    try:
+        data = request.json or {}
+        session_id = data.get('session_id')
+        
+        if not session_id:
+            return jsonify(error="session_id is required"), 400
+        
+        # Get the specific session
+        session = db.session.query(ConsultationSession).get(session_id)
+        
+        if not session:
+            return jsonify(error="Consultation session not found"), 404
+        
+        if not session.concern:
+            return jsonify(error="Session has no concern data to base summary on"), 400
+        
+        # Determine session type
+        student_count = len(session.student_ids) if session.student_ids else 1
+        session_type = "Group" if student_count > 1 else "Individual"
+        
+        # Generate new summary
+        new_summary = generate_concern_based_summary(
+            concern=session.concern,
+            action_taken=session.action_taken or "Provided counseling and guidance",
+            outcome=session.outcome or "Positive session outcome achieved",
+            duration=session.duration,
+            session_type=session_type,
+            student_count=student_count
+        )
+        
+        # Update the session
+        old_summary = session.summary
+        session.summary = new_summary
+        db.session.commit()
+        
+        return jsonify({
+            "message": "Session summary updated successfully",
+            "session_id": session_id,
+            "old_summary": old_summary,
+            "new_summary": new_summary
+        }), 200
+        
+    except Exception as e:
+        db.session.rollback()
+        return jsonify(error=f"Failed to update session summary: {str(e)}"), 500

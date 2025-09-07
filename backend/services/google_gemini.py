@@ -464,3 +464,68 @@ EXAMPLE:
     print(f"DEBUG: General categorization complete. Cache hits: {len(general_cache)}, New API calls: {len(new_categorizations)}")
     
     return final_results
+
+def generate_concern_based_summary(concern, action_taken, outcome, duration=None, session_type=None, student_count=None):
+    """
+    Generate a comprehensive consultation session summary based on the concern data.
+    This replaces generic summaries with concern-specific, meaningful summaries.
+    """
+    # Determine session type based on student count
+    if session_type is None:
+        if student_count and student_count > 1:
+            session_type = "Group"
+        else:
+            session_type = "Individual"
+    
+    # Clean and prepare the concern text
+    concern_text = concern.strip() if concern else "Academic or personal guidance session"
+    action_text = action_taken.strip() if action_taken else "Provided counseling and guidance"
+    outcome_text = outcome.strip() if outcome else "Positive session outcome achieved"
+    
+    # Format duration if provided
+    duration_text = f" Duration: {duration}." if duration else ""
+    
+    prompt = f"""
+You are an educational consultation specialist. Create a professional, comprehensive summary for a consultation session based on the provided details.
+
+SESSION DETAILS:
+- Type: {session_type} consultation session
+- Student Concern: "{concern_text}"
+- Action Taken: "{action_text}"
+- Outcome: "{outcome_text}"
+- Duration: {duration or "Not specified"}
+
+TASK: Generate a professional consultation session summary that:
+1. Clearly states the session type and main concern addressed
+2. Briefly describes the intervention or action taken
+3. Mentions the outcome or progress achieved
+4. Maintains professional counseling terminology
+5. Is concise but informative (2-3 sentences)
+6. Includes duration if provided
+
+EXAMPLES of good summaries:
+- "Individual consultation addressing time management difficulties. Implemented structured planning techniques and productivity strategies. Student demonstrated improved organizational skills and confidence in deadline management. Duration: 01:30:00."
+
+- "Group consultation focusing on academic performance concerns. Provided study strategies, resource materials, and peer collaboration techniques. Students showed enhanced understanding and motivation for academic improvement. Duration: 02:00:00."
+
+- "Individual session addressing social anxiety and peer relationship challenges. Applied cognitive behavioral techniques and social skills development exercises. Student exhibited increased confidence and improved interpersonal communication strategies."
+
+Generate ONLY the professional summary, nothing else.
+"""
+
+    try:
+        response = model.generate_content(prompt)
+        summary = response.text.strip()
+        
+        # Ensure the summary includes duration if provided
+        if duration and duration_text not in summary:
+            summary = summary.rstrip('.') + f".{duration_text}"
+        
+        return summary
+    except Exception as e:
+        # Fallback to a basic summary if Gemini fails
+        fallback_summary = f"{session_type} consultation session addressing {concern_text.lower()}."
+        if duration:
+            fallback_summary += f"{duration_text}"
+        fallback_summary += f" {action_text} {outcome_text}"
+        return fallback_summary
