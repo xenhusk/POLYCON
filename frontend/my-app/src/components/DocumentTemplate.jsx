@@ -303,6 +303,7 @@ const DocumentTemplate = ({
             <td
                 style={{
                 padding: '5pt',
+                paddingTop: '5pt',
                 border: '1pt solid #000',
                 width: '270pt',
                 textAlign: 'center',
@@ -342,9 +343,11 @@ const DocumentTemplate = ({
                 <tr key={index}>
                 <td
                     style={{
-                    padding: '5pt',
-                    border: '1pt solid #000',
-                    width: '270pt',
+                        padding: '5pt',
+                        paddingTop: '20pt',
+                        border: '1pt solid #000',
+                        width: '270pt',
+                        textAlign: 'center',
                     }}
                 >
                     <p
@@ -360,9 +363,11 @@ const DocumentTemplate = ({
                 </td>
                 <td
                     style={{
-                    padding: '5pt',
-                    border: '1pt solid #000',
-                    width: '198pt',
+                        padding: '5pt',
+                        paddingTop: '5pt',
+                        border: '1pt solid #000',
+                        width: '198pt',
+                        textAlign: 'center',
                     }}
                 >
                     <p
@@ -373,7 +378,7 @@ const DocumentTemplate = ({
                         fontSize: '11pt',
                     }}
                     >
-                    {student.program} {student.year_section}
+                    {student.programName || student.program || ''} {student.year_section || ''}
                     </p>
                 </td>
                 </tr>
@@ -384,6 +389,8 @@ const DocumentTemplate = ({
                 padding: '5pt',
                 border: '1pt solid #000',
                 width: '270pt',
+                textAlign: 'center',
+                paddingTop: '20pt',
                 }}
             >
                 <p
@@ -395,7 +402,7 @@ const DocumentTemplate = ({
                 }}
                 >
                 {teacherInfo
-                    ? `${teacherInfo.firstName} ${teacherInfo.lastName}`
+                    ? `${teacherInfo.firstName || ''} ${teacherInfo.lastName || ''}`.trim() || 'Name of your Teacher/Adviser Here with his/her title'
                     : 'Name of your Teacher/Adviser Here with his/her title'}
                 </p>
             </td>
@@ -404,6 +411,7 @@ const DocumentTemplate = ({
                 padding: '5pt',
                 border: '1pt solid #000',
                 width: '198pt',
+                textAlign: 'center',
                 }}
             >
                 <p
@@ -415,8 +423,8 @@ const DocumentTemplate = ({
                 }}
                 >
                 {teacherInfo
-                    ? teacherInfo.department || 'Position of Teacher / Name Program'
-                    : 'Position of Teacher / Name Program'} {teacherInfo.role}
+                    ? `${teacherInfo.departmentName || teacherInfo.department || 'Position of Teacher / Name Program'} ${teacherInfo.role || ''}`.trim() || 'Position of Teacher / Name Program'
+                    : 'Position of Teacher / Name Program'}
                 </p>
             </td>
             </tr>

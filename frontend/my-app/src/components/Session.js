@@ -1,4 +1,4 @@
-import React, { useState, useRef, useEffect } from "react";
+import React, { useState, useRef, useEffect, useCallback } from "react";
 import { useNavigate, useLocation } from "react-router-dom";
 import { ReactComponent as PlayIcon } from "./icons/play.svg";
 import { ReactComponent as StopIcon } from "./icons/stop.svg";
@@ -27,6 +27,8 @@ const Session = () => {
   const [assessmentModalOpen, setAssessmentModalOpen] = useState(false);
   const [AssessmentClicked, setAssessmentClicked] = useState(false);
   const [FinalizeClicked, setFinalizeClicked] = useState(false);
+  const [currentSessionId, setCurrentSessionId] = useState(null);
+  const [isSessionInitialized, setIsSessionInitialized] = useState(false);
 
   const audioRef = useRef(null);
   const mediaRecorderRef = useRef(null);
@@ -39,253 +41,304 @@ const Session = () => {
   const venueFromQuery = queryParams.get("venue");
   const bookingID = queryParams.get("booking_id");
 
-  // If a sessionID exists, fetch session details.
-  // Otherwise, use the query parameters to populate teacher and student details.
-  useEffect(() => {
-    const queryParams = new URLSearchParams(location.search);
-    const sessionID = queryParams.get("sessionID");
-    const teacherIDFromQuery = queryParams.get("teacherID");
-    const studentIDsFromQuery = queryParams.get("studentIDs");
-    const teacherInfoQuery = queryParams.get("teacherInfo");
-    const studentInfoQuery = queryParams.get("studentInfo");
+  const hasAttemptedNewSessionInit = useRef(false);
 
-    if (sessionID) {
-      // Existing session - fetch its details.
-      const fetchSessionDetails = async (sessionID) => {
+  // Helper to convert HH:MM:SS to seconds
+  const timeToSeconds = (timeStr) => {
+    if (!timeStr) return 0;
+    const parts = timeStr.split(":");
+    if (parts.length === 3) {
+      return (
+        parseInt(parts[0], 10) * 3600 +
+        parseInt(parts[1], 10) * 60 +
+        parseInt(parts[2], 10)
+      );
+    }
+    return 0;
+  };
+
+  // Initialize session: fetch existing or create a new placeholder session
+  const initializeSession = useCallback(
+    async (sessionIDFromURL, teacherIDFromQuery, studentIDsFromQueryString) => {
+      if (sessionIDFromURL) {
+        if (sessionIDFromURL === currentSessionId && isSessionInitialized) {
+          console.log("SESSION_INIT: Already fetched this existing session:", currentSessionId);
+          return;
+        }
+        console.log(
+          `SESSION_INIT: Existing sessionID found in URL: ${sessionIDFromURL}. Fetching details.`
+        );
+        setCurrentSessionId(sessionIDFromURL);
         try {
           const response = await fetch(
-            `http://localhost:5001/consultation/get_session?sessionID=${sessionID}`
+            `http://localhost:5001/consultation/get_session?sessionID=${sessionIDFromURL}`
           );
           const data = await response.json();
           if (response.ok) {
-            setTeacherId(data.teacher_id.split("/").pop());
+            setTeacherId(data.teacher_id?.split("/").pop() || "");
             setStudentIds(
-              data.student_ids.map((id) => id.split("/").pop()).join(", ")
+              Array.isArray(data.student_ids)
+                ? data.student_ids.map((ref) => ref.split("/").pop()).join(", ")
+                : ""
             );
-            // Optionally, you might set teacherInfo/studentInfo from data here.
+            setConcern(data.concern || "");
+            setActionTaken(data.action_taken || "");
+            setOutcome(data.outcome || "");
+            setRemarks(data.remarks || "");
+            setIsSessionInitialized(true);
           } else {
-            console.error("Failed to fetch session details:", data.error);
+            console.error("SESSION_INIT: Failed to fetch session details:", data.error);
+            alert(`Error fetching session: ${data.error}. You might be redirected.`);
+            setIsSessionInitialized(false);
+            navigate(-1);
           }
         } catch (error) {
-          console.error("Error fetching session details:", error);
+          console.error("SESSION_INIT: Error fetching session details:", error);
+          alert("Network error fetching session details. Please try again.");
+          setIsSessionInitialized(false);
+          navigate(-1);
         }
-      };
-      fetchSessionDetails(sessionID);
-    } else {
-      // New session: use the query parameters provided from the appointment page.
-      if (teacherIDFromQuery) {
-        setTeacherId(teacherIDFromQuery);
-      }
-      if (studentIDsFromQuery) {
-        setStudentIds(
-          studentIDsFromQuery
+      } else if (teacherIDFromQuery && studentIDsFromQueryString) {
+        if (currentSessionId && isSessionInitialized) {
+          console.log("SESSION_INIT: New session already created, currentSessionId:", currentSessionId);
+          return;
+        }
+        console.log("SESSION_INIT: New session. Calling /start_session.");
+        try {
+          const studentIdArray = studentIDsFromQueryString
             .split(",")
             .map((id) => id.trim())
-            .join(", ")
-        );
-      }
-      if (teacherInfoQuery) {
-        try {
-          setTeacherInfo(JSON.parse(teacherInfoQuery));
-        } catch (e) {
-          console.error("Error parsing teacher info", e);
+            .filter((id) => id);
+          if (studentIdArray.length === 0) {
+            console.error("SESSION_INIT: No valid student IDs provided for new session.");
+            alert("No student IDs provided for the new session.");
+            setIsSessionInitialized(false);
+            navigate(-1);
+            return;
+          }
+          const response = await fetch("http://localhost:5001/consultation/start_session", {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({
+              teacher_id: teacherIDFromQuery,
+              student_ids: studentIdArray,
+              venue: venueFromQuery,
+            }),
+          });
+          const data = await response.json();
+          if (response.ok && data.session_id) {
+            console.log(`SESSION_INIT: New session started. Session ID: ${data.session_id}`);
+            setCurrentSessionId(data.session_id);
+            setTeacherId(teacherIDFromQuery);
+            setStudentIds(studentIDsFromQueryString);
+            setIsSessionInitialized(true);
+          } else {
+            console.error("SESSION_INIT: Failed to start new session:", data.error || "Unknown error");
+            alert(`Failed to initialize session: ${data.error || "Please try again."}`);
+            setIsSessionInitialized(false);
+            navigate(-1);
+          }
+        } catch (error) {
+          console.error("SESSION_INIT: Error starting new session:", error);
+          alert("Network error starting session. Please try again.");
+          setIsSessionInitialized(false);
+          navigate(-1);
         }
+      } else {
+        console.warn("SESSION_INIT: Insufficient data to initialize.");
+        setIsSessionInitialized(false);
       }
-      if (studentInfoQuery) {
-        try {
-          setStudentInfo(JSON.parse(studentInfoQuery));
-        } catch (e) {
-          console.error("Error parsing student info", e);
-        }
+    },
+    [navigate, venueFromQuery, currentSessionId, isSessionInitialized]
+  );
+
+  useEffect(() => {
+    const sessionIDFromURL = queryParams.get("sessionID");
+    const teacherIDFromQuery = queryParams.get("teacherID");
+    const studentIDsFromQueryString = queryParams.get("studentIDs");
+    // Only attempt to initialize a new session ONCE per component instance
+    if (sessionIDFromURL) {
+      if (sessionIDFromURL !== currentSessionId) {
+        console.log("UseEffect: Existing session ID in URL, calling initializeSession to fetch.");
+        initializeSession(sessionIDFromURL, null, null);
+      }
+      hasAttemptedNewSessionInit.current = true;
+    } else if (teacherIDFromQuery && studentIDsFromQueryString) {
+      if (!hasAttemptedNewSessionInit.current) {
+        console.log("UseEffect: New session params in URL, calling initializeSession to create.");
+        initializeSession(null, teacherIDFromQuery, studentIDsFromQueryString);
+        hasAttemptedNewSessionInit.current = true;
+      } else {
+        console.log("UseEffect: New session params in URL, but already attempted init.");
+      }
+    } else {
+      console.warn("UseEffect: Not enough info in URL for new or existing session initialization.");
+      setIsSessionInitialized(false);
+    }
+    // Parse teacherInfo and studentInfo (decodeURIComponent)
+    const teacherInfoQuery = queryParams.get("teacherInfo");
+    const studentInfoQuery = queryParams.get("studentInfo");
+    if (teacherInfoQuery) {
+      try {
+        setTeacherInfo(JSON.parse(decodeURIComponent(teacherInfoQuery)));
+      } catch (e) {
+        console.error("Error parsing teacher info from URL", e);
       }
     }
-  }, [location.search]);
+    if (studentInfoQuery) {
+      try {
+        setStudentInfo(JSON.parse(decodeURIComponent(studentInfoQuery)));
+      } catch (e) {
+        console.error("Error parsing student info from URL", e);
+      }
+    }
+  }, [location.search, initializeSession, currentSessionId]);
 
   // Timer functions
   const startTimer = () => {
     const startTime = Date.now();
+    clearInterval(timerIntervalRef.current);
     timerIntervalRef.current = setInterval(() => {
       const elapsedTime = Date.now() - startTime;
       const hours = String(Math.floor(elapsedTime / 3600000)).padStart(2, "0");
-      const minutes = String(
-        Math.floor((elapsedTime % 3600000) / 60000)
-      ).padStart(2, "0");
-      const seconds = String(Math.floor((elapsedTime % 60000) / 1000)).padStart(
-        2,
-        "0"
-      );
+      const minutes = String(Math.floor((elapsedTime % 3600000) / 60000)).padStart(2, "0");
+      const seconds = String(Math.floor((elapsedTime % 60000) / 1000)).padStart(2, "0");
       setTimer(`${hours}:${minutes}:${seconds}`);
     }, 1000);
-    setTimerRunning(true);
   };
 
   const stopTimer = () => {
     clearInterval(timerIntervalRef.current);
-    setTimerRunning(false);
   };
 
   // Audio recording functions
   const startRecording = async () => {
+    if (!micEnabled) {
+      alert("Microphone is disabled. Please enable it to record.");
+      return;
+    }
+    if (!isSessionInitialized || !currentSessionId) {
+      alert(
+        "Session is not properly initialized. Cannot start recording. Please ensure teacher and student details are loaded or a session has been started."
+      );
+      return;
+    }
     try {
-      if (micEnabled) {
-        // Stop any existing recording first
-        if (
-          mediaRecorderRef.current &&
-          mediaRecorderRef.current.state === "recording"
-        ) {
-          stopRecording();
-        }
-
-        const stream = await navigator.mediaDevices.getUserMedia({
-          audio: true,
-        });
-        mediaRecorderRef.current = new MediaRecorder(stream);
-        audioChunksRef.current = [];
-
-        mediaRecorderRef.current.ondataavailable = (event) => {
-          audioChunksRef.current.push(event.data);
-        };
-
-        mediaRecorderRef.current.onstop = () => {
-          const blob = new Blob(audioChunksRef.current, { type: "audio/webm" });
-          setAudioBlob(blob);
-          if (audioRef.current) {
-            audioRef.current.src = URL.createObjectURL(blob);
-          }
-        };
-
-        mediaRecorderRef.current.start();
+      if (mediaRecorderRef.current && mediaRecorderRef.current.state === "recording") {
+        mediaRecorderRef.current.stop();
       }
+      const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
+      mediaRecorderRef.current = new MediaRecorder(stream, { mimeType: "audio/webm;codecs=opus" });
+      audioChunksRef.current = [];
+      mediaRecorderRef.current.ondataavailable = (event) => {
+        if (event.data.size > 0) audioChunksRef.current.push(event.data);
+      };
+      mediaRecorderRef.current.onstop = () => {
+        const blob = new Blob(audioChunksRef.current, { type: "audio/webm" });
+        setAudioBlob(blob);
+        if (audioRef.current) {
+          audioRef.current.src = URL.createObjectURL(blob);
+        }
+        stream.getTracks().forEach((track) => track.stop());
+      };
+      mediaRecorderRef.current.start();
       setRecording(true);
       startTimer();
     } catch (error) {
       console.error("Error starting recording:", error);
-      if (error.name === "NotAllowedError") {
-        alert(
-          "Microphone permission denied. Please allow access to record audio."
-        );
+      if (error.name === "NotAllowedError" || error.name === "PermissionDeniedError") {
+        alert("Microphone permission denied. Please allow access to record audio.");
         setMicEnabled(false);
+      } else if (error.name === "NotFoundError" || error.name === "DevicesNotFoundError") {
+        alert("No microphone found. Please ensure a microphone is connected and enabled.");
+        setMicEnabled(false);
+      } else {
+        alert(`Error starting recording: ${error.message}`);
       }
     }
   };
 
   const stopRecording = () => {
-    if (
-      mediaRecorderRef.current &&
-      mediaRecorderRef.current.state === "recording"
-    ) {
+    if (mediaRecorderRef.current && mediaRecorderRef.current.state === "recording") {
       mediaRecorderRef.current.stop();
-      mediaRecorderRef.current.stream
-        .getTracks()
-        .forEach((track) => track.stop());
     }
     setRecording(false);
     stopTimer();
   };
 
   const toggleMicrophone = () => {
-    // Only allow toggling microphone when not recording
-    if (!recording) {
-      setMicEnabled(!micEnabled);
-    }
+    if (!recording) setMicEnabled(!micEnabled);
   };
 
   // Audio upload function - modify to save quality metrics
-  const uploadAudio = async (audioBlob) => {
-    const formData = new FormData();
-    formData.append("audio", audioBlob, "session-audio.webm");
-
-    // Calculate speaker count dynamically based on participants.
-    const teacherIdElement = teacherId.trim();
-    const studentIdsElement = studentIds.trim();
-    const studentIdsArray = studentIdsElement
-      .split(",")
-      .filter((id) => id.trim() !== "");
-
-    const expectedSpeakers = 1 + studentIdsArray.length; // Teacher + students
-    formData.append("speaker_count", expectedSpeakers);
-
-    console.log(`Calculated speaker count: ${expectedSpeakers}`);
-
-    const response = await fetch(
-      "http://localhost:5001/consultation/transcribe",
-      {
-        method: "POST",
-        body: formData,
-      }
-    );
-
-    if (!response.ok) {
-      throw new Error("Audio upload and transcription failed");
+  const uploadAudio = async (blobToUpload, sessionIdForUpload, durationInSeconds) => {
+    if (!blobToUpload) {
+      console.warn("UPLOAD_AUDIO: No audio blob to upload.");
+      return null;
     }
-
+    if (!sessionIdForUpload) {
+      console.error("UPLOAD_AUDIO: session_id is required to upload audio for transcription.");
+      alert("Cannot upload audio: Session ID is missing.");
+      return null;
+    }
+    const formData = new FormData();
+    formData.append("audio", blobToUpload, "session-audio.webm");
+    const studentIdsArray = studentIds.split(",").map((id) => id.trim()).filter((id) => id);
+    const expectedSpeakers = (teacherId ? 1 : 0) + studentIdsArray.length;
+    formData.append("speaker_count", String(expectedSpeakers));
+    formData.append("duration_seconds", String(durationInSeconds));
+    formData.append("session_id", sessionIdForUpload);
+    console.log("UPLOAD_AUDIO: FormData being sent to /transcribe:", {
+      speaker_count: expectedSpeakers,
+      duration_seconds: durationInSeconds,
+      session_id: sessionIdForUpload,
+    });
+    const response = await fetch("http://localhost:5001/consultation/transcribe", {
+      method: "POST",
+      body: formData,
+    });
+    if (!response.ok) {
+      const errorData = await response.json().catch(() => ({ error: "Audio upload and transcription failed with non-JSON response" }));
+      console.error("UPLOAD_AUDIO: Transcription request failed:", response.status, errorData);
+      throw new Error(errorData.error || "Audio upload and transcription failed");
+    }
     const data = await response.json();
-    console.log("Audio uploaded and transcription received:", data);
+    console.log("UPLOAD_AUDIO: Response from /transcribe (task dispatched):", data);
     return data;
   };
 
   // Finish session creates the consultation record and then returns a sessionID.
   const finishSession = async () => {
-    setProcessing(true);
-
-    // Add debug logging for required fields
-    console.log("Checking required fields:", {
-      teacherId,
-      studentIds,
-      concern,
-      action_taken,
-      outcome,
-    });
-
-    if (!teacherId || !studentIds || !concern || !action_taken || !outcome) {
-      console.log("Missing fields detected");
-      alert("Please fill in all required fields");
+    if (!isSessionInitialized || !currentSessionId) {
+      alert("Session is not properly initialized. Cannot finalize. Please refresh or start a new session if this persists.");
       setProcessing(false);
       return;
     }
-
-    stopTimer();
-
-    let transcriptionText = "";
-    let audioUrl = "";
-    let qualityScore = 0;
-    let qualityMetrics = {};
-    let rawSentimentAnalysis = [];
-    
+    setProcessing(true);
+    if (!teacherId || !studentIds || !concern || !action_taken || !outcome) {
+      alert("Please fill in all required fields: Concern, Action Taken, and Outcome.");
+      setProcessing(false);
+      return;
+    }
+    if (recording) {
+      stopRecording();
+    }
+    let audioUploadResponseData = null;
+    let durationInSeconds = timeToSeconds(timer);
     if (audioBlob) {
       try {
-        const audioUploadResponse = await uploadAudio(audioBlob);
-        transcriptionText = audioUploadResponse.transcription || "";
-        audioUrl = audioUploadResponse.audioUrl || "";
-        // Save quality data from transcription response
-        qualityScore = audioUploadResponse.quality_score || 0;
-        qualityMetrics = audioUploadResponse.quality_metrics || {};
-        rawSentimentAnalysis = audioUploadResponse.raw_sentiment_analysis || [];
+        audioUploadResponseData = await uploadAudio(audioBlob, currentSessionId, durationInSeconds);
+        console.log("FINISH_SESSION: Audio processing dispatched. Task ID:", audioUploadResponseData?.task_id);
       } catch (error) {
-        console.error("Error uploading audio:", error);
-        alert("Audio upload failed. Proceeding without transcription.");
+        console.error("FINISH_SESSION: Error during audio upload/transcription dispatch:", error);
+        alert(`Audio processing dispatch failed: ${error.message}. The session will be saved without audio analysis.`);
       }
     }
-
-    const generatedSummary = await generateSummary(transcriptionText, {
-      concern,
-      actionTaken: action_taken,
-      outcome,
-      remarks,
-    });
-
-    setSummary(generatedSummary);
-
-    // Ensure student_ids is an array
-    let studentIdsArray = Array.isArray(studentIds)
-      ? studentIds
-      : studentIds.split(",").map((id) => id.trim());
-
+    const studentIdsArrayForPayload = studentIds.split(",").map((id) => id.trim()).filter((id) => id);
     const payload = {
+      session_id: currentSessionId,
       teacher_id: teacherId,
-      student_ids: studentIdsArray,
-      transcription: transcriptionText,
-      summary: generatedSummary,
+      student_ids: studentIdsArrayForPayload,
       concern: concern,
       action_taken: action_taken,
       outcome: outcome,
@@ -293,53 +346,35 @@ const Session = () => {
       duration: timer,
       venue: venueFromQuery,
       session_date: new Date().toISOString(),
-      audio_file_path: audioUrl,
-      // Include quality data in the payload
-      quality_score: qualityScore,
-      quality_metrics: qualityMetrics,
-      raw_sentiment_analysis: rawSentimentAnalysis
+      task_id: audioUploadResponseData?.task_id || null,
+      processing_status: audioBlob ? "pending_ai_processing" : "no_audio_for_processing",
     };
-
-    console.log("Sending payload:", payload);
-    console.log("Payload being sent:", payload); // Add this debug log
-
+    console.log("FINISH_SESSION: Payload for /store_consultation (or update):", payload);
     try {
-      // Append booking_id as a query parameter if available.
-      let url = "http://localhost:5001/consultation/store_consultation";
+      let url = `http://localhost:5001/consultation/store_consultation`;
       if (bookingID) {
         url += `?booking_id=${bookingID}`;
-        console.log("🔍 Debug - Using booking_id:", bookingID); // Add debug log
+        console.log("FINISH_SESSION: Using booking_id in URL:", bookingID);
       }
       const response = await fetch(url, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify(payload),
       });
-
-      if (!response.ok) {
-        const errorData = await response.json();
-        console.error("Server validation error:", errorData); // Add this debug log
-        alert(`Failed to store consultation: ${errorData.error}`);
-        return;
-      }
-
-      const data = await response.json();
-      console.log("🚀 Debug: Server Response", data);
-
+      const responseData = await response.json();
+      console.log("FINISH_SESSION: Server Response from /store_consultation:", responseData);
       if (response.ok) {
-        const newSessionID = data.session_id;
-        console.log(
-          `✅ Navigating to: /finaldocument?sessionID=${newSessionID}`
-        );
-
+        const finalSessionID = responseData.session_id || currentSessionId;
         setTimeout(() => {
-          navigate(`/finaldocument?sessionID=${newSessionID}`);
+          navigate(`/finaldocument?sessionID=${finalSessionID}`);
         }, 100);
       } else {
-        console.error("❌ Error: Response from server was not OK", data);
+        console.error("FINISH_SESSION: Error storing/updating consultation:", responseData.error);
+        alert(`Failed to finalize consultation: ${responseData.error}`);
       }
     } catch (error) {
-      console.error("🚨 Error finishing session:", error);
+      console.error("FINISH_SESSION: Network error finalizing session:", error);
+      alert(`Error finalizing session: ${error.message}`);
     }
     setProcessing(false);
   };
@@ -418,11 +453,6 @@ const Session = () => {
       console.error("Error storing consultation session:", error);
       alert("Failed to store consultation session.");
     }
-  };
-
-  const handleLogout = () => {
-    localStorage.removeItem("userEmail");
-    navigate("/login");
   };
 
   return (
@@ -590,7 +620,11 @@ const Session = () => {
                     )}
                   </button>
                 </div>
-                <span className={`font-mono text-sm sm:text-base ${recording ? "text-red-500" : "text-black text-opacity-85"}`}>
+                <span
+                  className={`font-mono text-sm sm:text-base ${
+                    recording ? "text-red-500" : "text-black text-opacity-85"
+                  }`}
+                >
                   {timer}
                 </span>
               </div>
@@ -598,7 +632,8 @@ const Session = () => {
               <button
                 onClick={() => {
                   setFinalizeClicked(true);
-                  setTimeout(() => { setFinalizeClicked(false);
+                  setTimeout(() => {
+                    setFinalizeClicked(false);
                     setTimeout(() => finishSession(), 500);
                   }, 150);
                 }}
@@ -610,32 +645,32 @@ const Session = () => {
                 `}
               >
                 {processing ? (
-                    <>
-                      <svg
-                        className="animate-spin h-4 w-4 sm:h-5 sm:w-5 text-white"
-                        xmlns="http://www.w3.org/2000/svg"
-                        fill="none"
-                        viewBox="0 0 24 24"
-                      >
-                        <circle
-                          className="opacity-25"
-                          cx="12"
-                          cy="12"
-                          r="10"
-                          stroke="currentColor"
-                          strokeWidth="4"
-                        ></circle>
-                        <path
-                          className="opacity-75"
-                          fill="currentColor"
-                          d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"
-                        ></path>
-                      </svg>
-                      <span className="ml-2">Finalizing Consultation...</span>
-                    </>
-                  ) : (
-                    "Finalize Consultation"
-                  )}
+                  <>
+                    <svg
+                      className="animate-spin h-4 w-4 sm:h-5 sm:w-5 text-white"
+                      xmlns="http://www.w3.org/2000/svg"
+                      fill="none"
+                      viewBox="0 0 24 24"
+                    >
+                      <circle
+                        className="opacity-25"
+                        cx="12"
+                        cy="12"
+                        r="10"
+                        stroke="currentColor"
+                        strokeWidth="4"
+                      ></circle>
+                      <path
+                        className="opacity-75"
+                        fill="currentColor"
+                        d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"
+                      ></path>
+                    </svg>
+                    <span className="ml-2">Finalizing Consultation...</span>
+                  </>
+                ) : (
+                  "Finalize Consultation"
+                )}
               </button>
             </div>
           </div>

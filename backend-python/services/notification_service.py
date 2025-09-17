@@ -61,6 +61,7 @@ def send_notification(notification_data):
         sanitized_data = sanitize_for_socket(notification_data)
         
         # Emit the notification via Socket.IO
+        
         emit('notification', sanitized_data, namespace='/', broadcast=True)
         
     except Exception as e:
