@@ -219,7 +219,7 @@ const AdminConsultation = () => {
                     </motion.button>
                     
                     <span className="text-blue-200 font-medium">
-                      Teacher Leaderboard
+                      Leaderboard
                     </span>
                   </div>
 
@@ -298,7 +298,7 @@ const AdminConsultation = () => {
                     </motion.button>
                     
                     <span className="text-blue-200 font-medium">
-                      Teacher Leaderboard
+                      Leaderboard
                     </span>
                   </div>
 
@@ -320,8 +320,53 @@ const AdminConsultation = () => {
 
         <div className="pt-6 pb-2 max-w-6xl mx-auto">
           <div className="text-center mb-6">
-            <h2 className="text-[#0065A8] text-2xl font-bold mb-1">Teachers Consultation Leaderboard</h2>
-            <p className="text-slate-500 text-sm">Top teachers ranked by consultation engagement and consultation overview  </p>
+            <div className="flex items-center justify-center">
+              <h2 className="text-[#0065A8] text-2xl font-bold mb-1 mr-2">
+                {userRole === 'admin' ? 'Teachers Consultation Leaderboard' : 'Public Consultation Leaderboard'}
+              </h2>
+              {userRole !== 'admin' && (
+                <div className="relative group">
+                  <svg 
+                    className="w-5 h-5 text-blue-600 cursor-help mb-1" 
+                    fill="none" 
+                    stroke="currentColor" 
+                    viewBox="0 0 24 24"
+                  >
+                    <path 
+                      strokeLinecap="round" 
+                      strokeLinejoin="round" 
+                      strokeWidth={2} 
+                      d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" 
+                    />
+                  </svg>
+                  {/* Tooltip - Right positioned with analytics design */}
+                  <div className="absolute left-8 top-1/2 -translate-y-1/2 transition-all duration-300 opacity-0 group-hover:opacity-100 group-hover:translate-x-0 -translate-x-4 pointer-events-none z-50">
+                    <div className="bg-white/95 backdrop-blur-sm border border-blue-200 rounded-lg shadow-xl p-4 min-w-64 max-w-80">
+                      <div className="flex items-center gap-3">
+                        <div className="w-2 h-2 bg-blue-500 rounded-full animate-pulse" />
+                        <div>
+                          <h3 className="font-semibold text-blue-900 text-sm mb-1">Public Leaderboard View</h3>
+                          <p className="text-blue-600 text-xs mt-1 leading-relaxed">
+                            You're viewing the public consultation leaderboard showing teacher rankings and statistics. 
+                            Detailed consultation session information is restricted to administrative users for privacy and confidentiality.
+                          </p>
+                        </div>
+                      </div>
+                      {/* Arrow pointer pointing to the icon */}
+                      <div className="absolute right-full top-1/2 -translate-y-1/2">
+                        <div className="w-0 h-0 border-r-8 border-r-white/95 border-t-4 border-t-transparent border-b-4 border-b-transparent" />
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              )}
+            </div>
+            <p className="text-slate-500 text-sm">
+              {userRole === 'admin' 
+                ? 'Top teachers ranked by consultation engagement and consultation overview' 
+                : 'Teacher rankings based on consultation activity and performance'
+              }
+            </p>
           </div>
             
             {/* Filter Section */}
@@ -533,15 +578,16 @@ const AdminConsultation = () => {
                       <div 
                         key={teacher.teacher_id} 
                         className={`
-                          relative flex flex-col lg:flex-row items-start lg:items-center p-4 border-b border-gray-100 cursor-pointer 
+                          relative flex flex-col lg:flex-row items-start lg:items-center p-4 border-b border-gray-100 
                           transition-all duration-300 group hover:shadow-lg hover:bg-gradient-to-r hover:from-blue-50 hover:to-indigo-50
                           ${isTopThree ? 'bg-gradient-to-r from-yellow-50 to-orange-50' : 'bg-white hover:bg-gradient-to-r hover:from-blue-50 hover:to-indigo-50'}
                           ${displayRank === 1 ? 'border-l-4 border-l-yellow-400' : ''}
                           ${displayRank === 2 ? 'border-l-4 border-l-gray-400' : ''}
                           ${displayRank === 3 ? 'border-l-4 border-l-amber-600' : ''}
+                          ${userRole === 'admin' ? 'cursor-pointer' : 'cursor-default'}
                           last:border-b-0
                         `}
-                        onClick={() => handleTeacherClick(teacher)}
+                        onClick={() => userRole === 'admin' ? handleTeacherClick(teacher) : null}
                       >
                         {/* Rank Section */}
                         <div className="flex items-center mb-3 lg:mb-0 lg:mr-4">
@@ -563,7 +609,9 @@ const AdminConsultation = () => {
                               {teacher.teacher_name}
                             </h3>
                           </div>
-                          <p className="text-slate-500 text-xs">Teacher ID: {teacher.teacher_id}</p>
+                          {userRole === 'admin' && (
+                            <p className="text-slate-500 text-xs">Teacher ID: {teacher.teacher_id}</p>
+                          )}
                         </div>
 
                         {/* Stats Grid */}
@@ -584,14 +632,23 @@ const AdminConsultation = () => {
 
                         {/* Action Button */}
                         <div className="flex items-center lg:ml-4">
-                          <div className="flex items-center text-[#057DCD] font-medium text-xs group-hover:text-[#0065A8] transition-colors">
-                            <span className="mr-1">View Details</span>
-                            <div className="transform group-hover:translate-x-1 transition-transform">
+                          {userRole === 'admin' ? (
+                            <div className="flex items-center text-[#057DCD] font-medium text-xs group-hover:text-[#0065A8] transition-colors">
+                              <span className="mr-1">View Details</span>
+                              <div className="transform group-hover:translate-x-1 transition-transform">
+                                <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
+                                </svg>
+                              </div>
+                            </div>
+                          ) : (
+                            <div className="flex items-center text-gray-400 font-medium text-xs">
+                              <span className="mr-1">Admin Only</span>
                               <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
+                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z" />
                               </svg>
                             </div>
-                          </div>
+                          )}
                         </div>
 
                         {/* Hover Effect Overlay */}
@@ -605,8 +662,8 @@ const AdminConsultation = () => {
           </div>
         </div>
 
-      {/* Teacher Details Modal */}
-      {selectedTeacher && (
+      {/* Teacher Details Modal - Admin Only */}
+      {selectedTeacher && userRole === 'admin' && (
         <div className="fixed inset-0 bg-black/60 flex items-center justify-center z-50 p-4" onClick={closeModal}>
           <div className="bg-white rounded-2xl max-w-5xl w-full max-h-[90vh] overflow-hidden shadow-2xl" onClick={(e) => e.stopPropagation()}>
             {/* Modal Header */}
@@ -729,8 +786,8 @@ const AdminConsultation = () => {
         </div>
       )}
 
-      {/* Session Details Modal */}
-      {selectedSession && (
+      {/* Session Details Modal - Admin Only */}
+      {selectedSession && userRole === 'admin' && (
         <div className="fixed inset-0 bg-black/70 flex items-center justify-center z-[60] p-4" onClick={closeSessionModal}>
           <div className="bg-white rounded-2xl max-w-3xl w-full max-h-[85vh] overflow-hidden shadow-2xl" onClick={(e) => e.stopPropagation()}>
             {/* Session Modal Header */}

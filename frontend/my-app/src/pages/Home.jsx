@@ -249,7 +249,7 @@ const Nav = ({ handleLoginClick, handleSignupClick, handleSectionNavigation }) =
                 onClick={() => window.location.href = '/admin-consultation'}
                 className="text-white font-medium hover:text-blue-200 transition-colors duration-200 relative group"
               >
-                Teacher Leaderboard
+                Leaderboard
                 <span className="absolute bottom-0 left-0 w-0 h-0.5 bg-white group-hover:w-full transition-all duration-300" />
               </motion.button>
               
