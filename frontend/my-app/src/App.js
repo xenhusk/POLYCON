@@ -27,7 +27,8 @@ import Help_History from "./components/help/getstarted/Help_History";
 import Help_Appointments from "./components/help/getstarted/Help_Appointment";
 import Help_Set_Schedule from "./components/help/getstarted/Help_Set_Schedule";
 import Help_Grade from "./components/help/getstarted/Help_Grade";
-import Help_Polycon_Analysis from "./components/help/getstarted/Help_Polycon_Analysis.jsx";
+import Help_Polycon_Analysis from "./components/help/features/Help_Polycon_Analysis";
+import Help_Concern_Analysis from "./components/help/features/Help_Concern_Analysis";
 import Help_Consultation_Booking from "./components/help/features/Help_Consultation_Booking";
 import Help_Enrolled_Student from "./components/help/features/Help_Enrolled_Student";
 import Help_Calendar_Management from "./components/help/features/Help_Calendar_Management";
@@ -809,7 +810,8 @@ function App() {
                 className={`flex-1 flex flex-col transition-all duration-300 ease-in-out overflow-x-hidden ${
                   localStorage.getItem("userEmail") &&
                   !location.pathname.includes("/session") &&
-                  !location.pathname.includes("/finaldocument")
+                  !location.pathname.includes("/finaldocument") &&
+                  !location.pathname.includes("/help/")
                     ? sidebarExpanded
                       ? "md:ml-64"
                       : "md:ml-20"
@@ -978,16 +980,20 @@ function App() {
                               path="Info_Set_Schedule"
                               element={<Help_Set_Schedule />}
                             />
-                            <Route 
-                              path="Info_Polycon_Analysis"
-                              element={<Help_Polycon_Analysis />}
-                            />
                           </Route>
                           {/* Nested route for student features */}
                           <Route
                             path="/help/features"
                             element={<Help />}
                           >
+                            <Route 
+                              path="Info_Polycon_Analysis"
+                              element={<Help_Polycon_Analysis />}
+                            />
+                            <Route
+                              path="Info_Concern_Analysis"
+                              element={<Help_Concern_Analysis />}
+                            />
                             <Route
                               path="Info_Consultation_Booking"
                               element={<Help_Consultation_Booking />}

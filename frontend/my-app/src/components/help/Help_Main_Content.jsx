@@ -1,12 +1,15 @@
-import React, { useState } from "react";
+import React, { useState, useEffect, useContext } from "react";
 import { Link, Outlet, useLocation } from "react-router-dom";
 import { motion } from "framer-motion";
+import { HelpContext, HelpProvider } from "../../components/help/HelpContext";
 
 const Help_Main_Content = () => {
   const location = useLocation();
   const [onThisPageLinks, setOnThisPageLinks] = useState([]);
   const [activeSection, setActiveSection] = useState("");
   const [isTeacher, setIsTeacher] = React.useState(false);
+  const [isStudent, setIsStudent] = React.useState(false);
+  const { searchQuery, setSearchQuery } = useContext(HelpContext);
 
   const sidebarActive = (to) =>
     location.pathname === to
@@ -87,30 +90,18 @@ const Help_Main_Content = () => {
 
     // Info pages section links
     const infoPages = {
-      Info_Polycon_Analysis: [
-        "#analysis_features",
-        "#tips_analysis"
-      ],
-      Info_Grade: [
-        "#grade_features", 
-        "#tips_troubleshooting_grade"
-      ],
-      Info_History: [
-        "#history_features", 
-        "#tips_section_history"
-      ],
+      Info_Polycon_Analysis: ["#analysis_features", "#tips_analysis"],
+      Info_Grade: ["#grade_features", "#tips_troubleshooting_grade"],
+      Info_History: ["#history_features", "#tips_section_history"],
       Info_Set_Schedule: [
         "#schedule_features",
-        "#tips_troubleshooting_schedule"
+        "#tips_troubleshooting_schedule",
       ],
       Info_Appointments: [
         "#appointment_features",
         "#tips_section_appointments",
       ],
-      Info_Dashboard: [
-        "#dashboard_features", 
-        "#tips_section_dashboard"
-      ],
+      Info_Dashboard: ["#dashboard_features", "#tips_section_dashboard"],
     };
 
     const currentPage = location.pathname.split("/").pop();
@@ -176,7 +167,12 @@ const Help_Main_Content = () => {
   React.useEffect(() => {
     const userRole = localStorage.getItem("userRole");
     setIsTeacher(userRole === "faculty");
+    setIsStudent(userRole === "student");
   }, []);
+
+  const handleSearchChange = (event) => {
+    setSearchQuery(event.target.value);
+  };
 
   return (
     <motion.div
@@ -208,16 +204,16 @@ const Help_Main_Content = () => {
                       <Link
                         to="/help/getstarted/Info_Login"
                         className={`block px-3 py-1 text-sm rounded-md transition-colors ${sidebarActive(
-                      "/help/getstarted/Info_Login"
-                    )}`}
+                          "/help/getstarted/Info_Login"
+                        )}`}
                       >
                         Account Login
                       </Link>
                       <Link
                         to="/help/getstarted/Info_Signup"
                         className={`block px-3 py-1 text-sm rounded-md transition-colors ${sidebarActive(
-                      "/help/getstarted/Info_Signup"
-                    )}`}
+                          "/help/getstarted/Info_Signup"
+                        )}`}
                       >
                         Account Registration
                       </Link>
@@ -239,7 +235,7 @@ const Help_Main_Content = () => {
                   >
                     Appointments
                   </Link>
-                  { isTeacher && (
+                  {isTeacher && (
                     <Link
                       to="/help/getstarted/Info_Set_Schedule"
                       className={`block px-3 py-1 text-sm rounded-md transition-colors ${sidebarActive(
@@ -265,22 +261,32 @@ const Help_Main_Content = () => {
                   >
                     Grade
                   </Link>
-                  { isTeacher && (
-                    <Link
-                      to="/help/getstarted/Info_Polycon_Analysis"
-                      className={`block px-3 py-1 text-sm rounded-md transition-colors ${sidebarActive(
-                        "/help/getstarted/Info_Polycon_Analysis"
-                      )}`}
-                    >
-                      Polycon
-                    </Link>
-                  )}
                 </nav>
 
                 <h3 className="text-sm font-semibold text-gray-900 uppercase tracking-wide mb-4 mt-8">
                   Features
                 </h3>
                 <nav className="space-y-2">
+                  {isTeacher && (
+                    <>
+                      <Link
+                        to="/help/features/Info_Polycon_Analysis"
+                        className={`block px-3 py-1 text-sm rounded-md transition-colors ${sidebarActive(
+                          "/help/features/Info_Polycon_Analysis"
+                        )}`}
+                      >
+                        Polycon Analysis
+                      </Link>
+                        <Link
+                        to="/help/features/Info_Concern_Analysis"
+                        className={`block px-3 py-1 text-sm rounded-md transition-colors ${sidebarActive(
+                          "/help/features/Info_Concern_Analysis"
+                        )}`}
+                      >
+                        Concern Analysis
+                      </Link>
+                    </>
+                  )}
                   <Link
                     to="/help/features/Info_Consultation_Booking"
                     className={`block px-3 py-1 text-sm rounded-md transition-colors ${sidebarActive(
@@ -343,9 +349,23 @@ const Help_Main_Content = () => {
           </div>
 
           {/* Main content area */}
-          <div className="flex-1">
+          <motion.div
+            initial={{ opacity: 0, x: 50 }}
+            animate={{ opacity: 1, x: 0 }}
+            transition={{ duration: 0.5 }}
+            className="flex-1"
+          >
+            <div className="mb-4">
+              <input
+                type="text"
+                placeholder="Search help articles..."
+                className="w-full px-4 py-2 text-sm text-gray-700 placeholder-gray-400 bg-gray-100 rounded-lg focus:outline-none focus:ring-2 focus:ring-[#057DCD] focus:border-transparent"
+                value={searchQuery}
+                onChange={handleSearchChange}
+              />
+            </div>
             <Outlet />
-          </div>
+          </motion.div>
           {!(
             location.pathname.toLowerCase().includes("/faq") ||
             location.pathname.toLowerCase().includes("/contact")
@@ -385,4 +405,8 @@ const Help_Main_Content = () => {
   );
 };
 
-export default Help_Main_Content;
+export default () => (
+  <HelpProvider>
+    <Help_Main_Content />
+  </HelpProvider>
+);
