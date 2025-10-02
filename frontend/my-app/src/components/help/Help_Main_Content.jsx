@@ -1,16 +1,20 @@
-import React, { useState } from "react";
+import React, { useState, useEffect, useContext } from "react";
 import { Link, Outlet, useLocation } from "react-router-dom";
 import { motion } from "framer-motion";
+import { HelpContext, HelpProvider } from "../../components/help/HelpContext";
 
 const Help_Main_Content = () => {
   const location = useLocation();
   const [onThisPageLinks, setOnThisPageLinks] = useState([]);
   const [activeSection, setActiveSection] = useState("");
+  const [isTeacher, setIsTeacher] = React.useState(false);
+  const [isStudent, setIsStudent] = React.useState(false);
+  const { searchQuery, setSearchQuery } = useContext(HelpContext);
 
   const sidebarActive = (to) =>
-  location.pathname === to
-    ? "text-[#057DCD] bg-blue-50 font-md border-[#057DCD]"
-    : "text-gray-600 hover:text-[#057DCD] hover:bg-blue-50 border-transparent";
+    location.pathname === to
+      ? "text-[#057DCD] bg-blue-50 font-md border-[#057DCD]"
+      : "text-gray-600 hover:text-[#057DCD] hover:bg-blue-50 border-transparent";
 
   React.useEffect(() => {
     const handleScroll = () => {
@@ -86,16 +90,18 @@ const Help_Main_Content = () => {
 
     // Info pages section links
     const infoPages = {
-      Info_Bookings: ["#booking_features", "#tips_section_bookings"],
+      Info_Polycon_Analysis: ["#analysis_features", "#tips_analysis"],
+      Info_Grade: ["#grade_features", "#tips_troubleshooting_grade"],
       Info_History: ["#history_features", "#tips_section_history"],
+      Info_Set_Schedule: [
+        "#schedule_features",
+        "#tips_troubleshooting_schedule",
+      ],
       Info_Appointments: [
         "#appointment_features",
         "#tips_section_appointments",
       ],
-      Info_Student_Dashboard: [
-        "#dashboard_features",
-        "#tips_section_dashboard",
-      ],
+      Info_Dashboard: ["#dashboard_features", "#tips_section_dashboard"],
     };
 
     const currentPage = location.pathname.split("/").pop();
@@ -115,7 +121,7 @@ const Help_Main_Content = () => {
     }
 
     // Student Features section links
-    const studentFeatures = {
+    const Features = {
       Info_Consultation_Booking: [
         { label: "Booking Steps", href: "#booking_steps" },
         { label: "Tips & Guidelines", href: "#tips_guidelines_booking" },
@@ -133,8 +139,8 @@ const Help_Main_Content = () => {
       ],
     };
 
-    if (studentFeatures[currentPage]) {
-      studentFeatures[currentPage].forEach((item, index) => {
+    if (Features[currentPage]) {
+      Features[currentPage].forEach((item, index) => {
         links.push({
           label: item.label,
           href: item.href,
@@ -158,6 +164,16 @@ const Help_Main_Content = () => {
     }
   };
 
+  React.useEffect(() => {
+    const userRole = localStorage.getItem("userRole");
+    setIsTeacher(userRole === "faculty");
+    setIsStudent(userRole === "student");
+  }, []);
+
+  const handleSearchChange = (event) => {
+    setSearchQuery(event.target.value);
+  };
+
   return (
     <motion.div
       initial={{ opacity: 0, y: 20 }}
@@ -177,67 +193,131 @@ const Help_Main_Content = () => {
                 <nav className="space-y-2">
                   <Link
                     to="/help/getstarted/"
-                    className={`block px-3 py-1 text-sm rounded-md transition-colors ${sidebarActive("/help/getstarted/")}`}
+                    className={`block px-3 py-1 text-sm rounded-md transition-colors ${sidebarActive(
+                      "/help/getstarted/"
+                    )}`}
                   >
                     Overview
                   </Link>
+                  {!isTeacher && (
+                    <>
+                      <Link
+                        to="/help/getstarted/Info_Login"
+                        className={`block px-3 py-1 text-sm rounded-md transition-colors ${sidebarActive(
+                          "/help/getstarted/Info_Login"
+                        )}`}
+                      >
+                        Account Login
+                      </Link>
+                      <Link
+                        to="/help/getstarted/Info_Signup"
+                        className={`block px-3 py-1 text-sm rounded-md transition-colors ${sidebarActive(
+                          "/help/getstarted/Info_Signup"
+                        )}`}
+                      >
+                        Account Registration
+                      </Link>
+                    </>
+                  )}
                   <Link
-                    to="/help/getstarted/Info_Login"
-                    className={`block px-3 py-1 text-sm rounded-md transition-colors ${sidebarActive("/help/getstarted/Info_Login")}`}
+                    to="/help/getstarted/Info_Dashboard"
+                    className={`block px-3 py-1 text-sm rounded-md transition-colors ${sidebarActive(
+                      "/help/getstarted/Info_Dashboard"
+                    )}`}
                   >
-                    Account Login
+                    Dashboard
                   </Link>
                   <Link
-                    to="/help/getstarted/Info_Signup"
-                    className={`block px-3 py-1 text-sm rounded-md transition-colors ${sidebarActive("/help/getstarted/Info_Signup")}`}
+                    to="/help/getstarted/Info_Appointments"
+                    className={`block px-3 py-1 text-sm rounded-md transition-colors ${sidebarActive(
+                      "/help/getstarted/Info_Appointments"
+                    )}`}
                   >
-                    Account Registration
+                    Appointments
                   </Link>
-                  <Link
-                    to="/help/getstarted/Info_Student_Dashboard"
-                    className={`block px-3 py-1 text-sm rounded-md transition-colors ${sidebarActive("/help/getstarted/Info_Student_Dashboard")}`}
-                  >
-                    Student Dashboard
-                  </Link>
+                  {isTeacher && (
+                    <Link
+                      to="/help/getstarted/Info_Set_Schedule"
+                      className={`block px-3 py-1 text-sm rounded-md transition-colors ${sidebarActive(
+                        "/help/getstarted/Info_Set_Schedule"
+                      )}`}
+                    >
+                      Schedule
+                    </Link>
+                  )}
                   <Link
                     to="/help/getstarted/Info_History"
-                    className={`block px-3 py-1 text-sm rounded-md transition-colors ${sidebarActive("/help/getstarted/Info_History")}`}
+                    className={`block px-3 py-1 text-sm rounded-md transition-colors ${sidebarActive(
+                      "/help/getstarted/Info_History"
+                    )}`}
                   >
                     History
                   </Link>
                   <Link
-                    to="/help/getstarted/Info_Appointments"
-                    className={`block px-3 py-1 text-sm rounded-md transition-colors ${sidebarActive("/help/getstarted/Info_Appointments")}`}
+                    to="/help/getstarted/Info_Grade"
+                    className={`block px-3 py-1 text-sm rounded-md transition-colors ${sidebarActive(
+                      "/help/getstarted/Info_Grade"
+                    )}`}
                   >
-                    Appointments
-                  </Link>
-                  <Link
-                    to="/help/getstarted/Info_Bookings"
-                    className={`block px-3 py-1 text-sm rounded-md transition-colors ${sidebarActive("/help/getstarted/Info_Bookings")}`}
-                  >
-                    Booking Consultations
+                    Grade
                   </Link>
                 </nav>
 
                 <h3 className="text-sm font-semibold text-gray-900 uppercase tracking-wide mb-4 mt-8">
-                  Student Features
+                  Features
                 </h3>
                 <nav className="space-y-2">
+                  {isTeacher && (
+                    <>
+                      <Link
+                        to="/help/features/Info_Polycon_Analysis"
+                        className={`block px-3 py-1 text-sm rounded-md transition-colors ${sidebarActive(
+                          "/help/features/Info_Polycon_Analysis"
+                        )}`}
+                      >
+                        Polycon Analysis
+                      </Link>
+                        <Link
+                        to="/help/features/Info_Concern_Analysis"
+                        className={`block px-3 py-1 text-sm rounded-md transition-colors ${sidebarActive(
+                          "/help/features/Info_Concern_Analysis"
+                        )}`}
+                      >
+                        Concern Analysis
+                      </Link>
+                    </>
+                  )}
                   <Link
-                    to="/help/studentfeatures/Info_Consultation_Booking"
-                    className={`block px-3 py-1 text-sm rounded-md transition-colors ${sidebarActive("/help/getstarted/Info_Consultation_Booking")}`}
+                    to="/help/features/Info_Consultation_Booking"
+                    className={`block px-3 py-1 text-sm rounded-md transition-colors ${sidebarActive(
+                      "/help/features/Info_Consultation_Booking"
+                    )}`}
                   >
                     Consultation Booking
                   </Link>
+                  {isTeacher && (
+                    <Link
+                      to="/help/features/Info_Enrolled_Student"
+                      className={`block px-3 py-1 text-sm rounded-md transition-colors ${sidebarActive(
+                        "/help/features/Info_Enrolled_Student"
+                      )}`}
+                    >
+                      Enrolled Students
+                    </Link>
+                  )}
                   <Link
-                    to="/help/studentfeatures/Info_Calendar_Management"
-                    className={`block px-3 py-1 text-sm rounded-md transition-colors ${sidebarActive("/help/getstarted/Info_Calendar_Management")}`}
+                    to="/help/features/Info_Calendar_Management"
+                    className={`block px-3 py-1 text-sm rounded-md transition-colors ${sidebarActive(
+                      "/help/features/Info_Calendar_Management"
+                    )}`}
                   >
                     Calendar Management
                   </Link>
                   <Link
-                    to="/help/studentfeatures/Info_Notifications"
-                    className={`block px-3 py-1 text-sm rounded-md transition-colors ${sidebarActive("/help/getstarted/Info_Notifications")}`}
+                    to="/help/features/Info_Notifications"
+                    className={`block px-3 py-1 text-sm rounded-md transition-colors ${sidebarActive(
+                      "/help/features/Info_Notifications"
+                    )}`}
                   >
                     Notifications
                   </Link>
@@ -249,13 +329,17 @@ const Help_Main_Content = () => {
                 <nav className="space-y-2">
                   <Link
                     to="/help/support/FAQ"
-                    className={`block px-3 py-1 text-sm rounded-md transition-colors ${sidebarActive("/help/getstarted/FAQ")}`}
+                    className={`block px-3 py-1 text-sm rounded-md transition-colors ${sidebarActive(
+                      "/help/support/FAQ"
+                    )}`}
                   >
                     FAQ
                   </Link>
                   <Link
-                    to="/help/getstarted/Contact"
-                    className={`block px-3 py-1 text-sm rounded-md transition-colors ${sidebarActive("/help/getstarted/Contact")}`}
+                    to="/help/support/Contact"
+                    className={`block px-3 py-1 text-sm rounded-md transition-colors ${sidebarActive(
+                      "/help/support/Contact"
+                    )}`}
                   >
                     Contact Support
                   </Link>
@@ -265,9 +349,23 @@ const Help_Main_Content = () => {
           </div>
 
           {/* Main content area */}
-          <div className="flex-1">
+          <motion.div
+            initial={{ opacity: 0, x: 50 }}
+            animate={{ opacity: 1, x: 0 }}
+            transition={{ duration: 0.5 }}
+            className="flex-1"
+          >
+            <div className="mb-4">
+              <input
+                type="text"
+                placeholder="Search help articles..."
+                className="w-full px-4 py-2 text-sm text-gray-700 placeholder-gray-400 bg-gray-100 rounded-lg focus:outline-none focus:ring-2 focus:ring-[#057DCD] focus:border-transparent"
+                value={searchQuery}
+                onChange={handleSearchChange}
+              />
+            </div>
             <Outlet />
-          </div>
+          </motion.div>
           {!(
             location.pathname.toLowerCase().includes("/faq") ||
             location.pathname.toLowerCase().includes("/contact")
@@ -307,4 +405,8 @@ const Help_Main_Content = () => {
   );
 };
 
-export default Help_Main_Content;
+export default () => (
+  <HelpProvider>
+    <Help_Main_Content />
+  </HelpProvider>
+);

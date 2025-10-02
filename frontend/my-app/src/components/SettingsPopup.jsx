@@ -25,6 +25,7 @@ const SettingsPopup = ({
 }) => {
   const navigate = useNavigate();
   const { clearNotificationsOnLogout } = useToast();
+  const isAdmin = localStorage.getItem("userRole") === "admin";
   const [showPasswordModal, setShowPasswordModal] = useState(false);
   const [isMobile, setIsMobile] = useState(window.innerWidth < 640);
 
@@ -393,17 +394,53 @@ const SettingsPopup = ({
                   </>
                 )}
 
-                <div className="px-6 py-2">
-                  <p className="text-sm font-semibold text-gray-500 uppercase tracking-wider mb-2">
-                    Help
-                  </p>
-                  <button
-                    onClick={() => navigate("/help/getstarted/")}
-                    className="w-full text-left px-4 py-3 text-base text-gray-700 hover:bg-gray-50 active:bg-gray-100 rounded flex items-center"
-                  >
-                    ?
-                  </button>
-                </div>
+                {!isAdmin && (
+                  <div className="px-6 py-2">
+                    <p className="text-sm font-semibold text-gray-500 uppercase tracking-wider mb-2">
+                      Security
+                    </p>
+                    <a
+                      href="/help/getstarted/"
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      className="w-full text-left px-4 py-3 text-base text-gray-700 hover:bg-gray-50 active:bg-gray-100 rounded flex items-center"
+                    >
+                      <svg
+                        xmlns="http://www.w3.org/2000/svg"
+                        className="h-5 w-5 mr-2 text-gray-500"
+                        fill="none"
+                        viewBox="0 0 24 24"
+                        stroke="currentColor"
+                      >
+                        <circle
+                          cx="12"
+                          cy="12"
+                          r="10"
+                          stroke="currentColor"
+                          strokeWidth="2"
+                          fill="#fff"
+                        />
+                        <path
+                          d="M12 16h.01M12 12a2 2 0 10-2-2"
+                          stroke="currentColor"
+                          strokeWidth="2"
+                          strokeLinecap="round"
+                          strokeLinejoin="round"
+                        />
+                        <path
+                          d="M12 14v-1"
+                          stroke="currentColor"
+                          strokeWidth="2"
+                          strokeLinecap="round"
+                          strokeLinejoin="round"
+                        />
+                      </svg>
+                      Get Help
+                    </a>
+                  </div>
+                )}
+
+                <div className="h-[1px] bg-gray-200 my-2" />
 
                 {/* Logout Section */}
                 <div className="px-6 py-2">
@@ -438,7 +475,7 @@ const SettingsPopup = ({
             style={{
               top: Math.max(
                 20,
-                Math.min(position.top, window.innerHeight - 360)
+                Math.min(position.top, window.innerHeight - 320)
               ),
               left: Math.max(
                 20,
@@ -544,7 +581,7 @@ const SettingsPopup = ({
                 </div>
               </>
             )}
-
+{/* 
             <div className="h-[1px] bg-gray-200 my-2" />
 
             <div className="px-4 py-2">
@@ -587,7 +624,7 @@ const SettingsPopup = ({
                 </svg>
                 Get Help
               </a>
-            </div>
+            </div> */}
 
             {/* Divider */}
             <div className="h-[1px] bg-gray-200 my-2" />

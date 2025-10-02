@@ -10,7 +10,8 @@ const Help = () => {
   const location = useLocation();
   const [SignInClicked, setSignInClicked] = useState(false);
   const [isMenuOpen, setIsMenuOpen] = useState(false);
-  const [isSearchOpen, setIsSearchOpen] = useState(false);
+  const [isTeacher, setIsTeacher] = React.useState(false);
+  const [isStudent, setIsStudent] = React.useState(false);
 
   useEffect(() => {
     if (isMenuOpen && window.innerWidth < 1024) {
@@ -36,94 +37,72 @@ const Help = () => {
     };
   }, [isMenuOpen]);
 
-  const hideHeader = location.pathname !== "/help" && location.pathname !== "/help/";
+  React.useEffect(() => {
+    const role = localStorage.getItem("userRole");
+    setIsTeacher(role === "faculty");
+    setIsStudent(role === "student");
+  }, []);
 
   return (
     <div className="min-h-screen flex flex-col bg-gray-50 overflow-hidden">
       {/* Header */}
-      {!hideHeader && (
-        <div className="border-b bg-[#057DCD] shadow-xl relative z-50">
-          <div className="max-w-7xl mx-auto px-4 sm:px-12 lg:px-8">
-            <div className="flex justify-between items-center py-4">
-              {/* Left: Logo */}
-              <div className="flex items-center">
-                <button
-                  onClick={() => navigate("/")}
-                  className="focus:outline-none"
-                >
-                  <motion.div
-                    whileHover={{ scale: 1.05 }}
-                    className="flex items-center space-x-2 sm:space-x-3"
-                  >
-                    <img
-                      src={logo}
-                      alt="POLYCON Logo"
-                      className="h-10 w-10 sm:h-14 sm:w-14 object-contain"
-                    />
-                    <span className="text-white font-bold text-lg sm:text-xl hidden sm:block">
-                      POLYCON
-                    </span>
-                  </motion.div>
-                </button>
-              </div>
-
-              <div className="flex-1 mx-4 hidden lg:flex justify-center lg:justify-end">
-                {isSearchOpen ? (
-                  <div className="relative w-72">
-                    <input
-                      autoFocus
-                      type="text"
-                      placeholder="Search"
-                      className="w-full px-4 py-2 pl-10 border rounded-md focus:outline-none focus:ring-2 focus:ring-[#057DCD] transition-all duration-200"
-                      onBlur={() => setIsSearchOpen(false)}
-                    />
-                    <FaSearch className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400" />
-                  </div>
-                ) : (
-                  <motion.button
-                    whileHover={{ scale: 1.05 }}
-                    whileTap={{ scale: 0.95 }}
-                    onClick={() => setIsSearchOpen(true)}
-                    className="bg-white/15 hover:bg-white/25 text-white p-3 rounded-full transition-all duration-200 shadow-sm"
-                  >
-                    <FaSearch className="text-xl" />
-                  </motion.button>
-                )}
-              </div>
-
-              {/* Right: Sign In & Menu */}
-              <div className="flex items-center space-x-4">
-                <motion.button
+      <div className="border-b bg-[#057DCD] shadow-xl relative z-50 lg:hidden">
+        <div className="max-w-7xl mx-auto px-4 sm:px-12 lg:px-8">
+          <div className="flex justify-between items-center py-4">
+            {/* Left: Logo */}
+            <div className="flex items-center">
+              <button
+                onClick={() => navigate("/")}
+                className="focus:outline-none"
+              >
+                <motion.div
                   whileHover={{ scale: 1.05 }}
-                  whileTap={{ scale: 0.95 }}
-                  onClick={() => {
-                    setSignInClicked(true);
-                    setTimeout(() => setSignInClicked(false), 300);
-                    navigate("/login");
-                  }}
-                  className={`hidden lg:block bg-white text-base lg:text-xl text-[#0056a6] w-[6rem] lg:w-[8rem] px-4 py-2
-            rounded-[50px] font-semibold transition-all duration-200
-            hover:bg-[#e6f3ff] hover:text-[#0078e7] hover:shadow-md ${
-              SignInClicked ? "scale-90" : "scale-100"
-            }`}
+                  className="flex items-center space-x-2 sm:space-x-3"
                 >
-                  Sign In
-                </motion.button>
+                  <img
+                    src={logo}
+                    alt="POLYCON Logo"
+                    className="h-10 w-10 sm:h-14 sm:w-14 object-contain"
+                  />
+                  <span className="text-white font-bold text-lg sm:text-xl hidden sm:block">
+                    POLYCON
+                  </span>
+                </motion.div>
+              </button>
+            </div>
 
-                {/* Burger Menu Button */}
-                <motion.button
-                  whileHover={{ scale: 1.05 }}
-                  whileTap={{ scale: 0.95 }}
-                  onClick={() => setIsMenuOpen(!isMenuOpen)}
-                  className="block lg:hidden text-white text-2xl p-2 rounded-md hover:bg-white/20 transition-colors focus:outline-none"
-                >
-                  {isMenuOpen ? <FaTimes /> : "☰"}
-                </motion.button>
-              </div>
+            {/* Right: Sign In & Menu */}
+            <div className="flex items-center space-x-4">
+              <motion.button
+                whileHover={{ scale: 1.05 }}
+                whileTap={{ scale: 0.95 }}
+                onClick={() => {
+                  setSignInClicked(true);
+                  setTimeout(() => setSignInClicked(false), 300);
+                  navigate("/login");
+                }}
+                className={`hidden lg:block bg-white text-base lg:text-xl text-[#0056a6] w-[6rem] lg:w-[8rem] px-4 py-2
+                    rounded-[50px] font-semibold transition-all duration-200
+                  hover:bg-[#e6f3ff] hover:text-[#0078e7] hover:shadow-md ${
+                    SignInClicked ? "scale-90" : "scale-100"
+                  }`}
+              >
+                Sign In
+              </motion.button>
+
+              {/* Burger Menu Button */}
+              <motion.button
+                whileHover={{ scale: 1.05 }}
+                whileTap={{ scale: 0.95 }}
+                onClick={() => setIsMenuOpen(!isMenuOpen)}
+                className="block lg:hidden text-white text-2xl p-2 rounded-md hover:bg-white/20 transition-colors focus:outline-none"
+              >
+                {isMenuOpen ? <FaTimes /> : "☰"}
+              </motion.button>
             </div>
           </div>
         </div>
-      )}
+      </div>
 
       {/* Mobile Menu Overlay */}
       <AnimatePresence>
@@ -161,22 +140,10 @@ const Help = () => {
             whileHover={{ scale: 1.1 }}
             whileTap={{ scale: 0.9 }}
             onClick={() => setIsMenuOpen(false)}
-            className="p-3 hover:bg-white/20 rounded-md transition-colors"
+            className="p-3 hover:bg-white/20 rounded-md transition-colors mr-2"
           >
-            <FaTimes className="text-xl text-white" />
+            <FaTimes className="text-[22px] text-white" />
           </motion.button>
-        </div>
-
-        {/* Search Bar (Mobile) */}
-        <div className="p-4 border-b border-gray-200 bg-gray-50">
-          <div className="relative">
-            <input
-              type="text"
-              placeholder="Search"
-              className="w-full px-4 py-2 pl-10 border rounded-md focus:outline-none focus:ring-2 focus:ring-[#0056a6]"
-            />
-            <FaSearch className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400" />
-          </div>
         </div>
 
         {/* Menu Content */}
@@ -194,33 +161,30 @@ const Help = () => {
               >
                 Overview
               </Link>
+              {!isTeacher || isStudent && (
+                <>
+                  <Link
+                    to="/help/getstarted/Info_Login"
+                    onClick={() => setIsMenuOpen(false)}
+                    className="block text-sm text-gray-600 hover:text-[#0056a6] hover:bg-blue-50 p-2 rounded-md transition-colors"
+                  >
+                    Account Login
+                  </Link>
+                  <Link
+                    to="/help/getstarted/Info_Signup"
+                    onClick={() => setIsMenuOpen(false)}
+                    className="block text-sm text-gray-600 hover:text-[#0056a6] hover:bg-blue-50 p-2 rounded-md transition-colors"
+                  >
+                    Account Registration
+                  </Link>
+                </>
+              )}
               <Link
-                to="/help/getstarted/Info_Login"
+                to="/help/getstarted/Info_Dashboard"
                 onClick={() => setIsMenuOpen(false)}
                 className="block text-sm text-gray-600 hover:text-[#0056a6] hover:bg-blue-50 p-2 rounded-md transition-colors"
               >
-                Account Login
-              </Link>
-              <Link
-                to="/help/getstarted/Info_Signup"
-                onClick={() => setIsMenuOpen(false)}
-                className="block text-sm text-gray-600 hover:text-[#0056a6] hover:bg-blue-50 p-2 rounded-md transition-colors"
-              >
-                Account Registration
-              </Link>
-              <Link
-                to="/help/getstarted/Info_Student_Dashboard"
-                onClick={() => setIsMenuOpen(false)}
-                className="block text-sm text-gray-600 hover:text-[#0056a6] hover:bg-blue-50 p-2 rounded-md transition-colors"
-              >
-                Student Dashboard
-              </Link>
-              <Link
-                to="/help/getstarted/Info_History"
-                onClick={() => setIsMenuOpen(false)}
-                className="block text-sm text-gray-600 hover:text-[#0056a6] hover:bg-blue-50 p-2 rounded-md transition-colors"
-              >
-                History
+                Dashboard
               </Link>
               <Link
                 to="/help/getstarted/Info_Appointments"
@@ -229,36 +193,79 @@ const Help = () => {
               >
                 Appointments
               </Link>
+              {isTeacher && (
+                <Link
+                  to="/help/getstarted/Info_Set_Schedule"
+                  onClick={() => setIsMenuOpen(false)}
+                  className="block text-sm text-gray-600 hover:text-[#0056a6] hover:bg-blue-50 p-2 rounded-md transition-colors"
+                >
+                  Schedule
+                </Link>
+              )}
               <Link
-                to="/help/getstarted/Info_Bookings"
+                to="/help/getstarted/Info_History"
                 onClick={() => setIsMenuOpen(false)}
                 className="block text-sm text-gray-600 hover:text-[#0056a6] hover:bg-blue-50 p-2 rounded-md transition-colors"
               >
-                Booking Consultations
+                History
+              </Link>
+              <Link
+                to="/help/getstarted/Info_Grade"
+                onClick={() => setIsMenuOpen(false)}
+                className="block text-sm text-gray-600 hover:text-[#0056a6] hover:bg-blue-50 p-2 rounded-md transition-colors"
+              >
+                Grade
               </Link>
             </div>
 
-            {/* Student Features Section */}
+            {/* Features Section */}
             <h3 className="text-sm font-semibold text-gray-900 uppercase tracking-wide mb-3 pb-2 border-b border-gray-100">
-              Student Features
+              Features
             </h3>
             <div className="space-y-2 mb-6">
+              {isTeacher && (
+                <>
+                  <Link
+                    to="/help/features/Info_Polycon_Analysis"
+                    onClick={() => setIsMenuOpen(false)}
+                    className="block text-sm text-gray-600 hover:text-[#0056a6] hover:bg-blue-50 p-2 rounded-md transition-colors"
+                  >
+                    Polycon Analysis
+                  </Link>
+                  <Link
+                    to="/help/features/Info_Concern_Analysis"
+                    onClick={() => setIsMenuOpen(false)}
+                    className="block text-sm text-gray-600 hover:text-[#0056a6] hover:bg-blue-50 p-2 rounded-md transition-colors"
+                  >
+                    Concern Analysis
+                  </Link>
+                </>
+              )}
               <Link
-                to="/help/studentfeatures/Info_Consultation_Booking"
+                to="/help/features/Info_Consultation_Booking"
                 onClick={() => setIsMenuOpen(false)}
                 className="block text-sm text-gray-600 hover:text-[#0056a6] hover:bg-blue-50 p-2 rounded-md transition-colors"
               >
                 Consultation Booking
               </Link>
               <Link
-                to="/help/studentfeatures/Info_Calendar_Management"
+                to="/help/features/Info_Calendar_Management"
                 onClick={() => setIsMenuOpen(false)}
                 className="block text-sm text-gray-600 hover:text-[#0056a6] hover:bg-blue-50 p-2 rounded-md transition-colors"
               >
                 Calendar Management
               </Link>
+              {isTeacher && (
+                <Link
+                  to="/help/features/Info_Calendar_Management"
+                  onClick={() => setIsMenuOpen(false)}
+                  className="block text-sm text-gray-600 hover:text-[#0056a6] hover:bg-blue-50 p-2 rounded-md transition-colors"
+                >
+                  Enrolled Students
+                </Link>
+              )}
               <Link
-                to="/help/studentfeatures/Info_Notifications"
+                to="/help/features/Info_Notifications"
                 onClick={() => setIsMenuOpen(false)}
                 className="block text-sm text-gray-600 hover:text-[#0056a6] hover:bg-blue-50 p-2 rounded-md transition-colors"
               >
@@ -290,7 +297,7 @@ const Help = () => {
         </div>
 
         {/* Menu Footer */}
-        <div className="p-3 border-t sticky bottom-0 right-0 left-0 border-gray-200 bg-white">
+        <div className="p-3 border-t fixed bottom-0 right-0 left-0 border-gray-200 bg-white">
           <motion.button
             whileHover={{ scale: 1.02 }}
             whileTap={{ scale: 0.98 }}

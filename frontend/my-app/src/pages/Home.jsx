@@ -249,7 +249,7 @@ const Nav = ({ handleLoginClick, handleSignupClick, handleSectionNavigation }) =
                 onClick={() => window.location.href = '/admin-consultation'}
                 className="text-white font-medium hover:text-blue-200 transition-colors duration-200 relative group"
               >
-                Teacher Leaderboard
+                Leaderboard
                 <span className="absolute bottom-0 left-0 w-0 h-0.5 bg-white group-hover:w-full transition-all duration-300" />
               </motion.button>
               
@@ -1137,7 +1137,10 @@ const HelpButton = () => {
       transition={{ delay: 1, type: "spring", stiffness: 200 }}
       className="fixed bottom-8 right-8 z-50"
     >
-      <motion.button
+      <motion.a
+        href="/help/getstarted/"
+        target="_blank"
+        rel="noopener noreferrer"
         whileHover={{ scale: 1.1 }}
         whileTap={{ scale: 0.9 }}
         animate={{ 
@@ -1150,11 +1153,10 @@ const HelpButton = () => {
             ease: "easeInOut"
           }
         }}
-        className="w-16 h-16 bg-[#057DCD] text-white rounded-full shadow-xl hover:shadow-2xl transition-shadow duration-300 flex items-center justify-center text-2xl font-bold"
-        onClick={() => navigate("/help/getstarted/")}
+        className="w-16 h-16 bg-[#057DCD] text-white rounded-full shadow-xl hover:shadow-2xl transition-shadow duration-300 flex items-center justify-center text-2xl font-bold z-50"
       >
         ?
-      </motion.button>
+      </motion.a>
     </motion.div>
   );
 };
