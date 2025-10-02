@@ -48,7 +48,7 @@ def get_bookings():
             continue
         # Find the teacher user by ID number first (b.teacher_id is a string like "22-3191-535")
         teacher_user = User.query.filter_by(id_number=b.teacher_id).first()
-        teacher_name = "Unknown Teacher"
+        teacher_name = "Unkown Teacher"
         teacher_profile = None
         
         if teacher_user:
