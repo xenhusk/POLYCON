@@ -9,6 +9,7 @@ It provides multiple methods for data synchronization.
 import os
 import sys
 import subprocess
+import shutil
 import psycopg2
 from datetime import datetime
 import requests
@@ -113,6 +114,83 @@ Generated: {datetime.now().strftime('%Y-%m-%d %H:%M:%S')}
         print(f"📋 Instructions saved to: {instructions_file}")
         return instructions
 
+    def import_sql_to_production(self, sql_file: str, connection_url: Optional[str] = None) -> bool:
+        """Import a specific SQL file into the production database.
+
+        Prefers using the psql CLI if available; falls back to psycopg2 execution.
+
+        Args:
+            sql_file: Path to the SQL file to import.
+            connection_url: Full PostgreSQL connection URL. If not provided,
+                tries env vars in order: RENDER_DATABASE_URL, PRODUCTION_DATABASE_URL, DATABASE_URL.
+
+        Returns:
+            True on success, False otherwise.
+        """
+        # Resolve SQL file path and validate existence
+        sql_path = os.path.abspath(sql_file)
+        if not os.path.exists(sql_path):
+            print(f"❌ SQL file not found: {sql_path}")
+            return False
+
+        # Resolve connection URL
+        db_url = (
+            connection_url
+            or os.getenv('RENDER_DATABASE_URL')
+            or os.getenv('PRODUCTION_DATABASE_URL')
+            or os.getenv('DATABASE_URL')
+        )
+
+        if not db_url:
+            print("❌ No production connection string provided.")
+            print("   Pass --connection 'postgresql://user:pass@host:port/db' or set RENDER_DATABASE_URL.")
+            return False
+
+        print(f"🚀 Importing SQL into production using: {('psql' if shutil.which('psql') else 'psycopg2')} ")
+        print(f"📄 File: {sql_path}")
+
+        # Try psql first if available
+        if shutil.which('psql'):
+            try:
+                cmd = [
+                    'psql',
+                    db_url,
+                    '-v', 'ON_ERROR_STOP=1',
+                    '-f', sql_path,
+                ]
+                result = subprocess.run(cmd, text=True, capture_output=True)
+                if result.returncode == 0:
+                    print("✅ SQL import completed via psql")
+                    return True
+                else:
+                    print("⚠️  psql reported errors. Falling back to psycopg2 execution.")
+                    print(result.stderr[:2000])
+            except Exception as e:
+                print(f"⚠️  psql invocation failed: {e}. Falling back to psycopg2 execution.")
+
+        # Fallback to psycopg2 execution
+        try:
+            with open(sql_path, 'r', encoding='utf-8') as f:
+                sql_text = f.read()
+
+            # psycopg2 cannot execute psql meta-commands (e.g., \copy, \connect)
+            disallowed_tokens = ['\n\\copy', '\n\\connect', '\n\\i ', '\n\\include ']
+            if any(token in sql_text for token in disallowed_tokens):
+                print("❌ SQL file contains psql meta-commands (e.g., \\copy). Please use psql method.")
+                return False
+
+            conn = psycopg2.connect(db_url)
+            conn.autocommit = True
+            cur = conn.cursor()
+            cur.execute(sql_text)
+            cur.close()
+            conn.close()
+            print("✅ SQL import completed via psycopg2")
+            return True
+        except Exception as e:
+            print(f"❌ psycopg2 import failed: {e}")
+            return False
+
 def main():
     """Main function with command-line interface"""
     import argparse
@@ -123,7 +201,8 @@ def main():
     parser.add_argument('--type', default='all', 
                        choices=['users', 'consultations', 'appointments', 'departments', 'semesters', 'all_academic', 'all_sessions', 'all'],
                        help='Type of data to export')
-    parser.add_argument('--file', help='SQL file to upload')
+    parser.add_argument('--file', help='SQL file to upload/import')
+    parser.add_argument('--connection', help='Production DB connection URL (Render PostgreSQL connection string)')
     
     args = parser.parse_args()
     manager = ProductionDataManager()
@@ -145,10 +224,9 @@ def main():
         if not args.file:
             print("❌ Please specify --file parameter")
             return
-        
-        print(f"🚀 Uploading {args.file} to production...")
-        # Implementation depends on your specific needs
-        print("⚠️  Manual upload required - see generated instructions")
+
+        print(f"🚀 Importing {args.file} to production database...")
+        manager.import_sql_to_production(args.file, args.connection)
 
 if __name__ == '__main__':
     if len(sys.argv) == 1:
