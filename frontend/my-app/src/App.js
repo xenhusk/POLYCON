@@ -944,13 +944,27 @@ function App() {
                           <Route path="/settings" element={<Settings />} />
                           <Route path="/teacher-schedule" element={<TeacherScheduleManager />} />
                           <Route path="/comparative-analysis" element={<ComparativeAnalysis />} />
+                          <Route path="/session" element={<Session />} />
+                          <Route path="/finaldocument" element={<FinalDocument />} />
+                          <Route path="/sidebar-preview" element={<SidebarPreview />} />
+                          <Route path="/preloader-test" element={<PreloaderTest />} />
+                          <Route path="/socket-test" element={<SocketTest />} />
+                          <Route path="/enrollment-test" element={<EnrollmentTestPage />} />
                         </Route>
                         {/* Admin-only routes */}
                         <Route element={<ProtectedRoute roles={["admin"]} />}>
+                          <Route path="/homeadmin" element={<HomeAdmin />} />
                           <Route path="/admin" element={<AdminPortal />} />
                           <Route path="/admin-consultation" element={<AdminConsultation />} />
                           <Route path="/courses" element={<Courses />} />
+                          <Route path="/programs" element={<Programs />} />
+                          <Route path="/department" element={<Departments />} />
                           <Route path="/semester-management" element={<SemesterManagement />} />
+                        </Route>
+                        {/* Faculty-only routes */}
+                        <Route element={<ProtectedRoute roles={["faculty"]} />}>
+                          <Route path="/addgrade" element={<AddGrade />} />
+                          <Route path="/booking-teacher" element={<BookingTeacher />} />
                         </Route>
                         {/* Faculty-only routes */}
                         <Route element={<ProtectedRoute roles={["faculty"]} />}>
@@ -1023,37 +1037,19 @@ function App() {
                             <Route path="FAQ" element={<FAQ />} />
                           </Route>
                         </Route>
-                        <Route path="/booking-teacher" element={<BookingTeacher />} />
-                        <Route path="/session" element={<Session />} />
+                        
                         <Route
                           path="/sidebar-preview"
                           element={<SidebarPreview />}
                         />{" "}
                         {/* Add this route */}
                         
-                        <Route path="/programs" element={<Programs />} />{" "}
-                        {/* Add this route */}
-                        <Route
-                          path="/finaldocument"
-                          element={<FinalDocument />}
-                        />{" "}
-                        {/* New route */}
-                        <Route
-                          path="/department"
-                          element={<Departments />}
-                        />{" "}
-                        {/* New route */}
                         <Route
                           path="/preloader-test"
                           element={<PreloaderTest />}
                         />{" "}
                         {/* Add this line */}
-                        <Route path="/homeadmin" element={<UserHome />} />
-                        <Route
-                          path="/enrollment-test"
-                          element={<EnrollmentTestPage />}
-                        />{" "}
-                        {/* new test route */}
+                        
                         <Route
                           path="/socket-test"
                           element={<SocketTest />}
