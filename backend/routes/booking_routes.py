@@ -401,9 +401,21 @@ def confirm_booking():
         # Set schedule and venue from request data
         if data.get('schedule'):
             try:
-                schedule = datetime.fromisoformat(data.get('schedule').replace('Z', '+00:00'))
-                # Convert to naive UTC datetime for database storage (consistent with creation)
-                booking.schedule = schedule.astimezone(timezone.utc).replace(tzinfo=None)
+                schedule_str = data.get('schedule')
+                # Handle UTC timestamps and offsets consistently with create_booking
+                if schedule_str.endswith('Z'):
+                    # ISO format with Z suffix indicates UTC
+                    schedule_dt = datetime.fromisoformat(schedule_str.replace('Z', '+00:00'))
+                    booking.schedule = schedule_dt.astimezone(timezone.utc).replace(tzinfo=None)
+                elif '+' in schedule_str or schedule_str.endswith('+00:00'):
+                    # ISO format with timezone offset provided
+                    schedule_dt = datetime.fromisoformat(schedule_str)
+                    booking.schedule = schedule_dt.astimezone(timezone.utc).replace(tzinfo=None)
+                else:
+                    # Assume naive datetime is already in UTC (frontend sent UTC without tz)
+                    schedule_dt = datetime.fromisoformat(schedule_str)
+                    booking.schedule = schedule_dt.replace(tzinfo=None)
+                logger.info(f"Confirm conversion: '{schedule_str}' -> {booking.schedule} (UTC naive)")
             except ValueError:
                 return jsonify({"error": "Invalid schedule format"}), 400
                 
