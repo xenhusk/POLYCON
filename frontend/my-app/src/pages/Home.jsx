@@ -766,7 +766,7 @@ const About = ({ animateSection }) => {
                     <motion.a
                       whileHover={{ scale: 1.1 }}
                       whileTap={{ scale: 0.9 }}
-                      href="https://github.com/clarkjimgabiota" // Replace with actual GitHub URL
+                      href="https://github.com/Mitakashim3" // Replace with actual GitHub URL
                       target="_blank"
                       rel="noopener noreferrer"
                       className="bg-gray-800 text-white p-2 rounded-full hover:bg-gray-700 transition-colors duration-200"
@@ -778,7 +778,7 @@ const About = ({ animateSection }) => {
                     <motion.a
                       whileHover={{ scale: 1.1 }}
                       whileTap={{ scale: 0.9 }}
-                      href="https://linkedin.com/in/clarkjimgabiota" // Replace with actual LinkedIn URL
+                      href="https://linkedin.com/in/clark-jim-gabiota-a9b48a382" // Replace with actual LinkedIn URL
                       target="_blank"
                       rel="noopener noreferrer"
                       className="bg-[#0077B5] text-white p-2 rounded-full hover:bg-[#005885] transition-colors duration-200"
@@ -790,7 +790,7 @@ const About = ({ animateSection }) => {
                     <motion.a
                       whileHover={{ scale: 1.1 }}
                       whileTap={{ scale: 0.9 }}
-                      href="https://discord.com/users/clarkjimgabiota" // Replace with actual Discord URL
+                      href="https://discord.com/users/823719242477338624" // Replace with actual Discord URL
                       target="_blank"
                       rel="noopener noreferrer"
                       className="bg-[#5865F2] text-white p-2 rounded-full hover:bg-[#4752C4] transition-colors duration-200"
@@ -840,7 +840,7 @@ const About = ({ animateSection }) => {
                     <motion.a
                       whileHover={{ scale: 1.1 }}
                       whileTap={{ scale: 0.9 }}
-                      href="https://linkedin.com/in/kyrellsantillan" // Replace with actual LinkedIn URL
+                      href="https://linkedin.com/in/kyrell-santillan" // Replace with actual LinkedIn URL
                       target="_blank"
                       rel="noopener noreferrer"
                       className="bg-[#0077B5] text-white p-2 rounded-full hover:bg-[#005885] transition-colors duration-200"
