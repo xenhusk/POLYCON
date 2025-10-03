@@ -644,67 +644,147 @@ function History() {
                     animate={{ opacity: 1, y: 0 }}
                     exit={{ opacity: 0, y: -20 }}
                     transition={{ duration: 0.4, delay: 0.2 }}
-                    className="mt-8 flex justify-center items-center gap-3"
+                    className="mt-8"
                   >
-                    <motion.button
-                      whileHover={{ scale: 1.02 }}
-                      whileTap={{ scale: 0.98 }}
-                      onClick={() => handlePageChange(currentPage - 1)}
-                      disabled={!pagination.has_prev}
-                      className="px-6 py-3 rounded-lg border-2 border-gray-300 bg-white text-gray-700 
-                        hover:bg-gray-50 hover:border-[#057DCD] disabled:opacity-50 disabled:cursor-not-allowed
-                        transition-all duration-200 font-semibold shadow-lg flex items-center gap-2"
-                    >
-                      <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 19l-7-7 7-7" />
-                      </svg>
-                      Previous
-                    </motion.button>
-                    
-                    <div className="flex gap-2">
-                      {Array.from({ length: Math.min(5, pagination.total_pages) }, (_, i) => {
-                        let pageNum;
-                        if (pagination.total_pages <= 5) {
-                          pageNum = i + 1;
-                        } else {
-                          const startPage = Math.max(1, currentPage - 2);
-                          const endPage = Math.min(pagination.total_pages, startPage + 4);
-                          pageNum = startPage + i;
-                          if (pageNum > endPage) return null;
-                        }
+                    {/* Mobile Pagination */}
+                    <div className="flex flex-col sm:hidden gap-4">
+                      {/* Page Info */}
+                      <div className="text-center">
+                        <span className="text-sm text-gray-600">
+                          Page <span className="font-semibold text-[#057DCD]">{currentPage}</span> of{' '}
+                          <span className="font-semibold text-[#057DCD]">{pagination.total_pages}</span>
+                        </span>
+                      </div>
+                      
+                      {/* Mobile Navigation Buttons */}
+                      <div className="flex justify-between items-center gap-3">
+                        <motion.button
+                          whileHover={{ scale: 1.02 }}
+                          whileTap={{ scale: 0.98 }}
+                          onClick={() => handlePageChange(currentPage - 1)}
+                          disabled={!pagination.has_prev}
+                          className="flex-1 px-4 py-3 rounded-lg border-2 border-gray-300 bg-white text-gray-700 
+                            hover:bg-gray-50 hover:border-[#057DCD] disabled:opacity-50 disabled:cursor-not-allowed
+                            transition-all duration-200 font-semibold shadow-lg flex items-center justify-center gap-2 text-sm"
+                        >
+                          <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 19l-7-7 7-7" />
+                          </svg>
+                          <span className="hidden xs:inline">Previous</span>
+                          <span className="xs:hidden">Prev</span>
+                        </motion.button>
                         
-                        return (
-                          <motion.button
-                            key={pageNum}
-                            whileHover={{ scale: 1.05 }}
-                            whileTap={{ scale: 0.95 }}
-                            onClick={() => handlePageChange(pageNum)}
-                            className={`px-4 py-3 rounded-lg border-2 font-semibold transition-all duration-200 shadow-lg ${
-                              currentPage === pageNum
-                                ? 'border-[#057DCD] bg-[#057DCD] text-white'
-                                : 'border-gray-300 bg-white text-gray-700 hover:bg-[#057DCD] hover:text-white hover:border-[#057DCD]'
-                            }`}
-                          >
-                            {pageNum}
-                          </motion.button>
-                        );
-                      })}
+                        <motion.button
+                          whileHover={{ scale: 1.02 }}
+                          whileTap={{ scale: 0.98 }}
+                          onClick={() => handlePageChange(currentPage + 1)}
+                          disabled={!pagination.has_next}
+                          className="flex-1 px-4 py-3 rounded-lg border-2 border-gray-300 bg-white text-gray-700 
+                            hover:bg-gray-50 hover:border-[#057DCD] disabled:opacity-50 disabled:cursor-not-allowed
+                            transition-all duration-200 font-semibold shadow-lg flex items-center justify-center gap-2 text-sm"
+                        >
+                          <span className="hidden xs:inline">Next</span>
+                          <span className="xs:hidden">Next</span>
+                          <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
+                          </svg>
+                        </motion.button>
+                      </div>
+                      
+                      {/* Mobile Page Numbers (Compact) */}
+                      <div className="flex justify-center gap-1">
+                        {Array.from({ length: Math.min(3, pagination.total_pages) }, (_, i) => {
+                          let pageNum;
+                          if (pagination.total_pages <= 3) {
+                            pageNum = i + 1;
+                          } else {
+                            const startPage = Math.max(1, currentPage - 1);
+                            const endPage = Math.min(pagination.total_pages, startPage + 2);
+                            pageNum = startPage + i;
+                            if (pageNum > endPage) return null;
+                          }
+                          
+                          return (
+                            <motion.button
+                              key={pageNum}
+                              whileHover={{ scale: 1.05 }}
+                              whileTap={{ scale: 0.95 }}
+                              onClick={() => handlePageChange(pageNum)}
+                              className={`px-3 py-2 rounded-lg border-2 font-semibold transition-all duration-200 shadow-lg text-sm ${
+                                currentPage === pageNum
+                                  ? 'border-[#057DCD] bg-[#057DCD] text-white'
+                                  : 'border-gray-300 bg-white text-gray-700 hover:bg-[#057DCD] hover:text-white hover:border-[#057DCD]'
+                              }`}
+                            >
+                              {pageNum}
+                            </motion.button>
+                          );
+                        })}
+                      </div>
                     </div>
-                    
-                    <motion.button
-                      whileHover={{ scale: 1.02 }}
-                      whileTap={{ scale: 0.98 }}
-                      onClick={() => handlePageChange(currentPage + 1)}
-                      disabled={!pagination.has_next}
-                      className="px-6 py-3 rounded-lg border-2 border-gray-300 bg-white text-gray-700 
-                        hover:bg-gray-50 hover:border-[#057DCD] disabled:opacity-50 disabled:cursor-not-allowed
-                        transition-all duration-200 font-semibold shadow-lg flex items-center gap-2"
-                    >
-                      Next
-                      <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
-                      </svg>
-                    </motion.button>
+
+                    {/* Desktop Pagination */}
+                    <div className="hidden sm:flex justify-center items-center gap-3">
+                      <motion.button
+                        whileHover={{ scale: 1.02 }}
+                        whileTap={{ scale: 0.98 }}
+                        onClick={() => handlePageChange(currentPage - 1)}
+                        disabled={!pagination.has_prev}
+                        className="px-6 py-3 rounded-lg border-2 border-gray-300 bg-white text-gray-700 
+                          hover:bg-gray-50 hover:border-[#057DCD] disabled:opacity-50 disabled:cursor-not-allowed
+                          transition-all duration-200 font-semibold shadow-lg flex items-center gap-2"
+                      >
+                        <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 19l-7-7 7-7" />
+                        </svg>
+                        Previous
+                      </motion.button>
+                      
+                      <div className="flex gap-2">
+                        {Array.from({ length: Math.min(5, pagination.total_pages) }, (_, i) => {
+                          let pageNum;
+                          if (pagination.total_pages <= 5) {
+                            pageNum = i + 1;
+                          } else {
+                            const startPage = Math.max(1, currentPage - 2);
+                            const endPage = Math.min(pagination.total_pages, startPage + 4);
+                            pageNum = startPage + i;
+                            if (pageNum > endPage) return null;
+                          }
+                          
+                          return (
+                            <motion.button
+                              key={pageNum}
+                              whileHover={{ scale: 1.05 }}
+                              whileTap={{ scale: 0.95 }}
+                              onClick={() => handlePageChange(pageNum)}
+                              className={`px-4 py-3 rounded-lg border-2 font-semibold transition-all duration-200 shadow-lg ${
+                                currentPage === pageNum
+                                  ? 'border-[#057DCD] bg-[#057DCD] text-white'
+                                  : 'border-gray-300 bg-white text-gray-700 hover:bg-[#057DCD] hover:text-white hover:border-[#057DCD]'
+                              }`}
+                            >
+                              {pageNum}
+                            </motion.button>
+                          );
+                        })}
+                      </div>
+                      
+                      <motion.button
+                        whileHover={{ scale: 1.02 }}
+                        whileTap={{ scale: 0.98 }}
+                        onClick={() => handlePageChange(currentPage + 1)}
+                        disabled={!pagination.has_next}
+                        className="px-6 py-3 rounded-lg border-2 border-gray-300 bg-white text-gray-700 
+                          hover:bg-gray-50 hover:border-[#057DCD] disabled:opacity-50 disabled:cursor-not-allowed
+                          transition-all duration-200 font-semibold shadow-lg flex items-center gap-2"
+                      >
+                        Next
+                        <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
+                        </svg>
+                      </motion.button>
+                    </div>
                   </motion.div>
                 )}
               </AnimatePresence>
