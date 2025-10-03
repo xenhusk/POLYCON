@@ -1,9 +1,12 @@
 from flask import Blueprint, request, jsonify
+from flask_cors import cross_origin
 from models import db, Booking, User, Student, Faculty
 from sqlalchemy.orm import joinedload
 from sqlalchemy import or_
 from services.socket_service import emit_booking_created, emit_booking_confirmed, emit_booking_cancelled
 from datetime import datetime, timezone
+import os
+import pytz
 import logging
 
 logger = logging.getLogger(__name__)
@@ -168,8 +171,11 @@ def get_all_bookings_admin():
         })
     return jsonify(result), 200
 
-@booking_bp.route('/create_booking', methods=['POST'])
+@booking_bp.route('/create_booking', methods=['POST', 'OPTIONS'])
+@cross_origin()
 def create_booking():
+    if request.method == 'OPTIONS':
+        return jsonify({'ok': True}), 200
     """
     Create a new booking/appointment
     Required fields: teacherID, studentIDs (array), schedule, venue
@@ -200,7 +206,6 @@ def create_booking():
     schedule_str = data.get('schedule')
     if not schedule_str:
         return jsonify({"error": "schedule is required"}), 400
-    from datetime import datetime, timezone
     try:
         # Handle UTC timestamps properly
         if schedule_str.endswith('Z'):
@@ -214,8 +219,12 @@ def create_booking():
             # Convert to UTC and make naive for database storage
             schedule = schedule.astimezone(timezone.utc).replace(tzinfo=None)
         else:
-            # Assume naive datetime is already in UTC
-            schedule = datetime.fromisoformat(schedule_str)
+            # Naive datetime: treat as local app timezone, then convert to UTC
+            app_tz_name = os.getenv('APP_TIMEZONE', 'Asia/Manila')
+            local_tz = pytz.timezone(app_tz_name)
+            naive_dt = datetime.fromisoformat(schedule_str)
+            localized = local_tz.localize(naive_dt)
+            schedule = localized.astimezone(pytz.utc).replace(tzinfo=None)
             
         # Log the schedule conversion for debugging
         logger.info(f"Schedule conversion: '{schedule_str}' -> {schedule} (UTC naive)")
@@ -267,7 +276,6 @@ def create_booking():
     try:
         # Generate a unique ID using UUID
         import uuid
-        from datetime import datetime, timezone
         booking_id = str(uuid.uuid4())
         current_utc_time = datetime.now(timezone.utc)
         
@@ -325,8 +333,12 @@ def create_booking():
         db.session.rollback()
         return jsonify({"error": f"Failed to create booking: {str(e)}"}), 500
 
-@booking_bp.route('/cancel_booking', methods=['POST'])
+@booking_bp.route('/cancel_booking', methods=['POST', 'OPTIONS'])
+@cross_origin()  # allow CORS for this endpoint (uses app-wide CORS config)
 def cancel_booking():
+    if request.method == 'OPTIONS':
+        # Preflight request handling
+        return jsonify({'ok': True}), 200
     data = request.get_json()
     booking_id = data.get('bookingID')
 
@@ -371,8 +383,11 @@ def cancel_booking():
         db.session.rollback()
         return jsonify({"error": f"Failed to cancel booking: {str(e)}"}), 500
 
-@booking_bp.route('/confirm_booking', methods=['POST'])
+@booking_bp.route('/confirm_booking', methods=['POST', 'OPTIONS'])
+@cross_origin()
 def confirm_booking():
+    if request.method == 'OPTIONS':
+        return jsonify({'ok': True}), 200
     data = request.get_json()
     booking_id = data.get('bookingID')
 
@@ -390,9 +405,24 @@ def confirm_booking():
         # Set schedule and venue from request data
         if data.get('schedule'):
             try:
-                schedule = datetime.fromisoformat(data.get('schedule').replace('Z', '+00:00'))
-                # Convert to naive UTC datetime for database storage (consistent with creation)
-                booking.schedule = schedule.astimezone(timezone.utc).replace(tzinfo=None)
+                schedule_str = data.get('schedule')
+                # Handle UTC timestamps and offsets consistently with create_booking
+                if schedule_str.endswith('Z'):
+                    # ISO format with Z suffix indicates UTC
+                    schedule_dt = datetime.fromisoformat(schedule_str.replace('Z', '+00:00'))
+                    booking.schedule = schedule_dt.astimezone(timezone.utc).replace(tzinfo=None)
+                elif '+' in schedule_str or schedule_str.endswith('+00:00'):
+                    # ISO format with timezone offset provided
+                    schedule_dt = datetime.fromisoformat(schedule_str)
+                    booking.schedule = schedule_dt.astimezone(timezone.utc).replace(tzinfo=None)
+                else:
+                    # Naive datetime: treat as local app timezone, then convert to UTC
+                    app_tz_name = os.getenv('APP_TIMEZONE', 'Asia/Manila')
+                    local_tz = pytz.timezone(app_tz_name)
+                    schedule_dt = datetime.fromisoformat(schedule_str)
+                    localized = local_tz.localize(schedule_dt)
+                    booking.schedule = localized.astimezone(pytz.utc).replace(tzinfo=None)
+                logger.info(f"Confirm conversion: '{schedule_str}' -> {booking.schedule} (UTC naive)")
             except ValueError:
                 return jsonify({"error": "Invalid schedule format"}), 400
                 
