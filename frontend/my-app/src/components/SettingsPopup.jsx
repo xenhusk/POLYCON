@@ -3,6 +3,7 @@ import { useNavigate } from "react-router-dom";
 import PasswordResetModal from "./PasswordResetModal";
 import { motion, AnimatePresence } from "framer-motion";
 import { useToast } from "../contexts/ToastContext";
+import { clearUserAuth } from "../utils/authUtils";
 import {
   areBrowserNotificationsSupported,
   hasNotificationPermission,
@@ -76,13 +77,13 @@ const SettingsPopup = ({
     // Clear notifications from localStorage
     clearNotificationsOnLogout();
 
-    // Clear all localStorage data
-    localStorage.clear();
+    // Clear auth data consistently
+    clearUserAuth();
     onClose();
     if (typeof onLogout === "function") {
       onLogout();
     }
-    navigate("/");
+    navigate("/login", { replace: true });
   };
 
   // New handler for Change Password click

@@ -318,50 +318,39 @@ const AdminConsultation = () => {
           </motion.nav>
         )}
 
-        <div className="pt-6 pb-2 max-w-6xl mx-auto">
+        <div className="pt-6 pb-2 max-w-6xl mx-auto px-2 sm:px-4 lg:px-0">
           <div className="text-center mb-6">
-            <div className="flex items-center justify-center">
-              <h2 className="text-[#0065A8] text-2xl font-bold mb-1 mr-2">
-                {userRole === 'admin' ? 'Teachers Consultation Leaderboard' : 'Public Consultation Leaderboard'}
-              </h2>
-              {userRole !== 'admin' && (
-                <div className="relative group">
-                  <svg 
-                    className="w-5 h-5 text-blue-600 cursor-help mb-1" 
-                    fill="none" 
-                    stroke="currentColor" 
-                    viewBox="0 0 24 24"
+            <div className="flex flex-col sm:flex-row items-center justify-center">
+              <div className="relative group" data-tooltip-container>
+                <h2 className="text-[#0065A8] text-xl sm:text-2xl font-bold mb-2 sm:mb-1 sm:mr-2 text-center cursor-default">
+                  {userRole === 'admin' ? 'Teachers Consultation Leaderboard' : 'Public Consultation Leaderboard'}
+                </h2>
+                {userRole !== 'admin' && (
+                  <div 
+                    data-tooltip="desktop"
+                    className="absolute left-1/2 -translate-x-1/2 top-full mt-2 transition-all duration-300 opacity-0 invisible group-hover:opacity-100 group-hover:visible pointer-events-none z-50 hidden sm:block"
                   >
-                    <path 
-                      strokeLinecap="round" 
-                      strokeLinejoin="round" 
-                      strokeWidth={2} 
-                      d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" 
-                    />
-                  </svg>
-                  {/* Tooltip - Right positioned with analytics design */}
-                  <div className="absolute left-8 top-1/2 -translate-y-1/2 transition-all duration-300 opacity-0 group-hover:opacity-100 group-hover:translate-x-0 -translate-x-4 pointer-events-none z-50">
                     <div className="bg-white/95 backdrop-blur-sm border border-blue-200 rounded-lg shadow-xl p-4 min-w-64 max-w-80">
-                      <div className="flex items-center gap-3">
-                        <div className="w-2 h-2 bg-blue-500 rounded-full animate-pulse" />
+                      <div className="flex items-start gap-3">
+                        <div className="w-2 h-2 bg-blue-500 rounded-full animate-pulse mt-1 flex-shrink-0" />
                         <div>
                           <h3 className="font-semibold text-blue-900 text-sm mb-1">Public Leaderboard View</h3>
-                          <p className="text-blue-600 text-xs mt-1 leading-relaxed">
+                          <p className="text-blue-600 text-xs leading-relaxed">
                             You're viewing the public consultation leaderboard showing teacher rankings and statistics. 
                             Detailed consultation session information is restricted to administrative users for privacy and confidentiality.
                           </p>
                         </div>
                       </div>
-                      {/* Arrow pointer pointing to the icon */}
-                      <div className="absolute right-full top-1/2 -translate-y-1/2">
-                        <div className="w-0 h-0 border-r-8 border-r-white/95 border-t-4 border-t-transparent border-b-4 border-b-transparent" />
+                      {/* Arrow pointing up to title */}
+                      <div className="absolute bottom-full left-1/2 -translate-x-1/2">
+                        <div className="w-0 h-0 border-b-6 border-b-white/95 border-l-3 border-l-transparent border-r-3 border-r-transparent" />
                       </div>
                     </div>
                   </div>
-                </div>
-              )}
+                )}
+              </div>
             </div>
-            <p className="text-slate-500 text-sm">
+            <p className="text-slate-500 text-sm px-2 sm:px-0">
               {userRole === 'admin' 
                 ? 'Top teachers ranked by consultation engagement and consultation overview' 
                 : 'Teacher rankings based on consultation activity and performance'
@@ -370,7 +359,7 @@ const AdminConsultation = () => {
           </div>
             
             {/* Filter Section */}
-            <div className="bg-white/90 backdrop-blur-sm rounded-xl shadow-lg border border-white/50 overflow-hidden mb-6">
+            <div className="bg-white/90 backdrop-blur-sm rounded-xl shadow-lg border border-white/50 overflow-hidden mb-6 mx-2 sm:mx-0">
               {/* Filter Header */}
               <div className="bg-gradient-to-r from-[#0065A8] to-[#057DCD] text-white p-3">
                 <div className="flex items-center">
@@ -380,15 +369,15 @@ const AdminConsultation = () => {
                     </svg>
                   </div>
                   <div>
-                    <h3 className="font-bold text-base">Filter Options</h3>
-                    <p className="text-blue-100 text-xs">Filter by semester, department, and search teachers</p>
+                    <h3 className="font-bold text-sm sm:text-base">Filter Options</h3>
+                    <p className="text-blue-100 text-xs hidden sm:block">Filter by semester, department, and search teachers</p>
                   </div>
                 </div>
               </div>
               
               {/* Filter Content */}
-              <div className="p-4">
-                <div className="grid grid-cols-1 lg:grid-cols-3 gap-4">
+              <div className="p-3 sm:p-4">
+                <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3 sm:gap-4">
                   {/* Academic Period Section */}
                   <div className="space-y-2">
                     <div className="flex items-center">
@@ -478,7 +467,7 @@ const AdminConsultation = () => {
           )}
 
           {/* Leaderboard */}
-          <div className="bg-white rounded-xl shadow-lg border border-white/50 overflow-hidden">
+          <div className="bg-white rounded-xl shadow-lg border border-white/50 overflow-hidden mx-2 sm:mx-0">
             {loading ? (
               <div className="flex flex-col items-center justify-center py-16">
                 <div className="relative mb-4">
@@ -508,68 +497,85 @@ const AdminConsultation = () => {
             ) : (
               <>
                 {/* Leaderboard Header */}
-                <div className="bg-gradient-to-r from-[#0065A8] to-[#057DCD] text-white p-4">
-                  <div className="flex items-center justify-between">
+                <div className="bg-gradient-to-r from-[#0065A8] to-[#057DCD] text-white p-3 sm:p-4">
+                  <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between space-y-3 sm:space-y-0">
                     <div className="flex items-center">
-                      <div className="w-8 h-8 bg-white/20 rounded-full flex items-center justify-center mr-3">
-                        <svg className="w-4 h-4 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <div className="w-6 h-6 sm:w-8 sm:h-8 bg-white/20 rounded-full flex items-center justify-center mr-2 sm:mr-3">
+                        <svg className="w-3 h-3 sm:w-4 sm:h-4 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                           <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12l2 2 4-4M7.835 4.697a3.42 3.42 0 001.946-.806 3.42 3.42 0 014.438 0 3.42 3.42 0 001.946.806 3.42 3.42 0 013.138 3.138 3.42 3.42 0 00.806 1.946 3.42 3.42 0 010 4.438 3.42 3.42 0 00-.806 1.946 3.42 3.42 0 01-3.138 3.138 3.42 3.42 0 00-1.946.806 3.42 3.42 0 01-4.438 0 3.42 3.42 0 00-1.946-.806 3.42 3.42 0 01-3.138-3.138 3.42 3.42 0 00-.806-1.946 3.42 3.42 0 010-4.438 3.42 3.42 0 00.806-1.946 3.42 3.42 0 013.138-3.138z" />
                         </svg>
                       </div>
                       <div>
-                        <h3 className="text-lg font-bold">Teacher Rankings</h3>
-                        <p className="text-blue-100 text-xs">Ranked by consultation activity</p>
+                        <h3 className="text-base sm:text-lg font-bold">Teacher Rankings</h3>
+                        <p className="text-blue-100 text-xs hidden sm:block">Ranked by consultation activity</p>
                       </div>
                     </div>
-                     <div className="flex items-center space-x-1">
+                     <div className="flex items-center space-x-1 w-full sm:w-auto justify-center sm:justify-end">
                         {/* Previous Button */}
                         <button
                           onClick={handlePrevPage}
                           disabled={currentPage === 1}
-                          className={`px-2 py-1 rounded text-xs font-medium transition-all duration-200 ${
+                          className={`px-2 sm:px-3 py-1 rounded text-xs font-medium transition-all duration-200 ${
                             currentPage === 1 
                               ? 'bg-blue-50 text-gray-400 cursor-not-allowed' 
                               : 'bg-[#0065A8] text-white hover:bg-[#057DCD]'
                           }`}
                         >
-                          Previous
+                          <span className="hidden sm:inline">Previous</span>
+                          <span className="sm:hidden">Prev</span>
                         </button>
                         
-                        {/* Page Numbers */}
+                        {/* Page Numbers - Show fewer on mobile */}
                         <div className="flex items-center space-x-1">
-                          {Array.from({ length: totalPages }, (_, i) => i + 1).map(page => (
-                            <button
-                              key={page}
-                              onClick={() => handlePageChange(page)}
-                              className={`w-8 h-8 rounded text-xs font-medium transition-all duration-200 ${
-                                currentPage === page
-                                  ? 'bg-[#0065A8] text-white'
-                                  : 'bg-blue-50 text-gray-600 hover:bg-gray-300'
-                              }`}
-                            >
-                              {page}
-                            </button>
-                          ))}
+                          {Array.from({ length: Math.min(totalPages, 3) }, (_, i) => {
+                            let page;
+                            if (totalPages <= 3) {
+                              page = i + 1;
+                            } else if (currentPage <= 2) {
+                              page = i + 1;
+                            } else if (currentPage >= totalPages - 1) {
+                              page = totalPages - 2 + i;
+                            } else {
+                              page = currentPage - 1 + i;
+                            }
+                            return (
+                              <button
+                                key={page}
+                                onClick={() => handlePageChange(page)}
+                                className={`w-6 h-6 sm:w-8 sm:h-8 rounded text-xs font-medium transition-all duration-200 ${
+                                  currentPage === page
+                                    ? 'bg-[#0065A8] text-white'
+                                    : 'bg-blue-50 text-gray-600 hover:bg-gray-300'
+                                }`}
+                              >
+                                {page}
+                              </button>
+                            );
+                          })}
+                          {totalPages > 3 && (
+                            <span className="text-white text-xs px-1">...</span>
+                          )}
                         </div>
                         
                         {/* Next Button */}
                         <button
                           onClick={handleNextPage}
                           disabled={currentPage === totalPages}
-                          className={`px-2 py-1 rounded text-xs font-medium transition-all duration-200 ${
+                          className={`px-2 sm:px-3 py-1 rounded text-xs font-medium transition-all duration-200 ${
                             currentPage === totalPages 
                               ? 'bg-blue-50 text-gray-400 cursor-not-allowed' 
                               : 'bg-[#0065A8] text-white hover:bg-[#057DCD]'
                           }`}
                         >
-                          Next
+                          <span className="hidden sm:inline">Next</span>
+                          <span className="sm:hidden">Next</span>
                         </button>
                       </div>
                   </div>
                 </div>
 
                 {/* Leaderboard List */}
-                <div className="max-h-[18.5rem] overflow-y-auto">
+                <div className="max-h-[18.5rem] sm:max-h-[20rem] overflow-y-auto">
                   {paginatedLeaderboardData.map((teacher, index) => {
                     // Use original_rank from backend instead of calculating from pagination
                     const displayRank = teacher.original_rank || (startIndex + index + 1);
@@ -578,7 +584,7 @@ const AdminConsultation = () => {
                       <div 
                         key={teacher.teacher_id} 
                         className={`
-                          relative flex flex-col lg:flex-row items-start lg:items-center p-4 border-b border-gray-100 
+                          relative p-3 sm:p-4 border-b border-gray-100 
                           transition-all duration-300 group hover:shadow-lg hover:bg-gradient-to-r hover:from-blue-50 hover:to-indigo-50
                           ${isTopThree ? 'bg-gradient-to-r from-yellow-50 to-orange-50' : 'bg-white hover:bg-gradient-to-r hover:from-blue-50 hover:to-indigo-50'}
                           ${displayRank === 1 ? 'border-l-4 border-l-yellow-400' : ''}
@@ -589,66 +595,111 @@ const AdminConsultation = () => {
                         `}
                         onClick={() => userRole === 'admin' ? handleTeacherClick(teacher) : null}
                       >
-                        {/* Rank Section */}
-                        <div className="flex items-center mb-3 lg:mb-0 lg:mr-4">
-                          <div className={`
-                            flex items-center justify-center w-10 h-10 rounded-full font-bold text-sm
-                            ${displayRank === 1 ? 'bg-gradient-to-br from-yellow-400 to-yellow-600 text-white shadow-lg' : ''}
-                            ${displayRank === 2 ? 'bg-gradient-to-br from-gray-400 to-gray-600 text-white shadow-lg' : ''}
-                            ${displayRank === 3 ? 'bg-gradient-to-br from-amber-500 to-amber-700 text-white shadow-lg' : ''}
-                            ${displayRank > 3 ? 'bg-gradient-to-br from-slate-500 to-slate-700 text-white' : ''}
-                          `}>
-                            #{displayRank}
-                          </div>
-                        </div>
-
-                        {/* Teacher Info Section */}
-                        <div className="flex-1 lg:mr-6 mb-3 lg:mb-0">
-                          <div className="flex items-center mb-1">
-                            <h3 className="text-lg font-bold text-slate-800 group-hover:text-[#0065A8] transition-colors">
-                              {teacher.teacher_name}
-                            </h3>
-                          </div>
-                          {userRole === 'admin' && (
-                            <p className="text-slate-500 text-xs">Teacher ID: {teacher.teacher_id}</p>
-                          )}
-                        </div>
-
-                        {/* Stats Grid */}
-                        <div className="grid grid-cols-3 gap-4 mb-3 lg:mb-0 w-full lg:w-auto">
-                          <div className="text-center p-2 bg-white/80 backdrop-blur-sm rounded-lg border border-gray-200 group-hover:border-blue-200 transition-colors">
-                            <div className="text-lg font-bold text-[#057DCD] mb-1">{teacher.total_consultations}</div>
-                            <div className="text-xs text-slate-500 font-medium uppercase tracking-wide">Sessions</div>
-                          </div>
-                          <div className="text-center p-2 bg-white/80 backdrop-blur-sm rounded-lg border border-gray-200 group-hover:border-blue-200 transition-colors">
-                            <div className="text-lg font-bold text-[#057DCD] mb-1">{teacher.total_students}</div>
-                            <div className="text-xs text-slate-500 font-medium uppercase tracking-wide">Students</div>
-                          </div>
-                          <div className="text-center p-2 bg-white/80 backdrop-blur-sm rounded-lg border border-gray-200 group-hover:border-blue-200 transition-colors">
-                            <div className="text-lg font-bold text-[#057DCD] mb-1">{teacher.total_duration_formatted}</div>
-                            <div className="text-xs text-slate-500 font-medium uppercase tracking-wide">Duration</div>
-                          </div>
-                        </div>
-
-                        {/* Action Button */}
-                        <div className="flex items-center lg:ml-4">
-                          {userRole === 'admin' ? (
-                            <div className="flex items-center text-[#057DCD] font-medium text-xs group-hover:text-[#0065A8] transition-colors">
-                              <span className="mr-1">View Details</span>
-                              <div className="transform group-hover:translate-x-1 transition-transform">
-                                <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
-                                </svg>
+                        {/* Mobile Layout - Stack everything vertically */}
+                        <div className="flex flex-col space-y-3 md:hidden">
+                          {/* Mobile Header Row - Rank and Name */}
+                          <div className="flex items-center justify-between">
+                            <div className="flex items-center space-x-3">
+                              <div className={`
+                                flex items-center justify-center w-8 h-8 rounded-full font-bold text-xs
+                                ${displayRank === 1 ? 'bg-gradient-to-br from-yellow-400 to-yellow-600 text-white shadow-lg' : ''}
+                                ${displayRank === 2 ? 'bg-gradient-to-br from-gray-400 to-gray-600 text-white shadow-lg' : ''}
+                                ${displayRank === 3 ? 'bg-gradient-to-br from-amber-500 to-amber-700 text-white shadow-lg' : ''}
+                                ${displayRank > 3 ? 'bg-gradient-to-br from-slate-500 to-slate-700 text-white' : ''}
+                              `}>
+                                #{displayRank}
+                              </div>
+                              <div>
+                                <h3 className="text-base font-bold text-slate-800 group-hover:text-[#0065A8] transition-colors">
+                                  {teacher.teacher_name}
+                                </h3>
+                                {userRole === 'admin' && (
+                                  <p className="text-slate-500 text-xs">ID: {teacher.teacher_id}</p>
+                                )}
                               </div>
                             </div>
-                          ) : (
-                            <div className="flex items-center text-gray-400 font-medium text-xs">
-                              <span className="mr-1">Admin Only</span>
-                              <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z" />
-                              </svg>
+                          </div>
+                          
+                          {/* Mobile Stats Row */}
+                          <div className="grid grid-cols-3 gap-2">
+                            <div className="text-center p-2 bg-white/80 backdrop-blur-sm rounded-lg border border-gray-200 group-hover:border-blue-200 transition-colors">
+                              <div className="text-sm font-bold text-[#057DCD] mb-1">{teacher.total_consultations}</div>
+                              <div className="text-xs text-slate-500 font-medium uppercase tracking-wide">Sessions</div>
                             </div>
-                          )}
+                            <div className="text-center p-2 bg-white/80 backdrop-blur-sm rounded-lg border border-gray-200 group-hover:border-blue-200 transition-colors">
+                              <div className="text-sm font-bold text-[#057DCD] mb-1">{teacher.total_students}</div>
+                              <div className="text-xs text-slate-500 font-medium uppercase tracking-wide">Students</div>
+                            </div>
+                            <div className="text-center p-2 bg-white/80 backdrop-blur-sm rounded-lg border border-gray-200 group-hover:border-blue-200 transition-colors">
+                              <div className="text-sm font-bold text-[#057DCD] mb-1">{teacher.total_duration_formatted}</div>
+                              <div className="text-xs text-slate-500 font-medium uppercase tracking-wide">Duration</div>
+                            </div>
+                          </div>
+                        </div>
+
+                        {/* Desktop/Tablet Layout - Horizontal layout for larger screens */}
+                        <div className="hidden md:flex md:flex-col lg:flex-row md:items-start lg:items-center">
+                          {/* Rank Section */}
+                          <div className="flex items-center mb-3 lg:mb-0 lg:mr-4">
+                            <div className={`
+                              flex items-center justify-center w-10 h-10 rounded-full font-bold text-sm
+                              ${displayRank === 1 ? 'bg-gradient-to-br from-yellow-400 to-yellow-600 text-white shadow-lg' : ''}
+                              ${displayRank === 2 ? 'bg-gradient-to-br from-gray-400 to-gray-600 text-white shadow-lg' : ''}
+                              ${displayRank === 3 ? 'bg-gradient-to-br from-amber-500 to-amber-700 text-white shadow-lg' : ''}
+                              ${displayRank > 3 ? 'bg-gradient-to-br from-slate-500 to-slate-700 text-white' : ''}
+                            `}>
+                              #{displayRank}
+                            </div>
+                          </div>
+
+                          {/* Teacher Info Section */}
+                          <div className="flex-1 lg:mr-6 mb-3 lg:mb-0">
+                            <div className="flex items-center mb-1">
+                              <h3 className="text-lg font-bold text-slate-800 group-hover:text-[#0065A8] transition-colors">
+                                {teacher.teacher_name}
+                              </h3>
+                            </div>
+                            {userRole === 'admin' && (
+                              <p className="text-slate-500 text-xs">Teacher ID: {teacher.teacher_id}</p>
+                            )}
+                          </div>
+
+                          {/* Stats Grid */}
+                          <div className="grid grid-cols-3 gap-4 mb-3 lg:mb-0 w-full lg:w-auto">
+                            <div className="text-center p-2 bg-white/80 backdrop-blur-sm rounded-lg border border-gray-200 group-hover:border-blue-200 transition-colors">
+                              <div className="text-lg font-bold text-[#057DCD] mb-1">{teacher.total_consultations}</div>
+                              <div className="text-xs text-slate-500 font-medium uppercase tracking-wide">Sessions</div>
+                            </div>
+                            <div className="text-center p-2 bg-white/80 backdrop-blur-sm rounded-lg border border-gray-200 group-hover:border-blue-200 transition-colors">
+                              <div className="text-lg font-bold text-[#057DCD] mb-1">{teacher.total_students}</div>
+                              <div className="text-xs text-slate-500 font-medium uppercase tracking-wide">Students</div>
+                            </div>
+                            <div className="text-center p-2 bg-white/80 backdrop-blur-sm rounded-lg border border-gray-200 group-hover:border-blue-200 transition-colors">
+                              <div className="text-lg font-bold text-[#057DCD] mb-1">{teacher.total_duration_formatted}</div>
+                              <div className="text-xs text-slate-500 font-medium uppercase tracking-wide">Duration</div>
+                            </div>
+                          </div>
+
+                          {/* Action Button for Desktop/Tablet */}
+                          <div className="flex items-center lg:ml-4">
+                            {userRole === 'admin' ? (
+                              <div className="flex items-center text-[#057DCD] font-medium text-xs group-hover:text-[#0065A8] transition-colors">
+                                <span className="mr-1">View Details</span>
+                                <div className="transform group-hover:translate-x-1 transition-transform">
+                                  <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
+                                  </svg>
+                                </div>
+                              </div>
+                            ) : (
+                              <div className="flex items-center text-gray-400 font-medium text-xs">
+                                <span className="mr-1 hidden lg:inline">View Restricted</span>
+                                <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z" />
+                                </svg>
+                              </div>
+                            )}
+                          </div>
                         </div>
 
                         {/* Hover Effect Overlay */}

@@ -122,6 +122,23 @@ const HomeAdmin = () => {
 
   // Use conditional rendering for blocking message
   const shouldBlockAdminMobile = userRole === 'admin' && isMobile;
+
+  // Prevent scrolling when mobile block is active
+  useEffect(() => {
+    if (shouldBlockAdminMobile) {
+      document.body.style.overflow = 'hidden';
+      document.documentElement.style.overflow = 'hidden';
+    } else {
+      document.body.style.overflow = '';
+      document.documentElement.style.overflow = '';
+    }
+
+    // Cleanup on unmount
+    return () => {
+      document.body.style.overflow = '';
+      document.documentElement.style.overflow = '';
+    };
+  }, [shouldBlockAdminMobile]);
           <button
             className="bg-[#057DCD] text-white px-6 py-2 rounded-lg shadow-md hover:bg-[#54BEFF] transition"
             onClick={() => {
@@ -235,20 +252,20 @@ const HomeAdmin = () => {
     <div className="flex flex-col items-center min-h-screen relative">
       {/* Blocking message for admin on mobile/tablet */}
       {shouldBlockAdminMobile ? (
-        <div className="flex flex-col pt-10 items-center min-h-screen w-screen bg-[#005B98]">
-        <PolyconLogo style={{ height: '200px', width: 'auto', marginBottom: '24px' }} />
-        <h3 className="text-2xl font-bold text-white mb-4 mx-9 text-center">Faculty Portal Unavailable on Mobile/Tablet</h3>
-        <p className="text-white mb-6 mx-9 text-center">For security and usability, please use a desktop or laptop to access admin features.</p>
-        <button
-          className="bg-[#057DCD] text-white px-6 py-2 rounded-lg shadow-md hover:bg-[#54BEFF] transition"
-          onClick={() => {
-            localStorage.clear();
-            window.location.href = "/";
-          }}
-        >
-          Logout
-        </button>
-      </div>
+        <div className="fixed inset-0 flex flex-col items-center justify-center w-screen h-screen bg-[#005B98] z-50 overflow-hidden">
+          <PolyconLogo style={{ height: '200px', width: 'auto', marginBottom: '24px' }} />
+          <h3 className="text-2xl font-bold text-white mb-4 mx-9 text-center">Faculty Portal Unavailable on Mobile/Tablet</h3>
+          <p className="text-white mb-6 mx-9 text-center">For security and usability, please use a desktop or laptop to access admin features.</p>
+          <button
+            className="bg-[#057DCD] text-white px-6 py-2 rounded-lg shadow-md hover:bg-[#54BEFF] transition"
+            onClick={() => {
+              localStorage.clear();
+              window.location.href = "/";
+            }}
+          >
+            Logout
+          </button>
+        </div>
       ) : (
         <>
           <h1 className="text-3xl font-bold text-[#0065A8] mb-6">Admin Dashboard</h1>

@@ -88,6 +88,7 @@ import Settings from "./pages/Settings";
 import SocketTest from "./pages/SocketTest"; // Add SocketTest import
 import { ToastProvider } from "./contexts/ToastContext"; // Add ToastProvider import
 import { ActionButtonDataProvider } from "./context/ActionButtonDataContext";
+import ProtectedRoute from "./routes/ProtectedRoute";
 const PreloaderTest = React.lazy(() => import("./components/PagePreloader"));
 
 // Update the variants to only include fade in (no fade out)
@@ -930,28 +931,31 @@ function App() {
                           path="/consultation-schedules"
                           element={<ConsultationSchedules />}
                         />
-                        {/* Protected dashboard route */}
-                        <Route
-                          path="/dashboard"
-                          element={
-                            localStorage.getItem("userEmail") ? (
-                              <UserHome />
-                            ) : (
-                              <Navigate to="/" />
-                            )
-                          }
-                        />
-                        {/* Protected routes */}
-                        <Route
-                          path="/booking-student"
-                          element={
-                            localStorage.getItem("userEmail") ? (
-                              <BookingStudent />
-                            ) : (
-                              <Navigate to="/login" replace />
-                            )
-                          }
-                        />
+                        {/* Protected routes (any authenticated user) */}
+                        <Route element={<ProtectedRoute />}>
+                          <Route path="/dashboard" element={<UserHome />} />
+                          <Route path="/booking-student" element={<BookingStudent />} />
+                          <Route path="/appointments" element={<Appointments />} />
+                          <Route path="/home-teacher" element={<HomeTeacher />} />
+                          <Route path="/homestudent" element={<HomeStudent />} />
+                          <Route path="/gradeview" element={<GradeViewer />} />
+                          <Route path="/history" element={<History />} />
+                          <Route path="/appointments-calendar" element={<AppointmentsCalendar />} />
+                          <Route path="/settings" element={<Settings />} />
+                          <Route path="/teacher-schedule" element={<TeacherScheduleManager />} />
+                          <Route path="/comparative-analysis" element={<ComparativeAnalysis />} />
+                        </Route>
+                        {/* Admin-only routes */}
+                        <Route element={<ProtectedRoute roles={["admin"]} />}>
+                          <Route path="/admin" element={<AdminPortal />} />
+                          <Route path="/admin-consultation" element={<AdminConsultation />} />
+                          <Route path="/courses" element={<Courses />} />
+                          <Route path="/semester-management" element={<SemesterManagement />} />
+                        </Route>
+                        {/* Faculty-only routes */}
+                        <Route element={<ProtectedRoute roles={["faculty"]} />}>
+                          <Route path="/addgrade" element={<AddGrade />} />
+                        </Route>
                         <Route>
                           <Route path="/help/getstarted/" element={<Help />}>
                             <Route index element={<Help_Overview />} />
@@ -1019,46 +1023,20 @@ function App() {
                             <Route path="FAQ" element={<FAQ />} />
                           </Route>
                         </Route>
-                        <Route
-                          path="/booking-teacher"
-                          element={<BookingTeacher />}
-                        />
+                        <Route path="/booking-teacher" element={<BookingTeacher />} />
                         <Route path="/session" element={<Session />} />
-                        <Route path="/admin" element={<AdminPortal />} />
-                        <Route path="/courses" element={<Courses />} />
-                        <Route path="/addgrade" element={<AddGrade />} />
-                        <Route
-                          path="/appointments-calendar"
-                          element={<AppointmentsCalendar />}
-                        />
                         <Route
                           path="/sidebar-preview"
                           element={<SidebarPreview />}
                         />{" "}
                         {/* Add this route */}
-                        <Route
-                          path="/appointments"
-                          element={<Appointments />}
-                        />{" "}
-                        {/* Add this route */}
-                        <Route
-                          path="/home-teacher"
-                          element={<HomeTeacher />}
-                        />{" "}
-                        {/* Add this route */}
-                        <Route
-                          path="/gradeview"
-                          element={<GradeViewer />}
-                        />{" "}
-                        {/* Add this route */}
+                        
                         <Route path="/programs" element={<Programs />} />{" "}
                         {/* Add this route */}
                         <Route
                           path="/finaldocument"
                           element={<FinalDocument />}
                         />{" "}
-                        {/* New route */}
-                        <Route path="/history" element={<History />} />{" "}
                         {/* New route */}
                         <Route
                           path="/department"
@@ -1071,32 +1049,11 @@ function App() {
                         />{" "}
                         {/* Add this line */}
                         <Route path="/homeadmin" element={<UserHome />} />
-                        <Route path="/homestudent" element={<HomeStudent />} />
                         <Route
                           path="/enrollment-test"
                           element={<EnrollmentTestPage />}
                         />{" "}
                         {/* new test route */}
-                        <Route
-                          path="/semester-management"
-                          element={<SemesterManagement />}
-                        />{" "}
-                        {/* Update this line */}
-                        <Route
-                          path="/comparative-analysis"
-                          element={<ComparativeAnalysis />}
-                        />
-                        <Route
-                          path="/admin-consultation"
-                          element={<AdminConsultation />}
-                        />
-                        <Route
-                          path="/teacher-schedule"
-                          element={<TeacherScheduleManager />}
-                        />{" "}
-                        {/* Teacher schedule management */}
-                        <Route path="/settings" element={<Settings />} />{" "}
-                        {/* Settings page with notification controls */}
                         <Route
                           path="/socket-test"
                           element={<SocketTest />}
