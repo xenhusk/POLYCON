@@ -14,20 +14,44 @@ if ',' in cors_origins:
 else:
     allowed_origins = [cors_origins]
 
-# Add localhost for development/testing
-if 'http://localhost:3000' not in allowed_origins:
-    allowed_origins.append('http://localhost:3000')
+# Add common localhost variants for development/testing
+dev_origins = [
+    'http://localhost:3000',
+    'http://localhost:3001',
+    'http://localhost:5173',
+    'http://127.0.0.1:3000',
+    'http://127.0.0.1:3001',
+    'http://127.0.0.1:5173',
+]
+for origin in dev_origins:
+    if origin not in allowed_origins:
+        allowed_origins.append(origin)
+
+# Ensure production backend origin is also allowed (Render)
+backend_origin = 'https://polycon.onrender.com'
+if backend_origin not in allowed_origins:
+    allowed_origins.append(backend_origin)
 
 print(f"🔌 SocketIO CORS allowed origins: {allowed_origins}")
 
-socketio = SocketIO(cors_allowed_origins=allowed_origins)
+socketio = SocketIO(
+    cors_allowed_origins=allowed_origins,
+    async_mode='eventlet',
+    ping_timeout=60,
+    ping_interval=25,
+)
 
 def init_app(app):
     # Initialize SocketIO with the Flask app using the same CORS origins
-    socketio.init_app(app, 
-                     cors_allowed_origins=allowed_origins,
-                     logger=True, 
-                     engineio_logger=True)
+    socketio.init_app(
+        app,
+        cors_allowed_origins=allowed_origins,
+        logger=True,
+        engineio_logger=True,
+        ping_timeout=60,
+        ping_interval=25,
+        async_mode='eventlet'
+    )
     print(f"🔌 SocketIO initialized with CORS enabled for: {allowed_origins}")
 
 def emit_booking_created(data):
