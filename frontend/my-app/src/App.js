@@ -78,6 +78,7 @@ import { usePrefetch } from "./context/DataPrefetchContext";
 import NetworkMonitor from "./components/NetworkMonitor";
 import { getUserIdentifiers } from "./utils/userUtils"; // Add import for getUserIdentifiers
 import { ensureUserIdPersistence, recoverUserIds } from "./utils/persistUtils";
+import { isAuthenticated, getUserRole } from "./utils/authUtils";
 import ComparativeAnalysis from "./pages/ComparativeAnalysis";
 import PasswordResetPage from "./components/PasswordResetPage";
 import EmailVerification from "./pages/EmailVerification";
@@ -89,6 +90,7 @@ import SocketTest from "./pages/SocketTest"; // Add SocketTest import
 import { ToastProvider } from "./contexts/ToastContext"; // Add ToastProvider import
 import { ActionButtonDataProvider } from "./context/ActionButtonDataContext";
 import ProtectedRoute from "./routes/ProtectedRoute";
+import AuthTest from "./components/AuthTest";
 const PreloaderTest = React.lazy(() => import("./components/PagePreloader"));
 
 // Update the variants to only include fade in (no fade out)
@@ -297,8 +299,8 @@ function App() {
   const [loadingProgress, setLoadingProgress] = useState(0);
   // NEW state to control overlay visibility
   const [showOverlay, setShowOverlay] = useState(true);
-  // NEW: Initialize loggedIn based on localStorage.
-  const [loggedIn, setLoggedIn] = useState(!!localStorage.getItem("userEmail"));
+  // NEW: Initialize loggedIn based on authentication utility.
+  const [loggedIn, setLoggedIn] = useState(isAuthenticated());
   const [preloadAttempted, setPreloadAttempted] = useState(false); // Track if preload was attempted
 
   // List of routes that should not trigger role fetching
@@ -747,7 +749,7 @@ function App() {
 
   // Add this effect to handle admin redirects
   useEffect(() => {
-    const userRole = localStorage.getItem("userRole");
+    const userRole = getUserRole();
     if (userRole === "admin" && window.location.pathname === "/") {
       navigate("/homeadmin");
     }
@@ -778,7 +780,7 @@ function App() {
     const userEmail = localStorage.getItem("userEmail");
     const currentPath = location.pathname;
     const shouldShowSidebar =
-      userEmail &&
+      isAuthenticated() &&
       !currentPath.includes("/session") &&
       !currentPath.includes("/finaldocument");
 
@@ -803,13 +805,13 @@ function App() {
         >
           <PreloadProvider>
             <div className="app-container flex flex-1 overflow-x-hidden">
-              {localStorage.getItem("userEmail") &&
+              {isAuthenticated() &&
                 !location.pathname.includes("/session") &&
                 !location.pathname.includes("/finaldocument") &&
                 !isHelpPage && <Sidebar onExpandChange={setSidebarExpanded} />}
               <div
                 className={`flex-1 flex flex-col transition-all duration-300 ease-in-out overflow-x-hidden ${
-                  localStorage.getItem("userEmail") &&
+                  isAuthenticated() &&
                   !location.pathname.includes("/session") &&
                   !location.pathname.includes("/finaldocument") &&
                   !location.pathname.includes("/help/")
@@ -880,7 +882,7 @@ function App() {
                         <Route
                           path="/"
                           element={
-                            localStorage.getItem("userEmail") ? (
+                            isAuthenticated() ? (
                               <Navigate to="/dashboard" />
                             ) : (
                               <Home />
@@ -891,7 +893,7 @@ function App() {
                         <Route
                           path="/login"
                           element={
-                            !localStorage.getItem("userEmail") ? (
+                            !isAuthenticated() ? (
                               <Login onLoginSuccess={handleLoginSuccess} />
                             ) : (
                               <Navigate to="/dashboard" />
@@ -901,7 +903,7 @@ function App() {
                         <Route
                           path="/signup"
                           element={
-                            !localStorage.getItem("userEmail") ? (
+                            !isAuthenticated() ? (
                               <Signup />
                             ) : (
                               <Navigate to="/dashboard" />
@@ -966,95 +968,80 @@ function App() {
                           <Route path="/addgrade" element={<AddGrade />} />
                           <Route path="/booking-teacher" element={<BookingTeacher />} />
                         </Route>
-                        {/* Faculty-only routes */}
-                        <Route element={<ProtectedRoute roles={["faculty"]} />}>
-                          <Route path="/addgrade" element={<AddGrade />} />
-                        </Route>
-                        <Route>
-                          <Route path="/help/getstarted/" element={<Help />}>
-                            <Route index element={<Help_Overview />} />
-                            <Route path="Info_Login" element={<Help_Login />} />
-                            <Route
-                              path="Info_SignUp"
-                              element={<Help_SignUp />}
-                            />
-                            <Route
-                              path="Info_Dashboard"
-                              element={<Help_Dashboard />}
-                            />
-                            <Route
-                              path="Info_History"
-                              element={<Help_History />}
-                            />
-                            <Route
-                              path="Info_Appointments"
-                              element={<Help_Appointments />}
-                            />
-                            <Route
-                              path="Info_Grade"
-                              element={<Help_Grade />}
-                            />
-                            <Route
-                              path="Info_Set_Schedule"
-                              element={<Help_Set_Schedule />}
-                            />
-                          </Route>
-                          {/* Nested route for student features */}
+                        {/* Help routes - publicly accessible */}
+                        <Route path="/help/getstarted/" element={<Help />}>
+                          <Route index element={<Help_Overview />} />
+                          <Route path="Info_Login" element={<Help_Login />} />
                           <Route
-                            path="/help/features"
-                            element={<Help />}
-                          >
-                            <Route 
-                              path="Info_Polycon_Analysis"
-                              element={<Help_Polycon_Analysis />}
-                            />
-                            <Route
-                              path="Info_Concern_Analysis"
-                              element={<Help_Concern_Analysis />}
-                            />
-                            <Route
-                              path="Info_Consultation_Booking"
-                              element={<Help_Consultation_Booking />}
-                            />
-                            <Route
-                              path="Info_Enrolled_Student"
-                              element={<Help_Enrolled_Student />}
-                            />
-                            <Route
-                              path="Info_Calendar_Management"
-                              element={<Help_Calendar_Management />}
-                            />
-                            <Route
-                              path="Info_Notifications"
-                              element={<Help_Notifications />}
-                            />
-                          </Route>
-                          <Route path="/help/support" element={<Help />}>
-                            <Route
-                              path="Contact"
-                              element={<Contact_Support />}
-                            />
-                            <Route path="FAQ" element={<FAQ />} />
-                          </Route>
+                            path="Info_SignUp"
+                            element={<Help_SignUp />}
+                          />
+                          <Route
+                            path="Info_Dashboard"
+                            element={<Help_Dashboard />}
+                          />
+                          <Route
+                            path="Info_History"
+                            element={<Help_History />}
+                          />
+                          <Route
+                            path="Info_Appointments"
+                            element={<Help_Appointments />}
+                          />
+                          <Route
+                            path="Info_Grade"
+                            element={<Help_Grade />}
+                          />
+                          <Route
+                            path="Info_Set_Schedule"
+                            element={<Help_Set_Schedule />}
+                          />
+                        </Route>
+                        {/* Nested route for student features */}
+                        <Route
+                          path="/help/features"
+                          element={<Help />}
+                        >
+                          <Route 
+                            path="Info_Polycon_Analysis"
+                            element={<Help_Polycon_Analysis />}
+                          />
+                          <Route
+                            path="Info_Concern_Analysis"
+                            element={<Help_Concern_Analysis />}
+                          />
+                          <Route
+                            path="Info_Consultation_Booking"
+                            element={<Help_Consultation_Booking />}
+                          />
+                          <Route
+                            path="Info_Enrolled_Student"
+                            element={<Help_Enrolled_Student />}
+                          />
+                          <Route
+                            path="Info_Calendar_Management"
+                            element={<Help_Calendar_Management />}
+                          />
+                          <Route
+                            path="Info_Notifications"
+                            element={<Help_Notifications />}
+                          />
+                        </Route>
+                        <Route path="/help/support" element={<Help />}>
+                          <Route
+                            path="Contact"
+                            element={<Contact_Support />}
+                          />
+                          <Route path="FAQ" element={<FAQ />} />
                         </Route>
                         
-                        <Route
-                          path="/sidebar-preview"
-                          element={<SidebarPreview />}
-                        />{" "}
-                        {/* Add this route */}
-                        
-                        <Route
-                          path="/preloader-test"
-                          element={<PreloaderTest />}
-                        />{" "}
-                        {/* Add this line */}
-                        
-                        <Route
-                          path="/socket-test"
-                          element={<SocketTest />}
-                        />{" "}
-                        {/* Socket.IO test dashboard route */}
+                        {/* Development/Test routes - should be protected */}
+                        <Route element={<ProtectedRoute />}>
+                          <Route path="/sidebar-preview" element={<SidebarPreview />} />
+                          <Route path="/preloader-test" element={<PreloaderTest />} />
+                          <Route path="/socket-test" element={<SocketTest />} />
+                          <Route path="/auth-test" element={<AuthTest />} />
+                        </Route>
                       </Routes>
                     </Suspense>
                   </motion.div>
@@ -1066,7 +1053,7 @@ function App() {
                 !location.pathname.includes("/finaldocument") &&
                 userRole !== "admin" && (
                   <ActionButtonsToggle
-                    isVisible={localStorage.getItem("userEmail")}
+                    isVisible={isAuthenticated()}
                   >
                     [
                     <BookingPopup key="booking" />, ...(userRole === 'faculty' ?
@@ -1076,7 +1063,7 @@ function App() {
                 )}
             </div>
             {/* NEW: Show preloader overlay only when authenticated, not on Session or Final Document pages */}
-            {localStorage.getItem("userEmail") &&
+            {isAuthenticated() &&
               !location.pathname.includes("/session") &&
               !location.pathname.includes("/finaldocument") &&
               (isLoading || !profile || showOverlay) && (

@@ -75,7 +75,7 @@ function TeacherAppointments() {
   }, [appointments]);
 
   return (
-    <div className="h-full overflow-hidden bg-gray-50">
+    <div className="h-full overflow-hidden bg-gradient-to-br from-[#eaf6ff] via-[#e3f1ff] to-[#f7fbff]">
       {/* Navigation Header */}
       <div className="bg-gradient-to-r from-[#0065A8] to-[#057DCD] shadow-lg border-b border-blue-600/20">
         <div className="max-w-6xl mx-auto px-4 py-3">
@@ -129,7 +129,7 @@ function TeacherAppointments() {
 
       {/* Calendar Content */}
       <div className="p-6">
-        <div className="bg-white p-4 rounded-lg shadow-lg">
+        <div className="bg-white/80 backdrop-blur p-4 rounded-xl shadow-md ring-1 ring-blue-100">
           <Calendar
             localizer={localizer}
             events={events}

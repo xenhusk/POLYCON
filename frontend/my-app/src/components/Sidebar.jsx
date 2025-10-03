@@ -373,14 +373,11 @@ const Sidebar = ({ onExpandChange }) => {
   };
 
   const handleSettingsClick = () => {
-    if (settingsButtonRef.current) {
-      const rect = settingsButtonRef.current.getBoundingClientRect();
-      setSettingsPosition({
-        // Position the popup 100px above the settings icon
-        top: rect.top - 100,
-        left: rect.right + 10
-      });
-    }
+    // Position the popup at the middle-left of the screen
+    setSettingsPosition({
+      top: window.innerHeight / 2,
+      left: 20
+    });
     setShowSettings(!showSettings);
   };
 
@@ -434,6 +431,10 @@ const Sidebar = ({ onExpandChange }) => {
                 ? mobileOpen ? 'translate-x-0 w-64' : '-translate-x-full' 
                 : (isFrozen || isOpen) ? 'w-64' : 'w-20'
             }`}
+            style={{ 
+              borderTopRightRadius: '0px',
+              borderBottomRightRadius: '0px'
+            }}
             onMouseEnter={() => !isFrozen && !isMobile && setIsOpen(true)}
             onMouseLeave={() => !isFrozen && !isMobile && setIsOpen(false)}
           >
@@ -593,17 +594,15 @@ const Sidebar = ({ onExpandChange }) => {
         onClose={() => setShowNotifications(false)}
       />
       {showUploadModal && (
-        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
-          <div className="bg-white rounded-lg shadow-xl">
-            <ProfilePictureUploader
-              onClose={handleModalClose}
-              onSuccess={(newProfileUrl) => {
-                fetchUserDetails();
-                setProfilePicture(newProfileUrl);
-                handleModalClose();
-              }}
-            />
-          </div>
+        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
+          <ProfilePictureUploader
+            onClose={handleModalClose}
+            onSuccess={(newProfileUrl) => {
+              fetchUserDetails();
+              setProfilePicture(newProfileUrl);
+              handleModalClose();
+            }}
+          />
         </div>
       )}
     </>

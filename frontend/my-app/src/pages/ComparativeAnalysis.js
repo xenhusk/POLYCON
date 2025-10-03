@@ -427,7 +427,8 @@ function ComparativeAnalysis() {
   };
 
   return (
-    <div className="p-3 sm:p-6 bg-gradient-to-b from-white to-gray-50 min-h-screen">
+    <div className="min-h-screen bg-gradient-to-br from-slate-50 via-blue-50 to-indigo-100">
+      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
       {/* Header Section with Enhanced Design */}
       <ComparativeAnalysisHeader
         openSelectionModal={openSelectionModal}
@@ -1023,48 +1024,71 @@ function ComparativeAnalysis() {
         </motion.div>
       )}
 
-      {/* Selection Modal - Enhanced with search and profile photos */}
+      {/* Selection Modal - Enhanced with modern design */}
       {showSelectionModal && (
-        <div 
-          className="fixed inset-0 bg-black bg-opacity-60 flex items-center justify-center z-50 p-4"
+        <motion.div 
+          initial={{ opacity: 0 }}
+          animate={{ opacity: 1 }}
+          exit={{ opacity: 0 }}
+          className="fixed inset-0 bg-black/60 backdrop-blur-md flex items-center justify-center z-50 p-4"
           onClick={() => setShowSelectionModal(false)}
         >
           <motion.div
-            variants={modalVariants}
-            initial="hidden"
-            animate="visible"
-            exit="exit"
-            className="bg-white rounded-xl shadow-2xl w-full max-w-lg max-h-[90vh] overflow-y-auto"
+            initial={{ opacity: 0, scale: 0.9, y: 20 }}
+            animate={{ opacity: 1, scale: 1, y: 0 }}
+            exit={{ opacity: 0, scale: 0.9, y: 20 }}
+            transition={{ type: "spring", stiffness: 300, damping: 30 }}
+            className="bg-white/95 backdrop-blur-sm rounded-2xl shadow-2xl w-full max-w-2xl max-h-[90vh] overflow-hidden border border-white/20"
             onClick={(e) => e.stopPropagation()}
-            style={{
-              scrollbarWidth: 'none',
-              msOverflowStyle: 'none',
-            }}
           >
             {/* Modal Header */}
-            <div className="bg-[#0065A8] px-6 py-4 flex justify-between items-center sticky top-0 z-10">
-              <h2 className="text-lg font-semibold text-white">
-                Select Analysis Options
-              </h2>
-              <button
+            <div className="bg-gradient-to-r from-[#0065A8] via-[#057DCD] to-[#54BEFF] px-8 py-6 flex justify-between items-center">
+              <div className="flex items-center gap-3">
+                <div className="w-10 h-10 bg-white/20 backdrop-blur-sm rounded-full flex items-center justify-center">
+                  <svg className="w-6 h-6 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z" />
+                  </svg>
+                </div>
+                <div>
+                  <h2 className="text-xl font-bold text-white">
+                    Analysis Configuration
+                  </h2>
+                  <p className="text-blue-100 text-sm">
+                    Select your analysis parameters
+                  </p>
+                </div>
+              </div>
+              <motion.button
+                whileHover={{ scale: 1.1 }}
+                whileTap={{ scale: 0.9 }}
                 onClick={() => setShowSelectionModal(false)}
-                className="text-white hover:text-gray-200 transition-colors"
+                className="text-white hover:text-gray-200 transition-colors p-2 rounded-lg hover:bg-white/20"
               >
                 <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
                 </svg>
-              </button>
+              </motion.button>
             </div>
 
             {/* Modal Body */}
-            <div className="p-6 space-y-6">
+            <div className="p-8 space-y-8 max-h-[60vh] overflow-y-auto">
               {/* Semester Selection */}
-              <div>
-                <label className="block text-sm font-medium text-gray-700 mb-2">
+              <motion.div 
+                initial={{ opacity: 0, x: -20 }}
+                animate={{ opacity: 1, x: 0 }}
+                transition={{ delay: 0.1 }}
+                className="bg-white/50 backdrop-blur-sm rounded-xl p-6 border border-white/20"
+              >
+                <label className="text-sm font-bold text-gray-800 mb-3 flex items-center gap-2">
+                  <div className="w-6 h-6 bg-gradient-to-r from-[#0065A8] to-[#057DCD] rounded-full flex items-center justify-center">
+                    <svg className="w-3 h-3 text-white" fill="currentColor" viewBox="0 0 20 20">
+                      <path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm1-12a1 1 0 10-2 0v4a1 1 0 00.293.707l2.828 2.829a1 1 0 101.415-1.415L11 9.586V6z" clipRule="evenodd" />
+                    </svg>
+                  </div>
                   Select Semester *
                 </label>
                 <select
-                  className="w-full px-3 py-2 border-2 border-[#0065A8] rounded-lg focus:outline-none focus:ring-2 focus:ring-[#54BEFF] text-sm"
+                  className="w-full px-4 py-3 border-2 border-gray-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-[#0065A8] focus:border-[#0065A8] transition-all duration-200 bg-white shadow-sm"
                   value={
                     tempSemester
                       ? `${tempSemester.school_year}|${tempSemester.semester}`
@@ -1092,44 +1116,70 @@ function ComparativeAnalysis() {
                     </option>
                   ))}
                 </select>
-              </div>
+              </motion.div>
 
               {/* Teacher Display */}
-              <div>
-                <label className="block text-sm font-medium text-gray-700 mb-2">
+              <motion.div 
+                initial={{ opacity: 0, x: -20 }}
+                animate={{ opacity: 1, x: 0 }}
+                transition={{ delay: 0.2 }}
+                className="bg-white/50 backdrop-blur-sm rounded-xl p-6 border border-white/20"
+              >
+                <label className="text-sm font-bold text-gray-800 mb-3 flex items-center gap-2">
+                  <div className="w-6 h-6 bg-gradient-to-r from-[#057DCD] to-[#54BEFF] rounded-full flex items-center justify-center">
+                    <svg className="w-3 h-3 text-white" fill="currentColor" viewBox="0 0 20 20">
+                      <path fillRule="evenodd" d="M10 9a3 3 0 100-6 3 3 0 000 6zm-7 9a7 7 0 1114 0H3z" clipRule="evenodd" />
+                    </svg>
+                  </div>
                   Teacher *
                 </label>
-                <div className="w-full px-3 py-2 border-2 border-[#0065A8] rounded-lg bg-gray-50 text-sm">
+                <div className="w-full px-4 py-3 border-2 border-gray-200 rounded-xl bg-gradient-to-r from-gray-50 to-gray-100 text-gray-700 font-medium shadow-sm">
                   {teachers[0]?.fullName || "Loading..."}
                 </div>
-              </div>
+              </motion.div>
 
               {/* Student Search with Profile Photos */}
-              <div className="relative">
-                <label className="block text-sm font-medium text-gray-700 mb-2">
+              <motion.div 
+                initial={{ opacity: 0, x: -20 }}
+                animate={{ opacity: 1, x: 0 }}
+                transition={{ delay: 0.3 }}
+                className="relative bg-white/50 backdrop-blur-sm rounded-xl p-6 border border-white/20"
+              >
+                <label className="text-sm font-bold text-gray-800 mb-3 flex items-center gap-2">
+                  <div className="w-6 h-6 bg-gradient-to-r from-[#54BEFF] to-[#0065A8] rounded-full flex items-center justify-center">
+                    <svg className="w-3 h-3 text-white" fill="currentColor" viewBox="0 0 20 20">
+                      <path d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
+                    </svg>
+                  </div>
                   Select Student *
                 </label>
                 
                 {/* Selected Student Display */}
                 {tempStudent && selectedStudentData && (
-                  <div className="flex items-center gap-3 p-3 bg-gray-50 border-2 border-[#0065A8] rounded-lg mb-2">
+                  <motion.div 
+                    initial={{ opacity: 0, scale: 0.9 }}
+                    animate={{ opacity: 1, scale: 1 }}
+                    className="flex items-center gap-4 p-4 bg-gradient-to-r from-green-50 to-blue-50 border-2 border-green-200 rounded-xl mb-4 shadow-sm"
+                  >
                     <img
                       src={getProfilePictureUrl(
                         selectedStudentData.profilePicture, 
                         selectedStudentData.firstName || selectedStudentData.name || 'Student'
                       )}
                       alt={`${selectedStudentData.firstName || selectedStudentData.name || ''} ${selectedStudentData.lastName || ''}`.trim()}
-                      className="w-10 h-10 rounded-full object-cover"
+                      className="w-12 h-12 rounded-full object-cover border-2 border-white shadow-sm"
                     />
                     <div className="flex-1">
-                      <div className="font-medium text-gray-900">
+                      <div className="font-bold text-gray-900">
                         {`${selectedStudentData.firstName || selectedStudentData.name || ''} ${selectedStudentData.lastName || ''}`.trim()}
                       </div>
-                      <div className="text-sm text-gray-500">
+                      <div className="text-sm text-gray-600">
                         ID: {selectedStudentData.studentID || selectedStudentData.id}
                       </div>
                     </div>
-                    <button
+                    <motion.button
+                      whileHover={{ scale: 1.1 }}
+                      whileTap={{ scale: 0.9 }}
                       type="button"
                       onClick={() => {
                         setTempStudentName("");
@@ -1137,33 +1187,49 @@ function ComparativeAnalysis() {
                         setSelectedStudentData(null);
                         setTempCourse("");
                       }}
-                      className="text-red-500 hover:text-red-700 text-sm font-medium"
+                      className="text-red-500 hover:text-red-700 p-2 rounded-lg hover:bg-red-50 transition-colors"
                     >
-                      Remove
-                    </button>
-                  </div>
+                      <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+                      </svg>
+                    </motion.button>
+                  </motion.div>
                 )}
                 
                 {/* Search Input - Only show when no student is selected */}
                 {!tempStudent && (
-                  <input
-                    type="text"
-                    placeholder="Search student by name..."
-                    value={tempStudentName}
-                    onChange={handleStudentNameChange}
-                    disabled={!tempSemester || !tempTeacher}
-                    className="w-full border-2 border-[#0065A8] rounded-lg px-3 py-2 focus:outline-none focus:ring-2 focus:ring-[#54BEFF] disabled:bg-gray-100 disabled:cursor-not-allowed text-sm"
-                  />
+                  <div className="relative">
+                    <input
+                      type="text"
+                      placeholder="Search student by name..."
+                      value={tempStudentName}
+                      onChange={handleStudentNameChange}
+                      disabled={!tempSemester || !tempTeacher}
+                      className="w-full border-2 border-gray-200 rounded-xl px-4 py-3 focus:outline-none focus:ring-2 focus:ring-[#0065A8] focus:border-[#0065A8] disabled:bg-gray-100 disabled:cursor-not-allowed transition-all duration-200 shadow-sm"
+                    />
+                    <div className="absolute right-3 top-1/2 transform -translate-y-1/2">
+                      <svg className="w-5 h-5 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
+                      </svg>
+                    </div>
+                  </div>
                 )}
 
                 {/* Search Results Dropdown */}
                 {!tempStudent && filteredStudents.length > 0 && (
-                  <ul className="absolute z-[110] bg-white border border-gray-300 rounded-lg mt-1 max-h-40 overflow-y-auto w-full shadow-lg">
-                    {filteredStudents.map((student) => (
-                      <li
+                  <motion.ul 
+                    initial={{ opacity: 0, y: -10 }}
+                    animate={{ opacity: 1, y: 0 }}
+                    className="absolute z-[110] bg-white/95 backdrop-blur-sm border border-gray-200 rounded-xl mt-2 max-h-48 overflow-y-auto w-full shadow-xl"
+                  >
+                    {filteredStudents.map((student, index) => (
+                      <motion.li
                         key={student.studentID || student.id}
+                        initial={{ opacity: 0, x: -10 }}
+                        animate={{ opacity: 1, x: 0 }}
+                        transition={{ delay: index * 0.05 }}
                         onClick={() => handleStudentSelect(student)}
-                        className="px-3 py-2 cursor-pointer hover:bg-gray-100 text-sm flex items-center gap-3"
+                        className="px-4 py-3 cursor-pointer hover:bg-blue-50 text-sm flex items-center gap-3 transition-colors border-b border-gray-100 last:border-b-0"
                       >
                         <img
                           src={getProfilePictureUrl(
@@ -1171,36 +1237,52 @@ function ComparativeAnalysis() {
                             student.firstName || student.name || 'Student'
                           )}
                           alt={`${student.firstName || student.name || ''} ${student.lastName || ''}`.trim()}
-                          className="w-8 h-8 rounded-full object-cover"
+                          className="w-10 h-10 rounded-full object-cover border-2 border-gray-200"
                         />
-                        <div>
-                          <div className="font-medium">
+                        <div className="flex-1">
+                          <div className="font-semibold text-gray-800">
                             {`${student.firstName || student.name || ''} ${student.lastName || ''}`.trim()}
                           </div>
                           <div className="text-xs text-gray-500">
                             ID: {student.studentID || student.id}
                           </div>
                         </div>
-                      </li>
+                        <div className="w-6 h-6 bg-green-100 rounded-full flex items-center justify-center">
+                          <svg className="w-4 h-4 text-green-600" fill="currentColor" viewBox="0 0 20 20">
+                            <path fillRule="evenodd" d="M10 3a1 1 0 011 1v5h5a1 1 0 110 2h-5v5a1 1 0 11-2 0v-5H4a1 1 0 110-2h5V4a1 1 0 011-1z" clipRule="evenodd" />
+                          </svg>
+                        </div>
+                      </motion.li>
                     ))}
-                  </ul>
+                  </motion.ul>
                 )}
 
                 {/* Loading message */}
                 {isLoadingStudents && (
-                  <div className="text-sm text-gray-500 mt-2">
+                  <div className="flex items-center gap-2 text-sm text-gray-600 mt-3">
+                    <div className="w-4 h-4 border-2 border-[#0065A8] border-t-transparent rounded-full animate-spin"></div>
                     Loading students...
                   </div>
                 )}
-              </div>
+              </motion.div>
 
               {/* Course Selection */}
-              <div>
-                <label className="block text-sm font-medium text-gray-700 mb-2">
+              <motion.div 
+                initial={{ opacity: 0, x: -20 }}
+                animate={{ opacity: 1, x: 0 }}
+                transition={{ delay: 0.4 }}
+                className="bg-white/50 backdrop-blur-sm rounded-xl p-6 border border-white/20"
+              >
+                <label className="text-sm font-bold text-gray-800 mb-3 flex items-center gap-2">
+                  <div className="w-6 h-6 bg-gradient-to-r from-[#0065A8] to-[#057DCD] rounded-full flex items-center justify-center">
+                    <svg className="w-3 h-3 text-white" fill="currentColor" viewBox="0 0 20 20">
+                      <path d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
+                    </svg>
+                  </div>
                   Select Course *
                 </label>
                 <select
-                  className="w-full px-3 py-2 border-2 border-[#0065A8] rounded-lg focus:outline-none focus:ring-2 focus:ring-[#54BEFF] text-sm"
+                  className="w-full px-4 py-3 border-2 border-gray-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-[#0065A8] focus:border-[#0065A8] transition-all duration-200 bg-white shadow-sm"
                   value={tempCourse}
                   onChange={(e) => setTempCourse(e.target.value)}
                   disabled={!tempStudent || availableCourses.length === 0}
@@ -1212,32 +1294,43 @@ function ComparativeAnalysis() {
                     </option>
                   ))}
                 </select>
-              </div>
+              </motion.div>
             </div>
 
             {/* Modal Footer */}
-            <div className="flex mt-4">
-              <button
+            <div className="bg-gradient-to-r from-gray-50 to-gray-100 px-8 py-6 flex gap-4">
+              <motion.button
+                whileHover={{ scale: 1.02 }}
+                whileTap={{ scale: 0.98 }}
                 onClick={handleSelectionModalDone}
                 disabled={!(tempSemester && tempTeacher && tempStudent && tempCourse)}
-                className={`flex-1 py-3 sm:py-4 text-center justify-center rounded-bl-xl transition-colors flex items-center gap-2 text-xs sm:text-sm font-medium ${
+                className={`flex-1 py-4 text-center justify-center rounded-xl transition-all duration-200 flex items-center gap-3 text-sm font-semibold shadow-lg ${
                   tempSemester && tempTeacher && tempStudent && tempCourse
-                    ? 'bg-[#0065A8] hover:bg-[#54BEFF] text-white'
+                    ? 'bg-gradient-to-r from-[#0065A8] to-[#057DCD] hover:shadow-xl text-white'
                     : 'bg-gray-300 text-gray-500 cursor-not-allowed'
                 }`}
               >
+                <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
+                </svg>
                 Apply Selection
-              </button>
-              <button
+              </motion.button>
+              <motion.button
+                whileHover={{ scale: 1.02 }}
+                whileTap={{ scale: 0.98 }}
                 onClick={() => setShowSelectionModal(false)}
-                className="flex-1 py-3 sm:py-4 text-gray-700 bg-gray-100 rounded-br-xl hover:bg-gray-200 transition-colors text-xs sm:text-sm font-medium"
+                className="flex-1 py-4 text-gray-700 bg-white border-2 border-gray-200 rounded-xl hover:bg-gray-50 hover:border-gray-300 transition-all duration-200 text-sm font-semibold shadow-lg flex items-center justify-center gap-3"
               >
+                <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+                </svg>
                 Cancel
-              </button>
+              </motion.button>
             </div>
           </motion.div>
-        </div>
+        </motion.div>
       )}
+      </div>
     </div>
   );
 }

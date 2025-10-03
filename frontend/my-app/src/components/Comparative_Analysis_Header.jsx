@@ -1,29 +1,78 @@
 import React from 'react';
+import { motion } from 'framer-motion';
 
 const ComparativeAnalysisHeader = ({ openSelectionModal, allFieldsProvided }) => {
   return (
-    <div className="mb-12 text-center max-w-4xl mx-auto">
-      <div className="mb-6">
-        <h2 className="text-4xl md:text-5xl font-bold text-[#0065A8] mb-4">
-          Polycon Analysis
-        </h2>
-        <div className="h-1 w-24 bg-gradient-to-r from-[#0065A8] to-[#54BEFF] mx-auto rounded-full"></div>
-      </div>
+    <div className="mb-12">
+      {/* Hero Section */}
+      <motion.div 
+        initial={{ opacity: 0, y: -20 }}
+        animate={{ opacity: 1, y: 0 }}
+        transition={{ duration: 0.6 }}
+        className="relative overflow-hidden bg-gradient-to-r from-[#0065A8] via-[#057DCD] to-[#54BEFF] py-12 px-4 sm:px-6 lg:px-8 rounded-2xl mb-8"
+      >
+        <div className="absolute inset-0 bg-black/10"></div>
+        <div className="relative max-w-7xl mx-auto text-center">
+          <motion.div
+            initial={{ opacity: 0, scale: 0.9 }}
+            animate={{ opacity: 1, scale: 1 }}
+            transition={{ duration: 0.8, delay: 0.2 }}
+            className="inline-flex items-center justify-center w-20 h-20 bg-white/20 backdrop-blur-sm rounded-full mb-6"
+          >
+            <svg className="w-10 h-10 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z" />
+            </svg>
+          </motion.div>
+          <motion.h1 
+            initial={{ opacity: 0, y: 20 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ duration: 0.8, delay: 0.3 }}
+            className="text-4xl sm:text-5xl lg:text-6xl font-bold text-white mb-4"
+          >
+            Polycon Analysis
+          </motion.h1>
+          <motion.p 
+            initial={{ opacity: 0, y: 20 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ duration: 0.8, delay: 0.4 }}
+            className="text-xl sm:text-2xl text-blue-100 max-w-4xl mx-auto"
+          >
+            Comprehensive student improvement and learning progress analysis
+          </motion.p>
+        </div>
+      </motion.div>
 
-      <p className="text-gray-600 text-md mb-6 px-4">
-        Welcome to the Polycon Analysis tool, your comprehensive solution for
-        evaluating student improvement and learning progress. This analysis
-        combines grade progression, consultation quality, and academic events to provide
-        insights into how much students have improved and learned over time.
-      </p>
+      {/* Description Section */}
+      <motion.div 
+        initial={{ opacity: 0, y: 20 }}
+        animate={{ opacity: 1, y: 0 }}
+        transition={{ duration: 0.6, delay: 0.5 }}
+        className="text-center max-w-4xl mx-auto mb-8"
+      >
+        <p className="text-gray-600 text-lg px-4">
+          Welcome to the Polycon Analysis tool, your comprehensive solution for
+          evaluating student improvement and learning progress. This analysis
+          combines grade progression, consultation quality, and academic events to provide
+          insights into how much students have improved and learned over time.
+        </p>
+      </motion.div>
 
-      <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-8 px-4">
+      {/* Feature Cards Section */}
+      <motion.div 
+        initial={{ opacity: 0, y: 20 }}
+        animate={{ opacity: 1, y: 0 }}
+        transition={{ duration: 0.6, delay: 0.6 }}
+        className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-8 px-4"
+      >
         {/* Performance Tracking Card */}
-        <div className="bg-white p-4 rounded-xl shadow-sm border border-gray-100">
-          <div className="text-[#0065A8] mb-2">
+        <motion.div 
+          whileHover={{ scale: 1.05, y: -5 }}
+          className="bg-white/80 backdrop-blur-sm p-6 rounded-2xl shadow-lg border border-white/20 hover:shadow-xl transition-all duration-300"
+        >
+          <div className="w-12 h-12 bg-gradient-to-r from-[#0065A8] to-[#057DCD] rounded-full flex items-center justify-center mb-4 mx-auto">
             <svg
               xmlns="http://www.w3.org/2000/svg"
-              className="h-6 w-6 mx-auto"
+              className="h-6 w-6 text-white"
               fill="none"
               viewBox="0 0 24 24"
               stroke="currentColor"
@@ -36,18 +85,21 @@ const ComparativeAnalysisHeader = ({ openSelectionModal, allFieldsProvided }) =>
               />
             </svg>
           </div>
-          <h3 className="font-semibold text-gray-800">Improvement Tracking</h3>
-          <p className="text-sm text-gray-500">
+          <h3 className="font-bold text-gray-800 text-center mb-3">Improvement Tracking</h3>
+          <p className="text-sm text-gray-600 text-center">
             Track academic improvement and learning progress across different periods
           </p>
-        </div>
+        </motion.div>
 
         {/* Consultation History Card */}
-        <div className="bg-white p-4 rounded-xl shadow-sm border border-gray-100">
-          <div className="text-[#0065A8] mb-2">
+        <motion.div 
+          whileHover={{ scale: 1.05, y: -5 }}
+          className="bg-white/80 backdrop-blur-sm p-6 rounded-2xl shadow-lg border border-white/20 hover:shadow-xl transition-all duration-300"
+        >
+          <div className="w-12 h-12 bg-gradient-to-r from-[#057DCD] to-[#54BEFF] rounded-full flex items-center justify-center mb-4 mx-auto">
             <svg
               xmlns="http://www.w3.org/2000/svg"
-              className="h-6 w-6 mx-auto"
+              className="h-6 w-6 text-white"
               fill="none"
               viewBox="0 0 24 24"
               stroke="currentColor"
@@ -60,18 +112,21 @@ const ComparativeAnalysisHeader = ({ openSelectionModal, allFieldsProvided }) =>
               />
             </svg>
           </div>
-          <h3 className="font-semibold text-gray-800">Consultation Quality</h3>
-          <p className="text-sm text-gray-500">
+          <h3 className="font-bold text-gray-800 text-center mb-3">Consultation Quality</h3>
+          <p className="text-sm text-gray-600 text-center">
             Analyze consultation effectiveness and learning outcomes
           </p>
-        </div>
+        </motion.div>
 
         {/* Academic Events Card */}
-        <div className="bg-white p-4 rounded-xl shadow-sm border border-gray-100">
-          <div className="text-[#0065A8] mb-2">
+        <motion.div 
+          whileHover={{ scale: 1.05, y: -5 }}
+          className="bg-white/80 backdrop-blur-sm p-6 rounded-2xl shadow-lg border border-white/20 hover:shadow-xl transition-all duration-300"
+        >
+          <div className="w-12 h-12 bg-gradient-to-r from-[#54BEFF] to-[#0065A8] rounded-full flex items-center justify-center mb-4 mx-auto">
             <svg
               xmlns="http://www.w3.org/2000/svg"
-              className="h-6 w-6 mx-auto"
+              className="h-6 w-6 text-white"
               fill="none"
               viewBox="0 0 24 24"
               stroke="currentColor"
@@ -90,18 +145,25 @@ const ComparativeAnalysisHeader = ({ openSelectionModal, allFieldsProvided }) =>
               />
             </svg>
           </div>
-          <h3 className="font-semibold text-gray-800">Academic Events</h3>
-          <p className="text-sm text-gray-500">
+          <h3 className="font-bold text-gray-800 text-center mb-3">Academic Events</h3>
+          <p className="text-sm text-gray-600 text-center">
             Monitor participation and impact of events
           </p>
-        </div>
-      </div>
+        </motion.div>
+      </motion.div>
 
       {/* Analysis Button */}
-      <div className="mb-8">
-        <button
+      <motion.div 
+        initial={{ opacity: 0, y: 20 }}
+        animate={{ opacity: 1, y: 0 }}
+        transition={{ duration: 0.6, delay: 0.7 }}
+        className="mb-8 text-center"
+      >
+        <motion.button
+          whileHover={{ scale: 1.05 }}
+          whileTap={{ scale: 0.95 }}
           onClick={openSelectionModal}
-          className="group px-8 py-4 bg-[#0065A8] text-white rounded-xl hover:bg-[#54BEFF] transition-all transform hover:scale-105 duration-300 shadow-md hover:shadow-lg"
+          className="group px-8 py-4 bg-gradient-to-r from-[#0065A8] to-[#057DCD] text-white rounded-xl hover:shadow-xl transition-all duration-300 shadow-lg"
         >
           <span className="flex items-center justify-center space-x-3">
             <svg
@@ -116,21 +178,26 @@ const ComparativeAnalysisHeader = ({ openSelectionModal, allFieldsProvided }) =>
                 clipRule="evenodd"
               />
             </svg>
-            <span className="font-medium text-lg">Start Analysis</span>
+            <span className="font-semibold text-lg">Start Analysis</span>
           </span>
-        </button>
-        <p className="text-sm text-gray-500 mt-3">
+        </motion.button>
+        <p className="text-sm text-gray-600 mt-4 font-medium">
           Click to select semester, student, and course options
         </p>
-      </div>
+      </motion.div>
 
       {/* Empty State Message */}
       {!allFieldsProvided && (
-        <div className="text-center text-gray-500 my-10 p-8 bg-white rounded-xl shadow-sm border border-gray-100 max-w-full mx-auto">
-          <div className="bg-blue-50 rounded-full w-16 h-16 flex items-center justify-center mx-auto mb-4">
+        <motion.div 
+          initial={{ opacity: 0, y: 20 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ duration: 0.6, delay: 0.8 }}
+          className="text-center my-10 p-8 bg-white/80 backdrop-blur-sm rounded-2xl shadow-lg border border-white/20 max-w-2xl mx-auto"
+        >
+          <div className="w-20 h-20 bg-gradient-to-r from-[#0065A8] to-[#057DCD] rounded-full flex items-center justify-center mx-auto mb-6">
             <svg
               xmlns="http://www.w3.org/2000/svg"
-              className="h-8 w-8 text-[#0065A8]"
+              className="h-10 w-10 text-white"
               fill="none"
               viewBox="0 0 24 24"
               stroke="currentColor"
@@ -143,14 +210,14 @@ const ComparativeAnalysisHeader = ({ openSelectionModal, allFieldsProvided }) =>
               />
             </svg>
           </div>
-          <h3 className="text-xl font-semibold text-gray-700 mb-2">
+          <h3 className="text-2xl font-bold text-gray-800 mb-3">
             Ready to Begin Analysis?
           </h3>
-          <p className="text-gray-600">
+          <p className="text-gray-600 text-lg">
             Please select a semester, teacher, student, and course to generate
             a comprehensive performance analysis.
           </p>
-        </div>
+        </motion.div>
       )}
     </div>
   );

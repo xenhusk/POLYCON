@@ -946,103 +946,180 @@ export default function AddGrade() {
   }, [facultyID]);
 
   return (
-    <div className="w-full mx-auto p-2 sm:p-4 lg:p-6 bg-white fade-in overflow-x-hidden">
-      {/* Updated toast message display */}
-      {message.content && (
-        <div
-          className={`fixed top-5 right-5 left-5 sm:left-auto sm:right-5 p-3 sm:p-4 rounded-lg shadow-lg z-50 text-sm sm:text-base ${
-            message.type === "success"
-              ? "bg-green-100 text-green-700"
-              : "bg-red-100 text-red-700"
-          }`}
-        >
-          {message.content}
-        </div>
-      )}
-
-      <div className="w-full mx-auto p-2 sm:p-4 bg-white mt-2 sm:mt-4 flex flex-col justify-center">
-        {/* Centered Page Title */}
-        <div className="flex justify-center items-center mb-6 sm:mb-8">
-          <h2 className="text-2xl sm:text-3xl lg:text-4xl font-bold text-[#0065A8] fade-in delay-100 text-center">
+    <div className="min-h-screen bg-gradient-to-br from-slate-50 via-blue-50 to-indigo-100">
+      {/* Hero Section */}
+      <motion.div 
+        initial={{ opacity: 0, y: -20 }}
+        animate={{ opacity: 1, y: 0 }}
+        transition={{ duration: 0.6 }}
+        className="relative overflow-hidden bg-gradient-to-r from-[#0065A8] via-[#057DCD] to-[#54BEFF] py-12 px-4 sm:px-6 lg:px-8"
+      >
+        <div className="absolute inset-0 bg-black/10"></div>
+        <div className="relative max-w-7xl mx-auto text-center">
+          <motion.div
+            initial={{ opacity: 0, scale: 0.9 }}
+            animate={{ opacity: 1, scale: 1 }}
+            transition={{ duration: 0.8, delay: 0.2 }}
+            className="inline-flex items-center justify-center w-20 h-20 bg-white/20 backdrop-blur-sm rounded-full mb-6"
+          >
+            <svg className="w-10 h-10 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
+            </svg>
+          </motion.div>
+          <motion.h1 
+            initial={{ opacity: 0, y: 20 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ duration: 0.8, delay: 0.3 }}
+            className="text-4xl sm:text-5xl lg:text-6xl font-bold text-white mb-4"
+          >
             Grade Management
-          </h2>
+          </motion.h1>
+          <motion.p 
+            initial={{ opacity: 0, y: 20 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ duration: 0.8, delay: 0.4 }}
+            className="text-xl sm:text-2xl text-blue-100 max-w-3xl mx-auto"
+          >
+            Manage student grades with precision and efficiency
+          </motion.p>
         </div>
+      </motion.div>
 
-        {/* Search and Filter Section - Enhanced mobile layout */}
-        <div className="mt-4 fade-in delay-200 z-50 flex justify-center">
-          <div className="flex flex-col gap-3 w-full max-w-4xl">
-            {/* Search Input Container */}
-            <div className="relative w-full">
-              <div className="border border-gray-300 rounded-lg px-3 py-2 shadow-md flex flex-wrap items-center min-h-[42px] w-full gap-1">
-                <div className="flex flex-wrap gap-1 w-full sm:w-auto">
-                  {selectedFilterStudents.map((student) => (
-                    <div
-                      key={student.studentID}
-                      className="bg-[#0065A8] text-white px-2 py-1 rounded-full flex items-center gap-2 text-xs sm:text-sm whitespace-nowrap"
-                    >
-                      <img
-                        src={getProfilePictureUrl(student.profile_picture, student.name)}
-                        alt={student.name}
-                        className="w-4 h-4 rounded-full"
-                      />
-                      <span className="truncate max-w-[120px] sm:max-w-[150px]">
-                        {student.name}
-                      </span>
-                      <span
-                        onClick={() => handleRemoveFilterStudent(student.studentID)}
-                        className="ml-1 cursor-pointer text-white hover:text-red-200 transition-colors"
-                      >
-                        ×
-                      </span>
-                    </div>
-                  ))}
-                  <input
-                    type="text"
-                    value={filterStudentQuery}
-                    onChange={handleFilterStudentQueryChange}
-                    placeholder="Search by Name"
-                    className="border-none focus:ring-0 outline-none flex-1 min-w-[120px] text-sm py-1"
-                  />
-                  {filterStudentQuery && (
-                    <div className="flex items-center gap-2 text-xs text-gray-500">
-                      {filterStudentSuggestions.length > 0 ? (
-                        <span className="text-green-600">✓ {filterStudentSuggestions.length} found</span>
-                      ) : (
-                        <span className="text-gray-400">Searching...</span>
-                      )}
-                    </div>
-                  )}
-                </div>
-              </div>
-
-              {/* Dropdown Suggestions with Profile Pictures */}
-              {filterStudentSuggestions.length > 0 && (
-                <ul className="absolute left-0 right-0 top-full mt-1 bg-white border border-gray-300 rounded-lg max-h-40 overflow-y-auto shadow-lg z-[60]">
-                  {filterStudentSuggestions.map((student) => (
-                    <li
-                      key={student.studentID}
-                      onClick={() => handleSelectFilterStudent(student)}
-                      className="px-3 py-2 cursor-pointer hover:bg-gray-50 text-sm flex items-center gap-3"
-                    >
-                      <img
-                        src={getProfilePictureUrl(student.profile_picture, student.name)}
-                        alt={student.name}
-                        className="w-8 h-8 rounded-full"
-                      />
-                      <div>
-                        <div className="font-medium">{student.name}</div>
-                        <div className="text-xs text-gray-500">{student.studentID}</div>
-                      </div>
-                    </li>
-                  ))}
-                </ul>
+      {/* Main Content */}
+      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+        {/* Updated toast message display */}
+        {message.content && (
+          <motion.div
+            initial={{ opacity: 0, x: 300 }}
+            animate={{ opacity: 1, x: 0 }}
+            exit={{ opacity: 0, x: 300 }}
+            className={`fixed top-5 right-5 left-5 sm:left-auto sm:right-5 p-4 rounded-xl shadow-xl z-50 text-sm sm:text-base backdrop-blur-sm ${
+              message.type === "success"
+                ? "bg-green-500/90 text-white border border-green-400"
+                : "bg-red-500/90 text-white border border-red-400"
+            }`}
+          >
+            <div className="flex items-center gap-3">
+              {message.type === "success" ? (
+                <svg className="w-5 h-5" fill="currentColor" viewBox="0 0 20 20">
+                  <path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clipRule="evenodd" />
+                </svg>
+              ) : (
+                <svg className="w-5 h-5" fill="currentColor" viewBox="0 0 20 20">
+                  <path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zM8.707 7.293a1 1 0 00-1.414 1.414L8.586 10l-1.293 1.293a1 1 0 101.414 1.414L10 11.414l1.293 1.293a1 1 0 001.414-1.414L11.414 10l1.293-1.293a1 1 0 00-1.414-1.414L10 8.586 8.707 7.293z" clipRule="evenodd" />
+                </svg>
               )}
+              {message.content}
+            </div>
+          </motion.div>
+        )}
+
+        {/* Search and Filter Section - Enhanced with modern card design */}
+        <motion.div 
+          initial={{ opacity: 0, y: 20 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ duration: 0.6, delay: 0.2 }}
+          className="mt-8 z-50 flex justify-center"
+        >
+          <div className="w-full max-w-6xl">
+            {/* Search Card */}
+            <div className="bg-white/80 backdrop-blur-sm rounded-2xl shadow-xl border border-white/20 p-6 mb-6">
+              <div className="flex items-center gap-3 mb-4">
+                <div className="w-10 h-10 bg-gradient-to-r from-[#0065A8] to-[#057DCD] rounded-full flex items-center justify-center">
+                  <svg className="w-5 h-5 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
+                  </svg>
+                </div>
+                <h3 className="text-xl font-bold text-gray-800">Search Students</h3>
+              </div>
+              
+              <div className="relative w-full">
+                <div className="bg-white border-2 border-gray-200 rounded-xl px-4 py-3 shadow-sm flex flex-wrap items-center min-h-[50px] w-full gap-2 hover:border-[#0065A8] transition-colors">
+                  <div className="flex flex-wrap gap-2 w-full sm:w-auto">
+                    {selectedFilterStudents.map((student) => (
+                      <motion.div
+                        key={student.studentID}
+                        initial={{ opacity: 0, scale: 0.8 }}
+                        animate={{ opacity: 1, scale: 1 }}
+                        className="bg-gradient-to-r from-[#0065A8] to-[#057DCD] text-white px-3 py-2 rounded-full flex items-center gap-2 text-sm whitespace-nowrap shadow-md"
+                      >
+                        <img
+                          src={getProfilePictureUrl(student.profile_picture, student.name)}
+                          alt={student.name}
+                          className="w-5 h-5 rounded-full border border-white/30"
+                        />
+                        <span className="truncate max-w-[120px] sm:max-w-[150px] font-medium">
+                          {student.name}
+                        </span>
+                        <button
+                          onClick={() => handleRemoveFilterStudent(student.studentID)}
+                          className="ml-1 cursor-pointer text-white hover:text-red-200 transition-colors p-1 hover:bg-white/20 rounded-full"
+                        >
+                          ×
+                        </button>
+                      </motion.div>
+                    ))}
+                    <input
+                      type="text"
+                      value={filterStudentQuery}
+                      onChange={handleFilterStudentQueryChange}
+                      placeholder="Search by student name..."
+                      className="border-none focus:ring-0 outline-none flex-1 min-w-[150px] text-gray-700 placeholder-gray-400"
+                    />
+                    {filterStudentQuery && (
+                      <div className="flex items-center gap-2 text-sm text-gray-500">
+                        {filterStudentSuggestions.length > 0 ? (
+                          <span className="text-green-600 font-medium">✓ {filterStudentSuggestions.length} found</span>
+                        ) : (
+                          <span className="text-gray-400">Searching...</span>
+                        )}
+                      </div>
+                    )}
+                  </div>
+                </div>
+
+                {/* Dropdown Suggestions with Profile Pictures */}
+                {filterStudentSuggestions.length > 0 && (
+                  <motion.ul 
+                    initial={{ opacity: 0, y: -10 }}
+                    animate={{ opacity: 1, y: 0 }}
+                    className="absolute left-0 right-0 top-full mt-2 bg-white border border-gray-200 rounded-xl max-h-48 overflow-y-auto shadow-xl z-[60] backdrop-blur-sm"
+                  >
+                    {filterStudentSuggestions.map((student) => (
+                      <motion.li
+                        key={student.studentID}
+                        initial={{ opacity: 0, x: -10 }}
+                        animate={{ opacity: 1, x: 0 }}
+                        onClick={() => handleSelectFilterStudent(student)}
+                        className="px-4 py-3 cursor-pointer hover:bg-blue-50 text-sm flex items-center gap-3 transition-colors border-b border-gray-100 last:border-b-0"
+                      >
+                        <img
+                          src={getProfilePictureUrl(student.profile_picture, student.name)}
+                          alt={student.name}
+                          className="w-10 h-10 rounded-full border-2 border-gray-200"
+                        />
+                        <div className="flex-1">
+                          <div className="font-semibold text-gray-800">{student.name}</div>
+                          <div className="text-xs text-gray-500">{student.studentID}</div>
+                        </div>
+                        <div className="w-6 h-6 bg-green-100 rounded-full flex items-center justify-center">
+                          <svg className="w-4 h-4 text-green-600" fill="currentColor" viewBox="0 0 20 20">
+                            <path fillRule="evenodd" d="M10 3a1 1 0 011 1v5h5a1 1 0 110 2h-5v5a1 1 0 11-2 0v-5H4a1 1 0 110-2h5V4a1 1 0 011-1z" clipRule="evenodd" />
+                          </svg>
+                        </div>
+                      </motion.li>
+                    ))}
+                  </motion.ul>
+                )}
+              </div>
             </div>
 
-            {/* Buttons Container */}
-            <div className="flex gap-3 w-full justify-center sm:justify-start">
-              <button
-                className={`flex-1 max-w-[120px] sm:flex-none bg-[#057DCD] text-white px-4 sm:px-6 py-2 rounded-lg shadow-md hover:bg-[#54BEFF] transition text-sm
+            {/* Action Buttons */}
+            <div className="flex flex-wrap gap-3 justify-center sm:justify-start">
+              <motion.button
+                whileHover={{ scale: 1.05 }}
+                whileTap={{ scale: 0.95 }}
+                className={`flex-1 max-w-[140px] sm:flex-none bg-gradient-to-r from-[#0065A8] to-[#057DCD] text-white px-6 py-3 rounded-xl shadow-lg hover:shadow-xl transition-all duration-200 text-sm font-semibold flex items-center justify-center gap-2
                   ${SearchClicked ? "scale-90" : "scale-100"}`}
                 onClick={() => {
                   setSearchClicked(true);
@@ -1063,34 +1140,41 @@ export default function AddGrade() {
                   setTimeout(() => setMessage({ type: "", content: "" }), 3000);
                 }}
               >
+                <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
+                </svg>
                 Search
-              </button>
+              </motion.button>
 
-              <button
+              <motion.button
+                whileHover={{ scale: 1.05 }}
+                whileTap={{ scale: 0.95 }}
                 onClick={() => {
                   setFilterClicked(true);
                   setTimeout(() => setFilterClicked(false), 300);
                   setShowFilters(!showFilters);
                 }}
-                className={`w-12 h-10 sm:w-auto bg-[#057DCD] text-white p-2 sm:px-3 rounded-lg shadow-md flex items-center justify-center hover:bg-[#54BEFF] transition
+                className={`w-14 h-12 sm:w-auto bg-gradient-to-r from-[#057DCD] to-[#54BEFF] text-white px-4 sm:px-6 py-3 rounded-xl shadow-lg hover:shadow-xl transition-all duration-200 flex items-center justify-center gap-2 font-semibold
                   ${FilterClicked ? "scale-90" : "scale-100"}`}
               >
                 <FilterIcon className="w-5 h-5" />
-                <span className="hidden sm:inline ml-2">Filter</span>
-              </button>
+                <span className="hidden sm:inline">Filter</span>
+              </motion.button>
 
-              <button
+              <motion.button
+                whileHover={{ scale: 1.05 }}
+                whileTap={{ scale: 0.95 }}
                 onClick={() => {
                   handleResetFilters();
                 }}
-                className={`flex-1 max-w-[120px] sm:flex-none bg-gray-500 text-white px-4 sm:px-6 py-2 rounded-lg shadow-md hover:bg-gray-400 transition text-sm flex items-center justify-center`}
+                className={`flex-1 max-w-[140px] sm:flex-none bg-gradient-to-r from-gray-500 to-gray-600 text-white px-6 py-3 rounded-xl shadow-lg hover:shadow-xl transition-all duration-200 text-sm font-semibold flex items-center justify-center gap-2`}
               >
-                <RedoIcon className="w-4 h-4 mr-1 sm:mr-2" />
-                <span className="text-xs sm:text-sm">Reset</span>
-              </button>
+                <RedoIcon className="w-4 h-4" />
+                Reset
+              </motion.button>
             </div>
           </div>
-        </div>
+        </motion.div>
 
         {/* Filter Modal - Full screen popup */}
         {showFilters && createPortal(
@@ -1321,264 +1405,338 @@ export default function AddGrade() {
             </motion.div>
           </AnimatePresence>,
           document.body
-        )}        {/* Table Section - Enhanced mobile responsiveness */}
-        <div className="mt-4 shadow-md overflow-hidden rounded-lg fade-in delay-300 relative z-0">
+        )}        {/* Grades Table Section - Enhanced with modern design */}
+        <motion.div 
+          initial={{ opacity: 0, y: 20 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ duration: 0.6, delay: 0.4 }}
+          className="mt-8 relative z-0"
+        >
           {/* Mobile Card View */}
           <div className="block sm:hidden">
-            <div className="max-h-[60vh] overflow-y-auto space-y-3 p-4">
+            <div className="max-h-[60vh] overflow-y-auto space-y-4 p-4">
               {isLoading || isFiltering ? (
                 Array.from({ length: 3 }).map((_, index) => (
-                  <div key={index} className="bg-white rounded-lg border p-4 animate-pulse">
-                    <div className="space-y-2">
+                  <motion.div 
+                    key={index} 
+                    initial={{ opacity: 0, y: 20 }}
+                    animate={{ opacity: 1, y: 0 }}
+                    transition={{ delay: index * 0.1 }}
+                    className="bg-white/80 backdrop-blur-sm rounded-2xl border border-white/20 p-6 animate-pulse shadow-lg"
+                  >
+                    <div className="space-y-3">
                       <div className="h-4 bg-gray-200 rounded w-3/4"></div>
                       <div className="h-3 bg-gray-200 rounded w-1/2"></div>
                       <div className="h-3 bg-gray-200 rounded w-2/3"></div>
                     </div>
-                  </div>
+                  </motion.div>
                 ))
               ) : currentGrades.length > 0 ? (
-                currentGrades.map((gradeData) => {
+                currentGrades.map((gradeData, index) => {
                   const grade = sanitizeGrade(gradeData);
                   if (!grade) return null;
 
                   return (
-                    <div key={grade.id} className="bg-white rounded-xl border border-gray-200 p-4 shadow-md hover:shadow-lg transition-shadow duration-300">
-                      <div className="flex justify-between items-start mb-3">
+                    <motion.div 
+                      key={grade.id} 
+                      initial={{ opacity: 0, y: 20 }}
+                      animate={{ opacity: 1, y: 0 }}
+                      transition={{ delay: index * 0.1 }}
+                      whileHover={{ scale: 1.02 }}
+                      className="bg-white/90 backdrop-blur-sm rounded-2xl border border-white/20 p-6 shadow-lg hover:shadow-xl transition-all duration-300"
+                    >
+                      <div className="flex justify-between items-start mb-4">
                         <div className="flex-1">
-                          <h3 className="font-bold text-gray-800 text-sm">{grade.studentName}</h3>
-                          <p className="text-xs text-gray-500 bg-gray-100 px-2 py-1 rounded-md inline-block mt-1">{grade.studentID}</p>
+                          <h3 className="font-bold text-gray-800 text-lg mb-1">{grade.studentName}</h3>
+                          <div className="flex items-center gap-2">
+                            <span className="text-sm text-gray-500 bg-gray-100 px-3 py-1 rounded-full">{grade.studentID}</span>
+                            <span className={`px-3 py-1 rounded-full text-xs font-semibold ${
+                              grade.remarks === "PASSED" 
+                                ? "bg-green-100 text-green-700" 
+                                : grade.remarks === "FAILED"
+                                ? "bg-red-100 text-red-700"
+                                : "bg-yellow-100 text-yellow-700"
+                            }`}>
+                              {grade.remarks}
+                            </span>
+                          </div>
                         </div>
-                        <div className="flex gap-1">
-                          <button
-                            className="text-gray-400 hover:text-blue-600 hover:bg-blue-100 p-2 rounded-lg transition-all duration-200"
+                        <div className="flex gap-2">
+                          <motion.button
+                            whileHover={{ scale: 1.1 }}
+                            whileTap={{ scale: 0.9 }}
+                            className="text-gray-400 hover:text-blue-600 hover:bg-blue-100 p-3 rounded-xl transition-all duration-200"
                             onClick={() => {
                               handleEditGrade(gradeData);
                             }}
                             title="Edit Grade"
                           >
-                            <EditIcon className="w-4 h-4" />
-                          </button>
-                          <button
-                            className="text-gray-400 hover:text-red-600 hover:bg-red-100 p-2 rounded-lg transition-all duration-200"
+                            <EditIcon className="w-5 h-5" />
+                          </motion.button>
+                          <motion.button
+                            whileHover={{ scale: 1.1 }}
+                            whileTap={{ scale: 0.9 }}
+                            className="text-gray-400 hover:text-red-600 hover:bg-red-100 p-3 rounded-xl transition-all duration-200"
                             onClick={() => handleDeleteGrade(grade.id)}
                             title="Delete Grade"
                           >
-                            <DeleteIcon className="w-4 h-4" />
-                          </button>
+                            <DeleteIcon className="w-5 h-5" />
+                          </motion.button>
                         </div>
                       </div>
-                      <div className="grid grid-cols-2 gap-3 text-xs">
-                        <div className="bg-gray-50 p-2 rounded-lg">
-                          <span className="text-gray-500 block mb-1">Course:</span>
-                          <p className="font-medium text-gray-800 truncate">{grade.courseName}</p>
+                      <div className="grid grid-cols-2 gap-4">
+                        <div className="bg-gradient-to-r from-gray-50 to-gray-100 p-4 rounded-xl">
+                          <span className="text-gray-600 text-sm font-medium block mb-2">Course</span>
+                          <p className="font-semibold text-gray-800 truncate">{grade.courseName}</p>
                         </div>
-                        <div className="bg-blue-50 p-2 rounded-lg">
-                          <span className="text-gray-500 block mb-1">Grade:</span>
-                          <p className="font-bold text-blue-600">{grade.grade}</p>
+                        <div className="bg-gradient-to-r from-blue-50 to-blue-100 p-4 rounded-xl">
+                          <span className="text-gray-600 text-sm font-medium block mb-2">Grade</span>
+                          <p className="font-bold text-blue-700 text-xl">{grade.grade}</p>
                         </div>
-                        <div className="bg-gray-50 p-2 rounded-lg">
-                          <span className="text-gray-500 block mb-1">Period:</span>
-                          <p className="font-medium text-gray-800">{grade.period}</p>
+                        <div className="bg-gradient-to-r from-gray-50 to-gray-100 p-4 rounded-xl">
+                          <span className="text-gray-600 text-sm font-medium block mb-2">Period</span>
+                          <p className="font-semibold text-gray-800">{grade.period}</p>
                         </div>
-                        <div className="bg-gray-50 p-2 rounded-lg">
-                          <span className="text-gray-500 block mb-1">Semester:</span>
-                          <p className="font-medium text-gray-800">{grade.semester}</p>
+                        <div className="bg-gradient-to-r from-gray-50 to-gray-100 p-4 rounded-xl">
+                          <span className="text-gray-600 text-sm font-medium block mb-2">Semester</span>
+                          <p className="font-semibold text-gray-800">{grade.semester}</p>
                         </div>
-                        <div className="bg-gray-50 p-2 rounded-lg">
-                          <span className="text-gray-500 block mb-1">School Year:</span>
-                          <p className="font-medium text-gray-800">{grade.school_year}</p>
-                        </div>
-                        <div className="bg-gray-50 p-2 rounded-lg">
-                          <span className="text-gray-500 block mb-1">Remarks:</span>
-                          <span className={`px-2 py-1 rounded-full text-xs font-semibold ${
-                            grade.remarks === "PASSED" 
-                              ? "bg-green-100 text-green-800" 
-                              : "bg-red-100 text-red-800"
-                          }`}>
-                            {grade.remarks}
-                          </span>
+                        <div className="bg-gradient-to-r from-gray-50 to-gray-100 p-4 rounded-xl col-span-2">
+                          <span className="text-gray-600 text-sm font-medium block mb-2">School Year</span>
+                          <p className="font-semibold text-gray-800">{grade.school_year}</p>
                         </div>
                       </div>
-                    </div>
+                    </motion.div>
                   );
                 })
               ) : (
-                <div className="text-center py-8 text-gray-500">
-                  No grades found
-                </div>
+                <motion.div 
+                  initial={{ opacity: 0 }}
+                  animate={{ opacity: 1 }}
+                  className="text-center py-12"
+                >
+                  <div className="w-20 h-20 bg-gray-100 rounded-full flex items-center justify-center mx-auto mb-4">
+                    <svg className="w-10 h-10 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
+                    </svg>
+                  </div>
+                  <h3 className="text-lg font-semibold text-gray-600 mb-2">No grades found</h3>
+                  <p className="text-gray-500">Try adjusting your search or filter criteria</p>
+                </motion.div>
               )}
             </div>
           </div>
 
           {/* Desktop Table View */}
           <div className="hidden sm:block overflow-x-auto">
-            <div className="max-h-[50vh] overflow-y-auto">
-              <table className="w-full bg-white text-center shadow-sm rounded-lg overflow-hidden" style={{ minWidth: "800px" }}>
-                <thead className="bg-gradient-to-r from-[#0065A8] to-[#0077BE] text-white sticky top-0 z-10">
-                  <tr className="border-b border-blue-700">
-                    <th className="px-2 lg:px-4 py-3 text-xs lg:text-sm font-semibold min-w-[80px] lg:min-w-[120px]">Student ID</th>
-                    <th className="px-2 lg:px-4 py-3 text-xs lg:text-sm font-semibold min-w-[120px] lg:min-w-[180px]">Student Name</th>
-                    <th className="px-2 lg:px-4 py-3 text-xs lg:text-sm font-semibold min-w-[140px] lg:min-w-[200px]">Course</th>
-                    <th className="px-2 lg:px-4 py-3 text-xs lg:text-sm font-semibold min-w-[60px] lg:min-w-[100px]">Grade</th>
-                    <th className="px-2 lg:px-4 py-3 text-xs lg:text-sm font-semibold min-w-[80px] lg:min-w-[120px]">Period</th>
-                    <th className="px-2 lg:px-4 py-3 text-xs lg:text-sm font-semibold min-w-[100px] lg:min-w-[150px]">School Year</th>
-                    <th className="px-2 lg:px-4 py-3 text-xs lg:text-sm font-semibold min-w-[70px] lg:min-w-[100px]">Semester</th>
-                    <th className="px-2 lg:px-4 py-3 text-xs lg:text-sm font-semibold min-w-[90px] lg:min-w-[140px]">Remarks</th>
-                    <th className="px-2 lg:px-4 py-3 text-xs lg:text-sm font-semibold min-w-[80px] text-center">Actions</th>
-                  </tr>
-                </thead>
-                <tbody>
-                  {/* Desktop table loading state */}
-                  {isLoading || isFiltering ? (
-                    Array.from({ length: 5 }).map((_, index) => (
-                      <tr key={index} className="animate-pulse border-b">
-                        <td className="px-2 lg:px-4 py-3"><div className="h-4 bg-gray-200 rounded mx-auto w-16"></div></td>
-                        <td className="px-2 lg:px-4 py-3"><div className="h-4 bg-gray-200 rounded mx-auto w-24"></div></td>
-                        <td className="px-2 lg:px-4 py-3"><div className="h-4 bg-gray-200 rounded mx-auto w-32"></div></td>
-                        <td className="px-2 lg:px-4 py-3"><div className="h-4 bg-gray-200 rounded mx-auto w-12"></div></td>
-                        <td className="px-2 lg:px-4 py-3"><div className="h-4 bg-gray-200 rounded mx-auto w-16"></div></td>
-                        <td className="px-2 lg:px-4 py-3"><div className="h-4 bg-gray-200 rounded mx-auto w-20"></div></td>
-                        <td className="px-2 lg:px-4 py-3"><div className="h-4 bg-gray-200 rounded mx-auto w-12"></div></td>
-                        <td className="px-2 lg:px-4 py-3"><div className="h-4 bg-gray-200 rounded mx-auto w-16"></div></td>
-                        <td className="px-2 lg:px-4 py-3">
-                          <div className="flex justify-center space-x-1">
-                            <div className="h-4 w-4 bg-gray-300 rounded"></div>
-                            <div className="h-4 w-4 bg-gray-300 rounded"></div>
+            <div className="bg-white/90 backdrop-blur-sm rounded-2xl shadow-xl border border-white/20 overflow-hidden">
+              <div className="max-h-[60vh] overflow-y-auto">
+                <table className="w-full text-center" style={{ minWidth: "900px" }}>
+                  <thead className="bg-gradient-to-r from-[#0065A8] via-[#057DCD] to-[#54BEFF] text-white sticky top-0 z-10">
+                    <tr>
+                      <th className="px-4 py-4 text-sm font-bold min-w-[120px]">Student ID</th>
+                      <th className="px-4 py-4 text-sm font-bold min-w-[180px]">Student Name</th>
+                      <th className="px-4 py-4 text-sm font-bold min-w-[200px]">Course</th>
+                      <th className="px-4 py-4 text-sm font-bold min-w-[100px]">Grade</th>
+                      <th className="px-4 py-4 text-sm font-bold min-w-[120px]">Period</th>
+                      <th className="px-4 py-4 text-sm font-bold min-w-[150px]">School Year</th>
+                      <th className="px-4 py-4 text-sm font-bold min-w-[100px]">Semester</th>
+                      <th className="px-4 py-4 text-sm font-bold min-w-[140px]">Remarks</th>
+                      <th className="px-4 py-4 text-sm font-bold min-w-[120px] text-center">Actions</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    {/* Desktop table loading state */}
+                    {isLoading || isFiltering ? (
+                      Array.from({ length: 5 }).map((_, index) => (
+                        <motion.tr 
+                          key={index} 
+                          initial={{ opacity: 0 }}
+                          animate={{ opacity: 1 }}
+                          transition={{ delay: index * 0.1 }}
+                          className="animate-pulse border-b border-gray-100"
+                        >
+                          <td className="px-4 py-4"><div className="h-4 bg-gray-200 rounded mx-auto w-16"></div></td>
+                          <td className="px-4 py-4"><div className="h-4 bg-gray-200 rounded mx-auto w-24"></div></td>
+                          <td className="px-4 py-4"><div className="h-4 bg-gray-200 rounded mx-auto w-32"></div></td>
+                          <td className="px-4 py-4"><div className="h-4 bg-gray-200 rounded mx-auto w-12"></div></td>
+                          <td className="px-4 py-4"><div className="h-4 bg-gray-200 rounded mx-auto w-16"></div></td>
+                          <td className="px-4 py-4"><div className="h-4 bg-gray-200 rounded mx-auto w-20"></div></td>
+                          <td className="px-4 py-4"><div className="h-4 bg-gray-200 rounded mx-auto w-12"></div></td>
+                          <td className="px-4 py-4"><div className="h-4 bg-gray-200 rounded mx-auto w-16"></div></td>
+                          <td className="px-4 py-4">
+                            <div className="flex justify-center space-x-2">
+                              <div className="h-8 w-8 bg-gray-300 rounded-lg"></div>
+                              <div className="h-8 w-8 bg-gray-300 rounded-lg"></div>
+                            </div>
+                          </td>
+                        </motion.tr>
+                      ))
+                    ) : currentGrades.length > 0 ? (
+                      currentGrades.map((gradeData, index) => {
+                        const grade = sanitizeGrade(gradeData);
+                        if (!grade) return null;
+
+                        return (
+                          <motion.tr 
+                            key={grade.id} 
+                            initial={{ opacity: 0, y: 20 }}
+                            animate={{ opacity: 1, y: 0 }}
+                            transition={{ delay: index * 0.05 }}
+                            whileHover={{ backgroundColor: "rgba(59, 130, 246, 0.05)" }}
+                            className="border-b border-gray-100 hover:bg-blue-50/50 transition-all duration-200"
+                          >
+                            <td className="px-4 py-4 text-sm text-gray-700 font-semibold">{String(grade.studentID)}</td>
+                            <td className="px-4 py-4 text-sm text-gray-800 font-semibold">{String(grade.studentName)}</td>
+                            <td className="px-4 py-4 text-sm text-gray-700">{String(grade.courseName)}</td>
+                            <td className="px-4 py-4">
+                              <span className="inline-flex items-center justify-center w-12 h-8 bg-gradient-to-r from-blue-100 to-blue-200 text-blue-800 font-bold rounded-lg text-sm">
+                                {String(grade.grade)}
+                              </span>
+                            </td>
+                            <td className="px-4 py-4 text-sm text-gray-700 font-medium">{String(grade.period)}</td>
+                            <td className="px-4 py-4 text-sm text-gray-700">{String(grade.school_year)}</td>
+                            <td className="px-4 py-4 text-sm text-gray-700 font-medium">{String(grade.semester)}</td>
+                            <td className="px-4 py-4">
+                              <span className={`inline-flex items-center px-3 py-1 rounded-full text-xs font-semibold ${
+                                grade.remarks === "PASSED" 
+                                  ? "bg-green-100 text-green-700" 
+                                  : grade.remarks === "FAILED"
+                                  ? "bg-red-100 text-red-700"
+                                  : "bg-yellow-100 text-yellow-700"
+                              }`}>
+                                {String(grade.remarks)}
+                              </span>
+                            </td>
+                            <td className="px-4 py-4">
+                              <div className="flex items-center justify-center gap-2">
+                                <motion.button
+                                  whileHover={{ scale: 1.1 }}
+                                  whileTap={{ scale: 0.9 }}
+                                  className="text-gray-400 hover:text-blue-600 hover:bg-blue-100 p-2 rounded-lg transition-all duration-200"
+                                  onClick={() => {
+                                    setEditClicked(true);
+                                    setTimeout(() => setEditClicked(false), 300);
+                                    handleEditGrade(gradeData);
+                                  }}
+                                  title="Edit Grade"
+                                >
+                                  <EditIcon className="w-5 h-5" />
+                                </motion.button>
+                                <motion.button
+                                  whileHover={{ scale: 1.1 }}
+                                  whileTap={{ scale: 0.9 }}
+                                  className="text-gray-400 hover:text-red-600 hover:bg-red-100 p-2 rounded-lg transition-all duration-200"
+                                  onClick={() => {
+                                    setDeleteClicked(true);
+                                    setTimeout(() => setDeleteClicked(false), 300);
+                                    handleDeleteGrade(grade.id);
+                                  }}
+                                  title="Delete Grade"
+                                >
+                                  <DeleteIcon className="w-5 h-5" />
+                                </motion.button>
+                              </div>
+                            </td>
+                          </motion.tr>
+                        );
+                      })
+                    ) : (
+                      <tr>
+                        <td colSpan="9" className="px-6 py-12 text-center">
+                          <div className="flex flex-col items-center">
+                            <div className="w-16 h-16 bg-gray-100 rounded-full flex items-center justify-center mb-4">
+                              <svg className="w-8 h-8 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
+                              </svg>
+                            </div>
+                            <h3 className="text-lg font-semibold text-gray-600 mb-2">No grades found</h3>
+                            <p className="text-gray-500">Try adjusting your search or filter criteria</p>
                           </div>
                         </td>
                       </tr>
-                    ))
-                  ) : currentGrades.length > 0 ? (
-                    currentGrades.map((gradeData) => {
-                      const grade = sanitizeGrade(gradeData);
-                      if (!grade) return null;
-
-                      return (
-                        <tr key={grade.id} className="border-b border-gray-200 hover:bg-blue-50 transition-colors duration-200 align-middle">
-                          <td className="px-2 lg:px-4 py-3 text-xs lg:text-sm text-gray-700 font-medium">{String(grade.studentID)}</td>
-                          <td className="px-2 lg:px-4 py-3 text-xs lg:text-sm text-gray-800 font-medium">{String(grade.studentName)}</td>
-                          <td className="px-2 lg:px-4 py-3 text-xs lg:text-sm text-gray-700">{String(grade.courseName)}</td>
-                          <td className="px-2 lg:px-4 py-3 text-xs lg:text-sm font-bold text-blue-600 bg-blue-50 rounded-md mx-1">{String(grade.grade)}</td>
-                          <td className="px-2 lg:px-4 py-3 text-xs lg:text-sm text-gray-700">{String(grade.period)}</td>
-                          <td className="px-2 lg:px-4 py-3 text-xs lg:text-sm text-gray-700">{String(grade.school_year)}</td>
-                          <td className="px-2 lg:px-4 py-3 text-xs lg:text-sm text-gray-700">{String(grade.semester)}</td>
-                          <td className="px-2 lg:px-4 py-3 text-xs lg:text-sm">
-                            <span className={`px-2 py-1 rounded-full text-xs font-semibold ${
-                              grade.remarks === "PASSED" 
-                                ? "bg-green-100 text-green-800" 
-                                : "bg-red-100 text-red-800"
-                            }`}>
-                              {String(grade.remarks)}
-                            </span>
-                          </td>
-                          <td className="align-middle px-2 lg:px-4 py-3">
-                            <div className="flex items-center justify-center h-full space-x-1 lg:space-x-2">
-                              <button
-                                className={`text-gray-400 hover:text-blue-600 hover:bg-blue-100 p-2 rounded-lg transition-all duration-200 ${
-                                  EditClicked ? "scale-90" : "scale-100"
-                                }`}
-                                onClick={() => {
-                                  setEditClicked(true);
-                                  setTimeout(() => setEditClicked(false), 300);
-                                  handleEditGrade(gradeData);
-                                }}
-                                title="Edit Grade"
-                              >
-                                <EditIcon className="w-4 h-4 lg:w-5 lg:h-5" />
-                              </button>
-                              <button
-                                className={`text-gray-400 hover:text-red-600 hover:bg-red-100 p-2 rounded-lg transition-all duration-200 ${
-                                  DeleteClicked ? "scale-90" : "scale-100"
-                                }`}
-                                onClick={() => {
-                                  setDeleteClicked(true);
-                                  setTimeout(() => setDeleteClicked(false), 300);
-                                  handleDeleteGrade(grade.id);
-                                }}
-                                title="Delete Grade"
-                              >
-                                <DeleteIcon className="w-4 h-4 lg:w-5 lg:h-5" />
-                              </button>
-                            </div>
-                          </td>
-                        </tr>
-                      );
-                    })
-                  ) : (
-                    <tr>
-                      <td colSpan="9" className="px-6 py-8 text-center text-gray-500">
-                        No grades found
-                      </td>
-                    </tr>
-                  )}
-                </tbody>
-              </table>
+                    )}
+                  </tbody>
+                </table>
+              </div>
             </div>
           </div>
-        </div>
+        </motion.div>
 
         {/* Pagination Controls */}
         {filteredGrades.length > itemsPerPage && (
-          <div className="mt-4 flex justify-center items-center gap-2 sm:gap-4">
-            <button
-              onClick={() => handlePageChange(currentPage - 1)}
-              disabled={currentPage === 1}
-              className={`px-3 py-1 rounded ${
-                currentPage === 1
-                  ? "bg-gray-200 text-gray-400 cursor-not-allowed"
-                  : "bg-[#057DCD] text-white hover:bg-[#54BEFF]"
-              }`}
-            >
-              Previous
-            </button>
-            
-            <div className="flex gap-1 sm:gap-2">
-              {Array.from({ length: Math.min(5, totalPages) }, (_, i) => {
-                let pageNum;
-                if (totalPages <= 5) {
-                  pageNum = i + 1;
-                } else if (currentPage <= 3) {
-                  pageNum = i + 1;
-                } else if (currentPage >= totalPages - 2) {
-                  pageNum = totalPages - 4 + i;
-                } else {
-                  pageNum = currentPage - 2 + i;
-                }
-                
-                return (
-                  <button
-                    key={pageNum}
-                    onClick={() => handlePageChange(pageNum)}
-                    className={`px-2 sm:px-3 py-1 rounded text-sm ${
-                      currentPage === pageNum
-                        ? "bg-[#057DCD] text-white"
-                        : "bg-gray-200 text-gray-700 hover:bg-gray-300"
-                    }`}
-                  >
-                    {pageNum}
-                  </button>
-                );
-              })}
+          <motion.div 
+            initial={{ opacity: 0, y: 20 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ duration: 0.6, delay: 0.6 }}
+            className="mt-8 flex flex-col sm:flex-row justify-between items-center gap-4"
+          >
+            <div className="text-sm text-gray-600 font-medium">
+              Showing {startIndex + 1}-{Math.min(endIndex, filteredGrades.length)} of {filteredGrades.length} grades
             </div>
             
-            <button
-              onClick={() => handlePageChange(currentPage + 1)}
-              disabled={currentPage === totalPages}
-              className={`px-3 py-1 rounded ${
-                currentPage === totalPages
-                  ? "bg-gray-200 text-gray-400 cursor-not-allowed"
-                  : "bg-[#057DCD] text-white hover:bg-[#54BEFF]"
-              }`}
-            >
-              Next
-            </button>
-          </div>
+            <div className="flex items-center gap-2">
+              <motion.button
+                whileHover={{ scale: 1.05 }}
+                whileTap={{ scale: 0.95 }}
+                onClick={() => handlePageChange(currentPage - 1)}
+                disabled={currentPage === 1}
+                className={`px-4 py-2 rounded-xl text-sm font-semibold transition-all duration-200 ${
+                  currentPage === 1
+                    ? "bg-gray-200 text-gray-400 cursor-not-allowed"
+                    : "bg-gradient-to-r from-[#0065A8] to-[#057DCD] text-white hover:shadow-lg"
+                }`}
+              >
+                Previous
+              </motion.button>
+              
+              <div className="flex gap-1">
+                {Array.from({ length: Math.min(5, totalPages) }, (_, i) => {
+                  let pageNum;
+                  if (totalPages <= 5) {
+                    pageNum = i + 1;
+                  } else if (currentPage <= 3) {
+                    pageNum = i + 1;
+                  } else if (currentPage >= totalPages - 2) {
+                    pageNum = totalPages - 4 + i;
+                  } else {
+                    pageNum = currentPage - 2 + i;
+                  }
+                  
+                  return (
+                    <motion.button
+                      key={pageNum}
+                      whileHover={{ scale: 1.05 }}
+                      whileTap={{ scale: 0.95 }}
+                      onClick={() => handlePageChange(pageNum)}
+                      className={`px-3 py-2 rounded-lg text-sm font-semibold transition-all duration-200 ${
+                        currentPage === pageNum
+                          ? "bg-gradient-to-r from-[#0065A8] to-[#057DCD] text-white shadow-lg"
+                          : "bg-white text-gray-700 hover:bg-gray-50 border border-gray-200"
+                      }`}
+                    >
+                      {pageNum}
+                    </motion.button>
+                  );
+                })}
+              </div>
+              
+              <motion.button
+                whileHover={{ scale: 1.05 }}
+                whileTap={{ scale: 0.95 }}
+                onClick={() => handlePageChange(currentPage + 1)}
+                disabled={currentPage === totalPages}
+                className={`px-4 py-2 rounded-xl text-sm font-semibold transition-all duration-200 ${
+                  currentPage === totalPages
+                    ? "bg-gray-200 text-gray-400 cursor-not-allowed"
+                    : "bg-gradient-to-r from-[#0065A8] to-[#057DCD] text-white hover:shadow-lg"
+                }`}
+              >
+                Next
+              </motion.button>
+            </div>
+          </motion.div>
         )}
-
-        {/* Results Info */}
-        <div className="mt-2 text-center text-sm text-gray-600">
-          Showing {startIndex + 1}-{Math.min(endIndex, filteredGrades.length)} of {filteredGrades.length} grades
-        </div>
       </div>
 
       {/* Delete Confirmation Modal */}
@@ -1696,7 +1854,7 @@ export default function AddGrade() {
           />
         )}
       </AnimatePresence>
-
     </div>
-    );
-  }
+  );
+}
+
