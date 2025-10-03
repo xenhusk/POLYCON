@@ -276,7 +276,6 @@ def create_booking():
     try:
         # Generate a unique ID using UUID
         import uuid
-        from datetime import datetime, timezone
         booking_id = str(uuid.uuid4())
         current_utc_time = datetime.now(timezone.utc)
         
