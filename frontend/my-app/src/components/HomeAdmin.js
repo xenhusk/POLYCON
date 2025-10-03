@@ -112,6 +112,7 @@ const HomeAdmin = () => {
   const [showFilters, setShowFilters] = useState(false); // Add state for filter visibility
   const navigate = useNavigate();
 
+
   // Compute current month info for labels if desired
   const getSemesterLabel = () => {
     if (selectedSemester && selectedSchoolYear) {
@@ -249,7 +250,16 @@ const HomeAdmin = () => {
   }, []);
 
   return (
-    <div className="flex flex-col items-center min-h-screen relative">
+    <div className="flex flex-col min-h-screen relative">
+      {/* Welcome Header - Admin */}
+      <div className="px-10 sm:px-20 py-1 sm:py-2 bg-white mb-4">
+        <div className="mx-auto">
+          <h1 className="text-lg sm:text-xl md:text-2xl font-bold text-[#0065A8]">
+            {`Welcome, ${localStorage.getItem('firstName') || ''} ${localStorage.getItem('lastName') || ''}`.trim() || 'Welcome, Admin'}
+          </h1>
+          <p className="text-xs sm:text-sm text-gray-600">Admin Dashboard</p>
+        </div>
+      </div>
       {/* Blocking message for admin on mobile/tablet */}
       {shouldBlockAdminMobile ? (
         <div className="fixed inset-0 flex flex-col items-center justify-center w-screen h-screen bg-[#005B98] z-50 overflow-hidden">
@@ -268,9 +278,9 @@ const HomeAdmin = () => {
         </div>
       ) : (
         <>
-          <h1 className="text-3xl font-bold text-[#0065A8] mb-6">Admin Dashboard</h1>
+          <h1 className="text-3xl font-bold text-[#0065A8] mb-4 relative text-center">Admin Dashboard</h1>
           {/* Settings gear icon in top right */}
-          <div className="absolute top-6 right-6">
+          <div className="absolute top-24 right-12 mt-10 ">
             <button 
               onClick={() => setShowFilters(!showFilters)}
               className="bg-white p-2 rounded-full shadow-md hover:shadow-lg transition-all duration-300 focus:outline-none"
@@ -348,7 +358,7 @@ const HomeAdmin = () => {
           </div>
 
           {/* Stats Section */}
-          <div className="flex gap-4 w-full p-10 pb-0">
+          <div className="flex gap-4 w-full p-16  pb-0">
             <div className="flex-1 bg-[#0088FF] text-white rounded-lg shadow-lg px-6 py-4">
               <div className="flex flex-col">
                 <p className="text-sm mb-2 text-left">Total Consultations:</p>
@@ -379,7 +389,7 @@ const HomeAdmin = () => {
           </div>
 
           {/* Graphs */}
-          <div className="grid grid-cols-2 w-full gap-6 p-10">
+          <div className="grid grid-cols-2 w-full gap-6 p-16">
             <div className="bg-white p-10 rounded-lg shadow-lg">
               <h2 className="text-xl font-semibold text-[#0065A8] text-center mb-4">Consultations Over Time</h2>
               <ResponsiveContainer width="105%" height={300}>
