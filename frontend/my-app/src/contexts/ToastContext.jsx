@@ -138,13 +138,15 @@ export const ToastProvider = ({ children }) => {
 
     // Initialize socket connection
     const newSocket = io(API_URL, {
-      transports: ['websocket', 'polling'],
-      timeout: 20000,
+      transports: ['polling', 'websocket'], // Try polling first, then websocket
+      timeout: 30000,
       forceNew: true,
       reconnection: true,
-      reconnectionDelay: 1000,
-      reconnectionAttempts: 5,
-      maxReconnectionAttempts: 5
+      reconnectionDelay: 2000,
+      reconnectionAttempts: 10,
+      maxReconnectionAttempts: 10,
+      upgrade: true,
+      rememberUpgrade: false
     });    newSocket.on('connect', () => {
       console.log('🔔 ToastProvider: Socket connected successfully');
       console.log('🔔 Socket ID:', newSocket.id);
@@ -155,6 +157,12 @@ export const ToastProvider = ({ children }) => {
       newSocket.emit('join_user_room', { userId: userId });
       console.log('🔔 ToastProvider: Joined user room for userId:', userId);
       prodLog('🔔 PROD: Joined user room for userId:', userId);
+      
+      // Listen for room join confirmation
+      newSocket.on('joined_room', (data) => {
+        console.log('🔔 ToastProvider: Room join confirmed:', data);
+        prodLog('🔔 PROD: Room join confirmed:', data);
+      });
       
       // Also join room with database ID for compatibility if different
       if (userDbId && userDbId !== userId) {
@@ -179,6 +187,17 @@ export const ToastProvider = ({ children }) => {
       // Rejoin user-specific room after reconnection
       newSocket.emit('join_user_room', { userId: userId });
       console.log('🔔 ToastProvider: Rejoined user room for userId:', userId);
+    });
+
+    newSocket.on('connect_error', (error) => {
+      console.error('🔔 ToastProvider: Socket connection error:', error);
+      prodLog('🔔 PROD: Socket connection error:', error.message);
+      setIsConnected(false);
+    });
+
+    newSocket.on('reconnect_error', (error) => {
+      console.error('🔔 ToastProvider: Socket reconnection error:', error);
+      prodLog('🔔 PROD: Socket reconnection error:', error.message);
     });
 
     newSocket.on('disconnect', (reason) => {

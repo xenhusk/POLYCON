@@ -39,6 +39,10 @@ socketio = SocketIO(
     async_mode='eventlet',
     ping_timeout=120,
     ping_interval=20,
+    allow_upgrades=True,
+    transports=['websocket', 'polling'],
+    logger=True,
+    engineio_logger=True
 )
 
 def init_app(app):
