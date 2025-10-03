@@ -108,17 +108,17 @@ const TermsModal = ({ open, onClose }) => {
               discretion, especially in cases of terms violations.
             </p>
           </div>
-          <div>
+          {/* <div>
             <h3 className="font-semibold mb-1">6. Payment and Billing</h3>
             <p>
               If Polycon offers paid services, payment terms, billing cycles,
               and refund policies will be clearly stated. For any transactions,
               please review the relevant policies.
             </p>
-          </div>
+          </div> */}
           <div>
             <h3 className="font-semibold mb-1">
-              7. Governing Law and Dispute Resolution
+              6. Governing Law and Dispute Resolution
             </h3>
             <p>
               These terms are governed by the laws of the institution's
@@ -127,7 +127,7 @@ const TermsModal = ({ open, onClose }) => {
             </p>
           </div>
           <div>
-            <h3 className="font-semibold mb-1">8. Privacy Policy</h3>
+            <h3 className="font-semibold mb-1">7. Privacy Policy</h3>
             <p>
               Please review our{" "}
               <a href="/privacy-policy" className="text-[#057DCD] underline">
@@ -137,14 +137,14 @@ const TermsModal = ({ open, onClose }) => {
             </p>
           </div>
           <div>
-            <h3 className="font-semibold mb-1">9. Contact Information</h3>
+            <h3 className="font-semibold mb-1">8. Contact Information</h3>
             <p>
               For questions or legal inquiries, contact us at{" "}
               <a
-                href="mailto:support@polycon.edu.ph"
+                href="Develorant@gmail.com"
                 className="text-[#057DCD] underline"
               >
-                support@polycon.edu.ph
+                Develorant@gmail.com
               </a>
               .
             </p>

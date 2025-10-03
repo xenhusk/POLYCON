@@ -745,7 +745,8 @@ const HelpButton = () => {
       transition={{ delay: 1, type: "spring", stiffness: 200 }}
       className="fixed bottom-8 right-8 z-50"
     >
-      <motion.button
+      <motion.a
+        target="_blank"
         whileHover={{ scale: 1.1 }}
         whileTap={{ scale: 0.9 }}
         animate={{ 
@@ -761,7 +762,7 @@ const HelpButton = () => {
         className="w-16 h-16 bg-gradient-to-r from-[#0065A8] to-[#54BEFF] text-white rounded-full shadow-xl hover:shadow-2xl transition-shadow duration-300 flex items-center justify-center text-2xl font-bold"
       >
         ?
-      </motion.button>
+      </motion.a>
     </motion.div>
   );
 };

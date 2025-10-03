@@ -475,7 +475,7 @@ const SettingsPopup = ({
             style={{
               top: Math.max(
                 20,
-                Math.min(position.top, window.innerHeight - 357)
+                Math.min(position.top, window.innerHeight - 320)
               ),
               left: Math.max(
                 20,
@@ -581,51 +581,50 @@ const SettingsPopup = ({
                 </div>
               </>
             )}
+{/* 
             <div className="h-[1px] bg-gray-200 my-2" />
 
-            {!isAdmin && (
-              <div className="px-4 py-2">
-                <p className="text-sm font-semibold text-gray-500">Help</p>
-                <a
-                  href="/help/getstarted/"
-                  target="_blank"
-                  rel="noopener noreferrer"
-                  className="w-full text-left px-3 py-2 text-sm text-gray-700 hover:bg-gray-100 rounded flex items-center"
+            <div className="px-4 py-2">
+              <p className="text-sm font-semibold text-gray-500">Help</p>
+              <a
+                href="/help/getstarted/"
+                target="_blank"
+                rel="noopener noreferrer"
+                className="w-full text-left px-3 py-2 text-sm text-gray-700 hover:bg-gray-100 rounded flex items-center"
+              >
+                <svg
+                  xmlns="http://www.w3.org/2000/svg"
+                  className="h-5 w-5 mr-2 text-gray-500"
+                  fill="none"
+                  viewBox="0 0 24 24"
+                  stroke="currentColor"
                 >
-                  <svg
-                    xmlns="http://www.w3.org/2000/svg"
-                    className="h-5 w-5 mr-2 text-gray-500"
-                    fill="none"
-                    viewBox="0 0 24 24"
+                  <circle
+                    cx="12"
+                    cy="12"
+                    r="10"
                     stroke="currentColor"
-                  >
-                    <circle
-                      cx="12"
-                      cy="12"
-                      r="10"
-                      stroke="currentColor"
-                      strokeWidth="2"
-                      fill="#fff"
-                    />
-                    <path
-                      d="M12 16h.01M12 12a2 2 0 10-2-2"
-                      stroke="currentColor"
-                      strokeWidth="2"
-                      strokeLinecap="round"
-                      strokeLinejoin="round"
-                    />
-                    <path
-                      d="M12 14v-1"
-                      stroke="currentColor"
-                      strokeWidth="2"
-                      strokeLinecap="round"
-                      strokeLinejoin="round"
-                    />
-                  </svg>
-                  Get Help
-                </a>
-              </div>
-            )}
+                    strokeWidth="2"
+                    fill="#fff"
+                  />
+                  <path
+                    d="M12 16h.01M12 12a2 2 0 10-2-2"
+                    stroke="currentColor"
+                    strokeWidth="2"
+                    strokeLinecap="round"
+                    strokeLinejoin="round"
+                  />
+                  <path
+                    d="M12 14v-1"
+                    stroke="currentColor"
+                    strokeWidth="2"
+                    strokeLinecap="round"
+                    strokeLinejoin="round"
+                  />
+                </svg>
+                Get Help
+              </a>
+            </div> */}
 
             {/* Divider */}
             <div className="h-[1px] bg-gray-200 my-2" />
