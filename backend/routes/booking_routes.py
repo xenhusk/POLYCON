@@ -5,6 +5,8 @@ from sqlalchemy.orm import joinedload
 from sqlalchemy import or_
 from services.socket_service import emit_booking_created, emit_booking_confirmed, emit_booking_cancelled
 from datetime import datetime, timezone
+import os
+import pytz
 import logging
 
 logger = logging.getLogger(__name__)
@@ -204,7 +206,6 @@ def create_booking():
     schedule_str = data.get('schedule')
     if not schedule_str:
         return jsonify({"error": "schedule is required"}), 400
-    from datetime import datetime, timezone
     try:
         # Handle UTC timestamps properly
         if schedule_str.endswith('Z'):
@@ -218,8 +219,12 @@ def create_booking():
             # Convert to UTC and make naive for database storage
             schedule = schedule.astimezone(timezone.utc).replace(tzinfo=None)
         else:
-            # Assume naive datetime is already in UTC
-            schedule = datetime.fromisoformat(schedule_str)
+            # Naive datetime: treat as local app timezone, then convert to UTC
+            app_tz_name = os.getenv('APP_TIMEZONE', 'Asia/Manila')
+            local_tz = pytz.timezone(app_tz_name)
+            naive_dt = datetime.fromisoformat(schedule_str)
+            localized = local_tz.localize(naive_dt)
+            schedule = localized.astimezone(pytz.utc).replace(tzinfo=None)
             
         # Log the schedule conversion for debugging
         logger.info(f"Schedule conversion: '{schedule_str}' -> {schedule} (UTC naive)")
@@ -412,9 +417,12 @@ def confirm_booking():
                     schedule_dt = datetime.fromisoformat(schedule_str)
                     booking.schedule = schedule_dt.astimezone(timezone.utc).replace(tzinfo=None)
                 else:
-                    # Assume naive datetime is already in UTC (frontend sent UTC without tz)
+                    # Naive datetime: treat as local app timezone, then convert to UTC
+                    app_tz_name = os.getenv('APP_TIMEZONE', 'Asia/Manila')
+                    local_tz = pytz.timezone(app_tz_name)
                     schedule_dt = datetime.fromisoformat(schedule_str)
-                    booking.schedule = schedule_dt.replace(tzinfo=None)
+                    localized = local_tz.localize(schedule_dt)
+                    booking.schedule = localized.astimezone(pytz.utc).replace(tzinfo=None)
                 logger.info(f"Confirm conversion: '{schedule_str}' -> {booking.schedule} (UTC naive)")
             except ValueError:
                 return jsonify({"error": "Invalid schedule format"}), 400
