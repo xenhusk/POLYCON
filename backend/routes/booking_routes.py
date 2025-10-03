@@ -1,4 +1,5 @@
 from flask import Blueprint, request, jsonify
+from flask_cors import cross_origin
 from models import db, Booking, User, Student, Faculty
 from sqlalchemy.orm import joinedload
 from sqlalchemy import or_
@@ -168,8 +169,11 @@ def get_all_bookings_admin():
         })
     return jsonify(result), 200
 
-@booking_bp.route('/create_booking', methods=['POST'])
+@booking_bp.route('/create_booking', methods=['POST', 'OPTIONS'])
+@cross_origin()
 def create_booking():
+    if request.method == 'OPTIONS':
+        return jsonify({'ok': True}), 200
     """
     Create a new booking/appointment
     Required fields: teacherID, studentIDs (array), schedule, venue
@@ -325,8 +329,12 @@ def create_booking():
         db.session.rollback()
         return jsonify({"error": f"Failed to create booking: {str(e)}"}), 500
 
-@booking_bp.route('/cancel_booking', methods=['POST'])
+@booking_bp.route('/cancel_booking', methods=['POST', 'OPTIONS'])
+@cross_origin()  # allow CORS for this endpoint (uses app-wide CORS config)
 def cancel_booking():
+    if request.method == 'OPTIONS':
+        # Preflight request handling
+        return jsonify({'ok': True}), 200
     data = request.get_json()
     booking_id = data.get('bookingID')
 
@@ -371,8 +379,11 @@ def cancel_booking():
         db.session.rollback()
         return jsonify({"error": f"Failed to cancel booking: {str(e)}"}), 500
 
-@booking_bp.route('/confirm_booking', methods=['POST'])
+@booking_bp.route('/confirm_booking', methods=['POST', 'OPTIONS'])
+@cross_origin()
 def confirm_booking():
+    if request.method == 'OPTIONS':
+        return jsonify({'ok': True}), 200
     data = request.get_json()
     booking_id = data.get('bookingID')
 

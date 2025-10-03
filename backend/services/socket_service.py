@@ -37,8 +37,8 @@ print(f"🔌 SocketIO CORS allowed origins: {allowed_origins}")
 socketio = SocketIO(
     cors_allowed_origins=allowed_origins,
     async_mode='eventlet',
-    ping_timeout=60,
-    ping_interval=25,
+    ping_timeout=120,
+    ping_interval=20,
 )
 
 def init_app(app):
@@ -48,8 +48,8 @@ def init_app(app):
         cors_allowed_origins=allowed_origins,
         logger=True,
         engineio_logger=True,
-        ping_timeout=60,
-        ping_interval=25,
+        ping_timeout=120,
+        ping_interval=20,
         async_mode='eventlet'
     )
     print(f"🔌 SocketIO initialized with CORS enabled for: {allowed_origins}")
