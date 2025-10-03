@@ -2,6 +2,7 @@ import React, { useEffect, useState } from 'react';
 import { createPortal } from 'react-dom';
 import API_URL from '../apiConfig';
 import { useNavigate } from 'react-router-dom';
+import { clearUserAuth } from '../utils/authUtils';
 import { ReactComponent as EditIcon } from "./icons/Edit.svg";
 import { ReactComponent as DeleteIcon } from "./icons/delete.svg";
 import './transitions.css';  // Add this import
@@ -56,9 +57,8 @@ export default function AdminPortal() {
 
   // Logout function
   const handleLogout = () => {
-    // Clear any tokens or session info if needed
-    localStorage.clear();
-    navigate('/login');
+    clearUserAuth();
+    navigate('/login', { replace: true });
   };
   const [idNumber, setIdNumber] = useState('');
   const [firstName, setFirstName] = useState('');
