@@ -4,7 +4,6 @@ import API_URL from '../apiConfig';
 import { useNavigate } from 'react-router-dom';
 import { ReactComponent as EditIcon } from "./icons/Edit.svg";
 import { ReactComponent as DeleteIcon } from "./icons/delete.svg";
-import PrefetchMonitor from './PrefetchMonitor';
 import './transitions.css';  // Add this import
 
 export default function AdminPortal() {
@@ -674,11 +673,6 @@ export default function AdminPortal() {
             </div>
           </div>
         </div>
-      </div>
-
-      {/* Concern Analytics Prefetch Monitor */}
-      <div className="mt-8 fade-in delay-300">
-        <PrefetchMonitor />
       </div>
 
       {showAddModal && createPortal(
