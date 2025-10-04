@@ -3,6 +3,7 @@ import { motion, AnimatePresence } from 'framer-motion';
 import API_URL from '../apiConfig';
 import ScheduleCard from './ScheduleCard';
 import AddScheduleCard from './AddScheduleCard';
+import DeleteConfirmationModal from './DeleteConfirmationModal';
 
 // CSS for hiding scrollbar and card effects
 const modalStyles = `
@@ -80,6 +81,8 @@ const TeacherScheduleManager = () => {
   const [scheduleClicked, setScheduleClicked] = useState(false);
   const [flippedCards, setFlippedCards] = useState(new Set());
   const [editingCardId, setEditingCardId] = useState(null);
+  const [deleteModalOpen, setDeleteModalOpen] = useState(false);
+  const [scheduleToDelete, setScheduleToDelete] = useState(null);
 
   const [formData, setFormData] = useState({
     day_of_week: '',
@@ -263,19 +266,32 @@ const TeacherScheduleManager = () => {
     setShowModal(true);
   };
 
-  const handleDelete = async (scheduleId) => {
-    if (!window.confirm('Are you sure you want to delete this schedule?')) {
-      return;
+  const handleDelete = (scheduleId) => {
+    const schedule = schedules.find(s => s.id === scheduleId);
+    if (schedule) {
+      setScheduleToDelete({
+        id: scheduleId,
+        dayName: dayNames[schedule.day_of_week],
+        timeRange: `${formatTime(schedule.start_time)} - ${formatTime(schedule.end_time)}`,
+        venue: schedule.venue
+      });
+      setDeleteModalOpen(true);
     }
+  };
+
+  const confirmDelete = async () => {
+    if (!scheduleToDelete) return;
 
     const teacherId = getTeacherId();
     if (!teacherId) {
       setError('Teacher ID not found. Please login again.');
+      setDeleteModalOpen(false);
+      setScheduleToDelete(null);
       return;
     }
 
     try {
-      const response = await fetch(`${API_URL}/teacher_schedule/delete/${scheduleId}?teacher_id=${teacherId}`, {
+      const response = await fetch(`${API_URL}/teacher_schedule/delete/${scheduleToDelete.id}?teacher_id=${teacherId}`, {
         method: 'DELETE',
       });
 
@@ -292,7 +308,15 @@ const TeacherScheduleManager = () => {
       console.error('Error deleting schedule:', error);
       setError('Failed to delete schedule');
       setTimeout(() => setError(''), 3000);
+    } finally {
+      setDeleteModalOpen(false);
+      setScheduleToDelete(null);
     }
+  };
+
+  const cancelDelete = () => {
+    setDeleteModalOpen(false);
+    setScheduleToDelete(null);
   };
 
   const resetForm = () => {
@@ -803,6 +827,14 @@ const TeacherScheduleManager = () => {
           </div>
         )}
       </AnimatePresence>
+
+      {/* Delete Confirmation Modal */}
+      <DeleteConfirmationModal
+        isOpen={deleteModalOpen}
+        onClose={cancelDelete}
+        onConfirm={confirmDelete}
+        scheduleInfo={scheduleToDelete}
+      />
     </>
   );
 };
