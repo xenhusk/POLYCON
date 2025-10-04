@@ -107,19 +107,19 @@ const TeacherScheduleManager = () => {
       form: 'from-blue-100 to-blue-150',
       formBorder: 'border-blue-300'
     },
-    1: { // Tuesday - Teal
-      card: 'from-teal-50 to-teal-100',
-      border: 'border-teal-200',
-      accent: 'bg-teal-500',
-      form: 'from-teal-100 to-teal-150',
-      formBorder: 'border-teal-300'
+    1: { // Tuesday - Rose
+      card: 'from-rose-50 to-rose-100',
+      border: 'border-rose-200',
+      accent: 'bg-rose-500',
+      form: 'from-rose-100 to-rose-150',
+      formBorder: 'border-rose-300'
     },
-    2: { // Wednesday - Indigo
-      card: 'from-indigo-50 to-indigo-100',
-      border: 'border-indigo-200',
-      accent: 'bg-indigo-500',
-      form: 'from-indigo-100 to-indigo-150',
-      formBorder: 'border-indigo-300'
+    2: { // Wednesday - Yellow
+      card: 'from-yellow-50 to-yellow-100',
+      border: 'border-yellow-200',
+      accent: 'bg-yellow-500',
+      form: 'from-yellow-100 to-yellow-150',
+      formBorder: 'border-yellow-300'
     },
     3: { // Thursday - Purple
       card: 'from-purple-50 to-purple-100',
