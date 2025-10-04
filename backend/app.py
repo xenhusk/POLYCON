@@ -57,6 +57,19 @@ def create_app():
     else:
         allowed_origins = [cors_origins]
     
+    # Add common localhost variants for development
+    dev_origins = [
+        'http://localhost:3000',
+        'http://localhost:3001',
+        'http://localhost:5173',
+        'http://127.0.0.1:3000',
+        'http://127.0.0.1:3001',
+        'http://127.0.0.1:5173',
+    ]
+    for origin in dev_origins:
+        if origin not in allowed_origins:
+            allowed_origins.append(origin)
+    
     print(f"CORS allowed origins: {allowed_origins}")  # Debug log
     
     # Configure CORS with explicit settings

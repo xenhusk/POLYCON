@@ -381,13 +381,13 @@ const TeacherScheduleManager = () => {
       const schedule = schedules.find(s => s.id === editingCardId);
       if (!schedule) return;
 
-      const response = await fetch(`${API_URL}/api/teacher-schedules/${schedule.id}`, {
+      const response = await fetch(`${API_URL}/teacher_schedule/update/${schedule.id}`, {
         method: 'PUT',
         headers: {
           'Content-Type': 'application/json',
-          'Authorization': `Bearer ${localStorage.getItem('token')}`
         },
         body: JSON.stringify({
+          teacher_id: getTeacherId(),
           day_of_week: parseInt(localFormData.day_of_week),
           start_time: localFormData.start_time,
           end_time: localFormData.end_time,
