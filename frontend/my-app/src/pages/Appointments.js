@@ -1,4 +1,5 @@
-import React, { useState, useEffect, useMemo, useCallback } from "react";
+import React, { useState, useEffect, useMemo, useCallback, useRef } from "react";
+import { motion, AnimatePresence } from 'framer-motion';
 import API_URL from '../apiConfig';
 import { useQuery } from "react-query";
 import AppointmentItem from "../components/AppointmentItem";
@@ -24,6 +25,151 @@ const fetchStudentAppointments = async () => {
 };
 
 function StudentAppointments() {
+  // Enhanced drag-to-scroll for desktop with better performance
+  const pendingRef = useRef(null);
+  const upcomingRef = useRef(null);
+  const [isDragging, setIsDragging] = useState(false);
+
+  useEffect(() => {
+    const setupDragScroll = (el) => {
+      if (!el) return;
+      
+      let isDown = false;
+      let startX = 0;
+      let scrollLeft = 0;
+      let velocity = 0;
+      let lastX = 0;
+      let animationFrame = null;
+
+      const onMouseDown = (e) => {
+        // Don't start drag if clicking on interactive elements
+        if (e.target.closest('button') || e.target.closest('input') || e.target.closest('select') || e.target.closest('a')) {
+          return;
+        }
+        
+        isDown = true;
+        setIsDragging(true);
+        el.classList.add('cursor-grabbing', 'select-none');
+        startX = e.pageX - el.offsetLeft;
+        scrollLeft = el.scrollLeft;
+        lastX = e.pageX;
+        velocity = 0;
+        
+        // Prevent text selection
+        e.preventDefault();
+      };
+
+      const onMouseLeave = () => {
+        isDown = false;
+        setIsDragging(false);
+        el.classList.remove('cursor-grabbing', 'select-none');
+      };
+
+      const onMouseUp = () => {
+        isDown = false;
+        setIsDragging(false);
+        el.classList.remove('cursor-grabbing', 'select-none');
+        
+        // Add momentum scrolling
+        if (Math.abs(velocity) > 1) {
+          const momentum = velocity * 0.8;
+          const animate = () => {
+            el.scrollLeft -= momentum;
+            velocity *= 0.95;
+            if (Math.abs(velocity) > 0.1) {
+              animationFrame = requestAnimationFrame(animate);
+            }
+          };
+          animate();
+        }
+      };
+
+      const onMouseMove = (e) => {
+        if (!isDown) return;
+        e.preventDefault();
+        
+        const x = e.pageX - el.offsetLeft;
+        const walk = (x - startX) * 1.5; // Increased sensitivity
+        el.scrollLeft = scrollLeft - walk;
+        
+        // Calculate velocity for momentum
+        velocity = e.pageX - lastX;
+        lastX = e.pageX;
+      };
+
+      // Touch events for mobile
+      const onTouchStart = (e) => {
+        // Don't start drag if touching interactive elements
+        if (e.target.closest('button') || e.target.closest('input') || e.target.closest('select') || e.target.closest('a')) {
+          return;
+        }
+        
+        isDown = true;
+        setIsDragging(true);
+        startX = e.touches[0].pageX - el.offsetLeft;
+        scrollLeft = el.scrollLeft;
+        lastX = e.touches[0].pageX;
+        velocity = 0;
+      };
+
+      const onTouchMove = (e) => {
+        if (!isDown) return;
+        e.preventDefault();
+        
+        const x = e.touches[0].pageX - el.offsetLeft;
+        const walk = (x - startX) * 1.5;
+        el.scrollLeft = scrollLeft - walk;
+        
+        velocity = e.touches[0].pageX - lastX;
+        lastX = e.touches[0].pageX;
+      };
+
+      const onTouchEnd = () => {
+        isDown = false;
+        setIsDragging(false);
+        
+        if (Math.abs(velocity) > 1) {
+          const momentum = velocity * 0.6;
+          const animate = () => {
+            el.scrollLeft -= momentum;
+            velocity *= 0.9;
+            if (Math.abs(velocity) > 0.1) {
+              animationFrame = requestAnimationFrame(animate);
+            }
+          };
+          animate();
+        }
+      };
+
+      // Add event listeners
+      el.addEventListener('mousedown', onMouseDown);
+      el.addEventListener('mouseleave', onMouseLeave);
+      el.addEventListener('mouseup', onMouseUp);
+      el.addEventListener('mousemove', onMouseMove);
+      el.addEventListener('touchstart', onTouchStart, { passive: false });
+      el.addEventListener('touchmove', onTouchMove, { passive: false });
+      el.addEventListener('touchend', onTouchEnd);
+
+      return () => {
+        el.removeEventListener('mousedown', onMouseDown);
+        el.removeEventListener('mouseleave', onMouseLeave);
+        el.removeEventListener('mouseup', onMouseUp);
+        el.removeEventListener('mousemove', onMouseMove);
+        el.removeEventListener('touchstart', onTouchStart);
+        el.removeEventListener('touchmove', onTouchMove);
+        el.removeEventListener('touchend', onTouchEnd);
+        if (animationFrame) {
+          cancelAnimationFrame(animationFrame);
+        }
+      };
+    };
+
+    const cleanups = [];
+    if (pendingRef.current) cleanups.push(setupDragScroll(pendingRef.current));
+    if (upcomingRef.current) cleanups.push(setupDragScroll(upcomingRef.current));
+    return () => cleanups.forEach((dispose) => dispose && dispose());
+  }, []); // Remove appointments dependency to avoid initialization error
+
   const { showBookingCreated, showBookingConfirmed, showBookingCancelled, showAppointmentReminder, socket, isConnected } = useToast();
   
   const {
@@ -39,6 +185,147 @@ function StudentAppointments() {
     pending: [],
     upcoming: [],
   });
+
+  // Re-initialize drag functionality when appointments change
+  useEffect(() => {
+    const setupDragScroll = (el) => {
+      if (!el) return;
+      
+      let isDown = false;
+      let startX = 0;
+      let scrollLeft = 0;
+      let velocity = 0;
+      let lastX = 0;
+      let animationFrame = null;
+
+      const onMouseDown = (e) => {
+        // Don't start drag if clicking on interactive elements
+        if (e.target.closest('button') || e.target.closest('input') || e.target.closest('select') || e.target.closest('a')) {
+          return;
+        }
+        
+        isDown = true;
+        setIsDragging(true);
+        el.classList.add('cursor-grabbing', 'select-none');
+        startX = e.pageX - el.offsetLeft;
+        scrollLeft = el.scrollLeft;
+        lastX = e.pageX;
+        velocity = 0;
+        
+        // Prevent text selection
+        e.preventDefault();
+      };
+
+      const onMouseLeave = () => {
+        isDown = false;
+        setIsDragging(false);
+        el.classList.remove('cursor-grabbing', 'select-none');
+      };
+
+      const onMouseUp = () => {
+        isDown = false;
+        setIsDragging(false);
+        el.classList.remove('cursor-grabbing', 'select-none');
+        
+        // Add momentum scrolling
+        if (Math.abs(velocity) > 1) {
+          const momentum = velocity * 0.8;
+          const animate = () => {
+            el.scrollLeft -= momentum;
+            velocity *= 0.95;
+            if (Math.abs(velocity) > 0.1) {
+              animationFrame = requestAnimationFrame(animate);
+            }
+          };
+          animate();
+        }
+      };
+
+      const onMouseMove = (e) => {
+        if (!isDown) return;
+        e.preventDefault();
+        
+        const x = e.pageX - el.offsetLeft;
+        const walk = (x - startX) * 1.5; // Increased sensitivity
+        el.scrollLeft = scrollLeft - walk;
+        
+        // Calculate velocity for momentum
+        velocity = e.pageX - lastX;
+        lastX = e.pageX;
+      };
+
+      // Touch events for mobile
+      const onTouchStart = (e) => {
+        // Don't start drag if touching interactive elements
+        if (e.target.closest('button') || e.target.closest('input') || e.target.closest('select') || e.target.closest('a')) {
+          return;
+        }
+        
+        isDown = true;
+        setIsDragging(true);
+        startX = e.touches[0].pageX - el.offsetLeft;
+        scrollLeft = el.scrollLeft;
+        lastX = e.touches[0].pageX;
+        velocity = 0;
+      };
+
+      const onTouchMove = (e) => {
+        if (!isDown) return;
+        e.preventDefault();
+        
+        const x = e.touches[0].pageX - el.offsetLeft;
+        const walk = (x - startX) * 1.5;
+        el.scrollLeft = scrollLeft - walk;
+        
+        velocity = e.touches[0].pageX - lastX;
+        lastX = e.touches[0].pageX;
+      };
+
+      const onTouchEnd = () => {
+        isDown = false;
+        setIsDragging(false);
+        
+        if (Math.abs(velocity) > 1) {
+          const momentum = velocity * 0.6;
+          const animate = () => {
+            el.scrollLeft -= momentum;
+            velocity *= 0.9;
+            if (Math.abs(velocity) > 0.1) {
+              animationFrame = requestAnimationFrame(animate);
+            }
+          };
+          animate();
+        }
+      };
+
+      // Add event listeners
+      el.addEventListener('mousedown', onMouseDown);
+      el.addEventListener('mouseleave', onMouseLeave);
+      el.addEventListener('mouseup', onMouseUp);
+      el.addEventListener('mousemove', onMouseMove);
+      el.addEventListener('touchstart', onTouchStart, { passive: false });
+      el.addEventListener('touchmove', onTouchMove, { passive: false });
+      el.addEventListener('touchend', onTouchEnd);
+
+      return () => {
+        el.removeEventListener('mousedown', onMouseDown);
+        el.removeEventListener('mouseleave', onMouseLeave);
+        el.removeEventListener('mouseup', onMouseUp);
+        el.removeEventListener('mousemove', onMouseMove);
+        el.removeEventListener('touchstart', onTouchStart);
+        el.removeEventListener('touchmove', onTouchMove);
+        el.removeEventListener('touchend', onTouchEnd);
+        if (animationFrame) {
+          cancelAnimationFrame(animationFrame);
+        }
+      };
+    };
+
+    const cleanups = [];
+    if (pendingRef.current) cleanups.push(setupDragScroll(pendingRef.current));
+    if (upcomingRef.current) cleanups.push(setupDragScroll(upcomingRef.current));
+    return () => cleanups.forEach((dispose) => dispose && dispose());
+  }, [appointments]); // Now this is safe to use
 
   useEffect(() => {
     const categorizedAppointments = { pending: [], upcoming: [] };
@@ -145,138 +432,270 @@ function StudentAppointments() {
   }, [socket, isConnected, refetch]);
 
   return (
-    <div className="flex flex-col gap-4 sm:gap-5 h-full lg:grid lg:grid-cols-2">
+    <div className="space-y-8">
       {/* Pending Appointments Section */}
-      <section className="bg-white rounded-xl shadow-sm p-4 sm:p-6 flex flex-col max-h-[76vh] sm:max-h-[80vh] lg:max-h-[76vh] order-1 lg:order-none">
-        <h3 className="text-lg sm:text-xl font-semibold mb-3 sm:mb-4 text-[#0065A8] border-b-2 border-[#54BEFF] sticky pb-2 top-0 bg-white">
-          Pending Appointments
-        </h3>
-        <div className="flex-1 overflow-y-auto min-h-0 Appointments-scroll">
-          {isLoading ? (
-            <ul className="space-y-3 sm:space-y-4 pr-1 sm:pr-2">
-              {Array.from({ length: 1 }).map((_, index) => (
-                <li
-                  key={index}
-                  className="bg-white rounded-lg shadow-md p-4 sm:p-6 my-3 sm:my-4 border-l-4 border-[#0065A8] hover:shadow-lg transition-shadow flex flex-col fade-in delay-300 animate-pulse"
-                >
-                  {/* Teacher Section Skeleton */}
-                  <div className="mb-3 sm:mb-4 fade-in delay-100">
-                    <p className="h-3 sm:h-4 bg-gray-300 rounded w-32 sm:w-40 mb-2"></p>
-                    <div className="flex items-center">
-                      <div className="w-10 h-10 sm:w-12 sm:h-12 bg-gray-200 rounded-full mr-2 sm:mr-3 border-2 border-[#54BEFF]"></div>
-                      <div className="h-3 sm:h-4 bg-gray-300 rounded w-32 sm:w-40"></div>
+      <motion.section
+        initial={{ opacity: 0, y: 20 }}
+        animate={{ opacity: 1, y: 0 }}
+        transition={{ duration: 0.6 }}
+        className="bg-white rounded-2xl shadow-2xl overflow-hidden border border-gray-100"
+      >
+        <div className="bg-gradient-to-r from-[#057DCD] to-[#046bb8] text-white p-6">
+          <div className="flex items-center justify-between">
+            <div className="flex items-center gap-4">
+              <div className="w-12 h-12 bg-white bg-opacity-20 rounded-full flex items-center justify-center">
+                <svg className="w-6 h-6 text-white" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" />
+                </svg>
                     </div>
+              <div>
+                <h3 className="text-2xl font-bold">Pending Appointments</h3>
+                <p className="text-blue-100">Awaiting teacher confirmation</p>
                   </div>
-                  {/* Student(s) Section Skeleton */}
-                  <div className="mt-3 sm:mt-4 fade-in delay-200">
-                    <p className="h-3 sm:h-4 bg-gray-300 rounded w-32 sm:w-40 mb-2"></p>
-                    <div className="flex flex-wrap items-center gap-2 sm:gap-3">
-                      {Array.from({ length: 3 }).map((_, index) => (
-                        <div
-                          key={index}
-                          className="flex items-center bg-gray-50 rounded-full px-2 sm:px-3 py-1"
-                        >
-                          <div className="w-6 h-6 sm:w-8 sm:h-8 bg-gray-200 rounded-full mr-1 sm:mr-2 border-2 border-gray-200"></div>
-                          <div className="h-2 sm:h-3 bg-gray-300 rounded w-16 sm:w-20"></div>
                         </div>
-                      ))}
+            <div className="bg-white bg-opacity-20 rounded-full px-4 py-2">
+              <span className="text-lg font-bold">{appointments?.pending?.length || 0}</span>
                     </div>
                   </div>
-                  {/* Details Section Skeleton */}
-                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 sm:gap-4 mt-3 sm:mt-4 fade-in delay-300">
-                    <div>
-                      <div className="h-3 sm:h-4 bg-gray-300 rounded w-28 sm:w-40 mb-1 sm:mb-2"></div>
-                      <div className="h-2 sm:h-3 bg-gray-200 rounded w-20 sm:w-24"></div>
                     </div>
+
+        <div className="p-6">
+          <AnimatePresence mode="wait">
+            {isLoading ? (
+              <motion.div
+                key="loading"
+                initial={{ opacity: 0 }}
+                animate={{ opacity: 1 }}
+                exit={{ opacity: 0 }}
+                className="flex gap-6 overflow-x-auto pb-4"
+              >
+                {Array.from({ length: 2 }).map((_, index) => (
+                  <motion.div
+                    key={index}
+                    initial={{ opacity: 0, x: 20 }}
+                    animate={{ opacity: 1, x: 0 }}
+                    transition={{ delay: index * 0.1 }}
+                    className="min-w-[320px] bg-gray-50 rounded-xl p-6 animate-pulse"
+                  >
+                    <div className="flex items-center gap-4 mb-4">
+                      <div className="w-12 h-12 bg-gray-200 rounded-full"></div>
+                      <div className="flex-1">
+                        <div className="h-4 bg-gray-200 rounded w-32 mb-2"></div>
+                        <div className="h-3 bg-gray-200 rounded w-24"></div>
                   </div>
-                </li>
-              ))}
-            </ul>
+                    </div>
+                    <div className="space-y-3">
+                      <div className="h-3 bg-gray-200 rounded w-full"></div>
+                      <div className="h-3 bg-gray-200 rounded w-3/4"></div>
+                    </div>
+                  </motion.div>
+                ))}
+              </motion.div>
           ) : appointments?.pending?.length > 0 ? (
-            <ul className="space-y-3 sm:space-y-4 pr-1 sm:pr-2">
-              {appointments.pending.map((app) => (
-                <AppointmentItem
-                  key={app.id}
-                  appointment={app}
-                  role="student"
-                />
-              ))}
-            </ul>
-          ) : (
-            <p className="text-gray-500 italic">No pending appointments</p>
+              <motion.div
+                key="content"
+                initial={{ opacity: 0 }}
+                animate={{ opacity: 1 }}
+                exit={{ opacity: 0 }}
+                className="relative group"
+              >
+                <div 
+                  ref={pendingRef} 
+                  className={`flex gap-6 overflow-x-auto pb-4 scrollbar-hide ${isDragging ? 'cursor-grabbing' : 'cursor-grab'}`}
+                  style={{ scrollbarWidth: 'none', msOverflowStyle: 'none' }}
+                >
+                  {appointments.pending.map((app, index) => (
+                    <motion.div
+                      key={app.id}
+                      initial={{ opacity: 0, x: 20 }}
+                      animate={{ opacity: 1, x: 0 }}
+                      transition={{ delay: index * 0.1 }}
+                      className="min-w-[320px] flex-shrink-0"
+                    >
+                    <AppointmentItem
+                      appointment={app}
+                      role="student"
+                    />
+                    </motion.div>
+                  ))}
+            </div>
+                
+                {/* Navigation arrows */}
+                <motion.button
+                  whileHover={{ scale: 1.1 }}
+                  whileTap={{ scale: 0.9 }}
+                  onClick={() => pendingRef.current && pendingRef.current.scrollBy({ left: -320, behavior: 'smooth' })}
+                  className="hidden lg:flex items-center justify-center absolute left-4 top-1/2 -translate-y-1/2 w-10 h-10 bg-white rounded-full shadow-lg text-[#057DCD] hover:bg-[#057DCD] hover:text-white transition-all duration-200 opacity-0 group-hover:opacity-100"
+                  aria-label="Scroll left"
+                >
+                  <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 19l-7-7 7-7" />
+                  </svg>
+                </motion.button>
+                <motion.button
+                  whileHover={{ scale: 1.1 }}
+                  whileTap={{ scale: 0.9 }}
+                  onClick={() => pendingRef.current && pendingRef.current.scrollBy({ left: 320, behavior: 'smooth' })}
+                  className="hidden lg:flex items-center justify-center absolute right-4 top-1/2 -translate-y-1/2 w-10 h-10 bg-white rounded-full shadow-lg text-[#057DCD] hover:bg-[#057DCD] hover:text-white transition-all duration-200 opacity-0 group-hover:opacity-100"
+                  aria-label="Scroll right"
+                >
+                  <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
+                  </svg>
+                </motion.button>
+              </motion.div>
+            ) : (
+              <motion.div
+                key="empty"
+                initial={{ opacity: 0, scale: 0.9 }}
+                animate={{ opacity: 1, scale: 1 }}
+                exit={{ opacity: 0, scale: 0.9 }}
+                className="text-center py-12"
+              >
+                <div className="w-24 h-24 mx-auto mb-6 bg-gradient-to-br from-gray-200 to-gray-300 rounded-full flex items-center justify-center">
+                  <svg className="w-12 h-12 text-gray-500" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" />
+                  </svg>
+            </div>
+                <h3 className="text-xl font-bold text-gray-800 mb-2">No Pending Appointments</h3>
+                <p className="text-gray-600">You don't have any pending appointments at the moment.</p>
+              </motion.div>
           )}
+          </AnimatePresence>
         </div>
-      </section>
+      </motion.section>
 
       {/* Upcoming Appointments Section */}
-      <section className="bg-white rounded-xl shadow-sm p-4 sm:p-6 flex flex-col max-h-[76vh] sm:max-h-[80vh] lg:max-h-[76vh] order-2 lg:order-none">
-        <h3 className="text-lg sm:text-xl font-semibold mb-3 sm:mb-4 text-[#0065A8] border-b-2 border-[#54BEFF] pb-2 sticky top-0 bg-white">
-          Upcoming Appointments
-        </h3>
-        <div className="flex-1 overflow-y-auto min-h-0 Appointments-scroll">
-          {isLoading ? (
-            <ul className="space-y-3 sm:space-y-4 pr-1 sm:pr-2">
-              {Array.from({ length: 1 }).map((_, index) => (
-                <li
-                  key={index}
-                  className="bg-white rounded-lg shadow-md p-4 sm:p-6 my-3 sm:my-4 border-l-4 border-[#0065A8] hover:shadow-lg transition-shadow flex flex-col fade-in delay-300 animate-pulse"
-                >
-                  {/* Teacher Section Skeleton */}
-                  <div className="mb-3 sm:mb-4 fade-in delay-100">
-                    <p className="h-3 sm:h-4 bg-gray-300 rounded w-32 sm:w-40 mb-2"></p>
-                    <div className="flex items-center">
-                      <div className="w-10 h-10 sm:w-12 sm:h-12 bg-gray-200 rounded-full mr-2 sm:mr-3 border-2 border-gray-200"></div>
-                      <div className="h-3 sm:h-4 bg-gray-300 rounded w-32 sm:w-40"></div>
+      <motion.section
+        initial={{ opacity: 0, y: 20 }}
+        animate={{ opacity: 1, y: 0 }}
+        transition={{ duration: 0.6, delay: 0.2 }}
+        className="bg-white rounded-2xl shadow-2xl overflow-hidden border border-gray-100"
+      >
+        <div className="bg-gradient-to-r from-emerald-500 to-emerald-600 text-white p-6">
+          <div className="flex items-center justify-between">
+            <div className="flex items-center gap-4">
+              <div className="w-12 h-12 bg-white bg-opacity-20 rounded-full flex items-center justify-center">
+                <svg className="w-6 h-6 text-white" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
+                </svg>
                     </div>
+              <div>
+                <h3 className="text-2xl font-bold">Upcoming Appointments</h3>
+                <p className="text-emerald-100">Confirmed and ready to attend</p>
                   </div>
-                  {/* Student(s) Section Skeleton */}
-                  <div className="mt-3 sm:mt-4 fade-in delay-200">
-                    <p className="h-3 sm:h-4 bg-gray-300 rounded w-32 sm:w-40 mb-2"></p>
-                    <div className="flex flex-wrap items-center gap-2 sm:gap-3">
-                      {Array.from({ length: 3 }).map((_, index) => (
-                        <div
-                          key={index}
-                          className="flex items-center bg-gray-50 rounded-full px-2 sm:px-3 py-1"
-                        >
-                          <div className="w-6 h-6 sm:w-8 sm:h-8 bg-gray-200 rounded-full mr-1 sm:mr-2 border-2 border-gray-200"></div>
-                          <div className="h-2 sm:h-3 bg-gray-300 rounded w-16 sm:w-20"></div>
                         </div>
-                      ))}
+            <div className="bg-white bg-opacity-20 rounded-full px-4 py-2">
+              <span className="text-lg font-bold">{appointments?.upcoming?.length || 0}</span>
                     </div>
                   </div>
-                  {/* Details Section Skeleton */}
-                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 sm:gap-4 mt-3 sm:mt-4 fade-in delay-300">
-                    <div>
-                      <div className="h-3 sm:h-4 bg-gray-300 rounded w-28 sm:w-40 mb-1 sm:mb-2"></div>
-                      <div className="h-2 sm:h-3 bg-gray-200 rounded w-20 sm:w-24"></div>
                     </div>
-                    <div>
-                      <div className="h-3 sm:h-4 bg-gray-300 rounded w-28 sm:w-40 mb-1 sm:mb-2"></div>
-                      <div className="h-2 sm:h-3 bg-gray-200 rounded w-20 sm:w-24"></div>
+
+        <div className="p-6">
+          <AnimatePresence mode="wait">
+            {isLoading ? (
+              <motion.div
+                key="loading"
+                initial={{ opacity: 0 }}
+                animate={{ opacity: 1 }}
+                exit={{ opacity: 0 }}
+                className="flex gap-6 overflow-x-auto pb-4"
+              >
+                {Array.from({ length: 2 }).map((_, index) => (
+                  <motion.div
+                    key={index}
+                    initial={{ opacity: 0, x: 20 }}
+                    animate={{ opacity: 1, x: 0 }}
+                    transition={{ delay: index * 0.1 }}
+                    className="min-w-[320px] bg-gray-50 rounded-xl p-6 animate-pulse"
+                  >
+                    <div className="flex items-center gap-4 mb-4">
+                      <div className="w-12 h-12 bg-gray-200 rounded-full"></div>
+                      <div className="flex-1">
+                        <div className="h-4 bg-gray-200 rounded w-32 mb-2"></div>
+                        <div className="h-3 bg-gray-200 rounded w-24"></div>
                     </div>
-                    <div>
-                      <div className="h-3 sm:h-4 bg-gray-300 rounded w-28 sm:w-40 mb-1 sm:mb-2"></div>
-                      <div className="h-2 sm:h-3 bg-gray-200 rounded w-20 sm:w-24"></div>
                     </div>
+                    <div className="space-y-3">
+                      <div className="h-3 bg-gray-200 rounded w-full"></div>
+                      <div className="h-3 bg-gray-200 rounded w-3/4"></div>
                   </div>
-                </li>
+                  </motion.div>
               ))}
-            </ul>
+              </motion.div>
           ) : appointments?.upcoming?.length > 0 ? (
-            <ul className="space-y-3 sm:space-y-4 pr-1 sm:pr-2">
-              {appointments.upcoming.map((app) => (
-                <AppointmentItem
-                  key={app.id}
-                  appointment={app}
-                  role="student"
-                />
-              ))}
-            </ul>
-          ) : (
-            <p className="text-gray-500 italic">No upcoming appointments</p>
+              <motion.div
+                key="content"
+                initial={{ opacity: 0 }}
+                animate={{ opacity: 1 }}
+                exit={{ opacity: 0 }}
+                className="relative group"
+              >
+                <div 
+                  ref={upcomingRef} 
+                  className={`flex gap-6 overflow-x-auto pb-4 scrollbar-hide ${isDragging ? 'cursor-grabbing' : 'cursor-grab'}`}
+                  style={{ scrollbarWidth: 'none', msOverflowStyle: 'none' }}
+                >
+                  {appointments.upcoming.map((app, index) => (
+                    <motion.div
+                      key={app.id}
+                      initial={{ opacity: 0, x: 20 }}
+                      animate={{ opacity: 1, x: 0 }}
+                      transition={{ delay: index * 0.1 }}
+                      className="min-w-[320px] flex-shrink-0"
+                    >
+                    <AppointmentItem
+                      appointment={app}
+                      role="student"
+                    />
+                    </motion.div>
+                  ))}
+            </div>
+                
+                {/* Navigation arrows */}
+                <motion.button
+                  whileHover={{ scale: 1.1 }}
+                  whileTap={{ scale: 0.9 }}
+                  onClick={() => upcomingRef.current && upcomingRef.current.scrollBy({ left: -320, behavior: 'smooth' })}
+                  className="hidden lg:flex items-center justify-center absolute left-4 top-1/2 -translate-y-1/2 w-10 h-10 bg-white rounded-full shadow-lg text-emerald-500 hover:bg-emerald-500 hover:text-white transition-all duration-200 opacity-0 group-hover:opacity-100"
+                  aria-label="Scroll left"
+                >
+                  <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 19l-7-7 7-7" />
+                  </svg>
+                </motion.button>
+                <motion.button
+                  whileHover={{ scale: 1.1 }}
+                  whileTap={{ scale: 0.9 }}
+                  onClick={() => upcomingRef.current && upcomingRef.current.scrollBy({ left: 320, behavior: 'smooth' })}
+                  className="hidden lg:flex items-center justify-center absolute right-4 top-1/2 -translate-y-1/2 w-10 h-10 bg-white rounded-full shadow-lg text-emerald-500 hover:bg-emerald-500 hover:text-white transition-all duration-200 opacity-0 group-hover:opacity-100"
+                  aria-label="Scroll right"
+                >
+                  <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
+                  </svg>
+                </motion.button>
+              </motion.div>
+            ) : (
+              <motion.div
+                key="empty"
+                initial={{ opacity: 0, scale: 0.9 }}
+                animate={{ opacity: 1, scale: 1 }}
+                exit={{ opacity: 0, scale: 0.9 }}
+                className="text-center py-12"
+              >
+                <div className="w-24 h-24 mx-auto mb-6 bg-gradient-to-br from-emerald-200 to-emerald-300 rounded-full flex items-center justify-center">
+                  <svg className="w-12 h-12 text-emerald-600" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
+                  </svg>
+            </div>
+                <h3 className="text-xl font-bold text-gray-800 mb-2">No Upcoming Appointments</h3>
+                <p className="text-gray-600">You don't have any confirmed appointments scheduled.</p>
+              </motion.div>
           )}
+          </AnimatePresence>
         </div>
-      </section>
+      </motion.section>
     </div>
   );
 }
@@ -292,6 +711,151 @@ const fetchTeacherAppointments = async () => {
 };
 
 function TeacherAppointments() {
+  // Enhanced drag-to-scroll for desktop with better performance
+  const pendingRef = useRef(null);
+  const upcomingRef = useRef(null);
+  const [isDragging, setIsDragging] = useState(false);
+
+  useEffect(() => {
+    const setupDragScroll = (el) => {
+      if (!el) return;
+      
+      let isDown = false;
+      let startX = 0;
+      let scrollLeft = 0;
+      let velocity = 0;
+      let lastX = 0;
+      let animationFrame = null;
+
+      const onMouseDown = (e) => {
+        // Don't start drag if clicking on interactive elements
+        if (e.target.closest('button') || e.target.closest('input') || e.target.closest('select') || e.target.closest('a')) {
+          return;
+        }
+        
+        isDown = true;
+        setIsDragging(true);
+        el.classList.add('cursor-grabbing', 'select-none');
+        startX = e.pageX - el.offsetLeft;
+        scrollLeft = el.scrollLeft;
+        lastX = e.pageX;
+        velocity = 0;
+        
+        // Prevent text selection
+        e.preventDefault();
+      };
+
+      const onMouseLeave = () => {
+        isDown = false;
+        setIsDragging(false);
+        el.classList.remove('cursor-grabbing', 'select-none');
+      };
+
+      const onMouseUp = () => {
+        isDown = false;
+        setIsDragging(false);
+        el.classList.remove('cursor-grabbing', 'select-none');
+        
+        // Add momentum scrolling
+        if (Math.abs(velocity) > 1) {
+          const momentum = velocity * 0.8;
+          const animate = () => {
+            el.scrollLeft -= momentum;
+            velocity *= 0.95;
+            if (Math.abs(velocity) > 0.1) {
+              animationFrame = requestAnimationFrame(animate);
+            }
+          };
+          animate();
+        }
+      };
+
+      const onMouseMove = (e) => {
+        if (!isDown) return;
+        e.preventDefault();
+        
+        const x = e.pageX - el.offsetLeft;
+        const walk = (x - startX) * 1.5; // Increased sensitivity
+        el.scrollLeft = scrollLeft - walk;
+        
+        // Calculate velocity for momentum
+        velocity = e.pageX - lastX;
+        lastX = e.pageX;
+      };
+
+      // Touch events for mobile
+      const onTouchStart = (e) => {
+        // Don't start drag if touching interactive elements
+        if (e.target.closest('button') || e.target.closest('input') || e.target.closest('select') || e.target.closest('a')) {
+          return;
+        }
+        
+        isDown = true;
+        setIsDragging(true);
+        startX = e.touches[0].pageX - el.offsetLeft;
+        scrollLeft = el.scrollLeft;
+        lastX = e.touches[0].pageX;
+        velocity = 0;
+      };
+
+      const onTouchMove = (e) => {
+        if (!isDown) return;
+        e.preventDefault();
+        
+        const x = e.touches[0].pageX - el.offsetLeft;
+        const walk = (x - startX) * 1.5;
+        el.scrollLeft = scrollLeft - walk;
+        
+        velocity = e.touches[0].pageX - lastX;
+        lastX = e.touches[0].pageX;
+      };
+
+      const onTouchEnd = () => {
+        isDown = false;
+        setIsDragging(false);
+        
+        if (Math.abs(velocity) > 1) {
+          const momentum = velocity * 0.6;
+          const animate = () => {
+            el.scrollLeft -= momentum;
+            velocity *= 0.9;
+            if (Math.abs(velocity) > 0.1) {
+              animationFrame = requestAnimationFrame(animate);
+            }
+          };
+          animate();
+        }
+      };
+
+      // Add event listeners
+      el.addEventListener('mousedown', onMouseDown);
+      el.addEventListener('mouseleave', onMouseLeave);
+      el.addEventListener('mouseup', onMouseUp);
+      el.addEventListener('mousemove', onMouseMove);
+      el.addEventListener('touchstart', onTouchStart, { passive: false });
+      el.addEventListener('touchmove', onTouchMove, { passive: false });
+      el.addEventListener('touchend', onTouchEnd);
+
+      return () => {
+        el.removeEventListener('mousedown', onMouseDown);
+        el.removeEventListener('mouseleave', onMouseLeave);
+        el.removeEventListener('mouseup', onMouseUp);
+        el.removeEventListener('mousemove', onMouseMove);
+        el.removeEventListener('touchstart', onTouchStart);
+        el.removeEventListener('touchmove', onTouchMove);
+        el.removeEventListener('touchend', onTouchEnd);
+        if (animationFrame) {
+          cancelAnimationFrame(animationFrame);
+        }
+      };
+    };
+
+    const cleanups = [];
+    if (pendingRef.current) cleanups.push(setupDragScroll(pendingRef.current));
+    if (upcomingRef.current) cleanups.push(setupDragScroll(upcomingRef.current));
+    return () => cleanups.forEach((dispose) => dispose && dispose());
+  }, []); // Remove sortedAppointments dependency to avoid initialization error
+  
   const { showBookingCreated, showBookingConfirmed, showBookingCancelled, showAppointmentReminder, socket, isConnected } = useToast();
   
   const {
@@ -308,6 +872,147 @@ function TeacherAppointments() {
     upcoming: [],
   });
   const [confirmInputs, setConfirmInputs] = useState({});
+
+  // Re-initialize drag functionality when appointments change
+  useEffect(() => {
+    const setupDragScroll = (el) => {
+      if (!el) return;
+      
+      let isDown = false;
+      let startX = 0;
+      let scrollLeft = 0;
+      let velocity = 0;
+      let lastX = 0;
+      let animationFrame = null;
+
+      const onMouseDown = (e) => {
+        // Don't start drag if clicking on interactive elements
+        if (e.target.closest('button') || e.target.closest('input') || e.target.closest('select') || e.target.closest('a')) {
+          return;
+        }
+        
+        isDown = true;
+        setIsDragging(true);
+        el.classList.add('cursor-grabbing', 'select-none');
+        startX = e.pageX - el.offsetLeft;
+        scrollLeft = el.scrollLeft;
+        lastX = e.pageX;
+        velocity = 0;
+        
+        // Prevent text selection
+        e.preventDefault();
+      };
+
+      const onMouseLeave = () => {
+        isDown = false;
+        setIsDragging(false);
+        el.classList.remove('cursor-grabbing', 'select-none');
+      };
+
+      const onMouseUp = () => {
+        isDown = false;
+        setIsDragging(false);
+        el.classList.remove('cursor-grabbing', 'select-none');
+        
+        // Add momentum scrolling
+        if (Math.abs(velocity) > 1) {
+          const momentum = velocity * 0.8;
+          const animate = () => {
+            el.scrollLeft -= momentum;
+            velocity *= 0.95;
+            if (Math.abs(velocity) > 0.1) {
+              animationFrame = requestAnimationFrame(animate);
+            }
+          };
+          animate();
+        }
+      };
+
+      const onMouseMove = (e) => {
+        if (!isDown) return;
+        e.preventDefault();
+        
+        const x = e.pageX - el.offsetLeft;
+        const walk = (x - startX) * 1.5; // Increased sensitivity
+        el.scrollLeft = scrollLeft - walk;
+        
+        // Calculate velocity for momentum
+        velocity = e.pageX - lastX;
+        lastX = e.pageX;
+      };
+
+      // Touch events for mobile
+      const onTouchStart = (e) => {
+        // Don't start drag if touching interactive elements
+        if (e.target.closest('button') || e.target.closest('input') || e.target.closest('select') || e.target.closest('a')) {
+          return;
+        }
+        
+        isDown = true;
+        setIsDragging(true);
+        startX = e.touches[0].pageX - el.offsetLeft;
+        scrollLeft = el.scrollLeft;
+        lastX = e.touches[0].pageX;
+        velocity = 0;
+      };
+
+      const onTouchMove = (e) => {
+        if (!isDown) return;
+        e.preventDefault();
+        
+        const x = e.touches[0].pageX - el.offsetLeft;
+        const walk = (x - startX) * 1.5;
+        el.scrollLeft = scrollLeft - walk;
+        
+        velocity = e.touches[0].pageX - lastX;
+        lastX = e.touches[0].pageX;
+      };
+
+      const onTouchEnd = () => {
+        isDown = false;
+        setIsDragging(false);
+        
+        if (Math.abs(velocity) > 1) {
+          const momentum = velocity * 0.6;
+          const animate = () => {
+            el.scrollLeft -= momentum;
+            velocity *= 0.9;
+            if (Math.abs(velocity) > 0.1) {
+              animationFrame = requestAnimationFrame(animate);
+            }
+          };
+          animate();
+        }
+      };
+
+      // Add event listeners
+      el.addEventListener('mousedown', onMouseDown);
+      el.addEventListener('mouseleave', onMouseLeave);
+      el.addEventListener('mouseup', onMouseUp);
+      el.addEventListener('mousemove', onMouseMove);
+      el.addEventListener('touchstart', onTouchStart, { passive: false });
+      el.addEventListener('touchmove', onTouchMove, { passive: false });
+      el.addEventListener('touchend', onTouchEnd);
+
+      return () => {
+        el.removeEventListener('mousedown', onMouseDown);
+        el.removeEventListener('mouseleave', onMouseLeave);
+        el.removeEventListener('mouseup', onMouseUp);
+        el.removeEventListener('mousemove', onMouseMove);
+        el.removeEventListener('touchstart', onTouchStart);
+        el.removeEventListener('touchmove', onTouchMove);
+        el.removeEventListener('touchend', onTouchEnd);
+        if (animationFrame) {
+          cancelAnimationFrame(animationFrame);
+        }
+      };
+    };
+
+    const cleanups = [];
+    if (pendingRef.current) cleanups.push(setupDragScroll(pendingRef.current));
+    if (upcomingRef.current) cleanups.push(setupDragScroll(upcomingRef.current));
+    return () => cleanups.forEach((dispose) => dispose && dispose());
+  }, [sortedAppointments]); // Now this is safe to use
 
   // Memoize the sorted appointments
   const sortedData = useMemo(() => {
@@ -511,143 +1216,277 @@ function TeacherAppointments() {
   }
 
   return (
-    <div className="flex flex-col gap-4 sm:gap-5 h-full lg:grid lg:grid-cols-2">
-      <section className="bg-white rounded-xl shadow-sm p-4 sm:p-6 flex flex-col max-h-[76vh] sm:max-h-[80vh] lg:max-h-[76vh] order-1 lg:order-none">
-        <h3 className="text-lg sm:text-xl font-semibold mb-3 sm:mb-4 text-[#0065A8] border-b-2 border-[#54BEFF] sticky pb-2 top-0 bg-white">
-          Pending Appointments
-        </h3>
-        <div className="flex-1 overflow-y-auto min-h-0">
-          {isLoading ? (
-            <ul className="space-y-3 sm:space-y-4 pr-1 sm:pr-2">
-              {Array.from({ length: 1 }).map((_, index) => (
-                <li
-                  key={index}
-                  className="bg-white rounded-lg shadow-md p-4 sm:p-6 my-3 sm:my-4 border-l-4 border-[#0065A8] hover:shadow-lg transition-shadow flex flex-col fade-in delay-300 animate-pulse"
-                >
-                  {/* Teacher Section Skeleton */}
-                  <div className="mb-3 sm:mb-4 fade-in delay-100">
-                    <p className="h-3 sm:h-4 bg-gray-300 rounded w-32 sm:w-40 mb-2"></p>
-                    <div className="flex items-center">
-                      <div className="w-10 h-10 sm:w-12 sm:h-12 bg-gray-200 rounded-full mr-2 sm:mr-3 border-2 border-gray-200"></div>
-                      <div className="h-3 sm:h-4 bg-gray-300 rounded w-32 sm:w-40"></div>
+    <div className="space-y-8">
+      {/* Pending Appointments Section */}
+      <motion.section
+        initial={{ opacity: 0, y: 20 }}
+        animate={{ opacity: 1, y: 0 }}
+        transition={{ duration: 0.6 }}
+        className="bg-white rounded-2xl shadow-2xl overflow-hidden border border-gray-100"
+      >
+        <div className="bg-gradient-to-r from-amber-500 to-orange-500 text-white p-6">
+          <div className="flex items-center justify-between">
+            <div className="flex items-center gap-4">
+              <div className="w-12 h-12 bg-white bg-opacity-20 rounded-full flex items-center justify-center">
+                <svg className="w-6 h-6 text-white" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" />
+                </svg>
                     </div>
+              <div>
+                <h3 className="text-2xl font-bold">Pending Requests</h3>
+                <p className="text-amber-100">Awaiting your confirmation</p>
                   </div>
-                  {/* Student(s) Section Skeleton */}
-                  <div className="mt-3 sm:mt-4 fade-in delay-200">
-                    <p className="h-3 sm:h-4 bg-gray-300 rounded w-32 sm:w-40 mb-2"></p>
-                    <div className="flex flex-wrap items-center gap-2 sm:gap-3">
-                      {Array.from({ length: 3 }).map((_, index) => (
-                        <div
-                          key={index}
-                          className="flex items-center bg-gray-50 rounded-full px-2 sm:px-3 py-1"
-                        >
-                          <div className="w-6 h-6 sm:w-8 sm:h-8 bg-gray-200 rounded-full mr-1 sm:mr-2 border-2 border-gray-200"></div>
-                          <div className="h-2 sm:h-3 bg-gray-300 rounded w-16 sm:w-20"></div>
                         </div>
-                      ))}
+            <div className="bg-white bg-opacity-20 rounded-full px-4 py-2">
+              <span className="text-lg font-bold">{sortedAppointments?.pending?.length || 0}</span>
                     </div>
                   </div>
-                  {/* Details Section Skeleton */}
-                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 sm:gap-4 mt-3 sm:mt-4 fade-in delay-300">
-                    <div>
-                      <div className="h-3 sm:h-4 bg-gray-300 rounded w-28 sm:w-40 mb-1 sm:mb-2"></div>
-                      <div className="h-2 sm:h-3 bg-gray-200 rounded w-20 sm:w-24"></div>
                     </div>
-                  </div>
-                </li>
-              ))}
-            </ul>
-          ) : sortedAppointments?.pending?.length > 0 ? (
-            <ul className="space-y-3 sm:space-y-4 pr-1 sm:pr-2">
-              {sortedAppointments.pending.map((app) => (
-                <AppointmentItem
-                  key={app.id}
-                  appointment={app}
-                  role="faculty"
-                  onCancel={cancelBooking}
-                  onConfirm={confirmBooking}
-                  confirmInputs={confirmInputs}
-                  handleConfirmClick={handleConfirmClick}
-                  setConfirmInputs={setConfirmInputs}
-                />
-              ))}
-            </ul>
-          ) : (
-            <p className="text-gray-500 italic">No pending appointments</p>
-          )}
-        </div>
-      </section>
 
-      <section className="bg-white rounded-xl shadow-sm p-4 sm:p-6 flex flex-col max-h-[76vh] sm:max-h-[80vh] lg:max-h-[76vh] order-2 lg:order-none">
-        <h3 className="text-lg sm:text-xl font-semibold mb-3 sm:mb-4 text-[#0065A8] border-b-2 border-[#54BEFF] pb-2 sticky top-0 bg-white">
-          Upcoming Appointments
-        </h3>
-        <div className="flex-1 overflow-y-auto min-h-0">
-          {isLoading ? (
-            <ul className="space-y-3 sm:space-y-4 pr-1 sm:pr-2">
-              {Array.from({ length: 1 }).map((_, index) => (
-                <li
-                  key={index}
-                  className="bg-white rounded-lg shadow-md p-4 sm:p-6 my-3 sm:my-4 border-l-4 border-[#0065A8] hover:shadow-lg transition-shadow flex flex-col fade-in delay-300 animate-pulse"
+        <div className="p-6">
+          <AnimatePresence mode="wait">
+            {isLoading ? (
+              <motion.div
+                key="loading"
+                initial={{ opacity: 0 }}
+                animate={{ opacity: 1 }}
+                exit={{ opacity: 0 }}
+                className="flex gap-6 overflow-x-auto pb-4"
+              >
+                {Array.from({ length: 2 }).map((_, index) => (
+                  <motion.div
+                    key={index}
+                    initial={{ opacity: 0, x: 20 }}
+                    animate={{ opacity: 1, x: 0 }}
+                    transition={{ delay: index * 0.1 }}
+                    className="min-w-[320px] bg-gray-50 rounded-xl p-6 animate-pulse"
+                  >
+                    <div className="flex items-center gap-4 mb-4">
+                      <div className="w-12 h-12 bg-gray-200 rounded-full"></div>
+                      <div className="flex-1">
+                        <div className="h-4 bg-gray-200 rounded w-32 mb-2"></div>
+                        <div className="h-3 bg-gray-200 rounded w-24"></div>
+                  </div>
+                    </div>
+                    <div className="space-y-3">
+                      <div className="h-3 bg-gray-200 rounded w-full"></div>
+                      <div className="h-3 bg-gray-200 rounded w-3/4"></div>
+                    </div>
+                  </motion.div>
+                ))}
+              </motion.div>
+          ) : sortedAppointments?.pending?.length > 0 ? (
+              <motion.div
+                key="content"
+                initial={{ opacity: 0 }}
+                animate={{ opacity: 1 }}
+                exit={{ opacity: 0 }}
+                className="relative group"
+              >
+                <div 
+                  ref={pendingRef} 
+                  className={`flex gap-6 overflow-x-auto pb-4 scrollbar-hide ${isDragging ? 'cursor-grabbing' : 'cursor-grab'}`}
+                  style={{ scrollbarWidth: 'none', msOverflowStyle: 'none' }}
                 >
-                  {/* Teacher Section Skeleton */}
-                  <div className="mb-3 sm:mb-4 fade-in delay-100">
-                    <p className="h-3 sm:h-4 bg-gray-300 rounded w-32 sm:w-40 mb-2"></p>
-                    <div className="flex items-center">
-                      <div className="w-10 h-10 sm:w-12 sm:h-12 bg-gray-200 rounded-full mr-2 sm:mr-3 border-2 border-gray-200"></div>
-                      <div className="h-3 sm:h-4 bg-gray-300 rounded w-32 sm:w-40"></div>
-                    </div>
-                  </div>
-                  {/* Student(s) Section Skeleton */}
-                  <div className="mt-3 sm:mt-4 fade-in delay-200">
-                    <p className="h-3 sm:h-4 bg-gray-300 rounded w-32 sm:w-40 mb-2"></p>
-                    <div className="flex flex-wrap items-center gap-2 sm:gap-3">
-                      {Array.from({ length: 3 }).map((_, index) => (
-                        <div
-                          key={index}
-                          className="flex items-center bg-gray-50 rounded-full px-2 sm:px-3 py-1"
-                        >
-                          <div className="w-6 h-6 sm:w-8 sm:h-8 bg-gray-200 rounded-full mr-1 sm:mr-2 border-2 border-gray-200"></div>
-                          <div className="h-2 sm:h-3 bg-gray-300 rounded w-16 sm:w-20"></div>
-                        </div>
-                      ))}
-                    </div>
-                  </div>
-                  {/* Details Section Skeleton */}
-                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 sm:gap-4 mt-3 sm:mt-4 fade-in delay-300">
-                    <div>
-                      <div className="h-3 sm:h-4 bg-gray-300 rounded w-28 sm:w-40 mb-1 sm:mb-2"></div>
-                      <div className="h-2 sm:h-3 bg-gray-200 rounded w-20 sm:w-24"></div>
-                    </div>
-                    <div>
-                      <div className="h-3 sm:h-4 bg-gray-300 rounded w-28 sm:w-40 mb-1 sm:mb-2"></div>
-                      <div className="h-2 sm:h-3 bg-gray-200 rounded w-20 sm:w-24"></div>
-                    </div>
-                    <div>
-                      <div className="h-3 sm:h-4 bg-gray-300 rounded w-28 sm:w-40 mb-1 sm:mb-2"></div>
-                      <div className="h-2 sm:h-3 bg-gray-200 rounded w-20 sm:w-24"></div>
-                    </div>
-                  </div>
-                </li>
-              ))}
-            </ul>
-          ) : sortedAppointments?.upcoming?.length > 0 ? (
-            <ul className="space-y-3 sm:space-y-4">
-              {sortedAppointments.upcoming.map((app) => (
-                <AppointmentItem
-                  key={app.id}
-                  appointment={app}
-                  role="faculty"
-                  onStartSession={startSession}
-                  onCancel={cancelBooking}
-                />
-              ))}
-            </ul>
-          ) : (
-            <p className="text-gray-500 italic">No upcoming appointments</p>
+                  {sortedAppointments.pending.map((app, index) => (
+                    <motion.div
+                      key={app.id}
+                      initial={{ opacity: 0, x: 20 }}
+                      animate={{ opacity: 1, x: 0 }}
+                      transition={{ delay: index * 0.1 }}
+                      className="min-w-[320px] flex-shrink-0"
+                    >
+                    <AppointmentItem
+                      appointment={app}
+                      role="faculty"
+                      onCancel={cancelBooking}
+                      onConfirm={confirmBooking}
+                      confirmInputs={confirmInputs}
+                      handleConfirmClick={handleConfirmClick}
+                      setConfirmInputs={setConfirmInputs}
+                    />
+                    </motion.div>
+                  ))}
+            </div>
+                
+                {/* Navigation arrows */}
+                <motion.button
+                  whileHover={{ scale: 1.1 }}
+                  whileTap={{ scale: 0.9 }}
+                  onClick={() => pendingRef.current && pendingRef.current.scrollBy({ left: -320, behavior: 'smooth' })}
+                  className="hidden lg:flex items-center justify-center absolute left-4 top-1/2 -translate-y-1/2 w-10 h-10 bg-white rounded-full shadow-lg text-amber-500 hover:bg-amber-500 hover:text-white transition-all duration-200 opacity-0 group-hover:opacity-100"
+                  aria-label="Scroll left"
+                >
+                  <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 19l-7-7 7-7" />
+                  </svg>
+                </motion.button>
+                <motion.button
+                  whileHover={{ scale: 1.1 }}
+                  whileTap={{ scale: 0.9 }}
+                  onClick={() => pendingRef.current && pendingRef.current.scrollBy({ left: 320, behavior: 'smooth' })}
+                  className="hidden lg:flex items-center justify-center absolute right-4 top-1/2 -translate-y-1/2 w-10 h-10 bg-white rounded-full shadow-lg text-amber-500 hover:bg-amber-500 hover:text-white transition-all duration-200 opacity-0 group-hover:opacity-100"
+                  aria-label="Scroll right"
+                >
+                  <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
+                  </svg>
+                </motion.button>
+              </motion.div>
+            ) : (
+              <motion.div
+                key="empty"
+                initial={{ opacity: 0, scale: 0.9 }}
+                animate={{ opacity: 1, scale: 1 }}
+                exit={{ opacity: 0, scale: 0.9 }}
+                className="text-center py-12"
+              >
+                <div className="w-24 h-24 mx-auto mb-6 bg-gradient-to-br from-amber-200 to-orange-300 rounded-full flex items-center justify-center">
+                  <svg className="w-12 h-12 text-amber-600" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" />
+                  </svg>
+            </div>
+                <h3 className="text-xl font-bold text-gray-800 mb-2">No Pending Requests</h3>
+                <p className="text-gray-600">You don't have any appointment requests awaiting confirmation.</p>
+              </motion.div>
           )}
+          </AnimatePresence>
         </div>
-      </section>
+      </motion.section>
+
+      {/* Upcoming Appointments Section */}
+      <motion.section
+        initial={{ opacity: 0, y: 20 }}
+        animate={{ opacity: 1, y: 0 }}
+        transition={{ duration: 0.6, delay: 0.2 }}
+        className="bg-white rounded-2xl shadow-2xl overflow-hidden border border-gray-100"
+      >
+        <div className="bg-gradient-to-r from-emerald-500 to-emerald-600 text-white p-6">
+          <div className="flex items-center justify-between">
+            <div className="flex items-center gap-4">
+              <div className="w-12 h-12 bg-white bg-opacity-20 rounded-full flex items-center justify-center">
+                <svg className="w-6 h-6 text-white" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
+                </svg>
+                    </div>
+              <div>
+                <h3 className="text-2xl font-bold">Upcoming Sessions</h3>
+                <p className="text-emerald-100">Ready to start your consultations</p>
+                  </div>
+                        </div>
+            <div className="bg-white bg-opacity-20 rounded-full px-4 py-2">
+              <span className="text-lg font-bold">{sortedAppointments?.upcoming?.length || 0}</span>
+                    </div>
+                  </div>
+                    </div>
+
+        <div className="p-6">
+          <AnimatePresence mode="wait">
+            {isLoading ? (
+              <motion.div
+                key="loading"
+                initial={{ opacity: 0 }}
+                animate={{ opacity: 1 }}
+                exit={{ opacity: 0 }}
+                className="flex gap-6 overflow-x-auto pb-4"
+              >
+                {Array.from({ length: 2 }).map((_, index) => (
+                  <motion.div
+                    key={index}
+                    initial={{ opacity: 0, x: 20 }}
+                    animate={{ opacity: 1, x: 0 }}
+                    transition={{ delay: index * 0.1 }}
+                    className="min-w-[320px] bg-gray-50 rounded-xl p-6 animate-pulse"
+                  >
+                    <div className="flex items-center gap-4 mb-4">
+                      <div className="w-12 h-12 bg-gray-200 rounded-full"></div>
+                      <div className="flex-1">
+                        <div className="h-4 bg-gray-200 rounded w-32 mb-2"></div>
+                        <div className="h-3 bg-gray-200 rounded w-24"></div>
+                    </div>
+                    </div>
+                    <div className="space-y-3">
+                      <div className="h-3 bg-gray-200 rounded w-full"></div>
+                      <div className="h-3 bg-gray-200 rounded w-3/4"></div>
+                  </div>
+                  </motion.div>
+              ))}
+              </motion.div>
+          ) : sortedAppointments?.upcoming?.length > 0 ? (
+              <motion.div
+                key="content"
+                initial={{ opacity: 0 }}
+                animate={{ opacity: 1 }}
+                exit={{ opacity: 0 }}
+                className="relative group"
+              >
+                <div 
+                  ref={upcomingRef} 
+                  className={`flex gap-6 overflow-x-auto pb-4 scrollbar-hide ${isDragging ? 'cursor-grabbing' : 'cursor-grab'}`}
+                  style={{ scrollbarWidth: 'none', msOverflowStyle: 'none' }}
+                >
+                  {sortedAppointments.upcoming.map((app, index) => (
+                    <motion.div
+                      key={app.id}
+                      initial={{ opacity: 0, x: 20 }}
+                      animate={{ opacity: 1, x: 0 }}
+                      transition={{ delay: index * 0.1 }}
+                      className="min-w-[320px] flex-shrink-0"
+                    >
+                    <AppointmentItem
+                      appointment={app}
+                      role="faculty"
+                      onStartSession={startSession}
+                      onCancel={cancelBooking}
+                    />
+                    </motion.div>
+                  ))}
+            </div>
+                
+                {/* Navigation arrows */}
+                <motion.button
+                  whileHover={{ scale: 1.1 }}
+                  whileTap={{ scale: 0.9 }}
+                  onClick={() => upcomingRef.current && upcomingRef.current.scrollBy({ left: -320, behavior: 'smooth' })}
+                  className="hidden lg:flex items-center justify-center absolute left-4 top-1/2 -translate-y-1/2 w-10 h-10 bg-white rounded-full shadow-lg text-emerald-500 hover:bg-emerald-500 hover:text-white transition-all duration-200 opacity-0 group-hover:opacity-100"
+                  aria-label="Scroll left"
+                >
+                  <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 19l-7-7 7-7" />
+                  </svg>
+                </motion.button>
+                <motion.button
+                  whileHover={{ scale: 1.1 }}
+                  whileTap={{ scale: 0.9 }}
+                  onClick={() => upcomingRef.current && upcomingRef.current.scrollBy({ left: 320, behavior: 'smooth' })}
+                  className="hidden lg:flex items-center justify-center absolute right-4 top-1/2 -translate-y-1/2 w-10 h-10 bg-white rounded-full shadow-lg text-emerald-500 hover:bg-emerald-500 hover:text-white transition-all duration-200 opacity-0 group-hover:opacity-100"
+                  aria-label="Scroll right"
+                >
+                  <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
+                  </svg>
+                </motion.button>
+              </motion.div>
+            ) : (
+              <motion.div
+                key="empty"
+                initial={{ opacity: 0, scale: 0.9 }}
+                animate={{ opacity: 1, scale: 1 }}
+                exit={{ opacity: 0, scale: 0.9 }}
+                className="text-center py-12"
+              >
+                <div className="w-24 h-24 mx-auto mb-6 bg-gradient-to-br from-emerald-200 to-emerald-300 rounded-full flex items-center justify-center">
+                  <svg className="w-12 h-12 text-emerald-600" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
+                  </svg>
+            </div>
+                <h3 className="text-xl font-bold text-gray-800 mb-2">No Upcoming Sessions</h3>
+                <p className="text-gray-600">You don't have any confirmed consultation sessions scheduled.</p>
+              </motion.div>
+          )}
+          </AnimatePresence>
+        </div>
+      </motion.section>
     </div>
   );
 }
@@ -657,28 +1496,108 @@ function Appointments() {
     return localStorage.getItem("userRole")?.toLowerCase() || "";
   });
 
-  if (!role) return <p>Loading...</p>;
+  if (!role) {
+  return (
+      <div className="min-h-screen bg-gradient-to-br from-gray-50 to-blue-50 font-poppins flex items-center justify-center">
+        <div className="text-center">
+          <div className="animate-spin rounded-full h-16 w-16 border-4 border-[#057DCD] border-t-transparent mx-auto"></div>
+          <p className="mt-6 text-lg text-gray-600 font-medium">Loading appointments...</p>
+          </div>
+        </div>
+    );
+  }
 
   return (
-    <div className="min-h-screen overflow-hidden p-2 sm:p-3 lg:p-5 xl:p-7">
-      <h2 className="text-lg sm:text-xl lg:text-2xl xl:text-3xl font-bold 
-                 mb-3 sm:mb-4 lg:mb-6 xl:mb-8 
-                 text-center text-[#0065A8]
-                 transition-all duration-300">
-        Appointments
-      </h2>
-      <div className="bg-[#dceffa] rounded-lg sm:rounded-xl 
-                  p-3 sm:p-4 lg:p-5 xl:p-6 
-                  shadow-sm overflow-y-auto transparent-scroll
-                  h-[calc(100vh-6rem)] sm:h-[calc(100vh-7rem)] lg:h-[calc(100vh-8rem)]
-                  transition-all duration-300">
+    <div className="min-h-screen bg-gradient-to-br from-gray-50 to-blue-50 font-poppins">
+      {/* Hero Section */}
+      <motion.section
+        initial={{ opacity: 0 }}
+        animate={{ opacity: 1 }}
+        transition={{ duration: 0.8 }}
+        className="relative py-16 overflow-hidden"
+      >
+        {/* Background Elements */}
+        <div className="absolute inset-0 bg-gradient-to-br from-[#057DCD] via-[#046bb8] to-[#034a94]" />
+        <div className="absolute inset-0 bg-black bg-opacity-20" />
+        
+        {/* Floating Elements */}
+        <motion.div
+          animate={{ 
+            y: [0, -20, 0],
+            rotate: [0, 5, 0]
+          }}
+          transition={{ 
+            duration: 6,
+            repeat: Infinity,
+            ease: "easeInOut"
+          }}
+          className="absolute top-10 left-10 w-20 h-20 bg-blue-400 rounded-full opacity-20"
+        />
+        <motion.div
+          animate={{ 
+            y: [0, 30, 0],
+            rotate: [0, -5, 0]
+          }}
+          transition={{ 
+            duration: 8,
+            repeat: Infinity,
+            ease: "easeInOut"
+          }}
+          className="absolute bottom-10 right-10 w-32 h-32 bg-blue-300 rounded-full opacity-15"
+        />
+
+        <div className="relative z-10 max-w-7xl mx-auto px-6 text-center">
+          <motion.div
+            initial={{ opacity: 0, y: 30 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ duration: 0.8, delay: 0.2 }}
+          >
+            <h1 className="text-4xl md:text-5xl lg:text-6xl font-bold text-white mb-4">
+              My Appointments
+            </h1>
+            <p className="text-xl md:text-2xl text-blue-200 mb-2">
+              {role === "student" ? "Track your consultation requests" : "Manage your consultation sessions"}
+            </p>
+            <p className="text-lg text-blue-100 max-w-2xl mx-auto">
+              {role === "student" 
+                ? "View your pending and confirmed appointments with faculty members" 
+                : "Review and manage student consultation requests and scheduled sessions"
+              }
+            </p>
+          </motion.div>
+        </div>
+      </motion.section>
+
+      <div className="container mx-auto px-4 py-8">
+        <motion.div
+          initial={{ opacity: 0, y: 20 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ delay: 0.4 }}
+        >
         {role === "student" ? (
           <StudentAppointments />
         ) : role === "faculty" ? (
           <TeacherAppointments />
         ) : (
-          <p>No appointments available for your role.</p>
-        )}
+            <motion.div
+              initial={{ opacity: 0, scale: 0.9 }}
+              animate={{ opacity: 1, scale: 1 }}
+              className="text-center py-16"
+            >
+              <div className="bg-white rounded-2xl shadow-2xl p-12 max-w-2xl mx-auto border border-gray-100">
+                <div className="w-24 h-24 mx-auto mb-6 bg-gradient-to-br from-gray-300 to-gray-400 rounded-full flex items-center justify-center">
+                  <svg className="w-12 h-12 text-white" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-2.5L13.732 4c-.77-.833-1.732-.833-2.5 0L4.268 18.5c-.77.833.192 2.5 1.732 2.5z" />
+                  </svg>
+                </div>
+                <h3 className="text-2xl font-bold text-gray-800 mb-3">Access Restricted</h3>
+                <p className="text-lg text-gray-600">
+                  No appointments available for your current role. Please contact your administrator if you believe this is an error.
+                </p>
+              </div>
+            </motion.div>
+          )}
+        </motion.div>
       </div>
     </div>
   );

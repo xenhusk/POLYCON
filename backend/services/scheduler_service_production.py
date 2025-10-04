@@ -22,6 +22,15 @@ logger = logging.getLogger(__name__)
 IS_PRODUCTION = os.getenv('FLASK_ENV') == 'production'
 RENDER_DEPLOYMENT = os.getenv('RENDER') == 'true'  # Render sets this automatically
 
+# Eventlet availability (for green threads in production)
+EVENTLET_AVAILABLE = False
+try:
+    import eventlet  # type: ignore
+    EVENTLET_AVAILABLE = True
+    logger.info("Eventlet available for production scheduler")
+except Exception:
+    logger.info("Eventlet not available - falling back to standard threading")
+
 class ProductionAppointmentScheduler:
     """
     Production-optimized appointment scheduler for Render deployment.
@@ -39,13 +48,14 @@ class ProductionAppointmentScheduler:
         self.reminder_minutes = reminder_minutes
         self.running = False
         self.scheduler_thread = None
+        self.greenthread = None
         self.check_interval = 10  # TEMPORARY: Faster checking for debugging (was 30)
         self.sent_reminders = set()  # Track sent reminders to avoid duplicates
         self.app = app  # Store Flask app for context
         self.last_cleanup = datetime.utcnow()
         
         logger.info(f"ProductionAppointmentScheduler initialized with {reminder_minutes} minute reminders")
-        logger.info(f"Production mode: {IS_PRODUCTION}, Render: {RENDER_DEPLOYMENT}")
+        logger.info(f"Production mode: {IS_PRODUCTION}, Render: {RENDER_DEPLOYMENT}, Eventlet: {EVENTLET_AVAILABLE}")
         logger.info(f"Check interval: {self.check_interval} seconds")
 
     def start(self):
@@ -55,20 +65,38 @@ class ProductionAppointmentScheduler:
             return
 
         self.running = True
-        self.scheduler_thread = threading.Thread(
-            target=self._scheduler_loop,
-            daemon=False,  # CHANGE: Make thread non-daemon to prevent premature termination
-            name="ProductionAppointmentScheduler"
-        )
-        self.scheduler_thread.start()
-        logger.info("✅ Production appointment scheduler started successfully")
+        if EVENTLET_AVAILABLE and IS_PRODUCTION:
+            # Use eventlet greenthread in production under eventlet worker
+            try:
+                self.greenthread = eventlet.spawn(self._scheduler_loop)
+                logger.info("✅ Production appointment scheduler started with eventlet greenthread")
+            except Exception as e:
+                logger.error(f"❌ Failed to start eventlet greenthread: {e}. Falling back to threading.")
+                self.scheduler_thread = threading.Thread(
+                    target=self._scheduler_loop,
+                    daemon=False,
+                    name="ProductionAppointmentScheduler"
+                )
+                self.scheduler_thread.start()
+                logger.info("✅ Production appointment scheduler started with standard threading (fallback)")
+        else:
+            # Development or no eventlet - use standard thread
+            self.scheduler_thread = threading.Thread(
+                target=self._scheduler_loop,
+                daemon=False,
+                name="ProductionAppointmentScheduler"
+            )
+            self.scheduler_thread.start()
+            logger.info("✅ Production appointment scheduler started with standard threading")
         
         # Wait a moment to ensure the thread actually starts
         time.sleep(0.5)
-        if self.scheduler_thread.is_alive():
-            logger.info("✅ Scheduler thread confirmed alive after startup")
+        thread_alive = (self.scheduler_thread.is_alive() if self.scheduler_thread else False)
+        green_alive = (self.greenthread is not None and not self.greenthread.dead) if self.greenthread else False
+        if thread_alive or green_alive:
+            logger.info("✅ Scheduler background worker confirmed alive after startup")
         else:
-            logger.error("❌ Scheduler thread died immediately after startup!")
+            logger.error("❌ Scheduler background worker died immediately after startup!")
 
     def stop(self):
         """Stop the scheduler."""
@@ -79,6 +107,12 @@ class ProductionAppointmentScheduler:
         logger.info("🛑 Stopping appointment scheduler...")
         self.running = False
         
+        if self.greenthread and EVENTLET_AVAILABLE:
+            try:
+                self.greenthread.kill()
+                logger.info("✅ Greenthread stopped successfully")
+            except Exception as e:
+                logger.warning(f"⚠️ Failed to stop greenthread gracefully: {e}")
         if self.scheduler_thread and self.scheduler_thread.is_alive():
             # Wait for thread to finish gracefully
             self.scheduler_thread.join(timeout=5)
@@ -109,8 +143,14 @@ class ProductionAppointmentScheduler:
                     logger.error("⚠️ Scheduler will not work without app context!")
                 
                 logger.info(f"😴 Sleeping for {self.check_interval} seconds before next check...")
-                # Wait before next check
-                time.sleep(self.check_interval)
+                # Wait before next check (eventlet-friendly in production)
+                if EVENTLET_AVAILABLE and IS_PRODUCTION:
+                    try:
+                        eventlet.sleep(self.check_interval)
+                    except Exception:
+                        time.sleep(self.check_interval)
+                else:
+                    time.sleep(self.check_interval)
                 
             except Exception as e:
                 logger.error(f"❌ CRITICAL ERROR in production scheduler loop: {e}")
@@ -118,7 +158,13 @@ class ProductionAppointmentScheduler:
                 logger.error(f"🔍 Full traceback: {traceback.format_exc()}")
                 logger.info(f"🔄 Continuing scheduler loop after error (iteration #{loop_count})")
                 # Continue running even if there's an error
-                time.sleep(self.check_interval)
+                if EVENTLET_AVAILABLE and IS_PRODUCTION:
+                    try:
+                        eventlet.sleep(self.check_interval)
+                    except Exception:
+                        time.sleep(self.check_interval)
+                else:
+                    time.sleep(self.check_interval)
         
         logger.info(f"🛑 Production scheduler loop ENDED after {loop_count} iterations")
 

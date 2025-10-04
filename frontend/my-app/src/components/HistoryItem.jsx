@@ -1,5 +1,6 @@
 import React from 'react';
 import { useNavigate } from 'react-router-dom';
+import { motion } from 'framer-motion';
 import { getProfilePictureUrl } from '../utils/utils'; // Import profile picture util
 // Set API base URL for image loading
 import API_URL from '../apiConfig';
@@ -42,99 +43,153 @@ const HistoryItem = ({ session, className }) => {
     : (Array.isArray(session.student_ids) ? session.student_ids : []);
   
   return (
-    <div 
+    <motion.div 
       onClick={handleClick} 
-      className={`bg-white rounded-lg p-4 shadow hover:shadow-lg transition-shadow cursor-pointer 
-        border-l-4 border-[#0065A8] fade-in 
-        md-px:p-4 sm-px:p-3 xs:p-2 ${className || ''}`}
+      initial={{ opacity: 0, y: 20 }}
+      animate={{ opacity: 1, y: 0 }}
+      whileHover={{ y: -5 }}
+      transition={{ duration: 0.3 }}
+      className={`bg-white rounded-2xl shadow-2xl overflow-hidden border border-gray-100 hover:shadow-3xl transition-all duration-300 cursor-pointer mx-2 sm:mx-0 ${className || ''}`}
     >
-      <div className="flex justify-between items-start mb-4 fade-in delay-100 
-        md-px:mb-4 sm-px:mb-3 xs:mb-2">
-        <div>
-          <div className="flex items-center">
+      {/* Status indicator */}
+      <div className="h-1 w-full bg-gradient-to-r from-indigo-500 to-purple-600" />
+      
+      <div className="p-4 sm:p-6">
+        {/* Teacher Section */}
+        <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between mb-4 sm:mb-6 gap-3 sm:gap-0">
+          <div className="flex items-center gap-3 sm:gap-4">
             {session.teacher ? (
-              // Always render teacher image with placeholder fallback via util
-              (() => {
-                const url = getProfilePictureUrl(session.teacher.profile_picture, teacherName);
-                return (
-                  <img
-                    src={url}
-                    alt="Teacher"
-                    className="w-12 h-12 rounded-full mr-3 border-2 border-[#54BEFF]
-                      md-px:w-12 md-px:h-12 sm-px:w-10 sm-px:h-10 xs:w-8 xs:h-8
-                      md-px:mr-3 sm-px:mr-2 xs:mr-2" 
-                  />
-                );
-              })()
-            ) : null}
+              <motion.img
+                whileHover={{ scale: 1.1 }}
+                transition={{ duration: 0.2 }}
+                src={getProfilePictureUrl(session.teacher.profile_picture, teacherName)}
+                alt="Teacher"
+                className="w-12 h-12 sm:w-16 sm:h-16 rounded-full border-2 sm:border-4 border-white shadow-lg object-cover"
+              />
+            ) : (
+              <div className="w-12 h-12 sm:w-16 sm:h-16 rounded-full border-2 sm:border-4 border-white shadow-lg bg-gradient-to-br from-gray-200 to-gray-300 flex items-center justify-center">
+                <svg className="w-6 h-6 sm:w-8 sm:h-8 text-gray-500" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z" />
+                </svg>
+              </div>
+            )}
             <div>
-              <h3 className="font-semibold text-[#0065A8] text-lg
-                md-px:text-base sm-px:text-sm xs:text-sm">
+              <h3 className="text-lg sm:text-xl font-bold text-gray-800">
                 {session.teacher?.firstName ? 
                   `${session.teacher.firstName} ${session.teacher.lastName}` : 'N/A'}
               </h3>
-              <p className="text-gray-600 text-base
-                md-px:text-sm sm-px:text-xs xs:text-xs">
-                {session.teacher?.department || 'N/A'}
-              </p>
+              {session.teacher?.department && (
+                <p className="text-gray-600 text-xs sm:text-sm">{session.teacher.department}</p>
+              )}
             </div>
           </div>
-          <p className="mt-2 text-gray-600 text-base
-            md-px:text-sm sm-px:text-xs xs:text-xs
-            md-px:mt-2 sm-px:mt-1.5 xs:mt-1">
-            Session Date: {sessionDateDisplay}
+          <motion.div
+            initial={{ scale: 0 }}
+            animate={{ scale: 1 }}
+            className="bg-gradient-to-r from-indigo-500 to-purple-600 text-white px-3 sm:px-4 py-1 sm:py-2 rounded-full font-semibold text-xs sm:text-sm shadow-lg self-start sm:self-auto"
+          >
+            Completed
+          </motion.div>
+        </div>
+
+        {/* Session Date */}
+        <div className="bg-gradient-to-r from-blue-50 to-indigo-100 rounded-xl p-3 sm:p-4 border border-blue-200 mb-4 sm:mb-6">
+          <div className="flex items-center gap-2 sm:gap-3">
+            <div className="w-6 h-6 sm:w-8 sm:h-8 bg-[#057DCD] rounded-full flex items-center justify-center">
+              <svg className="w-3 h-3 sm:w-4 sm:h-4 text-white" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z" />
+              </svg>
+            </div>
+            <div>
+              <h5 className="font-semibold text-gray-800 text-sm sm:text-base">Session Date</h5>
+              <p className="text-gray-600 text-xs sm:text-sm">{sessionDateDisplay}</p>
+            </div>
+          </div>
+        </div>
+
+        {/* Students Section */}
+        <div className="mb-4 sm:mb-6">
+          <h4 className="text-base sm:text-lg font-semibold text-gray-800 mb-3 sm:mb-4 flex items-center gap-2">
+            <svg className="w-4 h-4 sm:w-5 sm:h-5 text-[#057DCD]" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 14l9-5-9-5-9 5 9 5z" />
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 14l6.16-3.422a12.083 12.083 0 01.665 6.479A11.952 11.952 0 0012 20.055a11.952 11.952 0 00-6.824-2.998 12.078 12.078 0 01.665-6.479L12 14z" />
+            </svg>
+            Student{Array.isArray(students) && students.length > 1 ? 's' : ''}
+          </h4>
+          <div className="flex flex-wrap gap-2 sm:gap-3">
+            {Array.isArray(students) && students.length > 0 ? (
+              students.map((student, index) => {
+                if (typeof student === 'object') {
+                  return (
+                    <motion.div
+                      key={index}
+                      initial={{ opacity: 0, scale: 0.8 }}
+                      animate={{ opacity: 1, scale: 1 }}
+                      transition={{ delay: index * 0.1 }}
+                      className="flex items-center bg-gradient-to-r from-blue-50 to-indigo-50 rounded-full px-3 sm:px-4 py-2 border border-blue-200 shadow-sm"
+                    >
+                      <img
+                        src={getProfilePictureUrl(student.profile_picture, `${student.firstName} ${student.lastName}`)}
+                        alt="Student"
+                        className="w-6 h-6 sm:w-8 sm:h-8 rounded-full border-2 border-white mr-2 sm:mr-3 shadow-sm"
+                      />
+                      <span className="text-gray-800 font-medium text-xs sm:text-sm">
+                        {student.firstName} {student.lastName}
+                      </span>
+                    </motion.div>
+                  );
+                } else {
+                  return (
+                    <motion.div
+                      key={index}
+                      initial={{ opacity: 0, scale: 0.8 }}
+                      animate={{ opacity: 1, scale: 1 }}
+                      transition={{ delay: index * 0.1 }}
+                      className="flex items-center bg-gradient-to-r from-gray-50 to-gray-100 rounded-full px-3 sm:px-4 py-2 border border-gray-200"
+                    >
+                      <span className="text-gray-600 text-xs sm:text-sm">{student}</span>
+                    </motion.div>
+                  );
+                }
+              })
+            ) : (
+              <div className="flex items-center bg-gradient-to-r from-gray-50 to-gray-100 rounded-full px-3 sm:px-4 py-2 border border-gray-200">
+                <span className="text-gray-600 text-xs sm:text-sm">N/A</span>
+              </div>
+            )}
+          </div>
+        </div>
+
+        {/* Summary Section */}
+        <div className="bg-gradient-to-r from-emerald-50 to-emerald-100 rounded-xl p-3 sm:p-4 border border-emerald-200">
+          <div className="flex items-center gap-2 sm:gap-3 mb-2 sm:mb-3">
+            <div className="w-6 h-6 sm:w-8 sm:h-8 bg-emerald-500 rounded-full flex items-center justify-center">
+              <svg className="w-3 h-3 sm:w-4 sm:h-4 text-white" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
+              </svg>
+            </div>
+            <h5 className="font-semibold text-gray-800 text-sm sm:text-base">Session Summary</h5>
+          </div>
+          <p className="text-gray-700 text-xs sm:text-sm leading-relaxed">
+            {session.summary || 'No summary available for this session'}
           </p>
         </div>
-      </div>
 
-      <div className="mt-2 fade-in delay-200">
-        <p className="text-base text-gray-600 font-semibold
-          md-px:text-sm sm-px:text-xs xs:text-xs">Student(s):</p>
-        <div className="flex flex-wrap items-center gap-3
-          md-px:gap-3 sm-px:gap-2 xs:gap-2">
-          {Array.isArray(students) && students.length > 0 ? (
-            students.map((student, index) => {
-              if (typeof student === 'object') {
-                return (
-                  <div key={index} className="flex items-center bg-gray-50 rounded-full px-3 py-1
-                    md-px:px-3 md-px:py-1 sm-px:px-2 sm-px:py-0.5 xs:px-2 xs:py-0.5">
-                    {/* Always render student image with placeholder via util */}
-                    <img
-                      src={getProfilePictureUrl(student.profile_picture, `${student.firstName} ${student.lastName}`)}
-                      alt="Student"
-                      className="w-8 h-8 rounded-full mr-2 border-2 border-[#54BEFF]
-                        md-px:w-8 md-px:h-8 sm-px:w-7 sm-px:h-7 xs:w-6 xs:h-6
-                        md-px:mr-2 sm-px:mr-1.5 xs:mr-1.5"
-                    />
-                    <span className="text-gray-700 text-base
-                      md-px:text-sm sm-px:text-xs xs:text-xs">
-                      {student.firstName} {student.lastName}
-                    </span>
-                  </div>
-                );
-              } else {
-                return (
-                  <span key={index} className="text-gray-700 text-base
-                    md-px:text-sm sm-px:text-xs xs:text-xs">{student}</span>
-                );
-              }
-            })
-          ) : (
-            <span className="text-gray-700 text-base
-              md-px:text-sm sm-px:text-xs xs:text-xs">N/A</span>
-          )}
-        </div>
+        {/* Click to view details hint */}
+        <motion.div
+          initial={{ opacity: 0 }}
+          animate={{ opacity: 1 }}
+          transition={{ delay: 0.5 }}
+          className="mt-3 sm:mt-4 flex items-center justify-center gap-2 text-gray-500 text-xs sm:text-sm"
+        >
+          <svg className="w-3 h-3 sm:w-4 sm:h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" />
+            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z" />
+          </svg>
+          <span>Click to view full session details</span>
+        </motion.div>
       </div>
-
-      <div className="mt-4 fade-in delay-300
-        md-px:mt-4 sm-px:mt-3 xs:mt-2">
-        <p className="text-base text-gray-600 font-semibold
-          md-px:text-sm sm-px:text-xs xs:text-xs">Summary:</p>
-        <p className="text-base md-px:text-sm sm-px:text-xs xs:text-xs">
-          {session.summary || 'No summary available'}
-        </p>
-      </div>
-    </div>
+    </motion.div>
   );
 };
 

@@ -164,7 +164,7 @@ const NotificationTray = ({ isVisible, onClose }) => {
             />
           </motion.div>
 
-          {/* Notification Tray Container - Moved to LEFT */}
+          {/* Notification Tray Container - Modern Design */}
           <motion.div 
             className={`
               fixed z-[1000]
@@ -194,101 +194,106 @@ const NotificationTray = ({ isVisible, onClose }) => {
               duration: 0.3
             }}
           >
-            <div className="bg-white sm:rounded-xl sm:shadow-2xl sm:border sm:border-gray-200/80 flex flex-col h-full overflow-hidden">
+            <div className="bg-white/95 backdrop-blur-sm sm:rounded-2xl sm:shadow-2xl sm:border sm:border-white/20 flex flex-col h-full overflow-hidden">
               
-              {/* Header */}
-              <div className="px-6 py-4 border-b border-gray-100 bg-gradient-to-r from-blue-50 to-indigo-50">
-                <div className="flex items-center justify-between">
-                  <div className="flex items-center space-x-3">
-                    <div className="flex items-center justify-center w-8 h-8 bg-blue-500 rounded-lg">
-                      <svg className="w-4 h-4 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 17h5l-1.405-1.405A2.032 2.032 0 0118 14.158V11a6.002 6.002 0 00-4-5.659V5a2 2 0 10-4 0v.341C7.67 6.165 6 8.388 6 11v3.159c0 .538-.214 1.055-.595 1.436L4 17h5m6 0v1a3 3 0 11-6 0v-1m6 0H9" />
-                      </svg>
+              {/* Header with Modern Design */}
+              <div className="relative">
+                <div className="absolute inset-0 bg-gradient-to-r from-[#057DCD] via-[#046bb8] to-[#034a94] rounded-t-2xl opacity-10"></div>
+                <div className="relative px-6 py-4">
+                  <div className="flex items-center justify-between">
+                    <div className="flex items-center space-x-3">
+                      <div className="w-10 h-10 bg-gradient-to-br from-[#057DCD] to-[#046bb8] rounded-xl flex items-center justify-center shadow-lg">
+                        <svg className="w-5 h-5 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 17h5l-1.405-1.405A2.032 2.032 0 0118 14.158V11a6.002 6.002 0 00-4-5.659V5a2 2 0 10-4 0v.341C7.67 6.165 6 8.388 6 11v3.159c0 .538-.214 1.055-.595 1.436L4 17h5m6 0v1a3 3 0 11-6 0v-1m6 0H9" />
+                        </svg>
+                      </div>
+                      <div>
+                        <h3 className="text-lg font-bold text-gray-800">Notifications</h3>
+                        {unreadCount > 0 && (
+                          <p className="text-xs text-gray-600">{unreadCount} unread</p>
+                        )}
+                      </div>
                     </div>
-                    <div>
-                      <h3 className="text-lg font-semibold text-gray-900">Notifications</h3>
-                      {unreadCount > 0 && (
-                        <p className="text-xs text-gray-600">{unreadCount} unread</p>
-                      )}
-                    </div>
-                  </div>
-                  <motion.button 
-                    onClick={onClose}
-                    className="p-2 text-gray-400 hover:text-gray-600 hover:bg-white/80 rounded-lg transition-all duration-200"
-                    whileHover={{ scale: 1.1, rotate: 90 }}
-                    whileTap={{ scale: 0.9 }}
-                  >
-                    <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
-                    </svg>
-                  </motion.button>
-                </div>
-
-                {/* Enhanced Toggle Switch */}
-                {hasNotifications && (
-                  <div className="flex items-center justify-between mt-4">
-                    <div className="relative flex bg-gray-100 rounded-lg p-1 shadow-sm">
-                      {/* Simple sliding background */}
-                      <motion.div
-                        className="absolute top-1 bottom-1 bg-blue-500 rounded-md shadow-sm"
-                        animate={{
-                          left: viewMode === 'all' ? '0.25rem' : '50%',
-                          width: viewMode === 'all' ? '50%' : 'calc(50% - 0.25rem)'
-                        }}
-                        transition={{
-                          type: "spring",
-                          stiffness: 400,
-                          damping: 30
-                        }}
-                      />
-                      
-                      <button
-                        onClick={() => setViewMode('all')}
-                        className={`relative z-10 flex-1 px-3 py-2 text-xs font-medium text-center transition-colors duration-200 ${
-                          viewMode === 'all' ? 'text-white' : 'text-gray-600 hover:text-gray-900'
-                        }`}
-                      >
-                        All ({notifications.length})
-                      </button>
-                      <button
-                        onClick={() => setViewMode('unread')}
-                        className={`relative z-10 flex-1 px-3 py-2 text-xs font-medium text-center transition-colors duration-200 ${
-                          viewMode === 'unread' ? 'text-white' : 'text-gray-600 hover:text-gray-900'
-                        }`}
-                      >
-                        Unread ({unreadCount})
-                      </button>
-                    </div>
-
-                    {/* Action Buttons */}
-                    <motion.div 
-                      className="flex items-center space-x-2"
-                      initial={{ opacity: 0, x: 20 }}
-                      animate={{ opacity: 1, x: 0 }}
-                      transition={{ delay: 0.2 }}
+                    <motion.button 
+                      onClick={onClose}
+                      className="p-2 text-gray-500 hover:text-gray-700 hover:bg-white/20 rounded-xl transition-all duration-200"
+                      whileHover={{ scale: 1.1, rotate: 90 }}
+                      whileTap={{ scale: 0.9 }}
                     >
-                      {unreadCount > 0 && (
+                      <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+                      </svg>
+                    </motion.button>
+                  </div>
+                </div>
+              </div>
+
+              {/* Enhanced Toggle Switch */}
+                {hasNotifications && (
+                  <div className="px-6 py-3">
+                    <div className="flex items-center justify-between">
+                      <div className="relative flex bg-gray-100 rounded-xl p-1 shadow-sm">
+                        {/* Modern sliding background */}
+                        <motion.div
+                          className="absolute top-1 bottom-1 bg-gradient-to-r from-[#057DCD] to-[#046bb8] rounded-lg shadow-sm"
+                          animate={{
+                            left: viewMode === 'all' ? '0.25rem' : '50%',
+                            width: viewMode === 'all' ? '50%' : 'calc(50% - 0.25rem)'
+                          }}
+                          transition={{
+                            type: "spring",
+                            stiffness: 400,
+                            damping: 30
+                          }}
+                        />
+                        
+                        <button
+                          onClick={() => setViewMode('all')}
+                          className={`relative z-10 flex-1 px-3 py-2 text-xs font-medium text-center transition-colors duration-200 ${
+                            viewMode === 'all' ? 'text-white' : 'text-gray-600 hover:text-gray-900'
+                          }`}
+                        >
+                          All ({notifications.length})
+                        </button>
+                        <button
+                          onClick={() => setViewMode('unread')}
+                          className={`relative z-10 flex-1 px-3 py-2 text-xs font-medium text-center transition-colors duration-200 ${
+                            viewMode === 'unread' ? 'text-white' : 'text-gray-600 hover:text-gray-900'
+                          }`}
+                        >
+                          Unread ({unreadCount})
+                        </button>
+                      </div>
+
+                      {/* Action Buttons */}
+                      <motion.div 
+                        className="flex items-center space-x-2"
+                        initial={{ opacity: 0, x: 20 }}
+                        animate={{ opacity: 1, x: 0 }}
+                        transition={{ delay: 0.2 }}
+                      >
+                        {unreadCount > 0 && (
+                          <motion.button 
+                            onClick={markAllAsRead}
+                            className="text-xs text-[#057DCD] hover:text-[#046bb8] font-medium px-3 py-1.5 rounded-lg hover:bg-blue-50 transition-all"
+                            whileHover={{ scale: 1.05 }}
+                            whileTap={{ scale: 0.95 }}
+                          >
+                            Mark all read
+                          </motion.button>
+                        )}
                         <motion.button 
-                          onClick={markAllAsRead}
-                          className="text-xs text-blue-600 hover:text-blue-700 font-medium px-2 py-1 rounded hover:bg-white/60 transition-all"
+                          onClick={clearNotifications}
+                          className="text-xs text-gray-500 hover:text-gray-700 font-medium px-3 py-1.5 rounded-lg hover:bg-gray-100 transition-all"
                           whileHover={{ scale: 1.05 }}
                           whileTap={{ scale: 0.95 }}
                         >
-                          Mark all read
+                          Clear all
                         </motion.button>
-                      )}
-                      <motion.button 
-                        onClick={clearNotifications}
-                        className="text-xs text-gray-500 hover:text-gray-700 font-medium px-2 py-1 rounded hover:bg-white/60 transition-all"
-                        whileHover={{ scale: 1.05 }}
-                        whileTap={{ scale: 0.95 }}
-                      >
-                        Clear all
-                      </motion.button>
-                    </motion.div>
+                      </motion.div>
+                    </div>
                   </div>
                 )}
-              </div>
 
               {/* Notifications List */}
               <div className="flex-1 overflow-y-auto notification-scroll">
@@ -321,7 +326,7 @@ const NotificationTray = ({ isVisible, onClose }) => {
                     </motion.button>
 
                     {/* Detailed Notification Card */}
-                    <div className="bg-gradient-to-r from-blue-50 to-indigo-50 rounded-xl p-4 border border-blue-100">
+                    <div className="bg-gradient-to-r from-[#057DCD]/5 to-[#046bb8]/5 rounded-2xl p-6 border border-[#057DCD]/20 shadow-lg">
                       {/* Header Section */}
                       <div className="flex items-start space-x-3 mb-4">
                         <div className={`flex-shrink-0 w-12 h-12 ${getNotificationStyle(selectedNotification.type).bgColor} rounded-xl flex items-center justify-center text-white shadow-md`}>
@@ -363,7 +368,7 @@ const NotificationTray = ({ isVisible, onClose }) => {
                           {(selectedNotification.type === 'booking' || selectedNotification.type === 'reminder') && (
                             <motion.button
                               onClick={() => handleNavigateFromDetail(selectedNotification)}
-                              className="flex-1 bg-blue-500 hover:bg-blue-600 text-white font-medium py-2.5 px-4 rounded-lg transition-colors text-center"
+                              className="flex-1 bg-gradient-to-r from-[#057DCD] to-[#046bb8] hover:from-[#046bb8] hover:to-[#034a94] text-white font-medium py-2.5 px-4 rounded-xl transition-all text-center shadow-md"
                               whileHover={{ scale: 1.02 }}
                               whileTap={{ scale: 0.98 }}
                             >
@@ -375,7 +380,7 @@ const NotificationTray = ({ isVisible, onClose }) => {
                               removeNotification(selectedNotification.id);
                               handleBackToList();
                             }}
-                            className="sm:w-auto px-4 py-2.5 text-red-600 hover:text-red-700 hover:bg-red-50 border border-red-200 rounded-lg transition-colors text-center"
+                            className="sm:w-auto px-4 py-2.5 text-red-600 hover:text-red-700 hover:bg-red-50 border border-red-200 rounded-xl transition-all text-center"
                             whileHover={{ scale: 1.02 }}
                             whileTap={{ scale: 0.98 }}
                           >
@@ -395,15 +400,15 @@ const NotificationTray = ({ isVisible, onClose }) => {
                     exit={{ opacity: 0, y: -20 }}
                     transition={{ duration: 0.3 }}
                   >
-                    <div className="w-16 h-16 bg-gray-100 rounded-full flex items-center justify-center mb-4">
-                      <svg className="w-8 h-8 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <div className="w-20 h-20 bg-gradient-to-br from-[#057DCD]/10 to-[#046bb8]/10 rounded-2xl flex items-center justify-center mb-6 shadow-lg">
+                      <svg className="w-10 h-10 text-[#057DCD]" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                         <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M15 17h5l-1.405-1.405A2.032 2.032 0 0118 14.158V11a6.002 6.002 0 00-4-5.659V5a2 2 0 10-4 0v.341C7.67 6.165 6 8.388 6 11v3.159c0 .538-.214 1.055-.595 1.436L4 17h5m6 0v1a3 3 0 11-6 0v-1m6 0H9" />
                       </svg>
                     </div>
-                    <h4 className="text-lg font-medium text-gray-900 mb-2">
+                    <h4 className="text-xl font-bold text-gray-800 mb-3">
                       {viewMode === 'unread' ? 'All caught up!' : 'No notifications yet'}
                     </h4>
-                    <p className="text-sm text-gray-500 max-w-sm leading-relaxed">
+                    <p className="text-sm text-gray-600 max-w-sm leading-relaxed">
                       {viewMode === 'unread' 
                         ? 'You\'ve read all your notifications. New ones will appear here.'
                         : 'You\'ll receive notifications here for appointments, bookings, and important updates.'
@@ -425,8 +430,8 @@ const NotificationTray = ({ isVisible, onClose }) => {
                       return (
                         <motion.div 
                           key={notification.id}
-                          className={`notification-item group relative p-4 cursor-pointer transition-all duration-200 hover:bg-gray-50 ${
-                            !notification.read ? 'bg-blue-50/30' : ''
+                          className={`notification-item group relative p-4 cursor-pointer transition-all duration-200 hover:bg-gradient-to-r hover:from-blue-50/50 hover:to-indigo-50/50 ${
+                            !notification.read ? 'bg-gradient-to-r from-[#057DCD]/5 to-[#046bb8]/5 border-l-4 border-[#057DCD]' : ''
                           }`}
                           onClick={() => handleNotificationClick(notification)}
                           initial={{ opacity: 0, x: -20 }}
@@ -444,7 +449,7 @@ const NotificationTray = ({ isVisible, onClose }) => {
                         >
                           <div className="flex items-start space-x-3">
                             {/* Notification Icon */}
-                            <div className={`flex-shrink-0 w-10 h-10 ${style.bgColor} rounded-lg flex items-center justify-center text-white`}>
+                            <div className={`flex-shrink-0 w-10 h-10 ${style.bgColor} rounded-xl flex items-center justify-center text-white shadow-md`}>
                               {style.icon}
                             </div>
 
@@ -473,7 +478,7 @@ const NotificationTray = ({ isVisible, onClose }) => {
                                 <span className={`inline-flex items-center text-xs font-medium px-2.5 py-1 rounded-full ${style.lightBg} ${style.textColor} ${style.borderColor} border`}>
                                   <span className="capitalize">{notification.type}</span>
                                 </span>
-                                <span className="text-xs text-blue-600 font-medium">
+                                <span className="text-xs text-[#057DCD] font-medium">
                                   Click to view details →
                                 </span>
                               </div>
@@ -501,9 +506,9 @@ const NotificationTray = ({ isVisible, onClose }) => {
               </div>
 
               {/* Footer */}
-              <div className="px-4 py-3 border-t border-gray-200 bg-gray-50/50">
+              <div className="px-6 py-4 border-t border-gray-200/50 bg-gradient-to-r from-gray-50/50 to-gray-100/50">
                 <div className="flex items-center justify-between">
-                  <div className="flex items-center text-xs text-gray-500">
+                  <div className="flex items-center text-xs text-gray-600">
                     <div className={`w-2 h-2 rounded-full mr-2 ${
                       isConnected ? 'bg-green-500' : 'bg-gray-400'
                     }`} />
@@ -513,7 +518,7 @@ const NotificationTray = ({ isVisible, onClose }) => {
                   {/* Mobile close button */}
                   <button 
                     onClick={onClose}
-                    className="sm:hidden px-4 py-2 bg-gray-900 text-white text-xs font-medium rounded-lg hover:bg-gray-800 transition-colors"
+                    className="sm:hidden px-4 py-2 bg-gradient-to-r from-[#057DCD] to-[#046bb8] text-white text-xs font-medium rounded-xl hover:from-[#046bb8] hover:to-[#034a94] transition-all shadow-md"
                   >
                     Close
                   </button>

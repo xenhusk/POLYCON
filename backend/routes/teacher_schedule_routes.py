@@ -220,6 +220,57 @@ def create_update_schedule():
         db.session.rollback()
         return jsonify({'error': f'Failed to save schedule: {str(e)}'}), 500
 
+# Update specific teacher schedule by ID
+@teacher_schedule_bp.route('/update/<int:schedule_id>', methods=['PUT'])
+@cross_origin()
+def update_schedule(schedule_id):
+    try:
+        data = request.json
+        teacher_id = data.get('teacher_id')
+        day_of_week = data.get('day_of_week')
+        start_time = data.get('start_time')
+        end_time = data.get('end_time')
+        venue = data.get('venue', '')
+        is_available = data.get('is_available', True)
+        
+        if not all([teacher_id, day_of_week is not None, start_time, end_time]):
+            return jsonify({'error': 'Missing required fields'}), 400
+        
+        # Find the specific schedule
+        schedule = TeacherSchedule.query.filter_by(
+            id=schedule_id,
+            teacher_id=teacher_id
+        ).first()
+        
+        if not schedule:
+            return jsonify({'error': 'Schedule not found'}), 404
+        
+        # Convert time strings to time objects
+        try:
+            start_time_obj = datetime.strptime(start_time, '%H:%M').time()
+            end_time_obj = datetime.strptime(end_time, '%H:%M').time()
+        except ValueError:
+            return jsonify({'error': 'Invalid time format. Use HH:MM'}), 400
+        
+        # Validate time range
+        if start_time_obj >= end_time_obj:
+            return jsonify({'error': 'Start time must be before end time'}), 400
+        
+        # Update the schedule
+        schedule.day_of_week = day_of_week
+        schedule.start_time = start_time_obj
+        schedule.end_time = end_time_obj
+        schedule.venue = venue
+        schedule.is_available = is_available
+        schedule.updated_at = datetime.utcnow()
+        
+        db.session.commit()
+        return jsonify({'message': 'Schedule updated successfully'}), 200
+        
+    except Exception as e:
+        db.session.rollback()
+        return jsonify({'error': f'Failed to update schedule: {str(e)}'}), 500
+
 # Delete teacher schedule
 @teacher_schedule_bp.route('/delete/<int:schedule_id>', methods=['DELETE'])
 @cross_origin()

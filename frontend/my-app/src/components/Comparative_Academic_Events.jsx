@@ -1,5 +1,5 @@
 import React, { useState } from "react";
-import { motion } from "framer-motion";
+import { motion, AnimatePresence } from "framer-motion";
 
 const ComparativeAcademicEvents = ({
   allFieldsProvided,
@@ -12,6 +12,7 @@ const ComparativeAcademicEvents = ({
   academicEvents,
 }) => {
   const [ratingError, setRatingError] = useState("");
+  const [showAddForm, setShowAddForm] = useState(false);
 
   const handleRatingChange = (e) => {
     const value = e.target.value;
@@ -24,12 +25,32 @@ const ComparativeAcademicEvents = ({
   };
 
   const handleAddEvent = () => {
+    if (!academicEventName.trim()) {
+      setRatingError("Please enter an event name");
+      return;
+    }
+
     if (academicEventRating === "" || Number(academicEventRating) < 1 || Number(academicEventRating) > 5) {
       setRatingError("Rating must be between 1 and 5");
       return;
     }
     setRatingError("");
     addAcademicEvent();
+    setShowAddForm(false);
+    setAcademicEventName("");
+    setAcademicEventRating("");
+  };
+
+  const handleOpenAddForm = () => {
+    setShowAddForm(true);
+    setRatingError("");
+  };
+
+  const handleCloseAddForm = () => {
+    setShowAddForm(false);
+    setRatingError("");
+    setAcademicEventName("");
+    setAcademicEventRating("");
   };
 
   return (
@@ -38,136 +59,58 @@ const ComparativeAcademicEvents = ({
         <motion.div
           initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
-          className="mb-8"
+          className="mb-10"
         >
-          <div className="flex items-center mb-6">
-            <h3 className="text-2xl font-bold text-[#0065A8] flex items-center">
-              <svg
-                xmlns="http://www.w3.org/2000/svg"
-                className="h-6 w-6 mr-2"
-                fill="none"
-                viewBox="0 0 24 24"
-                stroke="currentColor"
-              >
-                <path
-                  strokeLinecap="round"
-                  strokeLinejoin="round"
-                  strokeWidth={2}
-                  d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z"
-                />
-              </svg>
-              Academic Events
-            </h3>
-            <div className="h-0.5 flex-grow ml-4 bg-gradient-to-r from-[#0065A8] to-transparent"></div>
+          {/* Enhanced Section Header */}
+          <div className="relative mb-8">
+            <div className="absolute inset-0 flex items-center">
+              <div className="h-0.5 w-full bg-gradient-to-r from-transparent via-[#0065A8] to-transparent opacity-30"></div>
+            </div>
+            <div className="relative flex items-center justify-center">
+              <div className="bg-white px-8 py-4 rounded-2xl shadow-lg border border-gray-100">
+                <div className="flex items-center gap-4">
+                  <div className="w-12 h-12 bg-gradient-to-r from-[#0065A8] to-[#54BEFF] rounded-full flex items-center justify-center">
+                    <svg
+                      xmlns="http://www.w3.org/2000/svg"
+                      className="h-6 w-6 text-white"
+                      fill="none"
+                      viewBox="0 0 24 24"
+                      stroke="currentColor"
+                    >
+                      <path
+                        strokeLinecap="round"
+                        strokeLinejoin="round"
+                        strokeWidth={2}
+                        d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z"
+                      />
+                    </svg>
+                  </div>
+                  <div>
+                    <h3 className="text-2xl font-bold text-[#0065A8]">Academic Events</h3>
+                    <p className="text-sm text-gray-600">Track student participation and impact</p>
+                  </div>
+                </div>
+              </div>
+            </div>
           </div>
 
           <motion.div
-            className="bg-white rounded-xl shadow-lg p-8 border border-gray-100"
-            whileHover={{ boxShadow: "0 8px 30px rgba(0,0,0,0.12)" }}
+            className="bg-white rounded-2xl shadow-xl p-8 border border-gray-100 hover:shadow-2xl transition-all duration-300"
+            whileHover={{ scale: 1.01 }}
             transition={{ duration: 0.3 }}
           >
-            <div className="space-y-6">
-              {/* Input Section */}
-              <div className="grid grid-cols-1 lg:grid-cols-4 gap-6">
-                <div className="lg:col-span-3">
-                  <label className="block text-sm font-medium text-gray-700 mb-2">
-                    Event Name
-                  </label>
-                  <div className="relative">
-                    <input
-                      type="text"
-                      value={academicEventName}
-                      onChange={(e) => setAcademicEventName(e.target.value)}
-                      placeholder="Enter academic event name"
-                      className="w-full px-4 py-3.5 bg-gray-50 border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-[#0065A8] focus:bg-white transition-all duration-200 placeholder-gray-400"
-                    />
-                    <div className="absolute inset-y-0 right-0 flex items-center pr-3 pointer-events-none">
-                      <svg
-                        className="h-5 w-5 text-gray-400"
-                        fill="none"
-                        viewBox="0 0 24 24"
-                        stroke="currentColor"
-                      >
-                        <path
-                          strokeLinecap="round"
-                          strokeLinejoin="round"
-                          strokeWidth={2}
-                          d="M3 8l7.89 5.26a2 2 0 002.22 0L21 8M5 19h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z"
-                        />
-                      </svg>
-                    </div>
-                  </div>
-                </div>
-
-                <div className="space-y-2">
-                  <label className="block text-sm font-medium text-gray-700 mb-2">
-                    Rating (1-5)
-                  </label>
-                  <div className="flex space-x-3">
-                    <div className="relative">
-                      <input
-                        type="number"
-                        min="1"
-                        max="5"
-                        value={academicEventRating}
-                        onChange={handleRatingChange}
-                        placeholder="1-5"
-                        className={`w-28 px-4 py-3.5 bg-gray-50 border ${ratingError ? "border-red-400" : "border-gray-200"} rounded-lg focus:outline-none focus:ring-2 focus:ring-[#0065A8] focus:bg-white transition-all duration-200 placeholder-gray-400`}
-                      />
-                      <div className="absolute inset-y-0 right-0 flex items-center pr-3 pointer-events-none">
-                        <svg
-                          className="h-5 w-5 text-gray-400"
-                          fill="none"
-                          viewBox="0 0 24 24"
-                          stroke="currentColor"
-                        >
-                          <path
-                            strokeLinecap="round"
-                            strokeLinejoin="round"
-                            strokeWidth={2}
-                            d="M11.049 2.927c.3-.921 1.603-.921 1.902 0l1.519 4.674a1 1 0 00.95.69h4.915c.969 0 1.371 1.24.588 1.81l-3.976 2.888a1 1 0 00-.363 1.118l1.518 4.674c.3.922-.755 1.688-1.538 1.118l-3.976-2.888a1 1 0 00-1.176 0l-3.976 2.888c-.783.57-1.838-.197-1.538-1.118l1.518-4.674a1 1 0 00-.363-1.118l-3.976-2.888c-.784-.57-.38-1.81.588-1.81h4.914a1 1 0 00.951-.69l1.519-4.674z"
-                          />
-                        </svg>
-                      </div>
-                    </div>
-                    <motion.button
-                      onClick={handleAddEvent}
-                      whileHover={{ scale: 1.02 }}
-                      whileTap={{ scale: 0.98 }}
-                      className="flex-1 px-6 py-3.5 bg-[#0065A8] text-white rounded-lg hover:bg-[#54BEFF] transition-all duration-300 flex items-center justify-center space-x-2 font-medium shadow-md hover:shadow-lg"
-                    >
-                      <svg
-                        xmlns="http://www.w3.org/2000/svg"
-                        className="h-5 w-5"
-                        viewBox="0 0 20 20"
-                        fill="currentColor"
-                      >
-                        <path
-                          fillRule="evenodd"
-                          d="M10 3a1 1 0 011 1v5h5a1 1 0 110 2h-5v5a1 1 0 11-2 0v-5H4a1 1 0 110-2h5V4a1 1 0 011-1z"
-                          clipRule="evenodd"
-                        />
-                      </svg>
-                      <span>Add Event</span>
-                    </motion.button>
-                  </div>
-                  {ratingError && (
-                    <p className="text-xs text-red-500 mt-1">{ratingError}</p>
-                  )}
-                </div>
-              </div>
-
-              {/* Events List */}
-              {academicEvents.length > 0 && (
-                <motion.div
-                  initial={{ opacity: 0 }}
-                  animate={{ opacity: 1 }}
-                  className="mt-8"
-                >
-                  <h4 className="font-semibold text-gray-800 mb-4 flex items-center">
+            <div className="space-y-8">
+              {/* Events List with Add Card */}
+              <motion.div
+                initial={{ opacity: 0 }}
+                animate={{ opacity: 1 }}
+                className="mt-8"
+              >
+                <div className="flex items-center gap-3 mb-6">
+                  <div className="w-8 h-8 bg-gradient-to-r from-[#0065A8] to-[#54BEFF] rounded-full flex items-center justify-center">
                     <svg
                       xmlns="http://www.w3.org/2000/svg"
-                      className="h-5 w-5 mr-2 text-[#0065A8]"
+                      className="h-4 w-4 text-white"
                       viewBox="0 0 20 20"
                       fill="currentColor"
                     >
@@ -177,23 +120,71 @@ const ComparativeAcademicEvents = ({
                         clipRule="evenodd"
                       />
                     </svg>
-                    Added Events ({academicEvents.length})
+                  </div>
+                  <h4 className="text-xl font-bold text-gray-800">
+                    Academic Events ({academicEvents.length})
                   </h4>
-                  <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
+                </div>
+                <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
+                  {/* Add Event Card */}
+                  <motion.div
+                    initial={{ opacity: 0, scale: 0.9 }}
+                    animate={{ opacity: 1, scale: 1 }}
+                    whileHover={{ scale: 1.02, y: -5 }}
+                    className="bg-gradient-to-br from-[#0065A8]/5 to-[#54BEFF]/5 p-6 rounded-2xl border-2 border-dashed border-[#0065A8]/30 hover:border-[#0065A8]/50 transition-all duration-300 cursor-pointer group"
+                    onClick={handleOpenAddForm}
+                  >
+                    <div className="flex flex-col items-center justify-center h-full min-h-[200px] text-center">
+                      <div className="w-16 h-16 bg-gradient-to-r from-[#0065A8] to-[#54BEFF] rounded-full flex items-center justify-center mb-4 group-hover:scale-110 transition-transform duration-300">
+                        <svg
+                          xmlns="http://www.w3.org/2000/svg"
+                          className="h-8 w-8 text-white"
+                          viewBox="0 0 20 20"
+                          fill="currentColor"
+                        >
+                          <path
+                            fillRule="evenodd"
+                            d="M10 3a1 1 0 011 1v5h5a1 1 0 110 2h-5v5a1 1 0 11-2 0v-5H4a1 1 0 110-2h5V4a1 1 0 011-1z"
+                            clipRule="evenodd"
+                          />
+                        </svg>
+                      </div>
+                      <h4 className="text-lg font-bold text-[#0065A8] mb-2">
+                        Add New Event
+                      </h4>
+                      <p className="text-sm text-gray-600">
+                        Click to add a new academic event
+                      </p>
+                    </div>
+                  </motion.div>
                     {academicEvents.map((event, index) => (
                       <motion.div
                         key={index}
                         initial={{ opacity: 0, scale: 0.9 }}
                         animate={{ opacity: 1, scale: 1 }}
                         exit={{ opacity: 0, scale: 0.9 }}
-                        className="bg-white p-6 rounded-xl border border-gray-100 hover:shadow-lg transition-all duration-300"
+                        whileHover={{ scale: 1.02, y: -5 }}
+                        className="bg-white p-6 rounded-2xl border border-gray-100 hover:shadow-xl transition-all duration-300 relative overflow-hidden group"
                       >
+                        {/* Background Pattern */}
+                        <div className="absolute top-0 right-0 w-16 h-16 bg-gradient-to-br from-[#0065A8]/5 to-[#54BEFF]/5 rounded-full -translate-y-8 translate-x-8 group-hover:scale-110 transition-transform duration-300"></div>
+                        
                         <div className="relative">
                           {/* Event Header */}
-                          <div className="mb-4 pr-8">
-                            <h4 className="font-semibold text-lg text-gray-800 line-clamp-2">
-                              {event.name}
-                            </h4>
+                          <div className="mb-6 pr-10">
+                            <div className="flex items-start gap-3">
+                              <div className="w-10 h-10 bg-gradient-to-r from-[#0065A8] to-[#54BEFF] rounded-full flex items-center justify-center flex-shrink-0">
+                                <svg className="w-5 h-5 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z" />
+                                </svg>
+                              </div>
+                              <div className="flex-1">
+                                <h4 className="font-bold text-lg text-gray-800 line-clamp-2 mb-1">
+                                  {event.name}
+                                </h4>
+                                <p className="text-sm text-gray-500">Academic Event</p>
+                              </div>
+                            </div>
                           </div>
 
                           {/* Delete Button */}
@@ -201,7 +192,7 @@ const ComparativeAcademicEvents = ({
                             whileHover={{ scale: 1.1 }}
                             whileTap={{ scale: 0.9 }}
                             onClick={() => removeAcademicEvent(index)}
-                            className="absolute right-0 top-0 text-gray-400 hover:text-red-500 p-1 rounded-full hover:bg-red-50 transition-all duration-200"
+                            className="absolute right-2 top-2 text-gray-400 hover:text-red-500 p-2 rounded-full hover:bg-red-50 transition-all duration-200"
                           >
                             <svg
                               xmlns="http://www.w3.org/2000/svg"
@@ -217,27 +208,44 @@ const ComparativeAcademicEvents = ({
                             </svg>
                           </motion.button>
 
-                          {/* Rating Section */}
+                          {/* Enhanced Rating Section */}
                           <div
-                            className={`mt-4 rounded-xl ${
+                            className={`rounded-2xl border-2 ${
                               parseInt(event.rating) === 5
-                                ? "bg-green-50"
+                                ? "bg-gradient-to-br from-green-50 to-green-100 border-green-200"
                                 : parseInt(event.rating) === 4
-                                ? "bg-teal-50"
+                                ? "bg-gradient-to-br from-teal-50 to-teal-100 border-teal-200"
                                 : parseInt(event.rating) === 3
-                                ? "bg-blue-50"
+                                ? "bg-gradient-to-br from-blue-50 to-blue-100 border-blue-200"
                                 : parseInt(event.rating) === 2
-                                ? "bg-yellow-50"
-                                : "bg-red-50"
+                                ? "bg-gradient-to-br from-yellow-50 to-yellow-100 border-yellow-200"
+                                : "bg-gradient-to-br from-red-50 to-red-100 border-red-200"
                             }`}
                           >
                             {/* Rating Badge */}
-                            <div className="px-4 py-3 flex items-center justify-between">
-                              <span className="text-sm font-medium text-gray-600">
-                                Rating
-                              </span>
+                            <div className="px-5 py-4 flex items-center justify-between">
+                              <div className="flex items-center gap-3">
+                                <div className={`w-8 h-8 rounded-full flex items-center justify-center ${
+                                  parseInt(event.rating) === 5
+                                    ? "bg-gradient-to-r from-green-500 to-green-600"
+                                    : parseInt(event.rating) === 4
+                                    ? "bg-gradient-to-r from-[#00D1B2] to-[#00B4B4]"
+                                    : parseInt(event.rating) === 3
+                                    ? "bg-gradient-to-r from-blue-500 to-blue-600"
+                                    : parseInt(event.rating) === 2
+                                    ? "bg-gradient-to-r from-yellow-500 to-yellow-600"
+                                    : "bg-gradient-to-r from-red-500 to-red-600"
+                                }`}>
+                                  <svg className="w-4 h-4 text-white" fill="currentColor" viewBox="0 0 20 20">
+                                    <path d="M9.049 2.927c.3-.921 1.603-.921 1.902 0l1.07 3.292a1 1 0 00.95.69h3.462c.969 0 1.371 1.24.588 1.81l-2.8 2.034a1 1 0 00-.364 1.118l1.07 3.292c.3.921-.755 1.688-1.54 1.118l-2.8-2.034a1 1 0 00-1.175 0l-2.8 2.034c-.784.57-1.838-.197-1.539-1.118l1.07-3.292a1 1 0 00-.364-1.118L2.98 8.72c-.783-.57-.38-1.81.588-1.81h3.461a1 1 0 00.951-.69l1.07-3.292z" />
+                                  </svg>
+                                </div>
+                                <span className="text-sm font-semibold text-gray-700">
+                                  Impact Rating
+                                </span>
+                              </div>
                               <span
-                                className={`px-3 py-1 rounded-full text-white text-sm font-medium ${
+                                className={`px-4 py-2 rounded-xl text-white text-sm font-bold shadow-sm ${
                                   parseInt(event.rating) === 5
                                     ? "bg-gradient-to-r from-green-500 to-green-400"
                                     : parseInt(event.rating) === 4
@@ -254,15 +262,15 @@ const ComparativeAcademicEvents = ({
                             </div>
 
                             {/* Progress Bar */}
-                            <div className="px-4 pb-3">
-                              <div className="relative h-2 bg-white/50 rounded-full overflow-hidden">
+                            <div className="px-5 pb-4">
+                              <div className="relative h-3 bg-white/60 rounded-full overflow-hidden">
                                 <motion.div
                                   initial={{ width: 0 }}
                                   animate={{
                                     width: `${(parseInt(event.rating) / 5) * 100}%`,
                                   }}
-                                  transition={{ duration: 1, ease: "easeOut" }}
-                                  className={`absolute h-full rounded-full ${
+                                  transition={{ duration: 1.5, ease: "easeOut" }}
+                                  className={`absolute h-full rounded-full shadow-sm ${
                                     parseInt(event.rating) === 5
                                       ? "bg-gradient-to-r from-green-500 to-green-400"
                                       : parseInt(event.rating) === 4
@@ -280,43 +288,191 @@ const ComparativeAcademicEvents = ({
                         </div>
                       </motion.div>
                     ))}
-                  </div>
-                </motion.div>
-              )}
+                </div>
+              </motion.div>
 
-              {/* Empty State */}
+              {/* Enhanced Empty State */}
               {academicEvents.length === 0 && (
                 <motion.div
-                  initial={{ opacity: 0 }}
-                  animate={{ opacity: 1 }}
-                  className="mt-6 text-center p-8 border-2 border-dashed border-gray-200 rounded-xl bg-gray-50"
+                  initial={{ opacity: 0, scale: 0.95 }}
+                  animate={{ opacity: 1, scale: 1 }}
+                  className="mt-8 text-center p-12 border-2 border-dashed border-gray-200 rounded-2xl bg-gradient-to-br from-gray-50 to-gray-100"
                 >
-                  <svg
-                    xmlns="http://www.w3.org/2000/svg"
-                    className="h-12 w-12 mx-auto text-gray-400 mb-4"
-                    fill="none"
-                    viewBox="0 0 24 24"
-                    stroke="currentColor"
-                  >
-                    <path
-                      strokeLinecap="round"
-                      strokeLinejoin="round"
-                      strokeWidth={2}
-                      d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z"
-                    />
-                  </svg>
-                  <p className="text-gray-600 font-medium">
+                  <div className="w-20 h-20 bg-gradient-to-r from-[#0065A8] to-[#54BEFF] rounded-full flex items-center justify-center mx-auto mb-6">
+                    <svg
+                      xmlns="http://www.w3.org/2000/svg"
+                      className="h-10 w-10 text-white"
+                      fill="none"
+                      viewBox="0 0 24 24"
+                      stroke="currentColor"
+                    >
+                      <path
+                        strokeLinecap="round"
+                        strokeLinejoin="round"
+                        strokeWidth={2}
+                        d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z"
+                      />
+                    </svg>
+                  </div>
+                  <h4 className="text-xl font-bold text-gray-700 mb-2">
                     No academic events added yet
+                  </h4>
+                  <p className="text-gray-500 text-base mb-6">
+                    Add events to include them in your improvement analysis
                   </p>
-                  <p className="text-gray-500 text-sm mt-1">
-                    Add events to include them in your analysis
-                  </p>
+                  <motion.button
+                    onClick={handleOpenAddForm}
+                    whileHover={{ scale: 1.05 }}
+                    whileTap={{ scale: 0.95 }}
+                    className="bg-gradient-to-r from-[#0065A8] to-[#54BEFF] text-white px-8 py-3 rounded-xl font-semibold shadow-lg hover:shadow-xl transition-all duration-300 flex items-center gap-3 mx-auto"
+                  >
+                    <svg
+                      xmlns="http://www.w3.org/2000/svg"
+                      className="h-5 w-5"
+                      viewBox="0 0 20 20"
+                      fill="currentColor"
+                    >
+                      <path
+                        fillRule="evenodd"
+                        d="M10 3a1 1 0 011 1v5h5a1 1 0 110 2h-5v5a1 1 0 11-2 0v-5H4a1 1 0 110-2h5V4a1 1 0 011-1z"
+                        clipRule="evenodd"
+                      />
+                    </svg>
+                    Add Your First Event
+                  </motion.button>
+                  <div className="mt-4 flex items-center justify-center gap-2 text-sm text-gray-400">
+                    <svg className="w-4 h-4" fill="currentColor" viewBox="0 0 20 20">
+                      <path fillRule="evenodd" d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zm-7-4a1 1 0 11-2 0 1 1 0 012 0zM9 9a1 1 0 000 2v3a1 1 0 001 1h1a1 1 0 100-2v-3a1 1 0 00-1-1H9z" clipRule="evenodd" />
+                    </svg>
+                    <span>Events help track student engagement and learning impact</span>
+                  </div>
                 </motion.div>
               )}
             </div>
           </motion.div>
         </motion.div>
       )}
+
+      {/* Add Event Popup Form */}
+      <AnimatePresence>
+        {showAddForm && (
+          <motion.div
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            exit={{ opacity: 0 }}
+            className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4"
+            onClick={handleCloseAddForm}
+          >
+            <motion.div
+              initial={{ opacity: 0, scale: 0.9, y: 20 }}
+              animate={{ opacity: 1, scale: 1, y: 0 }}
+              exit={{ opacity: 0, scale: 0.9, y: 20 }}
+              className="bg-white rounded-2xl shadow-2xl p-8 w-full max-w-md mx-auto"
+              onClick={(e) => e.stopPropagation()}
+            >
+              <div className="flex items-center justify-between mb-6">
+                <h3 className="text-2xl font-bold text-[#0065A8]">Add New Event</h3>
+                <motion.button
+                  onClick={handleCloseAddForm}
+                  whileHover={{ scale: 1.1 }}
+                  whileTap={{ scale: 0.9 }}
+                  className="w-8 h-8 bg-gray-100 hover:bg-gray-200 rounded-full flex items-center justify-center transition-colors duration-200"
+                >
+                  <svg className="w-5 h-5 text-gray-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+                  </svg>
+                </motion.button>
+              </div>
+
+              <div className="space-y-6">
+                {/* Event Name */}
+                <div>
+                  <label className="text-sm font-semibold text-gray-700 mb-3 flex items-center gap-2">
+                    <div className="w-6 h-6 bg-gradient-to-r from-[#0065A8] to-[#54BEFF] rounded-full flex items-center justify-center">
+                      <svg className="w-3 h-3 text-white" fill="currentColor" viewBox="0 0 20 20">
+                        <path d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
+                      </svg>
+                    </div>
+                    Event Name
+                  </label>
+                  <input
+                    type="text"
+                    value={academicEventName}
+                    onChange={(e) => setAcademicEventName(e.target.value)}
+                    placeholder="Enter academic event name"
+                    className="w-full px-4 py-3 bg-gray-50 border-2 border-gray-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-[#0065A8] focus:border-[#0065A8] transition-all duration-200 placeholder-gray-400"
+                  />
+                </div>
+
+                {/* Rating */}
+                <div>
+                  <label className="text-sm font-semibold text-gray-700 mb-3 flex items-center gap-2">
+                    <div className="w-6 h-6 bg-gradient-to-r from-[#00D1B2] to-[#00B4B4] rounded-full flex items-center justify-center">
+                      <svg className="w-3 h-3 text-white" fill="currentColor" viewBox="0 0 20 20">
+                        <path d="M9.049 2.927c.3-.921 1.603-.921 1.902 0l1.07 3.292a1 1 0 00.95.69h3.462c.969 0 1.371 1.24.588 1.81l-2.8 2.034a1 1 0 00-.364 1.118l1.07 3.292c.3.921-.755 1.688-1.54 1.118l-2.8-2.034a1 1 0 00-1.175 0l-2.8 2.034c-.784.57-1.838-.197-1.539-1.118l1.07-3.292a1 1 0 00-.364-1.118L2.98 8.72c-.783-.57-.38-1.81.588-1.81h3.461a1 1 0 00.951-.69l1.07-3.292z" />
+                      </svg>
+                    </div>
+                    Rating (1-5)
+                  </label>
+                  <input
+                    type="number"
+                    min="1"
+                    max="5"
+                    value={academicEventRating}
+                    onChange={handleRatingChange}
+                    placeholder="1-5"
+                    className={`w-full px-4 py-3 bg-gray-50 border-2 ${ratingError ? "border-red-400" : "border-gray-200"} rounded-xl focus:outline-none focus:ring-2 focus:ring-[#0065A8] focus:border-[#0065A8] transition-all duration-200 placeholder-gray-400`}
+                  />
+                  {ratingError && (
+                    <motion.p 
+                      initial={{ opacity: 0, y: -10 }}
+                      animate={{ opacity: 1, y: 0 }}
+                      className="text-sm text-red-500 mt-2 flex items-center gap-2"
+                    >
+                      <svg className="w-4 h-4" fill="currentColor" viewBox="0 0 20 20">
+                        <path fillRule="evenodd" d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zm-7 4a1 1 0 11-2 0 1 1 0 012 0zm-1-9a1 1 0 00-1 1v4a1 1 0 102 0V6a1 1 0 00-1-1z" clipRule="evenodd" />
+                      </svg>
+                      {ratingError}
+                    </motion.p>
+                  )}
+                </div>
+
+                {/* Action Buttons */}
+                <div className="flex gap-3 pt-4">
+                  <motion.button
+                    onClick={handleCloseAddForm}
+                    whileHover={{ scale: 1.02 }}
+                    whileTap={{ scale: 0.98 }}
+                    className="flex-1 px-6 py-3 bg-gray-100 hover:bg-gray-200 text-gray-700 rounded-xl font-semibold transition-colors duration-200"
+                  >
+                    Cancel
+                  </motion.button>
+                  <motion.button
+                    onClick={handleAddEvent}
+                    whileHover={{ scale: 1.02 }}
+                    whileTap={{ scale: 0.98 }}
+                    className="flex-1 px-6 py-3 bg-gradient-to-r from-[#0065A8] to-[#54BEFF] text-white rounded-xl font-semibold shadow-lg hover:shadow-xl transition-all duration-300 flex items-center justify-center gap-2"
+                  >
+                    <svg
+                      xmlns="http://www.w3.org/2000/svg"
+                      className="h-5 w-5"
+                      viewBox="0 0 20 20"
+                      fill="currentColor"
+                    >
+                      <path
+                        fillRule="evenodd"
+                        d="M10 3a1 1 0 011 1v5h5a1 1 0 110 2h-5v5a1 1 0 11-2 0v-5H4a1 1 0 110-2h5V4a1 1 0 011-1z"
+                        clipRule="evenodd"
+                      />
+                    </svg>
+                    Add Event
+                  </motion.button>
+                </div>
+              </div>
+            </motion.div>
+          </motion.div>
+        )}
+      </AnimatePresence>
     </>
   );
 };

@@ -4,7 +4,7 @@ services:
     name: polycon-backend
     env: python
     buildCommand: pip install -r backend/requirements.txt
-    startCommand: cd backend && gunicorn -k eventlet --workers 1 --worker-connections 1000 -b 0.0.0.0:$PORT app:app
+    startCommand: cd backend && gunicorn -k eventlet --workers 1 --worker-connections 1000 --timeout 120 --keep-alive 2 -b 0.0.0.0:$PORT app:app
     envVars:
       - key: PYTHON_VERSION
         value: 3.12.0
@@ -20,6 +20,8 @@ services:
         value: https://polycon-frontend.onrender.com
       - key: FLASK_ENV
         value: production
+      - key: SOCKETIO_ASYNC_MODE
+        value: eventlet
 
   # Frontend Service  
   - type: web

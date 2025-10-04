@@ -530,20 +530,34 @@ const HomeTeacher = () => {
                 </div>
             )}
 
-            {/* Enrollment Modal (unchanged) */}
+            {/* Enrollment Modal - Enhanced with modern design */}
             {showEnrollmentModal && (
-                <div className="fixed inset-0 bg-black bg-opacity-50 flex justify-center items-center z-50 p-4">
-                    <div className="bg-white p-4 sm:p-6 rounded-lg shadow-lg w-full max-w-[500px]">
-                        <div className="flex justify-between items-center mb-4">
-                            <h2 className="text-xl font-bold">Enroll Students</h2>
+                <div className="fixed inset-0 bg-black/60 backdrop-blur-md flex justify-center items-center z-50 p-4">
+                    <div className="bg-white/95 backdrop-blur-sm rounded-2xl shadow-2xl w-full max-w-3xl max-h-[90vh] overflow-hidden border border-white/20 mx-2 sm:mx-4">
+                        <div className="bg-[#00D1B2] px-4 sm:px-8 py-4 sm:py-6 flex justify-between items-center">
+                            <div className="flex items-center gap-2 sm:gap-3">
+                                <div className="w-8 h-8 sm:w-10 sm:h-10 bg-white/20 backdrop-blur-sm rounded-full flex items-center justify-center">
+                                    <svg className="w-4 h-4 sm:w-6 sm:h-6 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 4.354a4 4 0 110 5.292M15 21H3v-1a6 6 0 0112 0v1zm0 0h6v-1a6 6 0 00-9-5.197m13.5-9a2.5 2.5 0 11-5 0 2.5 2.5 0 015 0z" />
+                                    </svg>
+                                </div>
+                                <div>
+                                    <h2 className="text-lg sm:text-xl font-bold text-white">Enroll Students</h2>
+                                    <p className="text-blue-100 text-xs sm:text-sm hidden sm:block">Add students to your class roster</p>
+                                </div>
+                            </div>
                             <button 
                                 onClick={() => setShowEnrollmentModal(false)}
-                                className="text-gray-500 hover:text-gray-700"
+                                className="text-white hover:text-gray-200 transition-colors p-1 sm:p-2 rounded-lg hover:bg-white/20"
                             >
-                                ×
+                                <svg className="w-5 h-5 sm:w-6 sm:h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+                                </svg>
                             </button>
                         </div>
-                        <EnrollmentModal closeModal={() => setShowEnrollmentModal(false)} />
+                        <div className="p-0">
+                            <EnrollmentModal closeModal={() => setShowEnrollmentModal(false)} />
+                        </div>
                     </div>
                 </div>
             )}

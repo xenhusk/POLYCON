@@ -14,20 +14,48 @@ if ',' in cors_origins:
 else:
     allowed_origins = [cors_origins]
 
-# Add localhost for development/testing
-if 'http://localhost:3000' not in allowed_origins:
-    allowed_origins.append('http://localhost:3000')
+# Add common localhost variants for development/testing
+dev_origins = [
+    'http://localhost:3000',
+    'http://localhost:3001',
+    'http://localhost:5173',
+    'http://127.0.0.1:3000',
+    'http://127.0.0.1:3001',
+    'http://127.0.0.1:5173',
+]
+for origin in dev_origins:
+    if origin not in allowed_origins:
+        allowed_origins.append(origin)
+
+# Ensure production backend origin is also allowed (Render)
+backend_origin = 'https://polycon.onrender.com'
+if backend_origin not in allowed_origins:
+    allowed_origins.append(backend_origin)
 
 print(f"🔌 SocketIO CORS allowed origins: {allowed_origins}")
 
-socketio = SocketIO(cors_allowed_origins=allowed_origins)
+socketio = SocketIO(
+    cors_allowed_origins=allowed_origins,
+    async_mode='eventlet',
+    ping_timeout=120,
+    ping_interval=20,
+    allow_upgrades=True,
+    transports=['websocket', 'polling'],
+    logger=True,
+    engineio_logger=True
+)
 
 def init_app(app):
     # Initialize SocketIO with the Flask app using the same CORS origins
-    socketio.init_app(app, 
-                     cors_allowed_origins=allowed_origins,
-                     logger=True, 
-                     engineio_logger=True)
+    socketio.init_app(
+        app,
+        cors_allowed_origins=allowed_origins,
+        logger=True,
+        engineio_logger=True,
+        ping_timeout=120,
+        ping_interval=20,
+        async_mode='eventlet'
+    )
     print(f"🔌 SocketIO initialized with CORS enabled for: {allowed_origins}")
 
 def emit_booking_created(data):
@@ -55,17 +83,10 @@ def emit_booking_created(data):
             socketio.emit('booking_created', teacher_data, room=teacher_room_by_id_number)
             print(f"✅ booking_created emitted to teacher room {teacher_room_by_id_number}")
         
-        # For students: use both User.id and idNumber for room targeting for compatibility
+        # For students: emit ONLY to id_number-based rooms to avoid duplicates
         for student_id in student_ids:
             student_message = generate_booking_created_message(data, 'student', student_id)
             student_data = {**data, 'message': student_message, 'recipient_role': 'student'}
-            
-            # Send to room based on User.id (primary key)
-            student_room_by_id = f"user_{student_id}"
-            socketio.emit('booking_created', student_data, room=student_room_by_id)
-            print(f"✅ booking_created emitted to student room {student_room_by_id} (User.id)")
-            
-            # Also send to room based on idNumber for frontend compatibility
             try:
                 from models import User
                 from extensions import db
@@ -110,17 +131,10 @@ def emit_booking_confirmed(data):
             socketio.emit('booking_confirmed', teacher_data, room=teacher_room)
             print(f"✅ booking_confirmed emitted to teacher room {teacher_room}")
         
-        # For students: use both User.id and idNumber for room targeting for compatibility
+        # For students: emit ONLY to id_number-based rooms to avoid duplicates
         for student_id in student_ids:
             student_message = generate_booking_confirmed_message(data, 'student', student_id)
             student_data = {**data, 'message': student_message, 'recipient_role': 'student'}
-            
-            # Send to room based on User.id (primary key)
-            student_room_by_id = f"user_{student_id}"
-            socketio.emit('booking_confirmed', student_data, room=student_room_by_id)
-            print(f"✅ booking_confirmed emitted to student room {student_room_by_id} (User.id)")
-            
-            # Also send to room based on idNumber for frontend compatibility
             try:
                 from models import User
                 from extensions import db
@@ -165,17 +179,10 @@ def emit_booking_cancelled(data):
             socketio.emit('booking_cancelled', teacher_data, room=teacher_room)
             print(f"✅ booking_cancelled emitted to teacher room {teacher_room}")
         
-        # For students: use both User.id and idNumber for room targeting for compatibility
+        # For students: emit ONLY to id_number-based rooms to avoid duplicates
         for student_id in student_ids:
             student_message = generate_booking_cancelled_message(data, 'student', student_id)
             student_data = {**data, 'message': student_message, 'recipient_role': 'student'}
-            
-            # Send to room based on User.id (primary key)
-            student_room_by_id = f"user_{student_id}"
-            socketio.emit('booking_cancelled', student_data, room=student_room_by_id)
-            print(f"✅ booking_cancelled emitted to student room {student_room_by_id} (User.id)")
-            
-            # Also send to room based on idNumber for frontend compatibility
             try:
                 from models import User
                 from extensions import db
@@ -218,14 +225,8 @@ def emit_booking_updated(data):
             socketio.emit('booking_updated', data, room=teacher_room)
             print(f"✅ booking_updated emitted to teacher room {teacher_room}")
         
-        # For students: use both User.id and idNumber for room targeting for compatibility
+        # For students: emit ONLY to id_number-based rooms to avoid duplicates
         for student_id in student_ids:
-            # Send to room based on User.id (primary key)
-            student_room_by_id = f"user_{student_id}"
-            socketio.emit('booking_updated', data, room=student_room_by_id)
-            print(f"✅ booking_updated emitted to student room {student_room_by_id} (User.id)")
-            
-            # Also send to room based on idNumber for frontend compatibility
             try:
                 from models import User
                 from extensions import db
@@ -265,14 +266,8 @@ def emit_booking_status_update(data):
             socketio.emit('booking_status_update', data, room=teacher_room)
             print(f"✅ booking_status_update emitted to teacher room {teacher_room}")
         
-        # For students: use both User.id and idNumber for room targeting for compatibility
+        # For students: emit ONLY to id_number-based rooms to avoid duplicates
         for student_id in student_ids:
-            # Send to room based on User.id (primary key)
-            student_room_by_id = f"user_{student_id}"
-            socketio.emit('booking_status_update', data, room=student_room_by_id)
-            print(f"✅ booking_status_update emitted to student room {student_room_by_id} (User.id)")
-            
-            # Also send to room based on idNumber for frontend compatibility
             try:
                 from models import User
                 from extensions import db

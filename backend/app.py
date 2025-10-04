@@ -42,6 +42,7 @@ from routes.teacher_schedule_routes import teacher_schedule_bp # Import teacher 
 from routes.keep_alive import keep_alive_bp # Import keep-alive routes
 from routes.prefetch_routes import prefetch_bp # Import prefetch routes
 from routes.cache_warm_routes import cache_warm_bp # Import cache warming routes
+from routes.websocket_health import websocket_health_bp # Import websocket health routes
 import routes.socket_routes  # Register socket event handlers
 
 
@@ -55,6 +56,19 @@ def create_app():
         allowed_origins = cors_origins.split(',')
     else:
         allowed_origins = [cors_origins]
+    
+    # Add common localhost variants for development
+    dev_origins = [
+        'http://localhost:3000',
+        'http://localhost:3001',
+        'http://localhost:5173',
+        'http://127.0.0.1:3000',
+        'http://127.0.0.1:3001',
+        'http://127.0.0.1:5173',
+    ]
+    for origin in dev_origins:
+        if origin not in allowed_origins:
+            allowed_origins.append(origin)
     
     print(f"CORS allowed origins: {allowed_origins}")  # Debug log
     
@@ -146,6 +160,7 @@ def create_app():
     app.register_blueprint(keep_alive_bp) # Register keep-alive routes (no prefix for simple /ping)
     app.register_blueprint(prefetch_bp, url_prefix='/prefetch') # Register prefetch routes
     app.register_blueprint(cache_warm_bp, url_prefix='/cache') # Register cache warming routes
+    app.register_blueprint(websocket_health_bp, url_prefix='/websocket') # Register websocket health routes
 
     # Configure static folder for uploads
     UPLOAD_FOLDER = os.path.join(os.path.dirname(os.path.abspath(__file__)), 'uploads')

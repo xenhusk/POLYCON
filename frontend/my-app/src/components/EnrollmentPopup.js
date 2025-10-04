@@ -95,41 +95,57 @@ const EnrollmentPopup = () => {
         </div>
       </button>
 
-      {/* Modal Overlay - Now responsive */}
+      {/* Modal Overlay - Enhanced with modern design */}
       <AnimatePresence>
         {showModal && (
-          <div className="fixed bg-black/60 backdrop-blur-md flex items-center justify-center z-[9999] p-4" style={{ 
-            position: 'fixed',
-            top: 0,
-            left: 0,
-            right: 0,
-            bottom: 0,
-            width: '100vw',
-            height: '100vh',
-            margin: 0,
-            padding: '1rem'
-          }}>
+          <motion.div 
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            exit={{ opacity: 0 }}
+            className="fixed inset-0 bg-black/60 backdrop-blur-md flex items-center justify-center z-[9999] p-4"
+            onClick={() => setShowModal(false)}
+          >
             <motion.div
-              variants={modalVariants}
-              initial="hidden"
-              animate="visible"
-              exit="exit"
-              className="bg-white rounded-xl shadow-2xl w-full max-w-2xl overflow-hidden max-h-[90vh] overflow-y-auto"
+              initial={{ opacity: 0, scale: 0.9, y: 20 }}
+              animate={{ opacity: 1, scale: 1, y: 0 }}
+              exit={{ opacity: 0, scale: 0.9, y: 20 }}
+              transition={{ type: "spring", stiffness: 300, damping: 30 }}
+              className="bg-white/95 backdrop-blur-sm rounded-2xl shadow-2xl w-full max-w-3xl max-h-[90vh] overflow-hidden border border-white/20 mx-2 sm:mx-4"
               onClick={(e) => e.stopPropagation()}
             >
               {/* Modal Header with close button */}
-              <div className="bg-[#00D1B2] px-4 sm:px-6 py-3 sm:py-4 flex justify-between items-center sticky top-0 z-10">
-                <h2 className="text-lg sm:text-xl font-semibold text-white">Enroll Students</h2>
+              <div className="bg-[#00D1B2] px-4 sm:px-8 py-4 sm:py-6 flex justify-between items-center">
+                <div className="flex items-center gap-2 sm:gap-3">
+                  <div className="w-8 h-8 sm:w-10 sm:h-10 bg-white/20 backdrop-blur-sm rounded-full flex items-center justify-center">
+                    <svg className="w-4 h-4 sm:w-6 sm:h-6 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 4.354a4 4 0 110 5.292M15 21H3v-1a6 6 0 0112 0v1zm0 0h6v-1a6 6 0 00-9-5.197m13.5-9a2.5 2.5 0 11-5 0 2.5 2.5 0 015 0z" />
+                    </svg>
+                  </div>
+                  <div>
+                    <h2 className="text-lg sm:text-xl font-bold text-white">Enroll Students</h2>
+                    <p className="text-blue-100 text-xs sm:text-sm hidden sm:block">
+                      Add students to your class roster
+                    </p>
+                  </div>
+                </div>
+                <motion.button
+                  whileHover={{ scale: 1.1 }}
+                  whileTap={{ scale: 0.9 }}
+                  onClick={() => setShowModal(false)}
+                  className="text-white hover:text-gray-200 transition-colors p-1 sm:p-2 rounded-lg hover:bg-white/20"
+                >
+                  <svg className="w-5 h-5 sm:w-6 sm:h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+                  </svg>
+                </motion.button>
               </div>
 
               {/* Modal Content */}
-              <div style={{ paddingBottom: "0px" }} className="px-0 py-4 sm:py-6">
-                <div className="px-0 sm:px-0">
-                  <EnrollmentModal closeModal={() => setShowModal(false)} />
-                </div>
+              <div className="p-0">
+                <EnrollmentModal closeModal={() => setShowModal(false)} />
               </div>
             </motion.div>
-          </div>
+          </motion.div>
         )}
       </AnimatePresence>
     </>

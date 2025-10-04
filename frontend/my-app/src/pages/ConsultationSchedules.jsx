@@ -290,139 +290,186 @@ const ConsultationSchedules = () => {
 
       <div className="container mx-auto px-4 py-8">
 
-        {/* Department Filter */}
+        {/* Filter Section */}
         <motion.div
           initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ delay: 0.3 }}
-          className="mb-12 grid grid-cols-1 lg:grid-cols-2 gap-8 max-w-6xl mx-auto"
+          className="mb-12"
         >
-          {/* Department Filter */}
-          <div className="bg-white rounded-2xl shadow-2xl p-8 border border-gray-100">
-            <label className="block text-lg font-semibold text-[#057DCD] mb-4 text-center">
-              Filter by Department
-            </label>
-            <select
-              value={selectedDepartment}
-              onChange={(e) => {
-                setSelectedDepartment(e.target.value);
-                // Clear teacher selection when department changes
-                if (selectedTeacher) {
-                  setSelectedTeacher('');
-                  setSelectedTeacherName('');
-                  setSelectedTeacherProfile('');
-                  setSelectedTeacherDepartment('');
-                  setTeacherSearchTerm('');
-                }
-              }}
-              className="w-full px-4 py-3 border-2 border-gray-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-[#057DCD] focus:border-transparent transition-all duration-200 text-lg"
-            >
-              <option value="">All Departments</option>
-              {departments.map(dept => (
-                <option key={dept.id} value={dept.id}>
-                  {dept.name}
-                </option>
-              ))}
-            </select>
-          </div>
-
-          {/* Teacher Search */}
-          <div className="bg-white rounded-2xl shadow-2xl p-8 border border-gray-100">
-            <label className="block text-lg font-semibold text-[#057DCD] mb-4 text-center">
-              Search by Teacher
-            </label>
-            <div className="relative">
-              <div className="flex items-center border-2 border-gray-200 rounded-xl px-4 py-3 focus-within:ring-2 focus-within:ring-[#057DCD] focus-within:border-transparent transition-all duration-200">
-                {selectedTeacher && !teacherSearchTerm ? (
-                  // Show selected teacher info when a teacher is selected and not searching
-                  <div className="flex items-center gap-4 flex-grow bg-gradient-to-r from-[#057DCD] to-[#046bb8] text-white px-4 py-3 rounded-lg -mx-4 -my-3">
-                    <img
-                      src={getProfilePictureUrl(selectedTeacherProfile, selectedTeacherName)}
-                      alt={selectedTeacherName}
-                      className="rounded-full w-12 h-12 border-3 border-white shadow-lg"
-                    />
-                    <div className="flex flex-col flex-grow">
-                      <span className="text-base font-bold text-white">{selectedTeacherName}</span>
-                      <span className="text-sm text-blue-100">{selectedTeacherDepartment}</span>
-                    </div>
-                    <button 
-                      onClick={() => {
-                        setSelectedTeacher('');
-                        setSelectedTeacherName('');
-                        setSelectedTeacherProfile('');
-                        setSelectedTeacherDepartment('');
-                      }}
-                      className="text-white hover:text-red-200 ml-2 p-2 rounded-full hover:bg-white hover:bg-opacity-20 transition-all duration-200"
-                    >
-                      <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
-                      </svg>
-                    </button>
-                  </div>
-                ) : (
-                  // Show search input when no teacher is selected or when searching
-                  <>
-                    <input
-                      type="text"
-                      value={teacherSearchTerm}
-                      onChange={(e) => {
-                        setTeacherSearchTerm(e.target.value);
-                        if (selectedTeacher) {
-                          setSelectedTeacher('');
-                          setSelectedTeacherName('');
-                          setSelectedTeacherProfile('');
-                          setSelectedTeacherDepartment('');
-                        }
-                      }}
-                      placeholder="Search by teacher name..."
-                      className="flex-grow focus:outline-none text-lg"
-                    />
-                    <svg className="w-5 h-5 text-gray-400 ml-2" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
-                    </svg>
-                  </>
-                )}
+          <div className="bg-white rounded-2xl shadow-2xl overflow-hidden border border-gray-100 mb-8">
+            <div className="bg-gradient-to-r from-[#057DCD] to-[#046bb8] text-white p-6">
+              <div className="flex items-center gap-4">
+                <div className="w-12 h-12 bg-white bg-opacity-20 rounded-full flex items-center justify-center">
+                  <svg className="w-6 h-6 text-white" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 4a1 1 0 011-1h16a1 1 0 011 1v2.586a1 1 0 01-.293.707l-6.414 6.414a1 1 0 00-.293.707V17l-4 4v-6.586a1 1 0 00-.293-.707L3.293 7.293A1 1 0 013 6.586V4z" />
+                  </svg>
+                </div>
+                <div>
+                  <h3 className="text-2xl font-bold">Filter Options</h3>
+                  <p className="text-blue-100">Find schedules by department or specific teacher</p>
+                </div>
               </div>
-              {teacherSearchTerm && (
-                <ul className="absolute z-10 bg-white border-2 border-gray-200 rounded-xl mt-2 max-h-60 overflow-y-auto w-full shadow-2xl">
-                  {teachers
-                    .filter(teacher => {
-                      const fullName = `${teacher.firstName} ${teacher.lastName}`.toLowerCase();
-                      return fullName.includes(teacherSearchTerm.toLowerCase());
-                    })
-                    .map(teacher => (
-                      <li 
-                        key={teacher.id} 
-                        onClick={() => {
-                          setSelectedTeacher(teacher.id);
-                          setSelectedTeacherName(`${teacher.firstName} ${teacher.lastName}`);
-                          setSelectedTeacherProfile(teacher.profile_picture);
-                          setSelectedTeacherDepartment(teacher.department);
-                          setTeacherSearchTerm('');
-                        }} 
-                        className="px-4 py-3 cursor-pointer hover:bg-blue-50 flex items-center transition-colors border-b border-gray-100 last:border-b-0"
-                      >
-                        <img 
-                          src={getProfilePictureUrl(teacher.profile_picture, `${teacher.firstName} ${teacher.lastName}`)}
-                          alt={`${teacher.firstName} ${teacher.lastName}`}
-                          className="rounded-full w-10 h-10 mr-3 border-2 border-white" 
+            </div>
+
+            <div className="p-8 grid grid-cols-1 lg:grid-cols-2 gap-8">
+              {/* Department Filter */}
+              <motion.div
+                initial={{ opacity: 0, x: -20 }}
+                animate={{ opacity: 1, x: 0 }}
+                transition={{ delay: 0.4 }}
+                className="space-y-4"
+              >
+                <label className="text-lg font-semibold text-gray-800 flex items-center gap-2">
+                  <div className="w-8 h-8 bg-[#057DCD] rounded-full flex items-center justify-center">
+                    <svg className="w-4 h-4 text-white" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 21V5a2 2 0 00-2-2H7a2 2 0 00-2 2v16m14 0h2m-2 0h-5m-9 0H3m2 0h5M9 7h1m-1 4h1m4-4h1m-1 4h1m-5 10v-5a1 1 0 011-1h2a1 1 0 011 1v5m-4 0h4" />
+                    </svg>
+                  </div>
+                  Filter by Department
+                </label>
+                <select
+                  value={selectedDepartment}
+                  onChange={(e) => {
+                    setSelectedDepartment(e.target.value);
+                    // Clear teacher selection when department changes
+                    if (selectedTeacher) {
+                      setSelectedTeacher('');
+                      setSelectedTeacherName('');
+                      setSelectedTeacherProfile('');
+                      setSelectedTeacherDepartment('');
+                      setTeacherSearchTerm('');
+                    }
+                  }}
+                  className="w-full px-4 py-4 border-2 border-gray-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-[#057DCD] focus:border-transparent transition-all duration-200 text-lg shadow-sm"
+                >
+                  <option value="">All Departments</option>
+                  {departments.map(dept => (
+                    <option key={dept.id} value={dept.id}>
+                      {dept.name}
+                    </option>
+                  ))}
+                </select>
+              </motion.div>
+
+              {/* Teacher Search */}
+              <motion.div
+                initial={{ opacity: 0, x: 20 }}
+                animate={{ opacity: 1, x: 0 }}
+                transition={{ delay: 0.5 }}
+                className="space-y-4"
+              >
+                <label className="text-lg font-semibold text-gray-800 flex items-center gap-2">
+                  <div className="w-8 h-8 bg-emerald-500 rounded-full flex items-center justify-center">
+                    <svg className="w-4 h-4 text-white" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z" />
+                    </svg>
+                  </div>
+                  Search by Teacher
+                </label>
+                <div className="relative">
+                  <div className="flex items-center border-2 border-gray-200 rounded-xl px-4 py-4 focus-within:ring-2 focus-within:ring-emerald-500 focus-within:border-transparent transition-all duration-200 shadow-sm">
+                    {selectedTeacher && !teacherSearchTerm ? (
+                      // Show selected teacher info when a teacher is selected and not searching
+                      <div className="flex items-center gap-4 flex-grow bg-gradient-to-r from-emerald-500 to-emerald-600 text-white px-4 py-3 rounded-lg -mx-4 -my-4">
+                        <img
+                          src={getProfilePictureUrl(selectedTeacherProfile, selectedTeacherName)}
+                          alt={selectedTeacherName}
+                          className="rounded-full w-12 h-12 border-3 border-white shadow-lg"
                         />
-                        <div className="flex flex-col">
-                          <span className="font-semibold text-gray-800">{teacher.firstName} {teacher.lastName}</span>
-                          <span className="text-sm text-gray-500">{teacher.department}</span>
+                        <div className="flex flex-col flex-grow">
+                          <span className="text-base font-bold text-white">{selectedTeacherName}</span>
+                          <span className="text-sm text-emerald-100">{selectedTeacherDepartment}</span>
                         </div>
-                      </li>
-                    ))}
-                  {teachers.filter(teacher => {
-                    const fullName = `${teacher.firstName} ${teacher.lastName}`.toLowerCase();
-                    return fullName.includes(teacherSearchTerm.toLowerCase());
-                  }).length === 0 && (
-                    <li className="px-4 py-3 text-gray-500 text-center">
-                      No teachers found matching "{teacherSearchTerm}"
-                    </li>
+                        <motion.button 
+                          whileHover={{ scale: 1.1 }}
+                          whileTap={{ scale: 0.9 }}
+                          onClick={() => {
+                            setSelectedTeacher('');
+                            setSelectedTeacherName('');
+                            setSelectedTeacherProfile('');
+                            setSelectedTeacherDepartment('');
+                          }}
+                          className="text-white hover:text-red-200 ml-2 p-2 rounded-full hover:bg-white hover:bg-opacity-20 transition-all duration-200"
+                        >
+                          <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+                          </svg>
+                        </motion.button>
+                      </div>
+                    ) : (
+                      // Show search input when no teacher is selected or when searching
+                      <>
+                        <input
+                          type="text"
+                          value={teacherSearchTerm}
+                          onChange={(e) => {
+                            setTeacherSearchTerm(e.target.value);
+                            if (selectedTeacher) {
+                              setSelectedTeacher('');
+                              setSelectedTeacherName('');
+                              setSelectedTeacherProfile('');
+                              setSelectedTeacherDepartment('');
+                            }
+                          }}
+                          placeholder="Search by teacher name..."
+                          className="flex-grow focus:outline-none text-lg"
+                        />
+                        <svg className="w-5 h-5 text-gray-400 ml-2" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
+                        </svg>
+                      </>
+                    )}
+                  </div>
+                  {teacherSearchTerm && (
+                    <motion.ul 
+                      initial={{ opacity: 0, y: -10 }}
+                      animate={{ opacity: 1, y: 0 }}
+                      className="absolute z-10 bg-white border-2 border-gray-200 rounded-xl mt-2 max-h-60 overflow-y-auto w-full shadow-2xl"
+                    >
+                      {teachers
+                        .filter(teacher => {
+                          const fullName = `${teacher.firstName} ${teacher.lastName}`.toLowerCase();
+                          return fullName.includes(teacherSearchTerm.toLowerCase());
+                        })
+                        .map((teacher, index) => (
+                          <motion.li 
+                            key={teacher.id}
+                            initial={{ opacity: 0, x: -20 }}
+                            animate={{ opacity: 1, x: 0 }}
+                            transition={{ delay: index * 0.05 }}
+                            onClick={() => {
+                              setSelectedTeacher(teacher.id);
+                              setSelectedTeacherName(`${teacher.firstName} ${teacher.lastName}`);
+                              setSelectedTeacherProfile(teacher.profile_picture);
+                              setSelectedTeacherDepartment(teacher.department);
+                              setTeacherSearchTerm('');
+                            }} 
+                            className="px-4 py-3 cursor-pointer hover:bg-emerald-50 flex items-center transition-colors border-b border-gray-100 last:border-b-0"
+                          >
+                            <img 
+                              src={getProfilePictureUrl(teacher.profile_picture, `${teacher.firstName} ${teacher.lastName}`)}
+                              alt={`${teacher.firstName} ${teacher.lastName}`}
+                              className="rounded-full w-10 h-10 mr-3 border-2 border-white shadow-sm" 
+                            />
+                            <div className="flex flex-col">
+                              <span className="font-semibold text-gray-800">{teacher.firstName} {teacher.lastName}</span>
+                              <span className="text-sm text-gray-500">{teacher.department}</span>
+                            </div>
+                          </motion.li>
+                        ))}
+                      {teachers.filter(teacher => {
+                        const fullName = `${teacher.firstName} ${teacher.lastName}`.toLowerCase();
+                        return fullName.includes(teacherSearchTerm.toLowerCase());
+                      }).length === 0 && (
+                        <li className="px-4 py-3 text-gray-500 text-center">
+                          No teachers found matching "{teacherSearchTerm}"
+                        </li>
+                      )}
+                    </motion.ul>
                   )}
-                </ul>
-              )}
+                </div>
+              </motion.div>
             </div>
           </div>
         </motion.div>
@@ -434,12 +481,17 @@ const ConsultationSchedules = () => {
             animate={{ opacity: 1, scale: 1 }}
             className="mb-8 flex justify-center"
           >
-            <div className="bg-red-50 border-2 border-red-200 text-red-700 px-6 py-4 rounded-2xl shadow-lg max-w-md">
-              <div className="flex items-center">
-                <svg className="w-6 h-6 mr-3" fill="currentColor" viewBox="0 0 20 20">
-                  <path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zM8.707 7.293a1 1 0 00-1.414 1.414L8.586 10l-1.293 1.293a1 1 0 101.414 1.414L10 11.414l1.293 1.293a1 1 0 001.414-1.414L11.414 10l1.293-1.293a1 1 0 00-1.414-1.414L10 8.586 8.707 7.293z" clipRule="evenodd" />
-                </svg>
-                {error}
+            <div className="bg-white rounded-2xl shadow-2xl p-8 border border-gray-100 max-w-2xl mx-auto">
+              <div className="flex items-center justify-center gap-4">
+                <div className="w-16 h-16 bg-gradient-to-br from-red-200 to-red-300 rounded-full flex items-center justify-center">
+                  <svg className="w-8 h-8 text-red-600" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-2.5L13.732 4c-.77-.833-1.732-.833-2.5 0L4.268 16.5c-.77.833.192 2.5 1.732 2.5z" />
+                  </svg>
+                </div>
+                <div className="text-center">
+                  <h3 className="text-xl font-bold text-gray-800 mb-2">Error Loading Schedules</h3>
+                  <p className="text-gray-600">{error}</p>
+                </div>
               </div>
             </div>
           </motion.div>
@@ -497,45 +549,58 @@ const ConsultationSchedules = () => {
                         initial={{ opacity: 0, x: -20 }}
                         animate={{ opacity: 1, x: 0 }}
                         transition={{ delay: 0.1 * index }}
-                        className="border-l-4 border-[#057DCD] pl-6 hover:bg-blue-50 p-4 rounded-r-xl transition-all duration-200"
+                        whileHover={{ scale: 1.02, y: -2 }}
+                        className="bg-gradient-to-r from-blue-50 to-indigo-50 border-l-4 border-[#057DCD] pl-6 p-6 rounded-r-xl transition-all duration-300 hover:shadow-lg hover:from-blue-100 hover:to-indigo-100"
                       >
-                        <div className="flex justify-between items-start mb-3">
-                          <div className="flex items-center gap-3">
+                        <div className="flex justify-between items-start mb-4">
+                          <div className="flex items-center gap-4">
                             <motion.img
-                              whileHover={{ scale: 1.1 }}
+                              whileHover={{ scale: 1.1, rotate: 5 }}
                               transition={{ duration: 0.2 }}
                               src={getProfilePictureUrl(schedule.profile_picture, schedule.teacher_name)}
                               alt={schedule.teacher_name}
-                              className="w-12 h-12 rounded-full object-cover border-2 border-[#057DCD] shadow-md hover:shadow-lg cursor-pointer"
+                              className="w-16 h-16 rounded-full object-cover border-4 border-white shadow-lg hover:shadow-xl cursor-pointer"
                             />
                             <div>
-                              <h4 className="font-bold text-lg text-gray-800">
+                              <h4 className="font-bold text-xl text-gray-800 mb-1">
                                 {schedule.teacher_name}
                               </h4>
+                              <p className="text-gray-600 text-sm">Consultation Hours</p>
                             </div>
                           </div>
-                          <span className="text-sm bg-gradient-to-r from-[#057DCD] to-[#046bb8] text-white px-3 py-1 rounded-full font-medium">
+                          <motion.span 
+                            whileHover={{ scale: 1.05 }}
+                            className="text-sm bg-gradient-to-r from-[#057DCD] to-[#046bb8] text-white px-4 py-2 rounded-full font-semibold shadow-lg"
+                          >
                             {schedule.department}
-                          </span>
+                          </motion.span>
                         </div>
-                        <div className="space-y-2">
-                          <div className="flex items-center text-gray-600">
-                            <svg className="w-5 h-5 mr-2 text-[#057DCD]" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" />
-                            </svg>
-                            <span className="font-semibold text-sm">Time:</span>
-                            <span className="ml-2 font-medium">
-                              {formatTime(schedule.start_time)} - {formatTime(schedule.end_time)}
-                            </span>
+                        <div className="space-y-3">
+                          <div className="flex items-center text-gray-700 bg-white rounded-lg p-3 shadow-sm">
+                            <div className="w-10 h-10 bg-[#057DCD] rounded-full flex items-center justify-center mr-3">
+                              <svg className="w-5 h-5 text-white" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" />
+                              </svg>
+                            </div>
+                            <div>
+                              <span className="font-semibold text-gray-800 block">Time</span>
+                              <span className="text-lg font-bold text-[#057DCD]">
+                                {formatTime(schedule.start_time)} - {formatTime(schedule.end_time)}
+                              </span>
+                            </div>
                           </div>
                           {schedule.venue && (
-                            <div className="flex items-center text-gray-600">
-                              <svg className="w-5 h-5 mr-2 text-[#057DCD]" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z" />
-                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 11a3 3 0 11-6 0 3 3 0 016 0z" />
-                              </svg>
-                              <span className="font-semibold text-sm">Venue:</span>
-                              <span className="ml-2 font-medium">{schedule.venue}</span>
+                            <div className="flex items-center text-gray-700 bg-white rounded-lg p-3 shadow-sm">
+                              <div className="w-10 h-10 bg-emerald-500 rounded-full flex items-center justify-center mr-3">
+                                <svg className="w-5 h-5 text-white" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z" />
+                                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 11a3 3 0 11-6 0 3 3 0 016 0z" />
+                                </svg>
+                              </div>
+                              <div>
+                                <span className="font-semibold text-gray-800 block">Venue</span>
+                                <span className="text-lg font-bold text-emerald-600">{schedule.venue}</span>
+                              </div>
                             </div>
                           )}
                         </div>
@@ -555,12 +620,12 @@ const ConsultationSchedules = () => {
           className="text-center mt-16"
         >
           <motion.button
-            whileHover={{ scale: 1.05 }}
+            whileHover={{ scale: 1.05, y: -2 }}
             whileTap={{ scale: 0.95 }}
             onClick={() => window.location.href = '/'}
-            className="bg-gradient-to-r from-[#057DCD] to-[#046bb8] hover:from-[#046bb8] hover:to-[#034a94] text-white font-bold py-4 px-10 rounded-full transition-all duration-300 shadow-2xl hover:shadow-3xl text-lg"
+            className="bg-gradient-to-r from-[#057DCD] to-[#046bb8] hover:from-[#046bb8] hover:to-[#034a94] text-white font-bold py-4 px-12 rounded-full transition-all duration-300 shadow-2xl hover:shadow-3xl text-lg border-2 border-transparent hover:border-white hover:border-opacity-20"
           >
-            <div className="flex items-center">
+            <div className="flex items-center justify-center">
               <svg className="w-6 h-6 mr-3" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M10 19l-7-7m0 0l7-7m-7 7h18" />
               </svg>

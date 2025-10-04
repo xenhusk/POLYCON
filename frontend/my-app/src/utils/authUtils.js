@@ -52,62 +52,102 @@ export const storeUserAuth = (userData, role) => {
   }
   
   // For admin: store adminId
-  if (role === "admin" && primaryId) {
-    localStorage.setItem("adminID", primaryId);
-    localStorage.setItem("adminId", primaryId);
-  }
-  
-  // Store additional data
-  if (userData.firstName) localStorage.setItem("firstName", userData.firstName);
-  if (userData.lastName) localStorage.setItem("lastName", userData.lastName);
-  if (userData.profile_picture) localStorage.setItem("profilePicture", userData.profile_picture);
-  
-  console.log("Auth data stored:", {
-    userEmail: localStorage.getItem("userEmail"),
-    userId: localStorage.getItem("userId"),
-    studentId: localStorage.getItem("studentID"),
-    role: localStorage.getItem("userRole")
-  });
-  
-  // Immediate fix: sync studentId if needed
-  if (role === 'student') {
-    const sId = localStorage.getItem('studentId');
-    if (sId && !localStorage.getItem('studentID')) {
-      localStorage.setItem('studentID', sId);
-      console.log("Synced studentID from studentId:", sId);
+  if (role === "admin") {
+    const adminIdentifier = userData.adminId || primaryId;
+    if (adminIdentifier) {
+      localStorage.setItem("adminID", adminIdentifier);
+      localStorage.setItem("adminId", adminIdentifier);
     }
   }
+  
+  console.log("Auth data stored successfully for role:", role);
 };
 
 /**
  * Clears all authentication data from localStorage
  */
 export const clearUserAuth = () => {
-  const keysToKeep = []; // Add any keys you want to preserve during logout
+  const authKeys = [
+    "userEmail", "email", "userRole", "isAuthenticated",
+    "userId", "userID", "studentID", "studentId", 
+    "teacherID", "teacherId", "facultyID", "adminID", "adminId",
+    "userInfo", "userDbId", "isEnrolled"
+  ];
   
-  // Get all localStorage keys
-  const keys = Object.keys(localStorage);
-  
-  // Remove all except those in keysToKeep
-  keys.forEach(key => {
-    if (!keysToKeep.includes(key)) {
-      localStorage.removeItem(key);
-    }
+  authKeys.forEach(key => {
+    localStorage.removeItem(key);
   });
+  
+  console.log("All authentication data cleared");
 };
 
 /**
- * Checks if the user is authenticated
- * @returns {boolean} Authentication status
+ * Checks if user is authenticated
+ * @returns {boolean} - True if user is authenticated
  */
 export const isAuthenticated = () => {
-  return localStorage.getItem("isAuthenticated") === "true";
+  const hasUserEmail = !!localStorage.getItem("userEmail");
+  const isAuthFlag = localStorage.getItem("isAuthenticated") === "true";
+  return hasUserEmail || isAuthFlag;
 };
 
 /**
  * Gets the current user's role
- * @returns {string} User role or empty string if not authenticated
+ * @returns {string|null} - User role or null if not authenticated
  */
 export const getUserRole = () => {
-  return localStorage.getItem("userRole") || "";
+  if (!isAuthenticated()) return null;
+  return localStorage.getItem("userRole");
+};
+
+/**
+ * Gets the current user's email
+ * @returns {string|null} - User email or null if not authenticated
+ */
+export const getUserEmail = () => {
+  if (!isAuthenticated()) return null;
+  return localStorage.getItem("userEmail");
+};
+
+/**
+ * Checks if user has a specific role
+ * @param {string|string[]} roles - Role(s) to check for
+ * @returns {boolean} - True if user has the specified role(s)
+ */
+export const hasRole = (roles) => {
+  if (!isAuthenticated()) return false;
+  
+  const userRole = getUserRole();
+  if (!userRole) return false;
+  
+  if (Array.isArray(roles)) {
+    return roles.includes(userRole);
+  }
+  
+  return userRole === roles;
+};
+
+/**
+ * Gets the appropriate redirect path based on user role
+ * @returns {string} - Redirect path for the user's role
+ */
+export const getRoleBasedRedirect = () => {
+  const role = getUserRole();
+  
+  const roleRedirects = {
+    'student': '/dashboard',
+    'faculty': '/home-teacher',
+    'admin': '/homeadmin'
+  };
+  
+  return roleRedirects[role] || '/dashboard';
+};
+
+/**
+ * Logs out the user by clearing auth data
+ */
+export const logout = () => {
+  clearUserAuth();
+  // Redirect to home page
+  window.location.href = '/';
 };

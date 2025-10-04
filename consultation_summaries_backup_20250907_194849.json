@@ -1,0 +1,2192 @@
+{
+  "715": {
+    "id": 715,
+    "current_summary": "Test",
+    "concern": "Test",
+    "action_taken": "Test",
+    "outcome": "Test",
+    "duration": "00:01:39",
+    "session_date": "2025-08-17T18:29:11.442000",
+    "student_count": 1
+  },
+  "512": {
+    "id": 512,
+    "current_summary": "1st Year consultation for Social Integration",
+    "concern": "Poor scheduling and planning skills affecting productivity",
+    "action_taken": "Provided counseling and support for social integration issues",
+    "outcome": "Student expressed improved understanding and confidence",
+    "duration": "00:45:00",
+    "session_date": "2025-05-15T14:33:12.829724",
+    "student_count": 1
+  },
+  "662": {
+    "id": 662,
+    "current_summary": "4th Year consultation for Career Guidance",
+    "concern": "Experiencing high levels of stress and anxiety about studies",
+    "action_taken": "Provided counseling and support for career guidance issues",
+    "outcome": "Student expressed improved understanding and confidence",
+    "duration": "00:45:00",
+    "session_date": "2025-06-08T14:33:12.834733",
+    "student_count": 1
+  },
+  "663": {
+    "id": 663,
+    "current_summary": "4th Year consultation for Career Guidance",
+    "concern": "Computer science programming assignments too difficult",
+    "action_taken": "Provided counseling and support for career guidance issues",
+    "outcome": "Student expressed improved understanding and confidence",
+    "duration": "00:30:00",
+    "session_date": "2025-06-29T14:33:12.834733",
+    "student_count": 1
+  },
+  "664": {
+    "id": 664,
+    "current_summary": "4th Year consultation for Career Guidance",
+    "concern": "Academic achievement not meeting personal expectations",
+    "action_taken": "Provided counseling and support for career guidance issues",
+    "outcome": "Student expressed improved understanding and confidence",
+    "duration": "01:00:00",
+    "session_date": "2025-05-09T14:33:12.834733",
+    "student_count": 1
+  },
+  "665": {
+    "id": 665,
+    "current_summary": "4th Year consultation for Career Guidance",
+    "concern": "University facility and service information requests",
+    "action_taken": "Provided counseling and support for career guidance issues",
+    "outcome": "Student expressed improved understanding and confidence",
+    "duration": "01:00:00",
+    "session_date": "2025-03-24T14:33:12.835730",
+    "student_count": 1
+  },
+  "666": {
+    "id": 666,
+    "current_summary": "4th Year consultation for Career Guidance",
+    "concern": "Academic probation due to poor academic standing",
+    "action_taken": "Provided counseling and support for career guidance issues",
+    "outcome": "Student expressed improved understanding and confidence",
+    "duration": "00:30:00",
+    "session_date": "2025-04-02T14:33:12.835730",
+    "student_count": 1
+  },
+  "667": {
+    "id": 667,
+    "current_summary": "4th Year consultation for Career Guidance",
+    "concern": "Emotional wellbeing concerns affecting concentration",
+    "action_taken": "Provided counseling and support for career guidance issues",
+    "outcome": "Student expressed improved understanding and confidence",
+    "duration": "01:00:00",
+    "session_date": "2025-06-14T14:33:12.835730",
+    "student_count": 1
+  },
+  "668": {
+    "id": 668,
+    "current_summary": "4th Year consultation for Career Guidance",
+    "concern": "Productivity issues and inefficient study habits",
+    "action_taken": "Provided counseling and support for career guidance issues",
+    "outcome": "Student expressed improved understanding and confidence",
+    "duration": "00:30:00",
+    "session_date": "2025-04-23T14:33:12.835730",
+    "student_count": 1
+  },
+  "670": {
+    "id": 670,
+    "current_summary": "4th Year consultation for Career Guidance",
+    "concern": "Concerns about academic record and transcript impact",
+    "action_taken": "Provided counseling and support for career guidance issues",
+    "outcome": "Student expressed improved understanding and confidence",
+    "duration": "00:45:00",
+    "session_date": "2025-04-27T14:33:12.835730",
+    "student_count": 1
+  },
+  "672": {
+    "id": 672,
+    "current_summary": "4th Year consultation for Career Guidance",
+    "concern": "Organization problems with study materials and schedules",
+    "action_taken": "Provided counseling and support for career guidance issues",
+    "outcome": "Student expressed improved understanding and confidence",
+    "duration": "01:00:00",
+    "session_date": "2025-06-25T14:33:12.835730",
+    "student_count": 1
+  },
+  "673": {
+    "id": 673,
+    "current_summary": "4th Year consultation for Career Guidance",
+    "concern": "Lack of motivation and interest in current academic program",
+    "action_taken": "Provided counseling and support for career guidance issues",
+    "outcome": "Student expressed improved understanding and confidence",
+    "duration": "00:30:00",
+    "session_date": "2025-03-06T14:33:12.835730",
+    "student_count": 1
+  },
+  "674": {
+    "id": 674,
+    "current_summary": "4th Year consultation for Career Guidance",
+    "concern": "General academic advising and program planning",
+    "action_taken": "Provided counseling and support for career guidance issues",
+    "outcome": "Student expressed improved understanding and confidence",
+    "duration": "00:30:00",
+    "session_date": "2025-04-21T14:33:12.835730",
+    "student_count": 1
+  },
+  "675": {
+    "id": 675,
+    "current_summary": "4th Year consultation for Career Guidance",
+    "concern": "Mental health issues impacting daily functioning",
+    "action_taken": "Provided counseling and support for career guidance issues",
+    "outcome": "Student expressed improved understanding and confidence",
+    "duration": "00:30:00",
+    "session_date": "2025-03-29T14:33:12.835730",
+    "student_count": 1
+  },
+  "676": {
+    "id": 676,
+    "current_summary": "4th Year consultation for Career Guidance",
+    "concern": "Administrative issues with enrollment and documentation",
+    "action_taken": "Provided counseling and support for career guidance issues",
+    "outcome": "Student expressed improved understanding and confidence",
+    "duration": "01:00:00",
+    "session_date": "2025-03-11T14:33:12.835730",
+    "student_count": 1
+  },
+  "678": {
+    "id": 678,
+    "current_summary": "4th Year consultation for Career Guidance",
+    "concern": "Feeling overwhelmed and emotionally exhausted from coursework",
+    "action_taken": "Provided counseling and support for career guidance issues",
+    "outcome": "Student expressed improved understanding and confidence",
+    "duration": "00:30:00",
+    "session_date": "2025-04-25T14:33:12.835730",
+    "student_count": 1
+  },
+  "679": {
+    "id": 679,
+    "current_summary": "4th Year consultation for Career Guidance",
+    "concern": "Work-life balance issues with part-time job and studies",
+    "action_taken": "Provided counseling and support for career guidance issues",
+    "outcome": "Student expressed improved understanding and confidence",
+    "duration": "01:00:00",
+    "session_date": "2025-05-02T14:33:12.835730",
+    "student_count": 1
+  },
+  "682": {
+    "id": 682,
+    "current_summary": "4th Year consultation for Career Guidance",
+    "concern": "Anxiety attacks during exams and presentations",
+    "action_taken": "Provided counseling and support for career guidance issues",
+    "outcome": "Student expressed improved understanding and confidence",
+    "duration": "00:45:00",
+    "session_date": "2025-04-18T14:33:12.835730",
+    "student_count": 1
+  },
+  "716": {
+    "id": 716,
+    "current_summary": "Group consultation session addressing motivation concerns. Duration: 02:00:00. Students showed excellent engagement and progress.",
+    "concern": "Self-confidence issues affecting classroom participation",
+    "action_taken": "Identified intrinsic motivators and personal learning styles",
+    "outcome": "Student mastered key concepts and ready for advanced topics",
+    "duration": "02:00:00",
+    "session_date": "2025-06-26T08:00:00",
+    "student_count": 2
+  },
+  "677": {
+    "id": 677,
+    "current_summary": "4th Year consultation for Career Guidance",
+    "concern": "My psychological state is affecting my everyday academic tasks.",
+    "action_taken": "Provided counseling and support for career guidance issues",
+    "outcome": "Student expressed improved understanding and confidence",
+    "duration": "00:45:00",
+    "session_date": "2025-05-19T14:33:12.835730",
+    "student_count": 1
+  },
+  "680": {
+    "id": 680,
+    "current_summary": "4th Year consultation for Career Guidance",
+    "concern": "I'm on academic probation; my grades just tanked this semester.",
+    "action_taken": "Provided counseling and support for career guidance issues",
+    "outcome": "Student expressed improved understanding and confidence",
+    "duration": "00:30:00",
+    "session_date": "2025-08-15T14:33:12.835730",
+    "student_count": 1
+  },
+  "717": {
+    "id": 717,
+    "current_summary": "Group consultation session addressing academic performance concerns. Duration: 02:00:00. Students showed excellent engagement and progress.",
+    "concern": "Challenges with academic workload and course difficulty",
+    "action_taken": "Provided academic resources and study materials for improvement",
+    "outcome": "Student developed effective strategies for ongoing improvement",
+    "duration": "02:00:00",
+    "session_date": "2025-08-10T16:30:00",
+    "student_count": 2
+  },
+  "718": {
+    "id": 718,
+    "current_summary": "Group consultation session addressing mental health concerns. Duration: 01:15:00. Students showed good engagement and progress.",
+    "concern": "Feeling overwhelmed with coursework and personal responsibilities",
+    "action_taken": "Discussed stress management techniques and coping strategies",
+    "outcome": "Student showed excellent progress and engagement with material",
+    "duration": "01:15:00",
+    "session_date": "2025-06-29T17:00:00",
+    "student_count": 2
+  },
+  "719": {
+    "id": 719,
+    "current_summary": "Individual consultation session addressing time management concerns. Duration: 02:00:00. Students showed good engagement and progress.",
+    "concern": "Difficulty prioritizing multiple assignments and project deadlines",
+    "action_taken": "Taught time-blocking techniques and productivity methods",
+    "outcome": "Student needs additional follow-up sessions for continued support",
+    "duration": "02:00:00",
+    "session_date": "2025-06-25T11:15:00",
+    "student_count": 1
+  },
+  "720": {
+    "id": 720,
+    "current_summary": "Group consultation session addressing academic performance concerns. Duration: 00:45:00. Students showed good engagement and progress.",
+    "concern": "Student struggling with maintaining required GPA for scholarship",
+    "action_taken": "Created action plan for GPA improvement with milestone tracking",
+    "outcome": "Student mastered key concepts and ready for advanced topics",
+    "duration": "00:45:00",
+    "session_date": "2025-06-02T11:45:00",
+    "student_count": 2
+  },
+  "721": {
+    "id": 721,
+    "current_summary": "Individual consultation session addressing time management concerns. Duration: 02:00:00. Students showed excellent engagement and progress.",
+    "concern": "Poor time allocation between study sessions and other activities",
+    "action_taken": "Taught time-blocking techniques and productivity methods",
+    "outcome": "Student mastered key concepts and ready for advanced topics",
+    "duration": "02:00:00",
+    "session_date": "2025-07-14T11:15:00",
+    "student_count": 1
+  },
+  "724": {
+    "id": 724,
+    "current_summary": "Group consultation session addressing motivation concerns. Duration: 01:30:00. Students showed good engagement and progress.",
+    "concern": "Difficulty maintaining focus and concentration during studies",
+    "action_taken": "Set short-term achievable goals to rebuild academic confidence",
+    "outcome": "Student needs additional follow-up sessions for continued support",
+    "duration": "01:30:00",
+    "session_date": "2025-08-12T11:30:00",
+    "student_count": 3
+  },
+  "726": {
+    "id": 726,
+    "current_summary": "Group consultation session addressing subject-specific concerns. Duration: 00:30:00. Students showed good engagement and progress.",
+    "concern": "Difficulty understanding advanced programming concepts and algorithms",
+    "action_taken": "Provided additional practice materials and supplementary resources",
+    "outcome": "Student mastered key concepts and ready for advanced topics",
+    "duration": "00:30:00",
+    "session_date": "2025-07-14T12:15:00",
+    "student_count": 2
+  },
+  "727": {
+    "id": 727,
+    "current_summary": "Group consultation session addressing academic performance concerns. Duration: 01:15:00. Students showed excellent engagement and progress.",
+    "concern": "Academic probation concerns and improvement planning",
+    "action_taken": "Created action plan for GPA improvement with milestone tracking",
+    "outcome": "Student showed excellent progress and engagement with material",
+    "duration": "01:15:00",
+    "session_date": "2025-05-24T10:15:00",
+    "student_count": 3
+  },
+  "728": {
+    "id": 728,
+    "current_summary": "Group consultation session addressing career guidance concerns. Duration: 02:00:00. Students showed good engagement and progress.",
+    "concern": "Skill development planning for competitive job market",
+    "action_taken": "Reviewed career options and industry requirements analysis",
+    "outcome": "Student mastered key concepts and ready for advanced topics",
+    "duration": "02:00:00",
+    "session_date": "2025-06-24T09:45:00",
+    "student_count": 3
+  },
+  "729": {
+    "id": 729,
+    "current_summary": "Group consultation session addressing time management concerns. Duration: 01:15:00. Students showed excellent engagement and progress.",
+    "concern": "Need for better organizational skills and scheduling techniques",
+    "action_taken": "Created detailed schedule template with priority-based task organization",
+    "outcome": "Student demonstrated improved understanding and confidence",
+    "duration": "01:15:00",
+    "session_date": "2025-06-01T16:45:00",
+    "student_count": 2
+  },
+  "730": {
+    "id": 730,
+    "current_summary": "Individual consultation session addressing mental health concerns. Duration: 02:00:00. Students showed excellent engagement and progress.",
+    "concern": "High levels of academic stress affecting daily performance",
+    "action_taken": "Developed wellness plan incorporating self-care practices",
+    "outcome": "Student developed effective strategies for ongoing improvement",
+    "duration": "02:00:00",
+    "session_date": "2025-07-12T11:00:00",
+    "student_count": 1
+  },
+  "684": {
+    "id": 684,
+    "current_summary": "4th Year consultation for Career Guidance",
+    "concern": "Statistics and data analysis coursework overwhelming",
+    "action_taken": "Provided counseling and support for career guidance issues",
+    "outcome": "Student expressed improved understanding and confidence",
+    "duration": "01:00:00",
+    "session_date": "2025-03-26T14:33:12.835730",
+    "student_count": 1
+  },
+  "685": {
+    "id": 685,
+    "current_summary": "4th Year consultation for Academic Stress",
+    "concern": "Time allocation challenges with extracurricular activities",
+    "action_taken": "Provided counseling and support for academic stress issues",
+    "outcome": "Student expressed improved understanding and confidence",
+    "duration": "00:30:00",
+    "session_date": "2025-07-10T14:33:12.835730",
+    "student_count": 1
+  },
+  "687": {
+    "id": 687,
+    "current_summary": "4th Year consultation for Academic Stress",
+    "concern": "Complex physics equations and laboratory experiments challenging",
+    "action_taken": "Provided counseling and support for academic stress issues",
+    "outcome": "Student expressed improved understanding and confidence",
+    "duration": "01:00:00",
+    "session_date": "2025-07-14T14:33:12.835730",
+    "student_count": 1
+  },
+  "688": {
+    "id": 688,
+    "current_summary": "4th Year consultation for Academic Stress",
+    "concern": "Low self-confidence and self-esteem affecting performance",
+    "action_taken": "Provided counseling and support for academic stress issues",
+    "outcome": "Student expressed improved understanding and confidence",
+    "duration": "01:00:00",
+    "session_date": "2025-04-11T14:33:12.835730",
+    "student_count": 1
+  },
+  "689": {
+    "id": 689,
+    "current_summary": "4th Year consultation for Academic Stress",
+    "concern": "Need for psychological support and counseling services",
+    "action_taken": "Provided counseling and support for academic stress issues",
+    "outcome": "Student expressed improved understanding and confidence",
+    "duration": "00:45:00",
+    "session_date": "2025-06-17T14:33:12.835730",
+    "student_count": 1
+  },
+  "690": {
+    "id": 690,
+    "current_summary": "4th Year consultation for Academic Stress",
+    "concern": "Questions about graduation requirements and academic policies",
+    "action_taken": "Provided counseling and support for academic stress issues",
+    "outcome": "Student expressed improved understanding and confidence",
+    "duration": "00:45:00",
+    "session_date": "2025-08-15T14:33:12.836860",
+    "student_count": 1
+  },
+  "692": {
+    "id": 692,
+    "current_summary": "4th Year consultation for Academic Stress",
+    "concern": "Difficulty understanding programming algorithms and data structures",
+    "action_taken": "Provided counseling and support for academic stress issues",
+    "outcome": "Student expressed improved understanding and confidence",
+    "duration": "01:00:00",
+    "session_date": "2025-05-25T14:33:12.836860",
+    "student_count": 1
+  },
+  "693": {
+    "id": 693,
+    "current_summary": "4th Year consultation for Academic Stress",
+    "concern": "Procrastination problems leading to last-minute cramming",
+    "action_taken": "Provided counseling and support for academic stress issues",
+    "outcome": "Student expressed improved understanding and confidence",
+    "duration": "00:30:00",
+    "session_date": "2025-03-21T14:33:12.836860",
+    "student_count": 1
+  },
+  "696": {
+    "id": 696,
+    "current_summary": "4th Year consultation for Academic Stress",
+    "concern": "Failing to meet academic requirements and standards",
+    "action_taken": "Provided counseling and support for academic stress issues",
+    "outcome": "Student expressed improved understanding and confidence",
+    "duration": "00:45:00",
+    "session_date": "2025-04-12T14:33:12.836860",
+    "student_count": 1
+  },
+  "697": {
+    "id": 697,
+    "current_summary": "4th Year consultation for Academic Stress",
+    "concern": "Feeling disconnected from academic goals and aspirations",
+    "action_taken": "Provided counseling and support for academic stress issues",
+    "outcome": "Student expressed improved understanding and confidence",
+    "duration": "00:45:00",
+    "session_date": "2025-08-02T14:33:12.836860",
+    "student_count": 1
+  },
+  "701": {
+    "id": 701,
+    "current_summary": "4th Year consultation for Personal Issues",
+    "concern": "Difficulty maintaining required GPA for scholarship",
+    "action_taken": "Provided counseling and support for personal issues issues",
+    "outcome": "Student expressed improved understanding and confidence",
+    "duration": "00:30:00",
+    "session_date": "2025-06-13T14:33:12.836860",
+    "student_count": 1
+  },
+  "703": {
+    "id": 703,
+    "current_summary": "4th Year consultation for Personal Issues",
+    "concern": "Deadline pressure and time constraints causing stress",
+    "action_taken": "Provided counseling and support for personal issues issues",
+    "outcome": "Student expressed improved understanding and confidence",
+    "duration": "00:45:00",
+    "session_date": "2025-04-02T14:33:12.836860",
+    "student_count": 1
+  },
+  "514": {
+    "id": 514,
+    "current_summary": "1st Year consultation for Social Integration",
+    "concern": "My mental state is making it hard to focus on studies.",
+    "action_taken": "Provided counseling and support for social integration issues",
+    "outcome": "Student expressed improved understanding and confidence",
+    "duration": "00:45:00",
+    "session_date": "2025-04-01T14:33:12.829724",
+    "student_count": 1
+  },
+  "704": {
+    "id": 704,
+    "current_summary": "4th Year consultation for Personal Issues",
+    "concern": "Public speaking and testing situations trigger severe anxiety.",
+    "action_taken": "Provided counseling and support for personal issues issues",
+    "outcome": "Student expressed improved understanding and confidence",
+    "duration": "01:00:00",
+    "session_date": "2025-07-17T14:33:12.836860",
+    "student_count": 1
+  },
+  "694": {
+    "id": 694,
+    "current_summary": "4th Year consultation for Academic Stress",
+    "concern": "Mental health struggles are disrupting my daily study routine.",
+    "action_taken": "Provided counseling and support for academic stress issues",
+    "outcome": "Student expressed improved understanding and confidence",
+    "duration": "01:00:00",
+    "session_date": "2025-05-20T14:33:12.836860",
+    "student_count": 1
+  },
+  "700": {
+    "id": 700,
+    "current_summary": "4th Year consultation for Personal Issues",
+    "concern": "Ugh, I'm in trouble – academic probation for bad grades.",
+    "action_taken": "Provided counseling and support for personal issues issues",
+    "outcome": "Student expressed improved understanding and confidence",
+    "duration": "00:45:00",
+    "session_date": "2025-06-27T14:33:12.836860",
+    "student_count": 1
+  },
+  "515": {
+    "id": 515,
+    "current_summary": "1st Year consultation for Social Integration",
+    "concern": "Poor grades in multiple subjects affecting overall GPA",
+    "action_taken": "Provided counseling and support for social integration issues",
+    "outcome": "Student expressed improved understanding and confidence",
+    "duration": "00:45:00",
+    "session_date": "2025-05-19T14:33:12.829724",
+    "student_count": 1
+  },
+  "520": {
+    "id": 520,
+    "current_summary": "1st Year consultation for Social Integration",
+    "concern": "Lost sense of purpose and direction in studies",
+    "action_taken": "Provided counseling and support for social integration issues",
+    "outcome": "Student expressed improved understanding and confidence",
+    "duration": "00:30:00",
+    "session_date": "2025-08-07T14:33:12.830732",
+    "student_count": 1
+  },
+  "527": {
+    "id": 527,
+    "current_summary": "1st Year consultation for General Inquiries",
+    "concern": "Low test scores and quiz performance impacting final grades",
+    "action_taken": "Provided counseling and support for general inquiries issues",
+    "outcome": "Student expressed improved understanding and confidence",
+    "duration": "00:30:00",
+    "session_date": "2025-05-26T14:33:12.830732",
+    "student_count": 1
+  },
+  "528": {
+    "id": 528,
+    "current_summary": "1st Year consultation for General Inquiries",
+    "concern": "Need for inspiration and renewed academic motivation",
+    "action_taken": "Provided counseling and support for general inquiries issues",
+    "outcome": "Student expressed improved understanding and confidence",
+    "duration": "00:45:00",
+    "session_date": "2025-08-05T14:33:12.830732",
+    "student_count": 1
+  },
+  "530": {
+    "id": 530,
+    "current_summary": "1st Year consultation for General Inquiries",
+    "concern": "Academic performance declining compared to previous semester",
+    "action_taken": "Provided counseling and support for general inquiries issues",
+    "outcome": "Student expressed improved understanding and confidence",
+    "duration": "01:00:00",
+    "session_date": "2025-03-24T14:33:12.830732",
+    "student_count": 1
+  },
+  "532": {
+    "id": 532,
+    "current_summary": "1st Year consultation for General Inquiries",
+    "concern": "Chemistry course content and chemical reactions confusing",
+    "action_taken": "Provided counseling and support for general inquiries issues",
+    "outcome": "Student expressed improved understanding and confidence",
+    "duration": "01:00:00",
+    "session_date": "2025-04-14T14:33:12.830732",
+    "student_count": 1
+  },
+  "518": {
+    "id": 518,
+    "current_summary": "1st Year consultation for Social Integration",
+    "concern": "My grades aren't reflecting the effort I'm putting in.",
+    "action_taken": "Provided counseling and support for social integration issues",
+    "outcome": "Student expressed improved understanding and confidence",
+    "duration": "00:30:00",
+    "session_date": "2025-05-13T14:33:12.830732",
+    "student_count": 1
+  },
+  "526": {
+    "id": 526,
+    "current_summary": "1st Year consultation for Social Integration",
+    "concern": "Emotional issues are disrupting my ability to concentrate.",
+    "action_taken": "Provided counseling and support for social integration issues",
+    "outcome": "Student expressed improved understanding and confidence",
+    "duration": "01:00:00",
+    "session_date": "2025-04-15T14:33:12.830732",
+    "student_count": 1
+  },
+  "522": {
+    "id": 522,
+    "current_summary": "1st Year consultation for Social Integration",
+    "concern": "Overwhelming fear during presentations and exam situations.",
+    "action_taken": "Provided counseling and support for social integration issues",
+    "outcome": "Student expressed improved understanding and confidence",
+    "duration": "00:30:00",
+    "session_date": "2025-06-28T14:33:12.830732",
+    "student_count": 1
+  },
+  "535": {
+    "id": 535,
+    "current_summary": "1st Year consultation for General Inquiries",
+    "concern": "My anxiety spikes whenever I face academic evaluations.",
+    "action_taken": "Provided counseling and support for general inquiries issues",
+    "outcome": "Student expressed improved understanding and confidence",
+    "duration": "00:30:00",
+    "session_date": "2025-03-28T14:33:12.830732",
+    "student_count": 1
+  },
+  "529": {
+    "id": 529,
+    "current_summary": "1st Year consultation for General Inquiries",
+    "concern": "Emotional difficulties are interfering with my regular activities.",
+    "action_taken": "Provided counseling and support for general inquiries issues",
+    "outcome": "Student expressed improved understanding and confidence",
+    "duration": "01:00:00",
+    "session_date": "2025-05-13T14:33:12.830732",
+    "student_count": 1
+  },
+  "516": {
+    "id": 516,
+    "current_summary": "1st Year consultation for Social Integration",
+    "concern": "My grades are a worry; how will this affect my transcript?",
+    "action_taken": "Provided counseling and support for social integration issues",
+    "outcome": "Student expressed improved understanding and confidence",
+    "duration": "00:30:00",
+    "session_date": "2025-07-30T14:33:12.829724",
+    "student_count": 1
+  },
+  "534": {
+    "id": 534,
+    "current_summary": "1st Year consultation for General Inquiries",
+    "concern": "Is anyone else drowning in assignments and feeling utterly depleted?",
+    "action_taken": "Provided counseling and support for general inquiries issues",
+    "outcome": "Student expressed improved understanding and confidence",
+    "duration": "00:30:00",
+    "session_date": "2025-05-17T14:33:12.830732",
+    "student_count": 1
+  },
+  "539": {
+    "id": 539,
+    "current_summary": "1st Year consultation for Learning Difficulties",
+    "concern": "Struggling with advanced mathematics concepts and problem-solving",
+    "action_taken": "Provided counseling and support for learning difficulties issues",
+    "outcome": "Student expressed improved understanding and confidence",
+    "duration": "01:00:00",
+    "session_date": "2025-08-14T14:33:12.830732",
+    "student_count": 1
+  },
+  "549": {
+    "id": 549,
+    "current_summary": "1st Year consultation for Personal Issues",
+    "concern": "Stress-related physical symptoms affecting studies",
+    "action_taken": "Provided counseling and support for personal issues issues",
+    "outcome": "Student expressed improved understanding and confidence",
+    "duration": "00:45:00",
+    "session_date": "2025-04-14T14:33:12.830732",
+    "student_count": 1
+  },
+  "552": {
+    "id": 552,
+    "current_summary": "1st Year consultation for Academic Stress",
+    "concern": "Career guidance and professional development opportunities",
+    "action_taken": "Provided counseling and support for academic stress issues",
+    "outcome": "Student expressed improved understanding and confidence",
+    "duration": "00:45:00",
+    "session_date": "2025-07-04T14:33:12.830732",
+    "student_count": 1
+  },
+  "557": {
+    "id": 557,
+    "current_summary": "2nd Year consultation for Academic Stress",
+    "concern": "Biology laboratory practicals and experiments challenging",
+    "action_taken": "Provided counseling and support for academic stress issues",
+    "outcome": "Student expressed improved understanding and confidence",
+    "duration": "00:30:00",
+    "session_date": "2025-08-03T14:33:12.831732",
+    "student_count": 1
+  },
+  "560": {
+    "id": 560,
+    "current_summary": "2nd Year consultation for Academic Stress",
+    "concern": "Research methodology and thesis writing requirements unclear",
+    "action_taken": "Provided counseling and support for academic stress issues",
+    "outcome": "Student expressed improved understanding and confidence",
+    "duration": "00:45:00",
+    "session_date": "2025-03-16T14:33:12.831732",
+    "student_count": 1
+  },
+  "548": {
+    "id": 548,
+    "current_summary": "1st Year consultation for Personal Issues",
+    "concern": "Complex coding concepts and data organization methods confuse me.",
+    "action_taken": "Provided counseling and support for personal issues issues",
+    "outcome": "Student expressed improved understanding and confidence",
+    "duration": "00:45:00",
+    "session_date": "2025-07-03T14:33:12.830732",
+    "student_count": 1
+  },
+  "561": {
+    "id": 561,
+    "current_summary": "2nd Year consultation for Academic Stress",
+    "concern": "I'm stressed about my academic standing and its future implications.",
+    "action_taken": "Provided counseling and support for academic stress issues",
+    "outcome": "Student expressed improved understanding and confidence",
+    "duration": "00:30:00",
+    "session_date": "2025-07-15T14:33:12.831732",
+    "student_count": 1
+  },
+  "553": {
+    "id": 553,
+    "current_summary": "1st Year consultation for Academic Stress",
+    "concern": "Here are four variations:",
+    "action_taken": "Provided counseling and support for academic stress issues",
+    "outcome": "Student expressed improved understanding and confidence",
+    "duration": "00:45:00",
+    "session_date": "2025-07-12T14:33:12.830732",
+    "student_count": 1
+  },
+  "574": {
+    "id": 574,
+    "current_summary": "2nd Year consultation for Learning Difficulties",
+    "concern": "Information about scholarship opportunities and applications",
+    "action_taken": "Provided counseling and support for learning difficulties issues",
+    "outcome": "Student expressed improved understanding and confidence",
+    "duration": "00:45:00",
+    "session_date": "2025-08-04T14:33:12.832738",
+    "student_count": 1
+  },
+  "562": {
+    "id": 562,
+    "current_summary": "2nd Year consultation for Academic Stress",
+    "concern": "I'm having trouble concentrating due to emotional difficulties.",
+    "action_taken": "Provided counseling and support for academic stress issues",
+    "outcome": "Student expressed improved understanding and confidence",
+    "duration": "01:00:00",
+    "session_date": "2025-07-08T14:33:12.831732",
+    "student_count": 1
+  },
+  "567": {
+    "id": 567,
+    "current_summary": "2nd Year consultation for Academic Stress",
+    "concern": "Psychological challenges are making it hard to function normally.",
+    "action_taken": "Provided counseling and support for academic stress issues",
+    "outcome": "Student expressed improved understanding and confidence",
+    "duration": "01:00:00",
+    "session_date": "2025-07-10T14:33:12.831732",
+    "student_count": 1
+  },
+  "564": {
+    "id": 564,
+    "current_summary": "2nd Year consultation for Academic Stress",
+    "concern": "Struggling to grasp computational thinking and algorithmic problem-solving.",
+    "action_taken": "Provided counseling and support for academic stress issues",
+    "outcome": "Student expressed improved understanding and confidence",
+    "duration": "00:45:00",
+    "session_date": "2025-03-16T14:33:12.831732",
+    "student_count": 1
+  },
+  "566": {
+    "id": 566,
+    "current_summary": "2nd Year consultation for Academic Stress",
+    "concern": "Programming logic and data management techniques are overwhelming.",
+    "action_taken": "Provided counseling and support for academic stress issues",
+    "outcome": "Student expressed improved understanding and confidence",
+    "duration": "01:00:00",
+    "session_date": "2025-04-02T14:33:12.831732",
+    "student_count": 1
+  },
+  "575": {
+    "id": 575,
+    "current_summary": "2nd Year consultation for Learning Difficulties",
+    "concern": "So, I'm on probation because my GPA is seriously low?",
+    "action_taken": "Provided counseling and support for learning difficulties issues",
+    "outcome": "Student expressed improved understanding and confidence",
+    "duration": "00:45:00",
+    "session_date": "2025-06-15T14:33:12.832738",
+    "student_count": 1
+  },
+  "576": {
+    "id": 576,
+    "current_summary": "2nd Year consultation for Learning Difficulties",
+    "concern": "Is there something wrong with me? I've completely lost the spark.",
+    "action_taken": "Provided counseling and support for learning difficulties issues",
+    "outcome": "Student expressed improved understanding and confidence",
+    "duration": "00:30:00",
+    "session_date": "2025-06-13T14:33:12.832738",
+    "student_count": 1
+  },
+  "582": {
+    "id": 582,
+    "current_summary": "2nd Year consultation for Learning Difficulties",
+    "concern": "I need help figuring out my course schedule and degree path.",
+    "action_taken": "Provided counseling and support for learning difficulties issues",
+    "outcome": "Student expressed improved understanding and confidence",
+    "duration": "00:30:00",
+    "session_date": "2025-05-12T14:33:12.832738",
+    "student_count": 1
+  },
+  "583": {
+    "id": 583,
+    "current_summary": "2nd Year consultation for Learning Difficulties",
+    "concern": "I'm just exhausted, both mentally and emotionally, by the workload.",
+    "action_taken": "Provided counseling and support for learning difficulties issues",
+    "outcome": "Student expressed improved understanding and confidence",
+    "duration": "00:45:00",
+    "session_date": "2025-03-19T14:33:12.832738",
+    "student_count": 1
+  },
+  "595": {
+    "id": 595,
+    "current_summary": "2nd Year consultation for Social Integration",
+    "concern": "Lack of engagement and enthusiasm for coursework",
+    "action_taken": "Provided counseling and support for social integration issues",
+    "outcome": "Student expressed improved understanding and confidence",
+    "duration": "01:00:00",
+    "session_date": "2025-07-24T14:33:12.832738",
+    "student_count": 1
+  },
+  "608": {
+    "id": 608,
+    "current_summary": "3rd Year consultation for Academic Stress",
+    "concern": "Difficulty managing time between multiple assignments and deadlines",
+    "action_taken": "Provided counseling and support for academic stress issues",
+    "outcome": "Student expressed improved understanding and confidence",
+    "duration": "00:45:00",
+    "session_date": "2025-06-11T14:33:12.833734",
+    "student_count": 1
+  },
+  "596": {
+    "id": 596,
+    "current_summary": "2nd Year consultation for Social Integration",
+    "concern": "My performance falls short of what I thought I could achieve.",
+    "action_taken": "Provided counseling and support for social integration issues",
+    "outcome": "Student expressed improved understanding and confidence",
+    "duration": "01:00:00",
+    "session_date": "2025-03-26T14:33:12.832738",
+    "student_count": 1
+  },
+  "588": {
+    "id": 588,
+    "current_summary": "2nd Year consultation for Personal Issues",
+    "concern": "Is there a better way to study? My time management needs serious help.",
+    "action_taken": "Provided counseling and support for personal issues issues",
+    "outcome": "Student expressed improved understanding and confidence",
+    "duration": "01:00:00",
+    "session_date": "2025-05-24T14:33:12.832738",
+    "student_count": 1
+  },
+  "591": {
+    "id": 591,
+    "current_summary": "2nd Year consultation for Personal Issues",
+    "concern": "Will my record hurt my chances down the line? I'm concerned.",
+    "action_taken": "Provided counseling and support for personal issues issues",
+    "outcome": "Student expressed improved understanding and confidence",
+    "duration": "01:00:00",
+    "session_date": "2025-07-14T14:33:12.832738",
+    "student_count": 1
+  },
+  "598": {
+    "id": 598,
+    "current_summary": "2nd Year consultation for Social Integration",
+    "concern": "Enrollment is a total paperwork nightmare, right?",
+    "action_taken": "Provided counseling and support for social integration issues",
+    "outcome": "Student expressed improved understanding and confidence",
+    "duration": "00:45:00",
+    "session_date": "2025-04-14T14:33:12.833734",
+    "student_count": 1
+  },
+  "612": {
+    "id": 612,
+    "current_summary": "3rd Year consultation for Academic Stress",
+    "concern": "Struggling to reach the academic standards I set for myself.",
+    "action_taken": "Provided counseling and support for academic stress issues",
+    "outcome": "Student expressed improved understanding and confidence",
+    "duration": "00:45:00",
+    "session_date": "2025-07-05T14:33:12.833734",
+    "student_count": 1
+  },
+  "615": {
+    "id": 615,
+    "current_summary": "3rd Year consultation for Academic Stress",
+    "concern": "Academic assessments trigger intense anxiety and panic responses.",
+    "action_taken": "Provided counseling and support for academic stress issues",
+    "outcome": "Student expressed improved understanding and confidence",
+    "duration": "00:45:00",
+    "session_date": "2025-07-23T14:33:12.833734",
+    "student_count": 1
+  },
+  "620": {
+    "id": 620,
+    "current_summary": "3rd Year consultation for Academic Stress",
+    "concern": "Severe nervousness overwhelms me during tests and presentations.",
+    "action_taken": "Provided counseling and support for academic stress issues",
+    "outcome": "Student expressed improved understanding and confidence",
+    "duration": "00:45:00",
+    "session_date": "2025-06-22T14:33:12.833734",
+    "student_count": 1
+  },
+  "616": {
+    "id": 616,
+    "current_summary": "3rd Year consultation for Academic Stress",
+    "concern": "Mental wellness issues are affecting my ability to handle daily tasks.",
+    "action_taken": "Provided counseling and support for academic stress issues",
+    "outcome": "Student expressed improved understanding and confidence",
+    "duration": "01:00:00",
+    "session_date": "2025-03-08T14:33:12.833734",
+    "student_count": 1
+  },
+  "632": {
+    "id": 632,
+    "current_summary": "3rd Year consultation for Career Guidance",
+    "concern": "My emotional state is disrupting my normal academic functioning.",
+    "action_taken": "Provided counseling and support for career guidance issues",
+    "outcome": "Student expressed improved understanding and confidence",
+    "duration": "00:30:00",
+    "session_date": "2025-06-29T14:33:12.834733",
+    "student_count": 1
+  },
+  "625": {
+    "id": 625,
+    "current_summary": "3rd Year consultation for Academic Stress",
+    "concern": "Seriously struggling academically; currently on probation.",
+    "action_taken": "Provided counseling and support for academic stress issues",
+    "outcome": "Student expressed improved understanding and confidence",
+    "duration": "00:45:00",
+    "session_date": "2025-06-26T14:33:12.833734",
+    "student_count": 1
+  },
+  "627": {
+    "id": 627,
+    "current_summary": "3rd Year consultation for Career Guidance",
+    "concern": "Ugh, my study methods are a mess, hindering my actual output!",
+    "action_taken": "Provided counseling and support for career guidance issues",
+    "outcome": "Student expressed improved understanding and confidence",
+    "duration": "00:45:00",
+    "session_date": "2025-08-08T14:33:12.833734",
+    "student_count": 1
+  },
+  "642": {
+    "id": 642,
+    "current_summary": "3rd Year consultation for Learning Difficulties",
+    "concern": "The workload in this CS class is crushing my confidence, honestly.",
+    "action_taken": "Provided counseling and support for learning difficulties issues",
+    "outcome": "Student expressed improved understanding and confidence",
+    "duration": "00:30:00",
+    "session_date": "2025-03-21T14:33:12.834733",
+    "student_count": 1
+  },
+  "639": {
+    "id": 639,
+    "current_summary": "3rd Year consultation for Career Guidance",
+    "concern": "Fear and anxiety completely take over during academic evaluations.",
+    "action_taken": "Provided counseling and support for career guidance issues",
+    "outcome": "Student expressed improved understanding and confidence",
+    "duration": "00:30:00",
+    "session_date": "2025-07-08T14:33:12.834733",
+    "student_count": 1
+  },
+  "652": {
+    "id": 652,
+    "current_summary": "3rd Year consultation for Personal Issues",
+    "concern": "Software development concepts and computational methods are tough.",
+    "action_taken": "Provided counseling and support for personal issues issues",
+    "outcome": "Student expressed improved understanding and confidence",
+    "duration": "01:00:00",
+    "session_date": "2025-05-14T14:33:12.834733",
+    "student_count": 1
+  },
+  "651": {
+    "id": 651,
+    "current_summary": "3rd Year consultation for Personal Issues",
+    "concern": "Where do I go for help with campus resources and services?",
+    "action_taken": "Provided counseling and support for personal issues issues",
+    "outcome": "Student expressed improved understanding and confidence",
+    "duration": "00:45:00",
+    "session_date": "2025-07-15T14:33:12.834733",
+    "student_count": 1
+  },
+  "658": {
+    "id": 658,
+    "current_summary": "3rd Year consultation for Social Integration",
+    "concern": "I'm struggling to manage my time; my assignments are piling up.",
+    "action_taken": "Provided counseling and support for social integration issues",
+    "outcome": "Student expressed improved understanding and confidence",
+    "duration": "01:00:00",
+    "session_date": "2025-04-06T14:33:12.834733",
+    "student_count": 1
+  },
+  "710": {
+    "id": 710,
+    "current_summary": "4th Year consultation for Learning Difficulties",
+    "concern": "Feeling overwhelmed; I need help organizing my study schedule.",
+    "action_taken": "Provided counseling and support for learning difficulties issues",
+    "outcome": "Student expressed improved understanding and confidence",
+    "duration": "00:30:00",
+    "session_date": "2025-08-06T14:33:12.836860",
+    "student_count": 1
+  },
+  "709": {
+    "id": 709,
+    "current_summary": "4th Year consultation for Learning Difficulties",
+    "concern": "Academic life right now is a major source of stress for me.",
+    "action_taken": "Provided counseling and support for learning difficulties issues",
+    "outcome": "Student expressed improved understanding and confidence",
+    "duration": "00:30:00",
+    "session_date": "2025-04-27T14:33:12.836860",
+    "student_count": 1
+  },
+  "712": {
+    "id": 712,
+    "current_summary": "4th Year consultation for General Inquiries",
+    "concern": "So much to do, and I'm just completely freaked out about it all.",
+    "action_taken": "Provided counseling and support for general inquiries issues",
+    "outcome": "Student expressed improved understanding and confidence",
+    "duration": "01:00:00",
+    "session_date": "2025-03-14T14:33:12.836860",
+    "student_count": 1
+  },
+  "660": {
+    "id": 660,
+    "current_summary": "4th Year consultation for Career Guidance",
+    "concern": "Dealing with emotional stress that's impacting my focus.",
+    "action_taken": "Provided counseling and support for career guidance issues",
+    "outcome": "Student expressed improved understanding and confidence",
+    "duration": "00:45:00",
+    "session_date": "2025-06-09T14:33:12.834733",
+    "student_count": 1
+  },
+  "705": {
+    "id": 705,
+    "current_summary": "4th Year consultation for Personal Issues",
+    "concern": "Mental health concerns are affecting my everyday academic performance.",
+    "action_taken": "Provided counseling and support for personal issues issues",
+    "outcome": "Student expressed improved understanding and confidence",
+    "duration": "01:00:00",
+    "session_date": "2025-05-21T14:33:12.836860",
+    "student_count": 1
+  },
+  "707": {
+    "id": 707,
+    "current_summary": "4th Year consultation for Personal Issues",
+    "concern": "This probation thing? Yeah, it's because I'm failing classes.",
+    "action_taken": "Provided counseling and support for personal issues issues",
+    "outcome": "Student expressed improved understanding and confidence",
+    "duration": "00:45:00",
+    "session_date": "2025-06-20T14:33:12.836860",
+    "student_count": 1
+  },
+  "657": {
+    "id": 657,
+    "current_summary": "3rd Year consultation for General Inquiries",
+    "concern": "Ugh, the classes are a lot, and I'm emotionally spent from it all.",
+    "action_taken": "Provided counseling and support for general inquiries issues",
+    "outcome": "Student expressed improved understanding and confidence",
+    "duration": "00:30:00",
+    "session_date": "2025-08-14T14:33:12.834733",
+    "student_count": 1
+  },
+  "659": {
+    "id": 659,
+    "current_summary": "3rd Year consultation for Social Integration",
+    "concern": "Could someone clarify the graduation rules and academic stuff for me?",
+    "action_taken": "Provided counseling and support for social integration issues",
+    "outcome": "Student expressed improved understanding and confidence",
+    "duration": "01:00:00",
+    "session_date": "2025-05-03T14:33:12.834733",
+    "student_count": 1
+  },
+  "708": {
+    "id": 708,
+    "current_summary": "4th Year consultation for Learning Difficulties",
+    "concern": "Need help understanding the policies and requirements for my degree.",
+    "action_taken": "Provided counseling and support for learning difficulties issues",
+    "outcome": "Student expressed improved understanding and confidence",
+    "duration": "00:30:00",
+    "session_date": "2025-05-03T14:33:12.836860",
+    "student_count": 1
+  },
+  "714": {
+    "id": 714,
+    "current_summary": "4th Year consultation for Social Integration",
+    "concern": "Experiencing poor grades in multiple subjects affecting overall gpa",
+    "action_taken": "Provided counseling and support for social integration issues",
+    "outcome": "Student expressed improved understanding and confidence",
+    "duration": "01:00:00",
+    "session_date": "2025-02-25T14:33:12.836860",
+    "student_count": 1
+  },
+  "706": {
+    "id": 706,
+    "current_summary": "4th Year consultation for Personal Issues",
+    "concern": "Currently facing lost sense of purpose and direction in studies",
+    "action_taken": "Provided counseling and support for personal issues issues",
+    "outcome": "Student expressed improved understanding and confidence",
+    "duration": "00:30:00",
+    "session_date": "2025-03-17T14:33:12.836860",
+    "student_count": 1
+  },
+  "711": {
+    "id": 711,
+    "current_summary": "4th Year consultation for Learning Difficulties",
+    "concern": "Experiencing academic performance declining compared to previous semester",
+    "action_taken": "Provided counseling and support for learning difficulties issues",
+    "outcome": "Student expressed improved understanding and confidence",
+    "duration": "00:45:00",
+    "session_date": "2025-04-16T14:33:12.836860",
+    "student_count": 1
+  },
+  "661": {
+    "id": 661,
+    "current_summary": "4th Year consultation for Career Guidance",
+    "concern": "Experiencing career guidance and professional development opportunities",
+    "action_taken": "Provided counseling and support for career guidance issues",
+    "outcome": "Student expressed improved understanding and confidence",
+    "duration": "01:00:00",
+    "session_date": "2025-04-20T14:33:12.834733",
+    "student_count": 1
+  },
+  "599": {
+    "id": 599,
+    "current_summary": "2nd Year consultation for Social Integration",
+    "concern": "My workload feels chaotic; I'm always behind on deadlines.",
+    "action_taken": "Provided counseling and support for social integration issues",
+    "outcome": "Student expressed improved understanding and confidence",
+    "duration": "01:00:00",
+    "session_date": "2025-03-13T14:33:12.833734",
+    "student_count": 1
+  },
+  "533": {
+    "id": 533,
+    "current_summary": "1st Year consultation for General Inquiries",
+    "concern": "Academics have me wound up; I can't seem to relax with all this pressure.",
+    "action_taken": "Provided counseling and support for general inquiries issues",
+    "outcome": "Student expressed improved understanding and confidence",
+    "duration": "01:00:00",
+    "session_date": "2025-04-04T14:33:12.830732",
+    "student_count": 1
+  },
+  "619": {
+    "id": 619,
+    "current_summary": "3rd Year consultation for Academic Stress",
+    "concern": "I'm constantly on edge, feeling the strain of keeping up with everything.",
+    "action_taken": "Provided counseling and support for academic stress issues",
+    "outcome": "Student expressed improved understanding and confidence",
+    "duration": "00:30:00",
+    "session_date": "2025-03-16T14:33:12.833734",
+    "student_count": 1
+  },
+  "628": {
+    "id": 628,
+    "current_summary": "3rd Year consultation for Career Guidance",
+    "concern": "The sheer volume of studying has my anxiety levels through the roof.",
+    "action_taken": "Provided counseling and support for career guidance issues",
+    "outcome": "Student expressed improved understanding and confidence",
+    "duration": "00:45:00",
+    "session_date": "2025-05-25T14:33:12.833734",
+    "student_count": 1
+  },
+  "633": {
+    "id": 633,
+    "current_summary": "3rd Year consultation for Career Guidance",
+    "concern": "Feeling the burn, and the weight of my classes is crushing me.",
+    "action_taken": "Provided counseling and support for career guidance issues",
+    "outcome": "Student expressed improved understanding and confidence",
+    "duration": "00:45:00",
+    "session_date": "2025-07-18T14:33:12.834733",
+    "student_count": 1
+  },
+  "669": {
+    "id": 669,
+    "current_summary": "4th Year consultation for Career Guidance",
+    "concern": "My coursework is totally overwhelming, and it's messing with my head.",
+    "action_taken": "Provided counseling and support for career guidance issues",
+    "outcome": "Student expressed improved understanding and confidence",
+    "duration": "00:45:00",
+    "session_date": "2025-06-05T14:33:12.835730",
+    "student_count": 1
+  },
+  "699": {
+    "id": 699,
+    "current_summary": "4th Year consultation for Academic Stress",
+    "concern": "These coding projects are seriously overwhelming, I'm drowning.",
+    "action_taken": "Provided counseling and support for academic stress issues",
+    "outcome": "Student expressed improved understanding and confidence",
+    "duration": "01:00:00",
+    "session_date": "2025-05-07T14:33:12.836860",
+    "student_count": 1
+  },
+  "523": {
+    "id": 523,
+    "current_summary": "1st Year consultation for Social Integration",
+    "concern": "I'm not performing at the level I expected myself to.",
+    "action_taken": "Provided counseling and support for social integration issues",
+    "outcome": "Student expressed improved understanding and confidence",
+    "duration": "00:30:00",
+    "session_date": "2025-04-17T14:33:12.830732",
+    "student_count": 1
+  },
+  "565": {
+    "id": 565,
+    "current_summary": "2nd Year consultation for Academic Stress",
+    "concern": "Disappointed with my academic results despite working hard.",
+    "action_taken": "Provided counseling and support for academic stress issues",
+    "outcome": "Student expressed improved understanding and confidence",
+    "duration": "01:00:00",
+    "session_date": "2025-08-12T14:33:12.831732",
+    "student_count": 1
+  },
+  "541": {
+    "id": 541,
+    "current_summary": "1st Year consultation for Learning Difficulties",
+    "concern": "Mental health struggles are interfering with my academic focus.",
+    "action_taken": "Provided counseling and support for learning difficulties issues",
+    "outcome": "Student expressed improved understanding and confidence",
+    "duration": "00:45:00",
+    "session_date": "2025-08-14T14:33:12.830732",
+    "student_count": 1
+  },
+  "578": {
+    "id": 578,
+    "current_summary": "2nd Year consultation for Learning Difficulties",
+    "concern": "Personal emotional challenges are affecting my study concentration.",
+    "action_taken": "Provided counseling and support for learning difficulties issues",
+    "outcome": "Student expressed improved understanding and confidence",
+    "duration": "01:00:00",
+    "session_date": "2025-07-13T14:33:12.832738",
+    "student_count": 1
+  },
+  "544": {
+    "id": 544,
+    "current_summary": "1st Year consultation for Learning Difficulties",
+    "concern": "I get panic attacks when confronted with exams or speaking.",
+    "action_taken": "Provided counseling and support for learning difficulties issues",
+    "outcome": "Student expressed improved understanding and confidence",
+    "duration": "01:00:00",
+    "session_date": "2025-03-07T14:33:12.830732",
+    "student_count": 1
+  },
+  "683": {
+    "id": 683,
+    "current_summary": "4th Year consultation for Career Guidance",
+    "concern": "I panic whenever I have to present or take tests.",
+    "action_taken": "Provided counseling and support for career guidance issues",
+    "outcome": "Student expressed improved understanding and confidence",
+    "duration": "01:00:00",
+    "session_date": "2025-03-22T14:33:12.835730",
+    "student_count": 1
+  },
+  "691": {
+    "id": 691,
+    "current_summary": "4th Year consultation for Academic Stress",
+    "concern": "Test anxiety and presentation fears are crippling my performance.",
+    "action_taken": "Provided counseling and support for academic stress issues",
+    "outcome": "Student expressed improved understanding and confidence",
+    "duration": "00:45:00",
+    "session_date": "2025-07-14T14:33:12.836860",
+    "student_count": 1
+  },
+  "655": {
+    "id": 655,
+    "current_summary": "3rd Year consultation for General Inquiries",
+    "concern": "Psychological stress is impacting my day-to-day study abilities.",
+    "action_taken": "Provided counseling and support for general inquiries issues",
+    "outcome": "Student expressed improved understanding and confidence",
+    "duration": "00:30:00",
+    "session_date": "2025-02-20T14:33:12.834733",
+    "student_count": 1
+  },
+  "573": {
+    "id": 573,
+    "current_summary": "2nd Year consultation for Academic Stress",
+    "concern": "Computer science fundamentals like algorithms are really challenging.",
+    "action_taken": "Provided counseling and support for academic stress issues",
+    "outcome": "Student expressed improved understanding and confidence",
+    "duration": "01:00:00",
+    "session_date": "2025-03-10T14:33:12.831732",
+    "student_count": 1
+  },
+  "581": {
+    "id": 581,
+    "current_summary": "2nd Year consultation for Learning Difficulties",
+    "concern": "The abstract nature of programming concepts is hard to comprehend.",
+    "action_taken": "Provided counseling and support for learning difficulties issues",
+    "outcome": "Student expressed improved understanding and confidence",
+    "duration": "00:45:00",
+    "session_date": "2025-07-09T14:33:12.832738",
+    "student_count": 1
+  },
+  "601": {
+    "id": 601,
+    "current_summary": "2nd Year consultation for General Inquiries",
+    "concern": "Coding theory and data structure implementations are confusing.",
+    "action_taken": "Provided counseling and support for general inquiries issues",
+    "outcome": "Student expressed improved understanding and confidence",
+    "duration": "00:45:00",
+    "session_date": "2025-07-16T14:33:12.833734",
+    "student_count": 1
+  },
+  "605": {
+    "id": 605,
+    "current_summary": "2nd Year consultation for Career Guidance",
+    "concern": "Algorithmic thinking and programming paradigms are difficult to master.",
+    "action_taken": "Provided counseling and support for career guidance issues",
+    "outcome": "Student expressed improved understanding and confidence",
+    "duration": "00:30:00",
+    "session_date": "2025-06-14T14:33:12.833734",
+    "student_count": 1
+  },
+  "671": {
+    "id": 671,
+    "current_summary": "4th Year consultation for Career Guidance",
+    "concern": "I'm struggling to get things done, and my studying feels all over the place.",
+    "action_taken": "Provided counseling and support for career guidance issues",
+    "outcome": "Student expressed improved understanding and confidence",
+    "duration": "00:30:00",
+    "session_date": "2025-05-27T14:33:12.835730",
+    "student_count": 1
+  },
+  "634": {
+    "id": 634,
+    "current_summary": "3rd Year consultation for Career Guidance",
+    "concern": "My transcript's impact is a big deal; I need help with my grades.",
+    "action_taken": "Provided counseling and support for career guidance issues",
+    "outcome": "Student expressed improved understanding and confidence",
+    "duration": "00:45:00",
+    "session_date": "2025-04-09T14:33:12.834733",
+    "student_count": 1
+  },
+  "644": {
+    "id": 644,
+    "current_summary": "3rd Year consultation for Learning Difficulties",
+    "concern": "Uh oh, my academic performance is concerning me about my record.",
+    "action_taken": "Provided counseling and support for learning difficulties issues",
+    "outcome": "Student expressed improved understanding and confidence",
+    "duration": "00:30:00",
+    "session_date": "2025-06-26T14:33:12.834733",
+    "student_count": 1
+  },
+  "653": {
+    "id": 653,
+    "current_summary": "3rd Year consultation for Personal Issues",
+    "concern": "I'm worried about my transcript and how it reflects my work.",
+    "action_taken": "Provided counseling and support for personal issues issues",
+    "outcome": "Student expressed improved understanding and confidence",
+    "duration": "00:45:00",
+    "session_date": "2025-03-22T14:33:12.834733",
+    "student_count": 1
+  },
+  "681": {
+    "id": 681,
+    "current_summary": "4th Year consultation for Career Guidance",
+    "concern": "My notes and planner are a mess; how do I get things together?",
+    "action_taken": "Provided counseling and support for career guidance issues",
+    "outcome": "Student expressed improved understanding and confidence",
+    "duration": "01:00:00",
+    "session_date": "2025-06-22T14:33:12.835730",
+    "student_count": 1
+  },
+  "695": {
+    "id": 695,
+    "current_summary": "4th Year consultation for Academic Stress",
+    "concern": "Honestly, I'm just not feeling it for this program anymore.",
+    "action_taken": "Provided counseling and support for academic stress issues",
+    "outcome": "Student expressed improved understanding and confidence",
+    "duration": "00:45:00",
+    "session_date": "2025-07-07T14:33:12.836860",
+    "student_count": 1
+  },
+  "610": {
+    "id": 610,
+    "current_summary": "3rd Year consultation for Academic Stress",
+    "concern": "Guidance on my major and how to stay on track, please?",
+    "action_taken": "Provided counseling and support for academic stress issues",
+    "outcome": "Student expressed improved understanding and confidence",
+    "duration": "00:45:00",
+    "session_date": "2025-07-12T14:33:12.833734",
+    "student_count": 1
+  },
+  "686": {
+    "id": 686,
+    "current_summary": "4th Year consultation for Academic Stress",
+    "concern": "Okay, here are three unique ways a student could express the academic concern \"General academic advising and program planning\":",
+    "action_taken": "Provided counseling and support for academic stress issues",
+    "outcome": "Student expressed improved understanding and confidence",
+    "duration": "00:45:00",
+    "session_date": "2025-03-09T14:33:12.835730",
+    "student_count": 1
+  },
+  "513": {
+    "id": 513,
+    "current_summary": "1st Year consultation for Social Integration",
+    "concern": "Coursework's got me completely drained; I'm burnt out emotionally.",
+    "action_taken": "Provided counseling and support for social integration issues",
+    "outcome": "Student expressed improved understanding and confidence",
+    "duration": "00:30:00",
+    "session_date": "2025-07-27T14:33:12.829724",
+    "student_count": 1
+  },
+  "556": {
+    "id": 556,
+    "current_summary": "2nd Year consultation for Academic Stress",
+    "concern": "Honestly, this semester is crushing me emotionally and mentally.",
+    "action_taken": "Provided counseling and support for academic stress issues",
+    "outcome": "Student expressed improved understanding and confidence",
+    "duration": "00:30:00",
+    "session_date": "2025-04-29T14:33:12.831732",
+    "student_count": 1
+  },
+  "590": {
+    "id": 590,
+    "current_summary": "2nd Year consultation for Personal Issues",
+    "concern": "This coursework load leaves me feeling overwhelmed and emotionally wrecked.",
+    "action_taken": "Provided counseling and support for personal issues issues",
+    "outcome": "Student expressed improved understanding and confidence",
+    "duration": "00:30:00",
+    "session_date": "2025-06-30T14:33:12.832738",
+    "student_count": 1
+  },
+  "604": {
+    "id": 604,
+    "current_summary": "2nd Year consultation for Career Guidance",
+    "concern": "Juggling my job and classes is totally overwhelming, honestly.",
+    "action_taken": "Provided counseling and support for career guidance issues",
+    "outcome": "Student expressed improved understanding and confidence",
+    "duration": "01:00:00",
+    "session_date": "2025-06-13T14:33:12.833734",
+    "student_count": 1
+  },
+  "609": {
+    "id": 609,
+    "current_summary": "3rd Year consultation for Academic Stress",
+    "concern": "Is it even possible to balance work and school successfully?",
+    "action_taken": "Provided counseling and support for academic stress issues",
+    "outcome": "Student expressed improved understanding and confidence",
+    "duration": "01:00:00",
+    "session_date": "2025-05-20T14:33:12.833734",
+    "student_count": 1
+  },
+  "626": {
+    "id": 626,
+    "current_summary": "3rd Year consultation for Career Guidance",
+    "concern": "My part-time job is making studying incredibly difficult right now.",
+    "action_taken": "Provided counseling and support for career guidance issues",
+    "outcome": "Student expressed improved understanding and confidence",
+    "duration": "00:30:00",
+    "session_date": "2025-03-18T14:33:12.833734",
+    "student_count": 1
+  },
+  "725": {
+    "id": 725,
+    "current_summary": "Group consultation session addressing academic performance concerns. Duration: 01:30:00. Students showed excellent engagement and progress.",
+    "concern": "This semester's work is just crushing me; is anyone else struggling?",
+    "action_taken": "Provided academic resources and study materials for improvement",
+    "outcome": "Student demonstrated improved understanding and confidence",
+    "duration": "01:30:00",
+    "session_date": "2025-07-31T12:30:00",
+    "student_count": 2
+  },
+  "722": {
+    "id": 722,
+    "current_summary": "Individual consultation session addressing time management concerns. Duration: 01:15:00. Students showed good engagement and progress.",
+    "concern": "I'm dealing with difficulty prioritizing multiple assignments and project deadlines",
+    "action_taken": "Developed accountability system for deadline management",
+    "outcome": "Student demonstrated improved understanding and confidence",
+    "duration": "01:15:00",
+    "session_date": "2025-07-08T13:30:00",
+    "student_count": 1
+  },
+  "723": {
+    "id": 723,
+    "current_summary": "Group consultation session addressing time management concerns. Duration: 01:30:00. Students showed excellent engagement and progress.",
+    "concern": "Ugh, I'm terrible at balancing studying with, like, everything else.",
+    "action_taken": "Developed accountability system for deadline management",
+    "outcome": "Student needs additional follow-up sessions for continued support",
+    "duration": "01:30:00",
+    "session_date": "2025-07-27T15:00:00",
+    "student_count": 3
+  },
+  "546": {
+    "id": 546,
+    "current_summary": "1st Year consultation for Learning Difficulties",
+    "concern": "My mind keeps wandering; how can I stay on track while I study?",
+    "action_taken": "Provided counseling and support for learning difficulties issues",
+    "outcome": "Student expressed improved understanding and confidence",
+    "duration": "00:30:00",
+    "session_date": "2025-04-18T14:33:12.830732",
+    "student_count": 1
+  },
+  "547": {
+    "id": 547,
+    "current_summary": "1st Year consultation for Personal Issues",
+    "concern": "Stats and data analysis is absolutely drowning me right now!",
+    "action_taken": "Provided counseling and support for personal issues issues",
+    "outcome": "Student expressed improved understanding and confidence",
+    "duration": "00:45:00",
+    "session_date": "2025-03-08T14:33:12.830732",
+    "student_count": 1
+  },
+  "647": {
+    "id": 647,
+    "current_summary": "3rd Year consultation for Learning Difficulties",
+    "concern": "Is anyone else finding this statistics coursework completely brutal?",
+    "action_taken": "Provided counseling and support for learning difficulties issues",
+    "outcome": "Student expressed improved understanding and confidence",
+    "duration": "01:00:00",
+    "session_date": "2025-07-06T14:33:12.834733",
+    "student_count": 1
+  },
+  "517": {
+    "id": 517,
+    "current_summary": "1st Year consultation for Social Integration",
+    "concern": "Balancing clubs and classes feels impossible, time-wise!",
+    "action_taken": "Provided counseling and support for social integration issues",
+    "outcome": "Student expressed improved understanding and confidence",
+    "duration": "00:45:00",
+    "session_date": "2025-05-16T14:33:12.830732",
+    "student_count": 1
+  },
+  "600": {
+    "id": 600,
+    "current_summary": "2nd Year consultation for General Inquiries",
+    "concern": "Seriously struggling to fit everything in with my schedule.",
+    "action_taken": "Provided counseling and support for general inquiries issues",
+    "outcome": "Student expressed improved understanding and confidence",
+    "duration": "01:00:00",
+    "session_date": "2025-02-18T14:33:12.833734",
+    "student_count": 1
+  },
+  "630": {
+    "id": 630,
+    "current_summary": "3rd Year consultation for Career Guidance",
+    "concern": "Is there enough time for both academics *and* my activities?",
+    "action_taken": "Provided counseling and support for career guidance issues",
+    "outcome": "Student expressed improved understanding and confidence",
+    "duration": "00:30:00",
+    "session_date": "2025-06-28T14:33:12.834733",
+    "student_count": 1
+  },
+  "531": {
+    "id": 531,
+    "current_summary": "1st Year consultation for General Inquiries",
+    "concern": "Are those complex physics problems and experiments just brutal for everyone?",
+    "action_taken": "Provided counseling and support for general inquiries issues",
+    "outcome": "Student expressed improved understanding and confidence",
+    "duration": "00:45:00",
+    "session_date": "2025-03-19T14:33:12.830732",
+    "student_count": 1
+  },
+  "540": {
+    "id": 540,
+    "current_summary": "1st Year consultation for Learning Difficulties",
+    "concern": "I'm struggling with both the physics equations *and* the lab work.",
+    "action_taken": "Provided counseling and support for learning difficulties issues",
+    "outcome": "Student expressed improved understanding and confidence",
+    "duration": "01:00:00",
+    "session_date": "2025-03-02T14:33:12.830732",
+    "student_count": 1
+  },
+  "543": {
+    "id": 543,
+    "current_summary": "1st Year consultation for Learning Difficulties",
+    "concern": "Wow, physics labs and those equations are seriously overwhelming, right?",
+    "action_taken": "Provided counseling and support for learning difficulties issues",
+    "outcome": "Student expressed improved understanding and confidence",
+    "duration": "01:00:00",
+    "session_date": "2025-03-26T14:33:12.830732",
+    "student_count": 1
+  },
+  "551": {
+    "id": 551,
+    "current_summary": "1st Year consultation for Personal Issues",
+    "concern": "Finding the physics equations and experiments incredibly difficult, honestly.",
+    "action_taken": "Provided counseling and support for personal issues issues",
+    "outcome": "Student expressed improved understanding and confidence",
+    "duration": "01:00:00",
+    "session_date": "2025-06-08T14:33:12.830732",
+    "student_count": 1
+  },
+  "702": {
+    "id": 702,
+    "current_summary": "4th Year consultation for Personal Issues",
+    "concern": "Physics equations and labs are really hitting me hard; it's tough.",
+    "action_taken": "Provided counseling and support for personal issues issues",
+    "outcome": "Student expressed improved understanding and confidence",
+    "duration": "00:45:00",
+    "session_date": "2025-07-14T14:33:12.836860",
+    "student_count": 1
+  },
+  "545": {
+    "id": 545,
+    "current_summary": "1st Year consultation for Learning Difficulties",
+    "concern": "I'm struggling; my belief in myself is really tanking my grades.",
+    "action_taken": "Provided counseling and support for learning difficulties issues",
+    "outcome": "Student expressed improved understanding and confidence",
+    "duration": "00:30:00",
+    "session_date": "2025-08-07T14:33:12.830732",
+    "student_count": 1
+  },
+  "592": {
+    "id": 592,
+    "current_summary": "2nd Year consultation for Personal Issues",
+    "concern": "Is it normal to feel so insecure that it impacts my schoolwork?",
+    "action_taken": "Provided counseling and support for personal issues issues",
+    "outcome": "Student expressed improved understanding and confidence",
+    "duration": "01:00:00",
+    "session_date": "2025-07-01T14:33:12.832738",
+    "student_count": 1
+  },
+  "519": {
+    "id": 519,
+    "current_summary": "1st Year consultation for Social Integration",
+    "concern": "I could really use some help from the counseling center, you know?",
+    "action_taken": "Provided counseling and support for social integration issues",
+    "outcome": "Student expressed improved understanding and confidence",
+    "duration": "00:45:00",
+    "session_date": "2025-02-26T14:33:12.830732",
+    "student_count": 1
+  },
+  "572": {
+    "id": 572,
+    "current_summary": "2nd Year consultation for Academic Stress",
+    "concern": "Are there any mental health resources available on campus?",
+    "action_taken": "Provided counseling and support for academic stress issues",
+    "outcome": "Student expressed improved understanding and confidence",
+    "duration": "00:45:00",
+    "session_date": "2025-02-24T14:33:12.831732",
+    "student_count": 1
+  },
+  "648": {
+    "id": 648,
+    "current_summary": "3rd Year consultation for Learning Difficulties",
+    "concern": "Feeling overwhelmed; seeking support for my well-being.",
+    "action_taken": "Provided counseling and support for learning difficulties issues",
+    "outcome": "Student expressed improved understanding and confidence",
+    "duration": "00:30:00",
+    "session_date": "2025-03-17T14:33:12.834733",
+    "student_count": 1
+  },
+  "606": {
+    "id": 606,
+    "current_summary": "3rd Year consultation for Academic Stress",
+    "concern": "I'm a little lost on what I need to graduate, policy-wise.",
+    "action_taken": "Provided counseling and support for academic stress issues",
+    "outcome": "Student expressed improved understanding and confidence",
+    "duration": "01:00:00",
+    "session_date": "2025-07-20T14:33:12.833734",
+    "student_count": 1
+  },
+  "525": {
+    "id": 525,
+    "current_summary": "1st Year consultation for Social Integration",
+    "concern": "I'm always putting things off, which means all-nighters before deadlines.",
+    "action_taken": "Provided counseling and support for social integration issues",
+    "outcome": "Student expressed improved understanding and confidence",
+    "duration": "01:00:00",
+    "session_date": "2025-05-19T14:33:12.830732",
+    "student_count": 1
+  },
+  "536": {
+    "id": 536,
+    "current_summary": "1st Year consultation for General Inquiries",
+    "concern": "Does anyone else struggle with the cramming cycle because of delaying tasks?",
+    "action_taken": "Provided counseling and support for general inquiries issues",
+    "outcome": "Student expressed improved understanding and confidence",
+    "duration": "01:00:00",
+    "session_date": "2025-06-18T14:33:12.830732",
+    "student_count": 1
+  },
+  "589": {
+    "id": 589,
+    "current_summary": "2nd Year consultation for Personal Issues",
+    "concern": "Ugh, my procrastination habits are definitely hurting my grades; it's always a rush.",
+    "action_taken": "Provided counseling and support for personal issues issues",
+    "outcome": "Student expressed improved understanding and confidence",
+    "duration": "01:00:00",
+    "session_date": "2025-04-24T14:33:12.832738",
+    "student_count": 1
+  },
+  "524": {
+    "id": 524,
+    "current_summary": "1st Year consultation for Social Integration",
+    "concern": "Am I falling short of what's expected in my classes?",
+    "action_taken": "Provided counseling and support for social integration issues",
+    "outcome": "Student expressed improved understanding and confidence",
+    "duration": "00:45:00",
+    "session_date": "2025-07-15T14:33:12.830732",
+    "student_count": 1
+  },
+  "537": {
+    "id": 537,
+    "current_summary": "1st Year consultation for General Inquiries",
+    "concern": "I'm struggling to keep up with the academic demands, unfortunately.",
+    "action_taken": "Provided counseling and support for general inquiries issues",
+    "outcome": "Student expressed improved understanding and confidence",
+    "duration": "01:00:00",
+    "session_date": "2025-03-22T14:33:12.830732",
+    "student_count": 1
+  },
+  "640": {
+    "id": 640,
+    "current_summary": "3rd Year consultation for Career Guidance",
+    "concern": "It looks like I'm not succeeding academically, which is tough.",
+    "action_taken": "Provided counseling and support for career guidance issues",
+    "outcome": "Student expressed improved understanding and confidence",
+    "duration": "00:45:00",
+    "session_date": "2025-08-10T14:33:12.834733",
+    "student_count": 1
+  },
+  "698": {
+    "id": 698,
+    "current_summary": "4th Year consultation for Academic Stress",
+    "concern": "My grades aren't cutting it, and I'm not hitting the mark.",
+    "action_taken": "Provided counseling and support for academic stress issues",
+    "outcome": "Student expressed improved understanding and confidence",
+    "duration": "01:00:00",
+    "session_date": "2025-03-08T14:33:12.836860",
+    "student_count": 1
+  },
+  "555": {
+    "id": 555,
+    "current_summary": "1st Year consultation for Career Guidance",
+    "concern": "My goals feel distant; is this even what I want anymore?",
+    "action_taken": "Provided counseling and support for career guidance issues",
+    "outcome": "Student expressed improved understanding and confidence",
+    "duration": "00:30:00",
+    "session_date": "2025-07-10T14:33:12.831732",
+    "student_count": 1
+  },
+  "613": {
+    "id": 613,
+    "current_summary": "3rd Year consultation for Academic Stress",
+    "concern": "Ugh, I'm totally lost; my ambitions have just...vanished.",
+    "action_taken": "Provided counseling and support for academic stress issues",
+    "outcome": "Student expressed improved understanding and confidence",
+    "duration": "00:30:00",
+    "session_date": "2025-05-26T14:33:12.833734",
+    "student_count": 1
+  },
+  "521": {
+    "id": 521,
+    "current_summary": "1st Year consultation for Social Integration",
+    "concern": "Academic expectations versus reality is causing me stress",
+    "action_taken": "Provided counseling and support for social integration issues",
+    "outcome": "Student expressed improved understanding and confidence",
+    "duration": "00:45:00",
+    "session_date": "2025-04-13T14:33:12.830732",
+    "student_count": 1
+  },
+  "579": {
+    "id": 579,
+    "current_summary": "2nd Year consultation for Learning Difficulties",
+    "concern": "Struggling to maintain the GPA I need for my goals",
+    "action_taken": "Provided counseling and support for learning difficulties issues",
+    "outcome": "Student expressed improved understanding and confidence",
+    "duration": "00:45:00",
+    "session_date": "2025-04-09T14:33:12.832738",
+    "student_count": 1
+  },
+  "584": {
+    "id": 584,
+    "current_summary": "2nd Year consultation for Learning Difficulties",
+    "concern": "My test scores aren't reflecting the time I put into studying",
+    "action_taken": "Provided counseling and support for learning difficulties issues",
+    "outcome": "Student expressed improved understanding and confidence",
+    "duration": "01:00:00",
+    "session_date": "2025-06-01T14:33:12.832738",
+    "student_count": 1
+  },
+  "587": {
+    "id": 587,
+    "current_summary": "2nd Year consultation for Personal Issues",
+    "concern": "My grades are slipping and I need help getting back on track",
+    "action_taken": "Provided counseling and support for personal issues issues",
+    "outcome": "Student expressed improved understanding and confidence",
+    "duration": "01:00:00",
+    "session_date": "2025-07-31T14:33:12.832738",
+    "student_count": 1
+  },
+  "594": {
+    "id": 594,
+    "current_summary": "2nd Year consultation for Social Integration",
+    "concern": "Having difficulty keeping up with course requirements",
+    "action_taken": "Provided counseling and support for social integration issues",
+    "outcome": "Student expressed improved understanding and confidence",
+    "duration": "01:00:00",
+    "session_date": "2025-05-15T14:33:12.832738",
+    "student_count": 1
+  },
+  "631": {
+    "id": 631,
+    "current_summary": "3rd Year consultation for Career Guidance",
+    "concern": "Academic performance is declining despite my best efforts",
+    "action_taken": "Provided counseling and support for career guidance issues",
+    "outcome": "Student expressed improved understanding and confidence",
+    "duration": "00:45:00",
+    "session_date": "2025-08-15T14:33:12.834733",
+    "student_count": 1
+  },
+  "654": {
+    "id": 654,
+    "current_summary": "3rd Year consultation for Personal Issues",
+    "concern": "Having issues with difficulty maintaining required gpa for scholarship",
+    "action_taken": "Provided counseling and support for personal issues issues",
+    "outcome": "Student expressed improved understanding and confidence",
+    "duration": "00:45:00",
+    "session_date": "2025-08-07T14:33:12.834733",
+    "student_count": 1
+  },
+  "611": {
+    "id": 611,
+    "current_summary": "3rd Year consultation for Academic Stress",
+    "concern": "University workload is causing overwhelming stress",
+    "action_taken": "Provided counseling and support for academic stress issues",
+    "outcome": "Student expressed improved understanding and confidence",
+    "duration": "01:00:00",
+    "session_date": "2025-04-27T14:33:12.833734",
+    "student_count": 1
+  },
+  "542": {
+    "id": 542,
+    "current_summary": "1st Year consultation for Learning Difficulties",
+    "concern": "I'm dealing with poor grades in multiple subjects affecting overall gpa",
+    "action_taken": "Provided counseling and support for learning difficulties issues",
+    "outcome": "Student expressed improved understanding and confidence",
+    "duration": "00:45:00",
+    "session_date": "2025-06-24T14:33:12.830732",
+    "student_count": 1
+  },
+  "593": {
+    "id": 593,
+    "current_summary": "2nd Year consultation for Personal Issues",
+    "concern": "Currently facing poor grades in multiple subjects affecting overall gpa",
+    "action_taken": "Provided counseling and support for personal issues issues",
+    "outcome": "Student expressed improved understanding and confidence",
+    "duration": "00:30:00",
+    "session_date": "2025-08-13T14:33:12.832738",
+    "student_count": 1
+  },
+  "622": {
+    "id": 622,
+    "current_summary": "3rd Year consultation for Academic Stress",
+    "concern": "Need help with poor grades in multiple subjects affecting overall gpa",
+    "action_taken": "Provided counseling and support for academic stress issues",
+    "outcome": "Student expressed improved understanding and confidence",
+    "duration": "00:45:00",
+    "session_date": "2025-03-10T14:33:12.833734",
+    "student_count": 1
+  },
+  "650": {
+    "id": 650,
+    "current_summary": "3rd Year consultation for Personal Issues",
+    "concern": "Struggling with poor grades in multiple subjects affecting overall gpa",
+    "action_taken": "Provided counseling and support for personal issues issues",
+    "outcome": "Student expressed improved understanding and confidence",
+    "duration": "00:30:00",
+    "session_date": "2025-06-13T14:33:12.834733",
+    "student_count": 1
+  },
+  "635": {
+    "id": 635,
+    "current_summary": "3rd Year consultation for Career Guidance",
+    "concern": "I'm dealing with lost sense of purpose and direction in studies",
+    "action_taken": "Provided counseling and support for career guidance issues",
+    "outcome": "Student expressed improved understanding and confidence",
+    "duration": "00:30:00",
+    "session_date": "2025-04-17T14:33:12.834733",
+    "student_count": 1
+  },
+  "563": {
+    "id": 563,
+    "current_summary": "2nd Year consultation for Academic Stress",
+    "concern": "I'm dealing with low test scores and quiz performance impacting final grades",
+    "action_taken": "Provided counseling and support for academic stress issues",
+    "outcome": "Student expressed improved understanding and confidence",
+    "duration": "00:45:00",
+    "session_date": "2025-04-14T14:33:12.831732",
+    "student_count": 1
+  },
+  "577": {
+    "id": 577,
+    "current_summary": "2nd Year consultation for Learning Difficulties",
+    "concern": "Currently facing low test scores and quiz performance impacting final grades",
+    "action_taken": "Provided counseling and support for learning difficulties issues",
+    "outcome": "Student expressed improved understanding and confidence",
+    "duration": "01:00:00",
+    "session_date": "2025-06-15T14:33:12.832738",
+    "student_count": 1
+  },
+  "585": {
+    "id": 585,
+    "current_summary": "2nd Year consultation for Learning Difficulties",
+    "concern": "Need help with low test scores and quiz performance impacting final grades",
+    "action_taken": "Provided counseling and support for learning difficulties issues",
+    "outcome": "Student expressed improved understanding and confidence",
+    "duration": "01:00:00",
+    "session_date": "2025-03-21T14:33:12.832738",
+    "student_count": 1
+  },
+  "637": {
+    "id": 637,
+    "current_summary": "3rd Year consultation for Career Guidance",
+    "concern": "Struggling with low test scores and quiz performance impacting final grades",
+    "action_taken": "Provided counseling and support for career guidance issues",
+    "outcome": "Student expressed improved understanding and confidence",
+    "duration": "00:30:00",
+    "session_date": "2025-06-18T14:33:12.834733",
+    "student_count": 1
+  },
+  "538": {
+    "id": 538,
+    "current_summary": "1st Year consultation for General Inquiries",
+    "concern": "Losing interest in my academic program",
+    "action_taken": "Provided counseling and support for general inquiries issues",
+    "outcome": "Student expressed improved understanding and confidence",
+    "duration": "00:30:00",
+    "session_date": "2025-07-06T14:33:12.830732",
+    "student_count": 1
+  },
+  "550": {
+    "id": 550,
+    "current_summary": "1st Year consultation for Personal Issues",
+    "concern": "Questioning my commitment to current studies",
+    "action_taken": "Provided counseling and support for personal issues issues",
+    "outcome": "Student expressed improved understanding and confidence",
+    "duration": "01:00:00",
+    "session_date": "2025-04-16T14:33:12.830732",
+    "student_count": 1
+  },
+  "569": {
+    "id": 569,
+    "current_summary": "2nd Year consultation for Academic Stress",
+    "concern": "I'm dealing with academic performance declining compared to previous semester",
+    "action_taken": "Provided counseling and support for academic stress issues",
+    "outcome": "Student expressed improved understanding and confidence",
+    "duration": "01:00:00",
+    "session_date": "2025-06-16T14:33:12.831732",
+    "student_count": 1
+  },
+  "607": {
+    "id": 607,
+    "current_summary": "3rd Year consultation for Academic Stress",
+    "concern": "Currently facing academic performance declining compared to previous semester",
+    "action_taken": "Provided counseling and support for academic stress issues",
+    "outcome": "Student expressed improved understanding and confidence",
+    "duration": "00:30:00",
+    "session_date": "2025-07-26T14:33:12.833734",
+    "student_count": 1
+  },
+  "649": {
+    "id": 649,
+    "current_summary": "3rd Year consultation for Personal Issues",
+    "concern": "Need help with academic performance declining compared to previous semester",
+    "action_taken": "Provided counseling and support for personal issues issues",
+    "outcome": "Student expressed improved understanding and confidence",
+    "duration": "00:45:00",
+    "session_date": "2025-05-24T14:33:12.834733",
+    "student_count": 1
+  },
+  "656": {
+    "id": 656,
+    "current_summary": "3rd Year consultation for General Inquiries",
+    "concern": "Struggling with academic performance declining compared to previous semester",
+    "action_taken": "Provided counseling and support for general inquiries issues",
+    "outcome": "Student expressed improved understanding and confidence",
+    "duration": "00:45:00",
+    "session_date": "2025-07-03T14:33:12.834733",
+    "student_count": 1
+  },
+  "571": {
+    "id": 571,
+    "current_summary": "2nd Year consultation for Academic Stress",
+    "concern": "I'm dealing with chemistry course content and chemical reactions confusing",
+    "action_taken": "Provided counseling and support for academic stress issues",
+    "outcome": "Student expressed improved understanding and confidence",
+    "duration": "00:45:00",
+    "session_date": "2025-08-08T14:33:12.831732",
+    "student_count": 1
+  },
+  "602": {
+    "id": 602,
+    "current_summary": "2nd Year consultation for General Inquiries",
+    "concern": "Currently facing chemistry course content and chemical reactions confusing",
+    "action_taken": "Provided counseling and support for general inquiries issues",
+    "outcome": "Student expressed improved understanding and confidence",
+    "duration": "01:00:00",
+    "session_date": "2025-07-20T14:33:12.833734",
+    "student_count": 1
+  },
+  "580": {
+    "id": 580,
+    "current_summary": "2nd Year consultation for Learning Difficulties",
+    "concern": "I'm dealing with struggling with advanced mathematics concepts and problem-solving",
+    "action_taken": "Provided counseling and support for learning difficulties issues",
+    "outcome": "Student expressed improved understanding and confidence",
+    "duration": "00:30:00",
+    "session_date": "2025-07-03T14:33:12.832738",
+    "student_count": 1
+  },
+  "603": {
+    "id": 603,
+    "current_summary": "2nd Year consultation for General Inquiries",
+    "concern": "Currently facing struggling with advanced mathematics concepts and problem-solving",
+    "action_taken": "Provided counseling and support for general inquiries issues",
+    "outcome": "Student expressed improved understanding and confidence",
+    "duration": "01:00:00",
+    "session_date": "2025-06-30T14:33:12.833734",
+    "student_count": 1
+  },
+  "623": {
+    "id": 623,
+    "current_summary": "3rd Year consultation for Academic Stress",
+    "concern": "Need help with struggling with advanced mathematics concepts and problem-solving",
+    "action_taken": "Provided counseling and support for academic stress issues",
+    "outcome": "Student expressed improved understanding and confidence",
+    "duration": "00:45:00",
+    "session_date": "2025-07-29T14:33:12.833734",
+    "student_count": 1
+  },
+  "641": {
+    "id": 641,
+    "current_summary": "3rd Year consultation for Learning Difficulties",
+    "concern": "Struggling with struggling with advanced mathematics concepts and problem-solving",
+    "action_taken": "Provided counseling and support for learning difficulties issues",
+    "outcome": "Student expressed improved understanding and confidence",
+    "duration": "01:00:00",
+    "session_date": "2025-04-01T14:33:12.834733",
+    "student_count": 1
+  },
+  "643": {
+    "id": 643,
+    "current_summary": "3rd Year consultation for Learning Difficulties",
+    "concern": "Experiencing struggling with advanced mathematics concepts and problem-solving",
+    "action_taken": "Provided counseling and support for learning difficulties issues",
+    "outcome": "Student expressed improved understanding and confidence",
+    "duration": "00:45:00",
+    "session_date": "2025-07-04T14:33:12.834733",
+    "student_count": 1
+  },
+  "554": {
+    "id": 554,
+    "current_summary": "1st Year consultation for Academic Stress",
+    "concern": "The pressure to succeed is mentally draining",
+    "action_taken": "Provided counseling and support for academic stress issues",
+    "outcome": "Student expressed improved understanding and confidence",
+    "duration": "01:00:00",
+    "session_date": "2025-06-28T14:33:12.830732",
+    "student_count": 1
+  },
+  "558": {
+    "id": 558,
+    "current_summary": "2nd Year consultation for Academic Stress",
+    "concern": "Anxiety about academic performance is consuming",
+    "action_taken": "Provided counseling and support for academic stress issues",
+    "outcome": "Student expressed improved understanding and confidence",
+    "duration": "01:00:00",
+    "session_date": "2025-06-08T14:33:12.831732",
+    "student_count": 1
+  },
+  "559": {
+    "id": 559,
+    "current_summary": "2nd Year consultation for Academic Stress",
+    "concern": "Academic stress is impacting my daily functioning",
+    "action_taken": "Provided counseling and support for academic stress issues",
+    "outcome": "Student expressed improved understanding and confidence",
+    "duration": "00:45:00",
+    "session_date": "2025-08-15T14:33:12.831732",
+    "student_count": 1
+  },
+  "568": {
+    "id": 568,
+    "current_summary": "2nd Year consultation for Academic Stress",
+    "concern": "Academic pressure is affecting my mental well-being",
+    "action_taken": "Provided counseling and support for academic stress issues",
+    "outcome": "Student expressed improved understanding and confidence",
+    "duration": "01:00:00",
+    "session_date": "2025-08-14T14:33:12.831732",
+    "student_count": 1
+  },
+  "617": {
+    "id": 617,
+    "current_summary": "3rd Year consultation for Academic Stress",
+    "concern": "Constant worry about assignments is exhausting",
+    "action_taken": "Provided counseling and support for academic stress issues",
+    "outcome": "Student expressed improved understanding and confidence",
+    "duration": "00:30:00",
+    "session_date": "2025-08-09T14:33:12.833734",
+    "student_count": 1
+  },
+  "629": {
+    "id": 629,
+    "current_summary": "3rd Year consultation for Career Guidance",
+    "concern": "Stress-related physical symptoms affecting studies - need guidance",
+    "action_taken": "Provided counseling and support for career guidance issues",
+    "outcome": "Student expressed improved understanding and confidence",
+    "duration": "00:45:00",
+    "session_date": "2025-05-24T14:33:12.833734",
+    "student_count": 1
+  },
+  "646": {
+    "id": 646,
+    "current_summary": "3rd Year consultation for Learning Difficulties",
+    "concern": "Having issues with stress-related physical symptoms affecting studies",
+    "action_taken": "Provided counseling and support for learning difficulties issues",
+    "outcome": "Student expressed improved understanding and confidence",
+    "duration": "00:45:00",
+    "session_date": "2025-05-21T14:33:12.834733",
+    "student_count": 1
+  },
+  "586": {
+    "id": 586,
+    "current_summary": "2nd Year consultation for Personal Issues",
+    "concern": "I'm dealing with career guidance and professional development opportunities",
+    "action_taken": "Provided counseling and support for personal issues issues",
+    "outcome": "Student expressed improved understanding and confidence",
+    "duration": "00:45:00",
+    "session_date": "2025-07-28T14:33:12.832738",
+    "student_count": 1
+  },
+  "614": {
+    "id": 614,
+    "current_summary": "3rd Year consultation for Academic Stress",
+    "concern": "Currently facing career guidance and professional development opportunities",
+    "action_taken": "Provided counseling and support for academic stress issues",
+    "outcome": "Student expressed improved understanding and confidence",
+    "duration": "00:30:00",
+    "session_date": "2025-04-09T14:33:12.833734",
+    "student_count": 1
+  },
+  "624": {
+    "id": 624,
+    "current_summary": "3rd Year consultation for Academic Stress",
+    "concern": "Need help with career guidance and professional development opportunities",
+    "action_taken": "Provided counseling and support for academic stress issues",
+    "outcome": "Student expressed improved understanding and confidence",
+    "duration": "01:00:00",
+    "session_date": "2025-02-21T14:33:12.833734",
+    "student_count": 1
+  },
+  "645": {
+    "id": 645,
+    "current_summary": "3rd Year consultation for Learning Difficulties",
+    "concern": "Struggling with career guidance and professional development opportunities",
+    "action_taken": "Provided counseling and support for learning difficulties issues",
+    "outcome": "Student expressed improved understanding and confidence",
+    "duration": "01:00:00",
+    "session_date": "2025-07-26T14:33:12.834733",
+    "student_count": 1
+  },
+  "570": {
+    "id": 570,
+    "current_summary": "2nd Year consultation for Academic Stress",
+    "concern": "I'm dealing with biology laboratory practicals and experiments challenging",
+    "action_taken": "Provided counseling and support for academic stress issues",
+    "outcome": "Student expressed improved understanding and confidence",
+    "duration": "01:00:00",
+    "session_date": "2025-04-16T14:33:12.831732",
+    "student_count": 1
+  },
+  "597": {
+    "id": 597,
+    "current_summary": "2nd Year consultation for Social Integration",
+    "concern": "Currently facing biology laboratory practicals and experiments challenging",
+    "action_taken": "Provided counseling and support for social integration issues",
+    "outcome": "Student expressed improved understanding and confidence",
+    "duration": "00:30:00",
+    "session_date": "2025-04-26T14:33:12.833734",
+    "student_count": 1
+  },
+  "621": {
+    "id": 621,
+    "current_summary": "3rd Year consultation for Academic Stress",
+    "concern": "Need help with biology laboratory practicals and experiments challenging",
+    "action_taken": "Provided counseling and support for academic stress issues",
+    "outcome": "Student expressed improved understanding and confidence",
+    "duration": "00:45:00",
+    "session_date": "2025-06-15T14:33:12.833734",
+    "student_count": 1
+  },
+  "638": {
+    "id": 638,
+    "current_summary": "3rd Year consultation for Career Guidance",
+    "concern": "Struggling with biology laboratory practicals and experiments challenging",
+    "action_taken": "Provided counseling and support for career guidance issues",
+    "outcome": "Student expressed improved understanding and confidence",
+    "duration": "01:00:00",
+    "session_date": "2025-04-09T14:33:12.834733",
+    "student_count": 1
+  },
+  "713": {
+    "id": 713,
+    "current_summary": "4th Year consultation for General Inquiries",
+    "concern": "I'm dealing with research methodology and thesis writing requirements unclear",
+    "action_taken": "Provided counseling and support for general inquiries issues",
+    "outcome": "Student expressed improved understanding and confidence",
+    "duration": "00:30:00",
+    "session_date": "2025-04-23T14:33:12.836860",
+    "student_count": 1
+  },
+  "618": {
+    "id": 618,
+    "current_summary": "3rd Year consultation for Academic Stress",
+    "concern": "Struggling to maintain engagement with learning",
+    "action_taken": "Provided counseling and support for academic stress issues",
+    "outcome": "Student expressed improved understanding and confidence",
+    "duration": "00:45:00",
+    "session_date": "2025-07-29T14:33:12.833734",
+    "student_count": 1
+  },
+  "636": {
+    "id": 636,
+    "current_summary": "3rd Year consultation for Career Guidance",
+    "concern": "Currently facing lack of engagement and enthusiasm for coursework",
+    "action_taken": "Provided counseling and support for career guidance issues",
+    "outcome": "Student expressed improved understanding and confidence",
+    "duration": "00:45:00",
+    "session_date": "2025-07-14T14:33:12.834733",
+    "student_count": 1
+  }
+}

@@ -29,7 +29,7 @@ const StudentAppointments = React.memo(() => {
   }
 
   return (
-    <div className="bg-white p-4 rounded-lg shadow-lg">
+    <div className="bg-white/80 backdrop-blur p-4 rounded-xl shadow-md ring-1 ring-blue-100">
       <Calendar
         localizer={localizer}
         events={events}

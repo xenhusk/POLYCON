@@ -1,8 +1,11 @@
 import React, { useState, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import API_URL from '../apiConfig';
+import ScheduleCard from './ScheduleCard';
+import AddScheduleCard from './AddScheduleCard';
+import DeleteConfirmationModal from './DeleteConfirmationModal';
 
-// CSS for hiding scrollbar
+// CSS for hiding scrollbar and card effects
 const modalStyles = `
   .modal-no-scrollbar::-webkit-scrollbar {
     display: none;
@@ -10,6 +13,30 @@ const modalStyles = `
   .modal-no-scrollbar {
     -ms-overflow-style: none;
     scrollbar-width: none;
+  }
+  .perspective-1000 {
+    perspective: 1000px;
+  }
+  .card-flip {
+    transform-style: preserve-3d;
+    transition: transform 0.6s cubic-bezier(0.4, 0, 0.2, 1), scale 0.6s cubic-bezier(0.4, 0, 0.2, 1);
+    transform-origin: center center;
+  }
+  .card-flip.flipped {
+    transform: rotateY(180deg) scale(1.1);
+    z-index: 10;
+  }
+  .card-front, .card-back {
+    backface-visibility: hidden;
+  }
+  .card-back {
+    transform: rotateY(180deg);
+  }
+  .card-container {
+    transition: all 0.3s ease;
+  }
+  .card-container.flipped {
+    z-index: 20;
   }
 `;
 
@@ -23,14 +50,6 @@ if (typeof document !== 'undefined') {
     document.head.appendChild(style);
   }
 }
-
-// Schedule icon SVG
-const ScheduleIcon = () => (
-  <svg width="24" height="24" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
-    <path d="M8 2V5M16 2V5M3.5 9.09H20.5M21 8.5V17C21 20 19.5 22 16 22H8C4.5 22 3 20 3 17V8.5C3 5.5 4.5 3.5 8 3.5H16C19.5 3.5 21 5.5 21 8.5Z" stroke="white" strokeWidth="1.5" strokeMiterlimit="10" strokeLinecap="round" strokeLinejoin="round"/>
-    <path d="M15.6947 13.7002H15.7037M15.6947 16.7002H15.7037M11.9955 13.7002H12.0045M11.9955 16.7002H12.0045M8.29431 13.7002H8.30329M8.29431 16.7002H8.30329" stroke="white" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
-  </svg>
-);
 
 const modalVariants = {
   hidden: { opacity: 0, scale: 0.95, y: 20 },
@@ -60,7 +79,11 @@ const TeacherScheduleManager = () => {
   const [showModal, setShowModal] = useState(false);
   const [editingSchedule, setEditingSchedule] = useState(null);
   const [scheduleClicked, setScheduleClicked] = useState(false);
-  
+  const [flippedCards, setFlippedCards] = useState(new Set());
+  const [editingCardId, setEditingCardId] = useState(null);
+  const [deleteModalOpen, setDeleteModalOpen] = useState(false);
+  const [scheduleToDelete, setScheduleToDelete] = useState(null);
+
   const [formData, setFormData] = useState({
     day_of_week: '',
     start_time: '',
@@ -77,6 +100,58 @@ const TeacherScheduleManager = () => {
     4: 'Friday',
     5: 'Saturday',
     6: 'Sunday'
+  };
+
+  const dayColors = {
+    0: { // Monday - Deep Blue
+      card: 'from-blue-50 to-blue-100',
+      border: 'border-blue-200',
+      accent: 'bg-blue-500',
+      form: 'from-blue-100 to-blue-150',
+      formBorder: 'border-blue-300'
+    },
+    1: { // Tuesday - Rose
+      card: 'from-rose-50 to-rose-100',
+      border: 'border-rose-200',
+      accent: 'bg-rose-500',
+      form: 'from-rose-100 to-rose-150',
+      formBorder: 'border-rose-300'
+    },
+    2: { // Wednesday - Yellow
+      card: 'from-yellow-50 to-yellow-100',
+      border: 'border-yellow-200',
+      accent: 'bg-yellow-500',
+      form: 'from-yellow-100 to-yellow-150',
+      formBorder: 'border-yellow-300'
+    },
+    3: { // Thursday - Purple
+      card: 'from-purple-50 to-purple-100',
+      border: 'border-purple-200',
+      accent: 'bg-purple-500',
+      form: 'from-purple-100 to-purple-150',
+      formBorder: 'border-purple-300'
+    },
+    4: { // Friday - Emerald
+      card: 'from-emerald-50 to-emerald-100',
+      border: 'border-emerald-200',
+      accent: 'bg-emerald-500',
+      form: 'from-emerald-100 to-emerald-150',
+      formBorder: 'border-emerald-300'
+    },
+    5: { // Saturday - Orange
+      card: 'from-orange-50 to-orange-100',
+      border: 'border-orange-200',
+      accent: 'bg-orange-500',
+      form: 'from-orange-100 to-orange-150',
+      formBorder: 'border-orange-300'
+    },
+    6: { // Sunday - Rose
+      card: 'from-rose-50 to-rose-100',
+      border: 'border-rose-200',
+      accent: 'bg-rose-500',
+      form: 'from-rose-100 to-rose-150',
+      formBorder: 'border-rose-300'
+    }
   };
 
   useEffect(() => {
@@ -191,19 +266,32 @@ const TeacherScheduleManager = () => {
     setShowModal(true);
   };
 
-  const handleDelete = async (scheduleId) => {
-    if (!window.confirm('Are you sure you want to delete this schedule?')) {
-      return;
+  const handleDelete = (scheduleId) => {
+    const schedule = schedules.find(s => s.id === scheduleId);
+    if (schedule) {
+      setScheduleToDelete({
+        id: scheduleId,
+        dayName: dayNames[schedule.day_of_week],
+        timeRange: `${formatTime(schedule.start_time)} - ${formatTime(schedule.end_time)}`,
+        venue: schedule.venue
+      });
+      setDeleteModalOpen(true);
     }
+  };
+
+  const confirmDelete = async () => {
+    if (!scheduleToDelete) return;
 
     const teacherId = getTeacherId();
     if (!teacherId) {
       setError('Teacher ID not found. Please login again.');
+      setDeleteModalOpen(false);
+      setScheduleToDelete(null);
       return;
     }
 
     try {
-      const response = await fetch(`${API_URL}/teacher_schedule/delete/${scheduleId}?teacher_id=${teacherId}`, {
+      const response = await fetch(`${API_URL}/teacher_schedule/delete/${scheduleToDelete.id}?teacher_id=${teacherId}`, {
         method: 'DELETE',
       });
 
@@ -220,7 +308,15 @@ const TeacherScheduleManager = () => {
       console.error('Error deleting schedule:', error);
       setError('Failed to delete schedule');
       setTimeout(() => setError(''), 3000);
+    } finally {
+      setDeleteModalOpen(false);
+      setScheduleToDelete(null);
     }
+  };
+
+  const cancelDelete = () => {
+    setDeleteModalOpen(false);
+    setScheduleToDelete(null);
   };
 
   const resetForm = () => {
@@ -239,6 +335,87 @@ const TeacherScheduleManager = () => {
     resetForm();
     setError('');
     setSuccess('');
+  };
+
+  const toggleCardFlip = (scheduleId) => {
+    setFlippedCards(prev => {
+      const newSet = new Set(prev);
+      if (newSet.has(scheduleId)) {
+        // Close the current card
+        newSet.delete(scheduleId);
+        setEditingCardId(null);
+      } else {
+        // Close all other cards and open this one
+        newSet.clear();
+        newSet.add(scheduleId);
+        setEditingCardId(scheduleId);
+      }
+      return newSet;
+    });
+  };
+
+
+  const handleCardEdit = (schedule) => {
+    setEditingSchedule(schedule);
+    setFormData({
+      day_of_week: schedule.day_of_week.toString(),
+      start_time: schedule.start_time,
+      end_time: schedule.end_time,
+      venue: schedule.venue || '',
+      is_available: schedule.is_available
+    });
+    setShowModal(true);
+    // Close the flipped card
+    setFlippedCards(new Set());
+    setEditingCardId(null);
+  };
+
+  const handleCardFormSubmit = async (e, localFormData) => {
+    e.preventDefault();
+    e.stopPropagation();
+    
+    try {
+      setError('');
+      setSuccess('');
+      
+      const schedule = schedules.find(s => s.id === editingCardId);
+      if (!schedule) return;
+
+      const response = await fetch(`${API_URL}/teacher_schedule/update/${schedule.id}`, {
+        method: 'PUT',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          teacher_id: getTeacherId(),
+          day_of_week: parseInt(localFormData.day_of_week),
+          start_time: localFormData.start_time,
+          end_time: localFormData.end_time,
+          venue: localFormData.venue,
+          is_available: localFormData.is_available
+        })
+      });
+
+      if (response.ok) {
+        setSuccess('Schedule updated successfully!');
+        await fetchSchedules();
+        // Close the card after successful update
+        setTimeout(() => {
+          setFlippedCards(prev => {
+            const newSet = new Set(prev);
+            newSet.delete(editingCardId);
+            return newSet;
+          });
+          setEditingCardId(null);
+          setSuccess('');
+        }, 1500);
+      } else {
+        const errorData = await response.json();
+        setError(errorData.message || 'Failed to update schedule');
+      }
+    } catch (error) {
+      setError('Network error. Please try again.');
+    }
   };
 
   const formatTime = (timeStr) => {
@@ -260,170 +437,194 @@ const TeacherScheduleManager = () => {
 
   return (
     <>
-      <div className="min-h-screen bg-gray-50 p-2 sm:p-4 lg:p-6">
-        <div className="w-full max-w-none">
-          {/* Header */}
-          <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center mb-4 sm:mb-6 gap-4">
-            <div className="flex-1">
-              <h1 className="text-2xl sm:text-3xl lg:text-4xl font-bold text-[#0065A8]">My Consultation Schedule</h1>
-              <p className="text-gray-600 mt-1 text-sm sm:text-base">Manage your weekly consultation hours</p>
-            </div>
-            
-            {/* Floating Add Button */}
-            <button
-              onClick={() => {
-                setScheduleClicked(true);
-                setTimeout(() => setScheduleClicked(false), 200);
-                setShowModal(true);
-              }}
-              className={`bg-[#0065A8] hover:bg-[#1976d2] text-white p-3 sm:p-4 rounded-lg shadow-lg transform hover:scale-110 
-                        transition-all duration-300 ease-in-out flex items-center gap-2 sm:gap-3 shrink-0
-                        ${scheduleClicked ? "scale-90" : "scale-100"}`}
-              title="Add New Schedule"
+      <div className="min-h-screen bg-gradient-to-br from-gray-50 to-blue-50 font-poppins">
+        {/* Hero Section */}
+        <motion.section
+          initial={{ opacity: 0 }}
+          animate={{ opacity: 1 }}
+          transition={{ duration: 0.8 }}
+          className="relative py-20 overflow-hidden"
+        >
+          {/* Background Elements */}
+          <div className="absolute inset-0 bg-gradient-to-br from-[#057DCD] via-[#046bb8] to-[#034a94]" />
+          <div className="absolute inset-0 bg-black bg-opacity-20" />
+          
+          {/* Floating Elements */}
+          <motion.div
+            animate={{ 
+              y: [0, -20, 0],
+              rotate: [0, 5, 0]
+            }}
+            transition={{ 
+              duration: 6,
+              repeat: Infinity,
+              ease: "easeInOut"
+            }}
+            className="absolute top-10 left-10 w-20 h-20 bg-blue-400 rounded-full opacity-20"
+          />
+          <motion.div
+            animate={{ 
+              y: [0, 30, 0],
+              rotate: [0, -5, 0]
+            }}
+            transition={{ 
+              duration: 8,
+              repeat: Infinity,
+              ease: "easeInOut"
+            }}
+            className="absolute bottom-10 right-10 w-32 h-32 bg-blue-300 rounded-full opacity-15"
+          />
+
+          <div className="relative z-10 max-w-7xl mx-auto px-6">
+            <motion.div
+              initial={{ opacity: 0, y: 30 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ duration: 0.8, delay: 0.2 }}
+              className="text-center"
             >
-              <span className="font-medium text-sm lg:text-base">Add Schedule</span>
-            </button>
+              <h1 className="text-4xl md:text-5xl lg:text-6xl font-bold text-white mb-4">
+                My Consultation Schedule
+              </h1>
+              <p className="text-xl md:text-2xl text-blue-200 mb-8">
+                Manage your weekly consultation hours
+              </p>
+            </motion.div>
           </div>
+        </motion.section>
+
+        <div className="container mx-auto px-4 py-8">
+          {/* Header */}
+          <motion.div
+            initial={{ opacity: 0, y: 20 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ delay: 0.3 }}
+            className="flex flex-col sm:flex-row justify-between items-start sm:items-center mb-8 gap-4"
+          >
+            <div className="flex-1">
+              <h2 className="text-2xl sm:text-3xl font-bold text-gray-800">Weekly Schedule</h2>
+              <p className="text-gray-600 mt-1 text-sm sm:text-base">Configure your availability for student consultations</p>
+            </div>
+          </motion.div>
 
           {/* Success/Error Messages */}
           <AnimatePresence>
             {success && (
               <motion.div
-                initial={{ opacity: 0, y: -10 }}
-                animate={{ opacity: 1, y: 0 }}
-                exit={{ opacity: 0, y: -10 }}
-                className="mb-4 sm:mb-6 bg-green-100 border border-green-400 text-green-700 px-4 sm:px-6 py-3 sm:py-4 rounded-lg shadow-md"
+                initial={{ opacity: 0, scale: 0.9 }}
+                animate={{ opacity: 1, scale: 1 }}
+                exit={{ opacity: 0, scale: 0.9 }}
+                className="mb-8 flex justify-center"
               >
-                <div className="flex items-center">
-                  <svg className="w-4 h-4 sm:w-5 sm:h-5 mr-2 shrink-0" fill="currentColor" viewBox="0 0 20 20">
-                    <path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clipRule="evenodd" />
-                  </svg>
-                  <span className="text-sm sm:text-base">{success}</span>
+                <div className="bg-white rounded-2xl shadow-2xl p-6 border border-gray-100 max-w-2xl mx-auto">
+                  <div className="flex items-center justify-center gap-4">
+                    <div className="w-12 h-12 bg-gradient-to-br from-green-200 to-green-300 rounded-full flex items-center justify-center">
+                      <svg className="w-6 h-6 text-green-600" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
+                      </svg>
+                    </div>
+                    <div className="text-center">
+                      <h3 className="text-lg font-bold text-gray-800 mb-1">Success!</h3>
+                      <p className="text-gray-600">{success}</p>
+                    </div>
+                  </div>
                 </div>
               </motion.div>
             )}
 
             {error && (
               <motion.div
-                initial={{ opacity: 0, y: -10 }}
-                animate={{ opacity: 1, y: 0 }}
-                exit={{ opacity: 0, y: -10 }}
-                className="mb-4 sm:mb-6 bg-red-100 border border-red-400 text-red-700 px-4 sm:px-6 py-3 sm:py-4 rounded-lg shadow-md"
+                initial={{ opacity: 0, scale: 0.9 }}
+                animate={{ opacity: 1, scale: 1 }}
+                exit={{ opacity: 0, scale: 0.9 }}
+                className="mb-8 flex justify-center"
               >
-                <div className="flex items-center">
-                  <svg className="w-4 h-4 sm:w-5 sm:h-5 mr-2 shrink-0" fill="currentColor" viewBox="0 0 20 20">
-                    <path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zM8.707 7.293a1 1 0 00-1.414 1.414L8.586 10l-1.293 1.293a1 1 0 101.414 1.414L10 11.414l1.293 1.293a1 1 0 001.414-1.414L11.414 10l1.293-1.293a1 1 0 00-1.414-1.414L10 8.586 8.707 7.293z" clipRule="evenodd" />
-                  </svg>
-                  <span className="text-sm sm:text-base">{error}</span>
+                <div className="bg-white rounded-2xl shadow-2xl p-6 border border-gray-100 max-w-2xl mx-auto">
+                  <div className="flex items-center justify-center gap-4">
+                    <div className="w-12 h-12 bg-gradient-to-br from-red-200 to-red-300 rounded-full flex items-center justify-center">
+                      <svg className="w-6 h-6 text-red-600" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-2.5L13.732 4c-.77-.833-1.732-.833-2.5 0L4.268 16.5c-.77.833.192 2.5 1.732 2.5z" />
+                      </svg>
+                    </div>
+                    <div className="text-center">
+                      <h3 className="text-lg font-bold text-gray-800 mb-1">Error</h3>
+                      <p className="text-gray-600">{error}</p>
+                    </div>
+                  </div>
                 </div>
               </motion.div>
             )}
           </AnimatePresence>
 
           {/* Current Schedules */}
-          <div className="bg-white rounded-xl shadow-lg overflow-hidden">
-            <div className="bg-[#0065A8] px-4 sm:px-6 py-3 sm:py-4">
-              <h2 className="text-lg sm:text-xl font-semibold text-white">Weekly Consultation Schedule</h2>
-              <p className="text-blue-100 text-xs sm:text-sm mt-1">
-                {schedules.length === 0 ? 'No schedules configured' : `${schedules.length} time slot${schedules.length !== 1 ? 's' : ''} configured`}
-              </p>
+          <motion.div
+            initial={{ opacity: 0, y: 20 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ delay: 0.4 }}
+            className="bg-white rounded-2xl shadow-2xl overflow-hidden border border-gray-100"
+          >
+            <div className="bg-gradient-to-r from-[#057DCD] to-[#046bb8] text-white p-6">
+              <div className="flex items-center gap-4">
+                <div className="w-12 h-12 bg-white bg-opacity-20 rounded-full flex items-center justify-center">
+                  <svg className="w-6 h-6 text-white" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z" />
+                  </svg>
+                </div>
+                <div>
+                  <h2 className="text-2xl font-bold">Weekly Consultation Schedule</h2>
+                  <p className="text-blue-100">
+                    {schedules.length === 0 ? 'No schedules configured' : `${schedules.length} time slot${schedules.length !== 1 ? 's' : ''} configured`}
+                  </p>
+                </div>
+              </div>
             </div>
             
             {schedules.length === 0 ? (
-              <div className="p-6 sm:p-12 text-center">
-                <div className="mb-4 flex justify-center">
-                  <ScheduleIcon />
+              <div className="p-6">
+                <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
+                  {/* Add Schedule Card - Only card when no schedules exist */}
+                  <AddScheduleCard 
+                    onAddClick={() => setShowModal(true)}
+                  />
                 </div>
-                <h3 className="text-lg font-medium text-gray-700 mb-2">No consultation schedules yet</h3>
-                <p className="text-gray-500 mb-6 text-sm sm:text-base">Set up your weekly consultation hours to let students know when you're available.</p>
-                <button
-                  onClick={() => setShowModal(true)}
-                  className="bg-[#0065A8] hover:bg-[#1976d2] text-white px-4 sm:px-6 py-2 sm:py-3 rounded-lg font-medium transition duration-200 text-sm sm:text-base"
-                >
-                  Create Your First Schedule
-                </button>
               </div>
             ) : (
-              <div className="p-3 sm:p-4 lg:p-6">
-                <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 2xl:grid-cols-5 gap-3 sm:gap-4 lg:gap-6">
+              <div className="p-6">
+                <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
+                  {/* Add Schedule Card - Always first */}
+                  <AddScheduleCard 
+                    onAddClick={() => setShowModal(true)}
+                  />
+                  
+                  {/* Existing Schedule Cards */}
                   {schedules
                     .sort((a, b) => a.day_of_week - b.day_of_week)
-                    .map((schedule) => (
-                  <motion.div
-                    key={schedule.id}
-                    initial={{ opacity: 0, scale: 0.95 }}
-                    animate={{ opacity: 1, scale: 1 }}
-                    whileHover={{ scale: 1.02 }}
-                    className="bg-white border-2 border-gray-200 rounded-xl p-3 sm:p-4 lg:p-5 hover:border-[#0065A8] hover:shadow-lg transition-all duration-200"
-                  >
-                    <div className="flex justify-between items-start mb-3 sm:mb-4">
-                      <h3 className="font-bold text-base sm:text-lg text-[#0065A8]">
-                        {dayNames[schedule.day_of_week]}
-                      </h3>
-                      <span
-                        className={`px-2 sm:px-3 py-1 rounded-full text-xs font-semibold ${
-                          schedule.is_available
-                            ? 'bg-green-100 text-green-800'
-                            : 'bg-red-100 text-red-800'
-                        }`}
-                      >
-                        {schedule.is_available ? 'Available' : 'Unavailable'}
-                      </span>
-                    </div>
-                    
-                    <div className="space-y-2 sm:space-y-3 mb-4 sm:mb-5">
-                      <div className="flex items-center text-gray-600">
-                        <svg className="w-3 h-3 sm:w-4 sm:h-4 mr-2 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" />
-                        </svg>
-                        <span className="text-xs sm:text-sm">
-                          {formatTime(schedule.start_time)} - {formatTime(schedule.end_time)}
-                        </span>
-                      </div>
-                      {schedule.venue && (
-                        <div className="flex items-center text-gray-600">
-                          <svg className="w-3 h-3 sm:w-4 sm:h-4 mr-2 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z" />
-                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M15 11a3 3 0 11-6 0 3 3 0 016 0z" />
-                          </svg>
-                          <span className="text-xs sm:text-sm truncate">{schedule.venue}</span>
-                        </div>
-                      )}
-                    </div>
-
-                    <div className="flex gap-2">
-                      <button
-                        onClick={() => handleEdit(schedule)}
-                        className="flex-1 bg-blue-50 hover:bg-blue-100 text-blue-700 px-2 sm:px-3 py-2 rounded-lg text-xs sm:text-sm font-medium transition duration-200 flex items-center justify-center gap-1"
-                      >
-                        <svg className="w-3 h-3 sm:w-4 sm:h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z" />
-                        </svg>
-                        <span className="hidden sm:inline">Edit</span>
-                      </button>
-                      <button
-                        onClick={() => handleDelete(schedule.id)}
-                        className="flex-1 bg-red-50 hover:bg-red-100 text-red-700 px-2 sm:px-3 py-2 rounded-lg text-xs sm:text-sm font-medium transition duration-200 flex items-center justify-center gap-1"
-                      >
-                        <svg className="w-3 h-3 sm:w-4 sm:h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
-                        </svg>
-                        <span className="hidden sm:inline">Delete</span>
-                      </button>
-                    </div>
-                  </motion.div>
-                ))}
+                    .map((schedule, index) => (
+                      <ScheduleCard
+                        key={schedule.id}
+                        schedule={schedule}
+                        dayNames={dayNames}
+                        dayColors={dayColors}
+                        formatTime={formatTime}
+                        isFlipped={flippedCards.has(schedule.id)}
+                        onFlip={toggleCardFlip}
+                        onEdit={handleCardEdit}
+                        onDelete={handleDelete}
+                        formData={formData}
+                        setFormData={setFormData}
+                        onFormSubmit={handleCardFormSubmit}
+                      />
+                    ))}
+                </div>
               </div>
-            </div>
-          )}
+            )}
+          </motion.div>
         </div>
       </div>
-    </div>
 
       {/* Modal */}
       <AnimatePresence>
         {showModal && (
-          <div className="fixed bg-black/60 backdrop-blur-md flex items-center justify-center z-[9999] p-2 sm:p-4" style={{ 
+          <div className="fixed bg-black/60 backdrop-blur-md flex items-center justify-center z-[9999] p-4" style={{ 
             position: 'fixed',
             top: 0,
             left: 0,
@@ -432,45 +633,82 @@ const TeacherScheduleManager = () => {
             width: '100vw',
             height: '100vh',
             margin: 0,
-            padding: '0.5rem'
+            padding: '1rem'
           }}>
             <motion.div
               variants={modalVariants}
               initial="hidden"
               animate="visible"
               exit="exit"
-              className="bg-white rounded-xl shadow-2xl w-full max-w-md max-h-[95vh] sm:max-h-[90vh] overflow-y-auto modal-no-scrollbar"
+              className="relative w-full max-w-lg max-h-[95vh] overflow-hidden"
               onClick={(e) => e.stopPropagation()}
               style={{
                 scrollbarWidth: 'none',
                 msOverflowStyle: 'none',
               }}
             >
-              {/* Modal Header */}
-              <div className="bg-[#0065A8] px-4 sm:px-6 py-3 sm:py-4 flex justify-between items-center sticky top-0 z-10">
-                <h2 className="text-base sm:text-lg font-semibold text-white">
-                  {editingSchedule ? "Edit Schedule" : "Add New Schedule"}
-                </h2>
-              </div>
+              {/* Card Container */}
+              <div className="bg-white rounded-3xl shadow-2xl border border-gray-100 overflow-hidden">
+                {/* Card Header */}
+                <div className="bg-gradient-to-r from-[#057DCD] via-[#046bb8] to-[#034a94] text-white p-6 relative overflow-hidden">
+                  {/* Background decoration */}
+                  <div className="absolute top-0 right-0 w-24 h-24 bg-white/10 rounded-full -translate-y-12 translate-x-12"></div>
+                  <div className="absolute bottom-0 left-0 w-16 h-16 bg-white/5 rounded-full translate-y-8 -translate-x-8"></div>
+                  
+                  <div className="relative z-10 flex justify-between items-center">
+                    <div className="flex items-center gap-4">
+                      <div className="w-12 h-12 bg-white/20 backdrop-blur-sm rounded-xl flex items-center justify-center">
+                        <svg className="w-6 h-6 text-white" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 6v6m0 0v6m0-6h6m-6 0H6" />
+                        </svg>
+                      </div>
+                      <div>
+                        <h2 className="text-2xl font-bold">
+                          {editingSchedule ? 'Edit Schedule' : 'Add New Schedule'}
+                        </h2>
+                        <p className="text-blue-100 text-sm">
+                          {editingSchedule ? 'Update your consultation time' : 'Create a new consultation slot'}
+                        </p>
+                      </div>
+                    </div>
+                    <button
+                      onClick={handleCancel}
+                      className="text-white hover:text-gray-200 transition-colors p-2 hover:bg-white/10 rounded-lg"
+                    >
+                      <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+                      </svg>
+                    </button>
+                  </div>
+                </div>
 
-              {/* Modal Body */}
-              <form onSubmit={handleSubmit} className="p-4 sm:p-6 space-y-3 sm:space-y-4">
+                {/* Card Body */}
+                <div className="overflow-y-auto modal-no-scrollbar" style={{ maxHeight: 'calc(95vh - 200px)' }}>
+                  <form onSubmit={handleSubmit} className="p-6 space-y-6">
                 {/* Message Display */}
                 {error && (
-                  <div className="p-3 rounded-lg text-xs sm:text-sm bg-red-100 text-red-700">
-                    {error}
+                  <div className="p-4 rounded-xl bg-red-50 border border-red-200 text-red-700 flex items-center gap-3">
+                    <svg className="w-5 h-5 text-red-500" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-2.5L13.732 4c-.77-.833-1.732-.833-2.5 0L4.268 16.5c-.77.833.192 2.5 1.732 2.5z" />
+                    </svg>
+                    <span className="text-sm font-medium">{error}</span>
                   </div>
                 )}
 
                 {/* Day of Week */}
-                <div>
-                  <label className="block text-xs sm:text-sm font-medium text-gray-700 mb-2">
+                <div className="bg-gradient-to-r from-blue-50 to-indigo-50 rounded-xl p-4 border border-blue-200">
+                  <label className="text-sm font-semibold text-gray-800 mb-3 flex items-center gap-2">
+                    <div className="w-6 h-6 bg-[#057DCD] rounded-full flex items-center justify-center">
+                      <svg className="w-3 h-3 text-white" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z" />
+                      </svg>
+                    </div>
                     Day of Week *
                   </label>
                   <select
                     value={formData.day_of_week}
                     onChange={(e) => setFormData({ ...formData, day_of_week: e.target.value })}
-                    className="w-full border-2 border-[#0065A8] rounded-lg px-3 py-2 focus:outline-none focus:ring-2 focus:ring-[#1976d2] focus:border-transparent text-sm sm:text-base"
+                    className="w-full bg-white border-2 border-blue-300 rounded-lg px-4 py-3 focus:outline-none focus:ring-2 focus:ring-[#057DCD] focus:border-[#057DCD] text-base shadow-sm"
                     required
                   >
                     <option value="">Select Day</option>
@@ -481,82 +719,122 @@ const TeacherScheduleManager = () => {
                 </div>
 
                 {/* Time Row */}
-                <div className="grid grid-cols-2 gap-3 sm:gap-4">
-                  <div>
-                    <label className="block text-xs sm:text-sm font-medium text-gray-700 mb-2">
+                <div className="grid grid-cols-2 gap-4">
+                  <div className="bg-gradient-to-r from-blue-50 to-indigo-50 rounded-xl p-4 border border-blue-200">
+                    <label className="text-sm font-semibold text-gray-800 mb-3 flex items-center gap-2">
+                      <div className="w-6 h-6 bg-[#057DCD] rounded-full flex items-center justify-center">
+                        <svg className="w-3 h-3 text-white" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" />
+                        </svg>
+                      </div>
                       Start Time *
                     </label>
                     <input
                       type="time"
                       value={formData.start_time}
                       onChange={(e) => setFormData({ ...formData, start_time: e.target.value })}
-                      className="w-full border-2 border-[#0065A8] rounded-lg px-3 py-2 focus:outline-none focus:ring-2 focus:ring-[#1976d2] focus:border-transparent text-sm sm:text-base"
+                      className="w-full bg-white border-2 border-blue-300 rounded-lg px-4 py-3 focus:outline-none focus:ring-2 focus:ring-[#057DCD] focus:border-[#057DCD] text-base shadow-sm"
                       required
                     />
                   </div>
-                  <div>
-                    <label className="block text-xs sm:text-sm font-medium text-gray-700 mb-2">
+                  <div className="bg-gradient-to-r from-blue-50 to-indigo-50 rounded-xl p-4 border border-blue-200">
+                    <label className="text-sm font-semibold text-gray-800 mb-3 flex items-center gap-2">
+                      <div className="w-6 h-6 bg-[#057DCD] rounded-full flex items-center justify-center">
+                        <svg className="w-3 h-3 text-white" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" />
+                        </svg>
+                      </div>
                       End Time *
                     </label>
                     <input
                       type="time"
                       value={formData.end_time}
                       onChange={(e) => setFormData({ ...formData, end_time: e.target.value })}
-                      className="w-full border-2 border-[#0065A8] rounded-lg px-3 py-2 focus:outline-none focus:ring-2 focus:ring-[#1976d2] focus:border-transparent text-sm sm:text-base"
+                      className="w-full bg-white border-2 border-blue-300 rounded-lg px-4 py-3 focus:outline-none focus:ring-2 focus:ring-[#057DCD] focus:border-[#057DCD] text-base shadow-sm"
                       required
                     />
                   </div>
                 </div>
 
                 {/* Venue */}
-                <div>
-                  <label className="block text-xs sm:text-sm font-medium text-gray-700 mb-2">
+                <div className="bg-gradient-to-r from-blue-50 to-indigo-50 rounded-xl p-4 border border-blue-200">
+                  <label className="text-sm font-semibold text-gray-800 mb-3 flex items-center gap-2">
+                    <div className="w-6 h-6 bg-[#057DCD] rounded-full flex items-center justify-center">
+                      <svg className="w-3 h-3 text-white" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z" />
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 11a3 3 0 11-6 0 3 3 0 016 0z" />
+                      </svg>
+                    </div>
                     Venue
                   </label>
                   <input
                     type="text"
                     value={formData.venue}
                     onChange={(e) => setFormData({ ...formData, venue: e.target.value })}
-                    className="w-full border-2 border-[#0065A8] rounded-lg px-3 py-2 focus:outline-none focus:ring-2 focus:ring-[#1976d2] focus:border-transparent text-sm sm:text-base"
+                    className="w-full bg-white border-2 border-blue-300 rounded-lg px-4 py-3 focus:outline-none focus:ring-2 focus:ring-[#057DCD] focus:border-[#057DCD] text-base shadow-sm"
                     placeholder="e.g., Room 101, Faculty Office"
                   />
                 </div>
 
-                {/* Availability Checkbox */}
-                <div className="flex items-center">
-                  <input
-                    type="checkbox"
-                    id="is_available"
-                    checked={formData.is_available}
-                    onChange={(e) => setFormData({ ...formData, is_available: e.target.checked })}
-                    className="w-4 h-4 text-[#0065A8] border-gray-300 rounded focus:ring-[#1976d2]"
-                  />
-                  <label htmlFor="is_available" className="ml-2 text-xs sm:text-sm text-gray-700">
-                    Available for consultation
-                  </label>
+                {/* Availability Toggle */}
+                <div className="bg-gradient-to-r from-blue-50 to-indigo-50 rounded-xl p-4 border border-blue-200">
+                  <div className="flex items-center justify-between">
+                    <div className="flex items-center gap-3">
+                      <div className={`w-3 h-3 rounded-full ${formData.is_available ? 'bg-[#057DCD]' : 'bg-gray-400'}`}></div>
+                      <span className="text-sm font-semibold text-gray-700">
+                        {formData.is_available ? 'Available for consultation' : 'Not available for consultation'}
+                      </span>
+                    </div>
+                    <label className="relative inline-flex items-center cursor-pointer">
+                      <input
+                        type="checkbox"
+                        checked={formData.is_available}
+                        onChange={(e) => setFormData({ ...formData, is_available: e.target.checked })}
+                        className="sr-only peer"
+                      />
+                      <div className="w-11 h-6 bg-gray-200 peer-focus:outline-none peer-focus:ring-4 peer-focus:ring-blue-300 rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-[#057DCD]"></div>
+                    </label>
+                  </div>
                 </div>
-              </form>
+                  </form>
+                </div>
 
-              {/* Modal Footer */}
-              <div className="flex">
-                <button
-                  type="submit"
-                  onClick={handleSubmit}
-                  className="flex-1 py-3 sm:py-4 bg-[#0065A8] hover:bg-[#1976d2] text-white text-center justify-center rounded-bl-xl transition-colors flex items-center gap-2 text-xs sm:text-sm font-medium"
-                >
-                  {editingSchedule ? 'Update Schedule' : 'Save Schedule'}
-                </button>
-                <button
-                  onClick={handleCancel}
-                  className="flex-1 py-3 sm:py-4 text-gray-700 bg-gray-100 rounded-br-xl hover:bg-gray-200 transition-colors text-xs sm:text-sm font-medium"
-                >
-                  Cancel
-                </button>
+                {/* Card Footer */}
+                <div className="flex border-t border-gray-200 bg-gray-50/50">
+                  <motion.button
+                    whileHover={{ scale: 1.02 }}
+                    whileTap={{ scale: 0.98 }}
+                    type="submit"
+                    onClick={handleSubmit}
+                    className="flex-1 py-4 bg-gradient-to-r from-[#057DCD] to-[#046bb8] hover:from-[#046bb8] hover:to-[#034a94] text-white text-center justify-center rounded-bl-3xl transition-all duration-200 flex items-center gap-2 text-sm font-semibold shadow-lg"
+                  >
+                    <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
+                    </svg>
+                    {editingSchedule ? 'Update Schedule' : 'Save Schedule'}
+                  </motion.button>
+                  <motion.button
+                    whileHover={{ scale: 1.02 }}
+                    whileTap={{ scale: 0.98 }}
+                    onClick={handleCancel}
+                    className="flex-1 py-4 text-gray-700 bg-gray-100 rounded-br-3xl hover:bg-gray-200 transition-all duration-200 text-sm font-semibold"
+                  >
+                    Cancel
+                  </motion.button>
+                </div>
               </div>
             </motion.div>
           </div>
         )}
       </AnimatePresence>
+
+      {/* Delete Confirmation Modal */}
+      <DeleteConfirmationModal
+        isOpen={deleteModalOpen}
+        onClose={cancelDelete}
+        onConfirm={confirmDelete}
+        scheduleInfo={scheduleToDelete}
+      />
     </>
   );
 };

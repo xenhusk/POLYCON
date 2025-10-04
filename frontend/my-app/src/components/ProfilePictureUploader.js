@@ -1,4 +1,5 @@
 import React, { useState, useEffect, useRef } from 'react';
+import { motion, AnimatePresence } from 'framer-motion';
 import { getProfilePictureUrl } from '../utils/utils';
 import API_URL from '../apiConfig';
 
@@ -166,29 +167,50 @@ function ProfilePictureUploader({ initialFile, onClose, onSuccess }) {
   };
 
   return (
-    <div className="bg-white p-4 sm:p-6 rounded-lg shadow-lg relative max-w-md w-full mx-auto overflow-visible">
-      {/* Header with close button */}
-      <div className="flex justify-between items-center mb-6">
-        <h2 className="text-xl sm:text-2xl font-semibold text-gray-800">Profile Picture</h2>
-        <button 
-          onClick={onClose}
-          className="w-8 h-8 flex items-center justify-center rounded-full hover:bg-gray-100 transition-colors"
-          aria-label="Close"
-        >
-          <svg 
-            className="w-5 h-5 text-gray-500" 
-            fill="none" 
-            stroke="currentColor" 
-            viewBox="0 0 24 24"
+    <motion.div 
+      initial={{ opacity: 0, scale: 0.9 }}
+      animate={{ opacity: 1, scale: 1 }}
+      exit={{ opacity: 0, scale: 0.9 }}
+      transition={{ duration: 0.3 }}
+      className="bg-white/95 backdrop-blur-sm p-6 rounded-3xl shadow-2xl border border-white/20 relative max-w-lg w-full mx-auto overflow-visible"
+    >
+      {/* Header with gradient background */}
+      <div className="relative mb-8">
+        <div className="absolute inset-0 bg-gradient-to-r from-[#057DCD] via-[#046bb8] to-[#034a94] rounded-2xl opacity-10"></div>
+        <div className="relative flex justify-between items-center p-4">
+          <div className="flex items-center gap-3">
+            <div className="w-10 h-10 bg-gradient-to-br from-[#057DCD] to-[#046bb8] rounded-full flex items-center justify-center shadow-lg">
+              <svg className="w-5 h-5 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z" />
+              </svg>
+            </div>
+            <div>
+              <h2 className="text-2xl font-bold text-gray-800">Profile Picture</h2>
+              <p className="text-sm text-gray-600">Update your profile photo</p>
+            </div>
+          </div>
+          <motion.button 
+            onClick={onClose}
+            whileHover={{ scale: 1.1 }}
+            whileTap={{ scale: 0.9 }}
+            className="w-10 h-10 flex items-center justify-center rounded-full bg-gray-100 hover:bg-gray-200 transition-colors shadow-md"
+            aria-label="Close"
           >
-            <path 
-              strokeLinecap="round" 
-              strokeLinejoin="round" 
-              strokeWidth={2} 
-              d="M6 18L18 6M6 6l12 12" 
-            />
-          </svg>
-        </button>
+            <svg 
+              className="w-5 h-5 text-gray-600" 
+              fill="none" 
+              stroke="currentColor" 
+              viewBox="0 0 24 24"
+            >
+              <path 
+                strokeLinecap="round" 
+                strokeLinejoin="round" 
+                strokeWidth={2} 
+                d="M6 18L18 6M6 6l12 12" 
+              />
+            </svg>
+          </motion.button>
+        </div>
       </div>
 
       {/* Hidden file input */}
@@ -201,21 +223,35 @@ function ProfilePictureUploader({ initialFile, onClose, onSuccess }) {
       />
 
       {/* Error message */}
-      {errorMessage && (
-        <div className="mb-4 p-3 bg-red-50 text-red-600 rounded-md text-sm">
-          {errorMessage}
-        </div>
-      )}
+      <AnimatePresence>
+        {errorMessage && (
+          <motion.div 
+            initial={{ opacity: 0, y: -10 }}
+            animate={{ opacity: 1, y: 0 }}
+            exit={{ opacity: 0, y: -10 }}
+            className="mb-6 p-4 bg-gradient-to-r from-red-50 to-red-100 border border-red-200 text-red-700 rounded-xl text-sm shadow-sm"
+          >
+            <div className="flex items-center gap-2">
+              <svg className="w-5 h-5 text-red-500 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8v4m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+              </svg>
+              <span className="font-medium">{errorMessage}</span>
+            </div>
+          </motion.div>
+        )}
+      </AnimatePresence>
 
       {/* Current profile & upload area */}
       <div className="flex flex-col sm:flex-row items-center gap-6 w-full overflow-visible">
         {/* Current profile picture or preview */}
         <div className="flex-shrink-0">
           {!src ? (
-            <div 
+            <motion.div 
               onClick={handlePlaceholderClick}
-              className="relative w-32 h-32 sm:w-40 sm:h-40 rounded-full overflow-hidden bg-gray-100 cursor-pointer hover:bg-gray-200 transition-colors flex items-center justify-center"
-              style={{maxWidth: '160px', maxHeight: '160px'}}
+              whileHover={{ scale: 1.05 }}
+              whileTap={{ scale: 0.95 }}
+              className="relative w-36 h-36 sm:w-44 sm:h-44 rounded-full overflow-hidden bg-gradient-to-br from-gray-100 to-gray-200 cursor-pointer shadow-lg border-4 border-white hover:shadow-xl transition-all duration-300 flex items-center justify-center"
+              style={{maxWidth: '176px', maxHeight: '176px'}}
             >
               <img 
                 src={currentProfilePic ? getProfilePictureUrl(currentProfilePic) : getProfilePictureUrl('')}
@@ -223,98 +259,175 @@ function ProfilePictureUploader({ initialFile, onClose, onSuccess }) {
                 className="w-full h-full object-cover max-w-full max-h-full"
                 style={{objectFit: 'cover'}}
               />
-              <div className="absolute inset-0 bg-black bg-opacity-50 flex items-center justify-center opacity-0 hover:opacity-100 transition-opacity">
-                <span className="text-white text-sm font-medium">Change Photo</span>
-              </div>
-            </div>
+              <motion.div 
+                initial={{ opacity: 0 }}
+                whileHover={{ opacity: 1 }}
+                className="absolute inset-0 bg-gradient-to-t from-black/60 to-transparent flex items-center justify-center"
+              >
+                <div className="text-center">
+                  <svg className="w-8 h-8 text-white mx-auto mb-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z" />
+                  </svg>
+                  <span className="text-white text-sm font-semibold">Change Photo</span>
+                </div>
+              </motion.div>
+            </motion.div>
           ) : (
-            <div className="relative w-32 h-32 sm:w-40 sm:h-40 rounded-full overflow-hidden" style={{maxWidth: '160px', maxHeight: '160px'}}>
+            <motion.div 
+              initial={{ scale: 0.8, opacity: 0 }}
+              animate={{ scale: 1, opacity: 1 }}
+              className="relative w-36 h-36 sm:w-44 sm:h-44 rounded-full overflow-hidden shadow-lg border-4 border-white" 
+              style={{maxWidth: '176px', maxHeight: '176px'}}
+            >
               <img 
                 src={src} 
                 alt="Preview" 
                 className="w-full h-full object-cover max-w-full max-h-full" 
                 style={{objectFit: 'cover'}}
               />
-            </div>
+              <div className="absolute inset-0 bg-gradient-to-t from-green-500/20 to-transparent flex items-end justify-center pb-2">
+                <span className="text-white text-xs font-semibold bg-green-500 px-2 py-1 rounded-full">Preview</span>
+              </div>
+            </motion.div>
           )}
         </div>
 
         {/* Right side - Upload controls */}
         <div className="flex-1 w-full min-w-0">
           {!src ? (
-            <div 
-              className={`border-2 border-dashed rounded-lg p-4 text-center ${
-                isDragging ? 'border-blue-500 bg-blue-50' : 'border-gray-300 hover:border-blue-400'
-              } transition-all cursor-pointer w-full overflow-visible`}
+            <motion.div 
+              className={`border-2 border-dashed rounded-2xl p-6 text-center transition-all cursor-pointer w-full overflow-visible ${
+                isDragging 
+                  ? 'border-[#057DCD] bg-gradient-to-br from-blue-50 to-blue-100 shadow-lg' 
+                  : 'border-gray-300 hover:border-[#057DCD] hover:bg-gray-50'
+              }`}
               onClick={handlePlaceholderClick}
               onDragEnter={handleDragEnter}
               onDragLeave={handleDragLeave}
               onDragOver={handleDragOver}
               onDrop={handleDrop}
+              whileHover={{ scale: 1.02 }}
+              whileTap={{ scale: 0.98 }}
               style={{minWidth: 0}}
             >
-              <div className="flex flex-col items-center justify-center py-4">
-                <svg className="w-10 h-10 text-gray-400 mb-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z" />
-                </svg>
-                <p className="text-sm text-gray-600 mb-1">Drag & drop an image here</p>
-                <p className="text-xs text-gray-500">or</p>
-                <button className="mt-2 px-4 py-2 bg-blue-500 text-white text-sm font-medium rounded-md hover:bg-blue-600 transition-colors">
+              <div className="flex flex-col items-center justify-center py-6">
+                <motion.div
+                  animate={isDragging ? { scale: 1.1, rotate: 5 } : { scale: 1, rotate: 0 }}
+                  transition={{ duration: 0.2 }}
+                  className="w-16 h-16 bg-gradient-to-br from-[#057DCD] to-[#046bb8] rounded-full flex items-center justify-center mb-4 shadow-lg"
+                >
+                  <svg className="w-8 h-8 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z" />
+                  </svg>
+                </motion.div>
+                <h3 className="text-lg font-semibold text-gray-800 mb-2">Upload Profile Picture</h3>
+                <p className="text-sm text-gray-600 mb-3">Drag & drop an image here</p>
+                <p className="text-xs text-gray-500 mb-4">or</p>
+                <motion.button 
+                  whileHover={{ scale: 1.05 }}
+                  whileTap={{ scale: 0.95 }}
+                  className="px-6 py-3 bg-gradient-to-r from-[#057DCD] to-[#046bb8] text-white text-sm font-semibold rounded-xl hover:from-[#046bb8] hover:to-[#034a94] transition-all duration-200 shadow-lg"
+                >
                   Browse Files
-                </button>
-                <p className="mt-2 text-xs text-gray-500">Max size: 5MB</p>
+                </motion.button>
+                <p className="mt-4 text-xs text-gray-500 bg-gray-100 px-3 py-1 rounded-full">Max size: 5MB</p>
               </div>
-            </div>
+            </motion.div>
           ) : (
-            <div className="space-y-4 w-full min-w-0">
-              <p className="text-sm text-gray-700 font-medium">Selected Image</p>
-              <p className="text-xs text-gray-500 truncate">
-                {selectedFile?.name} ({(selectedFile?.size / 1024 / 1024).toFixed(2)}MB)
-              </p>
+            <motion.div 
+              initial={{ opacity: 0, y: 20 }}
+              animate={{ opacity: 1, y: 0 }}
+              className="space-y-6 w-full min-w-0"
+            >
+              <div className="bg-gradient-to-r from-green-50 to-emerald-50 border border-green-200 rounded-xl p-4">
+                <div className="flex items-center gap-3 mb-2">
+                  <div className="w-8 h-8 bg-green-500 rounded-full flex items-center justify-center">
+                    <svg className="w-4 h-4 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
+                    </svg>
+                  </div>
+                  <h3 className="text-lg font-semibold text-gray-800">Image Selected</h3>
+                </div>
+                <p className="text-sm text-gray-600 truncate font-medium">
+                  {selectedFile?.name}
+                </p>
+                <p className="text-xs text-gray-500">
+                  Size: {(selectedFile?.size / 1024 / 1024).toFixed(2)}MB
+                </p>
+              </div>
               
               {/* Progress bar for upload */}
-              {isUploading && (
-                <div className="w-full bg-gray-200 rounded-full h-2.5 mb-4 overflow-hidden">
-                  <div 
-                    className="bg-blue-500 h-2.5 rounded-full transition-all duration-300 ease-out"
-                    style={{ width: `${uploadProgress}%` }}
-                  />
-                </div>
-              )}
+              <AnimatePresence>
+                {isUploading && (
+                  <motion.div 
+                    initial={{ opacity: 0, height: 0 }}
+                    animate={{ opacity: 1, height: 'auto' }}
+                    exit={{ opacity: 0, height: 0 }}
+                    className="w-full bg-gray-200 rounded-full h-3 overflow-hidden shadow-inner"
+                  >
+                    <motion.div 
+                      className="bg-gradient-to-r from-[#057DCD] to-[#046bb8] h-3 rounded-full transition-all duration-500 ease-out"
+                      initial={{ width: 0 }}
+                      animate={{ width: `${uploadProgress}%` }}
+                    />
+                  </motion.div>
+                )}
+              </AnimatePresence>
 
-              {/* Action buttons - vertical stack for better fit */}
-              <div className="flex flex-col gap-2 w-full">
-                <button 
+              {/* Action buttons - modern styling */}
+              <div className="flex flex-col gap-3 w-full">
+                <motion.button 
                   onClick={uploadPicture} 
                   disabled={isUploading}
-                  className={`w-full px-4 py-2 rounded-md text-sm font-medium transition-colors 
-                    ${isUploading 
+                  whileHover={!isUploading ? { scale: 1.02 } : {}}
+                  whileTap={!isUploading ? { scale: 0.98 } : {}}
+                  className={`w-full px-6 py-3 rounded-xl text-sm font-semibold transition-all duration-200 shadow-lg ${
+                    isUploading 
                       ? 'bg-gray-400 cursor-not-allowed text-white' 
-                      : 'bg-blue-600 hover:bg-blue-700 text-white'}
-                  `}
+                      : 'bg-gradient-to-r from-[#057DCD] to-[#046bb8] hover:from-[#046bb8] hover:to-[#034a94] text-white hover:shadow-xl'
+                  }`}
                 >
-                  {isUploading ? `Uploading ${Math.round(uploadProgress)}%` : 'Upload'}
-                </button>
-                <button 
-                  onClick={handleReset} 
-                  disabled={isUploading}
-                  className="w-full bg-gray-200 text-gray-700 px-4 py-2 rounded-md text-sm font-medium hover:bg-gray-300 transition-colors"
-                >
-                  Change
-                </button>
-                <button 
-                  onClick={onClose} 
-                  disabled={isUploading}
-                  className="w-full bg-gray-100 text-gray-700 px-4 py-2 rounded-md text-sm font-medium hover:bg-gray-200 transition-colors"
-                >
-                  Cancel
-                </button>
+                  {isUploading ? (
+                    <div className="flex items-center justify-center gap-2">
+                      <div className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin"></div>
+                      <span>Uploading {Math.round(uploadProgress)}%</span>
+                    </div>
+                  ) : (
+                    <div className="flex items-center justify-center gap-2">
+                      <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M7 16a4 4 0 01-.88-7.903A5 5 0 1115.9 6L16 6a5 5 0 011 9.9M15 13l-3-3m0 0l-3 3m3-3v12" />
+                      </svg>
+                      <span>Upload Picture</span>
+                    </div>
+                  )}
+                </motion.button>
+                
+                <div className="flex gap-3">
+                  <motion.button 
+                    onClick={handleReset} 
+                    disabled={isUploading}
+                    whileHover={!isUploading ? { scale: 1.02 } : {}}
+                    whileTap={!isUploading ? { scale: 0.98 } : {}}
+                    className="flex-1 bg-gray-200 text-gray-700 px-4 py-2 rounded-xl text-sm font-semibold hover:bg-gray-300 transition-all duration-200 shadow-md"
+                  >
+                    Change
+                  </motion.button>
+                  <motion.button 
+                    onClick={onClose} 
+                    disabled={isUploading}
+                    whileHover={!isUploading ? { scale: 1.02 } : {}}
+                    whileTap={!isUploading ? { scale: 0.98 } : {}}
+                    className="flex-1 bg-gray-100 text-gray-600 px-4 py-2 rounded-xl text-sm font-semibold hover:bg-gray-200 transition-all duration-200 shadow-md"
+                  >
+                    Cancel
+                  </motion.button>
+                </div>
               </div>
-            </div>
+            </motion.div>
           )}
         </div>
       </div>
-    </div>
+    </motion.div>
   );
 }
 
