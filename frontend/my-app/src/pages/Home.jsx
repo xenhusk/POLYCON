@@ -266,7 +266,7 @@ const Nav = ({
               <motion.button
                 whileHover={{ scale: 1.05 }}
                 whileTap={{ scale: 0.95 }}
-                onClick={() => (window.location.href = "/admin-consultation")}
+                onClick={() => (window.location.href = "/consultation-leaderboard")}
                 className="text-white font-medium hover:text-blue-200 transition-colors duration-200 relative group"
               >
                 Leaderboard
@@ -366,7 +366,7 @@ const Nav = ({
 
               {/* Teacher Leaderboard Link for Mobile */}
               <button
-                onClick={() => (window.location.href = "/admin-consultation")}
+                onClick={() => (window.location.href = "/consultation-leaderboard")}
                 className="block w-full text-left text-gray-700 font-medium hover:text-[#057DCD] transition-colors py-2"
               >
                 Teacher Leaderboard
