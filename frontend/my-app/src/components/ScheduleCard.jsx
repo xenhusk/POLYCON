@@ -360,7 +360,7 @@ const ScheduleCard = ({
                     onDelete(schedule.id);
                     closeCard();
                   }}
-                  className="flex-1 bg-red-500 hover:bg-red-600 text-white px-4 py-2 rounded-lg text-sm font-semibold transition-all duration-200 shadow-md"
+                  className="flex-1 bg-gray-500 hover:bg-red-500 text-white px-4 py-2 rounded-lg text-sm font-semibold transition-all duration-200 shadow-md"
                 >
                   Delete
                 </motion.button>
