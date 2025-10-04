@@ -319,74 +319,81 @@ const AdminConsultation = () => {
         )}
 
         <div className="pt-6 pb-2 max-w-6xl mx-auto px-2 sm:px-4 lg:px-0">
-          <div className="text-center mb-6">
-            <div className="flex flex-col sm:flex-row items-center justify-center">
-              <div className="relative group" data-tooltip-container>
-                <h2 className="text-[#0065A8] text-xl sm:text-2xl font-bold mb-2 sm:mb-1 sm:mr-2 text-center cursor-default">
-                  {userRole === 'admin' ? 'Teachers Consultation Leaderboard' : 'Public Consultation Leaderboard'}
-                </h2>
-                {userRole !== 'admin' && (
-                  <div 
-                    data-tooltip="desktop"
-                    className="absolute left-1/2 -translate-x-1/2 top-full mt-2 transition-all duration-300 opacity-0 invisible group-hover:opacity-100 group-hover:visible pointer-events-none z-50 hidden sm:block"
-                  >
-                    <div className="bg-white/95 backdrop-blur-sm border border-blue-200 rounded-lg shadow-xl p-4 min-w-64 max-w-80">
-                      <div className="flex items-start gap-3">
-                        <div className="w-2 h-2 bg-blue-500 rounded-full animate-pulse mt-1 flex-shrink-0" />
-                        <div>
-                          <h3 className="font-semibold text-blue-900 text-sm mb-1">Public Leaderboard View</h3>
-                          <p className="text-blue-600 text-xs leading-relaxed">
-                            You're viewing the public consultation leaderboard showing teacher rankings and statistics. 
-                            Detailed consultation session information is restricted to administrative users for privacy and confidentiality.
-                          </p>
+          {/* Modern Header */}
+          <div className="bg-gradient-to-r from-[#0065A8] to-[#057DCD] px-8 py-8 mb-8 relative overflow-hidden rounded-xl">
+            {/* Background decorative elements */}
+            <div className="absolute top-4 right-8 w-16 h-16 bg-white/10 rounded-full opacity-60"></div>
+            <div className="absolute bottom-4 right-16 w-12 h-12 bg-white/10 rounded-full opacity-40"></div>
+            
+            <div className="text-center relative z-10">
+              <div className="flex flex-col sm:flex-row items-center justify-center">
+                <div className="relative group" data-tooltip-container>
+                  <h2 className="text-white text-2xl sm:text-3xl font-bold mb-2 sm:mb-1 sm:mr-2 text-center cursor-default">
+                    {userRole === 'admin' ? 'Teachers Consultation Leaderboard' : 'Public Consultation Leaderboard'}
+                  </h2>
+                  {userRole !== 'admin' && (
+                    <div 
+                      data-tooltip="desktop"
+                      className="absolute left-1/2 -translate-x-1/2 top-full mt-2 transition-all duration-300 opacity-0 invisible group-hover:opacity-100 group-hover:visible pointer-events-none z-50 hidden sm:block"
+                    >
+                      <div className="bg-white/95 backdrop-blur-sm border border-blue-200 rounded-lg shadow-xl p-4 min-w-64 max-w-80">
+                        <div className="flex items-start gap-3">
+                          <div className="w-2 h-2 bg-blue-500 rounded-full animate-pulse mt-1 flex-shrink-0" />
+                          <div>
+                            <h3 className="font-semibold text-blue-900 text-sm mb-1">Public Leaderboard View</h3>
+                            <p className="text-blue-600 text-xs leading-relaxed">
+                              You're viewing the public consultation leaderboard showing teacher rankings and statistics. 
+                              Detailed consultation session information is restricted to administrative users for privacy and confidentiality.
+                            </p>
+                          </div>
+                        </div>
+                        {/* Arrow pointing up to title */}
+                        <div className="absolute bottom-full left-1/2 -translate-x-1/2">
+                          <div className="w-0 h-0 border-b-6 border-b-white/95 border-l-3 border-l-transparent border-r-3 border-r-transparent" />
                         </div>
                       </div>
-                      {/* Arrow pointing up to title */}
-                      <div className="absolute bottom-full left-1/2 -translate-x-1/2">
-                        <div className="w-0 h-0 border-b-6 border-b-white/95 border-l-3 border-l-transparent border-r-3 border-r-transparent" />
-                      </div>
                     </div>
-                  </div>
-                )}
+                  )}
+                </div>
               </div>
+              <p className="text-white/90 text-lg mb-1">
+                {userRole === 'admin' 
+                  ? 'Top teachers ranked by consultation engagement and consultation overview' 
+                  : 'Teacher rankings based on consultation activity and performance'
+                }
+              </p>
             </div>
-            <p className="text-slate-500 text-sm px-2 sm:px-0">
-              {userRole === 'admin' 
-                ? 'Top teachers ranked by consultation engagement and consultation overview' 
-                : 'Teacher rankings based on consultation activity and performance'
-              }
-            </p>
           </div>
             
-            {/* Filter Section */}
-            <div className="bg-white/90 backdrop-blur-sm rounded-xl shadow-lg border border-white/50 overflow-hidden mb-6 mx-2 sm:mx-0">
-              {/* Filter Header */}
-              <div className="bg-gradient-to-r from-[#0065A8] to-[#057DCD] text-white p-3">
+            {/* Modern Filter Section */}
+            <div className="bg-white rounded-xl shadow-xl border border-gray-100 overflow-hidden mb-8 mx-2 sm:mx-0">
+              {/* Modern Filter Header */}
+              <div className="bg-gradient-to-r from-[#0065A8] to-[#057DCD] text-white p-6">
                 <div className="flex items-center">
-                  <div className="w-6 h-6 bg-white/20 rounded-full flex items-center justify-center mr-2">
-                    <svg className="w-3 h-3 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <div className="w-10 h-10 bg-white/20 rounded-full flex items-center justify-center mr-4">
+                    <svg className="w-5 h-5 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                       <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
                     </svg>
                   </div>
                   <div>
-                    <h3 className="font-bold text-sm sm:text-base">Filter Options</h3>
-                    <p className="text-blue-100 text-xs hidden sm:block">Filter by semester, department, and search teachers</p>
+                    <h3 className="font-bold text-lg">Filter Options</h3>
+                    <p className="text-white/90 text-sm">Filter by semester, department, and search teachers</p>
                   </div>
                 </div>
               </div>
               
-              {/* Filter Content */}
-              <div className="p-3 sm:p-4">
-                <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3 sm:gap-4">
-                  {/* Academic Period Section */}
-                  <div className="space-y-2">
+              {/* Modern Filter Content */}
+              <div className="p-6">
+                <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
+                  {/* Modern Academic Period Section */}
+                  <div className="space-y-3">
                     <div className="flex items-center">
-                      <div className="w-6 h-6 bg-gradient-to-br from-blue-100 to-indigo-100 rounded-lg flex items-center justify-center mr-2">
-                        <svg className="w-3 h-3 text-[#0065A8]" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <div className="w-8 h-8 bg-gradient-to-br from-blue-100 to-indigo-100 rounded-lg flex items-center justify-center mr-3">
+                        <svg className="w-4 h-4 text-[#0065A8]" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                           <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z" />
                         </svg>
                       </div>
-                      <label htmlFor="semester-select" className="font-semibold text-gray-800 text-xs">
+                      <label htmlFor="semester-select" className="font-semibold text-gray-800 text-sm">
                         Academic Period
                       </label>
                     </div>
@@ -394,7 +401,7 @@ const AdminConsultation = () => {
                       id="semester-select"
                       value={`${selectedSemester.semester}|${selectedSemester.school_year}`}
                       onChange={handleSemesterChange}
-                      className="w-full px-3 py-2 bg-gradient-to-r from-gray-50 to-blue-50 border border-[#0065A8]/20 rounded-lg text-xs font-medium text-gray-800 cursor-pointer transition-all duration-300 focus:outline-none focus:border-[#0065A8] focus:ring-1 focus:ring-[#0065A8]/20 focus:bg-white hover:border-[#057DCD] appearance-none"
+                      className="w-full px-4 py-3 bg-gradient-to-r from-gray-50 to-blue-50 border-2 border-[#0065A8]/20 rounded-xl text-sm font-medium text-gray-800 cursor-pointer transition-all duration-300 focus:outline-none focus:border-[#0065A8] focus:ring-2 focus:ring-[#0065A8]/20 focus:bg-white hover:border-[#057DCD] appearance-none shadow-sm"
                     >
                       <option value="|">All Semesters</option>
                       {semesters.map((sem, index) => (
@@ -409,15 +416,15 @@ const AdminConsultation = () => {
                     </select>
                   </div>
 
-                  {/* Department Section */}
-                  <div className="space-y-2">
+                  {/* Modern Department Section */}
+                  <div className="space-y-3">
                     <div className="flex items-center">
-                      <div className="w-6 h-6 bg-gradient-to-br from-green-100 to-emerald-100 rounded-lg flex items-center justify-center mr-2">
-                        <svg className="w-3 h-3 text-[#0065A8]" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <div className="w-8 h-8 bg-gradient-to-br from-green-100 to-emerald-100 rounded-lg flex items-center justify-center mr-3">
+                        <svg className="w-4 h-4 text-[#0065A8]" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                           <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 21V5a2 2 0 00-2-2H7a2 2 0 00-2 2v16m14 0h2m-2 0h-5m-9 0H3m2 0h5M9 7h1m-1 4h1m4-4h1m-1 4h1m-5 10v-5a1 1 0 011-1h2a1 1 0 011 1v5m-4 0h4" />
                         </svg>
                       </div>
-                      <label htmlFor="department-select" className="font-semibold text-gray-800 text-xs">
+                      <label htmlFor="department-select" className="font-semibold text-gray-800 text-sm">
                         Department
                       </label>
                     </div>
@@ -425,7 +432,7 @@ const AdminConsultation = () => {
                       id="department-select"
                       value={selectedDepartment}
                       onChange={handleDepartmentChange}
-                      className="w-full px-3 py-2 bg-gradient-to-r from-gray-50 to-green-50 border border-[#0065A8]/20 rounded-lg text-xs font-medium text-gray-800 cursor-pointer transition-all duration-300 focus:outline-none focus:border-[#0065A8] focus:ring-1 focus:ring-[#0065A8]/20 focus:bg-white hover:border-[#057DCD] appearance-none"
+                      className="w-full px-4 py-3 bg-gradient-to-r from-gray-50 to-green-50 border-2 border-[#0065A8]/20 rounded-xl text-sm font-medium text-gray-800 cursor-pointer transition-all duration-300 focus:outline-none focus:border-[#0065A8] focus:ring-2 focus:ring-[#0065A8]/20 focus:bg-white hover:border-[#057DCD] appearance-none shadow-sm"
                     >
                       <option value="">All Departments</option>
                       {departments.map((dept) => (
@@ -436,15 +443,15 @@ const AdminConsultation = () => {
                     </select>
                   </div>
 
-                  {/* Teacher Search Section */}
-                  <div className="space-y-2">
+                  {/* Modern Teacher Search Section */}
+                  <div className="space-y-3">
                     <div className="flex items-center">
-                      <div className="w-6 h-6 bg-gradient-to-br from-purple-100 to-pink-100 rounded-lg flex items-center justify-center mr-2">
-                        <svg className="w-3 h-3 text-[#0065A8]" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <div className="w-8 h-8 bg-gradient-to-br from-purple-100 to-pink-100 rounded-lg flex items-center justify-center mr-3">
+                        <svg className="w-4 h-4 text-[#0065A8]" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                           <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
                         </svg>
                       </div>
-                      <label htmlFor="teacher-search" className="font-semibold text-gray-800 text-xs">
+                      <label htmlFor="teacher-search" className="font-semibold text-gray-800 text-sm">
                         Search Teacher
                       </label>
                     </div>
@@ -454,7 +461,7 @@ const AdminConsultation = () => {
                       value={searchTeacher}
                       onChange={handleSearchChange}
                       placeholder="Enter teacher name..."
-                      className="w-full px-3 py-2 bg-gradient-to-r from-gray-50 to-purple-50 border border-[#0065A8]/20 rounded-lg text-xs font-medium text-gray-800 transition-all duration-300 focus:outline-none focus:border-[#0065A8] focus:ring-1 focus:ring-[#0065A8]/20 focus:bg-white hover:border-[#057DCD]"
+                      className="w-full px-4 py-3 bg-gradient-to-r from-gray-50 to-purple-50 border-2 border-[#0065A8]/20 rounded-xl text-sm font-medium text-gray-800 transition-all duration-300 focus:outline-none focus:border-[#0065A8] focus:ring-2 focus:ring-[#0065A8]/20 focus:bg-white hover:border-[#057DCD] shadow-sm"
                     />
                   </div>
                 </div>
