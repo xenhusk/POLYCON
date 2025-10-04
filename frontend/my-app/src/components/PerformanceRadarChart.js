@@ -84,10 +84,12 @@ const PerformanceRadarChart = ({ metricsData }) => {
   };
   
   return (
-    <div className="radar-chart-container">
-      <Radar data={chartData} options={chartOptions} />
-      <div className="mt-3 text-center text-sm text-gray-500">
-        <p>* Grade Improvement is scaled to a maximum of 50%</p>
+    <div className="radar-chart-container w-full h-full flex flex-col items-center justify-center">
+      <div className="flex-1 flex items-center justify-center w-full">
+        <Radar data={chartData} options={chartOptions} />
+      </div>
+      <div className="mt-4 text-center text-sm text-gray-600 bg-white/80 backdrop-blur-sm rounded-lg px-3 py-2 border border-gray-200/50">
+        <p className="font-medium">* Grade Improvement is scaled to a maximum of 50%</p>
       </div>
     </div>
   );
