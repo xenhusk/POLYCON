@@ -14,6 +14,39 @@ const ScheduleCard = ({
   setFormData,
   onFormSubmit
 }) => {
+  // Helper function to generate colored shadows
+  const getColoredShadow = (bgClass, type) => {
+    const colorMap = {
+      'bg-blue-500': { rgb: '59, 130, 246', name: 'blue' },
+      'bg-rose-500': { rgb: '244, 63, 94', name: 'rose' },
+      'bg-yellow-500': { rgb: '234, 179, 8', name: 'yellow' },
+      'bg-purple-500': { rgb: '147, 51, 234', name: 'purple' },
+      'bg-emerald-500': { rgb: '16, 185, 129', name: 'emerald' },
+      'bg-orange-500': { rgb: '249, 115, 22', name: 'orange' }
+    };
+    
+    const color = colorMap[bgClass] || colorMap['bg-blue-500'];
+    
+    if (type === 'hover') {
+      return `0 25px 50px -12px rgba(${color.rgb}, 0.4), 0 0 0 1px rgba(${color.rgb}, 0.1)`;
+    } else {
+      return `0 10px 15px -3px rgba(${color.rgb}, 0.2), 0 4px 6px -2px rgba(${color.rgb}, 0.1)`;
+    }
+  };
+
+  // Helper function to get color for drop-shadow
+  const getColorFromBg = (bgClass) => {
+    const colorMap = {
+      'bg-blue-500': 'rgba(59, 130, 246, 0.3)',
+      'bg-rose-500': 'rgba(244, 63, 94, 0.3)',
+      'bg-yellow-500': 'rgba(234, 179, 8, 0.3)',
+      'bg-purple-500': 'rgba(147, 51, 234, 0.3)',
+      'bg-emerald-500': 'rgba(16, 185, 129, 0.3)',
+      'bg-orange-500': 'rgba(249, 115, 22, 0.3)'
+    };
+    
+    return colorMap[bgClass] || colorMap['bg-blue-500'];
+  };
   const [localFormData, setLocalFormData] = useState({
     day_of_week: schedule.day_of_week.toString(),
     start_time: schedule.start_time,
@@ -36,7 +69,9 @@ const ScheduleCard = ({
       peerChecked: 'peer-checked:bg-blue-500',
       hover: 'hover:bg-blue-600',
       gradientFrom: 'from-blue-600',
-      gradientTo: 'to-blue-700'
+      gradientTo: 'to-blue-700',
+      shadowColor: 'shadow-blue-500/25',
+      hoverShadow: 'hover:shadow-blue-500/40'
     },
     1: { // Tuesday - Rose
       text: 'text-rose-700',
@@ -50,7 +85,9 @@ const ScheduleCard = ({
       peerChecked: 'peer-checked:bg-rose-500',
       hover: 'hover:bg-rose-600',
       gradientFrom: 'from-rose-600',
-      gradientTo: 'to-rose-700'
+      gradientTo: 'to-rose-700',
+      shadowColor: 'shadow-rose-500/25',
+      hoverShadow: 'hover:shadow-rose-500/40'
     },
     2: { // Wednesday - Yellow
       text: 'text-yellow-700',
@@ -64,7 +101,9 @@ const ScheduleCard = ({
       peerChecked: 'peer-checked:bg-yellow-500',
       hover: 'hover:bg-yellow-600',
       gradientFrom: 'from-yellow-600',
-      gradientTo: 'to-yellow-700'
+      gradientTo: 'to-yellow-700',
+      shadowColor: 'shadow-yellow-500/25',
+      hoverShadow: 'hover:shadow-yellow-500/40'
     },
     3: { // Thursday - Purple
       text: 'text-purple-700',
@@ -78,7 +117,9 @@ const ScheduleCard = ({
       peerChecked: 'peer-checked:bg-purple-500',
       hover: 'hover:bg-purple-600',
       gradientFrom: 'from-purple-600',
-      gradientTo: 'to-purple-700'
+      gradientTo: 'to-purple-700',
+      shadowColor: 'shadow-purple-500/25',
+      hoverShadow: 'hover:shadow-purple-500/40'
     },
     4: { // Friday - Emerald
       text: 'text-emerald-700',
@@ -92,7 +133,9 @@ const ScheduleCard = ({
       peerChecked: 'peer-checked:bg-emerald-500',
       hover: 'hover:bg-emerald-600',
       gradientFrom: 'from-emerald-600',
-      gradientTo: 'to-emerald-700'
+      gradientTo: 'to-emerald-700',
+      shadowColor: 'shadow-emerald-500/25',
+      hoverShadow: 'hover:shadow-emerald-500/40'
     },
     5: { // Saturday - Orange
       text: 'text-orange-700',
@@ -106,7 +149,9 @@ const ScheduleCard = ({
       peerChecked: 'peer-checked:bg-orange-500',
       hover: 'hover:bg-orange-600',
       gradientFrom: 'from-orange-600',
-      gradientTo: 'to-orange-700'
+      gradientTo: 'to-orange-700',
+      shadowColor: 'shadow-orange-500/25',
+      hoverShadow: 'hover:shadow-orange-500/40'
     },
     6: { // Sunday - Rose
       text: 'text-rose-700',
@@ -120,7 +165,9 @@ const ScheduleCard = ({
       peerChecked: 'peer-checked:bg-rose-500',
       hover: 'hover:bg-rose-600',
       gradientFrom: 'from-rose-600',
-      gradientTo: 'to-rose-700'
+      gradientTo: 'to-rose-700',
+      shadowColor: 'shadow-rose-500/25',
+      hoverShadow: 'hover:shadow-rose-500/40'
     }
   };
 
@@ -164,7 +211,19 @@ const ScheduleCard = ({
               scale: 1.02,
               transition: { duration: 0.3 }
             }}
-            className={`relative w-full h-full bg-gradient-to-br ${dayColors[schedule.day_of_week]?.card || 'from-gray-50 to-gray-100'} border ${dayColors[schedule.day_of_week]?.border || 'border-gray-200'} rounded-2xl p-6 shadow-lg hover:shadow-2xl transition-all duration-300 cursor-pointer overflow-hidden`}
+            className={`relative w-full h-full bg-gradient-to-br ${dayColors[schedule.day_of_week]?.card || 'from-gray-50 to-gray-100'} border ${dayColors[schedule.day_of_week]?.border || 'border-gray-200'} rounded-2xl p-6 transition-all duration-300 cursor-pointer overflow-hidden`}
+            style={{
+              boxShadow: getColoredShadow(colors.bg, 'default'),
+              filter: 'drop-shadow(0 4px 6px rgba(0, 0, 0, 0.1))',
+            }}
+            onMouseEnter={(e) => {
+              e.target.style.boxShadow = getColoredShadow(colors.bg, 'hover');
+              e.target.style.filter = `drop-shadow(0 10px 15px ${getColorFromBg(colors.bg)})`;
+            }}
+            onMouseLeave={(e) => {
+              e.target.style.boxShadow = getColoredShadow(colors.bg, 'default');
+              e.target.style.filter = 'drop-shadow(0 4px 6px rgba(0, 0, 0, 0.1))';
+            }}
           >
             {/* Status indicator */}
             <div className={`h-1 w-full rounded-t-2xl mb-4 ${

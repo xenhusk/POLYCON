@@ -2,6 +2,17 @@ import React from 'react';
 import { motion } from 'framer-motion';
 
 const AddScheduleCard = ({ onAddClick }) => {
+  // Helper function to generate colored shadows
+  const getColoredShadow = (type) => {
+    const emeraldRgb = '16, 185, 129';
+    
+    if (type === 'hover') {
+      return `0 25px 50px -12px rgba(${emeraldRgb}, 0.4), 0 0 0 1px rgba(${emeraldRgb}, 0.1)`;
+    } else {
+      return `0 10px 15px -3px rgba(${emeraldRgb}, 0.2), 0 4px 6px -2px rgba(${emeraldRgb}, 0.1)`;
+    }
+  };
+
   return (
     <motion.div
       initial={{ opacity: 0, y: 20 }}
@@ -15,7 +26,16 @@ const AddScheduleCard = ({ onAddClick }) => {
           scale: 1.02,
           transition: { duration: 0.3 }
         }}
-        className="relative w-full h-80 bg-gradient-to-br from-emerald-50 via-teal-50 to-cyan-50 border-2 border-dashed border-emerald-300 rounded-2xl p-6 shadow-lg hover:shadow-2xl transition-all duration-300 cursor-pointer overflow-hidden"
+        className="relative w-full h-80 bg-gradient-to-br from-emerald-50 via-teal-50 to-cyan-50 border-2 border-dashed border-emerald-300 rounded-2xl p-6 transition-all duration-300 cursor-pointer overflow-hidden"
+        style={{
+          boxShadow: getColoredShadow('default'),
+        }}
+        onMouseEnter={(e) => {
+          e.target.style.boxShadow = getColoredShadow('hover');
+        }}
+        onMouseLeave={(e) => {
+          e.target.style.boxShadow = getColoredShadow('default');
+        }}
         onClick={onAddClick}
       >
         {/* Animated border effect */}
