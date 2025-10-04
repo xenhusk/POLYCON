@@ -40,6 +40,13 @@ const modalStyles = `
     -ms-overflow-style: none;
     scrollbar-width: none;
   }
+  .scrollbar-hide::-webkit-scrollbar {
+    display: none;
+  }
+  .scrollbar-hide {
+    -ms-overflow-style: none;
+    scrollbar-width: none;
+  }
 `;
 
 // Inject styles into head if not already present
@@ -396,6 +403,8 @@ export default function AddGrade() {
       courseFilter: "",
       selectedFilterStudents: []
     });
+    // Also reset the main selected students state
+    setSelectedFilterStudents([]);
   };
 
   const handleStudentNameChange = async (e) => {
@@ -446,10 +455,10 @@ export default function AddGrade() {
         const gradesResponse = await fetch(gradesUrl);
         const gradesData = await gradesResponse.json();
         // Update grades state
-        setGrades(Array.isArray(gradesData) ? gradesData : []);
-        setFilteredGrades(Array.isArray(gradesData) ? gradesData.filter(
-          (grade) => grade.school_year === schoolYear && grade.semester === semester
-        ) : []);
+        const newGrades = Array.isArray(gradesData) ? gradesData : [];
+        setGrades(newGrades);
+        // Apply all current filters to maintain search and other filter states
+        setFilteredGrades(applyAllFilters(newGrades));
         setMessage({
           type: "success",
           content: "Grade deleted successfully",
@@ -524,10 +533,10 @@ export default function AddGrade() {
         const gradesResponse = await fetch(gradesUrl);
         const gradesData = await gradesResponse.json();
         // Update grades state
-        setGrades(Array.isArray(gradesData) ? gradesData : []);
-        setFilteredGrades(Array.isArray(gradesData) ? gradesData.filter(
-          (grade) => grade.school_year === schoolYear && grade.semester === semester
-        ) : []);
+        const newGrades = Array.isArray(gradesData) ? gradesData : [];
+        setGrades(newGrades);
+        // Apply all current filters to maintain search and other filter states
+        setFilteredGrades(applyAllFilters(newGrades));
         // Don't reset page after update
         // Reset form and selected grade
         handleCancelEdit();
@@ -624,10 +633,10 @@ export default function AddGrade() {
         const gradesResponse = await fetch(gradesUrl);
         const gradesData = await gradesResponse.json();
         // Update grades state
-        setGrades(Array.isArray(gradesData) ? gradesData : []);
-        setFilteredGrades(Array.isArray(gradesData) ? gradesData.filter(
-          (grade) => grade.school_year === schoolYear && grade.semester === semester
-        ) : []);
+        const newGrades = Array.isArray(gradesData) ? gradesData : [];
+        setGrades(newGrades);
+        // Apply all current filters to maintain search and other filter states
+        setFilteredGrades(applyAllFilters(newGrades));
         // Don't reset page after add
         // Reset form
         setStudentID("");
@@ -793,7 +802,7 @@ export default function AddGrade() {
       const data = await response.json();
       const suggestions = (Array.isArray(data) ? data : []).filter(
         (student) =>
-          !tempFilters.selectedFilterStudents.some((s) => s.studentID === student.studentID)
+          !selectedFilterStudents.some((s) => s.studentID === student.studentID)
       );
       setFilterStudentSuggestions(suggestions);
     } catch (error) {
@@ -802,8 +811,33 @@ export default function AddGrade() {
     }
   };
 
+  // Add click outside handler to close dropdowns
+  useEffect(() => {
+    const handleClickOutside = (event) => {
+      // Close main search dropdown
+      if (filterStudentSuggestions.length > 0) {
+        const searchContainer = document.querySelector('[data-search-container]');
+        if (searchContainer && !searchContainer.contains(event.target)) {
+          setFilterStudentSuggestions([]);
+        }
+      }
+    };
+
+    document.addEventListener('mousedown', handleClickOutside);
+    return () => {
+      document.removeEventListener('mousedown', handleClickOutside);
+    };
+  }, [filterStudentSuggestions.length]);
+
   // NEW: Handler to add a student to the filter list
   const handleSelectFilterStudent = (student) => {
+    // Check if student is already selected to avoid duplicates
+    if (selectedFilterStudents.some(s => s.studentID === student.studentID)) {
+      return;
+    }
+    
+    // Update both the main state and temp filters state
+    setSelectedFilterStudents(prev => [...prev, student]);
     setTempFilters(prev => ({
       ...prev,
       selectedFilterStudents: [...prev.selectedFilterStudents, student]
@@ -814,10 +848,46 @@ export default function AddGrade() {
 
   // NEW: Handler to remove a selected student from filter list
   const handleRemoveFilterStudent = (studentID) => {
+    // Update both the main state and temp filters state
+    setSelectedFilterStudents(prev => prev.filter((s) => s.studentID !== studentID));
     setTempFilters(prev => ({
       ...prev,
       selectedFilterStudents: prev.selectedFilterStudents.filter((s) => s.studentID !== studentID)
     }));
+  };
+
+  // Helper function to apply all current filters to grades
+  const applyAllFilters = (gradesToFilter) => {
+    return gradesToFilter.filter((grade) => {
+      // Period filter
+      if (selectedPeriods.length && !selectedPeriods.includes(grade.period))
+        return false;
+
+      // Course filter
+      if (
+        courseFilter &&
+        !grade.courseName.toLowerCase().includes(courseFilter.toLowerCase())
+      )
+        return false;
+
+      // School year filter
+      if (schoolYearFilter && grade.school_year !== schoolYearFilter) return false;
+
+      // Semester filter
+      if (semesterFilter && grade.semester !== semesterFilter) return false;
+
+      // Student filter (search filter)
+      if (
+        selectedFilterStudents.length &&
+        !selectedFilterStudents.some(
+          (student) =>
+            grade.studentName.toLowerCase() === student.name.toLowerCase()
+        )
+      )
+        return false;
+
+      return true;
+    });
   };
 
   // Add this helper function at the top level of your component
@@ -862,6 +932,15 @@ export default function AddGrade() {
     setFilterStudentSuggestions([]);
     setFilteredGrades(grades); // Reset to show all grades
     setCurrentPage(1); // Reset to first page when filters change
+    
+    // Also reset temp filters
+    setTempFilters({
+      schoolYearFilter: "",
+      semesterFilter: "",
+      selectedPeriods: [],
+      courseFilter: "",
+      selectedFilterStudents: []
+    });
     
     // Show feedback message
     setMessage({
@@ -986,7 +1065,7 @@ export default function AddGrade() {
       </motion.div>
 
       {/* Main Content */}
-      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8" style={{ overflow: 'visible' }}>
         {/* Updated toast message display */}
         {message.content && (
           <motion.div
@@ -1019,11 +1098,12 @@ export default function AddGrade() {
           initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ duration: 0.6, delay: 0.2 }}
-          className="mt-8 z-50 flex justify-center"
+          className="mt-8 flex justify-center"
+          style={{ zIndex: 10 }}
         >
           <div className="w-full max-w-6xl">
             {/* Search Card */}
-            <div className="bg-white/80 backdrop-blur-sm rounded-2xl shadow-xl border border-white/20 p-6 mb-6">
+            <div className="bg-white/80 backdrop-blur-sm rounded-2xl shadow-xl border border-white/20 p-6 mb-6 relative" style={{ zIndex: 11, overflow: 'visible' }}>
               <div className="flex items-center gap-3 mb-4">
                 <div className="w-10 h-10 bg-gradient-to-r from-[#0065A8] to-[#057DCD] rounded-full flex items-center justify-center">
                   <svg className="w-5 h-5 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -1033,15 +1113,17 @@ export default function AddGrade() {
                 <h3 className="text-xl font-bold text-gray-800">Search Students</h3>
               </div>
               
-              <div className="relative w-full">
-                <div className="bg-white border-2 border-gray-200 rounded-xl px-4 py-3 shadow-sm flex flex-wrap items-center min-h-[50px] w-full gap-2 hover:border-[#0065A8] transition-colors">
-                  <div className="flex flex-wrap gap-2 w-full sm:w-auto">
+              <div className="relative w-full" style={{ zIndex: 12 }} data-search-container>
+                <div className="bg-white border-2 border-gray-200 rounded-xl px-4 py-3 shadow-sm flex items-center min-h-[50px] w-full gap-2 hover:border-[#0065A8] transition-colors">
+                  {/* Scrollable Container with Selected Students and Search Input */}
+                  <div className="flex items-center gap-2 overflow-x-auto scrollbar-hide flex-1 min-w-0">
+                    {/* Selected Students */}
                     {selectedFilterStudents.map((student) => (
                       <motion.div
                         key={student.studentID}
                         initial={{ opacity: 0, scale: 0.8 }}
                         animate={{ opacity: 1, scale: 1 }}
-                        className="bg-gradient-to-r from-[#0065A8] to-[#057DCD] text-white px-3 py-2 rounded-full flex items-center gap-2 text-sm whitespace-nowrap shadow-md"
+                        className="bg-gradient-to-r from-[#0065A8] to-[#057DCD] text-white px-3 py-2 rounded-full flex items-center gap-2 text-sm whitespace-nowrap shadow-md flex-shrink-0"
                       >
                         <img
                           src={getProfilePictureUrl(student.profile_picture, student.name)}
@@ -1059,15 +1141,19 @@ export default function AddGrade() {
                         </button>
                       </motion.div>
                     ))}
+                    
+                    {/* Search Input - Now within the scrollable area */}
                     <input
                       type="text"
                       value={filterStudentQuery}
                       onChange={handleFilterStudentQueryChange}
-                      placeholder="Search by student name..."
-                      className="border-none focus:ring-0 outline-none flex-1 min-w-[150px] text-gray-700 placeholder-gray-400"
+                      placeholder={selectedFilterStudents.length > 0 ? `Search for more students... (${selectedFilterStudents.length} selected)` : "Search by student name..."}
+                      className="border-none focus:ring-0 outline-none min-w-[200px] text-gray-700 placeholder-gray-400 flex-shrink-0"
                     />
+                    
+                    {/* Search Status - Also within scrollable area */}
                     {filterStudentQuery && (
-                      <div className="flex items-center gap-2 text-sm text-gray-500">
+                      <div className="flex items-center gap-2 text-sm text-gray-500 flex-shrink-0">
                         {filterStudentSuggestions.length > 0 ? (
                           <span className="text-green-600 font-medium">✓ {filterStudentSuggestions.length} found</span>
                         ) : (
@@ -1076,14 +1162,47 @@ export default function AddGrade() {
                       </div>
                     )}
                   </div>
+                  
+                  {/* Clear All Button - Fixed rightmost position */}
+                  {selectedFilterStudents.length > 0 && (
+                    <button
+                      onClick={() => {
+                        setSelectedFilterStudents([]);
+                        setTempFilters(prev => ({
+                          ...prev,
+                          selectedFilterStudents: []
+                        }));
+                      }}
+                      className="text-red-500 hover:text-red-700 text-sm font-medium px-3 py-2 rounded-lg hover:bg-red-50 transition-colors flex-shrink-0 border border-red-200 hover:border-red-300"
+                      title="Clear all selected students"
+                    >
+                      Clear All
+                    </button>
+                  )}
                 </div>
 
-                {/* Dropdown Suggestions with Profile Pictures */}
+                {/* Dropdown Suggestions with Profile Pictures - Fixed positioning and z-index */}
                 {filterStudentSuggestions.length > 0 && (
                   <motion.ul 
                     initial={{ opacity: 0, y: -10 }}
                     animate={{ opacity: 1, y: 0 }}
-                    className="absolute left-0 right-0 top-full mt-2 bg-white border border-gray-200 rounded-xl max-h-48 overflow-y-auto shadow-xl z-[60] backdrop-blur-sm"
+                    className="absolute left-0 right-0 top-full mt-2 bg-white border border-gray-200 rounded-xl max-h-48 overflow-y-auto shadow-xl backdrop-blur-sm"
+                    style={{ 
+                      zIndex: 50,
+                      position: 'absolute',
+                      top: '100%',
+                      left: 0,
+                      right: 0,
+                      marginTop: '0.5rem',
+                      maxHeight: '12rem',
+                      overflowY: 'auto',
+                      backgroundColor: 'white',
+                      border: '1px solid #e5e7eb',
+                      borderRadius: '0.75rem',
+                      boxShadow: '0 25px 50px -12px rgba(0, 0, 0, 0.25)',
+                      minWidth: '300px',
+                      maxWidth: '500px'
+                    }}
                   >
                     {filterStudentSuggestions.map((student) => (
                       <motion.li
@@ -1349,9 +1468,12 @@ export default function AddGrade() {
                         className="flex-1 min-w-[120px] outline-none bg-transparent"
                       />
                     </div>
-                    {/* Student Search Suggestions */}
+                    {/* Student Search Suggestions - Fixed z-index */}
                     {filterStudentSuggestions.length > 0 && (
-                      <div className="mt-2 bg-white border border-gray-200 rounded-lg shadow-lg max-h-40 overflow-y-auto">
+                      <div 
+                        className="mt-2 bg-white border border-gray-200 rounded-lg shadow-lg max-h-40 overflow-y-auto"
+                        style={{ zIndex: 60 }}
+                      >
                         {filterStudentSuggestions.map((student) => (
                           <div
                             key={student.studentID}
@@ -1410,7 +1532,8 @@ export default function AddGrade() {
           initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ duration: 0.6, delay: 0.4 }}
-          className="mt-8 relative z-0"
+          className="mt-8 relative"
+          style={{ zIndex: 1 }}
         >
           {/* Mobile Card View */}
           <div className="block sm:hidden">
@@ -1532,7 +1655,7 @@ export default function AddGrade() {
             <div className="bg-white/90 backdrop-blur-sm rounded-2xl shadow-xl border border-white/20 overflow-hidden">
               <div className="max-h-[60vh] overflow-y-auto">
                 <table className="w-full text-center" style={{ minWidth: "900px" }}>
-                  <thead className="bg-gradient-to-r from-[#0065A8] via-[#057DCD] to-[#54BEFF] text-white sticky top-0 z-10">
+                  <thead className="bg-gradient-to-r from-[#0065A8] via-[#057DCD] to-[#54BEFF] text-white sticky top-0" style={{ zIndex: 10 }}>
                     <tr>
                       <th className="px-4 py-4 text-sm font-bold min-w-[120px]">Student ID</th>
                       <th className="px-4 py-4 text-sm font-bold min-w-[180px]">Student Name</th>
@@ -1827,7 +1950,18 @@ export default function AddGrade() {
                 
                 if (response.ok) {
                   // Reload grades
-                  await fetchInitialData();
+                  const gradesUrl = new URL(`${API_URL}/grade/get_grades`);
+                  gradesUrl.searchParams.append(
+                    "facultyID",
+                    localStorage.getItem("teacherID")
+                  );
+                  const gradesResponse = await fetch(gradesUrl);
+                  const gradesData = await gradesResponse.json();
+                  // Update grades state
+                  const newGrades = Array.isArray(gradesData) ? gradesData : [];
+                  setGrades(newGrades);
+                  // Apply all current filters to maintain search and other filter states
+                  setFilteredGrades(applyAllFilters(newGrades));
                   setMessage({
                     type: "success",
                     content: "Grade updated successfully",
