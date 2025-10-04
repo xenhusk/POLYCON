@@ -394,7 +394,7 @@ const Nav = ({
   );
 };
 
-// Enhanced Hero Section
+// Enhanced Hero Section with Optimized Image Display
 const Hero = ({
   handleSignupClick,
   handleSectionNavigation,
@@ -402,13 +402,65 @@ const Hero = ({
 }) => {
   const images = [Consult1, Consult2, Consult3];
   const [currentImage, setCurrentImage] = useState(0);
+  const [isHovered, setIsHovered] = useState(false);
+  const [preloadedImages, setPreloadedImages] = useState(new Set());
+  const [isTransitioning, setIsTransitioning] = useState(false);
 
+  // Preload images for better performance
   useEffect(() => {
+    const preloadImage = (src) => {
+      return new Promise((resolve, reject) => {
+        const img = new Image();
+        img.onload = () => resolve(src);
+        img.onerror = reject;
+        img.src = src;
+      });
+    };
+
+    const preloadAllImages = async () => {
+      try {
+        await Promise.all(images.map(preloadImage));
+        setPreloadedImages(new Set(images));
+      } catch (error) {
+        console.warn('Some images failed to preload:', error);
+      }
+    };
+
+    preloadAllImages();
+  }, [images]);
+
+  // Auto-advance with pause on hover
+  useEffect(() => {
+    if (isHovered) return;
+    
     const interval = setInterval(() => {
       setCurrentImage((prev) => (prev + 1) % images.length);
     }, 5000);
+    
     return () => clearInterval(interval);
-  }, []);
+  }, [images.length, isHovered]);
+
+  // Enhanced image change handler with transition state
+  const handleImageChange = (index) => {
+    if (index === currentImage || isTransitioning) return;
+    
+    setIsTransitioning(true);
+    setCurrentImage(index);
+    
+    // Reset transition state after animation
+    setTimeout(() => setIsTransitioning(false), 500);
+  };
+
+  // Keyboard navigation
+  const handleKeyDown = (e) => {
+    if (e.key === 'ArrowLeft') {
+      const prevIndex = (currentImage - 1 + images.length) % images.length;
+      handleImageChange(prevIndex);
+    } else if (e.key === 'ArrowRight') {
+      const nextIndex = (currentImage + 1) % images.length;
+      handleImageChange(nextIndex);
+    }
+  };
 
   return (
     <motion.section
@@ -514,38 +566,101 @@ const Hero = ({
             </motion.div>
           </motion.div>
 
-          {/* Image Carousel */}
+          {/* Enhanced Image Carousel */}
           <motion.div
             initial={{ opacity: 0, x: 50 }}
             animate={{ opacity: 1, x: 0 }}
             transition={{ duration: 0.8, delay: 0.4 }}
             className="relative mt-8 lg:mt-0"
+            onMouseEnter={() => setIsHovered(true)}
+            onMouseLeave={() => setIsHovered(false)}
+            onKeyDown={handleKeyDown}
+            tabIndex={0}
+            role="img"
+            aria-label="Consultation system images carousel"
           >
-            <div className="relative w-full h-80 sm:h-96 lg:h-[500px] rounded-2xl lg:rounded-3xl overflow-hidden shadow-2xl">
-              <AnimatePresence mode="wait">
+            <div className="relative w-full h-80 sm:h-96 lg:h-[500px] rounded-2xl lg:rounded-3xl overflow-hidden shadow-2xl group">
+              {/* All images rendered for smoother transitions */}
+              {images.map((image, index) => (
                 <motion.img
-                  key={currentImage}
-                  src={images[currentImage]}
-                  alt="Consultation"
-                  initial={{ opacity: 0, scale: 1.1 }}
-                  animate={{ opacity: 1, scale: 1 }}
-                  exit={{ opacity: 0, scale: 0.9 }}
-                  transition={{ duration: 0.5 }}
+                  key={index}
+                  src={image}
+                  alt={`Consultation system image ${index + 1}`}
+                  initial={{ opacity: 0 }}
+                  animate={{ 
+                    opacity: index === currentImage ? 1 : 0,
+                    scale: index === currentImage ? 1 : 1.05
+                  }}
+                  transition={{ 
+                    duration: 0.6,
+                    ease: "easeInOut"
+                  }}
                   className="absolute inset-0 w-full h-full object-cover"
+                  loading={preloadedImages.has(image) ? "eager" : "lazy"}
                 />
-              </AnimatePresence>
+              ))}
+              
+              {/* Gradient overlay */}
               <div className="absolute inset-0 bg-gradient-to-t from-blue-900/50 to-transparent" />
+              
+              {/* Navigation arrows */}
+              <button
+                onClick={() => handleImageChange((currentImage - 1 + images.length) % images.length)}
+                className="absolute left-4 top-1/2 -translate-y-1/2 bg-black/30 hover:bg-black/50 text-white p-2 rounded-full opacity-0 group-hover:opacity-100 transition-all duration-200"
+                aria-label="Previous image"
+                disabled={isTransitioning}
+              >
+                <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 19l-7-7 7-7" />
+                </svg>
+              </button>
+              
+              <button
+                onClick={() => handleImageChange((currentImage + 1) % images.length)}
+                className="absolute right-4 top-1/2 -translate-y-1/2 bg-black/30 hover:bg-black/50 text-white p-2 rounded-full opacity-0 group-hover:opacity-100 transition-all duration-200"
+                aria-label="Next image"
+                disabled={isTransitioning}
+              >
+                <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
+                </svg>
+              </button>
+
+              {/* Progress indicator */}
+              <div className="absolute bottom-4 left-4 right-4">
+                <div className="flex space-x-1">
+                  {images.map((_, index) => (
+                    <div
+                      key={index}
+                      className="h-1 bg-white/30 rounded-full flex-1"
+                    >
+                      <motion.div
+                        className="h-full bg-white rounded-full"
+                        initial={{ width: "0%" }}
+                        animate={{ 
+                          width: index === currentImage ? "100%" : "0%"
+                        }}
+                        transition={{ duration: 0.1 }}
+                      />
+                    </div>
+                  ))}
+                </div>
+              </div>
             </div>
 
-            {/* Image Indicators */}
-            <div className="flex justify-center mt-4 sm:mt-6 space-x-2 mb-4 lg:mb-0">
+            {/* Enhanced Image Indicators */}
+            <div className="flex justify-center mt-4 sm:mt-6 space-x-3 mb-4 lg:mb-0">
               {images.map((_, index) => (
                 <button
                   key={index}
-                  onClick={() => setCurrentImage(index)}
-                  className={`w-3 h-3 rounded-full transition-all duration-200 ${
-                    index === currentImage ? "bg-white" : "bg-white/40"
+                  onClick={() => handleImageChange(index)}
+                  className={`w-3 h-3 rounded-full transition-all duration-300 hover:scale-125 ${
+                    index === currentImage 
+                      ? "bg-white scale-125 shadow-lg" 
+                      : "bg-white/40 hover:bg-white/60"
                   }`}
+                  aria-label={`Go to image ${index + 1}`}
+                  disabled={isTransitioning}
                 />
               ))}
             </div>
