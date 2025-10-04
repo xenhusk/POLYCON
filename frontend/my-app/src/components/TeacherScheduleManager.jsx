@@ -2,6 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import API_URL from '../apiConfig';
 import ScheduleCard from './ScheduleCard';
+import AddScheduleCard from './AddScheduleCard';
 
 // CSS for hiding scrollbar and card effects
 const modalStyles = `
@@ -463,51 +464,6 @@ const TeacherScheduleManager = () => {
               <p className="text-xl md:text-2xl text-blue-200 mb-8">
                 Manage your weekly consultation hours
               </p>
-              <motion.div
-                whileHover={{ scale: 1.05, y: -5 }}
-                whileTap={{ scale: 0.95 }}
-                onClick={() => {
-                  setScheduleClicked(true);
-                  setTimeout(() => setScheduleClicked(false), 200);
-                  setShowModal(true);
-                }}
-                className="group relative w-80 h-48 bg-white/95 backdrop-blur-sm border border-white/20 rounded-2xl shadow-2xl hover:shadow-3xl transition-all duration-300 cursor-pointer overflow-hidden mx-auto"
-              >
-                {/* Animated background pattern */}
-                <div className="absolute inset-0 opacity-0 group-hover:opacity-10 transition-opacity duration-300">
-                  <div className="absolute top-4 right-4 w-16 h-16 bg-[#057DCD] rounded-full blur-xl"></div>
-                  <div className="absolute bottom-4 left-4 w-12 h-12 bg-[#046bb8] rounded-full blur-xl"></div>
-                </div>
-
-                {/* Content */}
-                <div className="relative z-10 h-full flex flex-col items-center justify-center text-center p-6">
-                  {/* Icon */}
-                  <motion.div
-                    whileHover={{ scale: 1.1, rotate: 5 }}
-                    className="w-16 h-16 bg-gradient-to-br from-[#057DCD] to-[#046bb8] rounded-2xl flex items-center justify-center shadow-lg mb-4 group-hover:shadow-xl transition-shadow duration-300"
-                  >
-                    <svg className="w-8 h-8 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 6v6m0 0v6m0-6h6m-6 0H6" />
-                    </svg>
-                  </motion.div>
-
-                  {/* Text */}
-                  <h3 className="text-xl font-bold text-gray-800 mb-2 group-hover:text-[#057DCD] transition-colors duration-300">
-                    Add New Schedule
-                  </h3>
-                  <p className="text-gray-600 text-sm group-hover:text-gray-700 transition-colors duration-300">
-                    Create a new consultation time slot
-                  </p>
-                </div>
-
-                {/* Hover overlay */}
-                <motion.div
-                  initial={{ opacity: 0 }}
-                  whileHover={{ opacity: 1 }}
-                  className="absolute inset-0 bg-gradient-to-br from-[#057DCD]/10 to-[#046bb8]/10 rounded-2xl"
-                  transition={{ duration: 0.2 }}
-                />
-              </motion.div>
             </motion.div>
           </div>
         </motion.section>
@@ -599,36 +555,23 @@ const TeacherScheduleManager = () => {
             </div>
             
             {schedules.length === 0 ? (
-              <motion.div
-                initial={{ opacity: 0, scale: 0.9 }}
-                animate={{ opacity: 1, scale: 1 }}
-                transition={{ delay: 0.5 }}
-                className="text-center py-16"
-              >
-                <div className="bg-white rounded-2xl shadow-2xl p-12 max-w-2xl mx-auto border border-gray-100">
-                  <div className="w-24 h-24 mx-auto mb-6 bg-gradient-to-br from-gray-200 to-gray-300 rounded-full flex items-center justify-center">
-                    <svg className="w-12 h-12 text-gray-500" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z" />
-                    </svg>
-                  </div>
-                  <h3 className="text-2xl font-bold text-gray-800 mb-3">No Consultation Schedules Yet</h3>
-                  <p className="text-lg text-gray-600 mb-8">Set up your weekly consultation hours to let students know when you're available for meetings.</p>
-                  <motion.button
-                    whileHover={{ scale: 1.02 }}
-                    whileTap={{ scale: 0.98 }}
-                    onClick={() => setShowModal(true)}
-                    className="bg-gradient-to-r from-[#057DCD] to-[#046bb8] hover:from-[#046bb8] hover:to-[#034a94] text-white py-3 px-8 rounded-lg font-semibold transition-all duration-200 flex items-center gap-2 shadow-lg mx-auto"
-                  >
-                    <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 6v6m0 0v6m0-6h6m-6 0H6" />
-                    </svg>
-                    Create Your First Schedule
-                  </motion.button>
+              <div className="p-6">
+                <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
+                  {/* Add Schedule Card - Only card when no schedules exist */}
+                  <AddScheduleCard 
+                    onAddClick={() => setShowModal(true)}
+                  />
                 </div>
-              </motion.div>
+              </div>
             ) : (
               <div className="p-6">
                 <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
+                  {/* Add Schedule Card - Always first */}
+                  <AddScheduleCard 
+                    onAddClick={() => setShowModal(true)}
+                  />
+                  
+                  {/* Existing Schedule Cards */}
                   {schedules
                     .sort((a, b) => a.day_of_week - b.day_of_week)
                     .map((schedule, index) => (
