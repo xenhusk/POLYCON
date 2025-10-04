@@ -85,6 +85,7 @@ import EmailVerification from "./pages/EmailVerification";
 import EmailVerificationSuccess from "./pages/EmailVerificationSuccess";
 import EmailVerificationError from "./pages/EmailVerificationError";
 import AdminConsultation from "./components/AdminConsultation";
+import PublicConsultation from "./components/PublicConsultation";
 import Settings from "./pages/Settings";
 import SocketTest from "./pages/SocketTest"; // Add SocketTest import
 import { ToastProvider } from "./contexts/ToastContext"; // Add ToastProvider import
@@ -932,6 +933,11 @@ function App() {
                         <Route
                           path="/consultation-schedules"
                           element={<ConsultationSchedules />}
+                        />
+                        {/* Public consultation leaderboard - accessible without login */}
+                        <Route
+                          path="/consultation-leaderboard"
+                          element={<PublicConsultation />}
                         />
                         {/* Protected routes (any authenticated user) */}
                         <Route element={<ProtectedRoute />}>
