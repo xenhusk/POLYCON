@@ -906,7 +906,7 @@ const About = ({ animateSection }) => {
                       className="
                         w-[130%] h-[130%] 
                         object-cover 
-                        [object-position:50%_10%] 
+                        [object-position:50%_70%] 
                         [clip-path:inset(0%_0%_0%_0%_round_50%_49%_47%_47%)] 
                         transition-all duration-300 ease-in-out
                          text-gray-800 
