@@ -531,134 +531,284 @@ const SemesterManagement = () => {
     );
   }
   return (
-    <div className="flex flex-col min-h-screen items-center mx-auto p-6 bg-white fade-in">
-      {/* Toasts for specific messages outside the modal */}
-      {(error === 'Please start a semester first before activating teachers' || error === 'Teacher activated successfully') && (
-        <div className={`fixed top-5 right-5 z-50 rounded-lg shadow-lg max-w-md p-4 
-          ${error === 'Teacher activated successfully' ? 'bg-green-100 text-green-700' : 'bg-yellow-100 text-yellow-700'}`}
-        >
-          <div className="flex justify-between items-start">
-            <div className="flex-1">{error}</div>
-          </div>
+    <div className="min-h-screen bg-gradient-to-br from-slate-50 via-blue-50 to-indigo-100">
+      {/* Hero Section */}
+      <motion.section
+        initial={{ opacity: 0 }}
+        animate={{ opacity: 1 }}
+        transition={{ duration: 0.8 }}
+        className="relative py-16 overflow-hidden"
+      >
+        {/* Background Elements */}
+        <div className="absolute inset-0 bg-gradient-to-br from-[#057DCD] via-[#046bb8] to-[#034a94]" />
+        <div className="absolute inset-0 bg-black bg-opacity-20" />
+        
+        {/* Floating Elements */}
+        <motion.div
+          animate={{ 
+            y: [0, -20, 0],
+            rotate: [0, 5, 0]
+          }}
+          transition={{ 
+            duration: 6,
+            repeat: Infinity,
+            ease: "easeInOut"
+          }}
+          className="absolute top-10 left-10 w-20 h-20 bg-blue-400 rounded-full opacity-20"
+        />
+        <motion.div
+          animate={{ 
+            y: [0, 30, 0],
+            rotate: [0, -5, 0]
+          }}
+          transition={{ 
+            duration: 8,
+            repeat: Infinity,
+            ease: "easeInOut"
+          }}
+          className="absolute bottom-10 right-10 w-32 h-32 bg-blue-300 rounded-full opacity-15"
+        />
+        <motion.div
+          animate={{ 
+            y: [0, -15, 0],
+            x: [0, 10, 0]
+          }}
+          transition={{ 
+            duration: 7,
+            repeat: Infinity,
+            ease: "easeInOut"
+          }}
+          className="absolute top-1/2 right-1/4 w-16 h-16 bg-blue-200 rounded-full opacity-25"
+        />
+
+        <div className="relative z-10 max-w-7xl mx-auto px-6 text-center">
+          <motion.div
+            initial={{ opacity: 0, y: 30 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ duration: 0.8, delay: 0.2 }}
+          >
+            <h1 className="text-4xl md:text-5xl lg:text-6xl font-bold text-white mb-4">
+              Semester Management
+            </h1>
+            
+            <p className="text-lg text-blue-100 max-w-2xl mx-auto">
+              Manage academic semesters and teacher activation across the institution
+            </p>
+          </motion.div>
         </div>
-      )}
+      </motion.section>
 
-      <h2 className="text-3xl mt-10 font-bold text-center text-[#0065A8] pb-5 fade-in delay-100">
-        Semester Management
-      </h2>
+      {/* Main Content */}
+      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8" style={{ overflow: 'visible' }}>
+        {/* Updated toast message display */}
+        {(error === 'Please start a semester first before activating teachers' || error === 'Teacher activated successfully') && (
+          <motion.div
+            initial={{ opacity: 0, x: 300 }}
+            animate={{ opacity: 1, x: 0 }}
+            exit={{ opacity: 0, x: 300 }}
+            className={`fixed top-5 right-5 left-5 sm:left-auto sm:right-5 p-4 rounded-xl shadow-xl z-50 text-sm sm:text-base backdrop-blur-sm ${
+              error === 'Teacher activated successfully'
+                ? "bg-green-500/90 text-white border border-green-400"
+                : "bg-yellow-500/90 text-white border border-yellow-400"
+            }`}
+          >
+            <div className="flex items-center gap-3">
+              {error === 'Teacher activated successfully' ? (
+                <svg className="w-5 h-5" fill="currentColor" viewBox="0 0 20 20">
+                  <path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clipRule="evenodd" />
+                </svg>
+              ) : (
+                <svg className="w-5 h-5" fill="currentColor" viewBox="0 0 20 20">
+                  <path fillRule="evenodd" d="M8.257 3.099c.765-1.36 2.722-1.36 3.486 0l5.58 9.92c.75 1.334-.213 2.98-1.742 2.98H4.42c-1.53 0-2.493-1.646-1.743-2.98l5.58-9.92zM11 13a1 1 0 11-2 0 1 1 0 012 0zm-1-8a1 1 0 00-1 1v3a1 1 0 002 0V6a1 1 0 00-1-1z" clipRule="evenodd" />
+                </svg>
+              )}
+              {error}
+            </div>
+          </motion.div>
+        )}
 
-      <div className="flex items-center justify-between space-x-4 w-[90%] mt-4 fade-in delay-200">
-        {/* Manage Semester Button */}
-        <button
-          onClick={() => setShowSemesterModal(true)}
-          className="px-6 py-2 bg-[#057DCD] text-white rounded-lg hover:bg-[#54BEFF] transition-all duration-300 transform hover:scale-105 active:scale-95 shadow-md"
+        {/* Search and Filter Section - Enhanced with modern card design */}
+        <motion.div 
+          initial={{ opacity: 0, y: 20 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ duration: 0.6, delay: 0.2 }}
+          className="mt-8 flex justify-center"
+          style={{ zIndex: 10 }}
         >
-          Manage Semester
-        </button>
-
-        {/* Search and Filter Section */}
-        <div className="flex items-center space-x-2">
-          <div className="relative w-[400px] border border-gray-300 rounded-lg px-3 py-2 shadow-md flex flex-wrap items-center min-h-[42px]">
-            <input
-              type="text"
-              value={teacherSearchTerm}
-              onChange={handleTeacherSearchChange}
-              placeholder="Search teachers by name..."
-              className="border-none focus:ring-0 outline-none w-[100%]"
-            />
-          </div>
-          <div className="relative">
-            <button
-              onClick={() => setShowDepartmentModal(!showDepartmentModal)}
-              className={`bg-[#057DCD] text-white p-3 rounded-full shadow-md flex items-center justify-center hover:bg-[#54BEFF] transition
-                ${showDepartmentModal ? "scale-90" : "scale-100"}`}
-            >
-              <FilterIcon className="w-5 h-5" />
-            </button>
-            {selectedDepartmentFilter.length > 0 && (
-              <div className="absolute -top-2 -right-2 w-5 h-5 bg-red-500 rounded-full flex items-center justify-center">
-                <span className="text-xs text-white font-bold">{selectedDepartmentFilter.length}</span>
+          <div className="w-full max-w-6xl">
+            {/* Search Card */}
+            <div className="bg-white/80 backdrop-blur-sm rounded-2xl shadow-xl border border-white/20 p-6 mb-6 relative" style={{ zIndex: 11, overflow: 'visible' }}>
+              <div className="flex items-center gap-3 mb-4">
+                <div className="w-10 h-10 bg-gradient-to-r from-[#0065A8] to-[#057DCD] rounded-full flex items-center justify-center">
+                  <svg className="w-5 h-5 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
+                  </svg>
+                </div>
+                <h3 className="text-xl font-bold text-gray-800">Search Teachers</h3>
               </div>
-            )}
-          </div>
-        </div>
-      </div>
 
-      {/* Teacher Table */}
-      <div className="flex justify-center w-full fade-in delay-300">
-        <div className="mt-4 shadow-md rounded-lg overflow-hidden w-[90%] mx-auto">
-          <div className="overflow-x-auto">
-            <table className="w-full bg-white text-center table-fixed">
-              {/* Fixed Table Header */}
-              <thead className="bg-[#057DCD] text-white top-0 z-10">
-                <tr className="border-b">
-                  <th className="px-4 py-3">ID</th>
-                  <th className="px-4 py-3">Name</th>
-                  <th className="px-4 py-3">Department</th>
-                  <th className="px-4 py-3">Status</th>
-                  <th className="pr-5">Actions</th>
-                </tr>
-              </thead>
-            </table>
+              <div className="relative w-full" style={{ zIndex: 12 }}>
+                <div className="bg-white border-2 border-gray-200 rounded-xl px-4 py-3 shadow-sm flex items-center min-h-[50px] w-full gap-2 hover:border-[#0065A8] transition-colors">
+                  <div className="absolute inset-y-0 left-0 pl-4 flex items-center pointer-events-none">
+                    <svg className="w-5 h-5 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
+                    </svg>
+                  </div>
+                  <input 
+                    type="text"
+                    value={teacherSearchTerm}
+                    onChange={handleTeacherSearchChange}
+                    placeholder="Search teachers by name..."
+                    className="w-full pl-12 pr-4 py-3 bg-transparent border-none focus:ring-0 outline-none text-gray-700 placeholder-gray-400"
+                  />
+                </div>
+              </div>
+            </div>
 
-            {/* Scrollable Table Body */}
-            <div className="max-h-80 overflow-y-auto">
-              <table className="w-full bg-white text-center table-fixed">
-                <tbody>
-                  {teachers
-                    .filter(teacher =>
-                      (teacherSearchTerm.trim() === "" ||
-                        teacher.fullName.toLowerCase().includes(teacherSearchTerm.toLowerCase())) &&
-                      (selectedDepartmentFilter.length === 0 ||
-                        selectedDepartmentFilter.includes(teacher.department))
-                    )
-                    .map((teacher, index) => (
-                      <tr key={teacher.ID} className="border-b hover:bg-[#edf8ff] transition-all duration-200">
-                        <td className="py-2 px-6">{teacher.ID}</td>
-                        <td className="py-2 px-6">{teacher.fullName}</td>
-                        <td className="py-2 px-6">{teacher.department}</td>
-                        <td className="py-2 px-6">
-                          {teacher.isActive ? (
-                            <span className="text-green-500 font-medium">Active</span>
-                          ) : (
-                            <span className="text-gray-500 font-medium">Inactive</span>
-                          )}
-                        </td>
-                        <td className="py-2 px-6">
-                          {teacher.isActive ? (
-                            <span className="text-green-600 font-medium">✓ Activated</span>
-                          ) : (
-                            <button
-                              onClick={() => handleActivate(teacher.ID)}
-                              className="bg-green-500 text-white px-3 py-1 rounded hover:bg-green-600 transition-colors disabled:opacity-50"
-                              disabled={isActivatingTeacher === teacher.ID}
-                            >
-                              {isActivatingTeacher === teacher.ID ? 'Activating...' : 'Activate'}
-                            </button>
-                          )}
-                        </td>
-                      </tr>
-                    ))}
-                </tbody>
-              </table>
+            {/* Action Buttons */}
+            <div className="flex flex-wrap gap-3 justify-center sm:justify-start">
+              <motion.button
+                whileHover={{ scale: 1.05 }}
+                whileTap={{ scale: 0.95 }}
+                onClick={() => setShowSemesterModal(true)}
+                className="flex-1 max-w-[250px] sm:flex-none bg-gradient-to-r from-[#0065A8] to-[#057DCD] text-white px-6 py-3 rounded-xl shadow-lg hover:shadow-xl transition-all duration-200 text-sm font-semibold flex items-center justify-center gap-2"
+              >
+                <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z" />
+                </svg>
+                Manage Semester
+              </motion.button>
+
+              <motion.button
+                whileHover={{ scale: 1.05 }}
+                whileTap={{ scale: 0.95 }}
+                onClick={() => setShowDepartmentModal(true)}
+                className="w-14 h-12 sm:w-auto bg-gradient-to-r from-[#057DCD] to-[#54BEFF] text-white px-4 sm:px-6 py-3 rounded-xl shadow-lg hover:shadow-xl transition-all duration-200 flex items-center justify-center gap-2 font-semibold"
+              >
+                <FilterIcon className="w-5 h-5" />
+                <span className="hidden sm:inline">Filter</span>
+              </motion.button>
             </div>
           </div>
+        </motion.div>
 
-          {/* Activate All Button moved to after table */}
-          <div className="bg-gray-50 px-6 py-4 border-t border-gray-200">
+        {/* Teacher Table Section - Enhanced with modern design */}
+        <motion.div 
+          initial={{ opacity: 0, y: 20 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ duration: 0.6, delay: 0.4 }}
+          className="mt-8 relative"
+          style={{ zIndex: 1 }}
+        >
+          {/* Desktop Table View */}
+          <div className="hidden sm:block overflow-x-auto">
+            <div className="bg-white/90 backdrop-blur-sm rounded-2xl shadow-xl border border-white/20 overflow-hidden">
+              <div className="max-h-[60vh] overflow-y-auto">
+                <table className="w-full text-center" style={{ minWidth: "800px" }}>
+                  <thead className="bg-gradient-to-r from-[#0065A8] via-[#057DCD] to-[#54BEFF] text-white sticky top-0" style={{ zIndex: 10 }}>
+                    <tr>
+                      <th className="px-4 py-4 text-sm font-bold min-w-[100px]">ID</th>
+                      <th className="px-4 py-4 text-sm font-bold min-w-[200px]">Name</th>
+                      <th className="px-4 py-4 text-sm font-bold min-w-[150px]">Department</th>
+                      <th className="px-4 py-4 text-sm font-bold min-w-[120px]">Status</th>
+                      <th className="px-4 py-4 text-sm font-bold min-w-[150px] text-center">Actions</th>
+                    </tr>
+                  </thead>
+
+                  <tbody>
+                    {teachers
+                      .filter(teacher =>
+                        (teacherSearchTerm.trim() === "" ||
+                          teacher.fullName.toLowerCase().includes(teacherSearchTerm.toLowerCase())) &&
+                        (selectedDepartmentFilter.length === 0 ||
+                          selectedDepartmentFilter.includes(teacher.department))
+                      )
+                      .map((teacher, index) => (
+                        <motion.tr 
+                          key={teacher.ID} 
+                          initial={{ opacity: 0, y: 20 }}
+                          animate={{ opacity: 1, y: 0 }}
+                          transition={{ delay: index * 0.05 }}
+                          whileHover={{ backgroundColor: "rgba(59, 130, 246, 0.05)" }}
+                          className="border-b border-gray-100 hover:bg-blue-50/50 transition-all duration-200"
+                        >
+                          <td className="px-4 py-4 text-sm text-gray-700 font-semibold">
+                            {teacher.ID}
+                          </td>
+                          <td className="px-4 py-4 text-sm text-gray-800 font-semibold">{teacher.fullName}</td>
+                          <td className="px-4 py-4">
+                            <span className="inline-flex items-center px-3 py-1 bg-gradient-to-r from-green-100 to-green-200 text-green-800 font-bold rounded-lg text-sm">
+                              {teacher.department}
+                            </span>
+                          </td>
+                          <td className="px-4 py-4">
+                            {teacher.isActive ? (
+                              <span className="inline-flex items-center px-3 py-1 bg-gradient-to-r from-green-100 to-green-200 text-green-800 font-bold rounded-lg text-sm">
+                                <div className="w-2 h-2 bg-green-500 rounded-full mr-2"></div>
+                                Active
+                              </span>
+                            ) : (
+                              <span className="inline-flex items-center px-3 py-1 bg-gradient-to-r from-gray-100 to-gray-200 text-gray-600 font-bold rounded-lg text-sm">
+                                <div className="w-2 h-2 bg-gray-400 rounded-full mr-2"></div>
+                                Inactive
+                              </span>
+                            )}
+                          </td>
+                          <td className="px-4 py-4">
+                            {teacher.isActive ? (
+                              <div className="inline-flex items-center px-4 py-2 bg-gradient-to-r from-green-100 to-green-200 text-green-800 font-bold rounded-lg text-sm">
+                                <svg className="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M5 13l4 4L19 7" />
+                                </svg>
+                                Activated
+                              </div>
+                            ) : (
+                              <motion.button
+                                whileHover={{ scale: 1.05 }}
+                                whileTap={{ scale: 0.95 }}
+                                onClick={() => handleActivate(teacher.ID)}
+                                className="bg-gradient-to-r from-green-500 to-emerald-500 text-white px-4 py-2 rounded-lg hover:from-green-600 hover:to-emerald-600 transition-all duration-300 shadow-md hover:shadow-lg font-semibold disabled:opacity-50 disabled:transform-none"
+                                disabled={isActivatingTeacher === teacher.ID}
+                              >
+                                {isActivatingTeacher === teacher.ID ? 'Activating...' : 'Activate'}
+                              </motion.button>
+                            )}
+                          </td>
+                        </motion.tr>
+                      ))}
+                  </tbody>
+            </table>
+          </div>
+
+          {/* Modern Activate All Button */}
+          <div className="bg-gradient-to-r from-gray-50 to-blue-50 px-6 py-6 border-t border-gray-100">
             <div className="flex justify-end">
-              <button
+              <motion.button
+                whileHover={{ scale: 1.05 }}
+                whileTap={{ scale: 0.95 }}
                 onClick={handleActivateAll}
                 disabled={isActivatingAll || teachers.every(t => t.isActive)}
-                className={`bg-green-500 text-white px-6 py-2 rounded-lg hover:bg-green-600 transition-all duration-300 shadow-md transform hover:scale-105 font-medium
+                className={`bg-gradient-to-r from-green-500 to-emerald-500 text-white px-8 py-3 rounded-xl hover:from-green-600 hover:to-emerald-600 transition-all duration-300 shadow-lg hover:shadow-xl font-semibold
                   ${(isActivatingAll || teachers.every(t => t.isActive)) ? 'opacity-50 cursor-not-allowed transform-none' : ''}`}
               >
-                {isActivatingAll ? 'Activating...' : 'Activate All Teachers'}
-              </button>
+                {isActivatingAll ? (
+                  <div className="flex items-center">
+                    <svg className="animate-spin -ml-1 mr-3 h-5 w-5 text-white" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+                      <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
+                      <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+                    </svg>
+                    Activating All...
+                  </div>
+                ) : (
+                  'Activate All Teachers'
+                )}
+              </motion.button>
             </div>
           </div>
         </div>
       </div>
+    </motion.div>
+    </div>
 
       {/* Semester Management Modal */}
       {showSemesterModal && createPortal(
@@ -1024,5 +1174,6 @@ const SemesterManagement = () => {
       )}
     </div>
   );
-}
+};
+
 export default SemesterManagement;

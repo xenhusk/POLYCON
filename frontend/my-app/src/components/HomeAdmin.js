@@ -1,5 +1,6 @@
 import React, { useEffect, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
+import { motion } from 'framer-motion';
 import API_URL from '../apiConfig';
 import {
   LineChart,
@@ -92,12 +93,26 @@ const CustomToolbar = ({ label, onNavigate, onView, view, views }) => {
 const HomeAdmin = () => {
   // All hooks at the top
   const [isMobile, setIsMobile] = useState(false);
+  const [userDetails, setUserDetails] = useState(null);
+  
   useEffect(() => {
     const checkMobile = () => setIsMobile(window.innerWidth < 768);
     checkMobile();
     window.addEventListener('resize', checkMobile);
     return () => window.removeEventListener('resize', checkMobile);
   }, []);
+
+  // Fetch user details
+  useEffect(() => {
+    const email = localStorage.getItem('userEmail');
+    if (email) {
+      fetch(`${API_URL}/user/get_user?email=${email}`)
+        .then(res => res.json())
+        .then(data => setUserDetails(data))
+        .catch(err => console.error('Error fetching user details:', err));
+    }
+  }, []);
+
   const userRole = localStorage.getItem('userRole');
   const PolyconLogo = require('./icons/Polycon.svg').ReactComponent;
   const [semesters, setSemesters] = useState([]);
@@ -250,18 +265,86 @@ const HomeAdmin = () => {
   }, []);
 
   return (
-    <div className="flex flex-col min-h-screen relative">
-      {/* Welcome Header - Admin */}
-      <div className="px-10 sm:px-20 py-1 sm:py-2 bg-white mb-4">
-        <div className="mx-auto">
-          <h1 className="text-lg sm:text-xl md:text-2xl font-bold text-[#0065A8]">
-            {`Welcome, ${localStorage.getItem('firstName') || ''} ${localStorage.getItem('lastName') || ''}`.trim() || 'Welcome, Admin'}
-          </h1>
-          <p className="text-xs sm:text-sm text-gray-600">Admin Dashboard</p>
-        </div>
-      </div>
-      {/* Blocking message for admin on mobile/tablet */}
-      {shouldBlockAdminMobile ? (
+    <div className="min-h-screen bg-gradient-to-br from-gray-50 to-blue-50 font-poppins">
+      {/* Hero Section - Hidden for admin on mobile */}
+      {!shouldBlockAdminMobile && (
+        <motion.section
+          initial={{ opacity: 0 }}
+          animate={{ opacity: 1 }}
+          transition={{ duration: 0.8 }}
+          className="relative py-16 overflow-hidden"
+        >
+          {/* Background Elements */}
+          <div className="absolute inset-0 bg-gradient-to-br from-[#057DCD] via-[#046bb8] to-[#034a94]" />
+          <div className="absolute inset-0 bg-black bg-opacity-20" />
+          
+          {/* Floating Elements */}
+          <motion.div
+            animate={{ 
+              y: [0, -20, 0],
+              rotate: [0, 5, 0]
+            }}
+            transition={{ 
+              duration: 6,
+              repeat: Infinity,
+              ease: "easeInOut"
+            }}
+            className="absolute top-10 left-10 w-20 h-20 bg-blue-400 rounded-full opacity-20"
+          />
+          <motion.div
+            animate={{ 
+              y: [0, 30, 0],
+              rotate: [0, -5, 0]
+            }}
+            transition={{ 
+              duration: 8,
+              repeat: Infinity,
+              ease: "easeInOut"
+            }}
+            className="absolute bottom-10 right-10 w-32 h-32 bg-blue-300 rounded-full opacity-15"
+          />
+          <motion.div
+            animate={{ 
+              y: [0, -15, 0],
+              x: [0, 10, 0]
+            }}
+            transition={{ 
+              duration: 7,
+              repeat: Infinity,
+              ease: "easeInOut"
+            }}
+            className="absolute top-1/2 right-1/4 w-16 h-16 bg-blue-200 rounded-full opacity-25"
+          />
+
+          <div className="relative z-10 max-w-7xl mx-auto px-6 text-center">
+            <motion.div
+              initial={{ opacity: 0, y: 30 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ duration: 0.8, delay: 0.2 }}
+            >
+              <h1 className="text-4xl md:text-5xl lg:text-6xl font-bold text-white mb-4">
+                Welcome, {userDetails?.firstName} {userDetails?.lastName}
+              </h1>
+              <p className="text-xl md:text-2xl text-blue-200 mb-2">
+                Admin Dashboard
+              </p>
+              <p className="text-lg text-blue-100 max-w-2xl mx-auto">
+                Oversee system operations, manage users, and monitor consultation activities
+              </p>
+            </motion.div>
+          </div>
+        </motion.section>
+      )}
+
+      <div className="container mx-auto px-4 py-8">
+        <motion.div
+          initial={{ opacity: 0, y: 20 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ delay: 0.4 }}
+        >
+          <div className="flex flex-col items-center min-h-screen relative">
+            {/* Blocking message for admin on mobile/tablet */}
+            {shouldBlockAdminMobile ? (
         <div className="fixed inset-0 flex flex-col items-center justify-center w-screen h-screen bg-[#005B98] z-50 overflow-hidden">
           <PolyconLogo style={{ height: '200px', width: 'auto', marginBottom: '24px' }} />
           <h3 className="text-2xl font-bold text-white mb-4 mx-9 text-center">Faculty Portal Unavailable on Mobile/Tablet</h3>
@@ -278,176 +361,223 @@ const HomeAdmin = () => {
         </div>
       ) : (
         <>
-          <h1 className="text-3xl font-bold text-[#0065A8] mb-4 relative text-center">Admin Dashboard</h1>
-          {/* Settings gear icon in top right */}
-          <div className="absolute top-24 right-12 mt-10 ">
+          {/* Settings gear icon - same as HomeStudent */}
+          <div className="-top-6 right-6 absolute z-20">
             <button 
               onClick={() => setShowFilters(!showFilters)}
-              className="bg-white p-2 rounded-full shadow-md hover:shadow-lg transition-all duration-300 focus:outline-none"
+              className="bg-white p-2 sm:p-3 rounded-full shadow-md hover:shadow-lg transition-all duration-300 focus:outline-none"
               aria-label="Toggle filters"
             >
               <svg 
                 className={`w-6 h-6 text-[#0065A8] transition-transform duration-500 ${showFilters ? 'transform -rotate-180' : ''}`}
                 fill="currentColor" 
-                viewBox="0 0 20 20" 
-                xmlns="http://www.w3.org/2000/svg"
+                viewBox="0 0 20 20"
               >
-                <path
-                  fillRule="evenodd"
-                  d="M11.49 3.17c-.38-1.56-2.6-1.56-2.98 0a1.532 1.532 0 01-2.286.948c-1.372-.836-2.942.734-2.106 2.106.54.886.061 2.042-.947 2.287-1.561.379-1.561 2.6 0 2.978a1.532 1.532 0 01.947 2.287c-.836 1.372.734 2.942 2.106 2.106a1.532 1.532 0 012.287.947c.379 1.561 2.6 1.561 2.978 0a1.533 1.533 0 012.287-.947c1.372.836 2.942-.734 2.106-2.106a1.533 1.533 0 01.947-2.287c1.561-.379 1.561-2.6 0-2.978a1.532 1.532 0 01-.947-2.287c.836-1.372-.734-2.942-2.106-2.106a1.532 1.532 0 01-2.287-.947zM10 13a3 3 0 100-6 3 3 0 000 6z"
-                  clipRule="evenodd"
-                />
+                <path fillRule="evenodd" d="M11.49 3.17c-.38-1.56-2.6-1.56-2.98 0a1.532 1.532 0 01-2.286.948c-1.372-.836-2.942.734-2.106 2.106.54.886.061 2.042-.947 2.287-1.561.379-1.561 2.6 0 2.978a1.532 1.532 0 01.947 2.287c-.836 1.372.734 2.942 2.106 2.106a1.532 1.532 0 012.287.947c.379 1.561 2.6 1.561 2.978 0a1.533 1.533 0 012.287-.947c1.372.836 2.942-.734 2.106-2.106a1.533 1.533 0 01.947-2.287c1.561-.379 1.561-2.6 0-2.978a1.532 1.532 0 01-.947-2.287c.836-1.372-.734-2.942-2.106-2.106a1.532 1.532 0 01-2.287-.947zM10 13a3 3 0 100-6 3 3 0 000 6z" clipRule="evenodd"/>
               </svg>
             </button>
           </div>
 
-          {/* Slide-in filter panel - Now has a close button */}
-          <div 
-            className={`fixed top-20 right-6 bg-white shadow-xl rounded-lg border border-gray-200 z-10 transition-all duration-500 transform ${
-              showFilters ? 'translate-x-0 opacity-100' : 'translate-x-full opacity-0'
-            } p-4 w-80`}
-          >
-            <div className="flex justify-between items-center mb-4">
-              <h3 className="text-lg font-semibold text-[#0065A8]">Filter Data</h3>
-              {/* Add close button */}
-              <button 
-                onClick={() => setShowFilters(false)}
-                className="text-gray-500 hover:text-gray-700 p-1"
-                aria-label="Close filters"
-              >
-                <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M6 18L18 6M6 6l12 12"></path>
-                </svg>
-              </button>
-            </div>
-            <div className="space-y-4">
-              <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1">Semester</label>
-                <select
-                  value={selectedSemester || ''}
-                  onChange={(e) => setSelectedSemester(e.target.value)}
-                  className="w-full px-4 py-2 border border-[#0065A8] bg-white text-[#0065A8] font-medium rounded-lg focus:outline-none focus:ring-2 focus:ring-[#0088FF] focus:border-transparent appearance-none bg-[url('data:image/svg+xml;charset=US-ASCII,%3Csvg%20xmlns%3D%22http%3A%2F%2Fwww.w3.org%2F2000%2Fsvg%22%20width%3D%2224%22%20height%3D%2224%22%20viewBox%3D%220%200%2024%2024%22%3E%3Cpath%20fill%3D%22%230065A8%22%20d%3D%22M7%2010l5%205%205-5z%22%2F%3E%3C%2Fsvg%3E')] bg-no-repeat bg-[length:24px] [background-position:right_0.5rem_center] pr-10"
+          {/* Filter Panel - Updated styling */}
+          {showFilters && (
+            <div className="fixed top-20 right-6 bg-white shadow-xl rounded-lg border border-gray-200 z-10 transition-all duration-500 transform translate-x-0 opacity-100 p-4 w-80">
+              <div className="flex justify-between items-center mb-4">
+                <h3 className="text-lg font-semibold text-[#0065A8]">Filter Data</h3>
+                <button 
+                  onClick={() => setShowFilters(false)}
+                  className="text-gray-500 hover:text-gray-700 p-1"
+                  aria-label="Close filters"
                 >
-                  <option value="">Select Semester</option>
-                  {Array.from(new Set(semesters.map(s => s.semester))).map(sem => (
-                    <option key={sem} value={sem}>{sem} Semester</option>
-                  ))}
-                </select>
+                  <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M6 18L18 6M6 6l12 12"></path>
+                  </svg>
+                </button>
               </div>
-              <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1">School Year</label>
-                <select
-                  value={selectedSchoolYear || ''}
-                  onChange={(e) => setSelectedSchoolYear(e.target.value)}
-                  className="w-full px-4 py-2 border border-[#0065A8] bg-white text-[#0065A8] font-medium rounded-lg focus:outline-none focus:ring-2 focus:ring-[#0088FF] focus:border-transparent appearance-none bg-[url('data:image/svg+xml;charset=US-ASCII,%3Csvg%20xmlns%3D%22http%3A%2F%2Fwww.w3.org%2F2000%2Fsvg%22%20width%3D%2224%22%20height%3D%2224%22%20viewBox%3D%220%200%2024%2024%22%3E%3Cpath%20fill%3D%22%230065A8%22%20d%3D%22M7%2010l5%205%205-5z%22%2F%3E%3C%2Fsvg%3E')] bg-no-repeat bg-[length:24px] [background-position:right_0.5rem_center] pr-10"
-                >
-                  <option value="">Select School Year</option>
-                  {Array.from(new Set(semesters.map(s => s.school_year))).map(year => (
-                    <option key={year} value={year}>{year}</option>
-                  ))}
-                </select>
-              </div>
-              <div className="pt-2">
-                <p className="text-sm text-gray-500">
-                  {selectedSemester && selectedSchoolYear 
-                    ? `Viewing data for ${selectedSemester} Semester, ${selectedSchoolYear}` 
-                    : "Select filters to view specific data"}
-                </p>
+              
+              {/* Filter Content */}
+              <div className="space-y-4">
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-1">Semester</label>
+                  <select
+                    value={selectedSemester || ''}
+                    onChange={(e) => setSelectedSemester(e.target.value)}
+                    className="w-full px-4 py-2 border border-[#0065A8] bg-white text-[#0065A8] font-medium rounded-lg focus:outline-none focus:ring-2 focus:ring-[#0088FF] focus:border-transparent"
+                  >
+                    <option value="">All Semesters</option>
+                    {Array.from(new Set(semesters.map(s => s.semester)))
+                      .map(sem => (
+                        <option key={sem} value={sem}>{sem}</option>
+                      ))
+                    }
+                  </select>
+                </div>
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-1">School Year</label>
+                  <select
+                    value={selectedSchoolYear || ''}
+                    onChange={(e) => setSelectedSchoolYear(e.target.value)}
+                    className="w-full px-4 py-2 border border-[#0065A8] bg-white text-[#0065A8] font-medium rounded-lg focus:outline-none focus:ring-2 focus:ring-[#0088FF] focus:border-transparent"
+                  >
+                    <option value="">All Years</option>
+                    {Array.from(new Set(semesters.map(s => s.school_year)))
+                      .map(year => (
+                        <option key={year} value={year}>{year}</option>
+                      ))
+                    }
+                  </select>
+                </div>
               </div>
             </div>
-          </div>
+          )}
 
-          {/* Stats Section */}
-          <div className="flex gap-4 w-full p-16  pb-0">
-            <div className="flex-1 bg-[#0088FF] text-white rounded-lg shadow-lg px-6 py-4">
+          {/* Stats containers - Updated layout with titles */}
+          <div className="flex flex-col sm:flex-row gap-4 w-full mt-10 px-4 sm:px-6 lg:px-10 pb-0">
+            <div className="flex-1 bg-[#0088FF] text-white rounded-lg shadow-lg px-4 sm:px-6 py-4">
               <div className="flex flex-col">
                 <p className="text-sm mb-2 text-left">Total Consultations:</p>
                 <div className="flex items-baseline gap-2 justify-center">
-                  <span className="text-7xl font-bold">{stats.total_consultations}</span>
-                  <span className="text-lg">Consultations</span>
+                  <span className="text-4xl sm:text-5xl lg:text-7xl font-bold">{stats.total_consultations}</span>
+                  <span className="text-base sm:text-lg">Consultations</span>
                 </div>
               </div>
             </div>
-            <div className="flex-1 bg-[#FF7171] text-white rounded-lg shadow-lg px-6 py-4">
+
+            <div className="flex-1 bg-[#fc6969] text-white rounded-lg shadow-lg px-4 sm:px-6 py-4">
               <div className="flex flex-col">
                 <p className="text-sm mb-2 text-left">Total Consultation Hours:</p>
                 <div className="flex items-baseline gap-2 justify-center">
-                  <span className="text-7xl font-bold">{stats.total_hours}</span>
-                  <span className="text-lg">Hours</span>
+                  <span className="text-4xl sm:text-5xl lg:text-7xl font-bold">{stats.total_hours}</span>
+                  <span className="text-base sm:text-lg">Hours</span>
                 </div>
               </div>
             </div>
-            <div className="flex-1 bg-[#00D1B2] text-white rounded-lg shadow-lg px-6 py-4">
+
+            <div className="flex-1 bg-[#00D1B2] text-white rounded-lg shadow-lg px-4 sm:px-6 py-4">
               <div className="flex flex-col">
-                <p className="text-sm mb-2 text-left">Total Number of Students Consulted:</p>
+                <p className="text-sm mb-2 text-left">Unique Students:</p>
                 <div className="flex items-baseline gap-2 justify-center">
-                  <span className="text-7xl font-bold">{stats.unique_students}</span>
-                  <span className="text-lg">Students</span>
+                  <span className="text-4xl sm:text-5xl lg:text-7xl font-bold">{stats.unique_students}</span>
+                  <span className="text-base sm:text-lg">Students</span>
                 </div>
               </div>
             </div>
           </div>
 
-          {/* Graphs */}
-          <div className="grid grid-cols-2 w-full gap-6 p-16">
-            <div className="bg-white p-10 rounded-lg shadow-lg">
-              <h2 className="text-xl font-semibold text-[#0065A8] text-center mb-4">Consultations Over Time</h2>
-              <ResponsiveContainer width="105%" height={300}>
-                <LineChart data={consultationData}>
-                  <CartesianGrid vertical={false} stroke="#D3D3D3" />
-                  <XAxis 
-                    dataKey="date" 
-                    axisLine={false}
-                    tickLine={false}
-                    dy={20}
-                    tickFormatter={(date) => date}
-                  />
-                  <YAxis 
-                    axisLine={false}
-                    tickLine={false}
-                    tickFormatter={(value) => Math.round(value)}
-                    allowDecimals={false}
-                  />
-                  <Tooltip />
-                  <Legend align="left" wrapperStyle={{ textAlign: 'left', marginTop: '20px', marginBottom: '-20px'}}/>
-                  <Line type="monotone" dataKey="consultations" stroke="#3B82F6" strokeWidth={3} name="Consultations" />
-                </LineChart>
-              </ResponsiveContainer>
+          {/* Charts Section - Updated layout */}
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-6 px-4 sm:px-6 lg:px-10 py-6 sm:py-10 w-full">
+            {/* Consultation Graph */}
+            <div className="bg-white p-4 sm:p-6 lg:p-10 rounded-lg shadow-lg">
+              <h2 className="text-lg sm:text-xl font-semibold text-[#397de2] text-center mb-4">Consultations Over Time</h2>
+              <div className="h-[250px] sm:h-[300px]">
+                <ResponsiveContainer width="100%" height="100%">
+                  <LineChart data={consultationData}>
+                    <CartesianGrid vertical={false} stroke="#D3D3D3" />
+                    <XAxis 
+                      dataKey="date" 
+                      axisLine={false} 
+                      tickLine={false}
+                      dy={20}
+                      tickFormatter={(date) => {
+                          // Use shorter month format on small screens
+                          const options = window.innerWidth < 640 ? 
+                              { month: 'numeric' } : 
+                              { month: 'short', year: 'numeric' };
+                          return new Date(date).toLocaleDateString('en-US', options);
+                      }} 
+                    />
+                    <YAxis 
+                      axisLine={false}
+                      tickLine={false}
+                      tickFormatter={(value) => Math.round(value)} 
+                      allowDecimals={false} 
+                      domain={[0, 'dataMax']}
+                      width={30} // Fixed width to avoid layout shifts
+                    />
+                    <Tooltip />
+                    <Legend 
+                      align="center" 
+                      verticalAlign="bottom"
+                      wrapperStyle={{ 
+                          paddingTop: '10px',
+                          fontSize: window.innerWidth < 640 ? '12px' : '14px'
+                      }} 
+                    />
+                    <Line 
+                      type="monotone" 
+                      dataKey="consultations" 
+                      stroke="#397de2" 
+                      strokeWidth={2} 
+                      name="Consultations"
+                      dot={{ r: 3 }} // Smaller dots on mobile
+                    />
+                  </LineChart>
+                </ResponsiveContainer>
+              </div>
             </div>
-            <div className="bg-white p-10 rounded-lg shadow-lg">
-              <h2 className="text-xl font-semibold text-red-500 text-center mb-4">Consultation Hours Over Time</h2>
-              <ResponsiveContainer width="105%" height={300}>
-                <LineChart data={consultationHoursData}>
-                  <CartesianGrid vertical={false} stroke="#D3D3D3" />
-                  <XAxis 
-                    dataKey="date" 
-                    axisLine={false}
-                    tickLine={false}
-                    dy={20}
-                    tickFormatter={(date) => date}
-                  />
-                  <YAxis 
-                    axisLine={false}
-                    tickLine={false}
-                    tickFormatter={(minutes) => {
-                      const hh = Math.floor(minutes / 60);
-                      const mm = minutes % 60;
-                      return `${hh}:${mm.toString().padStart(2, '0')}`;
-                    }}
-                  />
-                  <Tooltip formatter={(value) => {
-                    const hh = Math.floor(value / 60);
-                    const mm = value % 60;
-                    return [`${hh}:${mm.toString().padStart(2, '0')}`, "Consultation Hours"];
-                  }} />
-                  <Legend align="left" wrapperStyle={{ textAlign: 'left', marginTop: '20px', marginBottom: '-20px'}}/>
-                  <Line type="monotone" dataKey="consultation_hours" stroke="#EF4444" strokeWidth={3} name="Consultation Hours" />
-                </LineChart>
-              </ResponsiveContainer>
+
+            {/* Hours Graph */}
+            <div className="bg-white p-4 sm:p-6 lg:p-10 rounded-lg shadow-lg">
+              <h2 className="text-lg sm:text-xl font-semibold text-[#fc6969] text-center mb-4">Consultation Hours Over Time</h2>
+              <div className="h-[250px] sm:h-[300px]">
+                <ResponsiveContainer width="100%" height="100%">
+                  <LineChart data={consultationHoursData}>
+                    <CartesianGrid vertical={false} stroke="#D3D3D3" />
+                    <XAxis 
+                      dataKey="date" 
+                      axisLine={false} 
+                      tickLine={false}
+                      dy={20}
+                      tickFormatter={(date) => {
+                          // Use shorter month format on small screens
+                          const options = window.innerWidth < 640 ? 
+                              { month: 'numeric' } : 
+                              { month: 'short', year: 'numeric' };
+                          return new Date(date).toLocaleDateString('en-US', options);
+                      }}
+                    />
+                    <YAxis
+                      axisLine={false}
+                      tickLine={false}
+                      tickFormatter={(minutes) => {
+                          const hh = Math.floor(minutes / 60);
+                          const mm = minutes % 60;
+                          return `${hh}:${mm.toString().padStart(2, '0')}`;
+                      }}
+                      width={40} // Fixed width for time values
+                    />
+                    <Tooltip 
+                      formatter={(value) => {
+                          const hh = Math.floor(value / 60);
+                          const mm = value % 60;
+                          return [`${hh}:${mm.toString().padStart(2, '0')}`, "Hours"];
+                      }}
+                    />
+                    <Legend 
+                      align="center" 
+                      verticalAlign="bottom"
+                      wrapperStyle={{ 
+                          paddingTop: '10px',
+                          fontSize: window.innerWidth < 640 ? '12px' : '14px'
+                      }}
+                    />
+                    <Line 
+                      type="monotone" 
+                      dataKey="consultation_hours" 
+                      stroke="#fc6969" 
+                      strokeWidth={2} 
+                      name="Consultation Hours"
+                      dot={{ r: 3 }} // Smaller dots on mobile
+                    />
+                  </LineChart>
+                </ResponsiveContainer>
+              </div>
             </div>
           </div>
         </>
       )}
+          </div>
+        </motion.div>
+      </div>
     </div>
   );
 };

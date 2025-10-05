@@ -2,7 +2,7 @@ from flask import Blueprint, request, jsonify
 from flask_cors import cross_origin
 from models import db, User, Program, Department, Student, Faculty
 from extensions import bcrypt
-from services.email_service import send_verification_email
+from services.email_service import send_verification_email_async
 from flask_jwt_extended import create_access_token, decode_token
 import datetime
 import uuid
@@ -129,7 +129,10 @@ def signup():
     # Generate token valid for 1 hour
     token = create_access_token(identity=token_data_str, expires_delta=datetime.timedelta(hours=1))
     verify_url = f"{frontend_url}/verify-email?token={token}"
-    send_verification_email(email, verify_url)
+    try:
+        send_verification_email_async(email, verify_url)
+    except Exception as e:
+        print(f"[ERROR] Failed to queue verification email for {email}: {e}")
     return jsonify({'message': 'Verification email sent. Please check your email.'}), 200
 
 @account_bp.route('/resend_verification', methods=['POST'])
@@ -158,7 +161,10 @@ def resend_verification():
     token_data_str = json.dumps(token_data)
     token = create_access_token(identity=token_data_str, expires_delta=datetime.timedelta(hours=1))
     verify_url = f"{frontend_url}/verify-email?token={token}"
-    send_verification_email(email, verify_url)
+    try:
+        send_verification_email_async(email, verify_url)
+    except Exception as e:
+        print(f"[ERROR] Failed to queue verification email for {email}: {e}")
     
     return jsonify({'message': 'Verification email sent. Please check your email.'}), 200
 

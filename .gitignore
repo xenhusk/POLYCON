@@ -24,3 +24,4 @@ Thumbs.db
 /backend/keys/
 /backend-python/keys/
 backend-python/keys/firebase-key.json
+database_config.env

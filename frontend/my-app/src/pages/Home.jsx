@@ -21,6 +21,7 @@ const Home = () => {
   const [showLoginModal, setShowLoginModal] = useState(false);
   const [showSignupModal, setShowSignupModal] = useState(false);
   const [errorMessage, setErrorMessage] = useState("");
+  const [openCardId, setOpenCardId] = useState(null);
 
   // Animation handler for section navigation
   const handleSectionNavigation = (sectionId) => {
@@ -69,6 +70,12 @@ const Home = () => {
     setErrorMessage(message);
   };
 
+  const handleCardToggle = (cardId) => {
+    setOpenCardId(prevOpenCardId => {
+      return prevOpenCardId === cardId ? null : cardId;
+    });
+  };
+
   return (
     <div className="min-h-screen bg-gradient-to-br from-gray-50 to-blue-50 font-poppins no-scrollbar">
       <Nav
@@ -81,7 +88,7 @@ const Home = () => {
         handleSignupClick={handleSignupClick}
         handleSectionNavigation={handleSectionNavigation}
       />
-      <About animateSection={animateSection} />
+      <About animateSection={animateSection} openCardId={openCardId} handleCardToggle={handleCardToggle} />
       <Contact animateSection={animateSection} />
       <Footer />
       <HelpButton />
@@ -259,7 +266,7 @@ const Nav = ({
               <motion.button
                 whileHover={{ scale: 1.05 }}
                 whileTap={{ scale: 0.95 }}
-                onClick={() => (window.location.href = "/admin-consultation")}
+                onClick={() => (window.location.href = "/consultation-leaderboard")}
                 className="text-white font-medium hover:text-blue-200 transition-colors duration-200 relative group"
               >
                 Leaderboard
@@ -359,7 +366,7 @@ const Nav = ({
 
               {/* Teacher Leaderboard Link for Mobile */}
               <button
-                onClick={() => (window.location.href = "/admin-consultation")}
+                onClick={() => (window.location.href = "/consultation-leaderboard")}
                 className="block w-full text-left text-gray-700 font-medium hover:text-[#057DCD] transition-colors py-2"
               >
                 Teacher Leaderboard
@@ -387,7 +394,7 @@ const Nav = ({
   );
 };
 
-// Enhanced Hero Section
+// Enhanced Hero Section with Optimized Image Display
 const Hero = ({
   handleSignupClick,
   handleSectionNavigation,
@@ -395,13 +402,65 @@ const Hero = ({
 }) => {
   const images = [Consult1, Consult2, Consult3];
   const [currentImage, setCurrentImage] = useState(0);
+  const [isHovered, setIsHovered] = useState(false);
+  const [preloadedImages, setPreloadedImages] = useState(new Set());
+  const [isTransitioning, setIsTransitioning] = useState(false);
 
+  // Preload images for better performance
   useEffect(() => {
+    const preloadImage = (src) => {
+      return new Promise((resolve, reject) => {
+        const img = new Image();
+        img.onload = () => resolve(src);
+        img.onerror = reject;
+        img.src = src;
+      });
+    };
+
+    const preloadAllImages = async () => {
+      try {
+        await Promise.all(images.map(preloadImage));
+        setPreloadedImages(new Set(images));
+      } catch (error) {
+        console.warn('Some images failed to preload:', error);
+      }
+    };
+
+    preloadAllImages();
+  }, [images]);
+
+  // Auto-advance with pause on hover
+  useEffect(() => {
+    if (isHovered) return;
+    
     const interval = setInterval(() => {
       setCurrentImage((prev) => (prev + 1) % images.length);
     }, 5000);
+    
     return () => clearInterval(interval);
-  }, []);
+  }, [images.length, isHovered]);
+
+  // Enhanced image change handler with transition state
+  const handleImageChange = (index) => {
+    if (index === currentImage || isTransitioning) return;
+    
+    setIsTransitioning(true);
+    setCurrentImage(index);
+    
+    // Reset transition state after animation
+    setTimeout(() => setIsTransitioning(false), 500);
+  };
+
+  // Keyboard navigation
+  const handleKeyDown = (e) => {
+    if (e.key === 'ArrowLeft') {
+      const prevIndex = (currentImage - 1 + images.length) % images.length;
+      handleImageChange(prevIndex);
+    } else if (e.key === 'ArrowRight') {
+      const nextIndex = (currentImage + 1) % images.length;
+      handleImageChange(nextIndex);
+    }
+  };
 
   return (
     <motion.section
@@ -507,38 +566,101 @@ const Hero = ({
             </motion.div>
           </motion.div>
 
-          {/* Image Carousel */}
+          {/* Enhanced Image Carousel */}
           <motion.div
             initial={{ opacity: 0, x: 50 }}
             animate={{ opacity: 1, x: 0 }}
             transition={{ duration: 0.8, delay: 0.4 }}
             className="relative mt-8 lg:mt-0"
+            onMouseEnter={() => setIsHovered(true)}
+            onMouseLeave={() => setIsHovered(false)}
+            onKeyDown={handleKeyDown}
+            tabIndex={0}
+            role="img"
+            aria-label="Consultation system images carousel"
           >
-            <div className="relative w-full h-80 sm:h-96 lg:h-[500px] rounded-2xl lg:rounded-3xl overflow-hidden shadow-2xl">
-              <AnimatePresence mode="wait">
+            <div className="relative w-full h-80 sm:h-96 lg:h-[500px] rounded-2xl lg:rounded-3xl overflow-hidden shadow-2xl group">
+              {/* All images rendered for smoother transitions */}
+              {images.map((image, index) => (
                 <motion.img
-                  key={currentImage}
-                  src={images[currentImage]}
-                  alt="Consultation"
-                  initial={{ opacity: 0, scale: 1.1 }}
-                  animate={{ opacity: 1, scale: 1 }}
-                  exit={{ opacity: 0, scale: 0.9 }}
-                  transition={{ duration: 0.5 }}
+                  key={index}
+                  src={image}
+                  alt={`Consultation system image ${index + 1}`}
+                  initial={{ opacity: 0 }}
+                  animate={{ 
+                    opacity: index === currentImage ? 1 : 0,
+                    scale: index === currentImage ? 1 : 1.05
+                  }}
+                  transition={{ 
+                    duration: 0.6,
+                    ease: "easeInOut"
+                  }}
                   className="absolute inset-0 w-full h-full object-cover"
+                  loading={preloadedImages.has(image) ? "eager" : "lazy"}
                 />
-              </AnimatePresence>
+              ))}
+              
+              {/* Gradient overlay */}
               <div className="absolute inset-0 bg-gradient-to-t from-blue-900/50 to-transparent" />
+              
+              {/* Navigation arrows */}
+              <button
+                onClick={() => handleImageChange((currentImage - 1 + images.length) % images.length)}
+                className="absolute left-4 top-1/2 -translate-y-1/2 bg-black/30 hover:bg-black/50 text-white p-2 rounded-full opacity-0 group-hover:opacity-100 transition-all duration-200"
+                aria-label="Previous image"
+                disabled={isTransitioning}
+              >
+                <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 19l-7-7 7-7" />
+                </svg>
+              </button>
+              
+              <button
+                onClick={() => handleImageChange((currentImage + 1) % images.length)}
+                className="absolute right-4 top-1/2 -translate-y-1/2 bg-black/30 hover:bg-black/50 text-white p-2 rounded-full opacity-0 group-hover:opacity-100 transition-all duration-200"
+                aria-label="Next image"
+                disabled={isTransitioning}
+              >
+                <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
+                </svg>
+              </button>
+
+              {/* Progress indicator */}
+              <div className="absolute bottom-4 left-4 right-4">
+                <div className="flex space-x-1">
+                  {images.map((_, index) => (
+                    <div
+                      key={index}
+                      className="h-1 bg-white/30 rounded-full flex-1"
+                    >
+                      <motion.div
+                        className="h-full bg-white rounded-full"
+                        initial={{ width: "0%" }}
+                        animate={{ 
+                          width: index === currentImage ? "100%" : "0%"
+                        }}
+                        transition={{ duration: 0.1 }}
+                      />
+                    </div>
+                  ))}
+                </div>
+              </div>
             </div>
 
-            {/* Image Indicators */}
-            <div className="flex justify-center mt-4 sm:mt-6 space-x-2 mb-4 lg:mb-0">
+            {/* Enhanced Image Indicators */}
+            <div className="flex justify-center mt-4 sm:mt-6 space-x-3 mb-4 lg:mb-0">
               {images.map((_, index) => (
                 <button
                   key={index}
-                  onClick={() => setCurrentImage(index)}
-                  className={`w-3 h-3 rounded-full transition-all duration-200 ${
-                    index === currentImage ? "bg-white" : "bg-white/40"
+                  onClick={() => handleImageChange(index)}
+                  className={`w-3 h-3 rounded-full transition-all duration-300 hover:scale-125 ${
+                    index === currentImage 
+                      ? "bg-white scale-125 shadow-lg" 
+                      : "bg-white/40 hover:bg-white/60"
                   }`}
+                  aria-label={`Go to image ${index + 1}`}
+                  disabled={isTransitioning}
                 />
               ))}
             </div>
@@ -849,216 +971,38 @@ const About = ({ animateSection, openCardId, handleCardToggle }) => {
               />
 
               {/* Kurt Zhynkent Canja */}
-              <motion.div
-                className="bg-white rounded-lg p-4 sm:p-6 shadow-lg hover:shadow-xl transition-all duration-300 transform hover:-translate-y-2"
-                whileHover={{ scale: 1.02 }}
-                initial={{ opacity: 0, y: 20 }}
-                whileInView={{ opacity: 1, y: 0 }}
-                transition={{ duration: 0.5, delay: 0.2 }}
-                viewport={{ once: true }}
-              >
-                <div className="text-center">
-                  {/* Profile Photo Placeholder */}
-                  <div
-                    className="
-                      w-24 h-24
-                      mx-auto mb-6
-                      rounded-full
-                      bg-gradient-to-br from-green-400 to-green-600
-                      flex items-end justify-center
-                      relative
-                      shadow-xl
-                      ring-4 ring-white
-                      ring-offset-2 ring-offset-gray-300
-                      transition-all duration-300 ease-in-out
-                      hover:scale-110
-                      hover:-translate-y-1
-                    "
-                  >
-                    <img
-                      src={Person1}
-                      alt="KZ"
-                      className="
-                        w-[130%] h-[130%] 
-                        object-cover 
-                        [object-position:50%_70%] 
-                        [clip-path:inset(0%_0%_0%_0%_round_50%_49%_46%_46%)] 
-                        transition-all duration-300 ease-in-out
-                        text-gray-800 
-                        text-xl
-                        font-bold
-                      "
-                    />
-                  </div>
-                  <h5 className="text-base sm:text-lg font-semibold text-gray-800 mb-1">
-                    Kurt Zhynkent Canja
-                  </h5>
-                  <p className="text-xs sm:text-sm font-medium text-[#057DCD] mb-2 sm:mb-3">
-                    System Analyst
-                  </p>
-                  <p className="text-xs text-gray-600 italic leading-relaxed mb-3 sm:mb-4">
-                    "Building bridges between ideas and reality."
-                  </p>
-
-                  {/* Social Links */}
-                  <div className="flex justify-center space-x-3">
-                    <motion.a
-                      whileHover={{ scale: 1.1 }}
-                      whileTap={{ scale: 0.9 }}
-                      href="https://github.com/kurtzhynkentcanja" // Replace with actual GitHub URL
-                      target="_blank"
-                      rel="noopener noreferrer"
-                      className="bg-gray-800 text-white p-2 rounded-full hover:bg-gray-700 transition-colors duration-200"
-                    >
-                      <svg
-                        className="w-4 h-4"
-                        fill="currentColor"
-                        viewBox="0 0 24 24"
-                      >
-                        <path d="M12 0c-6.626 0-12 5.373-12 12 0 5.302 3.438 9.8 8.207 11.387.599.111.793-.261.793-.577v-2.234c-3.338.726-4.033-1.416-4.033-1.416-.546-1.387-1.333-1.756-1.333-1.756-1.089-.745.083-.729.083-.729 1.205.084 1.839 1.237 1.839 1.237 1.07 1.834 2.807 1.304 3.492.997.107-.775.418-1.305.762-1.604-2.665-.305-5.467-1.334-5.467-5.931 0-1.311.469-2.381 1.236-3.221-.124-.303-.535-1.524.117-3.176 0 0 1.008-.322 3.301 1.23.957-.266 1.983-.399 3.003-.404 1.02.005 2.047.138 3.006.404 2.291-1.552 3.297-1.23 3.297-1.23.653 1.653.242 2.874.118 3.176.77.84 1.235 1.911 1.235 3.221 0 4.609-2.807 5.624-5.479 5.921.43.372.823 1.102.823 2.222v3.293c0 .319.192.694.801.576 4.765-1.589 8.199-6.086 8.199-11.386 0-6.627-5.373-12-12-12z" />
-                      </svg>
-                    </motion.a>
-                    <motion.a
-                      whileHover={{ scale: 1.1 }}
-                      whileTap={{ scale: 0.9 }}
-                      href="https://linkedin.com/in/kurtzhynkentcanja" // Replace with actual LinkedIn URL
-                      target="_blank"
-                      rel="noopener noreferrer"
-                      className="bg-[#0077B5] text-white p-2 rounded-full hover:bg-[#005885] transition-colors duration-200"
-                    >
-                      <svg
-                        className="w-4 h-4"
-                        fill="currentColor"
-                        viewBox="0 0 24 24"
-                      >
-                        <path d="M20.447 20.452h-3.554v-5.569c0-1.328-.027-3.037-1.852-3.037-1.853 0-2.136 1.445-2.136 2.939v5.667H9.351V9h3.414v1.561h.046c.477-.9 1.637-1.85 3.37-1.85 3.601 0 4.267 2.37 4.267 5.455v6.286zM5.337 7.433c-1.144 0-2.063-.926-2.063-2.065 0-1.138.92-2.063 2.063-2.063 1.14 0 2.064.925 2.064 2.063 0 1.139-.925 2.065-2.064 2.065zm1.782 13.019H3.555V9h3.564v11.452zM22.225 0H1.771C.792 0 0 .774 0 1.729v20.542C0 23.227.792 24 1.771 24h20.451C23.2 24 24 23.227 24 22.271V1.729C24 .774 23.2 0 22.222 0h.003z" />
-                      </svg>
-                    </motion.a>
-                    <motion.a
-                      whileHover={{ scale: 1.1 }}
-                      whileTap={{ scale: 0.9 }}
-                      href="https://discord.com/users/kurtzhynkentcanja" // Replace with actual Discord URL
-                      target="_blank"
-                      rel="noopener noreferrer"
-                      className="bg-[#5865F2] text-white p-2 rounded-full hover:bg-[#4752C4] transition-colors duration-200"
-                    >
-                      <svg
-                        className="w-4 h-4"
-                        fill="currentColor"
-                        viewBox="0 0 24 24"
-                      >
-                        <path d="M20.317 4.37a19.791 19.791 0 0 0-4.885-1.515a.074.074 0 0 0-.079.037c-.21.375-.444.864-.608 1.25a18.27 18.27 0 0 0-5.487 0a12.64 12.64 0 0 0-.617-1.25a.077.077 0 0 0-.079-.037A19.736 19.736 0 0 0 3.677 4.37a.07.07 0 0 0-.032.027C.533 9.046-.32 13.58.099 18.057a.082.082 0 0 0 .031.057a19.9 19.9 0 0 0 5.993 3.03a.078.078 0 0 0 .084-.028a14.09 14.09 0 0 0 1.226-1.994a.076.076 0 0 0-.041-.106a13.107 13.107 0 0 1-1.872-.892a.077.077 0 0 1-.008-.128a10.2 10.2 0 0 0 .372-.292a.074.074 0 0 1 .077-.01c3.928 1.793 8.18 1.793 12.062 0a.074.074 0 0 1 .078.01c.12.098.246.198.373.292a.077.077 0 0 1-.006.127a12.299 12.299 0 0 1-1.873.892a.077.077 0 0 0-.041.107c.36.698.772 1.362 1.225 1.993a.076.076 0 0 0 .084.028a19.839 19.839 0 0 0 6.002-3.03a.077.077 0 0 0 .032-.054c.5-5.177-.838-9.674-3.549-13.66a.061.061 0 0 0-.031-.03zM8.02 15.33c-1.183 0-2.157-1.085-2.157-2.419c0-1.333.956-2.419 2.157-2.419c1.21 0 2.176 1.096 2.157 2.42c0 1.333-.956 2.418-2.157 2.418zm7.975 0c-1.183 0-2.157-1.085-2.157-2.419c0-1.333.955-2.419 2.157-2.419c1.21 0 2.176 1.096 2.157 2.42c0 1.333-.946 2.418-2.157 2.418z" />
-                      </svg>
-                    </motion.a>
-                  </div>
-                </div>
-              </motion.div>
+              <TeamMemberCard
+                name="Kurt Zhynkent Canja"
+                role="Systems Analyst"
+                quote="Building bridges between ideas and reality."
+                profileImage={Person1}
+                gradientColors="from-green-400 to-green-600"
+                delay={0.2}
+                isOpen={openCardId === "kurt"}
+                onToggle={() => handleCardToggle("kurt")}
+                socialLinks={[
+                  {
+                    url: "https://github.com/kurtzhynkentcanja",
+                    bgColor: "bg-gray-800",
+                    hoverColor: "bg-gray-700",
+                    iconPath: "M12 0c-6.626 0-12 5.373-12 12 0 5.302 3.438 9.8 8.207 11.387.599.111.793-.261.793-.577v-2.234c-3.338.726-4.033-1.416-4.033-1.416-.546-1.387-1.333-1.756-1.333-1.756-1.089-.745.083-.729.083-.729 1.205.084 1.839 1.237 1.839 1.237 1.07 1.834 2.807 1.304 3.492.997.107-.775.418-1.305.762-1.604-2.665-.305-5.467-1.334-5.467-5.931 0-1.311.469-2.381 1.236-3.221-.124-.303-.535-1.524.117-3.176 0 0 1.008-.322 3.301 1.23.957-.266 1.983-.399 3.003-.404 1.02.005 2.047.138 3.006.404 2.291-1.552 3.297-1.23 3.297-1.23.653 1.653.242 2.874.118 3.176.77.84 1.235 1.911 1.235 3.221 0 4.609-2.807 5.624-5.479 5.921.43.372.823 1.102.823 2.222v3.293c0 .319.192.694.801.576 4.765-1.589 8.199-6.086 8.199-11.386 0-6.627-5.373-12-12-12z"
+                  },
+                  {
+                    url: "https://linkedin.com/in/kurtzhynkentcanja",
+                    bgColor: "bg-[#0077B5]",
+                    hoverColor: "bg-[#005885]",
+                    iconPath: "M20.447 20.452h-3.554v-5.569c0-1.328-.027-3.037-1.852-3.037-1.853 0-2.136 1.445-2.136 2.939v5.667H9.351V9h3.414v1.561h.046c.477-.9 1.637-1.85 3.37-1.85 3.601 0 4.267 2.37 4.267 5.455v6.286zM5.337 7.433c-1.144 0-2.063-.926-2.063-2.065 0-1.138.92-2.063 2.063-2.063 1.14 0 2.064.925 2.064 2.063 0 1.139-.925 2.065-2.064 2.065zm1.782 13.019H3.555V9h3.564v11.452zM22.225 0H1.771C.792 0 0 .774 0 1.729v20.542C0 23.227.792 24 1.771 24h20.451C23.2 24 24 23.227 24 22.271V1.729C24 .774 23.2 0 22.222 0h.003z"
+                  },
+                  {
+                    url: "https://discord.com/users/kurtzhynkentcanja",
+                    bgColor: "bg-[#5865F2]",
+                    hoverColor: "bg-[#4752C4]",
+                    iconPath: "M20.317 4.37a19.791 19.791 0 0 0-4.885-1.515a.074.074 0 0 0-.079.037c-.21.375-.444.864-.608 1.25a18.27 18.27 0 0 0-5.487 0a12.64 12.64 0 0 0-.617-1.25a.077.077 0 0 0-.079-.037A19.736 19.736 0 0 0 3.677 4.37a.07.07 0 0 0-.032.027C.533 9.046-.32 13.58.099 18.057a.082.082 0 0 0 .031.057a19.9 19.9 0 0 0 5.993 3.03a.078.078 0 0 0 .084-.028a14.09 14.09 0 0 0 1.226-1.994a.076.076 0 0 0-.041-.106a13.107 13.107 0 0 1-1.872-.892a.077.077 0 0 1-.008-.128a10.2 10.2 0 0 0 .372-.292a.074.074 0 0 1 .077-.01c3.928 1.793 8.18 1.793 12.062 0a.074.074 0 0 1 .078.01c.12.098.246.198.373.292a.077.077 0 0 1-.006.127a12.299 12.299 0 0 1-1.873.892a.077.077 0 0 0-.041.107c.36.698.772 1.362 1.225 1.993a.076.076 0 0 0 .084.028a19.839 19.839 0 0 0 6.002-3.03a.077.077 0 0 0 .032-.054c.5-5.177-.838-9.674-3.549-13.66a.061.061 0 0 0-.031-.03zM8.02 15.33c-1.183 0-2.157-1.085-2.157-2.419c0-1.333.956-2.419 2.157-2.419c1.21 0 2.176 1.096 2.157 2.42c0 1.333-.956 2.418-2.157 2.418zm7.975 0c-1.183 0-2.157-1.085-2.157-2.419c0-1.333.955-2.419 2.157-2.419c1.21 0 2.176 1.096 2.157 2.42c0 1.333-.946 2.418-2.157 2.418z"
+                  }
+                ]}
+              />
 
               {/* Clark Jim Gabiota */}
-              <motion.div
-                className="bg-white rounded-lg p-6 shadow-lg hover:shadow-xl transition-all duration-300 transform hover:-translate-y-2"
-                whileHover={{ scale: 1.02 }}
-                initial={{ opacity: 0, y: 20 }}
-                whileInView={{ opacity: 1, y: 0 }}
-                transition={{ duration: 0.5, delay: 0.3 }}
-                viewport={{ once: true }}
-              >
-                <div className="text-center">
-                  {/* Profile Photo Placeholder */}
-                  <div
-                    className="
-                      w-24 h-24
-                      mx-auto mb-6
-                      rounded-full
-                      bg-gradient-to-br from-purple-400 to-purple-600
-                      flex items-end justify-center
-                      relative
-                      shadow-xl
-                      ring-4 ring-white
-                      ring-offset-2 ring-offset-gray-300
-                      transition-all duration-300 ease-in-out
-                      hover:scale-110
-                      hover:-translate-y-1
-                    "
-                  >
-                    <img
-                      src={Person2}
-                      alt="CJ"
-                      className="
-                        w-[130%] h-[130%] 
-                        object-cover 
-                        [object-position:50%_70%] 
-                        [clip-path:inset(0%_0%_0%_0%_round_50%_49%_47%_47%)] 
-                        transition-all duration-300 ease-in-out
-                         text-gray-800 
-                        text-xl
-                        font-bold
-                      "
-                    />
-                  </div>
-                  <h5 className="text-lg font-semibold text-gray-800 mb-1">
-                    Clark Jim Gabiota
-                  </h5>
-                  <p className="text-sm font-medium text-[#057DCD] mb-3">
-                    Fullstack Developer
-                  </p>
-                  <p className="text-xs text-gray-600 italic leading-relaxed mb-4">
-                    "Crafting robust solutions with elegant code."
-                  </p>
-
-                  {/* Social Links */}
-                  <div className="flex justify-center space-x-3">
-                    <motion.a
-                      whileHover={{ scale: 1.1 }}
-                      whileTap={{ scale: 0.9 }}
-                      href="https://github.com/Mitakashim3" // Replace with actual GitHub URL
-                      target="_blank"
-                      rel="noopener noreferrer"
-                      className="bg-gray-800 text-white p-2 rounded-full hover:bg-gray-700 transition-colors duration-200"
-                    >
-                      <svg
-                        className="w-4 h-4"
-                        fill="currentColor"
-                        viewBox="0 0 24 24"
-                      >
-                        <path d="M12 0c-6.626 0-12 5.373-12 12 0 5.302 3.438 9.8 8.207 11.387.599.111.793-.261.793-.577v-2.234c-3.338.726-4.033-1.416-4.033-1.416-.546-1.387-1.333-1.756-1.333-1.756-1.089-.745.083-.729.083-.729 1.205.084 1.839 1.237 1.839 1.237 1.07 1.834 2.807 1.304 3.492.997.107-.775.418-1.305.762-1.604-2.665-.305-5.467-1.334-5.467-5.931 0-1.311.469-2.381 1.236-3.221-.124-.303-.535-1.524.117-3.176 0 0 1.008-.322 3.301 1.23.957-.266 1.983-.399 3.003-.404 1.02.005 2.047.138 3.006.404 2.291-1.552 3.297-1.23 3.297-1.23.653 1.653.242 2.874.118 3.176.77.84 1.235 1.911 1.235 3.221 0 4.609-2.807 5.624-5.479 5.921.43.372.823 1.102.823 2.222v3.293c0 .319.192.694.801.576 4.765-1.589 8.199-6.086 8.199-11.386 0-6.627-5.373-12-12-12z" />
-                      </svg>
-                    </motion.a>
-                    <motion.a
-                      whileHover={{ scale: 1.1 }}
-                      whileTap={{ scale: 0.9 }}
-                      href="https://linkedin.com/in/clark-jim-gabiota-a9b48a382" // Replace with actual LinkedIn URL
-                      target="_blank"
-                      rel="noopener noreferrer"
-                      className="bg-[#0077B5] text-white p-2 rounded-full hover:bg-[#005885] transition-colors duration-200"
-                    >
-                      <svg
-                        className="w-4 h-4"
-                        fill="currentColor"
-                        viewBox="0 0 24 24"
-                      >
-                        <path d="M20.447 20.452h-3.554v-5.569c0-1.328-.027-3.037-1.852-3.037-1.853 0-2.136 1.445-2.136 2.939v5.667H9.351V9h3.414v1.561h.046c.477-.9 1.637-1.85 3.37-1.85 3.601 0 4.267 2.37 4.267 5.455v6.286zM5.337 7.433c-1.144 0-2.063-.926-2.063-2.065 0-1.138.92-2.063 2.063-2.063 1.14 0 2.064.925 2.064 2.063 0 1.139-.925 2.065-2.064 2.065zm1.782 13.019H3.555V9h3.564v11.452zM22.225 0H1.771C.792 0 0 .774 0 1.729v20.542C0 23.227.792 24 1.771 24h20.451C23.2 24 24 23.227 24 22.271V1.729C24 .774 23.2 0 22.222 0h.003z" />
-                      </svg>
-                    </motion.a>
-                    <motion.a
-                      whileHover={{ scale: 1.1 }}
-                      whileTap={{ scale: 0.9 }}
-                      href="https://discord.com/users/823719242477338624" // Replace with actual Discord URL
-                      target="_blank"
-                      rel="noopener noreferrer"
-                      className="bg-[#5865F2] text-white p-2 rounded-full hover:bg-[#4752C4] transition-colors duration-200"
-                    >
-                      <svg
-                        className="w-4 h-4"
-                        fill="currentColor"
-                        viewBox="0 0 24 24"
-                      >
-                        <path d="M20.317 4.37a19.791 19.791 0 0 0-4.885-1.515a.074.074 0 0 0-.079.037c-.21.375-.444.864-.608 1.25a18.27 18.27 0 0 0-5.487 0a12.64 12.64 0 0 0-.617-1.25a.077.077 0 0 0-.079-.037A19.736 19.736 0 0 0 3.677 4.37a.07.07 0 0 0-.032.027C.533 9.046-.32 13.58.099 18.057a.082.082 0 0 0 .031.057a19.9 19.9 0 0 0 5.993 3.03a.078.078 0 0 0 .084-.028a14.09 14.09 0 0 0 1.226-1.994a.076.076 0 0 0-.041-.106a13.107 13.107 0 0 1-1.872-.892a.077.077 0 0 1-.008-.128a10.2 10.2 0 0 0 .372-.292a.074.074 0 0 1 .077-.01c3.928 1.793 8.18 1.793 12.062 0a.074.074 0 0 1 .078.01c.12.098.246.198.373.292a.077.077 0 0 1-.006.127a12.299 12.299 0 0 1-1.873.892a.077.077 0 0 0-.041.107c.36.698.772 1.362 1.225 1.993a.076.076 0 0 0 .084.028a19.839 19.839 0 0 0 6.002-3.03a.077.077 0 0 0 .032-.054c.5-5.177-.838-9.674-3.549-13.66a.061.061 0 0 0-.031-.03zM8.02 15.33c-1.183 0-2.157-1.085-2.157-2.419c0-1.333.956-2.419 2.157-2.419c1.21 0 2.176 1.096 2.157 2.42c0 1.333-.956 2.418-2.157 2.418zm7.975 0c-1.183 0-2.157-1.085-2.157-2.419c0-1.333.955-2.419 2.157-2.419c1.21 0 2.176 1.096 2.157 2.42c0 1.333-.946 2.418-2.157 2.418z" />
-                      </svg>
-                    </motion.a>
-                  </div>
-                </div>
-              </motion.div>
               <TeamMemberCard
                 name="Clark Jim Gabiota"
                 role="Fullstack Developer"
@@ -1091,110 +1035,36 @@ const About = ({ animateSection, openCardId, handleCardToggle }) => {
               />
 
               {/* Kyrell Santillan */}
-              <motion.div
-                className="bg-white rounded-lg p-6 shadow-lg hover:shadow-xl transition-all duration-300 transform hover:-translate-y-2"
-                whileHover={{ scale: 1.02 }}
-                initial={{ opacity: 0, y: 20 }}
-                whileInView={{ opacity: 1, y: 0 }}
-                transition={{ duration: 0.5, delay: 0.4 }}
-                viewport={{ once: true }}
-              >
-                <div className="text-center">
-                  {/* Profile Photo Placeholder */}
-                  <div
-                    className="
-                      w-24 h-24
-                      mx-auto mb-6
-                      rounded-full
-                      bg-gradient-to-br from-orange-400 to-orange-600
-                      flex items-end justify-center
-                      relative
-                      shadow-xl
-                      ring-4 ring-white
-                      ring-offset-2 ring-offset-gray-300
-                      transition-all duration-300 ease-in-out
-                      hover:scale-110
-                      hover:-translate-y-1
-                    "
-                  >
-                    <img
-                      src={Person3}
-                      alt="KS"
-                      className="
-                        w-[130%] h-[130%] 
-                        object-cover 
-                        [object-position:50%_70%] 
-                        [clip-path:inset(0%_0%_0%_0%_round_50%_49%_47%_47%)] 
-                        transition-all duration-300 ease-in-out
-                         text-gray-800 
-                        text-xl
-                        font-bold
-                      "
-                    />
-                  </div>
-                  <h5 className="text-lg font-semibold text-gray-800 mb-1">
-                    Kyrell Santillan
-                  </h5>
-                  <p className="text-sm font-medium text-[#057DCD] mb-3">
-                    Frontend Developer
-                  </p>
-                  <p className="text-xs text-gray-600 italic leading-relaxed mb-4">
-                    "Designing experiences that inspire and engage."
-                  </p>
-
-                  {/* Social Links */}
-                  <div className="flex justify-center space-x-3">
-                    <motion.a
-                      whileHover={{ scale: 1.1 }}
-                      whileTap={{ scale: 0.9 }}
-                      href="https://github.com/kyrellsantillan" // Replace with actual GitHub URL
-                      target="_blank"
-                      rel="noopener noreferrer"
-                      className="bg-gray-800 text-white p-2 rounded-full hover:bg-gray-700 transition-colors duration-200"
-                    >
-                      <svg
-                        className="w-4 h-4"
-                        fill="currentColor"
-                        viewBox="0 0 24 24"
-                      >
-                        <path d="M12 0c-6.626 0-12 5.373-12 12 0 5.302 3.438 9.8 8.207 11.387.599.111.793-.261.793-.577v-2.234c-3.338.726-4.033-1.416-4.033-1.416-.546-1.387-1.333-1.756-1.333-1.756-1.089-.745.083-.729.083-.729 1.205.084 1.839 1.237 1.839 1.237 1.07 1.834 2.807 1.304 3.492.997.107-.775.418-1.305.762-1.604-2.665-.305-5.467-1.334-5.467-5.931 0-1.311.469-2.381 1.236-3.221-.124-.303-.535-1.524.117-3.176 0 0 1.008-.322 3.301 1.23.957-.266 1.983-.399 3.003-.404 1.02.005 2.047.138 3.006.404 2.291-1.552 3.297-1.23 3.297-1.23.653 1.653.242 2.874.118 3.176.77.84 1.235 1.911 1.235 3.221 0 4.609-2.807 5.624-5.479 5.921.43.372.823 1.102.823 2.222v3.293c0 .319.192.694.801.576 4.765-1.589 8.199-6.086 8.199-11.386 0-6.627-5.373-12-12-12z" />
-                      </svg>
-                    </motion.a>
-                    <motion.a
-                      whileHover={{ scale: 1.1 }}
-                      whileTap={{ scale: 0.9 }}
-                      href="https://linkedin.com/in/kyrell-santillan" // Replace with actual LinkedIn URL
-                      target="_blank"
-                      rel="noopener noreferrer"
-                      className="bg-[#0077B5] text-white p-2 rounded-full hover:bg-[#005885] transition-colors duration-200"
-                    >
-                      <svg
-                        className="w-4 h-4"
-                        fill="currentColor"
-                        viewBox="0 0 24 24"
-                      >
-                        <path d="M20.447 20.452h-3.554v-5.569c0-1.328-.027-3.037-1.852-3.037-1.853 0-2.136 1.445-2.136 2.939v5.667H9.351V9h3.414v1.561h.046c.477-.9 1.637-1.85 3.37-1.85 3.601 0 4.267 2.37 4.267 5.455v6.286zM5.337 7.433c-1.144 0-2.063-.926-2.063-2.065 0-1.138.92-2.063 2.063-2.063 1.14 0 2.064.925 2.064 2.063 0 1.139-.925 2.065-2.064 2.065zm1.782 13.019H3.555V9h3.564v11.452zM22.225 0H1.771C.792 0 0 .774 0 1.729v20.542C0 23.227.792 24 1.771 24h20.451C23.2 24 24 23.227 24 22.271V1.729C24 .774 23.2 0 22.222 0h.003z" />
-                      </svg>
-                    </motion.a>
-                    <motion.a
-                      whileHover={{ scale: 1.1 }}
-                      whileTap={{ scale: 0.9 }}
-                      href="https://discord.com/users/kyrellsantillan" // Replace with actual Discord URL
-                      target="_blank"
-                      rel="noopener noreferrer"
-                      className="bg-[#5865F2] text-white p-2 rounded-full hover:bg-[#4752C4] transition-colors duration-200"
-                    >
-                      <svg
-                        className="w-4 h-4"
-                        fill="currentColor"
-                        viewBox="0 0 24 24"
-                      >
-                        <path d="M20.317 4.37a19.791 19.791 0 0 0-4.885-1.515a.074.074 0 0 0-.079.037c-.21.375-.444.864-.608 1.25a18.27 18.27 0 0 0-5.487 0a12.64 12.64 0 0 0-.617-1.25a.077.077 0 0 0-.079-.037A19.736 19.736 0 0 0 3.677 4.37a.07.07 0 0 0-.032.027C.533 9.046-.32 13.58.099 18.057a.082.082 0 0 0 .031.057a19.9 19.9 0 0 0 5.993 3.03a.078.078 0 0 0 .084-.028a14.09 14.09 0 0 0 1.226-1.994a.076.076 0 0 0-.041-.106a13.107 13.107 0 0 1-1.872-.892a.077.077 0 0 1-.008-.128a10.2 10.2 0 0 0 .372-.292a.074.074 0 0 1 .077-.01c3.928 1.793 8.18 1.793 12.062 0a.074.074 0 0 1 .078.01c.12.098.246.198.373.292a.077.077 0 0 1-.006.127a12.299 12.299 0 0 1-1.873.892a.077.077 0 0 0-.041.107c.36.698.772 1.362 1.225 1.993a.076.076 0 0 0 .084.028a19.839 19.839 0 0 0 6.002-3.03a.077.077 0 0 0 .032-.054c.5-5.177-.838-9.674-3.549-13.66a.061.061 0 0 0-.031-.03zM8.02 15.33c-1.183 0-2.157-1.085-2.157-2.419c0-1.333.956-2.419 2.157-2.419c1.21 0 2.176 1.096 2.157 2.42c0 1.333-.956 2.418-2.157 2.418zm7.975 0c-1.183 0-2.157-1.085-2.157-2.419c0-1.333.955-2.419 2.157-2.419c1.21 0 2.176 1.096 2.157 2.42c0 1.333-.946 2.418-2.157 2.418z" />
-                      </svg>
-                    </motion.a>
-                  </div>
-                </div>
-              </motion.div>
+              <TeamMemberCard
+                name="Kyrell Santillan"
+                role="Asst. Programmer"
+                quote="Designing experiences that inspire and engage."
+                profileImage={Person3}
+                gradientColors="from-orange-400 to-orange-600"
+                delay={0.4}
+                isOpen={openCardId === "kyrell"}
+                onToggle={() => handleCardToggle("kyrell")}
+                socialLinks={[
+                  {
+                    url: "https://github.com/kyrellsantillan",
+                    bgColor: "bg-gray-800",
+                    hoverColor: "bg-gray-700",
+                    iconPath: "M12 0c-6.626 0-12 5.373-12 12 0 5.302 3.438 9.8 8.207 11.387.599.111.793-.261.793-.577v-2.234c-3.338.726-4.033-1.416-4.033-1.416-.546-1.387-1.333-1.756-1.333-1.756-1.089-.745.083-.729.083-.729 1.205.084 1.839 1.237 1.839 1.237 1.07 1.834 2.807 1.304 3.492.997.107-.775.418-1.305.762-1.604-2.665-.305-5.467-1.334-5.467-5.931 0-1.311.469-2.381 1.236-3.221-.124-.303-.535-1.524.117-3.176 0 0 1.008-.322 3.301 1.23.957-.266 1.983-.399 3.003-.404 1.02.005 2.047.138 3.006.404 2.291-1.552 3.297-1.23 3.297-1.23.653 1.653.242 2.874.118 3.176.77.84 1.235 1.911 1.235 3.221 0 4.609-2.807 5.624-5.479 5.921.43.372.823 1.102.823 2.222v3.293c0 .319.192.694.801.576 4.765-1.589 8.199-6.086 8.199-11.386 0-6.627-5.373-12-12-12z"
+                  },
+                  {
+                    url: "https://linkedin.com/in/kyrell-santillan",
+                    bgColor: "bg-[#0077B5]",
+                    hoverColor: "bg-[#005885]",
+                    iconPath: "M20.447 20.452h-3.554v-5.569c0-1.328-.027-3.037-1.852-3.037-1.853 0-2.136 1.445-2.136 2.939v5.667H9.351V9h3.414v1.561h.046c.477-.9 1.637-1.85 3.37-1.85 3.601 0 4.267 2.37 4.267 5.455v6.286zM5.337 7.433c-1.144 0-2.063-.926-2.063-2.065 0-1.138.92-2.063 2.063-2.063 1.14 0 2.064.925 2.064 2.063 0 1.139-.925 2.065-2.064 2.065zm1.782 13.019H3.555V9h3.564v11.452zM22.225 0H1.771C.792 0 0 .774 0 1.729v20.542C0 23.227.792 24 1.771 24h20.451C23.2 24 24 23.227 24 22.271V1.729C24 .774 23.2 0 22.222 0h.003z"
+                  },
+                  {
+                    url: "https://discord.com/users/kyrellsantillan",
+                    bgColor: "bg-[#5865F2]",
+                    hoverColor: "bg-[#4752C4]",
+                    iconPath: "M20.317 4.37a19.791 19.791 0 0 0-4.885-1.515a.074.074 0 0 0-.079.037c-.21.375-.444.864-.608 1.25a18.27 18.27 0 0 0-5.487 0a12.64 12.64 0 0 0-.617-1.25a.077.077 0 0 0-.079-.037A19.736 19.736 0 0 0 3.677 4.37a.07.07 0 0 0-.032.027C.533 9.046-.32 13.58.099 18.057a.082.082 0 0 0 .031.057a19.9 19.9 0 0 0 5.993 3.03a.078.078 0 0 0 .084-.028a14.09 14.09 0 0 0 1.226-1.994a.076.076 0 0 0-.041-.106a13.107 13.107 0 0 1-1.872-.892a.077.077 0 0 1-.008-.128a10.2 10.2 0 0 0 .372-.292a.074.074 0 0 1 .077-.01c3.928 1.793 8.18 1.793 12.062 0a.074.074 0 0 1 .078.01c.12.098.246.198.373.292a.077.077 0 0 1-.006.127a12.299 12.299 0 0 1-1.873.892a.077.077 0 0 0-.041.107c.36.698.772 1.362 1.225 1.993a.076.076 0 0 0 .084.028a19.839 19.839 0 0 0 6.002-3.03a.077.077 0 0 0 .032-.054c.5-5.177-.838-9.674-3.549-13.66a.061.061 0 0 0-.031-.03zM8.02 15.33c-1.183 0-2.157-1.085-2.157-2.419c0-1.333.956-2.419 2.157-2.419c1.21 0 2.176 1.096 2.157 2.42c0 1.333-.956 2.418-2.157 2.418zm7.975 0c-1.183 0-2.157-1.085-2.157-2.419c0-1.333.955-2.419 2.157-2.419c1.21 0 2.176 1.096 2.157 2.42c0 1.333-.946 2.418-2.157 2.418z"
+                  }
+                ]}
+              />
             </div>
 
             {/* Team Description */}

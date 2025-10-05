@@ -206,7 +206,7 @@ const ConsultationSchedules = () => {
                 <motion.button
                   whileHover={{ scale: 1.05 }}
                   whileTap={{ scale: 0.95 }}
-                  onClick={() => window.location.href = '/admin-consultation'}
+                  onClick={() => window.location.href = '/consultation-leaderboard'}
                   className="text-white font-medium hover:text-blue-200 transition-colors duration-200 relative group"
                 >
                   Leaderboard
