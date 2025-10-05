@@ -14,6 +14,7 @@ import Person from "../components/icons/Person.png";
 import Person1 from "../components/icons/Person (1).png";
 import Person2 from "../components/icons/Person (2).png";
 import Person3 from "../components/icons/Person (3).png";
+import TeamMemberCard from "../components/TeamMemberCard";
 
 const Home = () => {
   const [animateSection, setAnimateSection] = useState(null);
@@ -548,10 +549,12 @@ const Hero = ({
   );
 };
 
-// Enhanced About Section
-const About = ({ animateSection }) => {
+// Enhanced About Section with Improved Photo Gallery
+const About = ({ animateSection, openCardId, handleCardToggle }) => {
   const images = [Image1, Image2, Image3];
   const [currentImage, setCurrentImage] = useState(0);
+  const [isLightboxOpen, setIsLightboxOpen] = useState(false);
+  const [lightboxImage, setLightboxImage] = useState(0);
 
   useEffect(() => {
     const interval = setInterval(() => {
@@ -559,6 +562,23 @@ const About = ({ animateSection }) => {
     }, 4000);
     return () => clearInterval(interval);
   }, []);
+
+  const openLightbox = (index) => {
+    setLightboxImage(index);
+    setIsLightboxOpen(true);
+  };
+
+  const closeLightbox = () => {
+    setIsLightboxOpen(false);
+  };
+
+  const nextImage = () => {
+    setLightboxImage((prev) => (prev + 1) % images.length);
+  };
+
+  const prevImage = () => {
+    setLightboxImage((prev) => (prev - 1 + images.length) % images.length);
+  };
 
   return (
     <motion.section
@@ -576,7 +596,7 @@ const About = ({ animateSection }) => {
           className="text-center mb-8 sm:mb-12 lg:mb-16"
         >
           <h2 className="text-3xl sm:text-4xl lg:text-5xl font-bold text-[#057DCD] mb-4 sm:mb-6">
-            About POLYCON
+            About Us
           </h2>
           <div className="w-20 sm:w-24 h-1 bg-[#057DCD] mx-auto"></div>
         </motion.div>
@@ -616,7 +636,14 @@ const About = ({ animateSection }) => {
             viewport={{ once: true }}
             className="relative order-1 lg:order-2"
           >
-            <div className="relative w-full h-64 sm:h-80 lg:h-96 xl:h-[500px] rounded-2xl sm:rounded-3xl overflow-hidden shadow-2xl">
+            {/* Enhanced Photo Gallery */}
+            <div className="space-y-4">
+              {/* Main Featured Image */}
+              <motion.div
+                whileHover={{ scale: 1.02 }}
+                className="relative w-full h-64 sm:h-80 lg:h-96 xl:h-[400px] rounded-2xl sm:rounded-3xl overflow-hidden shadow-2xl cursor-pointer group"
+                onClick={() => openLightbox(currentImage)}
+              >
               <AnimatePresence mode="wait">
                 <motion.img
                   key={currentImage}
@@ -626,13 +653,73 @@ const About = ({ animateSection }) => {
                   animate={{ opacity: 1, scale: 1 }}
                   exit={{ opacity: 0, scale: 0.9 }}
                   transition={{ duration: 0.5 }}
-                  className="absolute inset-0 w-full h-full object-cover object-center"
+                    className="absolute inset-0 w-full h-full object-cover object-center group-hover:scale-105 transition-transform duration-500"
                 />
               </AnimatePresence>
-              <div className="absolute inset-0 bg-gradient-to-t from-blue-900/30 to-transparent" />
+                <div className="absolute inset-0 bg-gradient-to-t from-blue-900/40 to-transparent" />
+                
+                {/* Hover Overlay */}
+                <div className="absolute inset-0 bg-black/0 group-hover:bg-black/20 transition-all duration-300 flex items-center justify-center">
+                  <motion.div
+                    initial={{ opacity: 0, scale: 0.8 }}
+                    whileHover={{ opacity: 1, scale: 1 }}
+                    className="bg-white/90 backdrop-blur-sm rounded-full p-3 opacity-0 group-hover:opacity-100 transition-all duration-300"
+                  >
+                    <svg className="w-6 h-6 text-[#057DCD]" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0zM10 7v3m0 0v3m0-3h3m-3 0H7" />
+                    </svg>
+                  </motion.div>
             </div>
 
-            {/* Decorative Elements - Hidden on mobile for cleaner look */}
+                {/* Image Counter */}
+                <div className="absolute top-4 right-4 bg-black/50 backdrop-blur-sm text-white px-3 py-1 rounded-full text-sm">
+                  {currentImage + 1} / {images.length}
+                </div>
+              </motion.div>
+
+              {/* Thumbnail Grid */}
+              <div className="grid grid-cols-3 gap-3">
+                {images.map((image, index) => (
+                  <motion.div
+                    key={index}
+                    whileHover={{ scale: 1.05 }}
+                    whileTap={{ scale: 0.95 }}
+                    className={`relative h-20 sm:h-24 lg:h-28 rounded-xl overflow-hidden cursor-pointer transition-all duration-300 ${
+                      index === currentImage 
+                        ? 'ring-4 ring-[#057DCD] shadow-lg' 
+                        : 'hover:shadow-md'
+                    }`}
+                    onClick={() => setCurrentImage(index)}
+                  >
+                    <img
+                      src={image}
+                      alt={`Gallery ${index + 1}`}
+                      className="w-full h-full object-cover transition-transform duration-300 hover:scale-110"
+                    />
+                    {index === currentImage && (
+                      <div className="absolute inset-0 bg-[#057DCD]/20" />
+                    )}
+                  </motion.div>
+                ))}
+              </div>
+
+              {/* Navigation Dots */}
+              <div className="flex justify-center space-x-2">
+                {images.map((_, index) => (
+                  <button
+                    key={index}
+                    onClick={() => setCurrentImage(index)}
+                    className={`w-3 h-3 rounded-full transition-all duration-200 ${
+                      index === currentImage 
+                        ? "bg-[#057DCD] scale-125" 
+                        : "bg-gray-300 hover:bg-gray-400"
+                    }`}
+                  />
+                ))}
+              </div>
+            </div>
+
+            {/* Decorative Elements */}
             <motion.div
               animate={{ rotate: 360 }}
               transition={{ duration: 20, repeat: Infinity, ease: "linear" }}
@@ -645,6 +732,74 @@ const About = ({ animateSection }) => {
             />
           </motion.div>
         </div>
+
+        {/* Lightbox Modal */}
+        <AnimatePresence>
+          {isLightboxOpen && (
+            <motion.div
+              initial={{ opacity: 0 }}
+              animate={{ opacity: 1 }}
+              exit={{ opacity: 0 }}
+              className="fixed inset-0 bg-black/90 backdrop-blur-sm z-50 flex items-center justify-center p-4"
+              onClick={closeLightbox}
+            >
+              <motion.div
+                initial={{ scale: 0.8, opacity: 0 }}
+                animate={{ scale: 1, opacity: 1 }}
+                exit={{ scale: 0.8, opacity: 0 }}
+                className="relative max-w-4xl max-h-[90vh] w-full"
+                onClick={(e) => e.stopPropagation()}
+              >
+                {/* Close Button */}
+                <button
+                  onClick={closeLightbox}
+                  className="absolute top-4 right-4 z-10 bg-black/50 backdrop-blur-sm text-white p-2 rounded-full hover:bg-black/70 transition-colors"
+                >
+                  <svg className="w-6 h-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+                  </svg>
+                </button>
+
+                {/* Navigation Buttons */}
+                <button
+                  onClick={prevImage}
+                  className="absolute left-4 top-1/2 -translate-y-1/2 z-10 bg-black/50 backdrop-blur-sm text-white p-3 rounded-full hover:bg-black/70 transition-colors"
+                >
+                  <svg className="w-6 h-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 19l-7-7 7-7" />
+                  </svg>
+                </button>
+                <button
+                  onClick={nextImage}
+                  className="absolute right-4 top-1/2 -translate-y-1/2 z-10 bg-black/50 backdrop-blur-sm text-white p-3 rounded-full hover:bg-black/70 transition-colors"
+                >
+                  <svg className="w-6 h-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
+                  </svg>
+                </button>
+
+                {/* Main Image */}
+                <AnimatePresence mode="wait">
+                  <motion.img
+                    key={lightboxImage}
+                    src={images[lightboxImage]}
+                    alt={`Gallery ${lightboxImage + 1}`}
+                    initial={{ opacity: 0, scale: 0.9 }}
+                    animate={{ opacity: 1, scale: 1 }}
+                    exit={{ opacity: 0, scale: 1.1 }}
+                    transition={{ duration: 0.3 }}
+                    className="w-full h-full object-contain rounded-lg"
+                  />
+                </AnimatePresence>
+
+                {/* Image Counter */}
+                <div className="absolute bottom-4 left-1/2 -translate-x-1/2 bg-black/50 backdrop-blur-sm text-white px-4 py-2 rounded-full">
+                  {lightboxImage + 1} / {images.length}
+                </div>
+              </motion.div>
+            </motion.div>
+          )}
+        </AnimatePresence>
 
         {/* Dedicated Team Section */}
         <motion.div
@@ -662,110 +817,36 @@ const About = ({ animateSection }) => {
             {/* Team Members Grid */}
             <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 sm:gap-6">
               {/* David Paul Desuyo */}
-              <motion.div
-                className="bg-white rounded-lg p-4 sm:p-6 shadow-lg hover:shadow-xl transition-all duration-300 transform hover:-translate-y-2"
-                whileHover={{ scale: 1.02 }}
-                initial={{ opacity: 0, y: 20 }}
-                whileInView={{ opacity: 1, y: 0 }}
-                transition={{ duration: 0.5, delay: 0.1 }}
-                viewport={{ once: true }}
-              >
-                <div className="text-center">
-                  {/* Profile Photo Placeholder */}
-                  <div
-                    className="
-                      w-24 h-24
-                      mx-auto mb-6
-                      rounded-full
-                      bg-gradient-to-br from-blue-400 to-blue-600
-                      flex items-end justify-center
-                      relative
-                      shadow-xl
-                      ring-4 ring-white
-                      ring-offset-2 ring-offset-gray-300
-                      transition-all duration-300 ease-in-out
-                      hover:scale-110
-                      hover:-translate-y-1
-                    "
-                  >
-                    <img
-                      src={Person}
-                      alt="DP"
-                      className="
-                        w-[130%] h-[130%] 
-                        object-cover 
-                        [object-position:50%_70%] 
-                        [clip-path:inset(0%_0%_0%_0%_round_50%_49%_47%_47%)] 
-                        transition-all duration-300 ease-in-out
-                        text-gray-800 
-                        text-xl
-                        font-bold
-                      "
-                    />
-                  </div>
-                  <h5 className="text-base sm:text-lg font-semibold text-gray-800 mb-1">
-                    David Paul Desuyo
-                  </h5>
-                  <p className="text-xs sm:text-sm font-medium text-[#057DCD] mb-2 sm:mb-3">
-                    Lead Developer & Project Manager
-                  </p>
-                  <p className="text-xs text-gray-600 italic leading-relaxed mb-3 sm:mb-4">
-                    "Innovation through dedication and continuous learning."
-                  </p>
-
-                  {/* Social Links */}
-                  <div className="flex justify-center space-x-2 sm:space-x-3">
-                    <motion.a
-                      whileHover={{ scale: 1.1 }}
-                      whileTap={{ scale: 0.9 }}
-                      href="https://github.com/xenhusk" // Replace with actual GitHub URL
-                      target="_blank"
-                      rel="noopener noreferrer"
-                      className="bg-gray-800 text-white p-1.5 sm:p-2 rounded-full hover:bg-gray-700 transition-colors duration-200"
-                    >
-                      <svg
-                        className="w-3 h-3 sm:w-4 sm:h-4"
-                        fill="currentColor"
-                        viewBox="0 0 24 24"
-                      >
-                        <path d="M12 0c-6.626 0-12 5.373-12 12 0 5.302 3.438 9.8 8.207 11.387.599.111.793-.261.793-.577v-2.234c-3.338.726-4.033-1.416-4.033-1.416-.546-1.387-1.333-1.756-1.333-1.756-1.089-.745.083-.729.083-.729 1.205.084 1.839 1.237 1.839 1.237 1.07 1.834 2.807 1.304 3.492.997.107-.775.418-1.305.762-1.604-2.665-.305-5.467-1.334-5.467-5.931 0-1.311.469-2.381 1.236-3.221-.124-.303-.535-1.524.117-3.176 0 0 1.008-.322 3.301 1.23.957-.266 1.983-.399 3.003-.404 1.02.005 2.047.138 3.006.404 2.291-1.552 3.297-1.23 3.297-1.23.653 1.653.242 2.874.118 3.176.77.84 1.235 1.911 1.235 3.221 0 4.609-2.807 5.624-5.479 5.921.43.372.823 1.102.823 2.222v3.293c0 .319.192.694.801.576 4.765-1.589 8.199-6.086 8.199-11.386 0-6.627-5.373-12-12-12z" />
-                      </svg>
-                    </motion.a>
-                    <motion.a
-                      whileHover={{ scale: 1.1 }}
-                      whileTap={{ scale: 0.9 }}
-                      href="https://linkedin.com/in/xenhusk" // Replace with actual LinkedIn URL
-                      target="_blank"
-                      rel="noopener noreferrer"
-                      className="bg-[#0077B5] text-white p-1.5 sm:p-2 rounded-full hover:bg-[#005885] transition-colors duration-200"
-                    >
-                      <svg
-                        className="w-3 h-3 sm:w-4 sm:h-4"
-                        fill="currentColor"
-                        viewBox="0 0 24 24"
-                      >
-                        <path d="M20.447 20.452h-3.554v-5.569c0-1.328-.027-3.037-1.852-3.037-1.853 0-2.136 1.445-2.136 2.939v5.667H9.351V9h3.414v1.561h.046c.477-.9 1.637-1.85 3.37-1.85 3.601 0 4.267 2.37 4.267 5.455v6.286zM5.337 7.433c-1.144 0-2.063-.926-2.063-2.065 0-1.138.92-2.063 2.063-2.063 1.14 0 2.064.925 2.064 2.063 0 1.139-.925 2.065-2.064 2.065zm1.782 13.019H3.555V9h3.564v11.452zM22.225 0H1.771C.792 0 0 .774 0 1.729v20.542C0 23.227.792 24 1.771 24h20.451C23.2 24 24 23.227 24 22.271V1.729C24 .774 23.2 0 22.222 0h.003z" />
-                      </svg>
-                    </motion.a>
-                    <motion.a
-                      whileHover={{ scale: 1.1 }}
-                      whileTap={{ scale: 0.9 }}
-                      href="https://discord.com/users/987379502374084610" // Replace with actual Discord URL
-                      target="_blank"
-                      rel="noopener noreferrer"
-                      className="bg-[#5865F2] text-white p-1.5 sm:p-2 rounded-full hover:bg-[#4752C4] transition-colors duration-200"
-                    >
-                      <svg
-                        className="w-3 h-3 sm:w-4 sm:h-4"
-                        fill="currentColor"
-                        viewBox="0 0 24 24"
-                      >
-                        <path d="M20.317 4.37a19.791 19.791 0 0 0-4.885-1.515a.074.074 0 0 0-.079.037c-.21.375-.444.864-.608 1.25a18.27 18.27 0 0 0-5.487 0a12.64 12.64 0 0 0-.617-1.25a.077.077 0 0 0-.079-.037A19.736 19.736 0 0 0 3.677 4.37a.07.07 0 0 0-.032.027C.533 9.046-.32 13.58.099 18.057a.082.082 0 0 0 .031.057a19.9 19.9 0 0 0 5.993 3.03a.078.078 0 0 0 .084-.028a14.09 14.09 0 0 0 1.226-1.994a.076.076 0 0 0-.041-.106a13.107 13.107 0 0 1-1.872-.892a.077.077 0 0 1-.008-.128a10.2 10.2 0 0 0 .372-.292a.074.074 0 0 1 .077-.01c3.928 1.793 8.18 1.793 12.062 0a.074.074 0 0 1 .078.01c.12.098.246.198.373.292a.077.077 0 0 1-.006.127a12.299 12.299 0 0 1-1.873.892a.077.077 0 0 0-.041.107c.36.698.772 1.362 1.225 1.993a.076.076 0 0 0 .084.028a19.839 19.839 0 0 0 6.002-3.03a.077.077 0 0 0 .032-.054c.5-5.177-.838-9.674-3.549-13.66a.061.061 0 0 0-.031-.03zM8.02 15.33c-1.183 0-2.157-1.085-2.157-2.419c0-1.333.956-2.419 2.157-2.419c1.21 0 2.176 1.096 2.157 2.42c0 1.333-.956 2.418-2.157 2.418zm7.975 0c-1.183 0-2.157-1.085-2.157-2.419c0-1.333.955-2.419 2.157-2.419c1.21 0 2.176 1.096 2.157 2.42c0 1.333-.946 2.418-2.157 2.418z" />
-                      </svg>
-                    </motion.a>
-                  </div>
-                </div>
-              </motion.div>
+              <TeamMemberCard
+                name="David Paul Desuyo"
+                role="Lead Developer & Project Manager"
+                quote="Innovation through dedication and continuous learning."
+                profileImage={Person}
+                gradientColors="from-blue-400 to-blue-600"
+                delay={0.1}
+                isOpen={openCardId === "david"}
+                onToggle={() => handleCardToggle("david")}
+                socialLinks={[
+                  {
+                    url: "https://github.com/xenhusk",
+                    bgColor: "bg-gray-800",
+                    hoverColor: "bg-gray-700",
+                    iconPath: "M12 0c-6.626 0-12 5.373-12 12 0 5.302 3.438 9.8 8.207 11.387.599.111.793-.261.793-.577v-2.234c-3.338.726-4.033-1.416-4.033-1.416-.546-1.387-1.333-1.756-1.333-1.756-1.089-.745.083-.729.083-.729 1.205.084 1.839 1.237 1.839 1.237 1.07 1.834 2.807 1.304 3.492.997.107-.775.418-1.305.762-1.604-2.665-.305-5.467-1.334-5.467-5.931 0-1.311.469-2.381 1.236-3.221-.124-.303-.535-1.524.117-3.176 0 0 1.008-.322 3.301 1.23.957-.266 1.983-.399 3.003-.404 1.02.005 2.047.138 3.006.404 2.291-1.552 3.297-1.23 3.297-1.23.653 1.653.242 2.874.118 3.176.77.84 1.235 1.911 1.235 3.221 0 4.609-2.807 5.624-5.479 5.921.43.372.823 1.102.823 2.222v3.293c0 .319.192.694.801.576 4.765-1.589 8.199-6.086 8.199-11.386 0-6.627-5.373-12-12-12z"
+                  },
+                  {
+                    url: "https://linkedin.com/in/xenhusk",
+                    bgColor: "bg-[#0077B5]",
+                    hoverColor: "bg-[#005885]",
+                    iconPath: "M20.447 20.452h-3.554v-5.569c0-1.328-.027-3.037-1.852-3.037-1.853 0-2.136 1.445-2.136 2.939v5.667H9.351V9h3.414v1.561h.046c.477-.9 1.637-1.85 3.37-1.85 3.601 0 4.267 2.37 4.267 5.455v6.286zM5.337 7.433c-1.144 0-2.063-.926-2.063-2.065 0-1.138.92-2.063 2.063-2.063 1.14 0 2.064.925 2.064 2.063 0 1.139-.925 2.065-2.064 2.065zm1.782 13.019H3.555V9h3.564v11.452zM22.225 0H1.771C.792 0 0 .774 0 1.729v20.542C0 23.227.792 24 1.771 24h20.451C23.2 24 24 23.227 24 22.271V1.729C24 .774 23.2 0 22.222 0h.003z"
+                  },
+                  {
+                    url: "https://discord.com/users/987379502374084610",
+                    bgColor: "bg-[#5865F2]",
+                    hoverColor: "bg-[#4752C4]",
+                    iconPath: "M20.317 4.37a19.791 19.791 0 0 0-4.885-1.515a.074.074 0 0 0-.079.037c-.21.375-.444.864-.608 1.25a18.27 18.27 0 0 0-5.487 0a12.64 12.64 0 0 0-.617-1.25a.077.077 0 0 0-.079-.037A19.736 19.736 0 0 0 3.677 4.37a.07.07 0 0 0-.032.027C.533 9.046-.32 13.58.099 18.057a.082.082 0 0 0 .031.057a19.9 19.9 0 0 0 5.993 3.03a.078.078 0 0 0 .084-.028a14.09 14.09 0 0 0 1.226-1.994a.076.076 0 0 0-.041-.106a13.107 13.107 0 0 1-1.872-.892a.077.077 0 0 1-.008-.128a10.2 10.2 0 0 0 .372-.292a.074.074 0 0 1 .077-.01c3.928 1.793 8.18 1.793 12.062 0a.074.074 0 0 1 .078.01c.12.098.246.198.373.292a.077.077 0 0 1-.006.127a12.299 12.299 0 0 1-1.873.892a.077.077 0 0 0-.041.107c.36.698.772 1.362 1.225 1.993a.076.076 0 0 0 .084.028a19.839 19.839 0 0 0 6.002-3.03a.077.077 0 0 0 .032-.054c.5-5.177-.838-9.674-3.549-13.66a.061.061 0 0 0-.031-.03zM8.02 15.33c-1.183 0-2.157-1.085-2.157-2.419c0-1.333.956-2.419 2.157-2.419c1.21 0 2.176 1.096 2.157 2.42c0 1.333-.956 2.418-2.157 2.418zm7.975 0c-1.183 0-2.157-1.085-2.157-2.419c0-1.333.955-2.419 2.157-2.419c1.21 0 2.176 1.096 2.157 2.42c0 1.333-.946 2.418-2.157 2.418z"
+                  }
+                ]}
+              />
 
               {/* Kurt Zhynkent Canja */}
               <motion.div
@@ -1123,7 +1204,7 @@ const About = ({ animateSection }) => {
                 <span className="font-semibold text-[#057DCD]">
                   Develorant group
                 </span>
-                , we are 3rd-year Bachelor of Science in Computer Science
+                , we are 4th-year Bachelor of Science in Computer Science
                 students at
                 <span className="font-medium"> STI West Negros University</span>
                 .

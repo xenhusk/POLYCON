@@ -11,10 +11,14 @@ const Help_Main_Content = () => {
   const [isStudent, setIsStudent] = React.useState(false);
   const { searchQuery, setSearchQuery } = useContext(HelpContext);
 
+  // Define Primary Color for consistent use
+  const PRIMARY_COLOR = "#057DCD";
+
+  // Function to determine link styling based on active route
   const sidebarActive = (to) =>
     location.pathname === to
-      ? "text-[#057DCD] bg-blue-50 font-md border-[#057DCD]"
-      : "text-gray-600 hover:text-[#057DCD] hover:bg-blue-50 border-transparent";
+      ? `text-[${PRIMARY_COLOR}] bg-blue-100 font-semibold border-l-4 border-[${PRIMARY_COLOR}]`
+      : `text-gray-700 hover:text-[${PRIMARY_COLOR}] hover:bg-blue-50 transition-all duration-200 border-l-4 border-transparent`;
 
   React.useEffect(() => {
     const handleScroll = () => {
@@ -62,7 +66,7 @@ const Help_Main_Content = () => {
         },
         {
           label: "Troubleshooting",
-          href: "#trouble_shooting",
+          href: "#troubleshooting",
           className: "text-gray-600 hover:text-[#057DCD]",
         }
       );
@@ -77,7 +81,7 @@ const Help_Main_Content = () => {
         },
         {
           label: "Email Verification",
-          href: "#email_verification",
+          href: "#email-verification",
           className: "text-gray-600 hover:text-[#057DCD]",
         },
         {
@@ -88,20 +92,28 @@ const Help_Main_Content = () => {
       );
     }
 
-    // Info pages section links
+    // GetStart Features section links
     const infoPages = {
-      Info_Polycon_Analysis: ["#analysis_features", "#tips_analysis"],
-      Info_Grade: ["#grade_features", "#tips_troubleshooting_grade"],
-      Info_History: ["#history_features", "#tips_section_history"],
+      Info_Grade: [
+        "#grade_features", 
+        "#tips_troubleshooting_grade"
+      ],
+      Info_History: [
+        "#history_features", 
+        "#tips_section_history"
+      ],
       Info_Set_Schedule: [
         "#schedule_features",
-        "#tips_troubleshooting_schedule",
+        "#tips_troubleshooting_schedule"
       ],
       Info_Appointments: [
         "#appointment_features",
-        "#tips_section_appointments",
+        "#tips_section_appointments"
       ],
-      Info_Dashboard: ["#dashboard_features", "#tips_section_dashboard"],
+      Info_Dashboard: [
+        "#dashboard_features", 
+        "#tips_section_dashboard"
+      ],
     };
 
     const currentPage = location.pathname.split("/").pop();
@@ -120,17 +132,29 @@ const Help_Main_Content = () => {
       );
     }
 
-    // Student Features section links
+    // Features section links
     const Features = {
+      Info_Polycon_Analysis: [
+        { label: "Analysis Features", href: "#analysis_features" },
+        { label: "Tips & Troubleshooting", href: "#tips_analysis" }
+      ],
+      Info_Concern_Analysis: [
+        { label: "Concern Features", href: "#concern_analysis_features" },
+        { label: "Tips & Troubleshooting", href: "#tips_concern_analysis" }
+      ],
       Info_Consultation_Booking: [
         { label: "Booking Steps", href: "#booking_steps" },
         { label: "Tips & Guidelines", href: "#tips_guidelines_booking" },
       ],
+      Info_Enrolled_Student: [
+        { label: "Enrolled Features", href: "#enrolled_features" },
+        { label: "Tips & Troubleshooting", href: "#tips_troubleshooting_enrolled" },
+      ],
       Info_Calendar_Management: [
-        { label: "Calendar Features", href: "#calendar_features" },
+        { label: "Calendar Features", href: "#Info_Calendar_Management" },
         {
           label: "Tips & Troubleshooting",
-          href: "#tips_troubleshooting_calendar",
+          href: "#tips_section_bookings",
         },
       ],
       Info_Notifications: [
@@ -181,19 +205,19 @@ const Help_Main_Content = () => {
       transition={{ duration: 0.5 }}
       className="relative h-screen overflow-y-auto"
     >
-      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-2 py-8">
+      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-2 py-6">
         <div className="flex max-w-[1440px] mx-auto">
           {/* Sidebar */}
           <div className="hidden lg:block w-64 flex-shrink-0 mr-4">
-            <div className="sticky top-8">
-              <div className="bg-white rounded-lg shadow-sm border border-gray-200 p-6">
+            <div className="fixed top-6">
+              <div className="bg-white rounded-lg shadow-sm border border-gray-200 p-6 w-64 h-[43rem] overflow-y-auto">
                 <h3 className="text-sm font-semibold text-gray-900 uppercase tracking-wide mb-4">
                   Getting Started
                 </h3>
                 <nav className="space-y-2">
                   <Link
                     to="/help/getstarted/"
-                    className={`block px-3 py-1 text-sm rounded-md transition-colors ${sidebarActive(
+                    className={`block px-3 py-1 text-sm rounded-md ${sidebarActive(
                       "/help/getstarted/"
                     )}`}
                   >
@@ -203,7 +227,7 @@ const Help_Main_Content = () => {
                     <>
                       <Link
                         to="/help/getstarted/Info_Login"
-                        className={`block px-3 py-1 text-sm rounded-md transition-colors ${sidebarActive(
+                        className={`block px-3 py-1 text-sm rounded-md ${sidebarActive(
                           "/help/getstarted/Info_Login"
                         )}`}
                       >
@@ -211,7 +235,7 @@ const Help_Main_Content = () => {
                       </Link>
                       <Link
                         to="/help/getstarted/Info_Signup"
-                        className={`block px-3 py-1 text-sm rounded-md transition-colors ${sidebarActive(
+                        className={`block px-3 py-1 text-sm rounded-md ${sidebarActive(
                           "/help/getstarted/Info_Signup"
                         )}`}
                       >
@@ -221,7 +245,7 @@ const Help_Main_Content = () => {
                   )}
                   <Link
                     to="/help/getstarted/Info_Dashboard"
-                    className={`block px-3 py-1 text-sm rounded-md transition-colors ${sidebarActive(
+                    className={`block px-3 py-1 text-sm rounded-md ${sidebarActive(
                       "/help/getstarted/Info_Dashboard"
                     )}`}
                   >
@@ -229,7 +253,7 @@ const Help_Main_Content = () => {
                   </Link>
                   <Link
                     to="/help/getstarted/Info_Appointments"
-                    className={`block px-3 py-1 text-sm rounded-md transition-colors ${sidebarActive(
+                    className={`block px-3 py-1 text-sm rounded-md ${sidebarActive(
                       "/help/getstarted/Info_Appointments"
                     )}`}
                   >
@@ -238,7 +262,7 @@ const Help_Main_Content = () => {
                   {isTeacher && (
                     <Link
                       to="/help/getstarted/Info_Set_Schedule"
-                      className={`block px-3 py-1 text-sm rounded-md transition-colors ${sidebarActive(
+                      className={`block px-3 py-1 text-sm rounded-md ${sidebarActive(
                         "/help/getstarted/Info_Set_Schedule"
                       )}`}
                     >
@@ -247,7 +271,7 @@ const Help_Main_Content = () => {
                   )}
                   <Link
                     to="/help/getstarted/Info_History"
-                    className={`block px-3 py-1 text-sm rounded-md transition-colors ${sidebarActive(
+                    className={`block px-3 py-1 text-sm rounded-md ${sidebarActive(
                       "/help/getstarted/Info_History"
                     )}`}
                   >
@@ -255,7 +279,7 @@ const Help_Main_Content = () => {
                   </Link>
                   <Link
                     to="/help/getstarted/Info_Grade"
-                    className={`block px-3 py-1 text-sm rounded-md transition-colors ${sidebarActive(
+                    className={`block px-3 py-1 text-sm rounded-md ${sidebarActive(
                       "/help/getstarted/Info_Grade"
                     )}`}
                   >
@@ -271,15 +295,15 @@ const Help_Main_Content = () => {
                     <>
                       <Link
                         to="/help/features/Info_Polycon_Analysis"
-                        className={`block px-3 py-1 text-sm rounded-md transition-colors ${sidebarActive(
+                        className={`block px-3 py-1 text-sm rounded-md ${sidebarActive(
                           "/help/features/Info_Polycon_Analysis"
                         )}`}
                       >
                         Polycon Analysis
                       </Link>
-                        <Link
+                      <Link
                         to="/help/features/Info_Concern_Analysis"
-                        className={`block px-3 py-1 text-sm rounded-md transition-colors ${sidebarActive(
+                        className={`block px-3 py-1 text-sm rounded-md ${sidebarActive(
                           "/help/features/Info_Concern_Analysis"
                         )}`}
                       >
@@ -289,7 +313,7 @@ const Help_Main_Content = () => {
                   )}
                   <Link
                     to="/help/features/Info_Consultation_Booking"
-                    className={`block px-3 py-1 text-sm rounded-md transition-colors ${sidebarActive(
+                    className={`block px-3 py-1 text-sm rounded-md ${sidebarActive(
                       "/help/features/Info_Consultation_Booking"
                     )}`}
                   >
@@ -298,7 +322,7 @@ const Help_Main_Content = () => {
                   {isTeacher && (
                     <Link
                       to="/help/features/Info_Enrolled_Student"
-                      className={`block px-3 py-1 text-sm rounded-md transition-colors ${sidebarActive(
+                      className={`block px-3 py-1 text-sm rounded-md ${sidebarActive(
                         "/help/features/Info_Enrolled_Student"
                       )}`}
                     >
@@ -307,7 +331,7 @@ const Help_Main_Content = () => {
                   )}
                   <Link
                     to="/help/features/Info_Calendar_Management"
-                    className={`block px-3 py-1 text-sm rounded-md transition-colors ${sidebarActive(
+                    className={`block px-3 py-1 text-sm rounded-md ${sidebarActive(
                       "/help/features/Info_Calendar_Management"
                     )}`}
                   >
@@ -315,7 +339,7 @@ const Help_Main_Content = () => {
                   </Link>
                   <Link
                     to="/help/features/Info_Notifications"
-                    className={`block px-3 py-1 text-sm rounded-md transition-colors ${sidebarActive(
+                    className={`block px-3 py-1 text-sm rounded-md ${sidebarActive(
                       "/help/features/Info_Notifications"
                     )}`}
                   >
@@ -329,7 +353,7 @@ const Help_Main_Content = () => {
                 <nav className="space-y-2">
                   <Link
                     to="/help/support/FAQ"
-                    className={`block px-3 py-1 text-sm rounded-md transition-colors ${sidebarActive(
+                    className={`block px-3 py-1 text-sm rounded-md ${sidebarActive(
                       "/help/support/FAQ"
                     )}`}
                   >
@@ -337,7 +361,7 @@ const Help_Main_Content = () => {
                   </Link>
                   <Link
                     to="/help/support/Contact"
-                    className={`block px-3 py-1 text-sm rounded-md transition-colors ${sidebarActive(
+                    className={`block px-3 py-1 text-sm rounded-md ${sidebarActive(
                       "/help/support/Contact"
                     )}`}
                   >
@@ -359,7 +383,7 @@ const Help_Main_Content = () => {
               <input
                 type="text"
                 placeholder="Search help articles..."
-                className="w-full px-4 py-2 text-sm text-gray-700 placeholder-gray-400 bg-gray-100 rounded-lg focus:outline-none focus:ring-2 focus:ring-[#057DCD] focus:border-transparent"
+                className={`w-full px-4 py-2 text-sm text-gray-700 placeholder-gray-400 bg-gray-100 rounded-lg focus:outline-none focus:ring-2 focus:ring-[${PRIMARY_COLOR}] focus:border-transparent`}
                 value={searchQuery}
                 onChange={handleSearchChange}
               />
@@ -371,7 +395,7 @@ const Help_Main_Content = () => {
             location.pathname.toLowerCase().includes("/contact")
           ) && (
             <div className="hidden lg:block ml-4 w-64 flex-shrink-0">
-              <div className="sticky top-8">
+              <div className="sticky top-6">
                 <div className="bg-white rounded-lg shadow-sm border border-gray-200 p-6">
                   <h4 className="text-sm font-semibold text-gray-900 mb-4">
                     On this page
@@ -385,10 +409,10 @@ const Help_Main_Content = () => {
                           e.preventDefault();
                           handleLinkClick(link.href);
                         }}
-                        className={`block px-3 py-2 text-sm rounded-md transition-colors ${
+                        className={`block px-3 py-2 text-sm rounded-md transition-all duration-200 border-l-4 ${
                           link.href.substring(1) === activeSection
-                            ? "text-[#057DCD] bg-blue-50 font-medium"
-                            : "text-gray-600 hover:text-[#057DCD] hover:bg-blue-50"
+                            ? `text-[${PRIMARY_COLOR}] bg-blue-100 font-medium border-[${PRIMARY_COLOR}]`
+                            : `text-gray-600 hover:text-[${PRIMARY_COLOR}] hover:bg-blue-50 border-transparent`
                         }`}
                       >
                         {link.label}
