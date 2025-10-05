@@ -2,7 +2,7 @@ from flask import Blueprint, request, jsonify
 from flask_cors import cross_origin
 from models import db, User, Program, Department, Student, Faculty
 from extensions import bcrypt
-from services.email_service import send_verification_email_async
+from services.email_service_unified import send_verification_email_async
 from flask_jwt_extended import create_access_token, decode_token
 import datetime
 import uuid
