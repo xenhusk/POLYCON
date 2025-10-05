@@ -18,8 +18,8 @@ if ',' in cors_origins:
 else:
     allowed_origins = [cors_origins]
 
-# Get frontend URL for redirects (use the first allowed origin)
-frontend_url = allowed_origins[0]
+# Get frontend URL for redirects (prefer explicit env; fallback to first allowed origin)
+frontend_url = os.getenv('FRONTEND_URL', allowed_origins[0])
 
 @account_bp.route('/login', methods=['POST', 'OPTIONS'])
 @cross_origin(origins=allowed_origins, 

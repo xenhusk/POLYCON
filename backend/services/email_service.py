@@ -36,6 +36,8 @@ def _send_verification_email_once(to_email: str, verification_link: str, timeout
     <p>Welcome to POLYCON!</p>
     <p>Please verify your email by clicking the link below:</p>
     <a href='{verification_link}'>Verify Email</a>
+    <p style="margin-top:16px;color:#666;font-size:12px">If the button doesn't work, copy and paste this link into your browser:</p>
+    <p style="word-break:break-all;font-size:12px"><code>{verification_link}</code></p>
     <p>If you did not sign up, you can ignore this email.</p>
     """
 
