@@ -300,9 +300,7 @@ export default function Departments() {
                 <h1 className="text-4xl md:text-5xl lg:text-6xl font-bold text-white mb-4">
                   Department Management
                 </h1>
-                <p className="text-xl md:text-2xl text-blue-200 mb-2">
-                  Admin Dashboard
-                </p>
+                
                 <p className="text-lg text-blue-100 max-w-2xl mx-auto">
                   Organize and manage academic departments across the institution
                 </p>

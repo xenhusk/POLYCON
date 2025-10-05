@@ -590,9 +590,7 @@ const SemesterManagement = () => {
             <h1 className="text-4xl md:text-5xl lg:text-6xl font-bold text-white mb-4">
               Semester Management
             </h1>
-            <p className="text-xl md:text-2xl text-blue-200 mb-2">
-              Admin Dashboard
-            </p>
+            
             <p className="text-lg text-blue-100 max-w-2xl mx-auto">
               Manage academic semesters and teacher activation across the institution
             </p>

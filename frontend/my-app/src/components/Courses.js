@@ -307,14 +307,35 @@ export default function Courses() {
   const applyFilters = () => {
     setIsFiltering(true);
     
-    // Simulate a delay to show the preloader (adjust the delay as needed)
     setTimeout(() => {
       let filtered = courses;
+
+      // Text filter
       if (courseFilter) {
         filtered = filtered.filter((course) =>
           course.courseName.toLowerCase().includes(courseFilter.toLowerCase())
         );
       }
+
+      // Department filter (selectedDepartment holds the department NAME)
+      if (selectedDepartment) {
+        filtered = filtered.filter((course) => course.department === selectedDepartment);
+      }
+
+      // Program filter (filterSelectedPrograms holds program IDs; map to names to compare against course.program[])
+      if (filterSelectedPrograms.length > 0) {
+        const selectedProgramNames = programs
+          .filter((prog) => filterSelectedPrograms.includes(prog.id))
+          .map((prog) => prog.name);
+
+        if (selectedProgramNames.length > 0) {
+          filtered = filtered.filter((course) =>
+            Array.isArray(course.program) &&
+            selectedProgramNames.every((progName) => course.program.includes(progName))
+          );
+        }
+      }
+
       setFilteredCourses(filtered);
       setIsFiltering(false);
     }, 500);
@@ -337,52 +358,27 @@ export default function Courses() {
   const handleDepartmentFilterChange = (e) => {
     const selectedDeptName = e.target.value;
     setSelectedDepartment(selectedDeptName);
-  
-    // Find department ID using name
-    const selectedDept = departments.find(
-      (dept) => dept.name === selectedDeptName
-    );
+
+    // Find department ID using name, then stage the list of programs for UI only
+    const selectedDept = departments.find((dept) => dept.name === selectedDeptName);
     const selectedDeptId = selectedDept ? selectedDept.id : null;
-  
-    // Get programs belonging to the selected department
+
     if (selectedDeptId) {
-      const departmentPrograms = programs.filter(
-        (prog) => prog.departmentID === selectedDeptId
-      );
+      const departmentPrograms = programs.filter((prog) => prog.departmentID === selectedDeptId);
       setFilteredPrograms(departmentPrograms);
     } else {
       setFilteredPrograms([]);
     }
-  
-    // Filter courses based on selected department
-    const filtered = selectedDeptName
-      ? courses.filter((course) => course.department === selectedDeptName)
-      : courses;
-    setFilteredCourses(filtered);
+    // Do NOT update table here; will apply on Apply Filters
   };
   
   const handleProgramFilterChange = (programId) => {
     const updatedPrograms = filterSelectedPrograms.includes(programId)
       ? filterSelectedPrograms.filter((id) => id !== programId)
       : [...filterSelectedPrograms, programId];
-  
+
+    // Stage selection only; do not update table until Apply Filters
     setFilterSelectedPrograms(updatedPrograms);
-  
-    // Filter courses based on selected programs
-    const selectedProgramNames = programs
-      .filter((prog) => updatedPrograms.includes(prog.id))
-      .map((prog) => prog.name);
-  
-    const filtered =
-      selectedProgramNames.length > 0
-        ? courses.filter((course) =>
-            selectedProgramNames.every((progName) =>
-              course.program.includes(progName)
-            )
-          )
-        : courses;
-  
-    setFilteredCourses(filtered);
   };
   
   const handleProgramChange = (programId) => {
@@ -506,9 +502,7 @@ export default function Courses() {
             <h1 className="text-4xl md:text-5xl lg:text-6xl font-bold text-white mb-4">
               Course Management
             </h1>
-            <p className="text-xl md:text-2xl text-blue-200 mb-2">
-              Admin Dashboard
-            </p>
+            
             <p className="text-lg text-blue-100 max-w-2xl mx-auto">
               Manage and organize academic courses across departments and programs
             </p>
@@ -750,6 +744,7 @@ export default function Courses() {
                   setTimeout(() => {
                     setFilterClicked(false);
                     applyFilters();
+                    setShowFilters(false);
                   }, 300);
                 }}
                 className={`flex-1 py-4 bg-gradient-to-r from-[#0065A8] to-[#057DCD] hover:from-[#057DCD] hover:to-[#0065A8] text-white text-center justify-center transition-all duration-300 flex items-center gap-2 text-sm font-semibold rounded-xl shadow-lg hover:shadow-xl ${
