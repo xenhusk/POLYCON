@@ -122,7 +122,7 @@ const Help_Concern_Analysis = () => {
         </div>
 
         {/* Analysis Features */}
-        <div className="p-4 sm:p-6 lg:p-8" id="analysis_features">
+        <div className="p-4 sm:p-6 lg:p-8" id="concern_analysis_features">
           <h2 className="text-xl font-semibold text-gray-900 mb-6">
             Analysis Features
           </h2>
@@ -150,7 +150,7 @@ const Help_Concern_Analysis = () => {
         </div>
 
         {/* Tips & Best Practices */}
-        <div className="p-4 sm:p-6 lg:p-8 bg-gray-50 border-t border-gray-200" id="tips_analysis">
+        <div className="p-4 sm:p-6 lg:p-8 bg-gray-50 border-t border-gray-200" id="tips_concern_analysis">
           <h2 className="text-lg font-semibold text-gray-900 mb-4">
             Tips & Best Practices
           </h2>

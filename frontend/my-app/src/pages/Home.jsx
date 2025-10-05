@@ -718,7 +718,7 @@ const About = ({ animateSection, openCardId, handleCardToggle }) => {
           className="text-center mb-8 sm:mb-12 lg:mb-16"
         >
           <h2 className="text-3xl sm:text-4xl lg:text-5xl font-bold text-[#057DCD] mb-4 sm:mb-6">
-            About POLYCON
+            About Us
           </h2>
           <div className="w-20 sm:w-24 h-1 bg-[#057DCD] mx-auto"></div>
         </motion.div>
@@ -1074,7 +1074,7 @@ const About = ({ animateSection, openCardId, handleCardToggle }) => {
                 <span className="font-semibold text-[#057DCD]">
                   Develorant group
                 </span>
-                , we are 3rd-year Bachelor of Science in Computer Science
+                , we are 4th-year Bachelor of Science in Computer Science
                 students at
                 <span className="font-medium"> STI West Negros University</span>
                 .

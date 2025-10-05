@@ -12,6 +12,7 @@ const Help = () => {
   const [isMenuOpen, setIsMenuOpen] = useState(false);
   const [isTeacher, setIsTeacher] = React.useState(false);
   const [isStudent, setIsStudent] = React.useState(false);
+  const [isLoggedIn, setIsLoggedIn] = useState(false); 
 
   useEffect(() => {
     if (isMenuOpen && window.innerWidth < 1024) {
@@ -41,7 +42,11 @@ const Help = () => {
     const role = localStorage.getItem("userRole");
     setIsTeacher(role === "faculty");
     setIsStudent(role === "student");
+    setIsLoggedIn(!!localStorage.getItem("token")); // Check if token exists
   }, []);
+
+  const buttontext = isLoggedIn ? "Dashboard" : "Sign In";
+  const buttonlink = isLoggedIn ? "/dashboard" : "/login";
 
   return (
     <div className="min-h-screen flex flex-col bg-gray-50 overflow-hidden">
@@ -129,7 +134,10 @@ const Help = () => {
       >
         {/* Menu Header */}
         <div className="flex items-center justify-between py-5 px-6 border-b bg-gradient-to-r from-[#057DCD] to-[#00a3ff]">
-          <div className="flex items-center space-x-2">
+          <div 
+            onClick={() => navigate("/")}
+            className="flex items-center space-x-2"
+          >
             <img
               src={logo}
               alt="POLYCON Logo"
@@ -299,14 +307,17 @@ const Help = () => {
         {/* Menu Footer */}
         <div className="p-3 border-t fixed bottom-0 right-0 left-0 border-gray-200 bg-white">
           <motion.button
-            whileHover={{ scale: 1.02 }}
-            whileTap={{ scale: 0.98 }}
-            onClick={() => navigate("/login")}
-            className="bg-[#0056a6] text-white text-base w-full px-4 py-3 rounded-md font-semibold
-           transition-all duration-200 hover:bg-[#0078e7] hover:shadow-md"
-          >
-            Sign In
-          </motion.button>
+                whileHover={{ scale: 1.02 }}
+                whileTap={{ scale: 0.98 }}
+                onClick={() => {
+                    setIsMenuOpen(false);
+                    navigate(buttonlink);
+                }}
+                className="bg-[#0056a6] text-white text-base w-full px-4 py-3 rounded-md font-semibold
+                transition-all duration-200 hover:bg-[#0078e7] hover:shadow-md"
+            >
+                {buttontext} 
+            </motion.button>
         </div>
       </motion.div>
 

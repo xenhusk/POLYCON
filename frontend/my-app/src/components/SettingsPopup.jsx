@@ -109,7 +109,9 @@ const SettingsPopup = ({
             // Register SW on mobile before requesting permission
             await registerNotificationServiceWorker();
           }
-          const granted = await requestNotificationPermissionWithInstructions(true);
+          const granted = await requestNotificationPermissionWithInstructions(
+            true
+          );
 
           if (granted) {
             const result = toggleNotifications(true);
@@ -221,14 +223,33 @@ const SettingsPopup = ({
                 <div className="relative flex justify-between items-center px-6 py-4">
                   <div className="flex items-center gap-3">
                     <div className="w-8 h-8 bg-gradient-to-br from-[#057DCD] to-[#046bb8] rounded-full flex items-center justify-center shadow-lg">
-                      <svg className="w-4 h-4 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M10.325 4.317c.426-1.756 2.924-1.756 3.35 0a1.724 1.724 0 002.573 1.066c1.543-.94 3.31.826 2.37 2.37a1.724 1.724 0 001.065 2.572c1.756.426 1.756 2.924 0 3.35a1.724 1.724 0 00-1.066 2.573c.94 1.543-.826 3.31-2.37 2.37a1.724 1.724 0 00-2.572 1.065c-.426 1.756-2.924 1.756-3.35 0a1.724 1.724 0 00-2.573-1.066c-1.543.94-3.31-.826-2.37-2.37a1.724 1.724 0 00-1.065-2.572c-1.756-.426-1.756-2.924 0-3.35a1.724 1.724 0 001.066-2.573c-.94-1.543.826-3.31 2.37-2.37.996.608 2.296.07 2.572-1.065z" />
-                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" />
+                      <svg
+                        className="w-4 h-4 text-white"
+                        fill="none"
+                        stroke="currentColor"
+                        viewBox="0 0 24 24"
+                      >
+                        <path
+                          strokeLinecap="round"
+                          strokeLinejoin="round"
+                          strokeWidth={2}
+                          d="M10.325 4.317c.426-1.756 2.924-1.756 3.35 0a1.724 1.724 0 002.573 1.066c1.543-.94 3.31.826 2.37 2.37a1.724 1.724 0 001.065 2.572c1.756.426 1.756 2.924 0 3.35a1.724 1.724 0 00-1.066 2.573c.94 1.543-.826 3.31-2.37 2.37a1.724 1.724 0 00-2.572 1.065c-.426 1.756-2.924 1.756-3.35 0a1.724 1.724 0 00-2.573-1.066c-1.543.94-3.31-.826-2.37-2.37a1.724 1.724 0 00-1.065-2.572c-1.756-.426-1.756-2.924 0-3.35a1.724 1.724 0 001.066-2.573c-.94-1.543.826-3.31 2.37-2.37.996.608 2.296.07 2.572-1.065z"
+                        />
+                        <path
+                          strokeLinecap="round"
+                          strokeLinejoin="round"
+                          strokeWidth={2}
+                          d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"
+                        />
                       </svg>
                     </div>
                     <div>
-                      <h3 className="text-lg font-bold text-gray-800">Settings</h3>
-                      <p className="text-xs text-gray-600">Manage your preferences</p>
+                      <h3 className="text-lg font-bold text-gray-800">
+                        Settings
+                      </h3>
+                      <p className="text-xs text-gray-600">
+                        Manage your preferences
+                      </p>
                     </div>
                   </div>
                   <motion.button
@@ -287,7 +308,9 @@ const SettingsPopup = ({
                     </div>
                     <div>
                       <span className="font-medium">Change Password</span>
-                      <p className="text-xs text-gray-500">Update your account security</p>
+                      <p className="text-xs text-gray-500">
+                        Update your account security
+                      </p>
                     </div>
                   </motion.button>
                 </div>
@@ -305,7 +328,7 @@ const SettingsPopup = ({
                       </p>
 
                       {/* Browser Notifications Toggle */}
-                      <motion.div 
+                      <motion.div
                         whileHover={{ scale: 1.02 }}
                         className="flex items-center justify-between px-4 py-3 hover:bg-gradient-to-r hover:from-blue-50 hover:to-indigo-50 rounded-xl transition-all duration-200 border border-transparent hover:border-blue-200 mb-2"
                       >
@@ -351,24 +374,24 @@ const SettingsPopup = ({
                       </motion.div>
 
                       {/* Sound Notifications Toggle */}
-                      <motion.div 
+                      <motion.div
                         whileHover={{ scale: 1.02 }}
                         className="flex items-center justify-between px-4 py-3 hover:bg-gradient-to-r hover:from-blue-50 hover:to-indigo-50 rounded-xl transition-all duration-200 border border-transparent hover:border-blue-200"
                       >
                         <div className="flex items-center">
                           <div className="w-10 h-10 bg-gradient-to-br from-[#057DCD] to-[#046bb8] rounded-lg flex items-center justify-center mr-3 shadow-md">
-                            <svg 
-                              xmlns="http://www.w3.org/2000/svg" 
-                              className="h-5 w-5 text-white" 
-                              viewBox="0 0 24 24" 
-                              fill="none" 
+                            <svg
+                              xmlns="http://www.w3.org/2000/svg"
+                              className="h-5 w-5 text-white"
+                              viewBox="0 0 24 24"
+                              fill="none"
                               stroke="currentColor"
                             >
-                              <path 
-                                d="M15.536 8.464a5 5 0 010 7.072m2.828-9.9a9 9 0 010 12.728M5.586 15H4a1 1 0 01-1-1v-4a1 1 0 011-1h1.586l4.707-4.707C10.923 3.663 12 4.109 12 5v14c0 .891-1.077 1.337-1.707.707L5.586 15z" 
-                                strokeWidth="2" 
-                                strokeLinecap="round" 
-                                strokeLinejoin="round" 
+                              <path
+                                d="M15.536 8.464a5 5 0 010 7.072m2.828-9.9a9 9 0 010 12.728M5.586 15H4a1 1 0 01-1-1v-4a1 1 0 011-1h1.586l4.707-4.707C10.923 3.663 12 4.109 12 5v14c0 .891-1.077 1.337-1.707.707L5.586 15z"
+                                strokeWidth="2"
+                                strokeLinecap="round"
+                                strokeLinejoin="round"
                               />
                             </svg>
                           </div>
@@ -400,6 +423,7 @@ const SettingsPopup = ({
                   </>
                 )}
 
+                {/* Help Section - only for non-admin users */}
                 {!isAdmin && (
                   <div className="px-6 py-2">
                     <p className="text-sm font-semibold text-gray-500 uppercase tracking-wider mb-2">
@@ -474,7 +498,9 @@ const SettingsPopup = ({
                     </div>
                     <div>
                       <span className="font-medium">Logout</span>
-                      <p className="text-xs text-red-500">Sign out of your account</p>
+                      <p className="text-xs text-red-500">
+                        Sign out of your account
+                      </p>
                     </div>
                   </motion.button>
                 </div>
@@ -490,9 +516,9 @@ const SettingsPopup = ({
             transition={{ duration: 0.2 }}
             className="fixed bg-white/95 backdrop-blur-sm rounded-2xl shadow-2xl border border-white/20 w-72 py-4 z-[1000]"
             style={{
-              left: '20px',
-              top: '50%',
-              marginTop: '-180px', // Half of modal height (approximately 360px total)
+              left: "20px",
+              top: "50%",
+              marginTop: "-180px", // Half of modal height (approximately 360px total)
             }}
           >
             {/* Header with gradient background */}
@@ -501,13 +527,30 @@ const SettingsPopup = ({
               <div className="relative px-4 py-2">
                 <div className="flex items-center gap-2">
                   <div className="w-6 h-6 bg-gradient-to-br from-[#057DCD] to-[#046bb8] rounded-full flex items-center justify-center shadow-lg">
-                    <svg className="w-3 h-3 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M10.325 4.317c.426-1.756 2.924-1.756 3.35 0a1.724 1.724 0 002.573 1.066c1.543-.94 3.31.826 2.37 2.37a1.724 1.724 0 001.065 2.572c1.756.426 1.756 2.924 0 3.35a1.724 1.724 0 00-1.066 2.573c.94 1.543-.826 3.31-2.37 2.37a1.724 1.724 0 00-2.572 1.065c-.426 1.756-2.924 1.756-3.35 0a1.724 1.724 0 00-2.573-1.066c-1.543.94-3.31-.826-2.37-2.37a1.724 1.724 0 00-1.065-2.572c-1.756-.426-1.756-2.924 0-3.35a1.724 1.724 0 001.066-2.573c-.94-1.543.826-3.31 2.37-2.37.996.608 2.296.07 2.572-1.065z" />
-                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" />
+                    <svg
+                      className="w-3 h-3 text-white"
+                      fill="none"
+                      stroke="currentColor"
+                      viewBox="0 0 24 24"
+                    >
+                      <path
+                        strokeLinecap="round"
+                        strokeLinejoin="round"
+                        strokeWidth={2}
+                        d="M10.325 4.317c.426-1.756 2.924-1.756 3.35 0a1.724 1.724 0 002.573 1.066c1.543-.94 3.31.826 2.37 2.37a1.724 1.724 0 001.065 2.572c1.756.426 1.756 2.924 0 3.35a1.724 1.724 0 00-1.066 2.573c.94 1.543-.826 3.31-2.37 2.37a1.724 1.724 0 00-2.572 1.065c-.426 1.756-2.924 1.756-3.35 0a1.724 1.724 0 00-2.573-1.066c-1.543.94-3.31-.826-2.37-2.37a1.724 1.724 0 00-1.065-2.572c-1.756-.426-1.756-2.924 0-3.35a1.724 1.724 0 001.066-2.573c-.94-1.543.826-3.31 2.37-2.37.996.608 2.296.07 2.572-1.065z"
+                      />
+                      <path
+                        strokeLinecap="round"
+                        strokeLinejoin="round"
+                        strokeWidth={2}
+                        d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"
+                      />
                     </svg>
                   </div>
                   <div>
-                    <h3 className="text-base font-bold text-gray-800">Settings</h3>
+                    <h3 className="text-base font-bold text-gray-800">
+                      Settings
+                    </h3>
                     <p className="text-xs text-gray-600">Manage preferences</p>
                   </div>
                 </div>
@@ -559,7 +602,7 @@ const SettingsPopup = ({
                   </p>
 
                   {/* Browser Notifications Toggle */}
-                  <motion.div 
+                  <motion.div
                     whileHover={{ scale: 1.02 }}
                     className="flex items-center justify-between px-3 py-2 hover:bg-gradient-to-r hover:from-blue-50 hover:to-indigo-50 rounded-lg transition-all duration-200 border border-transparent hover:border-blue-200 mb-1"
                   >
@@ -580,7 +623,9 @@ const SettingsPopup = ({
                           />
                         </svg>
                       </div>
-                      <span className="text-sm font-medium text-gray-700">Desktop Alerts</span>
+                      <span className="text-sm font-medium text-gray-700">
+                        Desktop Alerts
+                      </span>
                     </div>
                     <label className="relative inline-flex items-center cursor-pointer">
                       <input
@@ -594,7 +639,7 @@ const SettingsPopup = ({
                   </motion.div>
 
                   {/* Sound Notifications Toggle */}
-                  <motion.div 
+                  <motion.div
                     whileHover={{ scale: 1.02 }}
                     className="flex items-center justify-between px-3 py-2 hover:bg-gradient-to-r hover:from-blue-50 hover:to-indigo-50 rounded-lg transition-all duration-200 border border-transparent hover:border-blue-200"
                   >
@@ -615,7 +660,9 @@ const SettingsPopup = ({
                           />
                         </svg>
                       </div>
-                      <span className="text-sm font-medium text-gray-700">Sound Alerts</span>
+                      <span className="text-sm font-medium text-gray-700">
+                        Sound Alerts
+                      </span>
                     </div>
                     <label className="relative inline-flex items-center cursor-pointer">
                       <input
@@ -630,50 +677,68 @@ const SettingsPopup = ({
                 </div>
               </>
             )}
-{/* 
-            <div className="h-[1px] bg-gray-200 my-2" />
 
-            <div className="px-4 py-2">
-              <p className="text-sm font-semibold text-gray-500">Help</p>
-              <a
-                href="/help/getstarted/"
-                target="_blank"
-                rel="noopener noreferrer"
-                className="w-full text-left px-3 py-2 text-sm text-gray-700 hover:bg-gray-100 rounded flex items-center"
-              >
-                <svg
-                  xmlns="http://www.w3.org/2000/svg"
-                  className="h-5 w-5 mr-2 text-gray-500"
-                  fill="none"
-                  viewBox="0 0 24 24"
-                  stroke="currentColor"
-                >
-                  <circle
-                    cx="12"
-                    cy="12"
-                    r="10"
-                    stroke="currentColor"
-                    strokeWidth="2"
-                    fill="#fff"
-                  />
-                  <path
-                    d="M12 16h.01M12 12a2 2 0 10-2-2"
-                    stroke="currentColor"
-                    strokeWidth="2"
-                    strokeLinecap="round"
-                    strokeLinejoin="round"
-                  />
-                  <path
-                    d="M12 14v-1"
-                    stroke="currentColor"
-                    strokeWidth="2"
-                    strokeLinecap="round"
-                    strokeLinejoin="round"
-                  />
-                </svg>
-                Get Help
-              </a>
-            </div> */}
+            {/* Help Section - only for non-admin users */}
+            {!isAdmin && (
+              <>
+                <div className="h-px bg-gradient-to-r from-transparent via-gray-200 to-transparent my-2" />
+
+                <div className="px-4 py-2">
+                  {/* Header - Matched to Notifications Style */}
+                  <p className="text-xs font-semibold text-gray-700 mb-2 flex items-center gap-2">
+                    <div className="w-1.5 h-1.5 bg-[#057DCD] rounded-full"></div>
+                    Help
+                  </p>
+
+                  {/* Help Link - Matched to Notifications Toggle Style */}
+                  <motion.a
+                    href="/help/getstarted/"
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    whileHover={{ scale: 1.02 }}
+                    className="flex items-center w-full text-left px-3 py-2 text-sm font-medium text-gray-700 hover:bg-gradient-to-r hover:from-blue-50 hover:to-indigo-50 rounded-lg transition-all duration-200 border border-transparent hover:border-blue-200"
+                  >
+                    <div className="flex items-center">
+                      {/* Icon Container - Matched to Notifications Icon Style */}
+                      <div className="w-6 h-6 bg-gradient-to-br from-[#057DCD] to-[#046bb8] rounded-md flex items-center justify-center mr-2 shadow-md">
+                        {/* Help Icon (Question Mark in Circle) */}
+                        <svg
+                          xmlns="http://www.w3.org/2000/svg"
+                          className="h-3 w-3 text-white"
+                          fill="none"
+                          viewBox="0 0 24 24"
+                          stroke="currentColor"
+                        >
+                          <path
+                            strokeLinecap="round"
+                            strokeLinejoin="round"
+                            strokeWidth={2}
+                            d="M8.228 9.228a4 4 0 014.224-4.224m-4.224 4.224a4 4 0 014.224-4.224m-4.224 4.224L10 11m4 0l-1.776 1.776M14 11l-1.776 1.776m0 0l-1.414 1.414m1.414-1.414l-1.414 1.414"
+                            stroke="#fff"
+                          />
+                          <circle
+                            cx="12"
+                            cy="12"
+                            r="10"
+                            stroke="currentColor"
+                            strokeWidth="2"
+                            fill="none"
+                          />
+                          <path
+                            d="M12 16h.01M12 12a2 2 0 10-2-2"
+                            stroke="#fff"
+                            strokeWidth="2"
+                            strokeLinecap="round"
+                            strokeLinejoin="round"
+                          />
+                        </svg>
+                      </div>
+                      <span>Get Help</span>
+                    </div>
+                  </motion.a>
+                </div>
+              </>
+            )}
 
             {/* Divider */}
             <div className="h-px bg-gradient-to-r from-transparent via-gray-200 to-transparent my-2" />
