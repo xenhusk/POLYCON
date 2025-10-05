@@ -5,12 +5,18 @@ import os
 import time
 import threading
 
-def _send_verification_email_once(to_email: str, verification_link: str, timeout_seconds: int = 10) -> bool:
+def _send_verification_email_once(to_email: str, verification_link: str, timeout_seconds: int | None = None) -> bool:
     smtp_server = os.getenv('SMTP_SERVER', 'smtp.gmail.com')  # Use Gmail SMTP by default
     smtp_port = int(os.getenv('SMTP_PORT', 587))
     smtp_user = os.getenv('SMTP_USER')
     smtp_password = os.getenv('SMTP_PASSWORD')
     from_email = os.getenv('FROM_EMAIL', smtp_user)
+    # Allow configurable timeout via env; default 10s
+    if timeout_seconds is None:
+        try:
+            timeout_seconds = int(os.getenv('SMTP_TIMEOUT', '10'))
+        except Exception:
+            timeout_seconds = 10
 
     print(f"[DEBUG] SMTP_SERVER: {smtp_server}")
     print(f"[DEBUG] SMTP_PORT: {smtp_port}")
@@ -39,29 +45,50 @@ def _send_verification_email_once(to_email: str, verification_link: str, timeout
     msg['Subject'] = str(subject)  # Set subject directly as a string
     msg.attach(MIMEText(body, 'html'))
 
+    # Try STARTTLS first (587); if it fails or port is 465, try SSL
     try:
-        with smtplib.SMTP(smtp_server, smtp_port, timeout=timeout_seconds) as server:
-            server.ehlo()
-            server.starttls()
-            server.ehlo()
-            server.login(smtp_user, smtp_password)
-            server.sendmail(from_email, to_email, msg.as_string())
+        if smtp_port == 465:
+            with smtplib.SMTP_SSL(smtp_server, smtp_port, timeout=timeout_seconds) as server:
+                server.ehlo()
+                server.login(smtp_user, smtp_password)
+                server.sendmail(from_email, to_email, msg.as_string())
+        else:
+            with smtplib.SMTP(smtp_server, smtp_port, timeout=timeout_seconds) as server:
+                server.ehlo()
+                server.starttls()
+                server.ehlo()
+                server.login(smtp_user, smtp_password)
+                server.sendmail(from_email, to_email, msg.as_string())
         print(f"Verification email sent to {to_email}: {verification_link}")
         return True
-    except Exception as e:
-        print(f"[ERROR] Failed to send email (single attempt): {e}")
-        return False
+    except Exception as e1:
+        print(f"[WARN] STARTTLS/primary attempt failed: {e1}")
+        # Fallback: try SSL on 465 if not already
+        try:
+            with smtplib.SMTP_SSL(smtp_server, 465, timeout=timeout_seconds) as server:
+                server.ehlo()
+                server.login(smtp_user, smtp_password)
+                server.sendmail(from_email, to_email, msg.as_string())
+            print(f"Verification email sent via SSL fallback to {to_email}: {verification_link}")
+            return True
+        except Exception as e2:
+            print(f"[ERROR] SSL fallback failed: {e2}")
+            return False
 
 
 def send_verification_email(to_email: str, verification_link: str, max_retries: int = 3, base_backoff_seconds: float = 1.0) -> bool:
     """Synchronous send with retry/backoff. Returns True on success, False otherwise."""
+    last_error = None
     for attempt in range(max_retries):
         success = _send_verification_email_once(to_email, verification_link)
         if success:
             return True
+        # Capture last error from logs by hinting which attempt failed
+        last_error = f"attempt {attempt + 1} failed"
         sleep_seconds = base_backoff_seconds * (2 ** attempt)
-        print(f"[WARN] Retry send_verification_email attempt {attempt + 1}/{max_retries} failed. Backing off {sleep_seconds:.1f}s")
+        print(f"[WARN] Retry send_verification_email {last_error}. Backing off {sleep_seconds:.1f}s")
         time.sleep(sleep_seconds)
+    print(f"[ERROR] send_verification_email failed after {max_retries} attempts for {to_email}")
     return False
 
 
@@ -70,7 +97,7 @@ def send_verification_email_async(to_email: str, verification_link: str, max_ret
     def _runner():
         result = send_verification_email(to_email, verification_link, max_retries=max_retries, base_backoff_seconds=base_backoff_seconds)
         if not result:
-            print(f"[ERROR] All attempts to send verification email to {to_email} failed")
+            print(f"[ERROR] All attempts to send verification email to {to_email} failed. Check prior SMTP warnings for root cause (auth, network, or TLS).")
 
     thread = threading.Thread(target=_runner, daemon=True)
     thread.start()

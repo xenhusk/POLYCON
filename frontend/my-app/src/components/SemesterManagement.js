@@ -636,6 +636,35 @@ const SemesterManagement = () => {
           style={{ zIndex: 10 }}
         >
           <div className="w-full max-w-6xl">
+            {/* Search Card */}
+            <div className="bg-white/80 backdrop-blur-sm rounded-2xl shadow-xl border border-white/20 p-6 mb-6 relative" style={{ zIndex: 11, overflow: 'visible' }}>
+              <div className="flex items-center gap-3 mb-4">
+                <div className="w-10 h-10 bg-gradient-to-r from-[#0065A8] to-[#057DCD] rounded-full flex items-center justify-center">
+                  <svg className="w-5 h-5 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
+                  </svg>
+                </div>
+                <h3 className="text-xl font-bold text-gray-800">Search Teachers</h3>
+              </div>
+
+              <div className="relative w-full" style={{ zIndex: 12 }}>
+                <div className="bg-white border-2 border-gray-200 rounded-xl px-4 py-3 shadow-sm flex items-center min-h-[50px] w-full gap-2 hover:border-[#0065A8] transition-colors">
+                  <div className="absolute inset-y-0 left-0 pl-4 flex items-center pointer-events-none">
+                    <svg className="w-5 h-5 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
+                    </svg>
+                  </div>
+                  <input 
+                    type="text"
+                    value={teacherSearchTerm}
+                    onChange={handleTeacherSearchChange}
+                    placeholder="Search teachers by name..."
+                    className="w-full pl-12 pr-4 py-3 bg-transparent border-none focus:ring-0 outline-none text-gray-700 placeholder-gray-400"
+                  />
+                </div>
+              </div>
+            </div>
+
             {/* Action Buttons */}
             <div className="flex flex-wrap gap-3 justify-center sm:justify-start">
               <motion.button
@@ -648,6 +677,16 @@ const SemesterManagement = () => {
                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z" />
                 </svg>
                 Manage Semester
+              </motion.button>
+
+              <motion.button
+                whileHover={{ scale: 1.05 }}
+                whileTap={{ scale: 0.95 }}
+                onClick={() => setShowDepartmentModal(true)}
+                className="w-14 h-12 sm:w-auto bg-gradient-to-r from-[#057DCD] to-[#54BEFF] text-white px-4 sm:px-6 py-3 rounded-xl shadow-lg hover:shadow-xl transition-all duration-200 flex items-center justify-center gap-2 font-semibold"
+              >
+                <FilterIcon className="w-5 h-5" />
+                <span className="hidden sm:inline">Filter</span>
               </motion.button>
             </div>
           </div>
