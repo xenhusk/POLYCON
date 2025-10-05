@@ -2,8 +2,10 @@ import smtplib
 from email.mime.text import MIMEText
 from email.mime.multipart import MIMEMultipart
 import os
+import time
+import threading
 
-def send_verification_email(to_email, verification_link):
+def _send_verification_email_once(to_email: str, verification_link: str, timeout_seconds: int = 10) -> bool:
     smtp_server = os.getenv('SMTP_SERVER', 'smtp.gmail.com')  # Use Gmail SMTP by default
     smtp_port = int(os.getenv('SMTP_PORT', 587))
     smtp_user = os.getenv('SMTP_USER')
@@ -35,17 +37,43 @@ def send_verification_email(to_email, verification_link):
     msg['From'] = str(from_email) if from_email is not None else ''
     msg['To'] = str(to_email) if to_email is not None else ''
     msg['Subject'] = str(subject)  # Set subject directly as a string
-    msg.attach(MIMEText(body, 'html'))    
+    msg.attach(MIMEText(body, 'html'))
+
     try:
-        with smtplib.SMTP(smtp_server, smtp_port) as server:
+        with smtplib.SMTP(smtp_server, smtp_port, timeout=timeout_seconds) as server:
+            server.ehlo()
             server.starttls()
+            server.ehlo()
             server.login(smtp_user, smtp_password)
             server.sendmail(from_email, to_email, msg.as_string())
         print(f"Verification email sent to {to_email}: {verification_link}")
         return True
     except Exception as e:
-        print(f"[ERROR] Failed to send email: {e}")
+        print(f"[ERROR] Failed to send email (single attempt): {e}")
         return False
+
+
+def send_verification_email(to_email: str, verification_link: str, max_retries: int = 3, base_backoff_seconds: float = 1.0) -> bool:
+    """Synchronous send with retry/backoff. Returns True on success, False otherwise."""
+    for attempt in range(max_retries):
+        success = _send_verification_email_once(to_email, verification_link)
+        if success:
+            return True
+        sleep_seconds = base_backoff_seconds * (2 ** attempt)
+        print(f"[WARN] Retry send_verification_email attempt {attempt + 1}/{max_retries} failed. Backing off {sleep_seconds:.1f}s")
+        time.sleep(sleep_seconds)
+    return False
+
+
+def send_verification_email_async(to_email: str, verification_link: str, max_retries: int = 3, base_backoff_seconds: float = 1.0) -> None:
+    """Fire-and-forget background sender to avoid blocking request thread."""
+    def _runner():
+        result = send_verification_email(to_email, verification_link, max_retries=max_retries, base_backoff_seconds=base_backoff_seconds)
+        if not result:
+            print(f"[ERROR] All attempts to send verification email to {to_email} failed")
+
+    thread = threading.Thread(target=_runner, daemon=True)
+    thread.start()
 
 def send_password_reset_email(to_email, reset_link, user_name):
     smtp_server = os.getenv('SMTP_SERVER', 'smtp.gmail.com')
