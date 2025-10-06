@@ -7,7 +7,8 @@ const EmailVerificationModal = ({
   isOpen, 
   onClose, 
   email = '',
-  onSuccess = null 
+  onSuccess = null,
+  onCloseSignup = null 
 }) => {
   const [verificationStatus, setVerificationStatus] = useState('manual'); // 'loading', 'success', 'error', 'resent', 'manual'
   const [message, setMessage] = useState('');
@@ -163,7 +164,10 @@ const EmailVerificationModal = ({
       >
         {/* Close Button */}
         <button
-          onClick={onClose}
+          onClick={() => {
+            onClose();
+            if (onCloseSignup) onCloseSignup();
+          }}
           className="absolute top-4 right-4 text-gray-400 hover:text-gray-600 transition-colors"
         >
           <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -305,7 +309,10 @@ const EmailVerificationModal = ({
           <motion.button
             whileHover={{ scale: 1.05 }}
             whileTap={{ scale: 0.95 }}
-            onClick={onClose}
+            onClick={() => {
+              onClose();
+              if (onCloseSignup) onCloseSignup();
+            }}
             className="w-full border-2 border-[#057DCD] text-[#057DCD] py-3 px-6 rounded-full font-semibold hover:bg-[#057DCD] hover:text-white transition-colors duration-200"
           >
             Close

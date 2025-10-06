@@ -27,6 +27,7 @@ const VerificationModalDemo = () => {
               <li>• Beautiful animations</li>
               <li>• Email input field</li>
               <li>• Status indicators</li>
+              <li>• Close button closes signup modal</li>
             </ul>
           </div>
         </div>
@@ -38,6 +39,10 @@ const VerificationModalDemo = () => {
           email="test@wnu.sti.edu.ph"
           onSuccess={() => {
             console.log('Verification successful!');
+            setShowModal(false);
+          }}
+          onCloseSignup={() => {
+            console.log('Closing signup and switching to login!');
             setShowModal(false);
           }}
         />

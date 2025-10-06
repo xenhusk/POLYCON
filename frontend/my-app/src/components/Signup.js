@@ -660,6 +660,11 @@ const Signup = ({ onSwitchToLogin }) => {
           // Optionally redirect to login or show success message
           console.log('Email verification successful');
         }}
+        onCloseSignup={() => {
+          // Close verification modal and switch to login
+          setShowVerificationModal(false);
+          if (onSwitchToLogin) onSwitchToLogin();
+        }}
       />
     </div>
   );
