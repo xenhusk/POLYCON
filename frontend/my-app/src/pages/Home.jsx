@@ -973,7 +973,7 @@ const About = ({ animateSection, openCardId, handleCardToggle }) => {
               {/* Kurt Zhynkent Canja */}
               <TeamMemberCard
                 name="Kurt Zhynkent Canja"
-                role="Systems Analyst"
+                role="System Analyst"
                 quote="Building bridges between ideas and reality."
                 profileImage={Person1}
                 gradientColors="from-green-400 to-green-600"

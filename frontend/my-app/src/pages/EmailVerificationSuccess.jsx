@@ -48,14 +48,14 @@ const EmailVerificationSuccess = () => {
         </p>
 
         {/* Login Button */}
-        <motion.button
+        {/* <motion.button
           whileHover={{ scale: 1.02 }}
           whileTap={{ scale: 0.98 }}
           onClick={handleLoginRedirect}
           className="w-full bg-[#057DCD] text-white py-3 px-6 rounded-lg font-semibold hover:bg-[#046bb8] transition-colors duration-200"
         >
-          Continue to Login
-        </motion.button>
+          Go to Login
+        </motion.button> */}
 
         {/* Additional Info */}
         <p className="text-sm text-gray-500 mt-6">

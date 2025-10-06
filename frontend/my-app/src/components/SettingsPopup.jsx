@@ -195,6 +195,36 @@ const SettingsPopup = ({
 
   if (!isVisible && !showPasswordModal) return null;
 
+  const InteractiveRow = ({ children, isLink = false, href = '#', className = '' }) => {
+    const Component = isLink ? 'a' : 'div';
+    
+    // Using standard Tailwind classes to mimic the subtle hover effect (scale 1.02)
+    const baseClasses = "flex items-center justify-between px-4 py-3 rounded-xl transition-all duration-300 transform hover:scale-[1.02] hover:bg-gradient-to-r hover:from-blue-50 hover:to-indigo-50 border border-transparent hover:border-blue-200 cursor-pointer";
+
+    if (isLink) {
+        return (
+            <Component href={href} target="_blank" rel="noopener noreferrer" className={`${baseClasses} ${className}`}>
+                {children}
+            </Component>
+        );
+    }
+    
+    return (
+        <Component className={`${baseClasses} ${className}`}>
+            {children}
+        </Component>
+    );
+};
+
+// Common Icon style for consistency (w-10 h-10, rounded-lg)
+// This is also moved OUTSIDE the App component.
+const IconContainer = ({ children }) => (
+    <div className="w-10 h-10 bg-gradient-to-br from-[#057DCD] to-[#046bb8] rounded-lg flex items-center justify-center mr-3 shadow-md">
+      {children}
+    </div>
+);
+
+
   return (
     <>
       {/* Backdrop - only apply darkening and blur on mobile */}
@@ -425,48 +455,60 @@ const SettingsPopup = ({
 
                 {/* Help Section - only for non-admin users */}
                 {!isAdmin && (
-                  <div className="px-6 py-2">
-                    <p className="text-sm font-semibold text-gray-500 uppercase tracking-wider mb-2">
-                      Security
+                  <div className="px-6 py-3">
+                    {/* Header (Matched to Notifications Mobile Style) */}
+                    <p className="text-sm font-semibold text-gray-700 mb-3 flex items-center gap-2">
+                      <div className="w-2 h-2 bg-[#057DCD] rounded-full"></div>
+                      Help
                     </p>
-                    <a
-                      href="/help/getstarted/"
-                      target="_blank"
-                      rel="noopener noreferrer"
-                      className="w-full text-left px-4 py-3 text-base text-gray-700 hover:bg-gray-50 active:bg-gray-100 rounded flex items-center"
-                    >
-                      <svg
-                        xmlns="http://www.w3.org/2000/svg"
-                        className="h-5 w-5 mr-2 text-gray-500"
-                        fill="none"
-                        viewBox="0 0 24 24"
-                        stroke="currentColor"
-                      >
-                        <circle
-                          cx="12"
-                          cy="12"
-                          r="10"
-                          stroke="currentColor"
-                          strokeWidth="2"
-                          fill="#fff"
-                        />
-                        <path
-                          d="M12 16h.01M12 12a2 2 0 10-2-2"
-                          stroke="currentColor"
-                          strokeWidth="2"
-                          strokeLinecap="round"
-                          strokeLinejoin="round"
-                        />
-                        <path
-                          d="M12 14v-1"
-                          stroke="currentColor"
-                          strokeWidth="2"
-                          strokeLinecap="round"
-                          strokeLinejoin="round"
-                        />
-                      </svg>
-                      Get Help
-                    </a>
+
+                    {/* Get Help Link (Matched to Notifications Toggle Style) */}
+                    <InteractiveRow isLink={true} href="/help/getstarted/">
+                      <div className="flex items-center">
+                        <IconContainer>
+                          {/* Help Icon (Question Mark in Circle) - h-5 w-5 and white to match theme */}
+                          <svg
+                            xmlns="http://www.w3.org/2000/svg"
+                            className="h-5 w-5 text-white"
+                            fill="none"
+                            viewBox="0 0 24 24"
+                            stroke="currentColor"
+                          >
+                            <circle
+                              cx="12"
+                              cy="12"
+                              r="10"
+                              stroke="#fff"
+                              strokeWidth="2"
+                              fill="none"
+                            />
+                            <path
+                              d="M12 16h.01M12 12a2 2 0 10-2-2"
+                              stroke="#fff"
+                              strokeWidth="2"
+                              strokeLinecap="round"
+                              strokeLinejoin="round"
+                            />
+                            <path
+                              d="M12 14v-1"
+                              stroke="#fff"
+                              strokeWidth="2"
+                              strokeLinecap="round"
+                              strokeLinejoin="round"
+                            />
+                          </svg>
+                        </IconContainer>
+                        {/* Text Block (Title + Description - Matched) */}
+                        <div>
+                          <span className="text-base font-medium text-gray-700">
+                            Get Help
+                          </span>
+                          <p className="text-xs text-gray-500">
+                            Access documentation and FAQs
+                          </p>
+                        </div>
+                      </div>
+                    </InteractiveRow>
                   </div>
                 )}
 

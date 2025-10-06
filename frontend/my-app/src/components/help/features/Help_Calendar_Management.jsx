@@ -185,7 +185,7 @@ const HelpCalendarManagement = () => {
               : "Take the next step in your learning journey. Book a consultation now and get the help you need to succeed."}
           </p>
           <a
-            href="#"
+            href="/dashboard"
             className="inline-block bg-[#057DCD] text-white text-base sm:text-lg font-semibold rounded-lg px-6 py-3 shadow-md hover:bg-[#046BB1] transition-all duration-200"
           >
             {isTeacher ? "Go to Booking Dashboard" : "Book a Consultation"}
