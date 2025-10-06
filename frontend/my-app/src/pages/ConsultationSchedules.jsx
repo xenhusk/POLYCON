@@ -297,7 +297,7 @@ const ConsultationSchedules = () => {
           transition={{ delay: 0.3 }}
           className="mb-12"
         >
-          <div className="bg-white rounded-2xl shadow-2xl overflow-hidden border border-gray-100 mb-8">
+          <div className="bg-white rounded-2xl shadow-2xl border border-gray-100 mb-8" style={{ overflow: 'visible' }}>
             <div className="bg-gradient-to-r from-[#057DCD] to-[#046bb8] text-white p-6">
               <div className="flex items-center gap-4">
                 <div className="w-12 h-12 bg-white bg-opacity-20 rounded-full flex items-center justify-center">
@@ -312,7 +312,7 @@ const ConsultationSchedules = () => {
               </div>
             </div>
 
-            <div className="p-8 grid grid-cols-1 lg:grid-cols-2 gap-8">
+            <div className="p-8 grid grid-cols-1 lg:grid-cols-2 gap-8" style={{ overflow: 'visible' }}>
               {/* Department Filter */}
               <motion.div
                 initial={{ opacity: 0, x: -20 }}
@@ -367,7 +367,7 @@ const ConsultationSchedules = () => {
                   </div>
                   Search by Teacher
                 </label>
-                <div className="relative">
+                <div className="relative" style={{ zIndex: 1 }}>
                   <div className="flex items-center border-2 border-gray-200 rounded-xl px-4 py-4 focus-within:ring-2 focus-within:ring-emerald-500 focus-within:border-transparent transition-all duration-200 shadow-sm">
                     {selectedTeacher && !teacherSearchTerm ? (
                       // Show selected teacher info when a teacher is selected and not searching
@@ -425,7 +425,14 @@ const ConsultationSchedules = () => {
                     <motion.ul 
                       initial={{ opacity: 0, y: -10 }}
                       animate={{ opacity: 1, y: 0 }}
-                      className="absolute z-10 bg-white border-2 border-gray-200 rounded-xl mt-2 max-h-60 overflow-y-auto w-full shadow-2xl"
+                      className="absolute z-50 bg-white border-2 border-gray-200 rounded-xl mt-2 max-h-80 overflow-y-auto w-full shadow-2xl"
+                      style={{ 
+                        maxHeight: '20rem',
+                        minHeight: 'auto',
+                        top: '100%',
+                        left: 0,
+                        right: 0
+                      }}
                     >
                       {teachers
                         .filter(teacher => {
