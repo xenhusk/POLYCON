@@ -322,7 +322,7 @@ const EmailVerification = () => {
           transition={{ delay: 0.8 }}
           className="text-sm text-gray-500 mt-6"
         >
-          Having trouble? Check your spam folder or{' '}
+          Having trouble? Check your <span className="font-semibold">Junk Email</span> or{' '}
           <span 
             onClick={() => setVerificationStatus('manual')}
             className="text-[#057DCD] hover:underline cursor-pointer font-medium"
