@@ -106,6 +106,7 @@ class ConcernOptimizer:
         try:
             # Import here to avoid circular imports
             from models import ConcernCategory
+            from extensions import db
             
             for concern in concerns:
                 normalized = self.normalize_concern(concern)
@@ -130,11 +131,9 @@ class ConcernOptimizer:
             # Commit frequency updates
             if sentencing_cache or general_cache:
                 try:
-                    from extensions import db
                     db.session.commit()
                 except Exception as commit_error:
                     print(f"Error committing frequency updates: {commit_error}")
-                    from extensions import db
                     db.session.rollback()
         
         except Exception as e:

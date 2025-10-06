@@ -26,3 +26,5 @@ flask_migrate
 cloudinary
 scikit-learn
 nltk
+requests
+sendgrid

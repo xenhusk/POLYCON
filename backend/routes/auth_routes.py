@@ -4,7 +4,7 @@ from models import User, Student, Faculty, Department, Program
 from flask_jwt_extended import create_access_token
 import secrets
 from datetime import datetime, timedelta
-from services.email_service_new import send_password_reset_email
+from services.email_service_unified import send_password_reset_email
 import os
 
 auth_bp = Blueprint('auth', __name__, url_prefix='/auth')

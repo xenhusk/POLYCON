@@ -22,6 +22,12 @@ services:
         value: production
       - key: SOCKETIO_ASYNC_MODE
         value: eventlet
+      - key: SENDGRID_API_KEY
+        sync: false
+      - key: FROM_EMAIL
+        value: noreply@polycon.com
+      - key: FROM_NAME
+        value: POLYCON
 
   # Frontend Service  
   - type: web
@@ -32,11 +38,6 @@ services:
     envVars:
       - key: REACT_APP_API_URL
         value: https://polycon.onrender.com
-      - key: SMTP_SERVER
-      - key: SMTP_PORT
-      - key: SMTP_USER
-      - key: SMTP_PASSWORD
-      - key: FROM_EMAIL
     routes:
       - type: rewrite
         source: /*

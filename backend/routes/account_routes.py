@@ -2,7 +2,7 @@ from flask import Blueprint, request, jsonify
 from flask_cors import cross_origin
 from models import db, User, Program, Department, Student, Faculty
 from extensions import bcrypt
-from services.email_service import send_verification_email_async
+from services.email_service_unified import send_verification_email_async
 from flask_jwt_extended import create_access_token, decode_token
 import datetime
 import uuid
@@ -18,8 +18,8 @@ if ',' in cors_origins:
 else:
     allowed_origins = [cors_origins]
 
-# Get frontend URL for redirects (use the first allowed origin)
-frontend_url = allowed_origins[0]
+# Get frontend URL for redirects (prefer explicit env; fallback to first allowed origin)
+frontend_url = os.getenv('FRONTEND_URL', allowed_origins[0])
 
 @account_bp.route('/login', methods=['POST', 'OPTIONS'])
 @cross_origin(origins=allowed_origins, 
