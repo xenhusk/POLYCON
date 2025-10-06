@@ -75,6 +75,18 @@ class SendGridEmailService:
             print(f"[ERROR] Failed to send verification email via SendGrid: {e}")
             return False
     
+    def send_verification_email_async(self, to_email: str, verification_link: str) -> None:
+        """Send verification email asynchronously using SendGrid"""
+        import threading
+        
+        def _send():
+            success = self.send_verification_email(to_email, verification_link)
+            if not success:
+                print(f"[ERROR] Failed to send verification email to {to_email}")
+        
+        thread = threading.Thread(target=_send, daemon=True)
+        thread.start()
+    
     def send_password_reset_email(self, to_email: str, reset_link: str, user_name: str) -> bool:
         """Send password reset email using SendGrid API"""
         if not self.api_key:
@@ -141,6 +153,18 @@ class SendGridEmailService:
         except Exception as e:
             print(f"[ERROR] Failed to send password reset email via SendGrid: {e}")
             return False
+    
+    def send_password_reset_email_async(self, to_email: str, reset_link: str, user_name: str) -> None:
+        """Send password reset email asynchronously using SendGrid"""
+        import threading
+        
+        def _send():
+            success = self.send_password_reset_email(to_email, reset_link, user_name)
+            if not success:
+                print(f"[ERROR] Failed to send password reset email to {to_email}")
+        
+        thread = threading.Thread(target=_send, daemon=True)
+        thread.start()
 
 # Create a global instance
 sendgrid_service = SendGridEmailService()

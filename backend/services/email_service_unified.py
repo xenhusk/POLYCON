@@ -29,6 +29,19 @@ class EmailServiceSMTP:
         """Send password reset email using SMTP"""
         from services.email_service import send_password_reset_email
         return send_password_reset_email(to_email, reset_link, user_name)
+    
+    def send_password_reset_email_async(self, to_email: str, reset_link: str, user_name: str) -> None:
+        """Send password reset email asynchronously using SMTP"""
+        from services.email_service import send_password_reset_email
+        import threading
+        
+        def _send():
+            success = send_password_reset_email(to_email, reset_link, user_name)
+            if not success:
+                print(f"[ERROR] Failed to send password reset email to {to_email}")
+        
+        thread = threading.Thread(target=_send, daemon=True)
+        thread.start()
 
 # Global email service instance
 email_service = get_email_service()
@@ -45,3 +58,7 @@ def send_verification_email_async(to_email: str, verification_link: str) -> None
 def send_password_reset_email(to_email: str, reset_link: str, user_name: str) -> bool:
     """Send password reset email using the appropriate service"""
     return email_service.send_password_reset_email(to_email, reset_link, user_name)
+
+def send_password_reset_email_async(to_email: str, reset_link: str, user_name: str) -> None:
+    """Send password reset email asynchronously using the appropriate service"""
+    return email_service.send_password_reset_email_async(to_email, reset_link, user_name)
