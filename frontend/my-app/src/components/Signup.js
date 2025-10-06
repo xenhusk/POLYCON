@@ -3,6 +3,7 @@ import API_URL from '../apiConfig';
 import { EyeOutlined, EyeInvisibleOutlined } from "@ant-design/icons";
 import logo from "./icons/DarkLogo.png";
 import TermsModal from "./TermsModal";
+import EmailVerificationModal from "./EmailVerificationModal";
 
 const Signup = ({ onSwitchToLogin }) => {
   const [step, setStep] = useState(1);
@@ -30,7 +31,7 @@ const Signup = ({ onSwitchToLogin }) => {
     role: "student", // Default role set to student
   });
   const [errorMessage, setErrorMessage] = useState("");
-  const [successMessage, setSuccessMessage] = useState("");
+  const [showVerificationModal, setShowVerificationModal] = useState(false);
   const [fieldErrors, setFieldErrors] = useState({
     firstName: "",
     lastName: "",
@@ -44,6 +45,7 @@ const Signup = ({ onSwitchToLogin }) => {
     sex: "",
     termsAccepted: "",
   });
+
 
   useEffect(() => {
     if (formData.department) {
@@ -146,7 +148,6 @@ const Signup = ({ onSwitchToLogin }) => {
   const handleSubmit = async (e) => {
     e.preventDefault();
     setErrorMessage("");
-    setSuccessMessage("");
     setIsLoading(true);
 
     // Validate form
@@ -180,29 +181,29 @@ const Signup = ({ onSwitchToLogin }) => {
       const data = await response.json();
 
       if (response.ok) {
-        setSuccessMessage(
-          "✅ Registration successful! Check your email for the verification link."
-        );
         setIsLoading(false);
         
         // Save email for potential resend verification
         localStorage.setItem('pendingVerificationEmail', formData.email);
         
-        // Redirect to verification page after a short delay
-        setTimeout(() => {
-          window.location.href = '/verify-email';
-        }, 2000);
+        // Show verification modal
+        setShowVerificationModal(true);
       } else {
-        setErrorMessage(data.error || "Signup failed. Please try again.");
         setIsLoading(false);
+        
+        // Show error message for failed signup
+        setErrorMessage(data.error || "Signup failed. Please try again.");
       }
     } catch (error) {
-      setErrorMessage("Network error. Please try again.");
       setIsLoading(false);
+      
+      // Show error message for network errors
+      setErrorMessage("Network error. Please try again.");
     } finally {
       setSignupClicked(false);
     }
   };
+
 
   // Helper function to render field error
   const renderFieldError = (fieldName) => {
@@ -565,12 +566,7 @@ const Signup = ({ onSwitchToLogin }) => {
                       )}
                   </div>
                   {renderFieldError("confirmNewPassword")}
-                </div>                {/* General error message */}
-                {successMessage && (
-                  <p className="text-center text-green-500 text-sm font-medium mb-4">
-                    {successMessage}
-                  </p>
-                )}
+                </div>                {/* General error message - keeping for backward compatibility */}
                 {errorMessage && (
                   <p className="text-center text-red-500 text-sm font-medium mb-4">
                     {errorMessage}
@@ -654,6 +650,17 @@ const Signup = ({ onSwitchToLogin }) => {
           </div>
         )}
       </div>
+
+      {/* Email Verification Modal */}
+      <EmailVerificationModal
+        isOpen={showVerificationModal}
+        onClose={() => setShowVerificationModal(false)}
+        email={formData.email}
+        onSuccess={() => {
+          // Optionally redirect to login or show success message
+          console.log('Email verification successful');
+        }}
+      />
     </div>
   );
 };
