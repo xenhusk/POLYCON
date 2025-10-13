@@ -383,3 +383,66 @@ def get_semester_options():
     except Exception as e:
         print(f"Error fetching semester options: {str(e)}")
         return jsonify({"error": f"Failed to fetch semester options: {str(e)}"}), 500
+
+# Add endpoints that the frontend expects
+@semester_bp.route('/semesters', methods=['GET'])
+def get_semesters():
+    """Endpoint for /semesters that the frontend expects"""
+    return get_semester_options()
+
+@semester_bp.route('/teachers', methods=['GET'])
+def get_teachers_for_semester():
+    """Endpoint for /teachers that the frontend expects"""
+    school_year = request.args.get('school_year')
+    semester = request.args.get('semester')
+    
+    try:
+        # If school_year and semester are provided, filter teachers for that semester
+        if school_year and semester:
+            # Get teachers who have grades in that semester
+            from models import Grade
+            teachers_with_grades = db.session.query(
+                User.id_number,
+                User.full_name,
+                Department.name
+            ).join(Faculty, Faculty.user_id == User.id) \
+             .join(Department, User.department_id == Department.id) \
+             .join(Grade, Grade.faculty_user_id == User.id) \
+             .filter(
+                 Grade.school_year == school_year,
+                 Grade.semester == semester
+             ).distinct().all()
+            
+            teachers = [
+                {
+                    'id': id_number,
+                    'fullName': full_name,
+                    'department': dept_name
+                }
+                for id_number, full_name, dept_name in teachers_with_grades
+            ]
+        else:
+            # Return all active teachers if no semester specified
+            teachers_query = db.session.query(
+                User.id_number,
+                User.full_name,
+                Department.name,
+                Faculty.is_active
+            ).join(Faculty, Faculty.user_id == User.id) \
+             .join(Department, User.department_id == Department.id) \
+             .filter(Faculty.is_active == True).all()
+            
+            teachers = [
+                {
+                    'id': id_number,
+                    'fullName': full_name,
+                    'department': dept_name,
+                    'isActive': is_active
+                }
+                for id_number, full_name, dept_name, is_active in teachers_query
+            ]
+        
+        return jsonify(teachers), 200
+    except Exception as e:
+        print(f"Error fetching teachers: {str(e)}")
+        return jsonify({"error": f"Failed to fetch teachers: {str(e)}"}), 500

@@ -1,7 +1,7 @@
 import React from 'react';
 import { motion } from 'framer-motion';
 
-const ComparativeAnalysisHeader = ({ openSelectionModal, allFieldsProvided }) => {
+const ComparativeAnalysisHeader = () => {
   return (
     <div className="mb-12">
       {/* Hero Section */}
@@ -29,7 +29,7 @@ const ComparativeAnalysisHeader = ({ openSelectionModal, allFieldsProvided }) =>
             transition={{ duration: 0.8, delay: 0.3 }}
             className="text-4xl sm:text-5xl lg:text-6xl font-bold text-white mb-4"
           >
-            Polycon Analysis
+Polycon Analysis
           </motion.h1>
           <motion.p 
             initial={{ opacity: 0, y: 20 }}
@@ -51,9 +51,9 @@ const ComparativeAnalysisHeader = ({ openSelectionModal, allFieldsProvided }) =>
       >
         <p className="text-gray-600 text-lg px-4">
           Welcome to the Polycon Analysis tool, your comprehensive solution for
-          evaluating student improvement and learning progress. This analysis
-          combines grade progression, consultation quality, and academic events to provide
-          insights into how much students have improved and learned over time.
+          evaluating student grade improvement and learning progress. This analysis
+          compares student performance across different periods to provide
+          clear insights into academic progress and consultation effectiveness.
         </p>
       </motion.div>
 
@@ -85,9 +85,9 @@ const ComparativeAnalysisHeader = ({ openSelectionModal, allFieldsProvided }) =>
               />
             </svg>
           </div>
-          <h3 className="font-bold text-gray-800 text-center mb-3">Improvement Tracking</h3>
+          <h3 className="font-bold text-gray-800 text-center mb-3">Before & After Analysis</h3>
           <p className="text-sm text-gray-600 text-center">
-            Track academic improvement and learning progress across different periods
+            Compare student performance before and after consultation sessions
           </p>
         </motion.div>
 
@@ -112,9 +112,9 @@ const ComparativeAnalysisHeader = ({ openSelectionModal, allFieldsProvided }) =>
               />
             </svg>
           </div>
-          <h3 className="font-bold text-gray-800 text-center mb-3">Consultation Quality</h3>
+          <h3 className="font-bold text-gray-800 text-center mb-3">Impact Assessment</h3>
           <p className="text-sm text-gray-600 text-center">
-            Analyze consultation effectiveness and learning outcomes
+            Measure consultation effectiveness and student improvement rates
           </p>
         </motion.div>
 
@@ -145,80 +145,14 @@ const ComparativeAnalysisHeader = ({ openSelectionModal, allFieldsProvided }) =>
               />
             </svg>
           </div>
-          <h3 className="font-bold text-gray-800 text-center mb-3">Academic Events</h3>
+          <h3 className="font-bold text-gray-800 text-center mb-3">Class Performance</h3>
           <p className="text-sm text-gray-600 text-center">
-            Monitor participation and impact of events
+            View class-wide consultation impact and improvement statistics
           </p>
         </motion.div>
       </motion.div>
 
-      {/* Analysis Button */}
-      <motion.div 
-        initial={{ opacity: 0, y: 20 }}
-        animate={{ opacity: 1, y: 0 }}
-        transition={{ duration: 0.6, delay: 0.7 }}
-        className="mb-8 text-center"
-      >
-        <motion.button
-          whileHover={{ scale: 1.05 }}
-          whileTap={{ scale: 0.95 }}
-          onClick={openSelectionModal}
-          className="group px-8 py-4 bg-gradient-to-r from-[#0065A8] to-[#057DCD] text-white rounded-xl hover:shadow-xl transition-all duration-300 shadow-lg"
-        >
-          <span className="flex items-center justify-center space-x-3">
-            <svg
-              xmlns="http://www.w3.org/2000/svg"
-              className="h-6 w-6"
-              viewBox="0 0 20 20"
-              fill="currentColor"
-            >
-              <path
-                fillRule="evenodd"
-                d="M10 3a1 1 0 011 1v5h5a1 1 0 110 2h-5v5a1 1 0 11-2 0v-5H4a1 1 0 110-2h5V4a1 1 0 011-1z"
-                clipRule="evenodd"
-              />
-            </svg>
-            <span className="font-semibold text-lg">Start Analysis</span>
-          </span>
-        </motion.button>
-        <p className="text-sm text-gray-600 mt-4 font-medium">
-          Click to select semester, student, and course options
-        </p>
-      </motion.div>
-
-      {/* Empty State Message */}
-      {!allFieldsProvided && (
-        <motion.div 
-          initial={{ opacity: 0, y: 20 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ duration: 0.6, delay: 0.8 }}
-          className="text-center my-10 p-8 bg-white/80 backdrop-blur-sm rounded-2xl shadow-lg border border-white/20 max-w-2xl mx-auto"
-        >
-          <div className="w-20 h-20 bg-gradient-to-r from-[#0065A8] to-[#057DCD] rounded-full flex items-center justify-center mx-auto mb-6">
-            <svg
-              xmlns="http://www.w3.org/2000/svg"
-              className="h-10 w-10 text-white"
-              fill="none"
-              viewBox="0 0 24 24"
-              stroke="currentColor"
-            >
-              <path
-                strokeLinecap="round"
-                strokeLinejoin="round"
-                strokeWidth={2}
-                d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"
-              />
-            </svg>
-          </div>
-          <h3 className="text-2xl font-bold text-gray-800 mb-3">
-            Ready to Begin Analysis?
-          </h3>
-          <p className="text-gray-600 text-lg">
-            Please select a semester, teacher, student, and course to generate
-            a comprehensive performance analysis.
-          </p>
-        </motion.div>
-      )}
+      {/* Note: Start Analysis button and empty state removed - search is now directly on the page */}
     </div>
   );
 };

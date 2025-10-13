@@ -58,8 +58,7 @@ function ComparativeAnalysis() {
   // Main states for filtering
   const [selectedSemester, setSelectedSemester] = useState(null);
   const [selectedTeacher, setSelectedTeacher] = useState("");
-  const [selectedStudents, setSelectedStudents] = useState([]);
-  const [selectedCourse, setSelectedCourse] = useState("");
+  // Note: selectedStudents and selectedCourse removed - now using simplified search approach
   const [grades, setGrades] = useState([]);
   const [sessions, setSessions] = useState([]);
   const [semesters, setSemesters] = useState([]);
@@ -73,22 +72,15 @@ function ComparativeAnalysis() {
   // Overall metrics for the class
   const [overallMetrics, setOverallMetrics] = useState(null);
 
-  // Modal (for all four selections) states (temporary)
-  const [showSelectionModal, setShowSelectionModal] = useState(false);
-  const [tempSemester, setTempSemester] = useState(null);
-  const [tempTeacher, setTempTeacher] = useState("");
-  const [tempStudent, setTempStudent] = useState("");
-  const [tempCourse, setTempCourse] = useState("");
-  const [tempStudents, setTempStudents] = useState([]); // students list for the chosen teacher
-  const [isLoadingStudents, setIsLoadingStudents] = useState(false);
-  const [tempCourses, setTempCourses] = useState([]); // courses list for the chosen student
-  const [isLoadingCourses, setIsLoadingCourses] = useState(false);
-  
-  // Student search states
-  const [tempStudentName, setTempStudentName] = useState("");
-  const [filteredStudents, setFilteredStudents] = useState([]);
+  // Direct search states (no modal needed)
+  const [searchTerm, setSearchTerm] = useState("");
+  const [searchResults, setSearchResults] = useState([]);
+  const [isSearching, setIsSearching] = useState(false);
+  const [selectedStudent, setSelectedStudent] = useState(null);
+  const [availableAnalyses, setAvailableAnalyses] = useState([]);
+  const [isLoadingAnalyses, setIsLoadingAnalyses] = useState(false);
   const [selectedStudentData, setSelectedStudentData] = useState(null);
-  const [isStudentSearching, setIsStudentSearching] = useState(false);
+  const [lastRunAnalysisId, setLastRunAnalysisId] = useState(null);
 
   // Animation variants for modal - Enhanced for mobile
   const modalVariants = {
@@ -128,7 +120,6 @@ function ComparativeAnalysis() {
 
             console.log("✅ Setting teacher in ComparativeAnalysis:", teacher);
       setTeachers([teacher]);
-      setTempTeacher(teacher.id);
       setSelectedTeacher(teacher.id);
             return true;
           }
@@ -186,12 +177,8 @@ function ComparativeAnalysis() {
   // Note: We no longer need to fetch grades and sessions separately
   // The new comparative analysis endpoint handles all the data processing
 
-  // Check if all required fields are provided
-  const allFieldsProvided =
-    selectedSemester &&
-      selectedTeacher &&
-      selectedStudents.length === 1 &&
-    selectedCourse.trim() !== "";
+  // Check if basic fields are provided for the simplified interface
+  const basicFieldsProvided = selectedSemester && selectedTeacher;
 
   // Function to fetch overall metrics for the class
   const fetchOverallMetrics = () => {
@@ -212,61 +199,7 @@ function ComparativeAnalysis() {
     }
   };
 
-  // Function to run comparative analysis
-  const runComparativeAnalysis = () => {
-    if (selectedStudents.length > 0 && selectedTeacher && selectedSemester && consultationPeriod) {
-      setIsRunningAnalysis(true);
-      
-      // Show initial toast notification
-      showInfo(
-        "Starting Grade Analysis", 
-        "Analyzing student grade improvement after consultation...",
-        5000
-      );
-
-      const payload = {
-        student_id: selectedStudents[0],
-        consultation_period: consultationPeriod,
-        teacher_id: selectedTeacher,
-        school_year: selectedSemester.school_year,
-        semester: selectedSemester.semester,
-      };
-      
-      fetch(`${API_URL}/comparative/compare_student`, {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify(payload),
-      })
-        .then((res) => res.json())
-        .then((data) => {
-          console.log("🔍 DEBUG - Analysis result received:", data);
-          setAnalysisResult(data);
-          setIsRunningAnalysis(false);
-          
-          // Show success toast
-          showSuccess(
-            "Grade Analysis Complete!", 
-            `Student ${data.improvement_status.toLowerCase()} by ${Math.abs(data.improvement_points)} points (${Math.abs(data.improvement_percent).toFixed(1)}%)`,
-            6000
-          );
-        })
-        .catch((err) => {
-          console.error("Error running comparative analysis:", err);
-          setIsRunningAnalysis(false);
-          showError(
-            "Analysis Failed", 
-            "Unable to process grade analysis. Please check your data and try again.",
-            5000
-          );
-        });
-    } else {
-      showWarning(
-        "Missing Data", 
-        "Please ensure all required fields are selected before running the analysis.",
-        4000
-      );
-    }
-  };
+  // Note: Old runComparativeAnalysis function removed - now using simplified runAnalysis function
 
   // Function to generate colors for charts
   const generateColors = (count) => {
@@ -280,132 +213,244 @@ function ComparativeAnalysis() {
     return baseColors.slice(0, count);
   };
 
-  // Modal functions
-  const openSelectionModal = () => {
-    setTempSemester(selectedSemester);
-    setTempTeacher(selectedTeacher);
-    setTempStudent(selectedStudents.length > 0 ? selectedStudents[0] : "");
-    setTempCourse(selectedCourse);
-    setShowSelectionModal(true);
-  };
+  // Note: Modal functions removed - now using direct search on page
 
-  const closeSelectionModal = () => {
-    setShowSelectionModal(false);
-    setTempSemester(null);
-    setTempTeacher("");
-    setTempStudent("");
-    setTempCourse("");
-    setTempStudents([]);
-    setTempStudentName("");
-    setFilteredStudents([]);
-    setSelectedStudentData(null);
-    setIsStudentSearching(false);
-  };
+  // Search for students
+  const searchStudents = async (query) => {
+    if (query.trim().length < 2) {
+      setSearchResults([]);
+      return;
+    }
 
-  const applySelection = () => {
-    if (tempSemester && tempTeacher && tempStudent && tempCourse) {
-      setSelectedSemester(tempSemester);
-      setSelectedTeacher(tempTeacher);
-      setSelectedStudents([tempStudent]);
-      setSelectedCourse(tempCourse);
-      setSelectedStudentData(
-        students.find((s) => s.id_number === tempStudent) || null
+    setIsSearching(true);
+    try {
+      const response = await fetch(
+        `${API_URL}/polycon-analysis/get_teacher_students?teacherID=${selectedTeacher}&schoolYear=${selectedSemester.school_year}&semester=${selectedSemester.semester}`
       );
-      closeSelectionModal();
+      const students = await response.json();
+      
+      const filtered = students.filter(student => {
+        const fullName = student.firstName && student.lastName 
+          ? `${student.firstName} ${student.lastName}` 
+          : student.fullName || '';
+        const idNumber = student.id || student.id_number || student.idNumber || '';
+        
+        return (
+          fullName.toLowerCase().includes(query.toLowerCase()) ||
+          idNumber.toLowerCase().includes(query.toLowerCase())
+        );
+      });
+      
+      setSearchResults(filtered);
+    } catch (error) {
+      console.error("Error searching students:", error);
+      setSearchResults([]);
+    } finally {
+      setIsSearching(false);
     }
   };
 
-  // Student search functionality - only show results when actively searching
-  useEffect(() => {
-    const trimmedSearch = tempStudentName.trim();
-    
-    if (trimmedSearch === "") {
-      // No search term - clear results and stop searching
-      setFilteredStudents([]);
-      setIsStudentSearching(false);
-    } else {
-      // User is searching - show filtered results
-      setIsStudentSearching(true);
-            const filtered = tempStudents.filter((student) => {
-              const fullName = student.firstName && student.lastName 
-                ? `${student.firstName} ${student.lastName}` 
-                : student.fullName || '';
-              const idNumber = student.id || student.id_number || student.idNumber || '';
-              
-              return (
-                fullName.toLowerCase().includes(trimmedSearch.toLowerCase()) ||
-                idNumber.toLowerCase().includes(trimmedSearch.toLowerCase())
-              );
-            });
-      setFilteredStudents(filtered);
-    }
-  }, [tempStudentName, tempStudents]);
-
-  // Fetch students when teacher is selected in modal
-  useEffect(() => {
-    if (showSelectionModal && tempTeacher && tempSemester) {
-      setIsLoadingStudents(true);
-      fetch(
-        `${API_URL}/polycon-analysis/get_teacher_students?teacherID=${tempTeacher}&schoolYear=${tempSemester.school_year}&semester=${tempSemester.semester}`
-      )
-        .then((res) => res.json())
-        .then((data) => {
-          console.log("🔍 DEBUG - Students data:", data);
-          setTempStudents(data);
-          setFilteredStudents(data);
-          setIsLoadingStudents(false);
-        })
-        .catch((err) => {
-          console.error("Error fetching students:", err);
-          setIsLoadingStudents(false);
-        });
-    }
-  }, [showSelectionModal, tempTeacher, tempSemester]);
-
-  // Fetch courses for selected student
-  useEffect(() => {
-    if (tempStudent && tempTeacher && tempSemester) {
-      setIsLoadingCourses(true);
-      const url = `${API_URL}/comparative/get_student_courses?student_id=${tempStudent}&teacher_id=${tempTeacher}&school_year=${tempSemester.school_year}&semester=${tempSemester.semester}`;
-      console.log("🔍 DEBUG - Fetching courses with URL:", url);
-      console.log("🔍 DEBUG - tempStudent:", tempStudent, "tempTeacher:", tempTeacher, "tempSemester:", tempSemester);
+  // Get available analyses for selected student
+  const getAvailableAnalyses = async (student) => {
+    setIsLoadingAnalyses(true);
+    try {
+      const response = await fetch(
+        `${API_URL}/comparative/get_student_courses?student_id=${student.id}&teacher_id=${selectedTeacher}&school_year=${selectedSemester.school_year}&semester=${selectedSemester.semester}`
+      );
+      const courses = await response.json();
       
-      fetch(url)
-        .then((res) => res.json())
-        .then((data) => {
-          console.log("🔍 DEBUG - Courses API response:", data);
-          if (data.error) {
-            console.error("Error fetching courses:", data.error);
-            setTempCourses([]);
-          } else {
-            setTempCourses(data);
-            if (data.length === 0) {
-              console.log("🔍 DEBUG - No courses found. This might be because:");
-              console.log("  - The student doesn't have grades with this teacher in this semester");
-              console.log("  - Try selecting a different semester (2024-2025 1st has test data)");
-              console.log("  - Try selecting Bob Williams (S2024002) who has ED101 with David Paul Desuyo");
-            }
-          }
-          setIsLoadingCourses(false);
-        })
-        .catch((err) => {
-          console.error("Error fetching courses:", err);
-          setTempCourses([]);
-          setIsLoadingCourses(false);
+      // Create analysis options for each course and consultation period
+      const analyses = [];
+      const periods = ['Prelim', 'Midterm', 'Pre-Final']; // Exclude 'Final' as there's no period after it
+      
+      courses.forEach(course => {
+        periods.forEach(period => {
+          analyses.push({
+            id: `${course.id}-${period}`,
+            course: course,
+            consultation_period: period,
+            student: student,
+            label: `${course.course_code} - ${period} Consultation Analysis`
+          });
         });
-    } else {
-      setTempCourses([]);
+      });
+      
+      setAvailableAnalyses(analyses);
+    } catch (error) {
+      console.error("Error getting available analyses:", error);
+      setAvailableAnalyses([]);
+    } finally {
+      setIsLoadingAnalyses(false);
     }
-  }, [tempStudent, tempTeacher, tempSemester]);
+  };
+
+  // Run analysis for selected option
+  const runAnalysis = async (analysis) => {
+      setIsRunningAnalysis(true);
+      
+      const payload = {
+      student_id: analysis.student.id,
+      consultation_period: analysis.consultation_period,
+      teacher_id: selectedTeacher,
+      school_year: selectedSemester.school_year,
+      semester: selectedSemester.semester,
+    };
+    
+    console.log("🔍 DEBUG - Sending payload:", payload);
+    console.log("🔍 DEBUG - API URL:", `${API_URL}/comparative/compare_student`);
+    
+    try {
+      const response = await fetch(`${API_URL}/comparative/compare_student`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(payload),
+      });
+      
+      console.log("🔍 DEBUG - Response status:", response.status);
+      console.log("🔍 DEBUG - Response ok:", response.ok);
+      
+      const data = await response.json();
+      console.log("🔍 DEBUG - Analysis result received:", data);
+      
+      // Check if the response contains an error
+      if (data.error) {
+        console.error("API Error:", data.error);
+        showError("Analysis Failed", data.error, 5000);
+        return;
+      }
+      
+          setAnalysisResult(data);
+      setConsultationPeriod(analysis.consultation_period);
+      setLastRunAnalysisId(analysis.id);
+      // Keep selected student and available analyses for further analysis options
+      // Only clear search term and results
+      setSearchTerm("");
+      setSearchResults([]);
+          
+          showSuccess(
+        "Analysis Complete!", 
+        `${data.student_name} ${data.improvement_status.toLowerCase()} by ${Math.abs(data.improvement_points)} points (${Math.abs(data.improvement_percent).toFixed(1)}%) - ${data.consultation_impact}. You can select another analysis option above.`,
+            6000
+          );
+    } catch (error) {
+      console.error("Error running analysis:", error);
+      showError("Analysis Failed", "Unable to process grade analysis. Please try again.", 5000);
+    } finally {
+          setIsRunningAnalysis(false);
+    }
+  };
+
+  // Note: Old student search useEffect removed - now using simplified search
+
+  // Note: Old useEffect hooks for complex modal removed - now using simplified search
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-slate-50 via-blue-50 to-indigo-100">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
       {/* Header Section with Enhanced Design */}
-      <ComparativeAnalysisHeader
-        openSelectionModal={openSelectionModal}
-        allFieldsProvided={allFieldsProvided}
-      />
+      <ComparativeAnalysisHeader />
+
+      {/* Teacher and Semester Selection */}
+      <motion.div
+        initial={{ opacity: 0, y: 20 }}
+        animate={{ opacity: 1, y: 0 }}
+        className="mb-8 px-4"
+      >
+        <div className="bg-white rounded-2xl shadow-lg border border-gray-200 p-6 max-w-4xl mx-auto">
+          <div className="text-center mb-6">
+            <h3 className="text-2xl font-bold text-gray-900 mb-2">Select Teacher & Semester</h3>
+            <p className="text-gray-600">Choose the teacher and semester for consultation impact analysis</p>
+          </div>
+          
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+            {/* Semester Selection */}
+            <div>
+              <label className="block text-sm font-semibold text-gray-700 mb-3">
+                Select Semester
+              </label>
+              <select
+                value={selectedSemester?.id || ""}
+                onChange={(e) => {
+                  const selectedId = parseInt(e.target.value);
+                  console.log('🔍 DEBUG - Semester selection changed:', selectedId);
+                  const selectedSemesterData = semesters.find(s => s.id === selectedId);
+                  console.log('🔍 DEBUG - Found semester data:', selectedSemesterData);
+                  if (selectedSemesterData) {
+                    setSelectedSemester(selectedSemesterData);
+                    console.log('🔍 DEBUG - Set selected semester:', selectedSemesterData);
+                  }
+                }}
+                className="w-full px-4 py-3 border border-gray-300 rounded-xl focus:ring-2 focus:ring-[#0065A8] focus:border-transparent transition-all duration-200"
+              >
+                <option value="">Select a semester...</option>
+                {semesters.map((semester) => (
+                  <option key={semester.id} value={semester.id}>
+                    {semester.display_name}
+                  </option>
+                ))}
+              </select>
+            </div>
+
+            {/* Teacher Selection */}
+            <div>
+              <label className="block text-sm font-semibold text-gray-700 mb-3">
+                Select Teacher
+              </label>
+              <select
+                value={selectedTeacher}
+                onChange={(e) => setSelectedTeacher(e.target.value)}
+                className="w-full px-4 py-3 border border-gray-300 rounded-xl focus:ring-2 focus:ring-[#0065A8] focus:border-transparent transition-all duration-200"
+                disabled={!selectedSemester?.id}
+              >
+                <option value="">Select a teacher...</option>
+                {teachers.map((teacher) => (
+                  <option key={teacher.id} value={teacher.id}>
+                    {teacher.fullName} ({teacher.department})
+                  </option>
+                ))}
+              </select>
+              {!selectedSemester?.id && (
+                <p className="text-sm text-gray-500 mt-2">Please select a semester first</p>
+              )}
+            </div>
+          </div>
+        </div>
+      </motion.div>
+
+      {/* Instructions when no teacher/semester selected */}
+      {!basicFieldsProvided && (
+        <motion.div
+          initial={{ opacity: 0, y: 20 }}
+          animate={{ opacity: 1, y: 0 }}
+          className="mb-12 px-4"
+        >
+          <div className="bg-gradient-to-r from-blue-50 to-indigo-50 rounded-2xl border border-blue-200 p-8 max-w-4xl mx-auto text-center">
+            <div className="w-16 h-16 bg-gradient-to-r from-blue-500 to-indigo-600 rounded-full flex items-center justify-center mx-auto mb-4">
+              <svg className="w-8 h-8 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+              </svg>
+            </div>
+            <h3 className="text-xl font-bold text-gray-900 mb-2">Get Started with Consultation Impact Analysis</h3>
+            <p className="text-gray-600 mb-4">
+              To begin analyzing student performance and consultation impact, please:
+            </p>
+            <div className="flex flex-col sm:flex-row gap-4 justify-center items-center text-sm text-gray-700">
+              <div className="flex items-center gap-2">
+                <div className="w-6 h-6 bg-blue-500 text-white rounded-full flex items-center justify-center text-xs font-bold">1</div>
+                <span>Select a semester from the dropdown above</span>
+              </div>
+              <div className="flex items-center gap-2">
+                <div className="w-6 h-6 bg-blue-500 text-white rounded-full flex items-center justify-center text-xs font-bold">2</div>
+                <span>Choose a teacher who has grades in that semester</span>
+              </div>
+              <div className="flex items-center gap-2">
+                <div className="w-6 h-6 bg-blue-500 text-white rounded-full flex items-center justify-center text-xs font-bold">3</div>
+                <span>Search for students and run analysis</span>
+              </div>
+            </div>
+          </div>
+        </motion.div>
+      )}
 
       {/* Overall Class Metrics */}
       {overallMetrics && (
@@ -416,8 +461,8 @@ function ComparativeAnalysis() {
         >
           <div className="bg-white rounded-2xl shadow-lg border border-gray-200 p-6 max-w-4xl mx-auto">
             <div className="text-center mb-6">
-              <h3 className="text-2xl font-bold text-[#0065A8] mb-2">Class Performance Overview</h3>
-              <p className="text-gray-600">Overall improvement statistics for this semester</p>
+              <h3 className="text-2xl font-bold text-[#0065A8] mb-2">Class Consultation Impact</h3>
+              <p className="text-gray-600">Overall consultation effectiveness and student improvement metrics</p>
             </div>
             
             <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
@@ -432,7 +477,7 @@ function ComparativeAnalysis() {
                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 7h8m0 0v8m0-8l-8 8-4-4-6 6" />
                     </svg>
                   </div>
-                <h4 className="text-lg font-semibold text-blue-800 mb-2">Average Improvement</h4>
+                <h4 className="text-lg font-semibold text-blue-800 mb-2">Average Grade Improvement</h4>
                 <p className="text-3xl font-bold text-blue-900">
                   {overallMetrics.average_improvement_points > 0 ? '+' : ''}{overallMetrics.average_improvement_points}
                 </p>
@@ -450,9 +495,9 @@ function ComparativeAnalysis() {
                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
                   </svg>
                   </div>
-                <h4 className="text-lg font-semibold text-green-800 mb-2">Students Improved</h4>
+                <h4 className="text-lg font-semibold text-green-800 mb-2">Consultation Success Rate</h4>
                 <p className="text-3xl font-bold text-green-900">{overallMetrics.students_improved_percent}%</p>
-                <p className="text-sm text-green-700">{overallMetrics.students_improved_count} out of {overallMetrics.total_improvements_analyzed} students</p>
+                <p className="text-sm text-green-700">{overallMetrics.students_improved_count} out of {overallMetrics.total_improvements_analyzed} students improved</p>
               </motion.div>
 
               <motion.div 
@@ -466,13 +511,13 @@ function ComparativeAnalysis() {
                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0zm6 3a2 2 0 11-4 0 2 2 0 014 0zM7 10a2 2 0 11-4 0 2 2 0 014 0z" />
                   </svg>
                 </div>
-                <h4 className="text-lg font-semibold text-purple-800 mb-2">Total Students</h4>
+                <h4 className="text-lg font-semibold text-purple-800 mb-2">Students Analyzed</h4>
                 <p className="text-3xl font-bold text-purple-900">{overallMetrics.total_students}</p>
-                <p className="text-sm text-purple-700">{overallMetrics.students_with_consultations} with consultations</p>
+                <p className="text-sm text-purple-700">{overallMetrics.students_with_consultations} received consultations</p>
               </motion.div>
-                  </div>
-                </div>
-              </motion.div>
+              </div>
+            </div>
+        </motion.div>
       )}
 
       {/* Note: Student grades are now handled by the comparative analysis endpoint */}
@@ -481,123 +526,240 @@ function ComparativeAnalysis() {
 
       {/* Note: Consultation history is now handled by the comparative analysis endpoint */}
 
-      {/* Consultation Period Selector */}
-      {allFieldsProvided && (
-        <motion.div
-          initial={{ opacity: 0, y: 20 }}
-          animate={{ opacity: 1, y: 0 }}
-          className="mb-8 px-4"
-        >
-          <div className="bg-white rounded-2xl shadow-lg border border-gray-200 p-6 max-w-2xl mx-auto">
-            <h3 className="text-xl font-semibold text-gray-800 mb-4 text-center">
-              Select Consultation Period
-            </h3>
-            <p className="text-gray-600 text-sm mb-6 text-center">
-              Choose which period the consultation occurred in to compare grades before and after
-            </p>
-            <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
-              {['Prelim', 'Midterm', 'Pre-Final', 'Final'].map((period) => (
-                <motion.button
-                  key={period}
-                  onClick={() => setConsultationPeriod(period)}
-                  whileHover={{ scale: 1.05 }}
-                  whileTap={{ scale: 0.95 }}
-                  className={`px-4 py-3 rounded-xl font-medium transition-all duration-200 ${
-                    consultationPeriod === period
-                      ? 'bg-gradient-to-r from-[#0065A8] to-[#54BEFF] text-white shadow-lg'
-                      : 'bg-gray-100 text-gray-700 hover:bg-gray-200'
-                  }`}
-                >
-                  {period}
-                </motion.button>
-              ))}
-            </div>
-          </div>
-        </motion.div>
-      )}
 
-      {/* Enhanced Run Analysis Button */}
-      {allFieldsProvided && consultationPeriod && (
-        <motion.div 
+      {/* Direct Student Search Section */}
+      {basicFieldsProvided && (
+              <motion.div 
           initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
-          className="mb-12 text-center px-4"
+          className="mb-12 px-4"
         >
-          <div className="relative inline-block">
-            <motion.button
-              onClick={runComparativeAnalysis}
-              disabled={isRunningAnalysis}
-              whileHover={!isRunningAnalysis ? { scale: 1.05, y: -2 } : {}}
-              whileTap={!isRunningAnalysis ? { scale: 0.98 } : {}}
-              className={`relative w-full sm:w-auto px-8 sm:px-12 py-4 sm:py-5 ${
-                isRunningAnalysis 
-                  ? 'bg-gradient-to-r from-gray-400 to-gray-500 cursor-not-allowed' 
-                  : 'bg-gradient-to-r from-[#00D1B2] to-[#00B4B4] hover:from-[#00B4B4] hover:to-[#00A0A0]'
-              } text-white rounded-2xl transition-all duration-300 font-semibold flex items-center justify-center mx-auto text-base sm:text-lg shadow-xl border border-white/20 backdrop-blur-sm`}
-            >
-              {/* Button Content */}
-              <div className="flex items-center gap-3">
-                {isRunningAnalysis ? (
-                  <>
-                    <motion.div
-                      animate={{ rotate: 360 }}
-                      transition={{ duration: 1, repeat: Infinity, ease: "linear" }}
-                      className="w-6 h-6 border-3 border-white border-t-transparent rounded-full"
-                    ></motion.div>
-                    <span>Analyzing Improvement...</span>
-                  </>
+          <div className="bg-white rounded-2xl shadow-lg border border-gray-200 p-6">
+                <div className="text-center mb-6">
+              <h3 className="text-2xl font-bold text-gray-900 mb-2">Individual Student Analysis</h3>
+              <p className="text-gray-600">Search for a student to analyze their consultation impact</p>
+                </div>
+
+            {/* Student Search */}
+            <div className="mb-6">
+              <label className="block text-sm font-semibold text-gray-700 mb-3">
+                Search for Student
+              </label>
+              <div className="relative">
+                {selectedStudent ? (
+                  // Selected student display inside input field
+                  <div className="w-full px-4 py-3 pl-12 pr-12 border border-gray-300 rounded-xl bg-gradient-to-r from-[#0065A8]/10 to-[#54BEFF]/10 border-[#0065A8]/20">
+                    <div className="flex items-center justify-between">
+                      <div className="flex items-center gap-3">
+                        <div className="w-8 h-8 bg-gradient-to-r from-[#0065A8] to-[#54BEFF] rounded-full flex items-center justify-center">
+                          <span className="text-white font-semibold text-sm">
+                            {(() => {
+                              const fullName = selectedStudent.firstName && selectedStudent.lastName 
+                                ? `${selectedStudent.firstName} ${selectedStudent.lastName}` 
+                                : selectedStudent.fullName || '';
+                              return fullName ? fullName.split(' ').map(n => n[0]).join('').toUpperCase() : '??';
+                            })()}
+                          </span>
+                  </div>
+                        <div>
+                          <p className="font-medium text-gray-900 text-sm">
+                            {selectedStudent.firstName && selectedStudent.lastName 
+                              ? `${selectedStudent.firstName} ${selectedStudent.lastName}` 
+                              : selectedStudent.fullName || 'Unknown Student'}
+                          </p>
+                          <p className="text-xs text-gray-600">
+                            ID: {selectedStudent.id || selectedStudent.id_number || selectedStudent.idNumber || 'No ID'}
+                          </p>
+                  </div>
+                  </div>
+                      <button
+                        onClick={() => {
+                          setSelectedStudent(null);
+                          setAvailableAnalyses([]);
+                          setSearchTerm("");
+                          setSearchResults([]);
+                        }}
+                        className="text-gray-400 hover:text-red-500 transition-colors p-1"
+                      >
+                        <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+                        </svg>
+                      </button>
+                    </div>
+                  </div>
                 ) : (
-                  <>
-                    <motion.div
-                      whileHover={{ rotate: 15 }}
-                      transition={{ duration: 0.2 }}
-                    >
-                      <svg
-                        xmlns="http://www.w3.org/2000/svg"
-                        className="h-6 w-6"
-                        viewBox="0 0 20 20"
-                        fill="currentColor"
-                      >
-                        <path
-                          fillRule="evenodd"
-                          d="M6 2a2 2 0 00-2 2v12a2 2 0 002 2h8a2 2 0 002-2V7.414A2 2 0 0015.414 6L12 2.586A2 2 0 0010.586 2H6zm2 10a1 1 0 10-2 0v3a1 1 0 102 0v-3zm4-1a1 1 0 011 1v3a1 1 0 11-2 0v-3a1 1 0 011-1zm-2-8a1 1 0 00-1 1v.01a1 1 0 002 0V4a1 1 0 00-1-1z"
-                          clipRule="evenodd"
-                        />
+                  // Regular search input with dropdown suggestions
+                  <div className="relative">
+                    <input
+                      type="text"
+                      placeholder="Type student name or ID..."
+                      value={searchTerm}
+                      onChange={(e) => {
+                        setSearchTerm(e.target.value);
+                        searchStudents(e.target.value);
+                      }}
+                      className="w-full px-4 py-3 pl-12 border border-gray-300 rounded-xl focus:ring-2 focus:ring-[#0065A8] focus:border-transparent transition-all duration-200"
+                    />
+                    
+                    {/* Search Suggestions Dropdown */}
+                    {searchTerm.length >= 2 && searchResults.length > 0 && (
+                      <div className="absolute top-full left-0 right-0 mt-1 bg-white border border-gray-200 rounded-xl shadow-lg z-50 max-h-64 overflow-y-auto">
+                        {searchResults.map((student) => (
+                          <motion.div
+                            key={student.id || student.id_number || student.idNumber}
+                            initial={{ opacity: 0, y: -10 }}
+                            animate={{ opacity: 1, y: 0 }}
+                            whileHover={{ backgroundColor: "rgba(0, 101, 168, 0.05)" }}
+                            className="p-3 cursor-pointer border-b border-gray-100 last:border-b-0 hover:bg-blue-50 transition-all duration-200"
+                            onClick={() => {
+                              setSelectedStudent(student);
+                              getAvailableAnalyses(student);
+                              setSearchTerm("");
+                              setSearchResults([]);
+                            }}
+                          >
+                            <div className="flex items-center gap-3">
+                              <div className="w-8 h-8 bg-gradient-to-r from-[#0065A8] to-[#54BEFF] rounded-full flex items-center justify-center">
+                                <span className="text-white font-semibold text-xs">
+                                  {(() => {
+                                    const fullName = student.firstName && student.lastName 
+                                      ? `${student.firstName} ${student.lastName}` 
+                                      : student.fullName || '';
+                                    return fullName ? fullName.split(' ').map(n => n[0]).join('').toUpperCase() : '??';
+                                  })()}
+                                </span>
+                              </div>
+                              <div>
+                                <p className="font-medium text-gray-900 text-sm">
+                                  {student.firstName && student.lastName 
+                                    ? `${student.firstName} ${student.lastName}` 
+                                    : student.fullName || 'Unknown Student'}
+                                </p>
+                                <p className="text-xs text-gray-500">
+                                  {student.id || student.id_number || student.idNumber || 'No ID'}
+                                </p>
+                  </div>
+                </div>
+              </motion.div>
+            ))}
+          </div>
+                    )}
+
+                    {/* No Results Message */}
+                    {searchTerm.length >= 2 && searchResults.length === 0 && !isSearching && (
+                      <div className="absolute top-full left-0 right-0 mt-1 bg-white border border-gray-200 rounded-xl shadow-lg z-50 p-4">
+                        <div className="flex items-center gap-3 text-gray-500">
+                          <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9.172 16.172a4 4 0 015.656 0M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
+                          </svg>
+                          <div>
+                            <p className="text-sm font-medium">No students found</p>
+                            <p className="text-xs">Try a different search term</p>
+              </div>
+                          </div>
+              </div>
+                    )}
+            </div>
+                )}
+                
+                <div className="absolute left-4 top-1/2 transform -translate-y-1/2">
+                  {isSearching ? (
+                    <div className="animate-spin rounded-full h-5 w-5 border-b-2 border-[#0065A8]"></div>
+                  ) : (
+                    <svg className="w-5 h-5 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
+                    </svg>
+                  )}
+                </div>
+              </div>
+            </div>
+
+            {/* Available Analyses */}
+            {selectedStudent && (
+              <div className="space-y-6">
+                <div>
+                  <div className="flex items-center justify-between mb-4">
+                    <h4 className="text-lg font-semibold text-gray-900">Available Consultation Periods</h4>
+                    {analysisResult && (
+                      <div className="flex items-center gap-2 text-sm text-green-600">
+                        <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
+                        </svg>
+                        <span>Analysis completed - Try another consultation period below</span>
+                      </div>
+                    )}
+                  </div>
+                  {isLoadingAnalyses ? (
+                    <div className="text-center py-8">
+                      <div className="inline-block animate-spin rounded-full h-8 w-8 border-b-2 border-[#0065A8]"></div>
+                      <p className="text-gray-500 mt-2">Loading available analyses...</p>
+                    </div>
+                  ) : availableAnalyses.length > 0 ? (
+                    <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                      {availableAnalyses.map((analysis) => {
+                        const isLastRun = lastRunAnalysisId === analysis.id;
+                        return (
+        <motion.div 
+                            key={analysis.id}
+                            whileHover={{ scale: 1.02 }}
+                            whileTap={{ scale: 0.98 }}
+                            className={`p-4 border rounded-xl hover:shadow-md transition-all duration-200 cursor-pointer ${
+                              isLastRun 
+                                ? 'border-green-300 bg-green-50 hover:border-green-400' 
+                                : 'border-gray-200 hover:border-[#0065A8]'
+                            }`}
+                            onClick={() => runAnalysis(analysis)}
+                          >
+              <div className="flex items-center gap-3">
+                              <div className={`w-10 h-10 rounded-full flex items-center justify-center ${
+                                isLastRun 
+                                  ? 'bg-gradient-to-r from-green-500 to-green-600' 
+                                  : 'bg-gradient-to-r from-blue-500 to-blue-600'
+                              }`}>
+                                {isLastRun ? (
+                                  <svg className="w-5 h-5 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
+                                  </svg>
+                                ) : (
+                                  <svg className="w-5 h-5 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z" />
                       </svg>
+                                )}
+                              </div>
+                              <div className="flex-1">
+                                <div className="flex items-center gap-2">
+                                  <p className="font-medium text-gray-900">{analysis.course.course_code}</p>
+                                  {isLastRun && (
+                                    <span className="px-2 py-1 bg-green-100 text-green-800 text-xs rounded-full font-medium">
+                                      Just Run
+                                    </span>
+                                  )}
+                                </div>
+                                <p className="text-sm text-gray-600">{analysis.consultation_period} Period Impact Analysis</p>
+                                <p className="text-xs text-gray-500 mt-1">
+                                  {selectedSemester.school_year} - {selectedSemester.semester} Semester
+                                </p>
+                              </div>
+                            </div>
                     </motion.div>
-                    <span>Run Grade Analysis</span>
-                    <motion.div
-                      animate={{ x: [0, 4, 0] }}
-                      transition={{ duration: 1.5, repeat: Infinity, ease: "easeInOut" }}
-                    >
-                      <svg
-                        xmlns="http://www.w3.org/2000/svg"
-                        className="h-5 w-5"
-                        viewBox="0 0 20 20"
-                        fill="currentColor"
-                      >
-                        <path
-                          fillRule="evenodd"
-                          d="M10.293 3.293a1 1 0 011.414 0l6 6a1 1 0 010 1.414l-6 6a1 1 0 01-1.414-1.414L14.586 11H3a1 1 0 110-2h11.586l-4.293-4.293a1 1 0 010-1.414z"
-                          clipRule="evenodd"
-                        />
+                        );
+                      })}
+                    </div>
+                  ) : (
+                    <div className="text-center py-8 border border-gray-200 rounded-xl bg-gray-50">
+                      <div className="w-12 h-12 bg-gray-200 rounded-full flex items-center justify-center mx-auto mb-3">
+                        <svg className="w-6 h-6 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z" />
                       </svg>
-                    </motion.div>
-                  </>
+                      </div>
+                      <p className="text-gray-500 text-sm">No consultation periods available</p>
+                      <p className="text-gray-400 text-xs mt-1">This student may not have grades or consultation data for this semester</p>
+                    </div>
                 )}
               </div>
-            </motion.button>
           </div>
-          
-          {/* Analysis Description */}
-          <motion.p 
-            initial={{ opacity: 0 }}
-            animate={{ opacity: 1 }}
-            transition={{ delay: 0.3 }}
-            className="mt-4 text-sm text-gray-600 max-w-md mx-auto"
-          >
-            Generate simple grade improvement analysis based on consultation period
-          </motion.p>
+            )}
+          </div>
         </motion.div>
       )}
 
@@ -628,10 +790,10 @@ function ComparativeAnalysis() {
                   </div>
                   <div className="text-center">
                     <h3 className="text-3xl sm:text-4xl font-bold text-[#0065A8] mb-2">
-                      Grade Improvement Analysis
+                      Consultation Impact Results
                     </h3>
                     <p className="text-gray-600 text-sm sm:text-base">
-                      Student performance comparison before and after consultation
+                      Analysis of student performance before and after consultation period
                     </p>
                   </div>
                 </div>
@@ -639,76 +801,205 @@ function ComparativeAnalysis() {
             </div>
           </motion.div>
 
-          {/* Simple Grade Comparison */}
-          <div className="max-w-4xl mx-auto">
-            <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
-              {/* Student Grade Comparison Card */}
-            <motion.div
-              initial={{ opacity: 0, x: -30 }}
-              animate={{ opacity: 1, x: 0 }}
-              whileHover={{ scale: 1.02, y: -5 }}
-              transition={{ type: "spring", stiffness: 300 }}
-              className="bg-white rounded-3xl shadow-xl overflow-hidden border border-gray-100 transition-all duration-500 hover:shadow-2xl"
-            >
-              <div className="bg-gradient-to-br from-[#397de2] via-[#54BEFF] to-[#0065A8] p-6 sm:p-8 relative overflow-hidden">
-                  <div className="relative flex items-center gap-4">
-                    <div className="w-12 h-12 bg-white/20 backdrop-blur-sm rounded-full flex items-center justify-center">
-                      <svg className="w-6 h-6 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z" />
-                        </svg>
-                      </div>
-                    <div>
-                      <h4 className="text-2xl sm:text-3xl font-bold text-white">
-                        Grade Comparison
-                      </h4>
+          {/* Consultation Impact Analysis - Full Width */}
+          <motion.div 
+            initial={{ opacity: 0, y: 20 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ delay: 0.5 }}
+            className="max-w-6xl mx-auto mb-8"
+          >
+            <div className="bg-white rounded-3xl shadow-xl border border-gray-100 overflow-hidden">
+              <div className="bg-gradient-to-br from-[#0065A8] via-[#057DCD] to-[#54BEFF] p-6 sm:p-8 relative overflow-hidden">
+                <div className="relative flex items-center gap-4">
+                  <div className="w-16 h-16 bg-white/20 backdrop-blur-sm rounded-full flex items-center justify-center">
+                    <svg className="w-8 h-8 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9.663 17h4.673M12 3v1m6.364 1.636l-.707.707M21 12h-1M4 12H3m3.343-5.657l-.707-.707m2.828 9.9a5 5 0 117.072 0l-.548.547A3.374 3.374 0 0014 18.469V19a2 2 0 11-4 0v-.531c0-.895-.356-1.754-.988-2.386l-.548-.547z" />
+                    </svg>
+                  </div>
+                  <div>
+                    <h3 className="text-3xl sm:text-4xl font-bold text-white mb-2">
+                      Consultation Impact Analysis
+                    </h3>
                     <p className="text-blue-100 text-sm sm:text-base">
-                        {analysisResult.before_period} → {analysisResult.after_period}
+                      Comprehensive analysis of consultation effectiveness and student improvement correlation
                     </p>
                   </div>
                 </div>
               </div>
 
+              <div className="p-6 sm:p-8">
+                <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
+                  {/* Consultation Status */}
+                  <div className="bg-gradient-to-br from-blue-50 to-indigo-50 rounded-2xl p-6 border border-blue-200">
+                    <div className="flex items-center gap-3 mb-6">
+                      <div className="w-12 h-12 bg-gradient-to-r from-blue-500 to-indigo-600 rounded-full flex items-center justify-center">
+                        <svg className="w-6 h-6 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 12h.01M12 12h.01M16 12h.01M21 12c0 4.418-4.03 8-9 8a9.863 9.863 0 01-4.255-.949L3 20l1.395-3.72C3.512 15.042 3 13.574 3 12c0-4.418 4.03-8 9-8s9 3.582 9 8z" />
+                        </svg>
+                      </div>
+                      <h4 className="text-xl font-bold text-gray-900">Consultation Status</h4>
+                    </div>
+                    <div className="space-y-4">
+                      <div className="flex justify-between items-center">
+                        <span className="text-sm font-medium text-gray-600">Consultation Conducted:</span>
+                        <span className={`px-4 py-2 rounded-full text-sm font-medium ${
+                          analysisResult.has_consultation 
+                            ? 'bg-green-100 text-green-800' 
+                            : 'bg-red-100 text-red-800'
+                        }`}>
+                          {analysisResult.has_consultation ? 'Yes' : 'No'}
+                        </span>
+                      </div>
+                      {analysisResult.has_consultation && (
+                        <div className="flex justify-between items-center">
+                          <span className="text-sm font-medium text-gray-600">Number of Sessions:</span>
+                          <span className="text-lg font-bold text-gray-900">{analysisResult.consultation_count}</span>
+                        </div>
+                      )}
+                    </div>
+                  </div>
+
+                  {/* Impact Assessment */}
+                  <div className="bg-gradient-to-br from-green-50 to-emerald-50 rounded-2xl p-6 border border-green-200">
+                    <div className="flex items-center gap-3 mb-6">
+                      <div className="w-12 h-12 bg-gradient-to-r from-green-500 to-emerald-600 rounded-full flex items-center justify-center">
+                        <svg className="w-6 h-6 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z" />
+                        </svg>
+                      </div>
+                      <h4 className="text-xl font-bold text-gray-900">Impact Assessment</h4>
+                    </div>
+                    <div className="space-y-4">
+                      <div className="flex justify-between items-center">
+                        <span className="text-sm font-medium text-gray-600">Consultation Impact:</span>
+                        <span className={`px-4 py-2 rounded-full text-sm font-medium ${
+                          analysisResult.consultation_impact === 'High Impact' 
+                            ? 'bg-green-100 text-green-800'
+                            : analysisResult.consultation_impact === 'Moderate Impact'
+                            ? 'bg-yellow-100 text-yellow-800'
+                            : analysisResult.consultation_impact === 'Low Impact'
+                            ? 'bg-blue-100 text-blue-800'
+                            : analysisResult.consultation_impact === 'Negative Impact'
+                            ? 'bg-red-100 text-red-800'
+                            : 'bg-gray-100 text-gray-800'
+                        }`}>
+                          {analysisResult.consultation_impact}
+                        </span>
+                      </div>
+                      <div className="flex justify-between items-center">
+                        <span className="text-sm font-medium text-gray-600">Significance:</span>
+                        <span className={`px-4 py-2 rounded-full text-sm font-medium ${
+                          analysisResult.correlation_analysis?.consultation_significance === 'High'
+                            ? 'bg-green-100 text-green-800'
+                            : analysisResult.correlation_analysis?.consultation_significance === 'Low'
+                            ? 'bg-yellow-100 text-yellow-800'
+                            : 'bg-gray-100 text-gray-800'
+                        }`}>
+                          {analysisResult.correlation_analysis?.consultation_significance || 'Unknown'}
+                        </span>
+                      </div>
+                    </div>
+                  </div>
+
+                  {/* Effectiveness Analysis */}
+                  <div className="bg-gradient-to-br from-indigo-50 to-purple-50 rounded-2xl p-6 border border-indigo-200">
+                    <div className="flex items-center gap-3 mb-6">
+                      <div className="w-12 h-12 bg-gradient-to-r from-indigo-500 to-purple-600 rounded-full flex items-center justify-center">
+                        <svg className="w-6 h-6 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9.663 17h4.673M12 3v1m6.364 1.636l-.707.707M21 12h-1M4 12H3m3.343-5.657l-.707-.707m2.828 9.9a5 5 0 117.072 0l-.548.547A3.374 3.374 0 0014 18.469V19a2 2 0 11-4 0v-.531c0-.895-.356-1.754-.988-2.386l-.548-.547z" />
+                        </svg>
+                      </div>
+                      <h4 className="text-xl font-bold text-gray-900">Effectiveness Analysis</h4>
+                    </div>
+                    <div className="space-y-4">
+                      <p className="text-gray-700 leading-relaxed text-sm">
+                        {analysisResult.consultation_effectiveness}
+                      </p>
+                      {analysisResult.correlation_analysis?.consultation_to_improvement && (
+                        <div className="flex items-center gap-2 text-sm text-green-700 font-medium">
+                          <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
+                          </svg>
+                          <span>Strong correlation between consultation and improvement observed</span>
+                        </div>
+                      )}
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </motion.div>
+
+          {/* Performance Comparison and Visualization */}
+          <div className="max-w-6xl mx-auto">
+            <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
+              {/* Performance Comparison Card */}
+              <motion.div
+                initial={{ opacity: 0, x: -30 }}
+                animate={{ opacity: 1, x: 0 }}
+                whileHover={{ scale: 1.02, y: -5 }}
+                transition={{ type: "spring", stiffness: 300 }}
+                className="bg-white rounded-3xl shadow-xl overflow-hidden border border-gray-100 transition-all duration-500 hover:shadow-2xl"
+              >
+                <div className="bg-gradient-to-br from-[#397de2] via-[#54BEFF] to-[#0065A8] p-6 sm:p-8 relative overflow-hidden">
+                  <div className="relative flex items-center gap-4">
+                    <div className="w-12 h-12 bg-white/20 backdrop-blur-sm rounded-full flex items-center justify-center">
+                      <svg className="w-6 h-6 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z" />
+                      </svg>
+                    </div>
+                    <div>
+                      <h4 className="text-2xl sm:text-3xl font-bold text-white">
+                        Performance Comparison
+                      </h4>
+                      <p className="text-blue-100 text-sm sm:text-base">
+                        {analysisResult.before_period} → {analysisResult.after_period}
+                      </p>
+                    </div>
+                  </div>
+                </div>
+
                 {/* Grade Comparison Content */}
                 <div className="p-6 sm:p-8">
                   <div className="grid grid-cols-1 sm:grid-cols-2 gap-6 mb-6">
-                  <motion.div 
-                    initial={{ opacity: 0, y: 20 }}
-                    animate={{ opacity: 1, y: 0 }}
-                    transition={{ delay: 0.6 }}
+                    <motion.div 
+                      initial={{ opacity: 0, y: 20 }}
+                      animate={{ opacity: 1, y: 0 }}
+                      transition={{ delay: 0.6 }}
                       className="bg-gradient-to-br from-gray-50 to-gray-100 rounded-2xl p-6 text-center border border-gray-200"
-                  >
+                    >
                       <div className="flex items-center justify-center gap-3 mb-4">
                         <div className="w-8 h-8 bg-gray-600 rounded-full flex items-center justify-center">
-                        <svg className="w-4 h-4 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                          <svg className="w-4 h-4 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                             <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
-                        </svg>
-                      </div>
+                          </svg>
+                        </div>
                         <p className="text-sm font-medium text-gray-600">Before ({analysisResult.before_period})</p>
-                    </div>
+                      </div>
                       <p className="text-4xl font-bold text-gray-800">
                         {analysisResult.before_grade}
-                    </p>
-                  </motion.div>
-                    
-                  <motion.div 
-                    initial={{ opacity: 0, y: 20 }}
-                    animate={{ opacity: 1, y: 0 }}
-                    transition={{ delay: 0.7 }}
+                      </p>
+                    </motion.div>
+                      
+                    <motion.div 
+                      initial={{ opacity: 0, y: 20 }}
+                      animate={{ opacity: 1, y: 0 }}
+                      transition={{ delay: 0.7 }}
                       className="bg-gradient-to-br from-blue-50 to-blue-100 rounded-2xl p-6 text-center border border-blue-200"
-                  >
+                    >
                       <div className="flex items-center justify-center gap-3 mb-4">
-                      <div className="w-8 h-8 bg-gradient-to-r from-[#0065A8] to-[#54BEFF] rounded-full flex items-center justify-center">
-                        <svg className="w-4 h-4 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <div className="w-8 h-8 bg-gradient-to-r from-[#0065A8] to-[#54BEFF] rounded-full flex items-center justify-center">
+                          <svg className="w-4 h-4 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                             <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
-                        </svg>
-                      </div>
+                          </svg>
+                        </div>
                         <p className="text-sm font-medium text-blue-600">After ({analysisResult.after_period})</p>
-                    </div>
+                      </div>
                       <p className="text-4xl font-bold text-[#0065A8]">
                         {analysisResult.after_grade}
-                    </p>
-                  </motion.div>
-                </div>
+                      </p>
+                    </motion.div>
+                  </div>
 
                   {/* Improvement Summary */}
                   <motion.div 
@@ -731,16 +1022,16 @@ function ComparativeAnalysis() {
                           ? 'bg-gradient-to-r from-red-500 to-red-600'
                           : 'bg-gradient-to-r from-gray-500 to-gray-600'
                       }`}>
-                          <svg className="w-4 h-4 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                          {analysisResult.improvement_status === 'Improved' ? (
-                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 7h8m0 0v8m0-8l-8 8-4-4-6 6" />
-                          ) : analysisResult.improvement_status === 'Declined' ? (
-                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 17h8m0 0V9m0 8l-8-8-4 4-6-6" />
-                          ) : (
-                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M20 12H4" />
-                          )}
-                          </svg>
-                        </div>
+                        <svg className="w-4 h-4 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        {analysisResult.improvement_status === 'Improved' ? (
+                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 7h8m0 0v8m0-8l-8 8-4-4-6 6" />
+                        ) : analysisResult.improvement_status === 'Declined' ? (
+                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 17h8m0 0V9m0 8l-8-8-4 4-6-6" />
+                        ) : (
+                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M20 12H4" />
+                        )}
+                        </svg>
+                      </div>
                       <p className={`text-sm font-medium ${
                         analysisResult.improvement_status === 'Improved' 
                           ? 'text-green-600'
@@ -750,7 +1041,7 @@ function ComparativeAnalysis() {
                       }`}>
                         {analysisResult.improvement_status}
                       </p>
-                      </div>
+                    </div>
                     <p className={`text-3xl font-bold ${
                       analysisResult.improvement_status === 'Improved' 
                         ? 'text-green-800'
@@ -770,36 +1061,36 @@ function ComparativeAnalysis() {
                       ({analysisResult.improvement_percent > 0 ? '+' : ''}{analysisResult.improvement_percent}%)
                     </p>
                   </motion.div>
-                    </div>
-                  </motion.div>
+                </div>
+              </motion.div>
 
-              {/* Simple Bar Chart Card */}
-            <motion.div
-              initial={{ opacity: 0, x: 30 }}
-              animate={{ opacity: 1, x: 0 }}
-              whileHover={{ scale: 1.02, y: -5 }}
-              transition={{ type: "spring", stiffness: 300 }}
-              className="bg-white rounded-3xl shadow-xl overflow-hidden border border-gray-100 transition-all duration-500 hover:shadow-2xl"
-            >
-              <div className="bg-gradient-to-br from-[#fc6969] via-[#ff8f8f] to-[#ff6b6b] p-6 sm:p-8 relative overflow-hidden">
-                <div className="relative flex items-center gap-4">
-                  <div className="w-12 h-12 bg-white/20 backdrop-blur-sm rounded-full flex items-center justify-center">
-                    <svg className="w-6 h-6 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M7 12l3-3 3 3 4-4M8 21l4-4 4 4M3 4h18M4 4h16v12a1 1 0 01-1 1H5a1 1 0 01-1-1V4z" />
-                    </svg>
-                  </div>
-                  <div>
-                    <h4 className="text-2xl sm:text-3xl font-bold text-white">
-                      Grade Progression
-                    </h4>
+              {/* Performance Visualization Card */}
+              <motion.div
+                initial={{ opacity: 0, x: 30 }}
+                animate={{ opacity: 1, x: 0 }}
+                whileHover={{ scale: 1.02, y: -5 }}
+                transition={{ type: "spring", stiffness: 300 }}
+                className="bg-white rounded-3xl shadow-xl overflow-hidden border border-gray-100 transition-all duration-500 hover:shadow-2xl"
+              >
+                <div className="bg-gradient-to-br from-[#fc6969] via-[#ff8f8f] to-[#ff6b6b] p-6 sm:p-8 relative overflow-hidden">
+                  <div className="relative flex items-center gap-4">
+                    <div className="w-12 h-12 bg-white/20 backdrop-blur-sm rounded-full flex items-center justify-center">
+                      <svg className="w-6 h-6 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M7 12l3-3 3 3 4-4M8 21l4-4 4 4M3 4h18M4 4h16v12a1 1 0 01-1 1H5a1 1 0 01-1-1V4z" />
+                      </svg>
+                    </div>
+                    <div>
+                      <h4 className="text-2xl sm:text-3xl font-bold text-white">
+                        Performance Visualization
+                      </h4>
                       <p className="text-red-100 text-sm sm:text-base">
-                        Visual comparison of grades
-                    </p>
+                        Visual representation of grade progression
+                      </p>
+                    </div>
                   </div>
                 </div>
-              </div>
-                
-              <div className="p-6 sm:p-8">
+                  
+                <div className="p-6 sm:p-8">
                   <div className="h-64 w-full">
                     <Bar
                       data={{
@@ -858,326 +1149,15 @@ function ComparativeAnalysis() {
                       }}
                     />
                   </div>
-                    </div>
-                </motion.div>
-              </div>
                 </div>
-        </motion.div>
-      )}
-
-      {/* Selection Modal - Enhanced with modern design */}
-      {showSelectionModal && (
-        <motion.div 
-          initial={{ opacity: 0 }}
-          animate={{ opacity: 1 }}
-          exit={{ opacity: 0 }}
-          className="fixed inset-0 bg-black/60 backdrop-blur-md flex items-center justify-center z-50 p-4"
-          onClick={() => setShowSelectionModal(false)}
-        >
-          <motion.div
-            initial={{ opacity: 0, scale: 0.9, y: 20 }}
-            animate={{ opacity: 1, scale: 1, y: 0 }}
-            exit={{ opacity: 0, scale: 0.9, y: 20 }}
-            transition={{ type: "spring", stiffness: 300, damping: 30 }}
-            className="bg-white/95 backdrop-blur-sm rounded-2xl shadow-2xl w-full max-w-2xl max-h-[90vh] overflow-hidden border border-white/20"
-            onClick={(e) => e.stopPropagation()}
-          >
-            {/* Modal Header */}
-            <div className="bg-gradient-to-r from-[#0065A8] via-[#057DCD] to-[#54BEFF] px-8 py-6 flex justify-between items-center">
-              <div className="flex items-center gap-3">
-                <div className="w-10 h-10 bg-white/20 backdrop-blur-sm rounded-full flex items-center justify-center">
-                  <svg className="w-6 h-6 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z" />
-                  </svg>
-                </div>
-                <div>
-                  <h2 className="text-xl font-bold text-white">
-                    Analysis Configuration
-                  </h2>
-                  <p className="text-blue-100 text-sm">
-                    Select your analysis parameters
-                  </p>
-                </div>
-              </div>
-              <motion.button
-                whileHover={{ scale: 1.1 }}
-                whileTap={{ scale: 0.9 }}
-                onClick={() => setShowSelectionModal(false)}
-                className="text-white hover:text-gray-200 transition-colors p-2 rounded-lg hover:bg-white/20"
-              >
-                <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
-                </svg>
-              </motion.button>
+              </motion.div>
             </div>
+          </div>
+              </motion.div>
+            )}
 
-            {/* Modal Content */}
-            <div className="p-8 overflow-y-auto max-h-[calc(90vh-200px)] scrollbar-thin scrollbar-thumb-gray-300 scrollbar-track-gray-100">
-              <div className="space-y-6">
-              {/* Semester Selection */}
-                <div>
-                  <label className="block text-sm font-semibold text-gray-700 mb-3">
-                    Select Semester
-                </label>
-                <select
-                    value={tempSemester ? `${tempSemester.school_year}-${tempSemester.semester}` : ""}
-                  onChange={(e) => {
-                      console.log("🔍 DEBUG - Semester dropdown changed:", e.target.value);
-                      const [schoolYear, semester] = e.target.value.split('-');
-                      const selectedSem = semesters.find(s => s.school_year === schoolYear && s.semester === semester);
-                      console.log("🔍 DEBUG - Selected semester:", selectedSem);
-                      setTempSemester(selectedSem);
-                    }}
-                    className="w-full px-4 py-3 border border-gray-300 rounded-xl focus:ring-2 focus:ring-[#0065A8] focus:border-transparent transition-all duration-200"
-                  >
-                    <option value="">Choose a semester</option>
-                    {semesters.map((semester) => (
-                      <option key={`${semester.school_year}-${semester.semester}`} value={`${semester.school_year}-${semester.semester}`}>
-                        {semester.school_year} - {semester.semester}
-                    </option>
-                  ))}
-                </select>
-                  </div>
-
-                {/* Teacher Selection */}
-                <div>
-                  <label className="block text-sm font-semibold text-gray-700 mb-3">
-                    Select Teacher
-                  </label>
-                  <select
-                    value={tempTeacher}
-                    onChange={(e) => setTempTeacher(e.target.value)}
-                    className="w-full px-4 py-3 border border-gray-300 rounded-xl focus:ring-2 focus:ring-[#0065A8] focus:border-transparent transition-all duration-200"
-                  >
-                    <option value="">Choose a teacher</option>
-                    {teachers.map((teacher) => (
-                      <option key={teacher.id} value={teacher.id}>
-                        {teacher.fullName}
-                      </option>
-                    ))}
-                  </select>
-                  </div>
-
-                {/* Student Selection */}
-                <div>
-                  <label className="block text-sm font-semibold text-gray-700 mb-3">
-                    Select Student
-                  </label>
-                  <div className="space-y-3">
-                    <div className="min-h-[45px] flex items-center gap-2 border-2 border-[#0065A8] rounded-xl px-3 py-2 focus-within:ring-2 focus-within:ring-[#54BEFF]">
-                      {tempStudent && tempStudents.find(s => (s.id || s.id_number || s.idNumber) === tempStudent) ? (
-                        <div className="flex items-center justify-between w-full">
-                          <div className="flex items-center gap-3">
-                            <div className="w-8 h-8 bg-gradient-to-r from-[#0065A8] to-[#54BEFF] rounded-full flex items-center justify-center">
-                              <span className="text-white font-semibold text-sm">
-                                {(() => {
-                                  const student = tempStudents.find(s => (s.id || s.id_number || s.idNumber) === tempStudent);
-                                  const fullName = student?.firstName && student?.lastName 
-                                    ? `${student.firstName} ${student.lastName}` 
-                                    : student?.fullName || '';
-                                  return fullName ? fullName.split(' ').map(n => n[0]).join('').toUpperCase() : '??';
-                                })()}
-                              </span>
-                      </div>
-                            <div>
-                              <p className="font-medium text-gray-900">
-                                {(() => {
-                                  const student = tempStudents.find(s => (s.id || s.id_number || s.idNumber) === tempStudent);
-                                  return student?.firstName && student?.lastName 
-                                    ? `${student.firstName} ${student.lastName}` 
-                                    : student?.fullName || 'Unknown Student';
-                                })()}
-                              </p>
-                              <p className="text-sm text-gray-500">
-                                {(() => {
-                                  const student = tempStudents.find(s => (s.id || s.id_number || s.idNumber) === tempStudent);
-                                  return student?.id || student?.id_number || student?.idNumber || 'No ID';
-                                })()}
-                              </p>
-                      </div>
-                    </div>
-                          <button
-                      onClick={() => {
-                        setTempStudent("");
-                              setTempStudentName("");
-                              setTempCourses([]);
-                      }}
-                            className="text-gray-400 hover:text-red-500 transition-colors p-1"
-                    >
-                      <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
-                      </svg>
-                          </button>
-                        </div>
-                      ) : (
-                    <input
-                      type="text"
-                          placeholder="Search students..."
-                      value={tempStudentName}
-                          onChange={(e) => setTempStudentName(e.target.value)}
-                          className="flex-1 outline-none bg-transparent text-sm"
-                        />
-                      )}
-                    </div>
-                    {isLoadingStudents ? (
-                      <div className="text-center py-8">
-                        <div className="inline-block animate-spin rounded-full h-8 w-8 border-b-2 border-[#0065A8]"></div>
-                        <p className="text-gray-500 mt-2">Loading students...</p>
-                      </div>
-                    ) : !isStudentSearching ? (
-                      <div className="text-center py-8 border border-gray-200 rounded-xl bg-gray-50">
-                        <div className="w-12 h-12 bg-gray-200 rounded-full flex items-center justify-center mx-auto mb-3">
-                          <svg className="w-6 h-6 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
-                      </svg>
-                    </div>
-                        <p className="text-gray-500 text-sm">Start typing to search for students</p>
-                        <p className="text-gray-400 text-xs mt-1">Search by name or student ID</p>
-                  </div>
-                    ) : filteredStudents.length === 0 ? (
-                      <div className="text-center py-8 border border-gray-200 rounded-xl bg-gray-50">
-                        <div className="w-12 h-12 bg-gray-200 rounded-full flex items-center justify-center mx-auto mb-3">
-                          <svg className="w-6 h-6 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9.172 16.172a4 4 0 015.656 0M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
-                          </svg>
-                        </div>
-                        <p className="text-gray-500 text-sm">No students found</p>
-                        <p className="text-gray-400 text-xs mt-1">Try a different search term</p>
-                      </div>
-                    ) : (
-                      <div className="max-h-48 overflow-y-auto border border-gray-200 rounded-xl">
-                        {filteredStudents.map((student) => (
-                          <motion.div
-                            key={student.id || student.id_number || student.idNumber}
-                            whileHover={{ backgroundColor: "rgba(0, 101, 168, 0.05)" }}
-                            className={`p-3 cursor-pointer border-b border-gray-100 last:border-b-0 ${
-                              tempStudent === (student.id || student.id_number || student.idNumber) ? 'bg-[#0065A8]/10 border-l-4 border-l-[#0065A8]' : ''
-                            }`}
-                            onClick={() => {
-                              setTempStudent(student.id || student.id_number || student.idNumber);
-                              setTempStudentName(""); // Clear search field when student is selected
-                            }}
-                          >
-                            <div className="flex items-center gap-3">
-                              <div className="w-10 h-10 bg-gradient-to-r from-[#0065A8] to-[#54BEFF] rounded-full flex items-center justify-center">
-                                <span className="text-white font-semibold text-sm">
-                                  {(() => {
-                                    const fullName = student.firstName && student.lastName 
-                                      ? `${student.firstName} ${student.lastName}` 
-                                      : student.fullName || '';
-                                    return fullName ? fullName.split(' ').map(n => n[0]).join('').toUpperCase() : '??';
-                                  })()}
-                                </span>
-                          </div>
-                  <div>
-                    <p className="font-medium text-gray-900">
-                      {student.firstName && student.lastName 
-                        ? `${student.firstName} ${student.lastName}` 
-                        : student.fullName || 'Unknown Student'}
-                    </p>
-                    <p className="text-sm text-gray-500">
-                      {student.id || student.id_number || student.idNumber || 'No ID'}
-                    </p>
-                          </div>
-                        </div>
-                          </motion.div>
-                        ))}
-                  </div>
-                )}
-                  </div>
+      {/* Note: Modal removed - now using direct search on page */}
                 </div>
-
-              {/* Course Selection */}
-                <div>
-                  <label className="block text-sm font-semibold text-gray-700 mb-3">
-                    Select Course
-                </label>
-                <select
-                  value={tempCourse}
-                  onChange={(e) => setTempCourse(e.target.value)}
-                    disabled={!tempStudent || isLoadingCourses}
-                    className="w-full px-4 py-3 border border-gray-300 rounded-xl focus:ring-2 focus:ring-[#0065A8] focus:border-transparent transition-all duration-200 disabled:bg-gray-100 disabled:cursor-not-allowed"
-                  >
-                    <option value="">
-                      {!tempStudent 
-                        ? "Select a student first" 
-                        : isLoadingCourses 
-                          ? "Loading courses..." 
-                          : "Choose a course"}
-                    </option>
-                    {tempCourses.map((course) => (
-                      <option key={course.id} value={course.id}>
-                        {course.course_code} - {course.course_name}
-                    </option>
-                  ))}
-                </select>
-                  {tempStudent && tempCourses.length === 0 && !isLoadingCourses && (
-                    <p className="text-sm text-gray-500 mt-2">
-                      No courses found for this student with the selected teacher and semester.
-                    </p>
-                  )}
-                </div>
-
-                {/* Consultation Period Selection */}
-                <div>
-                  <label className="block text-sm font-semibold text-gray-700 mb-3">
-                    Consultation Period
-                  </label>
-                  <select
-                    value={consultationPeriod}
-                    onChange={(e) => setConsultationPeriod(e.target.value)}
-                    className="w-full px-4 py-3 border border-gray-300 rounded-xl focus:ring-2 focus:ring-[#0065A8] focus:border-transparent transition-all duration-200"
-                  >
-                    <option value="Prelim">Prelim</option>
-                    <option value="Midterm">Midterm</option>
-                    <option value="Pre-Final">Pre-Final</option>
-                    <option value="Final">Final</option>
-                  </select>
-                  <p className="text-sm text-gray-500 mt-2">
-                    Select the period when the consultation occurred. The analysis will compare grades before and after this period.
-                  </p>
-                </div>
-              </div>
-              
-              {/* Scroll indicator */}
-              <div className="text-center py-4">
-                <div className="inline-flex items-center text-sm text-gray-400">
-                  <svg className="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 14l-7 7m0 0l-7-7m7 7V3" />
-                  </svg>
-                  Scroll down to see Apply button
-                </div>
-              </div>
-            </div>
-
-            {/* Modal Footer */}
-            <div className="px-8 py-6 bg-gray-50 border-t border-gray-200 flex justify-end gap-4">
-              <motion.button
-                whileHover={{ scale: 1.05 }}
-                whileTap={{ scale: 0.95 }}
-                onClick={closeSelectionModal}
-                className="px-6 py-3 text-gray-600 hover:text-gray-800 transition-colors font-medium"
-              >
-                Cancel
-              </motion.button>
-              <motion.button
-                whileHover={{ scale: 1.05 }}
-                whileTap={{ scale: 0.95 }}
-                onClick={applySelection}
-                disabled={!tempSemester || !tempTeacher || !tempStudent || !tempCourse}
-                className={`px-8 py-3 rounded-xl font-semibold transition-all duration-200 ${
-                  tempSemester && tempTeacher && tempStudent && tempCourse
-                    ? 'bg-gradient-to-r from-[#0065A8] to-[#54BEFF] text-white hover:from-[#0056A3] hover:to-[#4A9EFF] shadow-lg'
-                    : 'bg-gray-300 text-gray-500 cursor-not-allowed'
-                }`}
-              >
-                Apply Selection
-              </motion.button>
-            </div>
-          </motion.div>
-        </motion.div>
-      )}
-      </div>
     </div>
   );
 }
