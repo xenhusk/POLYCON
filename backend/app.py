@@ -18,6 +18,8 @@ from routes.data_routes import data_bp # Import data_bp
 from routes.semester_routes import semester_bp # Import semester_bp
 from routes.user_routes import user_bp # Import user_bp
 from routes.department_routes import department_bp # Import department_bp
+from routes.venue_routes import venue_bp # Import venue_bp
+from routes.period_routes import period_bp # Import period_bp
 from routes.program_routes import program_bp # Import program_bp
 from routes.course_routes import course_bp # Add this import
 from routes.booking_routes import booking_bp # Add this import
@@ -135,6 +137,8 @@ def create_app():
     app.register_blueprint(semester_bp) # Register semester_bp
     app.register_blueprint(user_bp) # Corrected: Removed url_prefix as it's defined in the blueprint
     app.register_blueprint(department_bp, url_prefix='/departments') # Register department_bp
+    app.register_blueprint(venue_bp) # Register venue_bp
+    app.register_blueprint(period_bp) # Register period_bp
     app.register_blueprint(program_bp)
     app.register_blueprint(course_bp, url_prefix='/course') # Add this line
     app.register_blueprint(booking_bp, url_prefix='/bookings') # Add this line

@@ -10,6 +10,9 @@ function BookingTeacher({ closeModal }) {
   const [selectedStudents, setSelectedStudents] = useState([]);
   const [schedule, setSchedule] = useState('');
   const [venue, setVenue] = useState('');
+  const [venueId, setVenueId] = useState('');
+  const [venues, setVenues] = useState([]);
+  const [loadingVenues, setLoadingVenues] = useState(false);
   const [searchTerm, setSearchTerm] = useState('');
   const [profileDetails, setProfileDetails] = useState({ name: '', id: '', role: '', department: '' });
   const [departmentName, setDepartmentName] = useState('');
@@ -48,17 +51,66 @@ function BookingTeacher({ closeModal }) {
     }
   }, [location]);
 
+  // Fetch students on component mount
+  useEffect(() => {
+    const fetchStudents = async () => {
+      try {
+        const response = await fetch(`${API_URL}/get_students`);
+        const data = await response.json();
+        setStudents(data);
+      } catch (error) {
+        console.error('Error fetching students:', error);
+      }
+    };
+
+    fetchStudents();
+  }, []);
+
   const checkTeacherStatus = async (teacherId) => {
     try {
       const response = await fetch(`${API_URL}/user/get_user?idNumber=${teacherId}`);
       const data = await response.json();
       setIsTeacherActive(data.isActive);
+      setProfileDetails(data);
       if (!data.isActive) {
         setStudentSearchError('You are currently inactive. Cannot book consultations during semester break.');
       }
     } catch (error) {
       console.error('Error checking teacher status:', error);
       setStudentSearchError('Unable to verify teacher status. Please try again later.');
+    }
+  };
+
+  // Fetch venues based on teacher's department
+  const fetchVenues = async () => {
+    if (!profileDetails.department) return;
+
+    setLoadingVenues(true);
+    try {
+      let departmentId = null;
+      
+      // Extract department ID from the department field
+      if (profileDetails.department.startsWith("/departments/")) {
+        departmentId = profileDetails.department.split("/").pop();
+      } else {
+        // If it's not a URL, try to find the department by name
+        const response = await fetch(`${API_URL}/departments/get_departments`);
+        const departments = await response.json();
+        const dept = departments.find(d => d.name === profileDetails.department);
+        if (dept) {
+          departmentId = dept.id;
+        }
+      }
+
+      if (departmentId) {
+        const response = await fetch(`${API_URL}/venues/get_venues_by_department/${departmentId}`);
+        const venuesData = await response.json();
+        setVenues(venuesData);
+      }
+    } catch (error) {
+      console.error('Error fetching venues:', error);
+    } finally {
+      setLoadingVenues(false);
     }
   };
 
@@ -78,7 +130,57 @@ function BookingTeacher({ closeModal }) {
     } else {
       setDepartmentName(profileDetails.department || 'Unknown Department');
     }
+    
+    // Fetch venues when department is available
+    if (profileDetails.department) {
+      fetchVenues();
+    }
   }, [profileDetails.department]);
+
+  const handleBookAppointment = async () => {
+    if (!teacherID || selectedStudents.length === 0 || !schedule || (!venueId && !venue)) {
+      setStudentSearchError('Please fill in all required fields.');
+      return;
+    }
+
+    try {
+      const bookingData = {
+        teacherID,
+        studentIDs: selectedStudents,
+        schedule: new Date(schedule).toISOString(),
+        venue_id: venueId === 'others' ? null : venueId,
+        venue: venueId === 'others' ? venue : null,
+        createdBy: teacherID,
+      };
+
+      const response = await fetch(`${API_URL}/bookings/create_booking`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(bookingData),
+      });
+
+      if (response.ok) {
+        setStudentSearchError('');
+        // Reset form
+        setSelectedStudents([]);
+        setSchedule('');
+        setVenue('');
+        setVenueId('');
+        setSearchTerm('');
+        
+        // Show success message or close modal
+        if (typeof closeModal === 'function') {
+          closeModal();
+        }
+      } else {
+        const errorData = await response.json();
+        setStudentSearchError(errorData.error || 'Failed to book appointment.');
+      }
+    } catch (error) {
+      console.error('Error booking appointment:', error);
+      setStudentSearchError('Network error. Please try again.');
+    }
+  };
 
   return (
     <div className="max-w-3xl mx-auto p-8 bg-white rounded-lg">
@@ -203,10 +305,62 @@ function BookingTeacher({ closeModal }) {
 
       <div className="mb-4">
         <label className="block text-gray-700 font-medium mb-1">Venue:</label>
-        <input type="text" placeholder="Enter venue" value={venue} onChange={(e) => setVenue(e.target.value)} className="w-full border border-gray-300 rounded-lg px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500" />
+        {loadingVenues ? (
+          <div className="w-full border border-gray-300 rounded-lg px-3 py-2 text-gray-500">
+            Loading venues...
+          </div>
+        ) : (
+          <select
+            value={venueId}
+            onChange={(e) => {
+              setVenueId(e.target.value);
+              if (e.target.value === 'others') {
+                setVenue(''); // Clear venue name for custom input
+              } else {
+                setVenue(e.target.selectedOptions[0]?.text || '');
+              }
+            }}
+            className="w-full border border-gray-300 rounded-lg px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500"
+            disabled={!isTeacherActive}
+          >
+            <option value="">Select a venue</option>
+            {/* Available venues first */}
+            {venues
+              .filter(venue => venue.is_available)
+              .map(venue => (
+                <option key={venue.id} value={venue.id}>
+                  {venue.name} (Available)
+                </option>
+              ))}
+            {/* Unavailable venues second */}
+            {venues
+              .filter(venue => !venue.is_available)
+              .map(venue => (
+                <option key={venue.id} value={venue.id}>
+                  {venue.name} (Unavailable)
+                </option>
+              ))}
+            {/* Others option last */}
+            <option value="others">Others</option>
+          </select>
+        )}
+        {venueId === 'others' && (
+          <input
+            type="text"
+            placeholder="Enter custom venue"
+            value={venue}
+            onChange={(e) => setVenue(e.target.value)}
+            className="w-full border border-gray-300 rounded-lg px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500 mt-2"
+            disabled={!isTeacherActive}
+          />
+        )}
       </div>
 
-      <button className="bg-blue-500 text-white px-4 py-2 rounded-lg" disabled={!isTeacherActive}>
+      <button 
+        className="bg-blue-500 text-white px-4 py-2 rounded-lg hover:bg-blue-600 disabled:bg-gray-400 disabled:cursor-not-allowed" 
+        disabled={!isTeacherActive || !teacherID || selectedStudents.length === 0 || !schedule || (!venueId && !venue)}
+        onClick={handleBookAppointment}
+      >
         Book Appointment
       </button>
     </div>

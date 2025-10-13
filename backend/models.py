@@ -26,6 +26,32 @@ class Department(db.Model):
     name = db.Column(db.String(100), unique=True, nullable=False)
     users = db.relationship('User', backref='department', lazy=True)
 
+class Venue(db.Model):
+    __tablename__ = 'venues'
+
+    id = db.Column(db.Integer, primary_key=True)
+    name = db.Column(db.String(255), nullable=False)
+    department_id = db.Column(db.Integer, db.ForeignKey('departments.id'), nullable=False)
+    is_available = db.Column(db.Boolean, default=True, nullable=False)
+    
+    # Relationship to Department
+    department = db.relationship('Department', backref=db.backref('venues', lazy=True))
+    
+    def __repr__(self):
+        return f'<Venue {self.name} - {self.department.name if self.department else "No Department"}>'
+
+class Period(db.Model):
+    __tablename__ = 'periods'
+
+    id = db.Column(db.Integer, primary_key=True)
+    name = db.Column(db.String(100), unique=True, nullable=False)
+    is_active = db.Column(db.Boolean, default=False, nullable=False)
+    created_at = db.Column(db.DateTime, server_default=db.text("(now() AT TIME ZONE 'UTC')"))
+    updated_at = db.Column(db.DateTime, onupdate=db.text("(now() AT TIME ZONE 'UTC')"))
+    
+    def __repr__(self):
+        return f'<Period {self.name} - {"Active" if self.is_active else "Inactive"}>'
+
 class Program(db.Model):
     __tablename__ = 'programs'
     id = db.Column(db.Integer, primary_key=True, autoincrement=False)  # autoincrement must be False
@@ -107,14 +133,17 @@ class ConsultationSession(db.Model):
     action_taken = db.Column(db.Text, nullable=True)
     outcome = db.Column(db.Text, nullable=True)
     remarks = db.Column(db.Text, nullable=True)
-    venue = db.Column(db.String(255), nullable=True)
+    venue_id = db.Column(db.Integer, db.ForeignKey('venues.id'), nullable=True)
+    period_id = db.Column(db.Integer, db.ForeignKey('periods.id'), nullable=True)
     audio_file_path = db.Column(db.String(512), nullable=True) # URL or path to the audio file
     quality_score = db.Column(db.Float, nullable=True)
     quality_metrics = db.Column(db.JSON, nullable=True)
     raw_sentiment_analysis = db.Column(db.JSON, nullable=True)
     booking_id = db.Column(db.String(100), db.ForeignKey('bookings.id'), nullable=True) # Link to booking
 
-    # Relationship to Booking (optional, if you want to navigate from session to booking)
+    # Relationships
+    venue = db.relationship('Venue', backref=db.backref('consultation_sessions', lazy=True))
+    period = db.relationship('Period', backref=db.backref('consultation_sessions', lazy=True))
     booking = db.relationship('Booking', backref=db.backref('consultation_session', uselist=False))
 
 
@@ -125,12 +154,17 @@ class Booking(db.Model):
     subject = db.Column(db.String(200), nullable=True)
     description = db.Column(db.Text, nullable=True)
     schedule = db.Column(db.DateTime, nullable=False)
-    venue = db.Column(db.String(200), nullable=True)
+    venue_id = db.Column(db.Integer, db.ForeignKey('venues.id'), nullable=True)
+    period_id = db.Column(db.Integer, db.ForeignKey('periods.id'), nullable=True)
     status = db.Column(db.String(50), nullable=False, default='pending')
     teacher_id = db.Column(db.String(50), nullable=False)
     student_ids = db.Column(db.JSON, nullable=False, default=list)
     created_at = db.Column(db.DateTime, server_default=db.text("(now() AT TIME ZONE 'UTC')"))
     created_by = db.Column(db.String(50), nullable=True)  # ID of the user who created the booking
+    
+    # Relationships
+    venue = db.relationship('Venue', backref=db.backref('bookings', lazy=True))
+    period = db.relationship('Period', backref=db.backref('bookings', lazy=True))
 
 class TeacherSchedule(db.Model):
     __tablename__ = 'teacher_schedules'

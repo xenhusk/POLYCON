@@ -4,6 +4,7 @@ import logo from './image1.png';
 const DocumentTemplate = ({
   sessionDate,
   venue,
+  period,
   concern,
   actionTaken,
   outcome,
@@ -96,7 +97,7 @@ const DocumentTemplate = ({
             </span>
         </p>
 
-        {/* Date and Venue in two columns */}
+        {/* Date, Venue, and Period in three columns */}
         <div style={{
             display: 'flex',
             justifyContent: 'space-between',
@@ -110,6 +111,9 @@ const DocumentTemplate = ({
             </div>
             <div style={{ flex: 1 }}>
                 VENUE: {venue}
+            </div>
+            <div style={{ flex: 1 }}>
+                PERIOD: {period}
             </div>
         </div>
 

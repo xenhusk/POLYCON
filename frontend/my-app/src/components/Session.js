@@ -63,6 +63,9 @@ const Session = () => {
   const [transcriptionEnabled, setTranscriptionEnabled] = useState(false);
   const [showTranscriptionNotice, setShowTranscriptionNotice] = useState(false);
   const [hasShownNotice, setHasShownNotice] = useState(false);
+  const [bookingDetails, setBookingDetails] = useState(null);
+  const [venueId, setVenueId] = useState(null);
+  const [periodId, setPeriodId] = useState(null);
 
   const audioRef = useRef(null);
   const mediaRecorderRef = useRef(null);
@@ -75,9 +78,31 @@ const Session = () => {
   const venueFromQuery = queryParams.get("venue");
   const bookingID = queryParams.get("booking_id");
 
+  // Fetch booking details to get venue_id
+  const fetchBookingDetails = async () => {
+    if (!bookingID) return;
+    
+    try {
+      const response = await fetch(`${API_URL}/bookings/get_all_bookings_admin`);
+      const bookings = await response.json();
+      const booking = bookings.find(b => b.id === bookingID);
+      if (booking) {
+        setBookingDetails(booking);
+        setVenueId(booking.venue_id);
+        setPeriodId(booking.period_id);
+      }
+    } catch (error) {
+      console.error('Error fetching booking details:', error);
+    }
+  };
+
   // If a sessionID exists, fetch session details.
   // Otherwise, use the query parameters to populate teacher and student details.
   useEffect(() => {
+    // Fetch booking details if bookingID is available
+    if (bookingID) {
+      fetchBookingDetails();
+    }
     const queryParams = new URLSearchParams(location.search);
     const sessionID = queryParams.get("sessionID");
     const teacherIDFromQuery = queryParams.get("teacherID");
@@ -377,7 +402,8 @@ const Session = () => {
         outcome: outcome,
         remarks: remarks,
         duration: timer,
-        venue: venueFromQuery,
+        venue_id: venueId,
+        period_id: periodId,
         session_date: new Date().toISOString(),
         audio_file_path: audioUrl,
         // Include quality data in the payload

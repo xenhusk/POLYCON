@@ -63,7 +63,12 @@ function BookingAppointment({ closeModal, role: propRole }) {
   // Additional teacher states
   const [schedule, setSchedule] = useState("");
   const [venue, setVenue] = useState("");
+  const [venueId, setVenueId] = useState("");
+  const [venues, setVenues] = useState([]);
+  
+  const [loadingVenues, setLoadingVenues] = useState(false);
   const [teacherID, setTeacherID] = useState(teacherId || "");
+  
 
   // Student-specific state - FIXED: Check both casing variations
   const [studentID, setStudentID] = useState(
@@ -80,9 +85,88 @@ function BookingAppointment({ closeModal, role: propRole }) {
   const [isTeacherInputFocused, setIsTeacherInputFocused] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
   const [message, setMessage] = useState({ type: "", content: "" });
+  const [activePeriod, setActivePeriod] = useState(null);
   const [SubmitBookingClicked, setSubmitBookingClicked] = useState(false);
   const [CancelClicked, setCancelClicked] = useState(false);
   const [enrollmentMessage, setEnrollmentMessage] = useState("");
+
+  // Fetch active period
+  const fetchActivePeriod = async () => {
+    try {
+      const response = await fetch(`${API_URL}/periods/get_active_period`);
+      if (response.ok) {
+        const periodData = await response.json();
+        setActivePeriod(periodData);
+      }
+    } catch (error) {
+      console.error('Error fetching active period:', error);
+    }
+  };
+
+  // Fetch active period on component mount
+  useEffect(() => {
+    fetchActivePeriod();
+  }, []);
+
+  // Fetch venues for faculty users
+  const fetchVenues = async () => {
+    if (role !== "faculty" || !teacherID) return;
+
+    setLoadingVenues(true);
+    try {
+      // Get teacher's department
+      const response = await fetch(`${API_URL}/user/get_user?idNumber=${teacherID}`);
+      const teacherData = await response.json();
+      
+      if (teacherData.department) {
+        let departmentId = null;
+        
+        // Extract department ID from the department field
+        if (teacherData.department.startsWith("/departments/")) {
+          departmentId = teacherData.department.split("/").pop();
+        } else {
+          // If it's not a URL, try to find the department by name
+          const deptResponse = await fetch(`${API_URL}/departments/get_departments`);
+          const departments = await deptResponse.json();
+          const dept = departments.find(d => d.name === teacherData.department);
+          if (dept) {
+            departmentId = dept.id;
+          }
+        }
+
+        if (departmentId) {
+          const venuesResponse = await fetch(`${API_URL}/venues/get_venues_by_department/${departmentId}`);
+          const venuesData = await venuesResponse.json();
+          setVenues(venuesData);
+        }
+      }
+    } catch (error) {
+      console.error('Error fetching venues:', error);
+    } finally {
+      setLoadingVenues(false);
+    }
+  };
+
+  // Fetch venues when teacherID changes for faculty users
+  useEffect(() => {
+    if (role === "faculty") {
+      // If we don't have teacherID, try to get it from localStorage or user data
+      let currentTeacherID = teacherID;
+      if (!currentTeacherID) {
+        currentTeacherID = localStorage.getItem("teacherID") || 
+                          localStorage.getItem("teacherId") || 
+                          localStorage.getItem("facultyID") ||
+                          localStorage.getItem("userId");
+        if (currentTeacherID) {
+          setTeacherID(currentTeacherID);
+        }
+      }
+      
+      if (currentTeacherID) {
+        fetchVenues();
+      }
+    }
+  }, [role, teacherID]);
 
   // Helper function to get minimum date/time (current moment to allow walk-ins)
   const getMinDateTime = () => {
@@ -274,7 +358,7 @@ function BookingAppointment({ closeModal, role: propRole }) {
     
     if (role === "faculty") {
       // Validate required fields: teacherID, at least one student, schedule, and venue must be provided.
-      if (!teacherID || selectedStudents.length === 0 || !schedule || !venue) {
+      if (!teacherID || selectedStudents.length === 0 || !schedule || (!venueId && !venue)) {
         setMessage({
           type: "error",
           content: "Please fill in all required fields.",
@@ -289,7 +373,8 @@ function BookingAppointment({ closeModal, role: propRole }) {
         // --- Modified: extract student IDs from the selected student objects ---
         studentIDs: selectedStudents.map((s) => s.id),
         schedule: convertLocalToUTC(schedule),
-        venue,
+        venue_id: venueId === 'others' ? null : venueId,
+        venue: venueId === 'others' ? venue : null,
         createdBy: teacherID,
       };
       console.log("Faculty bookingData:", bookingData);
@@ -330,8 +415,8 @@ function BookingAppointment({ closeModal, role: propRole }) {
       } finally {
         setIsLoading(false);
       }    } else {
-      // Validate required fields: selectedTeacher, studentID, schedule, and venue must be provided.
-      if (!studentID || !selectedTeacher || !schedule || !venue) {
+      // Validate required fields: selectedTeacher, studentID, and schedule must be provided.
+      if (!studentID || !selectedTeacher || !schedule) {
         setMessage({
           type: "error",
           content: "Please fill in all required fields.",
@@ -358,7 +443,6 @@ function BookingAppointment({ closeModal, role: propRole }) {
         teacherID: selectedTeacher,
         studentIDs: studentIDsArray,
         schedule: convertLocalToUTC(schedule), // Convert local time to UTC
-        venue,    // use the venue state value
         createdBy: studentID,
       };
       
@@ -541,18 +625,58 @@ function BookingAppointment({ closeModal, role: propRole }) {
               </p>
             </div>
 
-            {/* Venue Input - Made Responsive */}
+            {/* Venue Selection - Made Responsive */}
             <div>
               <label className="block text-sm font-medium text-gray-700 mb-1 sm:mb-2">
                 Venue <span className="text-red-500">*</span>
               </label>
-              <input
-                type="text"
-                value={venue}
-                onChange={(e) => setVenue(e.target.value)}
-                placeholder={isMobile ? "Room number" : "Enter venue (e.g., Room 101)"}
-                className="w-full border-2 border-[#397de2] rounded-lg px-2 sm:px-3 py-2 sm:py-2 text-sm sm:text-base focus:outline-none focus:ring-2 focus:ring-[#54BEFF]"
-              />
+              {loadingVenues ? (
+                <div className="w-full border-2 border-gray-200 rounded-lg px-2 sm:px-3 py-2 sm:py-2 text-sm sm:text-base text-gray-500">
+                  Loading venues...
+                </div>
+              ) : (
+                <select
+                  value={venueId}
+                  onChange={(e) => {
+                    setVenueId(e.target.value);
+                    if (e.target.value === 'others') {
+                      setVenue(''); // Clear venue name for custom input
+                    } else {
+                      setVenue(e.target.selectedOptions[0]?.text || '');
+                    }
+                  }}
+                  className="w-full border-2 border-[#397de2] rounded-lg px-2 sm:px-3 py-2 sm:py-2 text-sm sm:text-base focus:outline-none focus:ring-2 focus:ring-[#54BEFF]"
+                >
+                  <option value="">Select a venue</option>
+                  {/* Available venues first */}
+                  {venues
+                    .filter(venue => venue.is_available)
+                    .map(venue => (
+                      <option key={venue.id} value={venue.id}>
+                        {venue.name} (Available)
+                      </option>
+                    ))}
+                  {/* Unavailable venues second */}
+                  {venues
+                    .filter(venue => !venue.is_available)
+                    .map(venue => (
+                      <option key={venue.id} value={venue.id}>
+                        {venue.name} (Unavailable)
+                      </option>
+                    ))}
+                  {/* Others option last */}
+                  <option value="others">Others</option>
+                </select>
+              )}
+              {venueId === 'others' && (
+                <input
+                  type="text"
+                  placeholder={isMobile ? "Room number" : "Enter custom venue (e.g., Room 101)"}
+                  value={venue}
+                  onChange={(e) => setVenue(e.target.value)}
+                  className="w-full border-2 border-[#397de2] rounded-lg px-2 sm:px-3 py-2 sm:py-2 text-sm sm:text-base focus:outline-none focus:ring-2 focus:ring-[#54BEFF] mt-2"
+                />
+              )}
             </div>
           </div>
         </>
@@ -782,19 +906,21 @@ function BookingAppointment({ closeModal, role: propRole }) {
               </p>
             </div>
 
-            {/* NEW: Venue Selection for Student */}
-            <div>
-              <label className="block text-sm font-medium text-gray-700 mb-1 sm:mb-2">
-                Venue <span className="text-red-500">*</span>
-              </label>
-              <input
-                type="text"
-                value={venue}
-                onChange={(e) => setVenue(e.target.value)}
-                placeholder={isMobile ? "Room number" : "Enter venue (e.g., Room 101)"}
-                className="w-full border-2 border-[#397de2] rounded-lg px-2 sm:px-3 py-2 text-sm sm:text-base focus:outline-none focus:ring-2 focus:ring-[#54BEFF]"
-              />
-            </div>
+            {/* Period Display for Student */}
+            {activePeriod && (
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-1 sm:mb-2">
+                  Current Period
+                </label>
+                <div className="w-full border-2 border-gray-200 rounded-lg px-2 sm:px-3 py-2 text-sm sm:text-base bg-gray-50 text-gray-600">
+                  {activePeriod.name}
+                </div>
+                <p className="text-xs text-gray-500 mt-1">
+                  This consultation will be recorded under the current active period.
+                </p>
+              </div>
+            )}
+
           </div>
         </>
       )}

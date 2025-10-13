@@ -55,6 +55,8 @@ import Programs from "./components/Programs";
 import FinalDocument from "./pages/finaldocument.jsx"; // add import for FinalDocument
 import History from "./pages/History"; // add import for History
 import Departments from "./components/Departments";
+import Venues from "./components/Venues";
+import Periods from "./components/Periods";
 import HomeAdmin from "./components/HomeAdmin"; // Update import name and path
 import SemesterManagement from "./components/SemesterManagement"; // Update import name and path
 import ConsultationSchedules from "./pages/ConsultationSchedules"; // Add import for public consultation schedules
@@ -967,6 +969,8 @@ function App() {
                           <Route path="/courses" element={<Courses />} />
                           <Route path="/programs" element={<Programs />} />
                           <Route path="/department" element={<Departments />} />
+                          <Route path="/venues" element={<Venues />} />
+                          <Route path="/periods" element={<Periods />} />
                           <Route path="/semester-management" element={<SemesterManagement />} />
                         </Route>
                         {/* Faculty-only routes */}

@@ -2,6 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { getProfilePictureUrl } from '../utils/utils';
 import { formatUTCToLocal, debugTimezone } from '../utils/timezoneUtils';
+import API_URL from '../apiConfig';
 
 function AppointmentItem({ appointment, role, onStartSession, onCancel, onConfirm, confirmInputs = {}, handleConfirmClick, setConfirmInputs }) {
   const [isLoading, setIsLoading] = useState(false);
@@ -14,6 +15,9 @@ function AppointmentItem({ appointment, role, onStartSession, onCancel, onConfir
   const [CanceledClicked, setCanceledClicked] = useState(false);
   const [CancelingClicked, setCancelingClicked] = useState(false);
   const [showCancelConfirm, setShowCancelConfirm] = useState(false); // New state for cancel confirmation
+  const [venues, setVenues] = useState([]);
+  const [loadingVenues, setLoadingVenues] = useState(false);
+  const [activePeriod, setActivePeriod] = useState(null);
 
   // Handle escape key to close modal
   useEffect(() => {
@@ -34,6 +38,63 @@ function AppointmentItem({ appointment, role, onStartSession, onCancel, onConfir
       document.body.style.overflow = 'unset';
     };
   }, [showCancelConfirm]);
+
+  // Fetch venues for teacher's department
+  const fetchVenues = async () => {
+    if (!appointment.teacher?.department_id && !appointment.teacher?.department) return;
+    
+    setLoadingVenues(true);
+    try {
+      // Get department ID from teacher info
+      let departmentId = appointment.teacher?.department_id;
+      if (!departmentId && appointment.teacher?.department) {
+        // If department is a string, we might need to extract ID or fetch departments
+        // For now, we'll fetch all venues and filter by department name
+        const response = await fetch(`${API_URL}/venues/get_venues`);
+        const allVenues = await response.json();
+        const filteredVenues = allVenues.filter(venue => 
+          venue.department_name === appointment.teacher.department
+        );
+        setVenues(filteredVenues);
+        return;
+      }
+      
+      if (departmentId) {
+        const response = await fetch(`${API_URL}/venues/get_venues_by_department/${departmentId}`);
+        const venuesData = await response.json();
+        setVenues(venuesData);
+      }
+    } catch (error) {
+      console.error('Error fetching venues:', error);
+    } finally {
+      setLoadingVenues(false);
+    }
+  };
+
+  // Fetch venues when component mounts or when teacher info changes
+  useEffect(() => {
+    if (appointment.teacher) {
+      fetchVenues();
+    }
+  }, [appointment.teacher]);
+
+  // Fetch active period
+  const fetchActivePeriod = async () => {
+    try {
+      const response = await fetch(`${API_URL}/periods/get_active_period`);
+      if (response.ok) {
+        const periodData = await response.json();
+        setActivePeriod(periodData);
+      }
+    } catch (error) {
+      console.error('Error fetching active period:', error);
+    }
+  };
+
+  // Fetch active period on component mount
+  useEffect(() => {
+    fetchActivePeriod();
+  }, []);
 
   // Extract teacher info from appointment data
   // Handle potential flat or nested structure for teacher information
@@ -135,11 +196,11 @@ function AppointmentItem({ appointment, role, onStartSession, onCancel, onConfir
     }
   };
 
-  const handleConfirmation = async (id, schedule, venue) => {
+  const handleConfirmation = async (id, schedule, venue_id) => {
     setIsLoading(true);
     setActionType('confirm');
     try {
-      await onConfirm(id, schedule, venue);
+      await onConfirm(id, schedule, venue_id);
       setMessage({ type: 'success', content: 'Appointment confirmed successfully' });
       setTimeout(() => setMessage({ type: '', content: '' }), 3000);
     } catch (error) {
@@ -436,20 +497,77 @@ function AppointmentItem({ appointment, role, onStartSession, onCancel, onConfir
                   </div>
                   <div>
                     <label className="block text-xs sm:text-sm font-semibold text-gray-700 mb-2">Venue</label>
-                    <input 
-                      type="text" 
-                      placeholder="Enter consultation venue"
-                      value={confirmInputs[appointment.id]?.venue || ''}
-                      onChange={(e) => setConfirmInputs?.(prev => ({
-                        ...prev, 
-                        [appointment.id]: { 
-                          ...prev[appointment.id],
-                          venue: e.target.value 
-                        }
-                      }))}
-                      className="w-full border-2 border-gray-200 rounded-lg p-2 sm:p-3 focus:outline-none focus:border-[#057DCD] text-xs sm:text-sm transition-colors duration-200"
-                    />
+                    {loadingVenues ? (
+                      <div className="w-full border-2 border-gray-200 rounded-lg p-2 sm:p-3 text-xs sm:text-sm text-gray-500">
+                        Loading venues...
+                      </div>
+                    ) : (
+                      <select
+                        value={confirmInputs[appointment.id]?.venue_id || ''}
+                        onChange={(e) => setConfirmInputs?.(prev => ({
+                          ...prev, 
+                          [appointment.id]: { 
+                            ...prev[appointment.id],
+                            venue_id: e.target.value,
+                            venue: e.target.selectedOptions[0]?.text || ''
+                          }
+                        }))}
+                        className="w-full border-2 border-gray-200 rounded-lg p-2 sm:p-3 focus:outline-none focus:border-[#057DCD] text-xs sm:text-sm transition-colors duration-200"
+                      >
+                        <option value="">Select a venue</option>
+                        {/* Available venues first */}
+                        {venues
+                          .filter(venue => venue.is_available)
+                          .map(venue => (
+                            <option key={venue.id} value={venue.id}>
+                              {venue.name} (Available)
+                            </option>
+                          ))}
+                        {/* Unavailable venues second */}
+                        {venues
+                          .filter(venue => !venue.is_available)
+                          .map(venue => (
+                            <option key={venue.id} value={venue.id}>
+                              {venue.name} (Unavailable)
+                            </option>
+                          ))}
+                        {/* Others option last */}
+                        <option value="others">Others</option>
+                      </select>
+                    )}
+                    {confirmInputs[appointment.id]?.venue_id === 'others' && (
+                      <input 
+                        type="text" 
+                        placeholder="Enter custom venue"
+                        value={confirmInputs[appointment.id]?.custom_venue || ''}
+                        onChange={(e) => setConfirmInputs?.(prev => ({
+                          ...prev, 
+                          [appointment.id]: { 
+                            ...prev[appointment.id],
+                            custom_venue: e.target.value,
+                            venue: e.target.value
+                          }
+                        }))}
+                        className="w-full border-2 border-gray-200 rounded-lg p-2 sm:p-3 focus:outline-none focus:border-[#057DCD] text-xs sm:text-sm transition-colors duration-200 mt-2"
+                      />
+                    )}
                   </div>
+                  
+                  {/* Period Display */}
+                  {activePeriod && (
+                    <div className="mb-3">
+                      <label className="block text-xs sm:text-sm font-medium text-gray-700 mb-1">
+                        Current Period
+                      </label>
+                      <div className="w-full border-2 border-gray-200 rounded-lg p-2 sm:p-3 text-xs sm:text-sm bg-gray-50 text-gray-600">
+                        {activePeriod.name}
+                      </div>
+                      <p className="text-xs text-gray-500 mt-1">
+                        This consultation will be recorded under the current active period.
+                      </p>
+                    </div>
+                  )}
+                  
                   <div className="flex flex-col sm:flex-row gap-2 sm:gap-3 pt-2">
                     <motion.button
                       whileHover={{ scale: 1.02 }}
@@ -462,7 +580,7 @@ function AppointmentItem({ appointment, role, onStartSession, onCancel, onConfir
                             handleConfirmation(
                               appointment.id, 
                               confirmInputs[appointment.id].schedule, 
-                              confirmInputs[appointment.id].venue
+                              confirmInputs[appointment.id].venue_id
                             );
                             setConfirmInputs?.((prev) => {
                               const updated = { ...prev };

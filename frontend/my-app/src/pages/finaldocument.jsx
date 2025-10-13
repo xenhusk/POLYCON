@@ -30,6 +30,7 @@ const FinalDocument = () => {
   const [loading, setLoading] = useState(true);
   const [sessionDate, setSessionDate] = useState("");
   const [venue, setVenue] = useState("N/A");
+  const [period, setPeriod] = useState("N/A");
   const [teacherInfo, setTeacherInfo] = useState(null);
   const [studentInfo, setStudentInfo] = useState(null);
   const audioRef = useRef(null);
@@ -113,7 +114,8 @@ const FinalDocument = () => {
           setOutcome(cleanString(data.outcome || ""));
           setRemarks(cleanString(data.remarks || ""));
           setSessionDate(data.session_date || "");
-          setVenue(data.venue || "N/A");          // Use teacher_info directly if available, otherwise fall back to teacher_id fetch
+          setVenue(data.venue || "N/A");
+          setPeriod(data.period || "N/A");          // Use teacher_info directly if available, otherwise fall back to teacher_id fetch
           if (data.teacher_info) {
             // Map data structure as needed for proper rendering
             const formattedTeacherInfo = {
@@ -350,6 +352,7 @@ const FinalDocument = () => {
                           <DocumentTemplate
                             sessionDate={sessionDate}
                             venue={venue}
+                            period={period}
                             concern={concern}
                             actionTaken={actionTaken}
                             outcome={outcome}

@@ -58,9 +58,7 @@ def compare_student():
         ).join(Course, Grade.course_id == Course.id)
 
         grades = grades_query.all()
-        print(f"🔍 DEBUG - Found {len(grades)} grades for student {user.id} with teacher {faculty_user_id}")
         if not grades:
-            print(f"🔍 DEBUG - No grades found. Query params: student_user_id={user.id}, faculty_user_id={faculty_user_id}, school_year={school_year}, semester={semester}")
             return jsonify({'error': 'No grades found for this student and teacher combination'}), 404
 
         # Group grades by period
@@ -82,10 +80,10 @@ def compare_student():
             consultation_index = period_order.index(consultation_period)
             if consultation_index >= len(period_order) - 1:
                 return jsonify({'error': f'Cannot compare {consultation_period} as it is the final period'}), 400
-
+            
             before_period = consultation_period
             after_period = period_order[consultation_index + 1]
-        except ValueError:
+                except ValueError:
             return jsonify({'error': f'Invalid consultation period: {consultation_period}'}), 400
 
         # Get before and after grades
@@ -124,11 +122,9 @@ def compare_student():
         }
         
         return jsonify(result), 200
-        
-    except Exception as e: 
+    except Exception as e:
         import traceback; traceback.print_exc()
         return jsonify({'error': f'Internal server error: {str(e)}'}), 500
-
 
 @comparative_bp.route('/overall_metrics', methods=['GET'])
 def overall_metrics():
@@ -182,35 +178,25 @@ def overall_metrics():
 
         # Calculate metrics for each student
         student_improvements = []
-        students_with_consultations_set = set() # Use a set to count each student once
-
+        students_with_consultations = 0
+        
         for student in students:
             # Get consultation sessions for this student
             all_sessions = ConsultationSession.query.all()
             student_sessions = []
-            
-            # Check all sessions for this student's ID
-            has_consultation = False
             for session in all_sessions:
                 try:
-                    # Assuming session.student_ids is a JSON string of IDs or a list/array field
-                    ids = json.loads(session.student_ids) if isinstance(session.student_ids, str) else session.student_ids
-                    ids = [str(id) for id in (ids or [])] # Normalize to list of strings
-                    
-                    student_id_str = str(student.user_id)
-                    
-                    if student_id_str in ids:
+                    ids = session.student_ids or []
+                    if student.user_id in ids or student.user_id in [str(id) for id in ids]:
                         student_sessions.append(session)
-                        has_consultation = True
                 except Exception:
-                    # Handle cases where session.student_ids is malformed or None
                     continue
             
             if not student_sessions:
                 continue
                 
-            students_with_consultations_set.add(student.user_id)
-                
+            students_with_consultations += 1
+            
             # Get grades for this student
             grades_query = Grade.query.filter_by(
                 student_user_id=student.user_id,
@@ -222,7 +208,7 @@ def overall_metrics():
             grades = grades_query.all()
             if not grades:
                 continue
-            
+                
             # Group grades by period
             grades_by_period = {}
             for grade in grades:
@@ -234,48 +220,41 @@ def overall_metrics():
             # Calculate average grade for each period
             avg_grades = {}
             for period, grade_list in grades_by_period.items():
-                if grade_list:
-                    avg_grades[period] = sum(grade_list) / len(grade_list)
+                avg_grades[period] = sum(grade_list) / len(grade_list)
             
             # For each consultation session, calculate improvement
             period_order = ['Prelim', 'Midterm', 'Pre-Final', 'Final']
             for session in student_sessions:
-                consultation_period = None
                 if session.period_id:
                     period = Period.query.get(session.period_id)
                     if period and period.name in period_order:
                         consultation_period = period.name
-                # Note: The original code didn't handle the case where period_id is missing but a period name might be in the session object
-                
-                if consultation_period:
-                    try:
-                        consultation_index = period_order.index(consultation_period)
-                        if consultation_index < len(period_order) - 1:
-                            before_period = consultation_period
-                            after_period = period_order[consultation_index + 1]
-                            
-                            before_grade = avg_grades.get(before_period)
-                            after_grade = avg_grades.get(after_period)
-                            
-                            if before_grade is not None and after_grade is not None:
-                                improvement_points = after_grade - before_grade
-                                improvement_percent = (improvement_points / before_grade) * 100 if before_grade > 0 else 0
+                        try:
+                            consultation_index = period_order.index(consultation_period)
+                            if consultation_index < len(period_order) - 1:
+                                before_period = consultation_period
+                                after_period = period_order[consultation_index + 1]
                                 
-                                student_improvements.append({
-                                    'student_id': student.user_id,
-                                    'improvement_points': improvement_points,
-                                    'improvement_percent': improvement_percent,
-                                    'improved': improvement_points > 0
-                                })
-                    except ValueError:
-                        continue # Invalid consultation_period name
-                
-        students_with_consultations = len(students_with_consultations_set)
+                                before_grade = avg_grades.get(before_period)
+                                after_grade = avg_grades.get(after_period)
+                                
+                                if before_grade is not None and after_grade is not None:
+                                    improvement_points = after_grade - before_grade
+                                    improvement_percent = (improvement_points / before_grade) * 100 if before_grade > 0 else 0
+                                    
+                                    student_improvements.append({
+                                        'student_id': student.user_id,
+                                        'improvement_points': improvement_points,
+                                        'improvement_percent': improvement_percent,
+                                        'improved': improvement_points > 0
+                                    })
+                        except ValueError:
+                            continue
 
         if not student_improvements:
             return jsonify({
                 'total_students': len(students),
-                'students_with_consultations': students_with_consultations,
+                'students_with_consultations': 0,
                 'average_improvement_points': 0,
                 'average_improvement_percent': 0,
                 'students_improved_percent': 0,
@@ -324,29 +303,23 @@ def get_student_courses():
         if not user:
             return jsonify({'error': 'Student not found'}), 404
 
-        # Find the faculty's user_id - handle both Faculty ID and User ID Number
+        # Find the faculty's user_id
         faculty_user_id = None
-        
-        # First try: teacher_id might be a Faculty ID (integer)
         try:
             faculty_id_int = int(teacher_id)
             faculty_user_id = db.session.query(Faculty.user_id).filter(Faculty.id == faculty_id_int).scalar()
-            if faculty_user_id:
-                print(f"Found teacher by Faculty ID {faculty_id_int} -> User ID {faculty_user_id}")
         except (ValueError, TypeError):
             pass
         
-        # Second try: teacher_id might be a User ID Number (string like F2024001)
         if not faculty_user_id:
-            teacher_user = User.query.filter_by(id_number=teacher_id).first()
-            if teacher_user:
-                faculty = Faculty.query.filter_by(user_id=teacher_user.id).first()
+            user = User.query.filter_by(id_number=teacher_id).first()
+            if user:
+                faculty = Faculty.query.filter_by(user_id=user.id).first()
                 if faculty:
-                    faculty_user_id = teacher_user.id
-                    print(f"Found teacher by User ID Number {teacher_id} -> User ID {faculty_user_id}")
+                    faculty_user_id = faculty.user_id
 
         if not faculty_user_id:
-            return jsonify({'error': f'Teacher not found for ID: {teacher_id}'}), 404
+            return jsonify({'error': 'Teacher not found'}), 404
 
         # Query for courses that have grades for this student-teacher combination
         courses_query = db.session.query(Course).join(
@@ -365,9 +338,9 @@ def get_student_courses():
         for course in courses:
             course_list.append({
                 'id': course.id,
-                'course_code': course.code,
-                'course_name': course.name,
-                'description': getattr(course, 'description', '') or ''
+                'course_code': course.course_code,
+                'course_name': course.course_name,
+                'description': course.description or ''
             })
         
         return jsonify(course_list), 200

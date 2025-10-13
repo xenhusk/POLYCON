@@ -303,7 +303,7 @@ class AppointmentScheduler:
                 'teacher_name': teacher_name,
                 'student_names': student_names,
                 'schedule': appointment.schedule.isoformat(),
-                'venue': appointment.venue,
+                'venue': appointment.venue.name if appointment.venue else 'TBA',
                 'timeUntil': time_until_text,
                 'minutesUntil': minutes_until,
                 'timestamp': datetime.utcnow().isoformat()

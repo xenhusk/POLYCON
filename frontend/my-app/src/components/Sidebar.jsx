@@ -246,6 +246,8 @@ const Sidebar = ({ onExpandChange }) => {
       course: '/courses',
       program: '/programs',
       department: '/department',
+      venues: '/venues',
+      periods: '/periods',
       leaderboard: '/admin-consultation'
     }
   };
@@ -504,6 +506,8 @@ const Sidebar = ({ onExpandChange }) => {
                 {renderMenuItem("course", CourseAdd, "Courses")}
                 {renderMenuItem("program", ProgramAdd, "Programs")}
                 {renderMenuItem("department", DepartmentAdd, "Departments")}
+                {renderMenuItem("venues", DepartmentAdd, "Venues")}
+                {renderMenuItem("periods", DepartmentAdd, "Periods")}
                 {renderMenuItem("semester", SemesterAdd, "Semesters")}
                 {renderMenuItem("leaderboard", Leaderboard, "Leaderboard")}
               </ul>

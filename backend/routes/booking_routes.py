@@ -103,7 +103,7 @@ def get_bookings():
             'subject': b.subject,
             'description': b.description,
             'schedule': format_schedule_for_api(b.schedule),
-            'venue': b.venue,
+            'venue': b.venue.name if b.venue else 'TBA',
             'status': b.status,
             'teacherID': b.teacher_id,
             'teacherName': teacher_name,
@@ -154,12 +154,42 @@ def get_all_bookings_admin():
                     })
         
         student_names = [f"{s.first_name} {s.last_name}" for s in student_users if s]
+        
+        # Get venue information
+        venue_info = None
+        if b.venue_id:
+            from models import Venue
+            venue = Venue.query.get(b.venue_id)
+            if venue:
+                venue_info = {
+                    'id': venue.id,
+                    'name': venue.name,
+                    'department_id': venue.department_id,
+                    'department_name': venue.department.name if venue.department else None,
+                    'is_available': venue.is_available
+                }
+        
+        # Get period information
+        period_info = None
+        if b.period_id:
+            from models import Period
+            period = Period.query.get(b.period_id)
+            if period:
+                period_info = {
+                    'id': period.id,
+                    'name': period.name,
+                    'is_active': period.is_active
+                }
+        
         result.append({
             'id': b.id,
             'subject': b.subject,
             'description': b.description,
             'schedule': format_schedule_for_api(b.schedule),
-            'venue': b.venue,
+            'venue_id': b.venue_id,
+            'venue': venue_info,
+            'period_id': b.period_id,
+            'period': period_info,
             'status': b.status,
             'teacherID': b.teacher_id,
             'teacherName': teacher_name,
@@ -232,10 +262,53 @@ def create_booking():
     except ValueError as e:
         logger.error(f"Invalid schedule format: {schedule_str}, error: {e}")
         return jsonify({"error": "Invalid schedule format"}), 400
-    venue = data.get('venue')
-    # Validate venue only for confirmed faculty bookings
-    if status == 'confirmed' and not venue:
-        return jsonify({"error": "venue is required for faculty bookings"}), 400
+    venue_id = data.get('venue_id')
+    venue_string = data.get('venue')  # For custom venues
+    
+    # For confirmed faculty bookings, venue_id is required
+    # For teacher-created bookings, either venue_id or venue string is acceptable
+    if status == 'confirmed' and not venue_id:
+        return jsonify({"error": "venue_id is required for faculty bookings"}), 400
+    
+    # Handle venue selection
+    final_venue_id = venue_id
+    if venue_id:
+        # Validate predefined venue
+        from models import Venue
+        venue = Venue.query.get(venue_id)
+        if not venue:
+            return jsonify({"error": "Invalid venue_id"}), 400
+        if not venue.is_available:
+            return jsonify({"error": "Selected venue is not available"}), 400
+    elif venue_string and status == 'pending':
+        # For teacher-created bookings with custom venue, create a temporary venue entry
+        from models import Venue, Department
+        # Get teacher's department
+        teacher = User.query.filter_by(id_number=data['teacherID']).first()
+        if teacher and teacher.department:
+            # Extract department ID
+            if teacher.department.startswith("/departments/"):
+                dept_id = teacher.department.split("/").pop()
+            else:
+                # Find department by name
+                dept = Department.query.filter_by(name=teacher.department).first()
+                dept_id = dept.id if dept else None
+            
+            if dept_id:
+                # Create a temporary venue entry for custom venue
+                temp_venue = Venue(
+                    name=f"Custom: {venue_string}",
+                    department_id=dept_id,
+                    is_available=False  # Mark as unavailable since it's custom
+                )
+                db.session.add(temp_venue)
+                db.session.flush()  # Get the ID without committing
+                final_venue_id = temp_venue.id
+    
+    # Get the currently active period
+    from models import Period
+    active_period = Period.query.filter_by(is_active=True).first()
+    period_id = active_period.id if active_period else None
     
     # Process studentIDs to numeric user IDs for all bookings
     student_ids = []
@@ -279,13 +352,14 @@ def create_booking():
         booking_id = str(uuid.uuid4())
         current_utc_time = datetime.now(timezone.utc)
         
-        # Create new booking (schedule/venue only for confirmed)
+        # Create new booking (schedule/venue_id only for confirmed)
         new_booking = Booking(
             id=booking_id,
             subject=data.get('subject', 'Consultation'),
             description=data.get('description', ''),
             schedule=schedule,
-            venue=venue,
+            venue_id=final_venue_id,
+            period_id=period_id,
             status=status,
             teacher_id=data['teacherID'],
             student_ids=student_ids,
@@ -306,6 +380,13 @@ def create_booking():
                 su = User.query.filter_by(id=sid).first()
                 if su:
                     student_names.append(f"{su.first_name} {su.last_name}")
+            # Get venue name for the payload
+            venue_name = None
+            if final_venue_id:
+                from models import Venue
+                final_venue = Venue.query.get(final_venue_id)
+                venue_name = final_venue.name if final_venue else None
+            
             booking_data = {
                 'id': booking_id,
                 'subject': data.get('subject', 'Consultation'),
@@ -315,7 +396,8 @@ def create_booking():
                 'student_names': student_names,
                 'student_ids': student_ids,  # List of student User.id values
                 'schedule': format_schedule_for_api(schedule),
-                'venue': venue,
+                'venue_id': final_venue_id,
+                'venue_name': venue_name,
                 'created_by': creator_id
             }
             print(f"🔔 Emitting booking_created: {booking_data}")

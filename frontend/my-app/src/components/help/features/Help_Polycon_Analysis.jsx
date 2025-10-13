@@ -13,48 +13,48 @@ const Help_Polycon_Analysis = () => {
 
   const keyMetrics = [
     {
-      title: "Grade Distribution",
+      title: "Grade Comparison",
       description:
-        "View the distribution of grades across subjects and classes.",
+        "Compare student grades before and after consultation sessions.",
     },
     {
-      title: "Attendance Rate",
-      description: "Track student attendance trends over time.",
+      title: "Improvement Tracking",
+      description: "Track student grade improvement across different periods.",
     },
     {
-      title: "Participation Level",
+      title: "Class Overview",
       description:
-        "Measure student engagement in class activities and discussions.",
+        "View overall class performance and improvement statistics.",
     },
     {
-      title: "Student Progress",
-      description: "Track individual student progress and improvement over time.",
+      title: "Consultation Effectiveness",
+      description: "Measure the impact of consultations on student performance.",
     },
   ];
 
   const analysisFeatures = [
     {
-      title: "Visual Performance Dashboards",
+      title: "Simple Grade Comparison",
       description: [
-        "Interactive charts for grades, attendance, participation, and progress",
-        "Compare performance across subjects, classes, and terms",
-        "Identify strengths and areas for improvement at a glance",
+        "Compare student grades before and after consultation sessions",
+        "Visual bar charts showing grade progression",
+        "Clear before/after grade display with improvement metrics",
       ],
     },
     {
-      title: "Trend Analysis",
+      title: "Period-Based Analysis",
       description: [
-        "Track academic progress over time with trend lines",
-        "Spot patterns in attendance, grades, and engagement",
-        "Use filters to focus on specific students, subjects, or periods",
+        "Select consultation period (Prelim, Midterm, Pre-Finals, Finals)",
+        "Automatic comparison to the next period",
+        "Track improvement across different academic terms",
       ],
     },
     {
-      title: "Custom Reports & Export",
+      title: "Class Performance Overview",
       description: [
-        "Generate detailed reports for student performance and progress",
-        "Export data for further analysis or sharing with students and parents",
-        "Download charts and tables in various formats",
+        "View overall class improvement statistics",
+        "See percentage of students who improved",
+        "Average improvement points across all students",
       ],
     },
   ];
@@ -110,13 +110,12 @@ const Help_Polycon_Analysis = () => {
             </span>
           </div>
           <h1 className="text-2xl sm:text-3xl font-bold text-gray-900 mb-3">
-            Polycon Analysis Overview
+            Grade Improvement Analysis
           </h1>
           <div className="bg-blue-50 border-l-4 border-[#057DCD] p-4 rounded-r-md">
             <p className="text-gray-700 text-sm sm:text-base">
-              Polycon Analysis provides insights and visualizations to help
-              teachers track student academic performance, identify trends, and
-              support data-driven decisions for continuous improvement.
+              Grade Improvement Analysis provides simple, clear comparisons of student performance before and after consultation sessions. 
+              Track grade improvements across different academic periods and view overall class performance statistics.
             </p>
           </div>
         </div>
