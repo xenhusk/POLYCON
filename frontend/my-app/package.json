@@ -13,6 +13,7 @@
     "date-fns": "^4.1.0",
     "firebase": "^11.7.3",
     "framer-motion": "^12.23.12",
+    "html2canvas": "^1.4.1",
     "jspdf": "^2.5.2",
     "lucide-react": "^0.474.0",
     "modal": "^0.2.0",

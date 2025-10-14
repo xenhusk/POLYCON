@@ -78,8 +78,8 @@ def is_consultation_relevant_to_period(session, consultation_period, school_year
 def compare_student():
     try:
         """
-        Simple grade comparison analysis for a student based on consultation period.
-        Compares grade from consultation period to the next period only.
+        Course-specific grade comparison analysis for a student based on consultation period.
+        Compares grade from consultation period to the next period for a specific course only.
         """
         data = request.get_json() or {}
         student_id = data.get('student_id')
@@ -87,9 +87,10 @@ def compare_student():
         teacher_id = data.get('teacher_id')
         school_year = data.get('school_year')
         semester = data.get('semester')
+        course_id = data.get('course_id')  # NEW: Add course_id parameter
         
-        if not all([student_id, consultation_period, teacher_id, school_year, semester]):
-            return jsonify({'error': 'student_id, consultation_period, teacher_id, school_year, and semester are required'}), 400
+        if not all([student_id, consultation_period, teacher_id, school_year, semester, course_id]):
+            return jsonify({'error': 'student_id, consultation_period, teacher_id, school_year, semester, and course_id are required'}), 400
 
         # Lookup user and student
         user = User.query.filter_by(id_number=student_id).first()
@@ -117,17 +118,18 @@ def compare_student():
         if not faculty_user_id:
             return jsonify({'error': 'Teacher not found'}), 404
 
-        # Get grades for the student and teacher
+        # Get grades for the student, teacher, and specific course
         grades_query = Grade.query.filter_by(
             student_user_id=user.id,
             faculty_user_id=faculty_user_id,
             school_year=school_year,
-            semester=semester
+            semester=semester,
+            course_id=course_id  # NEW: Filter by specific course
         ).join(Course, Grade.course_id == Course.id)
 
         grades = grades_query.all()
         if not grades:
-            return jsonify({'error': 'No grades found for this student and teacher combination'}), 404
+            return jsonify({'error': 'No grades found for this student, teacher, and course combination'}), 404
 
         # Group grades by period
         grades_by_period = {}
@@ -173,19 +175,19 @@ def compare_student():
         if improvement_points > 0:
             if improvement_percent >= 10:
                 improvement_status = 'Significantly Improved'
-                consultation_impact = 'High Impact'
+                consultation_impact = 'High'
             elif improvement_percent >= 5:
                 improvement_status = 'Improved'
-                consultation_impact = 'Moderate Impact'
+                consultation_impact = 'Moderate'
             else:
                 improvement_status = 'Slightly Improved'
-                consultation_impact = 'Low Impact'
+                consultation_impact = 'Low'
         elif improvement_points < 0:
             improvement_status = 'Declined'
-            consultation_impact = 'Negative Impact'
+            consultation_impact = 'Negative'
         else:
             improvement_status = 'No Change'
-            consultation_impact = 'No Impact'
+            consultation_impact = 'None'
 
         # Check if there are consultation sessions for this student and teacher
         # during the specific consultation period and semester
@@ -227,10 +229,27 @@ def compare_student():
         else:
             effectiveness = "No consultation sessions found for this period"
 
+        # Get course information
+        course = Course.query.get(course_id)
+        course_name = course.name if course else f"Course ID {course_id}"
+        course_code = course.code if course else "Unknown"
+
+        # Get teacher information
+        teacher_user = User.query.get(faculty_user_id)
+        teacher_name = f"{teacher_user.first_name} {teacher_user.last_name}" if teacher_user else "Unknown Teacher"
+        teacher_id_number = teacher_user.id_number if teacher_user else "Unknown"
+
         result = {
             'student_id': student_id,
             'student_name': f"{user.first_name} {user.last_name}",
+            'teacher_id': teacher_id_number,
+            'teacher_name': teacher_name,
+            'course_id': course_id,
+            'course_name': course_name,
+            'course_code': course_code,
             'consultation_period': consultation_period,
+            'school_year': school_year,
+            'semester': semester,
             'before_period': before_period,
             'after_period': after_period,
             'before_grade': round(before_grade, 2),
@@ -242,6 +261,7 @@ def compare_student():
             'consultation_effectiveness': effectiveness,
             'has_consultation': has_consultation,
             'consultation_count': consultation_count,
+            'grade_count': len(grades),  # NEW: Add total number of grades analyzed
             'relevant_consultation_sessions': relevant_sessions,
             'all_grades': avg_grades,
             'analysis_date': datetime.utcnow().isoformat(),
