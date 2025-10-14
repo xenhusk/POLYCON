@@ -1,176 +1,165 @@
-# Production Data Migration Guide
+# Production Database Migration Guide
 
-## 🚀 Quick Start - Transfer Local Data to Production
+This guide will help you safely update your Render PostgreSQL database with the new Period and Venue models.
 
-### **Option 1: Full Database Export (Recommended)**
+## 🎯 What This Migration Does
 
-```bash
-# 1. Export your entire local database
-python update_render_database.py export --type all
+1. **Creates new tables:**
+   - `periods` - For managing academic periods (Prelims, Midterm, Pre-finals, Finals)
+   - `venues` - For managing consultation venues by department
 
-# 2. Follow the generated instructions to upload to Render
-```
+2. **Adds new columns to existing tables:**
+   - `bookings` table: `venue_id`, `period_id`
+   - `consultation_sessions` table: `venue_id`, `period_id`
 
-### **Option 2: Export Only Your Unique Concerns**
+3. **Creates default data:**
+   - 4 default periods (Prelims, Midterm, Pre-finals, Finals)
+   - Sample venues for each department
 
-```bash
-# Export just consultation sessions with your improved data
-python update_render_database.py export --type consultations
-```
+## 🚀 Deployment Options
 
----
+### Option 1: Interactive Migration (Recommended)
 
-## 📋 Step-by-Step Process
-
-### **Step 1: Prepare Your Data**
-
-1. **Ensure your local database has the unique concerns**:
+1. **Navigate to backend directory:**
    ```bash
-   python analyze_concern_duplicates.py
+   cd backend
    ```
-   ✅ Should show 0% duplication rate
 
-2. **Export your data**:
+2. **Run the interactive migration tool:**
    ```bash
-   python update_render_database.py
+   python run_migration.py
    ```
-   - Choose option 1 for full export
-   - Choose option 2 for specific data
+   
+   This will:
+   - Check and install dependencies automatically
+   - Prompt you for your database URL
+   - Test the connection before proceeding
+   - Run the migration with detailed logging
+   - Optionally run verification tests
 
-### **Step 2: Access Render Database**
+### Option 2: Direct Migration Script
 
-1. **Go to your Render Dashboard**:
-   - Open [render.com/dashboard](https://render.com/dashboard)
-   - Navigate to your PostgreSQL database service
-   - Click "Connect" tab
-   - Copy the **External Connection String**
-
-2. **Format will look like**:
-   ```
-   postgresql://username:password@host:port/database_name
-   ```
-
-### **Step 3: Upload to Production**
-
-#### **Method A: Direct psql Upload**
-```bash
-# If you have psql installed locally:
-psql "your_render_connection_string" < database/your_exported_file.sql
-```
-
-#### **Method B: Via Render Shell**
-1. Go to your **Backend Service** in Render
-2. Open the **Shell** tab
-3. Upload your SQL file to your repository
-4. Run the import command in the shell
-
-#### **Method C: Manual SQL Execution**
-1. Connect to your Render database using a tool like pgAdmin or DBeaver
-2. Execute the SQL file contents manually
-
----
-
-## ⚠️ Important Safety Steps
-
-### **Before Upload:**
-
-1. **Backup Production Database**:
+1. **Install dependencies:**
    ```bash
-   # Connect to render and export current data
-   pg_dump "your_render_connection_string" > database/production_backup_$(date +%Y%m%d).sql
+   cd backend
+   pip install -r migration_requirements.txt
    ```
 
-2. **Test with Small Dataset First**:
-   - Export just 10-20 consultation sessions
-   - Upload those first to test the process
-
-### **After Upload:**
-
-1. **Verify Data Integrity**:
+2. **Run the migration (will prompt for database URL):**
    ```bash
-   # Run your analytics to ensure everything works
-   curl https://your-app.onrender.com/api/hometeacher-analytics
+   python production_migration.py
    ```
 
-2. **Check Concern Quality**:
-   - Verify that your unique concerns transferred correctly
-   - Test the analytics dashboard
+### Option 3: With Environment Variable
 
----
+1. **Set environment variable:**
+   ```bash
+   export DATABASE_URL="postgresql://username:password@host:port/database"
+   ```
 
-## 📊 Data Types You Can Export
+2. **Run the migration:**
+   ```bash
+   python production_migration.py
+   ```
 
-| Type | Description | Tables Included |
-|------|-------------|-----------------|
-| `all` | Complete database | All tables |
-| `consultations` | Session data with unique concerns | consultation_sessions |
-| `users` | User accounts | users, students, faculty |
-| `appointments` | Booking data | appointments |
-| `departments` | Academic structure | departments, programs |
-| `semesters` | Academic periods | semesters |
-| `all_academic` | Academic data only | users, students, faculty, departments, programs, semesters |
-| `all_sessions` | Session data only | consultation_sessions, appointments |
+### Option 4: Run via Render Shell
 
----
+1. **Access Render Shell:**
+   - Go to your Render dashboard
+   - Navigate to your web service
+   - Click on "Shell" tab
 
-## 🛡️ Security & Best Practices
+2. **Run the migration:**
+   ```bash
+   cd backend
+   python production_migration.py
+   ```
 
-### **Connection Security**
-- Always use SSL connections
-- Keep connection strings secure
-- Use environment variables for sensitive data
+### Option 5: Deploy as One-time Job
 
-### **Data Validation**
-- Check foreign key constraints
-- Verify data types match
-- Test with small datasets first
+1. **Create a new Render service:**
+   - Service Type: "Background Worker"
+   - Build Command: `pip install -r migration_requirements.txt`
+   - Start Command: `python production_migration.py`
 
-### **Backup Strategy**
-- Always backup before importing
-- Keep multiple backup versions
-- Document your migration steps
+2. **Deploy and run once, then delete the service**
 
----
+## 🔍 Verification Steps
+
+After running the migration, verify the changes:
+
+1. **Check new tables exist:**
+   ```sql
+   SELECT table_name FROM information_schema.tables 
+   WHERE table_schema = 'public' 
+   AND table_name IN ('periods', 'venues');
+   ```
+
+2. **Check new columns exist:**
+   ```sql
+   SELECT column_name FROM information_schema.columns 
+   WHERE table_name = 'bookings' 
+   AND column_name IN ('venue_id', 'period_id');
+   ```
+
+3. **Check default data:**
+   ```sql
+   SELECT * FROM periods;
+   SELECT * FROM venues LIMIT 5;
+   ```
+
+## 🛡️ Safety Features
+
+- **Idempotent:** Can be run multiple times safely
+- **Checks existence:** Won't create duplicate tables/columns
+- **Transaction safety:** Each operation is wrapped in transactions
+- **Detailed logging:** Shows exactly what's happening
+- **Rollback friendly:** No destructive operations
+
+## 📋 Migration Checklist
+
+- [ ] Backup your production database (Render provides automatic backups)
+- [ ] Test the migration script locally first
+- [ ] Set the correct `DATABASE_URL` environment variable
+- [ ] Run the migration during low-traffic hours
+- [ ] Verify all tables and columns were created
+- [ ] Test your application with the new schema
+- [ ] Monitor application logs for any issues
 
 ## 🚨 Troubleshooting
 
-### **Common Issues**
+### Common Issues:
 
-1. **Connection Errors**:
-   - Verify connection string format
-   - Check network connectivity
-   - Ensure database allows external connections
+1. **Connection Error:**
+   - Verify `DATABASE_URL` is correct
+   - Check if your IP is whitelisted (if using IP restrictions)
 
-2. **Import Errors**:
-   - Check for constraint violations
-   - Verify table exists
-   - Look for data type mismatches
+2. **Permission Error:**
+   - Ensure the database user has CREATE TABLE permissions
+   - Check if foreign key constraints can be created
 
-3. **Large File Issues**:
-   - Split large exports into smaller files
-   - Use streaming uploads for big datasets
-   - Consider using background jobs
+3. **Table Already Exists:**
+   - This is normal and safe - the script will skip existing tables
 
-### **Getting Help**
+### Getting Help:
 
-- Check Render documentation: [render.com/docs](https://render.com/docs)
-- PostgreSQL documentation: [postgresql.org/docs](https://postgresql.org/docs)
-- Flask-SQLAlchemy: [flask-sqlalchemy.palletsprojects.com](https://flask-sqlalchemy.palletsprojects.com)
+If you encounter issues:
+1. Check the migration logs for specific error messages
+2. Verify your database connection settings
+3. Ensure all dependencies are installed
+4. Check Render service logs for additional context
 
----
+## 📞 Support
 
-## 📝 Example Commands
+The migration script includes comprehensive logging and error handling. All operations are designed to be safe and reversible. If you need assistance, check the logs first as they will contain detailed information about what went wrong.
 
-```bash
-# Quick export of your unique consultation data
-python update_render_database.py export --type consultations
+## ✅ Post-Migration
 
-# Interactive mode (recommended for first-time users)
-python update_render_database.py
+After successful migration:
 
-# Check your local data quality first
-python analyze_concern_duplicates.py
+1. **Update your application code** to use the new Period and Venue features
+2. **Test all functionality** to ensure everything works correctly
+3. **Monitor performance** to ensure no issues were introduced
+4. **Update documentation** to reflect the new schema
 
-# Verify your improvements are ready
-python backend/test_full_flow.py
-```
+The migration is designed to be backward compatible, so your existing application should continue to work even before you update the code to use the new features.

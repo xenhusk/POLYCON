@@ -237,7 +237,7 @@ const Sidebar = ({ onExpandChange }) => {
       appointments: '/appointments',
       schedule: '/teacher-schedule',
       history: '/history', // FIX: was 'past', should be 'history' to match menu item
-      comparative: '/comparative-analysis'
+      comparative: '/polycon-analysis'
     },
     admin: {
       homeadmin: '/homeadmin',

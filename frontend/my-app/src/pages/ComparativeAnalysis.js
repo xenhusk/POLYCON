@@ -4,7 +4,6 @@ import API_URL from '../apiConfig';
 import { getProfilePictureUrl } from "../utils/utils";
 import { motion, AnimatePresence } from "framer-motion";
 import { useToast } from '../contexts/ToastContext';
-import ComparativeAnalysisHeader from "../components/Comparative_Analysis_Header";
 import ComparativeConsultationHistory from "../components/Comparative_Consultation_history";
 // Add Chart.js and required components
 import {
@@ -169,19 +168,23 @@ function ComparativeAnalysis() {
     }
   }, [selectedTeacher, selectedSemester]);
 
-  // Fetch overall metrics when teacher and semester are selected
+  // Fetch overall metrics when semester is selected
   useEffect(() => {
-    fetchOverallMetrics();
-  }, [selectedTeacher, selectedSemester]);
+    if (selectedSemester && selectedTeacher) {
+      fetchOverallMetrics();
+    }
+  }, [selectedSemester, selectedTeacher]);
 
   // Note: We no longer need to fetch grades and sessions separately
   // The new comparative analysis endpoint handles all the data processing
 
   // Check if basic fields are provided for the simplified interface
+  // Now only depends on semester since teacher is automatically set from logged-in user
   const basicFieldsProvided = selectedSemester && selectedTeacher;
 
   // Function to fetch overall metrics for the class
   const fetchOverallMetrics = () => {
+    // Use the logged-in teacher and selected semester
     if (selectedTeacher && selectedSemester) {
       const params = new URLSearchParams({
         teacher_id: selectedTeacher,
@@ -345,203 +348,165 @@ function ComparativeAnalysis() {
   // Note: Old useEffect hooks for complex modal removed - now using simplified search
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-slate-50 via-blue-50 to-indigo-100">
-      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
-      {/* Header Section with Enhanced Design */}
-      <ComparativeAnalysisHeader />
-
-      {/* Teacher and Semester Selection */}
-      <motion.div
-        initial={{ opacity: 0, y: 20 }}
-        animate={{ opacity: 1, y: 0 }}
-        className="mb-8 px-4"
+    <div className="min-h-screen bg-gradient-to-br from-gray-50 to-blue-50 font-poppins">
+      {/* Hero Section */}
+      <motion.section
+        initial={{ opacity: 0 }}
+        animate={{ opacity: 1 }}
+        transition={{ duration: 0.8 }}
+        className="relative py-16 overflow-hidden"
       >
-        <div className="bg-white rounded-2xl shadow-lg border border-gray-200 p-6 max-w-4xl mx-auto">
-          <div className="text-center mb-6">
-            <h3 className="text-2xl font-bold text-gray-900 mb-2">Select Teacher & Semester</h3>
-            <p className="text-gray-600">Choose the teacher and semester for consultation impact analysis</p>
-          </div>
-          
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-            {/* Semester Selection */}
-            <div>
-              <label className="block text-sm font-semibold text-gray-700 mb-3">
-                Select Semester
-              </label>
-              <select
-                value={selectedSemester?.id || ""}
-                onChange={(e) => {
-                  const selectedId = parseInt(e.target.value);
-                  console.log('🔍 DEBUG - Semester selection changed:', selectedId);
-                  const selectedSemesterData = semesters.find(s => s.id === selectedId);
-                  console.log('🔍 DEBUG - Found semester data:', selectedSemesterData);
-                  if (selectedSemesterData) {
-                    setSelectedSemester(selectedSemesterData);
-                    console.log('🔍 DEBUG - Set selected semester:', selectedSemesterData);
-                  }
-                }}
-                className="w-full px-4 py-3 border border-gray-300 rounded-xl focus:ring-2 focus:ring-[#0065A8] focus:border-transparent transition-all duration-200"
-              >
-                <option value="">Select a semester...</option>
-                {semesters.map((semester) => (
-                  <option key={semester.id} value={semester.id}>
-                    {semester.display_name}
-                  </option>
-                ))}
-              </select>
-            </div>
+        {/* Background Elements */}
+        <div className="absolute inset-0 bg-gradient-to-br from-[#0065A8] via-[#057DCD] to-[#046bb8]" />
+        <div className="absolute inset-0 bg-black bg-opacity-20" />
+        
+        {/* Floating Elements */}
+        <motion.div
+          animate={{ 
+            y: [0, -20, 0],
+            rotate: [0, 5, 0]
+          }}
+          transition={{ 
+            duration: 6,
+            repeat: Infinity,
+            ease: "easeInOut"
+          }}
+          className="absolute top-10 left-10 w-20 h-20 bg-blue-400 rounded-full opacity-20"
+        />
+        <motion.div
+          animate={{ 
+            y: [0, 30, 0],
+            rotate: [0, -5, 0]
+          }}
+          transition={{ 
+            duration: 8,
+            repeat: Infinity,
+            ease: "easeInOut"
+          }}
+          className="absolute bottom-10 right-10 w-32 h-32 bg-blue-300 rounded-full opacity-15"
+        />
 
-            {/* Teacher Selection */}
-            <div>
-              <label className="block text-sm font-semibold text-gray-700 mb-3">
-                Select Teacher
-              </label>
-              <select
-                value={selectedTeacher}
-                onChange={(e) => setSelectedTeacher(e.target.value)}
-                className="w-full px-4 py-3 border border-gray-300 rounded-xl focus:ring-2 focus:ring-[#0065A8] focus:border-transparent transition-all duration-200"
-                disabled={!selectedSemester?.id}
-              >
-                <option value="">Select a teacher...</option>
-                {teachers.map((teacher) => (
-                  <option key={teacher.id} value={teacher.id}>
-                    {teacher.fullName} ({teacher.department})
-                  </option>
-                ))}
-              </select>
-              {!selectedSemester?.id && (
-                <p className="text-sm text-gray-500 mt-2">Please select a semester first</p>
-              )}
-            </div>
-          </div>
+        <div className="relative z-10 max-w-7xl mx-auto px-6 text-center">
+          <motion.div
+            initial={{ opacity: 0, y: 30 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ duration: 0.8, delay: 0.2 }}
+          >
+            <h1 className="text-4xl md:text-5xl lg:text-6xl font-bold text-white mb-4">
+              POLYCON Analysis
+            </h1>
+            <p className="text-xl md:text-2xl text-blue-200 mb-2">
+              Analyze student performance and consultation effectiveness
+            </p>
+            <p className="text-lg text-blue-100 max-w-2xl mx-auto">
+              Track student improvement patterns and measure the impact of consultation sessions on academic performance
+            </p>
+          </motion.div>
         </div>
-      </motion.div>
+      </motion.section>
 
-      {/* Instructions when no teacher/semester selected */}
-      {!basicFieldsProvided && (
+      <div className="container mx-auto px-4 py-8">
         <motion.div
           initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
-          className="mb-12 px-4"
+          transition={{ delay: 0.4 }}
         >
-          <div className="bg-gradient-to-r from-blue-50 to-indigo-50 rounded-2xl border border-blue-200 p-8 max-w-4xl mx-auto text-center">
-            <div className="w-16 h-16 bg-gradient-to-r from-blue-500 to-indigo-600 rounded-full flex items-center justify-center mx-auto mb-4">
-              <svg className="w-8 h-8 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
-              </svg>
+
+
+      {/* Instructions when no semester selected */}
+      {!selectedSemester && (
+        <motion.div
+          initial={{ opacity: 0, y: 20 }}
+          animate={{ opacity: 1, y: 0 }}
+          className="mb-12"
+        >
+          <div className="bg-white rounded-2xl shadow-2xl overflow-hidden border border-gray-100">
+            <div className="bg-gradient-to-r from-[#0065A8] to-[#057DCD] text-white p-6">
+              <div className="flex items-center gap-4">
+                <div className="w-12 h-12 bg-white bg-opacity-20 rounded-full flex items-center justify-center">
+                  <svg className="w-6 h-6 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+                  </svg>
+                </div>
+                <div>
+                  <h3 className="text-2xl font-bold">Get Started with POLYCON Analysis</h3>
+                  <p className="text-blue-100">Follow these steps to begin your consultation impact analysis</p>
+                </div>
+              </div>
             </div>
-            <h3 className="text-xl font-bold text-gray-900 mb-2">Get Started with Consultation Impact Analysis</h3>
-            <p className="text-gray-600 mb-4">
-              To begin analyzing student performance and consultation impact, please:
-            </p>
-            <div className="flex flex-col sm:flex-row gap-4 justify-center items-center text-sm text-gray-700">
-              <div className="flex items-center gap-2">
-                <div className="w-6 h-6 bg-blue-500 text-white rounded-full flex items-center justify-center text-xs font-bold">1</div>
-                <span>Select a semester from the dropdown above</span>
-              </div>
-              <div className="flex items-center gap-2">
-                <div className="w-6 h-6 bg-blue-500 text-white rounded-full flex items-center justify-center text-xs font-bold">2</div>
-                <span>Choose a teacher who has grades in that semester</span>
-              </div>
-              <div className="flex items-center gap-2">
-                <div className="w-6 h-6 bg-blue-500 text-white rounded-full flex items-center justify-center text-xs font-bold">3</div>
-                <span>Search for students and run analysis</span>
+            <div className="p-8">
+              <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+                <motion.div
+                  initial={{ opacity: 0, y: 20 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  transition={{ delay: 0.1 }}
+                  className="text-center"
+                >
+                  <div className="w-16 h-16 bg-gradient-to-r from-[#0065A8] to-[#057DCD] rounded-full flex items-center justify-center mx-auto mb-4">
+                    <span className="text-white font-bold text-xl">1</span>
+                  </div>
+                  <h4 className="text-lg font-semibold text-gray-900 mb-2">Select Semester</h4>
+                  <p className="text-gray-600 text-sm">Choose the semester and search for students in the section below</p>
+                </motion.div>
+                <motion.div
+                  initial={{ opacity: 0, y: 20 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  transition={{ delay: 0.2 }}
+                  className="text-center"
+                >
+                  <div className="w-16 h-16 bg-gradient-to-r from-emerald-500 to-emerald-600 rounded-full flex items-center justify-center mx-auto mb-4">
+                    <span className="text-white font-bold text-xl">2</span>
+                  </div>
+                  <h4 className="text-lg font-semibold text-gray-900 mb-2">View Metrics</h4>
+                  <p className="text-gray-600 text-sm">Review class-wide consultation impact metrics and statistics</p>
+                </motion.div>
+                <motion.div
+                  initial={{ opacity: 0, y: 20 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  transition={{ delay: 0.3 }}
+                  className="text-center"
+                >
+                  <div className="w-16 h-16 bg-gradient-to-r from-purple-500 to-purple-600 rounded-full flex items-center justify-center mx-auto mb-4">
+                    <span className="text-white font-bold text-xl">3</span>
+                  </div>
+                  <h4 className="text-lg font-semibold text-gray-900 mb-2">Run Analysis</h4>
+                  <p className="text-gray-600 text-sm">Execute individual student analysis and view detailed results</p>
+                </motion.div>
               </div>
             </div>
           </div>
         </motion.div>
       )}
 
-      {/* Overall Class Metrics */}
-      {overallMetrics && (
-        <motion.div 
-          initial={{ opacity: 0, y: 20 }}
-          animate={{ opacity: 1, y: 0 }}
-          className="mb-10 px-4"
-        >
-          <div className="bg-white rounded-2xl shadow-lg border border-gray-200 p-6 max-w-4xl mx-auto">
-            <div className="text-center mb-6">
-              <h3 className="text-2xl font-bold text-[#0065A8] mb-2">Class Consultation Impact</h3>
-              <p className="text-gray-600">Overall consultation effectiveness and student improvement metrics</p>
-            </div>
-            
-            <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-              <motion.div
-                initial={{ opacity: 0, scale: 0.9 }}
-                animate={{ opacity: 1, scale: 1 }}
-                transition={{ delay: 0.1 }}
-                className="bg-gradient-to-br from-blue-50 to-blue-100 rounded-xl p-6 text-center border border-blue-200"
-              >
-                <div className="w-12 h-12 bg-gradient-to-r from-blue-500 to-blue-600 rounded-full flex items-center justify-center mx-auto mb-4">
-                    <svg className="w-6 h-6 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 7h8m0 0v8m0-8l-8 8-4-4-6 6" />
-                    </svg>
-                  </div>
-                <h4 className="text-lg font-semibold text-blue-800 mb-2">Average Grade Improvement</h4>
-                <p className="text-3xl font-bold text-blue-900">
-                  {overallMetrics.average_improvement_points > 0 ? '+' : ''}{overallMetrics.average_improvement_points}
-                </p>
-                <p className="text-sm text-blue-700">points ({overallMetrics.average_improvement_percent > 0 ? '+' : ''}{overallMetrics.average_improvement_percent}%)</p>
-              </motion.div>
-
-              <motion.div 
-                initial={{ opacity: 0, scale: 0.9 }}
-                animate={{ opacity: 1, scale: 1 }}
-                transition={{ delay: 0.2 }}
-                className="bg-gradient-to-br from-green-50 to-green-100 rounded-xl p-6 text-center border border-green-200"
-              >
-                <div className="w-12 h-12 bg-gradient-to-r from-green-500 to-green-600 rounded-full flex items-center justify-center mx-auto mb-4">
-                  <svg className="w-6 h-6 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
-                  </svg>
-                  </div>
-                <h4 className="text-lg font-semibold text-green-800 mb-2">Consultation Success Rate</h4>
-                <p className="text-3xl font-bold text-green-900">{overallMetrics.students_improved_percent}%</p>
-                <p className="text-sm text-green-700">{overallMetrics.students_improved_count} out of {overallMetrics.total_improvements_analyzed} students improved</p>
-              </motion.div>
-
-              <motion.div 
-                initial={{ opacity: 0, scale: 0.9 }}
-                animate={{ opacity: 1, scale: 1 }}
-                transition={{ delay: 0.3 }}
-                className="bg-gradient-to-br from-purple-50 to-purple-100 rounded-xl p-6 text-center border border-purple-200"
-              >
-                <div className="w-12 h-12 bg-gradient-to-r from-purple-500 to-purple-600 rounded-full flex items-center justify-center mx-auto mb-4">
-                  <svg className="w-6 h-6 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0zm6 3a2 2 0 11-4 0 2 2 0 014 0zM7 10a2 2 0 11-4 0 2 2 0 014 0z" />
-                  </svg>
-                </div>
-                <h4 className="text-lg font-semibold text-purple-800 mb-2">Students Analyzed</h4>
-                <p className="text-3xl font-bold text-purple-900">{overallMetrics.total_students}</p>
-                <p className="text-sm text-purple-700">{overallMetrics.students_with_consultations} received consultations</p>
-              </motion.div>
+      {/* Combined Semester Selection and Student Analysis Section */}
+      <motion.section
+        initial={{ opacity: 0, y: 20 }}
+        animate={{ opacity: 1, y: 0 }}
+        transition={{ duration: 0.6 }}
+        className="mb-12"
+      >
+        <div className="bg-white rounded-2xl shadow-2xl border border-gray-100">
+          <div className="bg-gradient-to-r from-[#0065A8] to-[#057DCD] text-white p-6 rounded-t-2xl">
+            <div className="flex items-center gap-4">
+              <div className="w-12 h-12 bg-white bg-opacity-20 rounded-full flex items-center justify-center">
+                <svg className="w-6 h-6 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
+                </svg>
+              </div>
+              <div>
+                <h3 className="text-2xl font-bold">Student Analysis & Semester Selection</h3>
+                <p className="text-blue-100">Search for students and select semester for consultation impact analysis</p>
               </div>
             </div>
-        </motion.div>
-      )}
-
-      {/* Note: Student grades are now handled by the comparative analysis endpoint */}
-
-
-
-      {/* Note: Consultation history is now handled by the comparative analysis endpoint */}
-
-
-      {/* Direct Student Search Section */}
-      {basicFieldsProvided && (
-              <motion.div 
-          initial={{ opacity: 0, y: 20 }}
-          animate={{ opacity: 1, y: 0 }}
-          className="mb-12 px-4"
-        >
-          <div className="bg-white rounded-2xl shadow-lg border border-gray-200 p-6">
-                <div className="text-center mb-6">
-              <h3 className="text-2xl font-bold text-gray-900 mb-2">Individual Student Analysis</h3>
-              <p className="text-gray-600">Search for a student to analyze their consultation impact</p>
-                </div>
+          </div>
+          <div className="p-6">
+          {/* Side by side layout */}
+          <div className="grid grid-cols-1 lg:grid-cols-2 gap-8 relative">
+            {/* Student Search - Left Side */}
+            <div className="relative">
 
             {/* Student Search */}
-            <div className="mb-6">
+            <div className="mb-6 pb-4">
               <label className="block text-sm font-semibold text-gray-700 mb-3">
                 Search for Student
               </label>
@@ -603,7 +568,7 @@ function ComparativeAnalysis() {
                     
                     {/* Search Suggestions Dropdown */}
                     {searchTerm.length >= 2 && searchResults.length > 0 && (
-                      <div className="absolute top-full left-0 right-0 mt-1 bg-white border border-gray-200 rounded-xl shadow-lg z-50 max-h-64 overflow-y-auto">
+                      <div className="absolute top-full left-0 right-0 mt-1 bg-white border border-gray-200 rounded-xl shadow-2xl z-[9999] max-h-64 overflow-y-auto">
                         {searchResults.map((student) => (
                           <motion.div
                             key={student.id || student.id_number || student.idNumber}
@@ -647,7 +612,7 @@ function ComparativeAnalysis() {
 
                     {/* No Results Message */}
                     {searchTerm.length >= 2 && searchResults.length === 0 && !isSearching && (
-                      <div className="absolute top-full left-0 right-0 mt-1 bg-white border border-gray-200 rounded-xl shadow-lg z-50 p-4">
+                      <div className="absolute top-full left-0 right-0 mt-1 bg-white border border-gray-200 rounded-xl shadow-2xl z-[9999] p-4">
                         <div className="flex items-center gap-3 text-gray-500">
                           <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                             <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9.172 16.172a4 4 0 015.656 0M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
@@ -674,101 +639,221 @@ function ComparativeAnalysis() {
               </div>
             </div>
 
-            {/* Available Analyses */}
-            {selectedStudent && (
-              <div className="space-y-6">
-                <div>
-                  <div className="flex items-center justify-between mb-4">
-                    <h4 className="text-lg font-semibold text-gray-900">Available Consultation Periods</h4>
-                    {analysisResult && (
-                      <div className="flex items-center gap-2 text-sm text-green-600">
-                        <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
-                        </svg>
-                        <span>Analysis completed - Try another consultation period below</span>
-                      </div>
-                    )}
+            </div>
+
+            {/* Semester Selection - Right Side */}
+            <div>
+              <label className="block text-sm font-semibold text-gray-700 mb-3">
+                Select Semester
+              </label>
+              <select
+                value={selectedSemester?.id || ""}
+                onChange={(e) => {
+                  const selectedId = parseInt(e.target.value);
+                  console.log('🔍 DEBUG - Semester selection changed:', selectedId);
+                  const selectedSemesterData = semesters.find(s => s.id === selectedId);
+                  console.log('🔍 DEBUG - Found semester data:', selectedSemesterData);
+                  if (selectedSemesterData) {
+                    setSelectedSemester(selectedSemesterData);
+                    console.log('🔍 DEBUG - Set selected semester:', selectedSemesterData);
+                  }
+                }}
+                className="w-full px-4 py-3 border border-gray-300 rounded-xl focus:ring-2 focus:ring-[#0065A8] focus:border-transparent transition-all duration-200"
+              >
+                <option value="">Select a semester...</option>
+                {semesters.map((semester) => (
+                  <option key={semester.id} value={semester.id}>
+                    {semester.display_name}
+                  </option>
+                ))}
+              </select>
+            </div>
+          </div>
+
+          {/* Available Analyses - Full width below the side-by-side layout */}
+          {selectedStudent && (
+            <div className="mt-8 pt-8 border-t border-gray-200">
+              <div className="flex items-center justify-between mb-4">
+                <h4 className="text-lg font-semibold text-gray-900">Available Consultation Periods</h4>
+                {analysisResult && (
+                  <div className="flex items-center gap-2 text-sm text-green-600">
+                    <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
+                    </svg>
+                    <span>Analysis completed - Try another consultation period below</span>
                   </div>
-                  {isLoadingAnalyses ? (
-                    <div className="text-center py-8">
-                      <div className="inline-block animate-spin rounded-full h-8 w-8 border-b-2 border-[#0065A8]"></div>
-                      <p className="text-gray-500 mt-2">Loading available analyses...</p>
-                    </div>
-                  ) : availableAnalyses.length > 0 ? (
-                    <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                      {availableAnalyses.map((analysis) => {
-                        const isLastRun = lastRunAnalysisId === analysis.id;
-                        return (
-        <motion.div 
-                            key={analysis.id}
-                            whileHover={{ scale: 1.02 }}
-                            whileTap={{ scale: 0.98 }}
-                            className={`p-4 border rounded-xl hover:shadow-md transition-all duration-200 cursor-pointer ${
-                              isLastRun 
-                                ? 'border-green-300 bg-green-50 hover:border-green-400' 
-                                : 'border-gray-200 hover:border-[#0065A8]'
-                            }`}
-                            onClick={() => runAnalysis(analysis)}
-                          >
-              <div className="flex items-center gap-3">
-                              <div className={`w-10 h-10 rounded-full flex items-center justify-center ${
-                                isLastRun 
-                                  ? 'bg-gradient-to-r from-green-500 to-green-600' 
-                                  : 'bg-gradient-to-r from-blue-500 to-blue-600'
-                              }`}>
-                                {isLastRun ? (
-                                  <svg className="w-5 h-5 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
-                                  </svg>
-                                ) : (
-                                  <svg className="w-5 h-5 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z" />
-                      </svg>
-                                )}
-                              </div>
-                              <div className="flex-1">
-                                <div className="flex items-center gap-2">
-                                  <p className="font-medium text-gray-900">{analysis.course.course_code}</p>
-                                  {isLastRun && (
-                                    <span className="px-2 py-1 bg-green-100 text-green-800 text-xs rounded-full font-medium">
-                                      Just Run
-                                    </span>
-                                  )}
-                                </div>
-                                <p className="text-sm text-gray-600">{analysis.consultation_period} Period Impact Analysis</p>
-                                <p className="text-xs text-gray-500 mt-1">
-                                  {selectedSemester.school_year} - {selectedSemester.semester} Semester
-                                </p>
-                              </div>
-                            </div>
-                    </motion.div>
-                        );
-                      })}
-                    </div>
-                  ) : (
-                    <div className="text-center py-8 border border-gray-200 rounded-xl bg-gray-50">
-                      <div className="w-12 h-12 bg-gray-200 rounded-full flex items-center justify-center mx-auto mb-3">
-                        <svg className="w-6 h-6 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z" />
-                      </svg>
-                      </div>
-                      <p className="text-gray-500 text-sm">No consultation periods available</p>
-                      <p className="text-gray-400 text-xs mt-1">This student may not have grades or consultation data for this semester</p>
-                    </div>
                 )}
               </div>
+              {isLoadingAnalyses ? (
+                <div className="text-center py-8">
+                  <div className="inline-block animate-spin rounded-full h-8 w-8 border-b-2 border-[#0065A8]"></div>
+                  <p className="text-gray-500 mt-2">Loading available analyses...</p>
+                </div>
+              ) : availableAnalyses.length > 0 ? (
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                  {availableAnalyses.map((analysis) => {
+                    const isLastRun = lastRunAnalysisId === analysis.id;
+                    return (
+                      <motion.div 
+                        key={analysis.id}
+                        whileHover={{ scale: 1.02 }}
+                        whileTap={{ scale: 0.98 }}
+                        className={`p-4 border rounded-xl hover:shadow-md transition-all duration-200 cursor-pointer ${
+                          isLastRun 
+                            ? 'border-green-300 bg-green-50 hover:border-green-400' 
+                            : 'border-gray-200 hover:border-[#0065A8]'
+                        }`}
+                        onClick={() => runAnalysis(analysis)}
+                      >
+                        <div className="flex items-center gap-3">
+                          <div className={`w-10 h-10 rounded-full flex items-center justify-center ${
+                            isLastRun 
+                              ? 'bg-gradient-to-r from-green-500 to-green-600' 
+                              : 'bg-gradient-to-r from-blue-500 to-blue-600'
+                          }`}>
+                            {isLastRun ? (
+                              <svg className="w-5 h-5 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
+                              </svg>
+                            ) : (
+                              <svg className="w-5 h-5 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z" />
+                              </svg>
+                            )}
+                          </div>
+                          <div className="flex-1">
+                            <div className="flex items-center gap-2">
+                              <p className="font-medium text-gray-900">{analysis.course.course_code}</p>
+                              {isLastRun && (
+                                <span className="px-2 py-1 bg-green-100 text-green-800 text-xs rounded-full font-medium">
+                                  Just Run
+                                </span>
+                              )}
+                            </div>
+                            <p className="text-sm text-gray-600">{analysis.consultation_period} Period Impact Analysis</p>
+                            <p className="text-xs text-gray-500 mt-1">
+                              {selectedSemester.school_year} - {selectedSemester.semester} Semester
+                            </p>
+                          </div>
+                        </div>
+                      </motion.div>
+                    );
+                  })}
+                </div>
+              ) : (
+                <div className="text-center py-8 border border-gray-200 rounded-xl bg-gray-50">
+                  <div className="w-12 h-12 bg-gray-200 rounded-full flex items-center justify-center mx-auto mb-3">
+                    <svg className="w-6 h-6 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z" />
+                    </svg>
+                  </div>
+                  <p className="text-gray-500 text-sm">No consultation periods available</p>
+                  <p className="text-gray-400 text-xs mt-1">This student may not have grades or consultation data for this semester</p>
+                </div>
+              )}
+            </div>
+          )}
           </div>
-            )}
+        </div>
+      </motion.section>
+
+      {/* Overall Class Metrics */}
+      {overallMetrics && (
+        <motion.section
+          initial={{ opacity: 0, y: 20 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ duration: 0.6, delay: 0.2 }}
+          className="mb-12"
+        >
+          <div className="bg-white rounded-2xl shadow-2xl overflow-hidden border border-gray-100">
+            <div className="bg-gradient-to-r from-emerald-500 to-emerald-600 text-white p-6">
+              <div className="flex items-center gap-4">
+                <div className="w-12 h-12 bg-white bg-opacity-20 rounded-full flex items-center justify-center">
+                  <svg className="w-6 h-6 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z" />
+                  </svg>
+                </div>
+                <div>
+                  <h3 className="text-2xl font-bold">Class Consultation Impact</h3>
+                  <p className="text-emerald-100">
+                    Overall consultation effectiveness and student improvement metrics for {selectedSemester?.school_year} - {selectedSemester?.semester} Semester
+                  </p>
+                </div>
+              </div>
+            </div>
+            <div className="p-6">
+            
+            <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+              <motion.div
+                initial={{ opacity: 0, scale: 0.9 }}
+                animate={{ opacity: 1, scale: 1 }}
+                transition={{ delay: 0.1 }}
+                className="bg-gradient-to-br from-blue-50 to-blue-100 rounded-xl p-6 text-center border border-blue-200"
+              >
+                <div className="w-12 h-12 bg-gradient-to-r from-blue-500 to-blue-600 rounded-full flex items-center justify-center mx-auto mb-4">
+                    <svg className="w-6 h-6 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 7h8m0 0v8m0-8l-8 8-4-4-6 6" />
+                    </svg>
+                  </div>
+                <h4 className="text-lg font-semibold text-blue-800 mb-2">Average Grade Improvement</h4>
+                <p className="text-3xl font-bold text-blue-900">
+                  {overallMetrics.average_improvement_points > 0 ? '+' : ''}{overallMetrics.average_improvement_points}
+                </p>
+                <p className="text-sm text-blue-700">points ({overallMetrics.average_improvement_percent > 0 ? '+' : ''}{overallMetrics.average_improvement_percent}%)</p>
+              </motion.div>
+
+              <motion.div 
+                initial={{ opacity: 0, scale: 0.9 }}
+                animate={{ opacity: 1, scale: 1 }}
+                transition={{ delay: 0.2 }}
+                className="bg-gradient-to-br from-green-50 to-green-100 rounded-xl p-6 text-center border border-green-200"
+              >
+                <div className="w-12 h-12 bg-gradient-to-r from-green-500 to-green-600 rounded-full flex items-center justify-center mx-auto mb-4">
+                  <svg className="w-6 h-6 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
+                  </svg>
+                  </div>
+                <h4 className="text-lg font-semibold text-green-800 mb-2">Consultation Success Rate</h4>
+                <p className="text-3xl font-bold text-green-900">{overallMetrics.students_improved_percent}%</p>
+                <p className="text-sm text-green-700">{overallMetrics.students_improved_count} out of {overallMetrics.total_improvements_analyzed} students improved</p>
+              </motion.div>
+
+              <motion.div 
+                initial={{ opacity: 0, scale: 0.9 }}
+                animate={{ opacity: 1, scale: 1 }}
+                transition={{ delay: 0.3 }}
+                className="bg-gradient-to-br from-purple-50 to-purple-100 rounded-xl p-6 text-center border border-purple-200"
+              >
+                <div className="w-12 h-12 bg-gradient-to-r from-purple-500 to-purple-600 rounded-full flex items-center justify-center mx-auto mb-4">
+                  <svg className="w-6 h-6 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0zm6 3a2 2 0 11-4 0 2 2 0 014 0zM7 10a2 2 0 11-4 0 2 2 0 014 0z" />
+                  </svg>
+                </div>
+                <h4 className="text-lg font-semibold text-purple-800 mb-2">Students Analyzed</h4>
+                <p className="text-3xl font-bold text-purple-900">{overallMetrics.total_students}</p>
+                <p className="text-sm text-purple-700">{overallMetrics.students_with_consultations} received consultations</p>
+              </motion.div>
+              </div>
+            </div>
           </div>
-        </motion.div>
+        </motion.section>
       )}
 
-      {/* Simple Grade Comparison Results */}
+      {/* Note: Student grades are now handled by the comparative analysis endpoint */}
+
+
+
+      {/* Note: Consultation history is now handled by the comparative analysis endpoint */}
+
+
+
+      {/* Analysis Results */}
       {analysisResult && (
-        <motion.div
+        <motion.section
           initial={{ opacity: 0, y: 30 }}
           animate={{ opacity: 1, y: 0 }}
-          className="mt-16 mb-20 px-2 sm:px-0"
+          transition={{ duration: 0.6, delay: 0.4 }}
+          className="mb-12"
         >
           {/* Header */}
           <motion.div
@@ -1153,11 +1238,10 @@ function ComparativeAnalysis() {
               </motion.div>
             </div>
           </div>
-              </motion.div>
-            )}
-
-      {/* Note: Modal removed - now using direct search on page */}
-                </div>
+        </motion.section>
+      )}
+        </motion.div>
+      </div>
     </div>
   );
 }

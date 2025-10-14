@@ -953,7 +953,7 @@ function App() {
                           <Route path="/appointments-calendar" element={<AppointmentsCalendar />} />
                           <Route path="/settings" element={<Settings />} />
                           <Route path="/teacher-schedule" element={<TeacherScheduleManager />} />
-                          <Route path="/comparative-analysis" element={<ComparativeAnalysis />} />
+                          <Route path="/polycon-analysis" element={<ComparativeAnalysis />} />
                           <Route path="/session" element={<Session />} />
                           <Route path="/finaldocument" element={<FinalDocument />} />
                           <Route path="/sidebar-preview" element={<SidebarPreview />} />
