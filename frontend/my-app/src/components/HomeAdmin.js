@@ -269,6 +269,7 @@ const HomeAdmin = () => {
       {/* Hero Section - Hidden for admin on mobile */}
       {!shouldBlockAdminMobile && (
         <motion.section
+          key="hero-section"
           initial={{ opacity: 0 }}
           animate={{ opacity: 1 }}
           transition={{ duration: 0.8 }}
@@ -323,7 +324,7 @@ const HomeAdmin = () => {
               transition={{ duration: 0.8, delay: 0.2 }}
             >
               <h1 className="text-4xl md:text-5xl lg:text-6xl font-bold text-white mb-4">
-                Welcome, {userDetails?.firstName} {userDetails?.lastName}
+                Welcome, {userDetails?.firstName || 'Admin'} {userDetails?.lastName || 'User'}
               </h1>
               <p className="text-xl md:text-2xl text-blue-200 mb-2">
                 Admin Dashboard
