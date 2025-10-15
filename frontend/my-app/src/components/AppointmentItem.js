@@ -280,9 +280,12 @@ function AppointmentItem({ appointment, role, onStartSession, onCancel, onConfir
                       alt="Student"
                       className="w-5 h-5 sm:w-6 sm:h-6 md:w-8 md:h-8 rounded-full border-2 border-white mr-1.5 sm:mr-2 md:mr-3 shadow-sm"
                     />
-                    <span className="text-gray-800 font-medium text-xs sm:text-sm leading-tight">
-                      {student.firstName} {student.lastName}
-                    </span>
+                    <div className="text-gray-800 font-medium text-xs sm:text-sm leading-tight">
+                      <div>{student.firstName} {student.lastName}</div>
+                      <div className="text-gray-600 text-xs">
+                        ID: {student.idNumber || student.id || 'No ID'}
+                      </div>
+                    </div>
                   </motion.div>
                 );
               })

@@ -867,7 +867,7 @@ function ComparativeAnalysis() {
                                     : student.fullName || 'Unknown Student'}
                                 </p>
                                 <p className="text-xs text-gray-500">
-                                  {student.id || student.id_number || student.idNumber || 'No ID'}
+                                  ID: {student.id || student.id_number || student.idNumber || 'No ID'} • {student.year_section || student.program || student.programName || 'Unknown Program'}
                                 </p>
                   </div>
                 </div>

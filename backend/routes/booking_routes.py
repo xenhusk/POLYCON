@@ -1,6 +1,6 @@
 from flask import Blueprint, request, jsonify
 from flask_cors import cross_origin
-from models import db, Booking, User, Student, Faculty
+from models import db, Booking, User, Student, Faculty, Program
 from sqlalchemy.orm import joinedload
 from sqlalchemy import or_
 from services.socket_service import emit_booking_created, emit_booking_confirmed, emit_booking_cancelled
@@ -90,11 +90,24 @@ def get_bookings():
                 student_user = User.query.filter_by(id=student_id).first()
                 if student_user:
                     student_users.append(student_user)
+                    # Get student record for program and year_section
+                    student_record = Student.query.filter_by(user_id=student_user.id).first()
+                    program_name = None
+                    year_section = None
+                    if student_record:
+                        year_section = student_record.year_section
+                        if student_record.program_id:
+                            program = Program.query.get(student_record.program_id)
+                            if program:
+                                program_name = program.name
+                    
                     student_profiles.append({
                         'id': student_user.id,
                         'idNumber': student_user.id_number,
                         'name': f"{student_user.first_name} {student_user.last_name}",
-                        'profile': student_user.profile_picture
+                        'profile': student_user.profile_picture,
+                        'program': program_name,
+                        'year_section': year_section
                     })
         
         student_names = [f"{s.first_name} {s.last_name}" for s in student_users if s]
@@ -146,11 +159,24 @@ def get_all_bookings_admin():
                 student_user = User.query.filter_by(id=student_id).first()
                 if student_user:
                     student_users.append(student_user)
+                    # Get student record for program and year_section
+                    student_record = Student.query.filter_by(user_id=student_user.id).first()
+                    program_name = None
+                    year_section = None
+                    if student_record:
+                        year_section = student_record.year_section
+                        if student_record.program_id:
+                            program = Program.query.get(student_record.program_id)
+                            if program:
+                                program_name = program.name
+                    
                     student_profiles.append({
                         'id': student_user.id,
                         'idNumber': student_user.id_number,
                         'name': f"{student_user.first_name} {student_user.last_name}",
-                        'profile': student_user.profile_picture
+                        'profile': student_user.profile_picture,
+                        'program': program_name,
+                        'year_section': year_section
                     })
         
         student_names = [f"{s.first_name} {s.last_name}" for s in student_users if s]

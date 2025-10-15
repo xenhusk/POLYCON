@@ -64,6 +64,7 @@ const AddGradePopup = () => {
   const [studentID, setStudentID] = useState("");
   const [studentName, setStudentName] = useState("");
   const [studentProfilePicture, setStudentProfilePicture] = useState("");
+  const [studentYearSection, setStudentYearSection] = useState("");
   const [courseID, setCourseID] = useState("");
   const [courseName, setCourseName] = useState("");
   const [grade, setGrade] = useState("");
@@ -170,6 +171,7 @@ const AddGradePopup = () => {
     setStudentName(student.name);
     setStudentID(student.studentID);
     setStudentProfilePicture(student.profilePicture || "");
+    setStudentYearSection(student.year_section || "");
     setFilteredStudents([]);
   };
 
@@ -224,6 +226,7 @@ const AddGradePopup = () => {
         setStudentID("");
         setStudentName("");
         setStudentProfilePicture("");
+        setStudentYearSection("");
         setCourseID("");
         setGrade("");
         setPeriod("");
@@ -249,6 +252,7 @@ const AddGradePopup = () => {
     setStudentID("");
     setStudentName("");
     setStudentProfilePicture("");
+    setStudentYearSection("");
     setCourseID("");
     setGrade("");
     setPeriod("");
@@ -357,7 +361,10 @@ const AddGradePopup = () => {
                       />
                       <div className="flex-1">
                         <div className="font-medium text-gray-900">{studentName}</div>
-                        <div className="text-sm text-gray-500">ID: {studentID}</div>
+                        <div className="text-sm text-gray-500">
+                          ID: {studentID}
+                          {studentYearSection && ` • ${studentYearSection}`}
+                        </div>
                       </div>
                       <button
                         type="button"
@@ -365,6 +372,7 @@ const AddGradePopup = () => {
                           setStudentName("");
                           setStudentID("");
                           setStudentProfilePicture("");
+                          setStudentYearSection("");
                         }}
                         className="text-red-500 hover:text-red-700 text-sm font-medium"
                       >
@@ -399,9 +407,10 @@ const AddGradePopup = () => {
                           />
                           <div>
                             <div className="font-medium">{student.name}</div>
-                            {student.studentID && (
-                              <div className="text-xs text-gray-500">ID: {student.studentID}</div>
-                            )}
+                            <div className="text-xs text-gray-500">
+                              ID: {student.studentID}
+                              {student.year_section && ` • ${student.year_section}`}
+                            </div>
                           </div>
                         </li>
                       ))}

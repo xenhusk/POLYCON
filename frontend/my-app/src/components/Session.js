@@ -699,7 +699,7 @@ const Session = () => {
                         <p className="text-xs sm:text-sm md:text-base lg:text-lg font-semibold">
                           {student && student.fullName ? student.fullName : student && student.firstName ? student.firstName : "Student Name"}
                         </p>                        <p className="text-[0.65rem] sm:text-[0.7rem] md:text-xs lg:text-sm text-[#98d6ff]">
-                          {formatProgramWithSection(student)}
+                          ID: {student.idNumber || student.id || 'No ID'} • {student.year_section || student.program || 'Unknown Program'}
                         </p>
                       </div>
                     </div>

@@ -1,6 +1,6 @@
 from flask import Blueprint, request, jsonify
 from extensions import db
-from models import Grade, Course, User
+from models import Grade, Course, User, Student
 
 grade_bp = Blueprint('grade', __name__, url_prefix='/grade')
 
@@ -148,7 +148,16 @@ def search_students():
     result = []
     for u in students:
         if name_query in u.full_name.lower():
-            result.append({'studentID': u.id_number, 'name': u.full_name})
+            # Get student details including year and section
+            student_record = Student.query.filter_by(user_id=u.id).first()
+            year_section = student_record.year_section if student_record else None
+            
+            result.append({
+                'studentID': u.id_number, 
+                'name': u.full_name,
+                'year_section': year_section,
+                'profilePicture': u.profile_picture
+            })
     return jsonify(result), 200
 
 @grade_bp.route('/get_faculty', methods=['GET'])
