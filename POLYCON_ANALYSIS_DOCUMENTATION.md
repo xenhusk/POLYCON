@@ -17,10 +17,18 @@ The POLYCON Analysis System is a comprehensive educational analytics platform de
 
 ### Key Features
 - **Individual Student Analysis**: Tracks performance changes for specific students in specific courses
-- **Consultation Impact Assessment**: Quantifies the effectiveness of consultation sessions
+- **Consultation Impact Assessment**: Quantifies the effectiveness of consultation sessions through grade correlation analysis
 - **Multi-Period Analysis**: Compares performance across different academic periods (Prelim, Midterm, Pre-Final, Final)
+- **Audio Transcription & Diarization**: Records consultation sessions with speaker identification
 - **Statistical Validation**: Uses established educational research methodologies
 - **Comprehensive Reporting**: Generates detailed analysis reports for stakeholders
+
+### Core Capabilities
+- **Audio Recording**: Real-time consultation session recording
+- **Transcription Services**: Automatic speech-to-text conversion with speaker identification
+- **Grade Correlation Analysis**: Measures the relationship between consultations and academic performance
+- **Multi-Speaker Support**: Handles consultations with multiple participants
+- **AI-Powered Summaries**: Generates consultation summaries using Google Gemini
 
 ## System Architecture
 
@@ -29,15 +37,19 @@ The POLYCON Analysis System is a comprehensive educational analytics platform de
 - **PostgreSQL Database**: Stores student grades, consultation sessions, and user data
 - **SQLAlchemy ORM**: Database abstraction layer for data manipulation
 - **Statistical Processing Engine**: Core analysis algorithms
+- **AssemblyAI Integration**: Audio transcription and speaker diarization
+- **Google Gemini Integration**: AI-powered summary generation and role identification
+- **Audio Processing Services**: Real-time audio recording and conversion
 
 ### Frontend Components
 - **React.js Interface**: User-friendly dashboard for analysis requests
 - **Chart.js Visualization**: Interactive charts for performance trends
 - **Print-Optimized Reports**: Professional document generation
+- **Audio Recording Interface**: Real-time consultation session recording
 
 ### Data Flow
 ```
-Student Data → Grade Processing → Statistical Analysis → Impact Assessment → Report Generation
+Audio Recording → Transcription → Speaker Diarization → Grade Processing → Statistical Analysis → Impact Assessment → Report Generation
 ```
 
 ## Analysis Methodology
@@ -46,7 +58,8 @@ Student Data → Grade Processing → Statistical Analysis → Impact Assessment
 The system collects comprehensive data including:
 - **Student Demographics**: Name, ID, enrollment information
 - **Academic Records**: Grades across multiple periods and courses
-- **Consultation Data**: Session dates, duration, concerns, outcomes
+- **Consultation Data**: Session dates, duration, concerns, outcomes, transcriptions
+- **Audio Data**: Recorded consultation sessions with speaker identification
 - **Course Information**: Course codes, names, faculty assignments
 
 ### 2. Period-Based Analysis
@@ -63,7 +76,35 @@ The system follows a structured approach to academic period analysis:
 - **Consultation Period**: Active intervention phase
 - **After Period**: Performance measurement after consultation
 
-### 3. Statistical Processing
+### 3. Audio Processing & Transcription
+
+#### Audio Recording
+```python
+# Real-time audio capture during consultation sessions
+audio_blob = record_consultation_session()
+upload_audio_to_storage(audio_blob)
+```
+
+#### Transcription Processing
+```python
+# AssemblyAI transcription with speaker diarization
+transcription_result = transcribe_audio_with_assemblyai(
+    file_path=audio_file,
+    speaker_count=expected_speakers
+)
+
+# Format: "Speaker A: [text]\nSpeaker B: [text]"
+formatted_transcription = format_speaker_diarization(transcription_result)
+```
+
+#### Role Identification
+```python
+# Google Gemini role identification
+roles = identify_roles_in_transcription(transcription_text)
+# Returns: {"Teacher": "Speaker A", "Student 1": "Speaker B", ...}
+```
+
+### 4. Statistical Processing
 
 #### Grade Aggregation
 ```python
@@ -113,7 +154,14 @@ WHERE g.student_user_id = ?
   AND g.course_id = ?
 ```
 
-### 3. Statistical Computation
+### 3. Audio Processing
+- **Audio Conversion**: Converts recorded audio to compatible formats
+- **Transcription**: Converts speech to text using AssemblyAI
+- **Speaker Diarization**: Identifies and labels different speakers
+- **Role Identification**: Uses AI to identify teacher and student roles
+- **Summary Generation**: Creates AI-generated consultation summaries
+
+### 4. Statistical Computation
 - **Mean Calculation**: Period-based grade averaging
 - **Variance Analysis**: Measures grade consistency
 - **Correlation Analysis**: Links consultation frequency to performance
@@ -137,6 +185,10 @@ WHERE g.student_user_id = ?
 consultation_to_improvement = improvement_points > 0 and has_consultation
 improvement_magnitude = abs(improvement_percent)
 consultation_significance = 'High' if has_consultation and improvement_percent >= 5 else 'Low'
+
+# Transcription-based analysis
+transcription_quality = len(transcription_text) > 100  # Minimum transcription length
+speaker_clarity = count_speakers(transcription_text) == expected_speakers
 ```
 
 ## Academic Foundation
@@ -202,13 +254,20 @@ CREATE TABLE grades (
 -- Consultation sessions table
 CREATE TABLE consultation_sessions (
     id SERIAL PRIMARY KEY,
-    teacher_id INTEGER REFERENCES users(id),
+    teacher_id VARCHAR(50),
     student_ids JSON,
-    session_date DATE,
-    duration INTEGER,
+    session_date TIMESTAMP,
+    duration VARCHAR(20),
+    transcription TEXT,
+    transcription_enabled BOOLEAN,
     concern TEXT,
     action_taken TEXT,
-    outcome TEXT
+    outcome TEXT,
+    remarks TEXT,
+    venue_id INTEGER REFERENCES venues(id),
+    period_id INTEGER REFERENCES periods(id),
+    audio_file_path VARCHAR(512),
+    booking_id VARCHAR(100) REFERENCES bookings(id)
 );
 ```
 
@@ -231,6 +290,23 @@ def compare_student():
     
     Returns:
     - JSON response with analysis results
+    """
+```
+
+#### Transcription Endpoint
+```python
+@consultation_bp.route('/transcribe', methods=['POST'])
+def transcribe():
+    """
+    Process audio file and generate transcription with speaker diarization.
+    
+    Parameters:
+    - audio: Audio file (WebM format)
+    - speaker_count: Expected number of speakers
+    - transcription_enabled: Boolean flag for transcription processing
+    
+    Returns:
+    - JSON response with transcription data and audio URL
     """
 ```
 
@@ -328,6 +404,6 @@ The system's design is grounded in educational research literature and follows b
 
 ---
 
-*Document Version: 1.0*  
-*Last Updated: December 2024*  
-*System Version: POLYCON v2.0*
+*Document Version: 2.0*  
+*Last Updated: October 2025*  
+*System Version: POLYCON v2.1*
