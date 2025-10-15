@@ -403,6 +403,21 @@ class SimplifiedDatabaseManager:
             except:
                 pass
             
+            try:
+                cursor.execute("SELECT COUNT(*) FROM feedbacks WHERE created_at > NOW() - INTERVAL '7 days'")
+                recent_feedbacks = cursor.fetchone()[0]
+                print(f"Recent feedback entries (7 days): {recent_feedbacks}")
+            except:
+                pass
+            
+            try:
+                cursor.execute("SELECT AVG(rating) FROM feedbacks")
+                avg_rating = cursor.fetchone()[0]
+                if avg_rating:
+                    print(f"Average feedback rating: {avg_rating:.2f}")
+            except:
+                pass
+            
             cursor.close()
             conn.close()
             
