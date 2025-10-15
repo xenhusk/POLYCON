@@ -25,3 +25,4 @@ Thumbs.db
 /backend-python/keys/
 backend-python/keys/firebase-key.json
 database_config.env
+database/exports/users_export_20251015_130821.json
