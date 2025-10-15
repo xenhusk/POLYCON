@@ -33,6 +33,8 @@ const FinalDocument = () => {
   const [period, setPeriod] = useState("N/A");
   const [teacherInfo, setTeacherInfo] = useState(null);
   const [studentInfo, setStudentInfo] = useState(null);
+  const [userRole, setUserRole] = useState(null);
+  const [currentUserId, setCurrentUserId] = useState(null);
   const audioRef = useRef(null);
   const documentRef = useRef(null);
 
@@ -90,6 +92,55 @@ const FinalDocument = () => {
   };
 
   useEffect(() => {
+    // Check user role and ID from localStorage
+    const userEmail = localStorage.getItem('userEmail');
+    const userRole = localStorage.getItem('userRole');
+    const userId = localStorage.getItem('userId');
+    
+    console.log('LocalStorage data:', {
+      userEmail,
+      userRole,
+      userId
+    });
+    
+    // Try localStorage first (faster) - but validate the data
+    if (userRole && userId && userRole !== 'faculty') {
+      console.log('Using localStorage data');
+      setUserRole(userRole);
+      setCurrentUserId(userId);
+    } else if (userEmail) {
+      // Clear corrupted localStorage data
+      if (userRole === 'faculty') {
+        console.log('Clearing corrupted localStorage data...');
+        localStorage.removeItem('userRole');
+        localStorage.removeItem('userId');
+      }
+      // Fallback to API call
+      console.log('Fetching user data from API...');
+      fetch(`${API_URL}/user/get_user_by_email?email=${userEmail}`)
+        .then(response => {
+          console.log('API response status:', response.status);
+          return response.json();
+        })
+        .then(userData => {
+          console.log('User data fetched:', userData);
+          if (userData && userData.role) {
+            setUserRole(userData.role);
+            setCurrentUserId(userData.id_number);
+            // Store in localStorage for next time
+            localStorage.setItem('userRole', userData.role);
+            localStorage.setItem('userId', userData.id_number);
+          } else {
+            console.error('Invalid user data structure:', userData);
+          }
+        })
+        .catch(error => {
+          console.error('Error fetching user data:', error);
+        });
+    }
+  }, []);
+
+  useEffect(() => {
     const fetchSessionData = async () => {
       try {
         if (!sessionID) {
@@ -139,15 +190,19 @@ const FinalDocument = () => {
               year_section: student.year_section || ''
             }));
             setStudentInfo(formattedStudentInfo);
+            console.log('Student info set (formatted):', formattedStudentInfo);
           } else if (data.student_info && Array.isArray(data.student_info)) {
             setStudentInfo(data.student_info);
+            console.log('Student info set (direct):', data.student_info);
           } else if (data.student_ids && Array.isArray(data.student_ids)) {
             const studentPromises = data.student_ids.map(async (studentPath) => {
               const studentId = studentPath.split('/').pop();
               const studentResponse = await fetch(`${API_URL}/user/get_user?id=${studentId}`);
               return studentResponse.json();
             });
-            setStudentInfo(await Promise.all(studentPromises));
+            const studentData = await Promise.all(studentPromises);
+            setStudentInfo(studentData);
+            console.log('Student info set (fetched):', studentData);
           }
         } else {
           console.error("Error fetching session details:", data.error);
@@ -160,6 +215,7 @@ const FinalDocument = () => {
     };
     fetchSessionData();
   }, [sessionID]);
+
 
   // Calculate initial scale to fit the document in the viewport
   const [initialScale, setInitialScale] = useState(0.35);
@@ -228,6 +284,8 @@ const FinalDocument = () => {
       .replace(/Student:/g, "\nStudent:")
       .trim();
   };
+
+
 
   return (
     <div className="relative min-h-screen overflow-y-auto fade-in">
@@ -407,6 +465,7 @@ const FinalDocument = () => {
           </div>
         </div>
       )}
+      
     </div>
   );
 };

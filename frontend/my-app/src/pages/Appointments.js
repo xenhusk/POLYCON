@@ -6,6 +6,7 @@ import AppointmentItem from "../components/AppointmentItem";
 import { showErrorNotification, showAppointmentReminder as browserAppointmentNotification } from '../utils/notificationUtils';
 import { useToast } from '../contexts/ToastContext';
 import { parseUTCTimestamp } from '../utils/timezoneUtils';
+import FeedbackPopup from '../components/FeedbackPopup';
 
 // Request notification permission on component load
 if ('Notification' in window && Notification.permission !== 'granted' && Notification.permission !== 'denied') {
@@ -430,6 +431,7 @@ function StudentAppointments() {
       }
     };
   }, [socket, isConnected, refetch]);
+
 
   return (
     <div className="space-y-8">
@@ -1496,6 +1498,63 @@ function Appointments() {
     return localStorage.getItem("userRole")?.toLowerCase() || "";
   });
 
+  // Feedback popup state
+  const [showFeedbackPopup, setShowFeedbackPopup] = useState(false);
+  const [feedbackSessionData, setFeedbackSessionData] = useState(null);
+
+  // Polling-based feedback check (only for students)
+  const checkForFeedbackOpportunity = async () => {
+    try {
+      const studentID = localStorage.getItem("studentID");
+      if (!studentID || role !== 'student') return;
+
+      const response = await fetch(`${API_URL}/feedback/check_pending?student_id=${studentID}`, {
+        method: 'GET',
+        headers: {
+          'Content-Type': 'application/json',
+        }
+      });
+
+      if (response.ok) {
+        const data = await response.json();
+        
+        if (data.has_pending_feedback && data.session_data) {
+          setFeedbackSessionData({
+            sessionId: data.session_data.session_id,
+            teacherId: data.session_data.teacher_id,
+            studentId: data.session_data.student_id
+          });
+          setShowFeedbackPopup(true);
+        }
+      }
+    } catch (error) {
+      console.error('Error checking for feedback:', error);
+    }
+  };
+
+  useEffect(() => {
+    if (role !== 'student') return;
+
+    // Initial check
+    checkForFeedbackOpportunity();
+    
+    // Set up polling every 30 seconds
+    const pollingInterval = setInterval(() => {
+      checkForFeedbackOpportunity();
+    }, 30000); // Check every 30 seconds
+
+    // Cleanup on unmount
+    return () => {
+      clearInterval(pollingInterval);
+    };
+  }, [role]);
+
+  const handleFeedbackSubmitted = (feedbackData) => {
+    console.log('Feedback submitted from Appointments page:', feedbackData);
+    setShowFeedbackPopup(false);
+    setFeedbackSessionData(null);
+  };
+
   if (!role) {
   return (
       <div className="min-h-screen bg-gradient-to-br from-gray-50 to-blue-50 font-poppins flex items-center justify-center">
@@ -1599,6 +1658,18 @@ function Appointments() {
           )}
         </motion.div>
       </div>
+
+      {/* Feedback Popup */}
+      {showFeedbackPopup && feedbackSessionData && (
+        <FeedbackPopup
+          isOpen={showFeedbackPopup}
+          onClose={() => setShowFeedbackPopup(false)}
+          consultationSessionId={feedbackSessionData.sessionId}
+          studentId={feedbackSessionData.studentId}
+          teacherId={feedbackSessionData.teacherId}
+          onFeedbackSubmitted={handleFeedbackSubmitted}
+        />
+      )}
     </div>
   );
 }
