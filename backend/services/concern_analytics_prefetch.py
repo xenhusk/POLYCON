@@ -52,7 +52,7 @@ class ConcernAnalyticsPrefetcher:
             name="ConcernAnalyticsPrefetcher"
         )
         self.prefetch_thread.start()
-        logger.info("✅ Concern analytics prefetcher started successfully")
+        logger.info("[SUCCESS] Concern analytics prefetcher started successfully")
 
     def stop(self):
         """Stop the prefetch service."""
@@ -65,7 +65,7 @@ class ConcernAnalyticsPrefetcher:
         
         if self.prefetch_thread and self.prefetch_thread.is_alive():
             self.prefetch_thread.join(timeout=5)
-            logger.info("✅ Concern analytics prefetcher stopped successfully")
+            logger.info("[SUCCESS] Concern analytics prefetcher stopped successfully")
 
     def _get_base_url(self):
         """Get the base URL for API calls."""
@@ -86,7 +86,7 @@ class ConcernAnalyticsPrefetcher:
 
     def _prefetch_loop(self):
         """Main prefetch loop that runs in background thread."""
-        logger.info(f"🚀 Concern analytics prefetch loop STARTING - refreshing every {self.prefetch_interval/60} minutes")
+        logger.info(f"[INFO] Concern analytics prefetch loop STARTING - refreshing every {self.prefetch_interval/60} minutes")
         
         # Initial delay to let the app fully start
         time.sleep(10)
@@ -101,10 +101,10 @@ class ConcernAnalyticsPrefetcher:
                 self._prefetch_common_analytics()
                 
                 self.last_prefetch = datetime.utcnow()
-                logger.info(f"✅ Prefetch completed at {self.last_prefetch}")
+                logger.info(f"[SUCCESS] Prefetch completed at {self.last_prefetch}")
                 
             except Exception as e:
-                logger.error(f"❌ Error in prefetch loop: {e}")
+                logger.error(f"[ERROR] Error in prefetch loop: {e}")
             
             # Wait for the next interval
             time.sleep(self.prefetch_interval)
@@ -138,14 +138,14 @@ class ConcernAnalyticsPrefetcher:
                 if response.status_code == 200:
                     data = response.json()
                     categories_count = len(data.get('nlp_categories', {}))
-                    logger.info(f"✅ Successfully prefetched analytics with {categories_count} categories")
+                    logger.info(f"[SUCCESS] Successfully prefetched analytics with {categories_count} categories")
                 else:
                     logger.warning(f"⚠️ Prefetch request failed with status {response.status_code}")
                     
             except requests.exceptions.Timeout:
                 logger.warning(f"⏰ Prefetch request {i+1} timed out")
             except Exception as e:
-                logger.error(f"❌ Error prefetching query {i+1}: {e}")
+                logger.error(f"[ERROR] Error prefetching query {i+1}: {e}")
             
             # Small delay between requests to avoid overwhelming the server
             time.sleep(2)
@@ -188,10 +188,10 @@ class ConcernAnalyticsPrefetcher:
             logger.info("🔄 Forcing immediate prefetch...")
             self._prefetch_common_analytics()
             self.last_prefetch = datetime.utcnow()
-            logger.info("✅ Forced prefetch completed")
+            logger.info("[SUCCESS] Forced prefetch completed")
             return True
         except Exception as e:
-            logger.error(f"❌ Error in forced prefetch: {e}")
+            logger.error(f"[ERROR] Error in forced prefetch: {e}")
             return False
 
 

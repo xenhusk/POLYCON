@@ -966,6 +966,7 @@ function App() {
                           <Route path="/homeadmin" element={<HomeAdmin />} />
                           <Route path="/admin" element={<AdminPortal />} />
                           <Route path="/admin-consultation" element={<AdminConsultation />} />
+                           <Route path="/leaderboard" element={<AdminConsultation />} />
                           <Route path="/courses" element={<Courses />} />
                           <Route path="/programs" element={<Programs />} />
                           <Route path="/department" element={<Departments />} />

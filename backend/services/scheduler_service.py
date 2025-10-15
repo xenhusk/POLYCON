@@ -10,15 +10,35 @@ import threading
 import time
 import logging
 import os
+import sys
 from datetime import datetime, timedelta
 from typing import List, Dict, Any
 from sqlalchemy import and_
 from models import Booking, User, ConsultationSession
+
 from extensions import db
 from services.socket_service import emit_appointment_reminder
 
-# Configure logging
-logging.basicConfig(level=logging.INFO)
+# Configure logging to handle Unicode properly
+import io
+import codecs
+
+# Create a UTF-8 compatible stream handler
+utf8_stream = io.TextIOWrapper(
+    io.BytesIO(), 
+    encoding='utf-8', 
+    errors='replace'
+)
+
+# Configure logging with UTF-8 support
+logging.basicConfig(
+    level=logging.INFO,
+    format='%(asctime)s - %(name)s - %(levelname)s - %(message)s',
+    handlers=[
+        logging.StreamHandler(sys.stdout)
+    ],
+    force=True  # Force reconfiguration
+)
 logger = logging.getLogger(__name__)
 
 # Production environment detection
@@ -324,7 +344,7 @@ class AppointmentScheduler:
                     emit_appointment_reminder(teacher_reminder)
                     logger.info(f"✅ Teacher reminder sent successfully for appointment {appointment.id}")
                 except Exception as emit_error:
-                    logger.error(f"❌ Failed to send teacher reminder for appointment {appointment.id}: {emit_error}")
+                    logger.error(f"[ERROR] Failed to send teacher reminder for appointment {appointment.id}: {emit_error}")
             
             # Send reminder to each student
             reminder_count = 0
@@ -345,7 +365,7 @@ class AppointmentScheduler:
                         reminder_count += 1
                         logger.info(f"✅ Student reminder sent successfully for appointment {appointment.id}")
                     except Exception as emit_error:
-                        logger.error(f"❌ Failed to send student reminder for appointment {appointment.id}: {emit_error}")
+                        logger.error(f"[ERROR] Failed to send student reminder for appointment {appointment.id}: {emit_error}")
             
             total_recipients = len(appointment.student_ids) + (1 if teacher else 0)
             logger.info(f"✅ Sent reminders for appointment {appointment.id} to {reminder_count + (1 if teacher else 0)}/{total_recipients} recipients")

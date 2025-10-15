@@ -17,6 +17,7 @@ const AdminConsultation = () => {
   const [currentPage, setCurrentPage] = useState(1);
   const [itemsPerPage] = useState(10);
   const [userRole, setUserRole] = useState('');
+  const [showFeedbackModal, setShowFeedbackModal] = useState(false);
 
   useEffect(() => {
     // Get user role from localStorage
@@ -248,7 +249,7 @@ const AdminConsultation = () => {
   }
 
     return (
-      <div className="min-h-screen bg-gradient-to-br from-gray-50 to-blue-50 font-poppins">
+      <div className="min-h-screen bg-gradient-to-br from-gray-50 pb-10 to-blue-50 font-poppins">
         {/* Navigation Header - Only show if user is not admin */}
         {userRole !== 'admin' && (
           <motion.nav 
@@ -318,52 +319,51 @@ const AdminConsultation = () => {
           </motion.nav>
         )}
 
-        <div className="pt-6 pb-2 max-w-6xl mx-auto px-2 sm:px-4 lg:px-0">
-          {/* Modern Header */}
-          <div className="bg-gradient-to-r from-[#0065A8] to-[#057DCD] px-8 py-8 mb-8 relative overflow-hidden rounded-xl">
-            {/* Background decorative elements */}
-            <div className="absolute top-4 right-8 w-16 h-16 bg-white/10 rounded-full opacity-60"></div>
-            <div className="absolute bottom-4 right-16 w-12 h-12 bg-white/10 rounded-full opacity-40"></div>
-            
-            <div className="text-center relative z-10">
-              <div className="flex flex-col sm:flex-row items-center justify-center">
-                <div className="relative group" data-tooltip-container>
-                  <h2 className="text-white text-2xl sm:text-3xl font-bold mb-2 sm:mb-1 sm:mr-2 text-center cursor-default">
-                    {userRole === 'admin' ? 'Teachers Consultation Leaderboard' : 'Public Consultation Leaderboard'}
-                  </h2>
-                  {userRole !== 'admin' && (
-                    <div 
-                      data-tooltip="desktop"
-                      className="absolute left-1/2 -translate-x-1/2 top-full mt-2 transition-all duration-300 opacity-0 invisible group-hover:opacity-100 group-hover:visible pointer-events-none z-50 hidden sm:block"
-                    >
-                      <div className="bg-white/95 backdrop-blur-sm border border-blue-200 rounded-lg shadow-xl p-4 min-w-64 max-w-80">
-                        <div className="flex items-start gap-3">
-                          <div className="w-2 h-2 bg-blue-500 rounded-full animate-pulse mt-1 flex-shrink-0" />
-                          <div>
-                            <h3 className="font-semibold text-blue-900 text-sm mb-1">Public Leaderboard View</h3>
-                            <p className="text-blue-600 text-xs leading-relaxed">
-                              You're viewing the public consultation leaderboard showing teacher rankings and statistics. 
-                              Detailed consultation session information is restricted to administrative users for privacy and confidentiality.
-                            </p>
-                          </div>
-                        </div>
-                        {/* Arrow pointing up to title */}
-                        <div className="absolute bottom-full left-1/2 -translate-x-1/2">
-                          <div className="w-0 h-0 border-b-6 border-b-white/95 border-l-3 border-l-transparent border-r-3 border-r-transparent" />
-                        </div>
-                      </div>
-                    </div>
-                  )}
+        {/* Full-width Header Section - Matching the reference image */}
+        <div className="bg-gradient-to-r from-[#0065A8] to-[#057DCD] px-8 py-16 relative overflow-hidden">
+          {/* Large decorative circular elements like in the reference image */}
+          <div className="absolute -top-8 -left-8 w-32 h-32 bg-white/5 rounded-full opacity-30"></div>
+          <div className="absolute top-1/2 -right-16 w-24 h-24 bg-white/8 rounded-full opacity-40"></div>
+          <div className="absolute bottom-4 right-8 w-16 h-16 bg-white/10 rounded-full opacity-50"></div>
+          
+          <div className="text-center relative z-10">
+            <div className="flex flex-col items-center justify-center">
+              <div className="flex items-center gap-4 mb-6">
+                <h2 className="text-white text-5xl font-bold text-center">
+                  {userRole === 'admin' ? 'Teacher Leaderboard' : 'Public Leaderboard'}
+                </h2>
+                
+                {/* Feedback calculation icon with tooltip and modal */}
+                <div className="relative group">
+                  <button
+                    onClick={() => setShowFeedbackModal(true)}
+                    className="w-12 h-12 bg-white/20 hover:bg-white/30 rounded-full flex items-center justify-center transition-all duration-200 group-hover:scale-110"
+                    title="How feedback is calculated"
+                  >
+                    <svg className="w-6 h-6 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8.228 9c.549-1.165 2.03-2 3.772-2 2.21 0 4 1.343 4 3 0 1.4-1.278 2.575-3.006 2.907-.542.104-.994.54-.994 1.093m0 3h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+                    </svg>
+                  </button>
+                  
+                  {/* Hover tooltip */}
+                  <div className="absolute bottom-full left-1/2 -translate-x-1/2 mb-2 px-3 py-2 bg-gray-900 text-white text-xs rounded-lg opacity-0 group-hover:opacity-100 transition-opacity duration-200 pointer-events-none whitespace-nowrap z-50">
+                    How feedback is calculated
+                    <div className="absolute top-full left-1/2 -translate-x-1/2 w-0 h-0 border-l-4 border-r-4 border-t-4 border-transparent border-t-gray-900"></div>
+                  </div>
                 </div>
               </div>
-              <p className="text-white/90 text-lg mb-1">
+              
+              <p className="text-white/90 text-xl max-w-4xl">
                 {userRole === 'admin' 
-                  ? 'Top teachers ranked by consultation engagement and consultation overview' 
+                  ? 'Rank teachers based on performance, feedback quality, and consultation engagement' 
                   : 'Teacher rankings based on consultation activity and performance'
                 }
               </p>
             </div>
           </div>
+        </div>
+
+        <div className="pt-6 pb-2 max-w-6xl mx-auto px-2 sm:px-4 lg:px-0">
             
             {/* Modern Filter Section */}
             <div className="bg-white rounded-xl shadow-xl border border-gray-100 overflow-hidden mb-8 mx-2 sm:mx-0">
@@ -467,6 +467,8 @@ const AdminConsultation = () => {
                 </div>
               </div>
             </div>
+
+
           {error && (
             <div className="bg-red-100 text-red-600 p-3 rounded-lg mb-4 border border-red-200 text-sm">
               {error}
@@ -628,7 +630,7 @@ const AdminConsultation = () => {
                           </div>
                           
                           {/* Mobile Stats Row */}
-                          <div className="grid grid-cols-3 gap-2">
+                          <div className="grid grid-cols-2 gap-2">
                             <div className="text-center p-2 bg-white/80 backdrop-blur-sm rounded-lg border border-gray-200 group-hover:border-blue-200 transition-colors">
                               <div className="text-sm font-bold text-[#057DCD] mb-1">{teacher.total_consultations}</div>
                               <div className="text-xs text-slate-500 font-medium uppercase tracking-wide">Sessions</div>
@@ -637,9 +639,40 @@ const AdminConsultation = () => {
                               <div className="text-sm font-bold text-[#057DCD] mb-1">{teacher.total_students}</div>
                               <div className="text-xs text-slate-500 font-medium uppercase tracking-wide">Students</div>
                             </div>
+                          </div>
+                          
+                          {/* Mobile Duration Row */}
+                          <div className="grid grid-cols-1 gap-2">
                             <div className="text-center p-2 bg-white/80 backdrop-blur-sm rounded-lg border border-gray-200 group-hover:border-blue-200 transition-colors">
                               <div className="text-sm font-bold text-[#057DCD] mb-1">{teacher.total_duration_formatted}</div>
                               <div className="text-xs text-slate-500 font-medium uppercase tracking-wide">Duration</div>
+                            </div>
+                          </div>
+                          
+                          {/* Mobile Rating Row - Always show for public view */}
+                          <div className="grid grid-cols-1 gap-2">
+                            <div className="text-center p-2 bg-gradient-to-br from-yellow-50 to-orange-50 rounded-lg border border-yellow-200 group-hover:border-yellow-300 transition-colors">
+                              <div className="flex items-center justify-center space-x-1 mb-1">
+                                <div className="text-sm font-bold text-yellow-600">
+                                  {teacher.average_rating > 0 ? teacher.average_rating.toFixed(1) : 'N/A'}
+                                </div>
+                                {teacher.average_rating > 0 && (
+                                  <svg className="w-3 h-3 text-yellow-500" fill="currentColor" viewBox="0 0 20 20">
+                                    <path d="M9.049 2.927c.3-.921 1.603-.921 1.902 0l1.07 3.292a1 1 0 00.95.69h3.462c.969 0 1.371 1.24.588 1.81l-2.8 2.034a1 1 0 00-.364 1.118l1.07 3.292c.3.921-.755 1.688-1.54 1.118l-2.8-2.034a1 1 0 00-1.175 0l-2.8 2.034c-.784.57-1.838-.197-1.539-1.118l1.07-3.292a1 1 0 00-.364-1.118L2.98 8.72c-.783-.57-.38-1.81.588-1.81h3.461a1 1 0 00.951-.69l1.07-3.292z" />
+                                  </svg>
+                                )}
+                              </div>
+                              <div className="text-xs text-yellow-600 font-medium uppercase tracking-wide">Rating</div>
+                            </div>
+                          </div>
+                          
+                          {/* Mobile Score Row */}
+                          <div className="grid grid-cols-1 gap-2">
+                            <div className="text-center p-2 bg-gradient-to-br from-purple-50 to-indigo-50 rounded-lg border border-purple-200 group-hover:border-purple-300 transition-colors">
+                              <div className="text-sm font-bold text-purple-600 mb-1">
+                                {teacher.total_score || 'N/A'}
+                              </div>
+                              <div className="text-xs text-purple-600 font-medium uppercase tracking-wide">Total Score</div>
                             </div>
                           </div>
                         </div>
@@ -672,7 +705,7 @@ const AdminConsultation = () => {
                           </div>
 
                           {/* Stats Grid */}
-                          <div className="grid grid-cols-3 gap-4 mb-3 lg:mb-0 w-full lg:w-auto">
+                          <div className="grid grid-cols-2 lg:grid-cols-5 gap-4 mb-3 lg:mb-0 w-full lg:w-auto">
                             <div className="text-center p-2 bg-white/80 backdrop-blur-sm rounded-lg border border-gray-200 group-hover:border-blue-200 transition-colors">
                               <div className="text-lg font-bold text-[#057DCD] mb-1">{teacher.total_consultations}</div>
                               <div className="text-xs text-slate-500 font-medium uppercase tracking-wide">Sessions</div>
@@ -684,6 +717,25 @@ const AdminConsultation = () => {
                             <div className="text-center p-2 bg-white/80 backdrop-blur-sm rounded-lg border border-gray-200 group-hover:border-blue-200 transition-colors">
                               <div className="text-lg font-bold text-[#057DCD] mb-1">{teacher.total_duration_formatted}</div>
                               <div className="text-xs text-slate-500 font-medium uppercase tracking-wide">Duration</div>
+                            </div>
+                            <div className="text-center p-2 bg-gradient-to-br from-yellow-50 to-orange-50 rounded-lg border border-yellow-200 group-hover:border-yellow-300 transition-colors">
+                              <div className="flex items-center justify-center space-x-1 mb-1">
+                                <div className="text-lg font-bold text-yellow-600">
+                                  {teacher.average_rating > 0 ? teacher.average_rating.toFixed(1) : 'N/A'}
+                                </div>
+                                {teacher.average_rating > 0 && (
+                                  <svg className="w-4 h-4 text-yellow-500" fill="currentColor" viewBox="0 0 20 20">
+                                    <path d="M9.049 2.927c.3-.921 1.603-.921 1.902 0l1.07 3.292a1 1 0 00.95.69h3.462c.969 0 1.371 1.24.588 1.81l-2.8 2.034a1 1 0 00-.364 1.118l1.07 3.292c.3.921-.755 1.688-1.54 1.118l-2.8-2.034a1 1 0 00-1.175 0l-2.8 2.034c-.784.57-1.838-.197-1.539-1.118l1.07-3.292a1 1 0 00-.364-1.118L2.98 8.72c-.783-.57-.38-1.81.588-1.81h3.461a1 1 0 00.951-.69l1.07-3.292z" />
+                                  </svg>
+                                )}
+                              </div>
+                              <div className="text-xs text-yellow-600 font-medium uppercase tracking-wide">Rating</div>
+                            </div>
+                            <div className="text-center p-2 bg-gradient-to-br from-purple-50 to-indigo-50 rounded-lg border border-purple-200 group-hover:border-purple-300 transition-colors">
+                              <div className="text-lg font-bold text-purple-600 mb-1">
+                                {teacher.total_score || 'N/A'}
+                              </div>
+                              <div className="text-xs text-purple-600 font-medium uppercase tracking-wide">Score</div>
                             </div>
                           </div>
 
@@ -738,7 +790,7 @@ const AdminConsultation = () => {
               </div>
               
               {/* Quick Stats Cards */}
-              <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mt-6">
+              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-5 gap-4 mt-6">
                 <div className="bg-white/20 backdrop-blur-sm rounded-xl p-4 text-center">
                   <div className="text-3xl font-bold mb-1">{selectedTeacher.total_consultations}</div>
                   <div className="text-sm text-blue-100">Total Consultations</div>
@@ -750,6 +802,23 @@ const AdminConsultation = () => {
                 <div className="bg-white/20 backdrop-blur-sm rounded-xl p-4 text-center">
                   <div className="text-3xl font-bold mb-1">{selectedTeacher.total_duration_formatted}</div>
                   <div className="text-sm text-blue-100">Total Time</div>
+                </div>
+                {selectedTeacher.average_rating > 0 && (
+                  <div className="bg-gradient-to-br from-yellow-400/20 to-orange-400/20 backdrop-blur-sm rounded-xl p-4 text-center border border-yellow-300/30">
+                    <div className="flex items-center justify-center space-x-2 mb-1">
+                      <div className="text-3xl font-bold text-yellow-200">{selectedTeacher.average_rating.toFixed(1)}</div>
+                      <svg className="w-6 h-6 text-yellow-300" fill="currentColor" viewBox="0 0 20 20">
+                        <path d="M9.049 2.927c.3-.921 1.603-.921 1.902 0l1.07 3.292a1 1 0 00.95.69h3.462c.969 0 1.371 1.24.588 1.81l-2.8 2.034a1 1 0 00-.364 1.118l1.07 3.292c.3.921-.755 1.688-1.54 1.118l-2.8-2.034a1 1 0 00-1.175 0l-2.8 2.034c-.784.57-1.838-.197-1.539-1.118l1.07-3.292a1 1 0 00-.364-1.118L2.98 8.72c-.783-.57-.38-1.81.588-1.81h3.461a1 1 0 00.951-.69l1.07-3.292z" />
+                      </svg>
+                    </div>
+                    <div className="text-sm text-yellow-100">Average Rating</div>
+                  </div>
+                )}
+                <div className="bg-gradient-to-br from-purple-400/20 to-indigo-400/20 backdrop-blur-sm rounded-xl p-4 text-center border border-purple-300/30">
+                  <div className="text-3xl font-bold text-purple-200 mb-1">
+                    {selectedTeacher.total_score || 'N/A'}
+                  </div>
+                  <div className="text-sm text-purple-100">Total Score</div>
                 </div>
               </div>
             </div>
@@ -914,6 +983,131 @@ const AdminConsultation = () => {
                   </div>
                 </div>
               )}
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Feedback Calculation Modal */}
+      {showFeedbackModal && (
+        <div className="fixed inset-0 bg-black/60 flex items-center justify-center z-50 p-4" onClick={() => setShowFeedbackModal(false)}>
+          <div className="bg-white rounded-2xl max-w-4xl w-full max-h-[90vh] overflow-hidden shadow-2xl" onClick={(e) => e.stopPropagation()}>
+            {/* Modal Header */}
+            <div className="bg-gradient-to-r from-[#0065A8] to-[#057DCD] text-white p-6">
+              <div className="flex justify-between items-center">
+                <div className="flex items-center">
+                  <div className="w-10 h-10 bg-white/20 rounded-full flex items-center justify-center mr-4">
+                    <svg className="w-5 h-5 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
+                    </svg>
+                  </div>
+                  <div>
+                    <h2 className="text-2xl font-bold">How Feedback is Calculated</h2>
+                    <p className="text-blue-100">Understanding the ranking system</p>
+                  </div>
+                </div>
+                <button 
+                  className="bg-white/20 hover:bg-white/30 border-0 text-white cursor-pointer p-2 w-10 h-10 flex items-center justify-center rounded-full transition-all duration-200 text-xl font-bold" 
+                  onClick={() => setShowFeedbackModal(false)}
+                >×</button>
+              </div>
+            </div>
+            
+            {/* Modal Body */}
+            <div className="p-6 overflow-y-auto max-h-[70vh]">
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
+                {/* Left Column - Rating System */}
+                <div className="space-y-6">
+                  <div className="flex items-start space-x-4">
+                    <div className="w-8 h-8 bg-[#057DCD] text-white rounded-full flex items-center justify-center text-sm font-bold flex-shrink-0 mt-1">
+                      1
+                    </div>
+                    <div>
+                      <h3 className="font-bold text-gray-800 mb-3 text-lg">Student Feedback Ratings</h3>
+                      <p className="text-gray-600 leading-relaxed mb-4">
+                        Students provide ratings from 1.0 to 5.0 stars after each consultation session. 
+                        These ratings reflect their satisfaction with the teacher's guidance and support.
+                      </p>
+                      <div className="flex items-center space-x-2 mb-3">
+                        <span className="text-sm text-gray-500 font-medium">Rating Scale:</span>
+                        <div className="flex space-x-1">
+                          {[1, 2, 3, 4, 5].map((star) => (
+                            <svg key={star} className="w-5 h-5 text-yellow-400" fill="currentColor" viewBox="0 0 20 20">
+                              <path d="M9.049 2.927c.3-.921 1.603-.921 1.902 0l1.07 3.292a1 1 0 00.95.69h3.462c.969 0 1.371 1.24.588 1.81l-2.8 2.034a1 1 0 00-.364 1.118l1.07 3.292c.3.921-.755 1.688-1.54 1.118l-2.8-2.034a1 1 0 00-1.175 0l-2.8 2.034c-.784.57-1.838-.197-1.539-1.118l1.07-3.292a1 1 0 00-.364-1.118L2.98 8.72c-.783-.57-.38-1.81.588-1.81h3.461a1 1 0 00.951-.69l1.07-3.292z" />
+                            </svg>
+                          ))}
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+
+                  <div className="flex items-start space-x-4">
+                    <div className="w-8 h-8 bg-[#057DCD] text-white rounded-full flex items-center justify-center text-sm font-bold flex-shrink-0 mt-1">
+                      2
+                    </div>
+                    <div>
+                      <h3 className="font-bold text-gray-800 mb-3 text-lg">Average Rating Calculation</h3>
+                      <p className="text-gray-600 leading-relaxed mb-4">
+                        Each teacher's average rating is calculated by summing all their individual ratings 
+                        and dividing by the total number of feedback entries received.
+                      </p>
+                      <div className="bg-blue-50 p-4 rounded-lg border border-blue-200">
+                        <code className="text-sm text-blue-800 font-mono">
+                          Average Rating = (Sum of all ratings) ÷ (Number of feedback entries)
+                        </code>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+
+                {/* Right Column - Ranking System */}
+                <div className="space-y-6">
+                  <div className="flex items-start space-x-4">
+                    <div className="w-8 h-8 bg-[#057DCD] text-white rounded-full flex items-center justify-center text-sm font-bold flex-shrink-0 mt-1">
+                      3
+                    </div>
+                    <div>
+                      <h3 className="font-bold text-gray-800 mb-3 text-lg">Combined Score Ranking</h3>
+                      <p className="text-gray-600 leading-relaxed mb-4">
+                        Teachers are ranked using a combined score that prioritizes feedback quality, 
+                        consultation duration, and activity level to ensure fair and comprehensive evaluation.
+                      </p>
+                      <div className="bg-green-50 p-4 rounded-lg border border-green-200">
+                        <code className="text-sm text-green-800 font-mono">
+                          Combined Score = (Average Rating × 50) + (Total Duration Hours × 0.5) + (Total Consultations × 0.1)
+                        </code>
+                      </div>
+                    </div>
+                  </div>
+
+                  <div className="flex items-start space-x-4">
+                    <div className="w-8 h-8 bg-[#057DCD] text-white rounded-full flex items-center justify-center text-sm font-bold flex-shrink-0 mt-1">
+                      4
+                    </div>
+                    <div>
+                      <h3 className="font-bold text-gray-800 mb-3 text-lg">What This Means</h3>
+                      <ul className="text-gray-600 space-y-2">
+                        <li className="flex items-start">
+                          <span className="text-[#057DCD] mr-2">•</span>
+                          <span><strong>Rating priority:</strong> Student feedback quality has the highest impact on rankings</span>
+                        </li>
+                        <li className="flex items-start">
+                          <span className="text-[#057DCD] mr-2">•</span>
+                          <span><strong>Duration matters:</strong> Teachers who spend more time in consultations rank higher</span>
+                        </li>
+                        <li className="flex items-start">
+                          <span className="text-[#057DCD] mr-2">•</span>
+                          <span><strong>Activity counts:</strong> Total consultation sessions also contribute to rankings</span>
+                        </li>
+                        <li className="flex items-start">
+                          <span className="text-[#057DCD] mr-2">•</span>
+                          <span><strong>Balanced evaluation:</strong> The system rewards quality, dedication, and consistency</span>
+                        </li>
+                      </ul>
+                    </div>
+                  </div>
+                </div>
+              </div>
             </div>
           </div>
         </div>

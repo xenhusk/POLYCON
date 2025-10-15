@@ -45,6 +45,7 @@ from routes.keep_alive import keep_alive_bp # Import keep-alive routes
 from routes.prefetch_routes import prefetch_bp # Import prefetch routes
 from routes.cache_warm_routes import cache_warm_bp # Import cache warming routes
 from routes.websocket_health import websocket_health_bp # Import websocket health routes
+from routes.feedback_routes import feedback_bp # Import feedback routes
 import routes.socket_routes  # Register socket event handlers
 
 
@@ -114,21 +115,21 @@ def create_app():
             # triggered by external cron service (cron-job.org)
             from services.scheduler_service_production import initialize_production_scheduler
             initialize_production_scheduler(app, reminder_minutes=15)
-            print("✅ Production scheduler initialized (NOTE: Background threads don't work - use alternative reminders)")
+            print("Production scheduler initialized (NOTE: Background threads don't work - use alternative reminders)")
         else:
             # Use regular scheduler for development
             from services.scheduler_service import initialize_scheduler
             initialize_scheduler(app)
-            print("✅ Development scheduler initialized")
+            print("Development scheduler initialized")
         
         # Initialize concern analytics prefetch service
         try:
             from services.concern_analytics_prefetch import initialize_concern_analytics_prefetcher
             # Prefetch every 30 minutes to keep cache warm
             initialize_concern_analytics_prefetcher(app, prefetch_interval_minutes=30)
-            print("✅ Concern analytics prefetch service initialized")
+            print("Concern analytics prefetch service initialized")
         except Exception as e:
-            print(f"⚠️ Failed to initialize concern analytics prefetch service: {e}")
+            print(f"Failed to initialize concern analytics prefetch service: {e}")
 
     # Register blueprints
     app.register_blueprint(health_bp)
@@ -165,6 +166,7 @@ def create_app():
     app.register_blueprint(prefetch_bp, url_prefix='/prefetch') # Register prefetch routes
     app.register_blueprint(cache_warm_bp, url_prefix='/cache') # Register cache warming routes
     app.register_blueprint(websocket_health_bp, url_prefix='/websocket') # Register websocket health routes
+    app.register_blueprint(feedback_bp) # Register feedback routes
 
     # Configure static folder for uploads
     UPLOAD_FOLDER = os.path.join(os.path.dirname(os.path.abspath(__file__)), 'uploads')

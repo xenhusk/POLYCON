@@ -132,14 +132,42 @@ def get_teacher_leaderboard():
                     'teacher_name': f"{teacher.first_name} {teacher.last_name}",
                     'department_name': teacher.department.name if teacher.department else None,
                     'department_id': teacher.department_id,
-                    'total_consultations': 0
+                    'total_consultations': 0,
+                    'total_rating': 0.0,
+                    'rating_count': 0,
+                    'average_rating': 0.0
                 }
             
             all_teacher_stats[teacher_key]['total_consultations'] += 1
         
-        # Sort by total consultations to establish original rankings
+        # Calculate ratings for each teacher
+        from models import Feedback
+        for teacher_key, stats in all_teacher_stats.items():
+            feedbacks = Feedback.query.filter_by(teacher_id=teacher_key).all()
+            for feedback in feedbacks:
+                stats['total_rating'] += float(feedback.rating)
+                stats['rating_count'] += 1
+            
+            # Calculate average rating
+            if stats['rating_count'] > 0:
+                stats['average_rating'] = stats['total_rating'] / stats['rating_count']
+        
+        # Sort by combined score: rating (highest priority) + duration (medium) + consultations (lowest)
+        # Calculate duration for ranking
+        for teacher_key, stats in all_teacher_stats.items():
+            total_duration_seconds = 0
+            teacher_sessions = ConsultationSession.query.filter_by(teacher_id=teacher_key).all()
+            for session in teacher_sessions:
+                if session.duration:
+                    try:
+                        hh, mm, ss = map(int, session.duration.split(':'))
+                        total_duration_seconds += hh * 3600 + mm * 60 + ss
+                    except Exception:
+                        pass
+            stats['total_duration_hours'] = total_duration_seconds / 3600
+        
         all_teachers_ranked = list(all_teacher_stats.values())
-        all_teachers_ranked.sort(key=lambda x: x['total_consultations'], reverse=True)
+        all_teachers_ranked.sort(key=lambda x: (x['average_rating'] * 50) + (x['total_duration_hours'] * 0.5) + (x['total_consultations'] * 0.1), reverse=True)
         
         # Assign original ranks (1-based)
         original_ranks = {}
@@ -177,6 +205,8 @@ def get_teacher_leaderboard():
             
             teacher_key = session.teacher_id
             if teacher_key not in teacher_stats:
+                # Get rating info from all_teacher_stats
+                rating_info = all_teacher_stats.get(teacher_key, {})
                 teacher_stats[teacher_key] = {
                     'teacher_id': session.teacher_id,
                     'teacher_name': f"{teacher.first_name} {teacher.last_name}",
@@ -186,6 +216,8 @@ def get_teacher_leaderboard():
                     'total_consultations': 0,
                     'total_students': 0,
                     'total_duration_seconds': 0,
+                    'average_rating': rating_info.get('average_rating', 0.0),
+                    'rating_count': rating_info.get('rating_count', 0),
                     'sessions': []
                 }
             
@@ -219,12 +251,19 @@ def get_teacher_leaderboard():
         leaderboard = list(teacher_stats.values())
         leaderboard.sort(key=lambda x: x['original_rank'])  # Sort by original rank to maintain true positions
         
-        # Format duration for display
+        # Format duration for display and add duration hours for ranking
         for teacher in leaderboard:
             total_seconds = teacher['total_duration_seconds']
             hours = total_seconds // 3600
             minutes = (total_seconds % 3600) // 60
             teacher['total_duration_formatted'] = f"{hours}h {minutes}m"
+            teacher['total_duration_hours'] = total_seconds / 3600
+            
+            # Calculate total score on backend
+            rating_score = (teacher.get('average_rating', 0) or 0) * 50
+            duration_score = (teacher.get('total_duration_hours', 0) or 0) * 0.5
+            consultation_score = (teacher.get('total_consultations', 0) or 0) * 0.1
+            teacher['total_score'] = round(rating_score + duration_score + consultation_score, 1)
         
         return jsonify(leaderboard), 200
         
