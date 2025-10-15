@@ -49,6 +49,9 @@ const Session = () => {
   const [remarks, setRemarks] = useState("");
   const [summary, setSummary] = useState("");
   const [transcription, setTranscription] = useState("");
+  const [transcriptionEnabled, setTranscriptionEnabled] = useState(false);
+  const [showTranscriptionNotice, setShowTranscriptionNotice] = useState(false);
+  const [hasShownNotice, setHasShownNotice] = useState(false);
   const [recording, setRecording] = useState(false);
   const [timer, setTimer] = useState("00:00:00");
   const [timerRunning, setTimerRunning] = useState(false);
@@ -60,9 +63,6 @@ const Session = () => {
   const [assessmentModalOpen, setAssessmentModalOpen] = useState(false);
   const [AssessmentClicked, setAssessmentClicked] = useState(false);
   const [FinalizeClicked, setFinalizeClicked] = useState(false);
-  const [transcriptionEnabled, setTranscriptionEnabled] = useState(false);
-  const [showTranscriptionNotice, setShowTranscriptionNotice] = useState(false);
-  const [hasShownNotice, setHasShownNotice] = useState(false);
   const [bookingDetails, setBookingDetails] = useState(null);
   const [venueId, setVenueId] = useState(null);
   const [periodId, setPeriodId] = useState(null);
@@ -350,9 +350,6 @@ const Session = () => {
 
     let transcriptionText = "";
     let audioUrl = "";
-    let qualityScore = 0;
-    let qualityMetrics = {};
-    let rawSentimentAnalysis = [];
     
     if (audioBlob) {
       try {
@@ -361,10 +358,6 @@ const Session = () => {
         const audioUploadResponse = await uploadAudio(audioBlob);
         transcriptionText = audioUploadResponse.transcription || "";
         audioUrl = audioUploadResponse.audioUrl || "";
-        // Save quality data from transcription response
-        qualityScore = audioUploadResponse.quality_score || 0;
-        qualityMetrics = audioUploadResponse.quality_metrics || {};
-        rawSentimentAnalysis = audioUploadResponse.raw_sentiment_analysis || [];
         setProcessingProgress(50);
       } catch (error) {        console.error("Error uploading audio:", error);
         showErrorNotification("Audio upload failed. Proceeding without transcription.");
@@ -405,11 +398,7 @@ const Session = () => {
         venue_id: venueId,
         period_id: periodId,
         session_date: new Date().toISOString(),
-        audio_file_path: audioUrl,
-        // Include quality data in the payload
-        quality_score: qualityScore,
-        quality_metrics: qualityMetrics,
-        raw_sentiment_analysis: rawSentimentAnalysis
+        audio_file_path: audioUrl
       };
 
       console.log("Sending payload:", payload);
