@@ -108,15 +108,31 @@ function BookingAppointment({ closeModal, role: propRole }) {
     fetchActivePeriod();
   }, []);
 
+  // Ensure venues are fetched on component mount
+  useEffect(() => {
+    console.log('Component mounted, fetching venues...');
+    // Small delay to ensure API is ready
+    setTimeout(() => {
+      fetchAllVenues();
+    }, 100);
+  }, []);
+
   // Fetch venues for faculty users
   const fetchVenues = async () => {
-    if (role !== "faculty" || !teacherID) return;
+    console.log('fetchVenues called with role:', role, 'teacherID:', teacherID);
+    
+    if (role !== "faculty" || !teacherID) {
+      console.log('fetchVenues: Not fetching venues - role:', role, 'teacherID:', teacherID);
+      return;
+    }
 
     setLoadingVenues(true);
     try {
+      console.log('fetchVenues: Fetching teacher data for ID:', teacherID);
       // Get teacher's department
       const response = await fetch(`${API_URL}/user/get_user?idNumber=${teacherID}`);
       const teacherData = await response.json();
+      console.log('fetchVenues: Teacher data:', teacherData);
       
       if (teacherData.department) {
         let departmentId = null;
@@ -124,24 +140,45 @@ function BookingAppointment({ closeModal, role: propRole }) {
         // Extract department ID from the department field
         if (teacherData.department.startsWith("/departments/")) {
           departmentId = teacherData.department.split("/").pop();
+          console.log('fetchVenues: Extracted department ID from URL:', departmentId);
         } else {
           // If it's not a URL, try to find the department by name
+          console.log('fetchVenues: Department is not URL, searching by name:', teacherData.department);
           const deptResponse = await fetch(`${API_URL}/departments/get_departments`);
           const departments = await deptResponse.json();
+          console.log('fetchVenues: Available departments:', departments);
           const dept = departments.find(d => d.name === teacherData.department);
           if (dept) {
             departmentId = dept.id;
+            console.log('fetchVenues: Found department by name:', dept);
           }
         }
 
         if (departmentId) {
+          console.log('fetchVenues: Fetching venues for department ID:', departmentId);
           const venuesResponse = await fetch(`${API_URL}/venues/get_venues_by_department/${departmentId}`);
           const venuesData = await venuesResponse.json();
-          setVenues(venuesData);
+          console.log('fetchVenues: Department venues data:', venuesData);
+          
+          if (venuesData && venuesData.length > 0) {
+            setVenues(venuesData);
+            console.log('fetchVenues: Successfully loaded department venues');
+          } else {
+            console.log('fetchVenues: No venues found for department, fetching all venues');
+            fetchAllVenues();
+          }
+        } else {
+          console.log('fetchVenues: No department ID found, fetching all venues');
+          fetchAllVenues();
         }
+      } else {
+        console.log('fetchVenues: Teacher has no department, fetching all venues');
+        fetchAllVenues();
       }
     } catch (error) {
-      console.error('Error fetching venues:', error);
+      console.error('Error fetching department venues:', error);
+      console.log('fetchVenues: Department fetch failed, fetching all venues');
+      fetchAllVenues();
     } finally {
       setLoadingVenues(false);
     }
@@ -149,6 +186,7 @@ function BookingAppointment({ closeModal, role: propRole }) {
 
   // Fetch venues when teacherID changes for faculty users
   useEffect(() => {
+    console.log('useEffect for fetchVenues - role:', role, 'teacherID:', teacherID);
     if (role === "faculty") {
       // If we don't have teacherID, try to get it from localStorage or user data
       let currentTeacherID = teacherID;
@@ -157,16 +195,74 @@ function BookingAppointment({ closeModal, role: propRole }) {
                           localStorage.getItem("teacherId") || 
                           localStorage.getItem("facultyID") ||
                           localStorage.getItem("userId");
+        console.log('useEffect: Found teacherID from localStorage:', currentTeacherID);
         if (currentTeacherID) {
           setTeacherID(currentTeacherID);
         }
       }
       
       if (currentTeacherID) {
+        console.log('useEffect: Calling fetchVenues with teacherID:', currentTeacherID);
         fetchVenues();
+      } else {
+        console.log('useEffect: No teacherID found, trying fallback venue fetch');
+        // Fallback: try to fetch all venues if no teacher ID
+        fetchAllVenues();
       }
+    } else {
+      console.log('useEffect: Not faculty role, trying fallback venue fetch');
+      // For non-faculty users, try to fetch all venues
+      fetchAllVenues();
     }
   }, [role, teacherID]);
+
+  // Function to fetch all venues from database
+  const fetchAllVenues = async () => {
+    console.log('fetchAllVenues: Fetching venues from database');
+    setLoadingVenues(true);
+    try {
+      console.log('fetchAllVenues: API_URL:', API_URL);
+      const response = await fetch(`${API_URL}/venues/get_venues`);
+      console.log('fetchAllVenues: Response status:', response.status);
+      console.log('fetchAllVenues: Response ok:', response.ok);
+      
+      if (!response.ok) {
+        throw new Error(`HTTP error! status: ${response.status}`);
+      }
+      
+      const venuesData = await response.json();
+      console.log('fetchAllVenues: Database venues data:', venuesData);
+      console.log('fetchAllVenues: Venues count from database:', venuesData.length);
+      
+      if (venuesData && venuesData.length > 0) {
+        setVenues(venuesData);
+        console.log('fetchAllVenues: Successfully loaded venues from database');
+      } else {
+        console.log('fetchAllVenues: No venues found in database, using fallback');
+        // Fallback venues if database is empty
+        const fallbackVenues = [
+          { id: 1, name: 'Room 101', is_available: true },
+          { id: 2, name: 'Room 102', is_available: true },
+          { id: 3, name: 'Conference Room A', is_available: true },
+          { id: 4, name: 'Online Meeting', is_available: true }
+        ];
+        setVenues(fallbackVenues);
+      }
+    } catch (error) {
+      console.error('Error fetching venues from database:', error);
+      console.log('fetchAllVenues: API failed, using fallback venues');
+      // Set fallback venues if API fails
+      const fallbackVenues = [
+        { id: 1, name: 'Room 101', is_available: true },
+        { id: 2, name: 'Room 102', is_available: true },
+        { id: 3, name: 'Conference Room A', is_available: true },
+        { id: 4, name: 'Online Meeting', is_available: true }
+      ];
+      setVenues(fallbackVenues);
+    } finally {
+      setLoadingVenues(false);
+    }
+  };
 
   // Helper function to get minimum date/time (current moment to allow walk-ins)
   const getMinDateTime = () => {
@@ -648,6 +744,8 @@ function BookingAppointment({ closeModal, role: propRole }) {
                   className="w-full border-2 border-[#397de2] rounded-lg px-2 sm:px-3 py-2 sm:py-2 text-sm sm:text-base focus:outline-none focus:ring-2 focus:ring-[#54BEFF]"
                 >
                   <option value="">Select a venue</option>
+                  {/* Debug: Show venues count */}
+                  {console.log('Rendering venues dropdown, venues count:', venues.length, 'venues:', venues)}
                   {/* Available venues first */}
                   {venues
                     .filter(venue => venue.is_available)

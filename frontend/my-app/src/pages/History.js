@@ -1,9 +1,12 @@
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import { useQuery } from "react-query";
 import { motion, AnimatePresence } from "framer-motion";
 import HistoryItem from "../components/HistoryItem";
 import apiClient from "../utils/apiClient";
 import useDebounce from "../hooks/useDebounce";
+import FeedbackPopup from "../components/FeedbackPopup";
+import { io } from 'socket.io-client';
+import API_URL from '../apiConfig';
 
 function History() {
   const role = localStorage.getItem("userRole")?.toLowerCase();
@@ -19,6 +22,11 @@ function History() {
   const [endDate, setEndDate] = useState("");
   const [isFiltersExpanded, setIsFiltersExpanded] = useState(false);
   const [showSearchSuggestions, setShowSearchSuggestions] = useState(false);
+  
+  // Feedback popup state
+  const [showFeedbackPopup, setShowFeedbackPopup] = useState(false);
+  const [feedbackSessionData, setFeedbackSessionData] = useState(null);
+  const [socket, setSocket] = useState(null);
 
   const limit = 10;
 
@@ -69,11 +77,97 @@ function History() {
     setCurrentPage(1);
   };
 
+
+  const handleFeedbackSubmitted = (feedbackData) => {
+    console.log('Feedback submitted from History page:', feedbackData);
+    setShowFeedbackPopup(false);
+    setFeedbackSessionData(null);
+  };
+
   const handlePageChange = (newPage) => {
     if (newPage >= 1 && newPage <= pagination.total_pages) {
       setCurrentPage(newPage);
     }
   };
+
+  // Polling-based feedback check (replaces Socket.IO)
+  const checkForFeedbackOpportunity = async () => {
+    try {
+      const response = await fetch(`${API_URL}/feedback/check_pending?student_id=${userID}`, {
+        method: 'GET',
+        headers: {
+          'Content-Type': 'application/json',
+        }
+      });
+
+      if (response.ok) {
+        const data = await response.json();
+        
+        if (data.has_pending_feedback && data.session_data) {
+          setFeedbackSessionData({
+            sessionId: data.session_data.session_id,
+            teacherId: data.session_data.teacher_id,
+            studentId: data.session_data.student_id
+          });
+          setShowFeedbackPopup(true);
+        }
+      }
+    } catch (error) {
+      console.error('Error checking for feedback:', error);
+    }
+  };
+
+  // Polling-based feedback check (only for students)
+  useEffect(() => {
+    if (role !== 'student' || !userID) return;
+
+    // Initial check
+    checkForFeedbackOpportunity();
+    
+    // Set up polling every 30 seconds
+    const pollingInterval = setInterval(() => {
+      checkForFeedbackOpportunity();
+    }, 30000); // Check every 30 seconds
+
+    // Cleanup on unmount
+    return () => {
+      clearInterval(pollingInterval);
+    };
+  }, [role, userID]);
+
+  // Socket connection for feedback triggers (fallback)
+  useEffect(() => {
+    if (role !== 'student' || !userID) return;
+
+    // Connect to socket
+    const newSocket = io(API_URL, {
+      transports: ['websocket', 'polling']
+    });
+
+    // Join student's room
+    newSocket.emit('join_room', `user_${userID}`);
+
+    // Listen for feedback trigger
+    newSocket.on('feedback_trigger', (data) => {
+      if (data.student_id === userID) {
+        setFeedbackSessionData({
+          sessionId: data.sessionID,
+          teacherId: data.teacher_id,
+          studentId: data.student_id
+        });
+        setTimeout(() => {
+          setShowFeedbackPopup(true);
+        }, 2000); // Show after 2 seconds
+      }
+    });
+
+    setSocket(newSocket);
+
+    // Cleanup on unmount
+    return () => {
+      newSocket.disconnect();
+    };
+  }, [role, userID]);
 
   if (!role || !userID) {
     return <p className="text-center text-red-500">Missing user information</p>;
@@ -792,6 +886,19 @@ function History() {
           </motion.div>
         </motion.div>
       </div>
+
+
+      {/* Feedback Popup */}
+      {showFeedbackPopup && feedbackSessionData && (
+        <FeedbackPopup
+          isOpen={showFeedbackPopup}
+          onClose={() => setShowFeedbackPopup(false)}
+          consultationSessionId={feedbackSessionData.sessionId}
+          studentId={feedbackSessionData.studentId}
+          teacherId={feedbackSessionData.teacherId}
+          onFeedbackSubmitted={handleFeedbackSubmitted}
+        />
+      )}
     </div>
   );
 }

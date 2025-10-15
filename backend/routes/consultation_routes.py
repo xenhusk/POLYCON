@@ -8,7 +8,7 @@ from services.audio_conversion_service import convert_audio
 from services.assemblyai_service import transcribe_audio_with_assemblyai
 from services.google_storage import upload_audio  # upload converted audio for download
 from services.cloudinary_service import upload_audio_cloudinary
-from services.socket_service import emit_booking_status_update
+from services.socket_service import emit_booking_status_update, emit_feedback_trigger
 from sqlalchemy.orm import joinedload
 from sqlalchemy import or_
 from sqlalchemy import or_ # Add or_
@@ -182,6 +182,7 @@ def summarize():
     summary = generate_summary(f"{transcription} {notes}")
     return jsonify(summary=summary)
 
+
 @consultation_bp.route('/analyze_quality', methods=['POST'])
 def analyze_quality():
     data = request.json or {}
@@ -262,18 +263,31 @@ def store_consultation_data(): # Renamed function
                 print(f"Failed to auto-generate summary, using provided or None: {str(e)}")
                 summary_to_use = data.get('summary')
 
+        # Helper function to sanitize text data for database storage
+        def sanitize_text(text):
+            if not text:
+                return text
+            # Remove or replace problematic Unicode characters
+            import re
+            
+            # Remove any non-ASCII characters that might cause encoding issues
+            # This is safer than trying to replace specific emojis
+            text = re.sub(r'[^\x00-\x7F]+', '', text)
+            
+            return text
+
         new_session = ConsultationSession(
             teacher_id=data.get('teacher_id'), # User.id_number
             student_ids=data.get('student_ids'), # List of User PKs
             session_date=session_datetime,
             duration=data.get('duration'),
-            summary=summary_to_use,
-            transcription=data.get('transcription'),
+            summary=sanitize_text(summary_to_use),
+            transcription=sanitize_text(data.get('transcription')),
             transcription_enabled=data.get('transcription_enabled', False),
-            concern=data.get('concern'),
-            action_taken=data.get('action_taken'),
-            outcome=data.get('outcome'),
-            remarks=data.get('remarks'),
+            concern=sanitize_text(data.get('concern')),
+            action_taken=sanitize_text(data.get('action_taken')),
+            outcome=sanitize_text(data.get('outcome')),
+            remarks=sanitize_text(data.get('remarks')),
             venue_id=data.get('venue_id'),
             period_id=data.get('period_id'),
             audio_file_path=data.get('audio_file_path'),
@@ -299,7 +313,18 @@ def store_consultation_data(): # Renamed function
                     'sessionID': new_session.id
                 }
                 emit_booking_status_update(socket_data)
-                print(f"🚀 Emitted booking completion event for booking {booking_id}")
+                print(f"[SUCCESS] Emitted booking completion event for booking {booking_id}")
+                
+                # Emit feedback trigger event to notify students
+                feedback_trigger_data = {
+                    'action': 'feedback_trigger',
+                    'sessionID': new_session.id,
+                    'teacher_id': new_session.teacher_id,
+                    'student_ids': new_session.student_ids,
+                    'message': 'Please provide feedback for your consultation session'
+                }
+                emit_feedback_trigger(feedback_trigger_data)
+                print(f"[SUCCESS] Emitted feedback trigger event for session {new_session.id}")
             else:
                 # Optional: handle case where booking_id is provided but booking not found
                 print(f"Warning: Booking with ID {booking_id} not found, but session created.")
@@ -311,6 +336,7 @@ def store_consultation_data(): # Renamed function
         db.session.rollback()
         print(f"Error storing consultation session: {str(e)}") # Log error
         return jsonify(error=f"Failed to store consultation session: {str(e)}"), 500
+
 
 @consultation_bp.route('/get_history', methods=['GET'])
 def get_history():

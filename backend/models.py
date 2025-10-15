@@ -119,7 +119,7 @@ class Grade(db.Model):
 class ConsultationSession(db.Model):
     __tablename__ = 'consultation_sessions'
 
-    id = db.Column(db.Integer, primary_key=True)
+    id = db.Column(db.Integer, primary_key=True, autoincrement=True)
     session_date = db.Column(db.DateTime, nullable=False, default=datetime.utcnow) # Added default
     duration = db.Column(db.String(20), nullable=True)
     student_ids = db.Column(db.JSON, nullable=False, default=list)  # List of student User.id (PKs)
@@ -200,6 +200,24 @@ class ConcernCategory(db.Model):
 
     def __repr__(self):
         return f'<ConcernCategory {self.normalized_concern[:50]}...>'
+
+class Feedback(db.Model):
+    __tablename__ = 'feedbacks'
+
+    id = db.Column(db.Integer, primary_key=True, autoincrement=True)
+    consultation_session_id = db.Column(db.Integer, nullable=False)
+    student_id = db.Column(db.String(50), nullable=False)
+    teacher_id = db.Column(db.String(50), nullable=False)
+    rating = db.Column(db.Numeric(2, 1), nullable=False)  # Decimal(2,1) for ratings like 4.5
+    comment = db.Column(db.Text, nullable=True)
+    created_at = db.Column(db.DateTime, server_default=db.text("(now() AT TIME ZONE 'UTC')"))
+    updated_at = db.Column(db.DateTime, server_default=db.text("(now() AT TIME ZONE 'UTC')"), onupdate=db.text("(now() AT TIME ZONE 'UTC')"))
+
+    # Relationships - removed problematic relationships for now
+    # We'll handle these through manual queries in the routes
+
+    def __repr__(self):
+        return f'<Feedback {self.id}: {self.rating}/5.0 by {self.student_id} for session {self.consultation_session_id}>'
 
 class Notification(db.Model):
     __tablename__ = 'notifications'

@@ -1,6 +1,8 @@
 import React, { useEffect, useState } from 'react';
 import { LineChart, Line, XAxis, YAxis, Tooltip, Legend, ResponsiveContainer, CartesianGrid } from 'recharts';
 import API_URL from '../apiConfig';
+import FeedbackPopup from './FeedbackPopup';
+import { useToast } from '../contexts/ToastContext';
 
 const HomeStudent = () => {
   const [studentId, setStudentId] = useState(null);
@@ -15,12 +17,54 @@ const HomeStudent = () => {
   });
   const [consultationData, setConsultationData] = useState([]);
   const [consultationHoursData, setConsultationHoursData] = useState([]);
+  
+  // Feedback popup state
+  const [showFeedbackPopup, setShowFeedbackPopup] = useState(false);
+  const [feedbackSessionData, setFeedbackSessionData] = useState(null);
+
+  // Note: Automatic feedback checking removed - feedback will only be triggered by teacher finalizing consultation
+
+
+  // Polling-based feedback check (replaces Socket.IO)
+  const checkForFeedbackOpportunity = async () => {
+    try {
+      const response = await fetch(`${API_URL}/feedback/check_pending?student_id=${studentId}`, {
+        method: 'GET',
+        headers: {
+          'Content-Type': 'application/json',
+        }
+      });
+
+      if (response.ok) {
+        const data = await response.json();
+        
+        if (data.has_pending_feedback && data.session_data) {
+          setFeedbackSessionData({
+            sessionId: data.session_data.session_id,
+            teacherId: data.session_data.teacher_id,
+            studentId: data.session_data.student_id
+          });
+          setShowFeedbackPopup(true);
+        }
+      }
+    } catch (error) {
+      console.error('Error checking for feedback:', error);
+    }
+  };
+
+  const handleFeedbackSubmitted = (feedbackData) => {
+    console.log('Feedback submitted:', feedbackData);
+    setShowFeedbackPopup(false);
+    setFeedbackSessionData(null);
+  };
 
   useEffect(() => {
     const storedStudentID = localStorage.getItem('studentID');
     if (storedStudentID) {
       setStudentId(storedStudentID);
     }
+    
+    // Note: Automatic feedback checking removed - feedback will only be triggered by teacher finalizing consultation
 
     // Fetch semesters for filtering
     fetch(`${API_URL}/homeadmin/semesters`)
@@ -78,6 +122,101 @@ const HomeStudent = () => {
       })
       .catch(err => console.error("Error fetching consultation data:", err));
   }, [studentId, selectedSemester, selectedSchoolYear]);
+
+  // Get socket from ToastContext
+  const { socket } = useToast();
+
+  // Polling-based feedback check (replaces Socket.IO)
+  useEffect(() => {
+    const studentId = localStorage.getItem('studentID');
+    if (!studentId) return;
+
+    // Initial check
+    checkForFeedbackOpportunity();
+    
+    // Set up polling every 30 seconds
+    const pollingInterval = setInterval(() => {
+      checkForFeedbackOpportunity();
+    }, 30000); // Check every 30 seconds
+
+    // Cleanup on unmount
+    return () => {
+      clearInterval(pollingInterval);
+    };
+  }, [studentId]);
+
+  // Socket connection for feedback triggers (fallback)
+  useEffect(() => {
+    const studentId = localStorage.getItem('studentID');
+    if (!studentId || !socket) return;
+
+    console.log(`🔌 Using existing socket connection (fallback)`);
+    console.log(`🔌 Socket connected state:`, socket.connected);
+    console.log(`🔌 Socket ID:`, socket.id);
+    console.log(`🔌 Socket type:`, typeof socket);
+    console.log(`🔌 Socket object:`, socket);
+    
+    // Wait for socket to connect if not already connected
+    if (!socket.connected) {
+      console.log(`🔌 Socket not connected, waiting for connection...`);
+      socket.on('connect', () => {
+        console.log(`🔌 Socket connected in HomeStudent!`);
+        console.log(`🔌 Socket ID after connect:`, socket.id);
+      });
+    }
+
+    // Listen for consultation started
+    socket.on('consultation_started', (data) => {
+      console.log('🎯 Consultation started received:', data);
+      console.log('🎯 Current student ID:', studentId);
+      console.log('🎯 Started student IDs:', data.student_ids);
+      console.log('🎯 Is student in list:', data.student_ids && data.student_ids.includes(studentId));
+      
+      // Check if this student is in the list of students for this consultation
+      if (data.student_ids && data.student_ids.includes(studentId)) {
+        console.log('✅ Consultation started is for this student - preparing for feedback');
+        // Store session data for later feedback
+        setFeedbackSessionData({
+          sessionId: data.sessionID,
+          teacherId: data.teacher_id,
+          studentId: studentId
+        });
+        console.log('📝 Session data stored, waiting for feedback trigger...');
+      } else {
+        console.log('❌ Consultation started is not for this student');
+      }
+    });
+
+    // Listen for feedback trigger
+    socket.on('feedback_trigger', (data) => {
+      console.log('🔔 Feedback trigger received:', data);
+      console.log('🔔 Current student ID:', studentId);
+      console.log('🔔 Trigger student IDs:', data.student_ids);
+      console.log('🔔 Is student in list:', data.student_ids && data.student_ids.includes(studentId));
+      
+      // Check if this student is in the list of students for this consultation
+      if (data.student_ids && data.student_ids.includes(studentId)) {
+        console.log('✅ Feedback trigger is for this student - showing popup');
+        setFeedbackSessionData({
+          sessionId: data.sessionID,
+          teacherId: data.teacher_id,
+          studentId: studentId
+        });
+        setTimeout(() => {
+          console.log('🎯 Showing feedback popup now!');
+          setShowFeedbackPopup(true);
+        }, 2000); // Show after 2 seconds
+      } else {
+        console.log('❌ Feedback trigger is not for this student');
+      }
+    });
+
+    // Cleanup on unmount
+    return () => {
+      socket.off('consultation_started');
+      socket.off('feedback_trigger');
+    };
+  }, [socket]);
 
   return (
     <div className="flex flex-col items-center min-h-screen relative">
@@ -293,6 +432,19 @@ const HomeStudent = () => {
             </div>
           </div>
         </div>
+      )}
+
+
+      {/* Feedback Popup */}
+      {showFeedbackPopup && feedbackSessionData && (
+        <FeedbackPopup
+          isOpen={showFeedbackPopup}
+          onClose={() => setShowFeedbackPopup(false)}
+          consultationSessionId={feedbackSessionData.sessionId}
+          studentId={feedbackSessionData.studentId}
+          teacherId={feedbackSessionData.teacherId}
+          onFeedbackSubmitted={handleFeedbackSubmitted}
+        />
       )}
     </div>
   );

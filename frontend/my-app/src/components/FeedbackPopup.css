@@ -1,0 +1,145 @@
+/* FeedbackPopup.css - Modern design using Tailwind classes */
+/* This file is kept for any custom styles that can't be achieved with Tailwind */
+
+/* Custom scrollbar for modal content if needed */
+.feedback-modal-content::-webkit-scrollbar {
+  width: 6px;
+}
+
+.feedback-modal-content::-webkit-scrollbar-track {
+  background: #f1f5f9;
+  border-radius: 3px;
+}
+
+.feedback-modal-content::-webkit-scrollbar-thumb {
+  background: #cbd5e1;
+  border-radius: 3px;
+}
+
+.feedback-modal-content::-webkit-scrollbar-thumb:hover {
+  background: #94a3b8;
+}
+
+/* Custom animations for enhanced user experience */
+@keyframes starPulse {
+  0%, 100% {
+    transform: scale(1);
+  }
+  50% {
+    transform: scale(1.1);
+  }
+}
+
+.star-pulse {
+  animation: starPulse 0.6s ease-in-out;
+}
+
+/* Custom focus styles for better accessibility */
+.feedback-input:focus {
+  outline: 2px solid #057DCD;
+  outline-offset: 2px;
+}
+
+/* Custom loading spinner animation */
+@keyframes spin {
+  from {
+    transform: rotate(0deg);
+  }
+  to {
+    transform: rotate(360deg);
+  }
+}
+
+.animate-spin {
+  animation: spin 1s linear infinite;
+}
+
+/* Half star rating styles */
+.half-star-overlay {
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 50%;
+  height: 100%;
+  overflow: hidden;
+  pointer-events: none;
+}
+
+.half-star-overlay span {
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 200%;
+  height: 100%;
+  display: block;
+}
+
+/* Perfect half-star implementation */
+.half-star-container {
+  position: relative;
+  width: 100%;
+  height: 100%;
+}
+
+.half-star-base {
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+}
+
+.half-star-overlay {
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 50%;
+  height: 100%;
+  overflow: hidden;
+  pointer-events: none;
+}
+
+.half-star-overlay span {
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 200%;
+  height: 100%;
+  display: block;
+}
+
+/* Enhanced star hover effects for decimal ratings */
+.star-button {
+  position: relative;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  touch-action: manipulation;
+  -webkit-tap-highlight-color: transparent;
+}
+
+.star-button:hover {
+  transform: scale(1.1);
+}
+
+.star-button:active {
+  transform: scale(0.95);
+}
+
+/* Mobile-specific improvements */
+@media (max-width: 640px) {
+  .star-button {
+    min-width: 48px;
+    min-height: 48px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+  }
+}
+
+/* Tablet-specific improvements */
+@media (min-width: 641px) and (max-width: 1024px) {
+  .star-button {
+    min-width: 56px;
+    min-height: 56px;
+  }
+}

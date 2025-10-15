@@ -817,7 +817,7 @@ export default function AdminPortal() {
                   type="text"
                   value={idNumber}
                   onChange={(e) => setIdNumber(e.target.value)}
-                  className="w-full border-2 border-[#0065A8] rounded-lg px-3 py-2 focus:outline-none focus:ring-8 focus:ring-[#54BEFF]"
+                  className="w-full border-2 border-[#0065A8] rounded-lg px-3 py-2 focus:outline-none focus:ring-2 focus:ring-[#54BEFF]"
                 />
               </div>
               {/* First Name */}
