@@ -2,6 +2,7 @@ import React, { useState, useEffect } from "react";
 import { motion, AnimatePresence } from 'framer-motion';
 import "./gradeViewer.css";
 import API_URL from '../apiConfig';
+import FeedbackPopup from './FeedbackPopup';
 
 const GradeViewer = () => {
   const [grades, setGrades] = useState([]);
@@ -24,6 +25,10 @@ const GradeViewer = () => {
   const [remarksFilter, setRemarksFilter] = useState("");
 
   const studentID = localStorage.getItem("studentID");
+
+  // Feedback popup state
+  const [showFeedbackPopup, setShowFeedbackPopup] = useState(false);
+  const [feedbackSessionData, setFeedbackSessionData] = useState(null);
 
   useEffect(() => {
     const fetchLatestFilter = async () => {
@@ -85,6 +90,58 @@ const GradeViewer = () => {
     setFilteredGrades(filtered);
     setCurrentPage(1); // Reset to first page when filtering
   }, [grades, courseFilter, gradeFilter, remarksFilter]);
+
+  // Polling-based feedback check (only for students)
+  const checkForFeedbackOpportunity = async () => {
+    try {
+      if (!studentID) return;
+
+      const response = await fetch(`${API_URL}/feedback/check_pending?student_id=${studentID}`, {
+        method: 'GET',
+        headers: {
+          'Content-Type': 'application/json',
+        }
+      });
+
+      if (response.ok) {
+        const data = await response.json();
+        
+        if (data.has_pending_feedback && data.session_data) {
+          setFeedbackSessionData({
+            sessionId: data.session_data.session_id,
+            teacherId: data.session_data.teacher_id,
+            studentId: data.session_data.student_id
+          });
+          setShowFeedbackPopup(true);
+        }
+      }
+    } catch (error) {
+      console.error('Error checking for feedback:', error);
+    }
+  };
+
+  useEffect(() => {
+    if (!studentID) return;
+
+    // Initial check
+    checkForFeedbackOpportunity();
+    
+    // Set up polling every 30 seconds
+    const pollingInterval = setInterval(() => {
+      checkForFeedbackOpportunity();
+    }, 30000); // Check every 30 seconds
+
+    // Cleanup on unmount
+    return () => {
+      clearInterval(pollingInterval);
+    };
+  }, [studentID]);
+
+  const handleFeedbackSubmitted = (feedbackData) => {
+    console.log('Feedback submitted from GradeViewer:', feedbackData);
+    setShowFeedbackPopup(false);
+    setFeedbackSessionData(null);
+  };
 
   const fetchGrades = async () => {
     // Generate a unique cache key based on filters and studentID
@@ -705,6 +762,18 @@ const GradeViewer = () => {
           </motion.div>
         )}
       </div>
+
+      {/* Feedback Popup */}
+      {showFeedbackPopup && feedbackSessionData && (
+        <FeedbackPopup
+          isOpen={showFeedbackPopup}
+          onClose={() => setShowFeedbackPopup(false)}
+          consultationSessionId={feedbackSessionData.sessionId}
+          studentId={feedbackSessionData.studentId}
+          teacherId={feedbackSessionData.teacherId}
+          onFeedbackSubmitted={handleFeedbackSubmitted}
+        />
+      )}
     </div>
   );
 };

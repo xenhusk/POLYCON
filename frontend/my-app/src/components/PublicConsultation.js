@@ -289,40 +289,77 @@ const PublicConsultation = () => {
         </div>
       </motion.nav>
 
-      <div className="pt-6 pb-2 max-w-6xl mx-auto px-2 sm:px-4 lg:px-0">
-        <div className="text-center mb-6">
-          <div className="flex flex-col sm:flex-row items-center justify-center">
-            <div className="relative group" data-tooltip-container>
-              <h2 className="text-[#0065A8] text-xl sm:text-2xl font-bold mb-2 sm:mb-1 sm:mr-2 text-center cursor-default">
-                Public Consultation Leaderboard
-              </h2>
-              <div 
-                data-tooltip="desktop"
-                className="absolute left-1/2 -translate-x-1/2 top-full mt-2 transition-all duration-300 opacity-0 invisible group-hover:opacity-100 group-hover:visible pointer-events-none z-50 hidden sm:block"
-              >
-                <div className="bg-white/95 backdrop-blur-sm border border-blue-200 rounded-lg shadow-xl p-4 min-w-64 max-w-80">
-                  <div className="flex items-start gap-3">
-                    <div className="w-2 h-2 bg-blue-500 rounded-full animate-pulse mt-1 flex-shrink-0" />
-                    <div>
-                      <h3 className="font-semibold text-blue-900 text-sm mb-1">Public Leaderboard View</h3>
-                      <p className="text-blue-600 text-xs leading-relaxed">
-                        You're viewing the public consultation leaderboard showing teacher rankings and statistics. 
-                        Detailed consultation session information is restricted to administrative users for privacy and confidentiality.
-                      </p>
+        {/* Full-width Header Section - Responsive design */}
+        <div className="bg-gradient-to-r from-[#0065A8] to-[#057DCD] px-4 sm:px-6 lg:px-8 py-8 sm:py-12 lg:py-16 relative overflow-hidden">
+          {/* Large decorative circular elements - responsive sizing */}
+          <div className="absolute -top-4 sm:-top-6 lg:-top-8 -left-4 sm:-left-6 lg:-left-8 w-16 sm:w-24 lg:w-32 h-16 sm:h-24 lg:h-32 bg-white/5 rounded-full opacity-30"></div>
+          <div className="absolute top-1/2 -right-8 sm:-right-12 lg:-right-16 w-12 sm:w-18 lg:w-24 h-12 sm:h-18 lg:h-24 bg-white/8 rounded-full opacity-40"></div>
+          <div className="absolute bottom-2 sm:bottom-3 lg:bottom-4 right-4 sm:right-6 lg:right-8 w-8 sm:w-12 lg:w-16 h-8 sm:h-12 lg:h-16 bg-white/10 rounded-full opacity-50"></div>
+          
+          <div className="text-center relative z-10">
+            <div className="flex flex-col items-center justify-center">
+              <div className="flex flex-col sm:flex-row items-center gap-2 sm:gap-4 mb-4 sm:mb-6">
+                <h2 className="text-white text-3xl sm:text-4xl lg:text-5xl font-bold text-center">
+                  Public Leaderboard
+                </h2>
+                
+                {/* Public view info icon with responsive tooltip */}
+                <div className="relative group">
+                  <button
+                    className="w-10 h-10 sm:w-12 sm:h-12 bg-white/20 hover:bg-white/30 rounded-full flex items-center justify-center transition-all duration-200 group-hover:scale-110"
+                  >
+                    <svg className="w-5 h-5 sm:w-6 sm:h-6 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" />
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z" />
+                    </svg>
+                  </button>
+                  
+                  {/* Responsive hover tooltip */}
+                  <div className="absolute left-full top-1/2 -translate-y-1/2 ml-2 sm:ml-4 px-3 sm:px-4 py-2 sm:py-3 bg-white/95 backdrop-blur-sm border border-blue-200 rounded-lg shadow-xl opacity-0 group-hover:opacity-100 transition-opacity duration-200 pointer-events-none z-50 min-w-64 sm:min-w-80 max-w-80 sm:max-w-96 hidden sm:block">
+                    <div className="flex items-start gap-2 sm:gap-3">
+                      <div className="w-1.5 h-1.5 sm:w-2 sm:h-2 bg-blue-500 rounded-full animate-pulse mt-1 flex-shrink-0" />
+                      <div>
+                        <h3 className="font-semibold text-blue-900 text-xs sm:text-sm mb-1">Public Leaderboard View</h3>
+                        <p className="text-blue-600 text-xs leading-relaxed">
+                          You're viewing the public consultation leaderboard showing teacher rankings and statistics. 
+                          Detailed consultation session information is restricted to administrative users for privacy and confidentiality.
+                        </p>
+                      </div>
+                    </div>
+                    {/* Arrow pointing left to icon */}
+                    <div className="absolute right-full top-1/2 -translate-y-1/2">
+                      <div className="w-0 h-0 border-r-4 sm:border-r-6 border-r-white/95 border-t-2 sm:border-t-3 border-t-transparent border-b-2 sm:border-b-3 border-b-transparent" />
                     </div>
                   </div>
-                  {/* Arrow pointing up to title */}
-                  <div className="absolute bottom-full left-1/2 -translate-x-1/2">
-                    <div className="w-0 h-0 border-b-6 border-b-white/95 border-l-3 border-l-transparent border-r-3 border-r-transparent" />
+                  
+                  {/* Mobile tooltip - positioned below */}
+                  <div className="absolute top-full left-1/2 -translate-x-1/2 mt-2 px-3 py-2 bg-white/95 backdrop-blur-sm border border-blue-200 rounded-lg shadow-xl opacity-0 group-hover:opacity-100 transition-opacity duration-200 pointer-events-none z-50 min-w-64 max-w-80 sm:hidden">
+                    <div className="flex items-start gap-2">
+                      <div className="w-1.5 h-1.5 bg-blue-500 rounded-full animate-pulse mt-1 flex-shrink-0" />
+                      <div>
+                        <h3 className="font-semibold text-blue-900 text-xs mb-1">Public Leaderboard View</h3>
+                        <p className="text-blue-600 text-xs leading-relaxed">
+                          You're viewing the public consultation leaderboard showing teacher rankings and statistics. 
+                          Detailed consultation session information is restricted to administrative users for privacy and confidentiality.
+                        </p>
+                      </div>
+                    </div>
+                    {/* Arrow pointing up to icon */}
+                    <div className="absolute bottom-full left-1/2 -translate-x-1/2">
+                      <div className="w-0 h-0 border-b-4 border-b-white/95 border-l-2 border-l-transparent border-r-2 border-r-transparent" />
+                    </div>
                   </div>
                 </div>
               </div>
+              
+              <p className="text-white/90 text-base sm:text-lg lg:text-xl max-w-4xl px-4">
+                Teacher rankings based on consultation activity and performance
+              </p>
             </div>
           </div>
-          <p className="text-slate-500 text-sm px-2 sm:px-0">
-            Teacher rankings based on consultation activity and performance
-          </p>
         </div>
+
+        <div className="pt-6 pb-2 max-w-6xl mx-auto px-2 sm:px-4 lg:px-0">
           
         {/* Filter Section */}
         <div className="bg-white/90 backdrop-blur-sm rounded-xl shadow-lg border border-white/50 overflow-hidden mb-6 mx-2 sm:mx-0">
@@ -584,7 +621,7 @@ const PublicConsultation = () => {
                         </div>
                         
                         {/* Mobile Stats Row */}
-                        <div className="grid grid-cols-3 gap-2">
+                        <div className="grid grid-cols-2 gap-2">
                           <div className="text-center p-2 bg-white/80 backdrop-blur-sm rounded-lg border border-gray-200 group-hover:border-blue-200 transition-colors">
                             <div className="text-sm font-bold text-[#057DCD] mb-1">{teacher.total_consultations}</div>
                             <div className="text-xs text-slate-500 font-medium uppercase tracking-wide">Sessions</div>
@@ -593,9 +630,40 @@ const PublicConsultation = () => {
                             <div className="text-sm font-bold text-[#057DCD] mb-1">{teacher.total_students}</div>
                             <div className="text-xs text-slate-500 font-medium uppercase tracking-wide">Students</div>
                           </div>
+                        </div>
+                        
+                        {/* Mobile Duration Row */}
+                        <div className="grid grid-cols-1 gap-2">
                           <div className="text-center p-2 bg-white/80 backdrop-blur-sm rounded-lg border border-gray-200 group-hover:border-blue-200 transition-colors">
                             <div className="text-sm font-bold text-[#057DCD] mb-1">{teacher.total_duration_formatted}</div>
                             <div className="text-xs text-slate-500 font-medium uppercase tracking-wide">Duration</div>
+                          </div>
+                        </div>
+                        
+                        {/* Mobile Rating Row - Always show for public view */}
+                        <div className="grid grid-cols-1 gap-2">
+                          <div className="text-center p-2 bg-gradient-to-br from-yellow-50 to-orange-50 rounded-lg border border-yellow-200 group-hover:border-yellow-300 transition-colors">
+                            <div className="flex items-center justify-center space-x-1 mb-1">
+                              <div className="text-sm font-bold text-yellow-600">
+                                {teacher.average_rating > 0 ? teacher.average_rating.toFixed(1) : 'N/A'}
+                              </div>
+                              {teacher.average_rating > 0 && (
+                                <svg className="w-3 h-3 text-yellow-500" fill="currentColor" viewBox="0 0 20 20">
+                                  <path d="M9.049 2.927c.3-.921 1.603-.921 1.902 0l1.07 3.292a1 1 0 00.95.69h3.462c.969 0 1.371 1.24.588 1.81l-2.8 2.034a1 1 0 00-.364 1.118l1.07 3.292c.3.921-.755 1.688-1.54 1.118l-2.8-2.034a1 1 0 00-1.175 0l-2.8 2.034c-.784.57-1.838-.197-1.539-1.118l1.07-3.292a1 1 0 00-.364-1.118L2.98 8.72c-.783-.57-.38-1.81.588-1.81h3.461a1 1 0 00.951-.69l1.07-3.292z" />
+                                </svg>
+                              )}
+                            </div>
+                            <div className="text-xs text-yellow-600 font-medium uppercase tracking-wide">Rating</div>
+                          </div>
+                        </div>
+                        
+                        {/* Mobile Score Row */}
+                        <div className="grid grid-cols-1 gap-2">
+                          <div className="text-center p-2 bg-gradient-to-br from-purple-50 to-indigo-50 rounded-lg border border-purple-200 group-hover:border-purple-300 transition-colors">
+                            <div className="text-sm font-bold text-purple-600 mb-1">
+                              {teacher.total_score || 'N/A'}
+                            </div>
+                            <div className="text-xs text-purple-600 font-medium uppercase tracking-wide">Total Score</div>
                           </div>
                         </div>
                       </div>
@@ -625,7 +693,7 @@ const PublicConsultation = () => {
                         </div>
 
                         {/* Stats Grid */}
-                        <div className="grid grid-cols-3 gap-4 mb-3 lg:mb-0 w-full lg:w-auto">
+                        <div className="grid grid-cols-2 lg:grid-cols-5 gap-4 mb-3 lg:mb-0 w-full lg:w-auto">
                           <div className="text-center p-2 bg-white/80 backdrop-blur-sm rounded-lg border border-gray-200 group-hover:border-blue-200 transition-colors">
                             <div className="text-lg font-bold text-[#057DCD] mb-1">{teacher.total_consultations}</div>
                             <div className="text-xs text-slate-500 font-medium uppercase tracking-wide">Sessions</div>
@@ -637,6 +705,25 @@ const PublicConsultation = () => {
                           <div className="text-center p-2 bg-white/80 backdrop-blur-sm rounded-lg border border-gray-200 group-hover:border-blue-200 transition-colors">
                             <div className="text-lg font-bold text-[#057DCD] mb-1">{teacher.total_duration_formatted}</div>
                             <div className="text-xs text-slate-500 font-medium uppercase tracking-wide">Duration</div>
+                          </div>
+                          <div className="text-center p-2 bg-gradient-to-br from-yellow-50 to-orange-50 rounded-lg border border-yellow-200 group-hover:border-yellow-300 transition-colors">
+                            <div className="flex items-center justify-center space-x-1 mb-1">
+                              <div className="text-lg font-bold text-yellow-600">
+                                {teacher.average_rating > 0 ? teacher.average_rating.toFixed(1) : 'N/A'}
+                              </div>
+                              {teacher.average_rating > 0 && (
+                                <svg className="w-4 h-4 text-yellow-500" fill="currentColor" viewBox="0 0 20 20">
+                                  <path d="M9.049 2.927c.3-.921 1.603-.921 1.902 0l1.07 3.292a1 1 0 00.95.69h3.462c.969 0 1.371 1.24.588 1.81l-2.8 2.034a1 1 0 00-.364 1.118l1.07 3.292c.3.921-.755 1.688-1.54 1.118l-2.8-2.034a1 1 0 00-1.175 0l-2.8 2.034c-.784.57-1.838-.197-1.539-1.118l1.07-3.292a1 1 0 00-.364-1.118L2.98 8.72c-.783-.57-.38-1.81.588-1.81h3.461a1 1 0 00.951-.69l1.07-3.292z" />
+                                </svg>
+                              )}
+                            </div>
+                            <div className="text-xs text-yellow-600 font-medium uppercase tracking-wide">Rating</div>
+                          </div>
+                          <div className="text-center p-2 bg-gradient-to-br from-purple-50 to-indigo-50 rounded-lg border border-purple-200 group-hover:border-purple-300 transition-colors">
+                            <div className="text-lg font-bold text-purple-600 mb-1">
+                              {teacher.total_score || 'N/A'}
+                            </div>
+                            <div className="text-xs text-purple-600 font-medium uppercase tracking-wide">Score</div>
                           </div>
                         </div>
 
