@@ -157,6 +157,7 @@ The simplified DB manager works with any PostgreSQL database and automatically d
 | teacher_schedules | Faculty schedules |
 | concern_categories | Concern classifications |
 | notifications | System notifications |
+| **feedbacks** | **Student feedback and ratings** |
 
 ## 🔄 **Sync Strategies**
 
