@@ -19,5 +19,9 @@ class Config:
     SQLALCHEMY_ENGINE_OPTIONS = {
         'pool_pre_ping': True,
         'pool_recycle': 300,
-        'poolclass': NullPool  # Use NullPool to avoid threading issues with eventlet
+        'poolclass': NullPool,  # Use NullPool to avoid threading issues with eventlet
+        'connect_args': {
+            'client_encoding': 'utf8',  # Ensure UTF-8 encoding for Unicode support
+            'options': '-c client_encoding=utf8'  # Additional UTF-8 configuration
+        }
     }
