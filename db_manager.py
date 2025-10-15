@@ -464,6 +464,282 @@ class EnhancedDatabaseManager:
                 print(f"❌ Migration error: {e}")
                 return False
     
+    def restore_database(self, backup_file: str, target: str = 'local', strategy: str = 'force') -> bool:
+        """Restore database from backup"""
+        print(f"🔄 Restoring {target} database from {backup_file}...")
+        
+        if target == 'local':
+            config = self.local_config
+        elif target == 'production':
+            config = self.production_config
+        else:
+            raise ValueError("Target must be 'local' or 'production'")
+        
+        if not config:
+            raise ValueError(f"No {target} database configuration found")
+        
+        # Find PostgreSQL path
+        pg_path = self.find_postgresql_path()
+        if not pg_path:
+            raise RuntimeError("PostgreSQL installation not found")
+        
+        # Build psql command
+        cmd = [os.path.join(pg_path, "psql.exe")]
+        
+        if config['host'] != 'localhost':
+            cmd.extend(['-h', config['host']])
+        if config['port'] != 5432:
+            cmd.extend(['-p', str(config['port'])])
+        cmd.extend(['-U', config['username']])
+        cmd.extend(['-d', config['database']])
+        
+        # Set password environment variable
+        env = os.environ.copy()
+        env['PGPASSWORD'] = config['password']
+        
+        # Execute restore
+        try:
+            with open(backup_file, 'r') as f:
+                result = subprocess.run(cmd, stdin=f, stderr=subprocess.PIPE, text=True, env=env)
+            
+            if result.returncode == 0:
+                print(f"✅ Database restored successfully")
+                return True
+            else:
+                print(f"❌ Restore failed: {result.stderr}")
+                return False
+        except Exception as e:
+            print(f"❌ Restore error: {e}")
+            return False
+
+    def import_data(self, import_file: str, target: str = 'local', format: str = 'json', model_name: str = None, force: bool = False) -> bool:
+        """Import data from file using model-aware operations"""
+        print(f"🔄 Importing data from {import_file} to {target} database...")
+        
+        try:
+            with self.app.app_context():
+                if format == 'json':
+                    with open(import_file, 'r') as f:
+                        data = json.load(f)
+                    
+                    if not data:
+                        print("❌ No data found in import file")
+                        return False
+                    
+                    # If model_name is specified, use it; otherwise try to infer from filename
+                    if not model_name:
+                        filename = Path(import_file).stem
+                        # Extract model name from filename (e.g., "users_export_20251015.json" -> "users")
+                        model_name = filename.split('_export_')[0] if '_export_' in filename else filename
+                    
+                    if model_name not in self.models:
+                        print(f"❌ Unknown model: {model_name}. Available: {list(self.models.keys())}")
+                        return False
+                    
+                    model_class = self.models[model_name]
+                    
+                    # Import data
+                    imported_count = 0
+                    skipped_count = 0
+                    for record_data in data:
+                        try:
+                            # Check if record already exists (by ID) unless force is True
+                            if not force:
+                                existing_record = model_class.query.get(record_data.get('id'))
+                                if existing_record:
+                                    print(f"⚠️  Skipping record ID {record_data.get('id')} - already exists")
+                                    skipped_count += 1
+                                    continue
+                            
+                            # Create model instance
+                            record = model_class(**record_data)
+                            db.session.add(record)
+                            imported_count += 1
+                        except Exception as e:
+                            print(f"⚠️  Skipping record due to error: {e}")
+                            skipped_count += 1
+                            continue
+                    
+                    db.session.commit()
+                    print(f"✅ Imported {imported_count} records to {model_name}")
+                    if skipped_count > 0:
+                        print(f"⚠️  Skipped {skipped_count} records (already exist)")
+                    return True
+                
+                elif format == 'csv':
+                    import csv
+                    with open(import_file, 'r') as f:
+                        reader = csv.DictReader(f)
+                        data = list(reader)
+                    
+                    if not data:
+                        print("❌ No data found in import file")
+                        return False
+                    
+                    # If model_name is specified, use it; otherwise try to infer from filename
+                    if not model_name:
+                        filename = Path(import_file).stem
+                        model_name = filename.split('_export_')[0] if '_export_' in filename else filename
+                    
+                    if model_name not in self.models:
+                        print(f"❌ Unknown model: {model_name}. Available: {list(self.models.keys())}")
+                        return False
+                    
+                    model_class = self.models[model_name]
+                    
+                    # Import data
+                    imported_count = 0
+                    for record_data in data:
+                        try:
+                            # Convert string values to appropriate types
+                            for key, value in record_data.items():
+                                if value == '':
+                                    record_data[key] = None
+                                elif hasattr(model_class, key):
+                                    column = getattr(model_class, key)
+                                    if hasattr(column, 'type'):
+                                        if 'Boolean' in str(column.type):
+                                            record_data[key] = value.lower() in ('true', '1', 'yes')
+                                        elif 'Integer' in str(column.type):
+                                            try:
+                                                record_data[key] = int(value) if value else None
+                                            except ValueError:
+                                                record_data[key] = None
+                            
+                            # Create model instance
+                            record = model_class(**record_data)
+                            db.session.add(record)
+                            imported_count += 1
+                        except Exception as e:
+                            print(f"⚠️  Skipping record due to error: {e}")
+                            continue
+                    
+                    db.session.commit()
+                    print(f"✅ Imported {imported_count} records to {model_name}")
+                    if skipped_count > 0:
+                        print(f"⚠️  Skipped {skipped_count} records (already exist)")
+                    return True
+                
+                else:
+                    print(f"❌ Unsupported format: {format}")
+                    return False
+                    
+        except Exception as e:
+            print(f"❌ Import error: {e}")
+            db.session.rollback()
+            return False
+
+    def run_tests(self, test_type: str = 'all') -> bool:
+        """Run database tests"""
+        print(f"🧪 Running {test_type} tests...")
+        
+        test_scripts = {
+            'all': ['test_database_summaries.py', 'test_appointments_api.py', 'test_analytics.py'],
+            'summaries': ['test_database_summaries.py'],
+            'appointments': ['test_appointments_api.py'],
+            'analytics': ['test_analytics.py'],
+            'prefetch': ['test_prefetch_service.py'],
+            'reminders': ['test_production_reminders.py']
+        }
+        
+        if test_type not in test_scripts:
+            print(f"❌ Unknown test type: {test_type}")
+            print(f"Available types: {list(test_scripts.keys())}")
+            return False
+        
+        scripts_to_run = test_scripts[test_type]
+        success_count = 0
+        
+        for script in scripts_to_run:
+            script_path = self.project_root / script
+            if script_path.exists():
+                print(f"🔄 Running {script}...")
+                try:
+                    result = subprocess.run([sys.executable, str(script_path)], 
+                                          capture_output=True, text=True, cwd=self.project_root)
+                    if result.returncode == 0:
+                        print(f"✅ {script} passed")
+                        success_count += 1
+                    else:
+                        print(f"❌ {script} failed:")
+                        print(result.stderr)
+                except Exception as e:
+                    print(f"❌ Error running {script}: {e}")
+            else:
+                print(f"⚠️  {script} not found")
+        
+        total_scripts = len(scripts_to_run)
+        print(f"\n📊 Test Results: {success_count}/{total_scripts} tests passed")
+        
+        return success_count == total_scripts
+
+    def clean_backups(self, days: int = 30) -> int:
+        """Clean up old backup files"""
+        print(f"🧹 Cleaning backups older than {days} days...")
+        
+        cutoff_date = datetime.now() - timedelta(days=days)
+        deleted_count = 0
+        
+        for backup_file in self.backup_dir.glob('*.sql'):
+            if backup_file.stat().st_mtime < cutoff_date.timestamp():
+                try:
+                    backup_file.unlink()
+                    print(f"Deleted: {backup_file.name}")
+                    deleted_count += 1
+                except Exception as e:
+                    print(f"Error deleting {backup_file.name}: {e}")
+        
+        for export_file in self.export_dir.glob('*'):
+            if export_file.stat().st_mtime < cutoff_date.timestamp():
+                try:
+                    export_file.unlink()
+                    print(f"Deleted: {export_file.name}")
+                    deleted_count += 1
+                except Exception as e:
+                    print(f"Error deleting {export_file.name}: {e}")
+        
+        print(f"✅ Cleaned {deleted_count} old files")
+        return deleted_count
+
+    def sync_databases(self, source: str = 'local', target: str = 'production', data_type: str = 'consultations') -> bool:
+        """Sync data between databases using model-aware operations"""
+        print(f"🔄 Syncing {data_type} from {source} to {target}...")
+        
+        try:
+            # Export from source using model-aware export
+            if data_type in self.models:
+                export_file = self.export_model_data(data_type, source, 'json')
+                print(f"✅ Exported {data_type} from {source}")
+            else:
+                # Fallback to backup method for non-model data
+                export_file = self.backup_database(source, [data_type])
+                print(f"✅ Backed up {data_type} from {source}")
+            
+            # Auto-import logic based on target
+            if target == 'local':
+                # Safe to auto-import to local (production data can be freely synced to local)
+                print(f"🔄 Auto-importing to local database...")
+                success = self.import_data(export_file, target, 'json', data_type, force=False)
+                if success:
+                    print("✅ Database sync completed automatically")
+                    return True
+                else:
+                    print("❌ Auto-import failed, but export file is available")
+                    print(f"📤 Export file: {export_file}")
+                    return False
+            else:
+                # Production target - require manual confirmation (protect production)
+                print(f"📤 Export file created: {export_file}")
+                print("⚠️  Production sync requires manual confirmation to protect production data")
+                print("💡 To complete sync to production, manually import the exported file:")
+                print(f"   python db_manager.py import --file {export_file} --target production --format json --force")
+                print("✅ Database sync export completed")
+                return True
+            
+        except Exception as e:
+            print(f"❌ Sync error: {e}")
+            return False
+
     def show_status(self) -> None:
         """Show database status using models"""
         print("📊 POLYCON Enhanced Database Status")
@@ -526,7 +802,9 @@ def main():
     
     # Other options
     parser.add_argument('--confirm', action='store_true', help='Confirm destructive operations')
+    parser.add_argument('--force', action='store_true', help='Force import/restore operations')
     parser.add_argument('--days', type=int, default=30, help='Days to keep backups')
+    parser.add_argument('--test-type', default='all', help='Type of tests to run')
     
     args = parser.parse_args()
     
@@ -597,6 +875,40 @@ def main():
                 print("\n⚠️  Integrity Issues:")
                 for issue in results['integrity_issues']:
                     print(f"  - {issue}")
+        
+        elif args.command == 'restore':
+            if not args.file:
+                print("❌ --file parameter required for restore")
+                return 1
+            
+            success = manager.restore_database(args.file, args.target, args.strategy)
+            if not success:
+                return 1
+        
+        elif args.command == 'import':
+            if not args.file:
+                print("❌ --file parameter required for import")
+                return 1
+            
+            success = manager.import_data(args.file, args.target, args.format, args.model, args.force)
+            if not success:
+                return 1
+        
+        elif args.command == 'test':
+            success = manager.run_tests(args.test_type)
+            if not success:
+                return 1
+        
+        elif args.command == 'clean':
+            deleted_count = manager.clean_backups(args.days)
+            print(f"✅ Cleaned {deleted_count} old files")
+        
+        elif args.command == 'sync':
+            # Use default model if not specified
+            model = args.model if args.model else 'consultation_sessions'
+            success = manager.sync_databases(args.source, args.target, model)
+            if not success:
+                return 1
         
         elif args.command == 'status':
             manager.show_status()
