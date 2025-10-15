@@ -126,7 +126,7 @@ class ConsultationSession(db.Model):
     summary = db.Column(db.Text, nullable=True)
     teacher_id = db.Column(db.String(50), nullable=True)  # Stores User.id_number of the teacher
 
-    # New fields to be added
+    # Core consultation fields
     transcription = db.Column(db.Text, nullable=True)
     transcription_enabled = db.Column(db.Boolean, default=False, nullable=False)  # Track if transcription was enabled
     concern = db.Column(db.Text, nullable=True)
@@ -136,9 +136,6 @@ class ConsultationSession(db.Model):
     venue_id = db.Column(db.Integer, db.ForeignKey('venues.id'), nullable=True)
     period_id = db.Column(db.Integer, db.ForeignKey('periods.id'), nullable=True)
     audio_file_path = db.Column(db.String(512), nullable=True) # URL or path to the audio file
-    quality_score = db.Column(db.Float, nullable=True)
-    quality_metrics = db.Column(db.JSON, nullable=True)
-    raw_sentiment_analysis = db.Column(db.JSON, nullable=True)
     booking_id = db.Column(db.String(100), db.ForeignKey('bookings.id'), nullable=True) # Link to booking
 
     # Relationships

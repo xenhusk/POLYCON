@@ -3,7 +3,6 @@ from datetime import datetime, timedelta
 from extensions import db
 from models import ConsultationSession, User, Student, Faculty, Program, Booking # Add Booking
 from services.google_gemini import generate_summary, identify_roles_in_transcription, generate_concern_based_summary
-from services.consultation_quality_service import calculate_consultation_quality
 from services.audio_conversion_service import convert_audio
 from services.assemblyai_service import transcribe_audio_with_assemblyai
 from services.google_storage import upload_audio  # upload converted audio for download
@@ -125,23 +124,13 @@ def transcribe():
             "full_text": "",
             "raw_sentiment_analysis": []
         }
-        quality_score = 0
-        quality_metrics = {}
         processed_transcription = ""
 
         # Only perform transcription if enabled
         if transcription_enabled:
-            # Transcribe the audio using AssemblyAI
+            # Transcribe the audio using AssemblyAI (without sentiment analysis)
             transcription_data = transcribe_audio_with_assemblyai(converted_path, speaker_count)
             
-            # Calculate consultation quality
-            duration = float(request.form.get('duration', 0)) if 'duration' in request.form else None
-            quality_score, quality_metrics = calculate_consultation_quality(
-                transcription_data["raw_sentiment_analysis"],
-                transcription_data["transcription_text"],
-                duration
-            )
-
             # Process the transcription with Gemini to identify roles
             processed_transcription = identify_roles_in_transcription(transcription_data["full_text"])
         else:
@@ -155,9 +144,6 @@ def transcribe():
         return jsonify({
             "audioUrl": audio_url,
             "transcription": processed_transcription,
-            "quality_score": quality_score,
-            "quality_metrics": quality_metrics,
-            "raw_sentiment_analysis": transcription_data["raw_sentiment_analysis"],
             "transcription_enabled": transcription_enabled
         })
     except Exception as e:
@@ -183,16 +169,6 @@ def summarize():
     return jsonify(summary=summary)
 
 
-@consultation_bp.route('/analyze_quality', methods=['POST'])
-def analyze_quality():
-    data = request.json or {}
-    sentiment = data.get('sentiment_analysis')
-    transcription = data.get('transcription')
-    duration = data.get('duration')
-    if not sentiment:
-        return jsonify(error="Sentiment analysis data is required"), 400
-    score, metrics = calculate_consultation_quality(sentiment, transcription, duration)
-    return jsonify(quality_score=score, quality_metrics=metrics)
 
 @consultation_bp.route('/store_consultation', methods=['POST']) # Renamed from /store
 def store_consultation_data(): # Renamed function
@@ -291,9 +267,6 @@ def store_consultation_data(): # Renamed function
             venue_id=data.get('venue_id'),
             period_id=data.get('period_id'),
             audio_file_path=data.get('audio_file_path'),
-            quality_score=data.get('quality_score'),
-            quality_metrics=data.get('quality_metrics'),
-            raw_sentiment_analysis=data.get('raw_sentiment_analysis'),
             booking_id=booking_id # From query param
         )
         db.session.add(new_session)
@@ -636,9 +609,6 @@ def get_session():
         "venue": session.venue,
         "audio_file_path": session.audio_file_path,
         "audio_url": session.audio_file_path, # Added for frontend compatibility
-        "quality_score": session.quality_score,
-        "quality_metrics": session.quality_metrics,
-        "raw_sentiment_analysis": session.raw_sentiment_analysis,
         "booking_id": session.booking_id,
         "teacher_info": {},
         "students_info": []
@@ -730,9 +700,6 @@ def get_final_document():
         "audio_file_path": session.audio_file_path,
         # Add audio_url for compatibility with frontend
         "audio_url": session.audio_file_path,
-        "quality_score": session.quality_score,
-        "quality_metrics": session.quality_metrics,
-        "raw_sentiment_analysis": session.raw_sentiment_analysis,
         "booking_id": session.booking_id,
         "teacher_info": {},
         "students_info": []
