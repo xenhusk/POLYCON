@@ -1,91 +1,51 @@
 #!/usr/bin/env python3
 """
-POLYCON Enhanced Database Manager
-================================
-A powerful database management tool that works directly with SQLAlchemy models.
-This version imports models.py and provides model-aware operations.
+POLYCON Simplified Database Manager
+==================================
+A reliable database management tool that uses direct SQL operations.
+No Flask dependency - works directly with PostgreSQL using pg_dump/psql.
 
 Usage:
-    python db_manager_enhanced.py [command] [options]
+    python db_manager.py [command] [options]
 
 Commands:
-    backup        - Create database backup
-    restore       - Restore from backup
-    export        - Export specific data using models
-    import        - Import data from file
-    migrate       - Run database migrations
-    verify        - Verify database integrity
-    sync          - Sync between local and production
-    test          - Run database tests
-    clean         - Clean up old backups
+    backup        - Create database backup (SQL dump)
+    restore       - Restore from backup with strategies
+    sync          - Sync entire database using SQL dumps
+    clean-sync    - Clean sync (drop and recreate target database)
     status        - Show database status
-    query         - Run custom queries on models
-    seed          - Seed database with sample data
-    reset         - Reset specific tables
+    clean         - Clean up old backups
+    test          - Test database connections
+
+Sync Strategies:
+    drop          - Drop and recreate target database (clean sync)
+    force         - Overwrite existing data (may cause conflicts)
 """
 
 import os
 import sys
-import json
 import subprocess
 import argparse
 import psycopg2
-import sqlite3
 from datetime import datetime, timedelta
-from typing import Dict, List, Optional, Tuple, Any
+from typing import Dict, List, Optional
 import urllib.parse
 from pathlib import Path
 
-# Add backend to path for imports
-sys.path.append(os.path.join(os.path.dirname(__file__), 'backend'))
-
-# Import Flask app and models
-from app import create_app
-from extensions import db
-from models import (
-    User, Department, Venue, Period, Program, Semester, 
-    Booking, ConsultationSession, Student, Faculty,
-    Course, Grade, TeacherSchedule, ConcernCategory, Notification
-)
-
-class EnhancedDatabaseManager:
-    """Enhanced database management with direct model access"""
+class SimplifiedDatabaseManager:
+    """Simplified database management with direct SQL operations"""
     
     def __init__(self):
         self.project_root = Path(__file__).parent
         self.database_dir = self.project_root / 'database'
         self.backup_dir = self.database_dir / 'backups'
-        self.export_dir = self.database_dir / 'exports'
         
         # Create directories
         self.database_dir.mkdir(exist_ok=True)
         self.backup_dir.mkdir(exist_ok=True)
-        self.export_dir.mkdir(exist_ok=True)
         
         # Load configuration
         self.load_config()
-        
-        # Create Flask app context
-        self.app = create_app()
-        
-        # Model mappings for easy access
-        self.models = {
-            'users': User,
-            'departments': Department,
-            'venues': Venue,
-            'periods': Period,
-            'programs': Program,
-            'semesters': Semester,
-            'bookings': Booking,
-            'consultation_sessions': ConsultationSession,
-            'students': Student,
-            'faculty': Faculty,
-            'courses': Course,
-            'grades': Grade,
-            'teacher_schedules': TeacherSchedule,
-            'concern_categories': ConcernCategory,
-            'notifications': Notification,
-        }
     
     def load_config(self):
         """Load database configuration from environment and config files"""
@@ -100,7 +60,14 @@ class EnhancedDatabaseManager:
                         os.environ[key.strip()] = value.strip()
         
         # Database URLs
-        self.local_db_url = os.getenv('DATABASE_URL', 'postgresql://postgres:password@localhost/polycon')
+        # Construct local database URL from individual components
+        local_user = os.getenv('LOCAL_DB_USER', 'postgres')
+        local_password = os.getenv('LOCAL_DB_PASSWORD', 'password')
+        local_name = os.getenv('LOCAL_DB_NAME', 'polycon')
+        self.local_db_url = f'postgresql://{local_user}:{local_password}@localhost:5432/{local_name}'
+        
+        # Use DATABASE_URL if available, otherwise use constructed URL
+        self.local_db_url = os.getenv('DATABASE_URL', self.local_db_url)
         self.production_db_url = os.getenv('PRODUCTION_DATABASE_URL')
         
         # Parse URLs
@@ -161,7 +128,7 @@ class EnhancedDatabaseManager:
     
     def backup_database(self, target: str = 'local', tables: Optional[List[str]] = None) -> str:
         """Create database backup"""
-        print(f"🔄 Creating {target} database backup...")
+        print(f"Creating {target} database backup...")
         
         if target == 'local':
             config = self.local_config
@@ -209,264 +176,16 @@ class EnhancedDatabaseManager:
                 result = subprocess.run(cmd, stdout=f, stderr=subprocess.PIPE, text=True, env=env)
             
             if result.returncode == 0:
-                print(f"✅ Backup created: {filepath}")
+                print(f"Backup created: {filepath}")
                 return str(filepath)
             else:
                 raise RuntimeError(f"Backup failed: {result.stderr}")
         except Exception as e:
             raise RuntimeError(f"Backup error: {e}")
     
-    def export_model_data(self, model_name: str, target: str = 'local', format: str = 'json', filters: Optional[Dict] = None) -> str:
-        """Export data using SQLAlchemy models"""
-        print(f"🔄 Exporting {model_name} data from {target} database using models...")
-        
-        if model_name not in self.models:
-            raise ValueError(f"Unknown model: {model_name}. Available: {list(self.models.keys())}")
-        
-        model_class = self.models[model_name]
-        
-        with self.app.app_context():
-            try:
-                # Query data using the model
-                query = model_class.query
-                
-                # Apply filters if provided
-                if filters:
-                    for field, value in filters.items():
-                        if hasattr(model_class, field):
-                            query = query.filter(getattr(model_class, field) == value)
-                
-                # Execute query
-                records = query.all()
-                
-                # Convert to exportable format
-                export_data = []
-                for record in records:
-                    # Convert SQLAlchemy model to dict
-                    record_dict = {}
-                    for column in model_class.__table__.columns:
-                        value = getattr(record, column.name)
-                        # Handle datetime serialization
-                        if isinstance(value, datetime):
-                            value = value.isoformat()
-                        record_dict[column.name] = value
-                    export_data.append(record_dict)
-                
-                # Generate filename
-                timestamp = datetime.now().strftime('%Y%m%d_%H%M%S')
-                filename = f"{model_name}_export_{timestamp}.{format}"
-                filepath = self.export_dir / filename
-                
-                # Export in requested format
-                if format == 'json':
-                    with open(filepath, 'w') as f:
-                        json.dump(export_data, f, indent=2, default=str)
-                elif format == 'csv':
-                    import csv
-                    if export_data:
-                        with open(filepath, 'w', newline='') as f:
-                            writer = csv.DictWriter(f, fieldnames=export_data[0].keys())
-                            writer.writeheader()
-                            writer.writerows(export_data)
-                else:
-                    raise ValueError(f"Unsupported format: {format}")
-                
-                print(f"✅ Exported {len(export_data)} {model_name} records to: {filepath}")
-                return str(filepath)
-                
-            except Exception as e:
-                print(f"❌ Export error: {e}")
-                raise
-    
-    def query_models(self, query_type: str, **kwargs) -> Any:
-        """Run custom queries on models"""
-        print(f"🔍 Running {query_type} query on models...")
-        
-        with self.app.app_context():
-            try:
-                if query_type == 'count':
-                    model_name = kwargs.get('model')
-                    if model_name not in self.models:
-                        raise ValueError(f"Unknown model: {model_name}")
-                    
-                    model_class = self.models[model_name]
-                    count = model_class.query.count()
-                    print(f"📊 {model_name}: {count} records")
-                    return count
-                
-                elif query_type == 'list':
-                    model_name = kwargs.get('model')
-                    limit = kwargs.get('limit', 10)
-                    
-                    if model_name not in self.models:
-                        raise ValueError(f"Unknown model: {model_name}")
-                    
-                    model_class = self.models[model_name]
-                    records = model_class.query.limit(limit).all()
-                    
-                    print(f"📋 {model_name} (showing {len(records)} of {model_class.query.count()}):")
-                    for record in records:
-                        print(f"  - {record}")
-                    return records
-                
-                elif query_type == 'search':
-                    model_name = kwargs.get('model')
-                    field = kwargs.get('field')
-                    value = kwargs.get('value')
-                    
-                    if model_name not in self.models:
-                        raise ValueError(f"Unknown model: {model_name}")
-                    
-                    model_class = self.models[model_name]
-                    if not hasattr(model_class, field):
-                        raise ValueError(f"Field {field} not found in {model_name}")
-                    
-                    records = model_class.query.filter(getattr(model_class, field).like(f'%{value}%')).all()
-                    
-                    print(f"🔍 Found {len(records)} {model_name} records where {field} contains '{value}':")
-                    for record in records:
-                        print(f"  - {record}")
-                    return records
-                
-                else:
-                    raise ValueError(f"Unknown query type: {query_type}")
-                    
-            except Exception as e:
-                print(f"❌ Query error: {e}")
-                raise
-    
-    def seed_database(self, data_type: str = 'sample') -> bool:
-        """Seed database with sample data using models"""
-        print(f"🌱 Seeding database with {data_type} data...")
-        
-        with self.app.app_context():
-            try:
-                if data_type == 'sample':
-                    # Create sample departments
-                    dept1 = Department(name="Computer Science")
-                    dept2 = Department(name="Information Technology")
-                    db.session.add(dept1)
-                    db.session.add(dept2)
-                    db.session.commit()
-                    
-                    # Create sample periods
-                    periods = [
-                        Period(name="Prelims", is_active=True),
-                        Period(name="Midterm", is_active=False),
-                        Period(name="Pre-finals", is_active=False),
-                        Period(name="Finals", is_active=False),
-                    ]
-                    for period in periods:
-                        db.session.add(period)
-                    db.session.commit()
-                    
-                    # Create sample venues
-                    venues = [
-                        Venue(name="Room 101", department_id=dept1.id, is_available=True),
-                        Venue(name="Room 102", department_id=dept1.id, is_available=True),
-                        Venue(name="Conference Room A", department_id=dept2.id, is_available=True),
-                    ]
-                    for venue in venues:
-                        db.session.add(venue)
-                    db.session.commit()
-                    
-                    print("✅ Sample data seeded successfully")
-                    return True
-                
-                else:
-                    raise ValueError(f"Unknown data type: {data_type}")
-                    
-            except Exception as e:
-                print(f"❌ Seeding error: {e}")
-                db.session.rollback()
-                return False
-    
-    def reset_table(self, table_name: str, confirm: bool = False) -> bool:
-        """Reset a specific table using models"""
-        if not confirm:
-            print(f"⚠️  This will delete ALL data from {table_name} table!")
-            response = input("Type 'YES' to confirm: ")
-            if response != 'YES':
-                print("❌ Operation cancelled")
-                return False
-        
-        print(f"🗑️  Resetting {table_name} table...")
-        
-        if table_name not in self.models:
-            raise ValueError(f"Unknown table: {table_name}. Available: {list(self.models.keys())}")
-        
-        model_class = self.models[table_name]
-        
-        with self.app.app_context():
-            try:
-                # Delete all records
-                deleted_count = model_class.query.delete()
-                db.session.commit()
-                
-                print(f"✅ Deleted {deleted_count} records from {table_name}")
-                return True
-                
-            except Exception as e:
-                print(f"❌ Reset error: {e}")
-                db.session.rollback()
-                return False
-    
-    def verify_database(self, target: str = 'local') -> Dict:
-        """Verify database integrity using models"""
-        print(f"🔍 Verifying {target} database using models...")
-        
-        with self.app.app_context():
-            try:
-                results = {}
-                
-                # Count records in each model
-                for model_name, model_class in self.models.items():
-                    count = model_class.query.count()
-                    results[model_name] = count
-                
-                # Check for data integrity issues
-                integrity_issues = []
-                
-                # Check for orphaned bookings
-                orphaned_bookings = Booking.query.filter(
-                    ~Booking.teacher_id.in_([u.id for u in User.query.filter_by(role='faculty')])
-                ).count()
-                if orphaned_bookings > 0:
-                    integrity_issues.append(f"Orphaned bookings: {orphaned_bookings}")
-                
-                # Check for orphaned consultation sessions
-                orphaned_sessions = ConsultationSession.query.filter(
-                    ~ConsultationSession.teacher_id.in_([u.id for u in User.query.filter_by(role='faculty')])
-                ).count()
-                if orphaned_sessions > 0:
-                    integrity_issues.append(f"Orphaned consultation sessions: {orphaned_sessions}")
-                
-                results['integrity_issues'] = integrity_issues
-                
-                print("✅ Database verification completed")
-                return results
-                
-            except Exception as e:
-                print(f"❌ Verification error: {e}")
-                return {}
-    
-    def migrate_database(self, target: str = 'local') -> bool:
-        """Run database migrations using models"""
-        print(f"🔄 Running database migrations on {target}...")
-        
-        with self.app.app_context():
-            try:
-                # Create all tables based on models
-                db.create_all()
-                print("✅ Database migrations completed")
-                return True
-            except Exception as e:
-                print(f"❌ Migration error: {e}")
-                return False
-    
     def restore_database(self, backup_file: str, target: str = 'local', strategy: str = 'force') -> bool:
-        """Restore database from backup"""
-        print(f"🔄 Restoring {target} database from {backup_file}...")
+        """Restore database from backup with proper strategy handling"""
+        print(f"Restoring {target} database from {backup_file} using {strategy} strategy...")
         
         if target == 'local':
             config = self.local_config
@@ -483,7 +202,22 @@ class EnhancedDatabaseManager:
         if not pg_path:
             raise RuntimeError("PostgreSQL installation not found")
         
-        # Build psql command
+        # Set password environment variable
+        env = os.environ.copy()
+        env['PGPASSWORD'] = config['password']
+        
+        # Handle different strategies
+        if strategy == 'drop':
+            print("Drop strategy: Dropping and recreating database...")
+            success = self._drop_and_recreate_database(config, pg_path, env)
+            if not success:
+                return False
+        elif strategy == 'force':
+            print("Force strategy: Attempting to restore over existing data...")
+            # Try to terminate connections first
+            self._terminate_database_connections(config, pg_path, env)
+        
+        # Build psql command for restore
         cmd = [os.path.join(pg_path, "psql.exe")]
         
         if config['host'] != 'localhost':
@@ -493,189 +227,243 @@ class EnhancedDatabaseManager:
         cmd.extend(['-U', config['username']])
         cmd.extend(['-d', config['database']])
         
-        # Set password environment variable
-        env = os.environ.copy()
-        env['PGPASSWORD'] = config['password']
-        
         # Execute restore
         try:
             with open(backup_file, 'r') as f:
                 result = subprocess.run(cmd, stdin=f, stderr=subprocess.PIPE, text=True, env=env)
             
             if result.returncode == 0:
-                print(f"✅ Database restored successfully")
+                print(f"Database restored successfully")
                 return True
             else:
-                print(f"❌ Restore failed: {result.stderr}")
+                print(f"Restore failed: {result.stderr}")
                 return False
         except Exception as e:
-            print(f"❌ Restore error: {e}")
+            print(f"Restore error: {e}")
+            return False
+    
+    def _terminate_database_connections(self, config: dict, pg_path: str, env: dict) -> bool:
+        """Terminate all connections to the database"""
+        try:
+            cmd = [os.path.join(pg_path, "psql.exe")]
+            if config['host'] != 'localhost':
+                cmd.extend(['-h', config['host']])
+            if config['port'] != 5432:
+                cmd.extend(['-p', str(config['port'])])
+            cmd.extend(['-U', config['username']])
+            cmd.extend(['-d', 'postgres'])  # Connect to postgres database
+            
+            terminate_sql = f"SELECT pg_terminate_backend(pid) FROM pg_stat_activity WHERE datname = '{config['database']}' AND pid <> pg_backend_pid();"
+            
+            result = subprocess.run(cmd, input=terminate_sql, text=True, capture_output=True, env=env)
+            if result.returncode == 0:
+                print("Terminated existing database connections")
+                return True
+            else:
+                print(f"Could not terminate connections: {result.stderr}")
+                return False
+        except Exception as e:
+            print(f"Error terminating connections: {e}")
+            return False
+    
+    def _drop_and_recreate_database(self, config: dict, pg_path: str, env: dict) -> bool:
+        """Drop and recreate the database"""
+        try:
+            cmd = [os.path.join(pg_path, "psql.exe")]
+            if config['host'] != 'localhost':
+                cmd.extend(['-h', config['host']])
+            if config['port'] != 5432:
+                cmd.extend(['-p', str(config['port'])])
+            cmd.extend(['-U', config['username']])
+            cmd.extend(['-d', 'postgres'])  # Connect to postgres database
+            
+            # Terminate connections first
+            self._terminate_database_connections(config, pg_path, env)
+            
+            # Drop and recreate database
+            sql_commands = [
+                f"DROP DATABASE IF EXISTS {config['database']};",
+                f"CREATE DATABASE {config['database']};"
+            ]
+            
+            for sql in sql_commands:
+                result = subprocess.run(cmd, input=sql, text=True, capture_output=True, env=env)
+                if result.returncode != 0:
+                    print(f"Error executing: {sql}")
+                    print(f"Error: {result.stderr}")
+                    return False
+            
+            print("Database dropped and recreated successfully")
+            return True
+        except Exception as e:
+            print(f"Error dropping/recreating database: {e}")
             return False
 
-    def import_data(self, import_file: str, target: str = 'local', format: str = 'json', model_name: str = None, force: bool = False) -> bool:
-        """Import data from file using model-aware operations"""
-        print(f"🔄 Importing data from {import_file} to {target} database...")
+    def sync_databases(self, source: str = 'local', target: str = 'production', strategy: str = 'drop') -> bool:
+        """Sync entire database between local and production using SQL dumps"""
+        print(f"Syncing entire database from {source} to {target} using {strategy} strategy...")
         
         try:
-            with self.app.app_context():
-                if format == 'json':
-                    with open(import_file, 'r') as f:
-                        data = json.load(f)
-                    
-                    if not data:
-                        print("❌ No data found in import file")
-                        return False
-                    
-                    # If model_name is specified, use it; otherwise try to infer from filename
-                    if not model_name:
-                        filename = Path(import_file).stem
-                        # Extract model name from filename (e.g., "users_export_20251015.json" -> "users")
-                        model_name = filename.split('_export_')[0] if '_export_' in filename else filename
-                    
-                    if model_name not in self.models:
-                        print(f"❌ Unknown model: {model_name}. Available: {list(self.models.keys())}")
-                        return False
-                    
-                    model_class = self.models[model_name]
-                    
-                    # Import data
-                    imported_count = 0
-                    skipped_count = 0
-                    for record_data in data:
-                        try:
-                            # Check if record already exists (by ID) unless force is True
-                            if not force:
-                                existing_record = model_class.query.get(record_data.get('id'))
-                                if existing_record:
-                                    print(f"⚠️  Skipping record ID {record_data.get('id')} - already exists")
-                                    skipped_count += 1
-                                    continue
-                            
-                            # Create model instance
-                            record = model_class(**record_data)
-                            db.session.add(record)
-                            imported_count += 1
-                        except Exception as e:
-                            print(f"⚠️  Skipping record due to error: {e}")
-                            skipped_count += 1
-                            continue
-                    
-                    db.session.commit()
-                    print(f"✅ Imported {imported_count} records to {model_name}")
-                    if skipped_count > 0:
-                        print(f"⚠️  Skipped {skipped_count} records (already exist)")
+            # Create backup from source
+            backup_file = self.backup_database(source)
+            print(f"Created backup from {source}: {backup_file}")
+            
+            # Auto-import logic based on target
+            if target == 'local':
+                # Safe to auto-import to local (production data can be freely synced to local)
+                print(f"Auto-restoring to local database...")
+                success = self.restore_database(backup_file, target, strategy)
+                if success:
+                    print("Database sync completed automatically")
                     return True
-                
-                elif format == 'csv':
-                    import csv
-                    with open(import_file, 'r') as f:
-                        reader = csv.DictReader(f)
-                        data = list(reader)
-                    
-                    if not data:
-                        print("❌ No data found in import file")
-                        return False
-                    
-                    # If model_name is specified, use it; otherwise try to infer from filename
-                    if not model_name:
-                        filename = Path(import_file).stem
-                        model_name = filename.split('_export_')[0] if '_export_' in filename else filename
-                    
-                    if model_name not in self.models:
-                        print(f"❌ Unknown model: {model_name}. Available: {list(self.models.keys())}")
-                        return False
-                    
-                    model_class = self.models[model_name]
-                    
-                    # Import data
-                    imported_count = 0
-                    for record_data in data:
-                        try:
-                            # Convert string values to appropriate types
-                            for key, value in record_data.items():
-                                if value == '':
-                                    record_data[key] = None
-                                elif hasattr(model_class, key):
-                                    column = getattr(model_class, key)
-                                    if hasattr(column, 'type'):
-                                        if 'Boolean' in str(column.type):
-                                            record_data[key] = value.lower() in ('true', '1', 'yes')
-                                        elif 'Integer' in str(column.type):
-                                            try:
-                                                record_data[key] = int(value) if value else None
-                                            except ValueError:
-                                                record_data[key] = None
-                            
-                            # Create model instance
-                            record = model_class(**record_data)
-                            db.session.add(record)
-                            imported_count += 1
-                        except Exception as e:
-                            print(f"⚠️  Skipping record due to error: {e}")
-                            continue
-                    
-                    db.session.commit()
-                    print(f"✅ Imported {imported_count} records to {model_name}")
-                    if skipped_count > 0:
-                        print(f"⚠️  Skipped {skipped_count} records (already exist)")
-                    return True
-                
                 else:
-                    print(f"❌ Unsupported format: {format}")
+                    print("Auto-restore failed, but backup file is available")
+                    print(f"Backup file: {backup_file}")
                     return False
-                    
-        except Exception as e:
-            print(f"❌ Import error: {e}")
-            db.session.rollback()
-            return False
-
-    def run_tests(self, test_type: str = 'all') -> bool:
-        """Run database tests"""
-        print(f"🧪 Running {test_type} tests...")
-        
-        test_scripts = {
-            'all': ['test_database_summaries.py', 'test_appointments_api.py', 'test_analytics.py'],
-            'summaries': ['test_database_summaries.py'],
-            'appointments': ['test_appointments_api.py'],
-            'analytics': ['test_analytics.py'],
-            'prefetch': ['test_prefetch_service.py'],
-            'reminders': ['test_production_reminders.py']
-        }
-        
-        if test_type not in test_scripts:
-            print(f"❌ Unknown test type: {test_type}")
-            print(f"Available types: {list(test_scripts.keys())}")
-            return False
-        
-        scripts_to_run = test_scripts[test_type]
-        success_count = 0
-        
-        for script in scripts_to_run:
-            script_path = self.project_root / script
-            if script_path.exists():
-                print(f"🔄 Running {script}...")
-                try:
-                    result = subprocess.run([sys.executable, str(script_path)], 
-                                          capture_output=True, text=True, cwd=self.project_root)
-                    if result.returncode == 0:
-                        print(f"✅ {script} passed")
-                        success_count += 1
-                    else:
-                        print(f"❌ {script} failed:")
-                        print(result.stderr)
-                except Exception as e:
-                    print(f"❌ Error running {script}: {e}")
             else:
-                print(f"⚠️  {script} not found")
+                # Production target - require manual confirmation (protect production)
+                print(f"Backup file created: {backup_file}")
+                print("Production sync requires manual confirmation to protect production data")
+                print(f"To complete sync to production, manually restore the backup:")
+                print(f"   python db_manager.py restore --file {backup_file} --target production --strategy {strategy}")
+                print("Database sync backup completed")
+                return True
+                
+        except Exception as e:
+            print(f"Sync error: {e}")
+            return False
+    
+    def clean_sync_databases(self, source: str = 'local', target: str = 'production') -> bool:
+        """Perform a clean sync by dropping and recreating the target database"""
+        print(f"Performing clean sync from {source} to {target}...")
+        return self.sync_databases(source, target, 'drop')
+
+    def show_status(self, target: str = 'local') -> None:
+        """Show database status using direct SQL queries"""
+        print("POLYCON Simplified Database Status")
+        print("=" * 50)
         
-        total_scripts = len(scripts_to_run)
-        print(f"\n📊 Test Results: {success_count}/{total_scripts} tests passed")
+        if target == 'local':
+            config = self.local_config
+        elif target == 'production':
+            config = self.production_config
+        else:
+            print("Invalid target. Use 'local' or 'production'")
+            return
         
-        return success_count == total_scripts
+        if not config:
+            print(f"No {target} database configuration found")
+            return
+        
+        try:
+            # Connect directly to the database
+            conn = psycopg2.connect(
+                host=config['host'],
+                port=config['port'],
+                database=config['database'],
+                user=config['username'],
+                password=config['password']
+            )
+            cursor = conn.cursor()
+            
+            print(f"Connected to {target} database: {config['database']}")
+            
+            # Get table counts
+            cursor.execute("""
+                SELECT table_name 
+                FROM information_schema.tables 
+                WHERE table_schema = 'public' 
+                ORDER BY table_name
+            """)
+            tables = cursor.fetchall()
+            
+            print("\nTable Statistics:")
+            total_records = 0
+            for table in tables:
+                table_name = table[0]
+                cursor.execute(f"SELECT COUNT(*) FROM {table_name}")
+                count = cursor.fetchone()[0]
+                print(f"  {table_name}: {count}")
+                total_records += count
+            
+            print(f"\nTotal Records: {total_records}")
+            
+            # Show recent activity (if tables exist)
+            try:
+                cursor.execute("SELECT COUNT(*) FROM bookings WHERE created_at > NOW() - INTERVAL '7 days'")
+                recent_bookings = cursor.fetchone()[0]
+                print(f"Recent bookings (7 days): {recent_bookings}")
+            except:
+                pass
+            
+            try:
+                cursor.execute("SELECT COUNT(*) FROM consultation_sessions WHERE session_date > NOW() - INTERVAL '7 days'")
+                recent_sessions = cursor.fetchone()[0]
+                print(f"Recent consultation sessions (7 days): {recent_sessions}")
+            except:
+                pass
+            
+            cursor.close()
+            conn.close()
+            
+        except Exception as e:
+            print(f"Status error: {e}")
+
+    def test_connections(self) -> bool:
+        """Test database connections"""
+        print("Testing database connections...")
+        
+        success_count = 0
+        total_tests = 0
+        
+        # Test local connection
+        if self.local_config:
+            total_tests += 1
+            try:
+                conn = psycopg2.connect(
+                    host=self.local_config['host'],
+                    port=self.local_config['port'],
+                    database=self.local_config['database'],
+                    user=self.local_config['username'],
+                    password=self.local_config['password']
+                )
+                cursor = conn.cursor()
+                cursor.execute("SELECT 1")
+                cursor.fetchone()
+                cursor.close()
+                conn.close()
+                print("Local database connection: OK")
+                success_count += 1
+            except Exception as e:
+                print(f"Local database connection: FAILED - {e}")
+        
+        # Test production connection
+        if self.production_config:
+            total_tests += 1
+            try:
+                conn = psycopg2.connect(
+                    host=self.production_config['host'],
+                    port=self.production_config['port'],
+                    database=self.production_config['database'],
+                    user=self.production_config['username'],
+                    password=self.production_config['password']
+                )
+                cursor = conn.cursor()
+                cursor.execute("SELECT 1")
+                cursor.fetchone()
+                cursor.close()
+                conn.close()
+                print("Production database connection: OK")
+                success_count += 1
+            except Exception as e:
+                print(f"Production database connection: FAILED - {e}")
+        
+        print(f"\nConnection Test Results: {success_count}/{total_tests} passed")
+        return success_count == total_tests
 
     def clean_backups(self, days: int = 30) -> int:
         """Clean up old backup files"""
-        print(f"🧹 Cleaning backups older than {days} days...")
+        print(f"Cleaning backups older than {days} days...")
         
         cutoff_date = datetime.now() - timedelta(days=days)
         deleted_count = 0
@@ -689,90 +477,14 @@ class EnhancedDatabaseManager:
                 except Exception as e:
                     print(f"Error deleting {backup_file.name}: {e}")
         
-        for export_file in self.export_dir.glob('*'):
-            if export_file.stat().st_mtime < cutoff_date.timestamp():
-                try:
-                    export_file.unlink()
-                    print(f"Deleted: {export_file.name}")
-                    deleted_count += 1
-                except Exception as e:
-                    print(f"Error deleting {export_file.name}: {e}")
-        
-        print(f"✅ Cleaned {deleted_count} old files")
+        print(f"Cleaned {deleted_count} old files")
         return deleted_count
-
-    def sync_databases(self, source: str = 'local', target: str = 'production', data_type: str = 'consultations') -> bool:
-        """Sync data between databases using model-aware operations"""
-        print(f"🔄 Syncing {data_type} from {source} to {target}...")
-        
-        try:
-            # Export from source using model-aware export
-            if data_type in self.models:
-                export_file = self.export_model_data(data_type, source, 'json')
-                print(f"✅ Exported {data_type} from {source}")
-            else:
-                # Fallback to backup method for non-model data
-                export_file = self.backup_database(source, [data_type])
-                print(f"✅ Backed up {data_type} from {source}")
-            
-            # Auto-import logic based on target
-            if target == 'local':
-                # Safe to auto-import to local (production data can be freely synced to local)
-                print(f"🔄 Auto-importing to local database...")
-                success = self.import_data(export_file, target, 'json', data_type, force=False)
-                if success:
-                    print("✅ Database sync completed automatically")
-                    return True
-                else:
-                    print("❌ Auto-import failed, but export file is available")
-                    print(f"📤 Export file: {export_file}")
-                    return False
-            else:
-                # Production target - require manual confirmation (protect production)
-                print(f"📤 Export file created: {export_file}")
-                print("⚠️  Production sync requires manual confirmation to protect production data")
-                print("💡 To complete sync to production, manually import the exported file:")
-                print(f"   python db_manager.py import --file {export_file} --target production --format json --force")
-                print("✅ Database sync export completed")
-                return True
-            
-        except Exception as e:
-            print(f"❌ Sync error: {e}")
-            return False
-
-    def show_status(self) -> None:
-        """Show database status using models"""
-        print("📊 POLYCON Enhanced Database Status")
-        print("=" * 50)
-        
-        with self.app.app_context():
-            try:
-                print("\n📊 Model Statistics:")
-                for model_name, model_class in self.models.items():
-                    count = model_class.query.count()
-                    print(f"  {model_name}: {count}")
-                
-                # Show recent activity
-                print("\n🕒 Recent Activity:")
-                recent_bookings = Booking.query.order_by(Booking.created_at.desc()).limit(3).all()
-                print(f"  Recent bookings: {len(recent_bookings)}")
-                for booking in recent_bookings:
-                    print(f"    - {booking.id}: {booking.created_at}")
-                
-                recent_sessions = ConsultationSession.query.order_by(ConsultationSession.session_date.desc()).limit(3).all()
-                print(f"  Recent consultation sessions: {len(recent_sessions)}")
-                for session in recent_sessions:
-                    print(f"    - {session.id}: {session.session_date}")
-                
-            except Exception as e:
-                print(f"❌ Status error: {e}")
 
 def main():
     """Main CLI interface"""
-    parser = argparse.ArgumentParser(description='POLYCON Enhanced Database Manager')
+    parser = argparse.ArgumentParser(description='POLYCON Simplified Database Manager')
     parser.add_argument('command', choices=[
-        'backup', 'restore', 'export', 'import', 'migrate', 'verify', 
-        'sync', 'test', 'clean', 'status', 'query', 'seed', 'reset'
+        'backup', 'restore', 'sync', 'clean-sync', 'status', 'clean', 'test'
     ], help='Command to execute')
     
     # Common options
@@ -783,140 +495,58 @@ def main():
     
     # Backup/restore options
     parser.add_argument('--file', help='Backup file path')
-    parser.add_argument('--strategy', choices=['force', 'clean', 'data_only'], 
-                       default='force', help='Restore strategy')
+    parser.add_argument('--strategy', choices=['force', 'drop'],
+                       default='drop', help='Restore/sync strategy (drop=clean sync, force=overwrite)')
     parser.add_argument('--tables', nargs='+', help='Specific tables to backup')
     
-    # Export options
-    parser.add_argument('--model', help='Model name to export')
-    parser.add_argument('--format', choices=['json', 'csv'], 
-                       default='json', help='Export format')
-    parser.add_argument('--filters', help='JSON filters for export')
-    
-    # Query options
-    parser.add_argument('--query-type', choices=['count', 'list', 'search'], 
-                       help='Type of query to run')
-    parser.add_argument('--field', help='Field name for search')
-    parser.add_argument('--value', help='Value to search for')
-    parser.add_argument('--limit', type=int, default=10, help='Limit for list queries')
-    
     # Other options
-    parser.add_argument('--confirm', action='store_true', help='Confirm destructive operations')
-    parser.add_argument('--force', action='store_true', help='Force import/restore operations')
     parser.add_argument('--days', type=int, default=30, help='Days to keep backups')
-    parser.add_argument('--test-type', default='all', help='Type of tests to run')
     
     args = parser.parse_args()
     
     # Initialize manager
-    manager = EnhancedDatabaseManager()
+    manager = SimplifiedDatabaseManager()
     
     try:
         if args.command == 'backup':
             filepath = manager.backup_database(args.target, args.tables)
-            print(f"✅ Backup completed: {filepath}")
-        
-        elif args.command == 'export':
-            if not args.model:
-                print("❌ --model parameter required for export")
-                return 1
-            
-            filters = None
-            if args.filters:
-                filters = json.loads(args.filters)
-            
-            filepath = manager.export_model_data(args.model, args.target, args.format, filters)
-            print(f"✅ Export completed: {filepath}")
-        
-        elif args.command == 'query':
-            if not args.query_type:
-                print("❌ --query-type parameter required for query")
-                return 1
-            
-            if not args.model:
-                print("❌ --model parameter required for query")
-                return 1
-            
-            kwargs = {'model': args.model}
-            if args.field:
-                kwargs['field'] = args.field
-            if args.value:
-                kwargs['value'] = args.value
-            if args.limit:
-                kwargs['limit'] = args.limit
-            
-            manager.query_models(args.query_type, **kwargs)
-        
-        elif args.command == 'seed':
-            manager.seed_database()
-        
-        elif args.command == 'reset':
-            if not args.model:
-                print("❌ --model parameter required for reset")
-                return 1
-            
-            success = manager.reset_table(args.model, args.confirm)
-            if not success:
-                return 1
-        
-        elif args.command == 'migrate':
-            success = manager.migrate_database(args.target)
-            if not success:
-                return 1
-        
-        elif args.command == 'verify':
-            results = manager.verify_database(args.target)
-            print("\n📊 Database Contents:")
-            for model, count in results.items():
-                if model != 'integrity_issues':
-                    print(f"  {model}: {count}")
-            
-            if results.get('integrity_issues'):
-                print("\n⚠️  Integrity Issues:")
-                for issue in results['integrity_issues']:
-                    print(f"  - {issue}")
+            print(f"Backup completed: {filepath}")
         
         elif args.command == 'restore':
             if not args.file:
-                print("❌ --file parameter required for restore")
+                print("--file parameter required for restore")
                 return 1
             
             success = manager.restore_database(args.file, args.target, args.strategy)
             if not success:
                 return 1
         
-        elif args.command == 'import':
-            if not args.file:
-                print("❌ --file parameter required for import")
-                return 1
-            
-            success = manager.import_data(args.file, args.target, args.format, args.model, args.force)
+        elif args.command == 'sync':
+            success = manager.sync_databases(args.source, args.target, args.strategy)
             if not success:
                 return 1
         
+        elif args.command == 'clean-sync':
+            success = manager.clean_sync_databases(args.source, args.target)
+            if not success:
+                return 1
+        
+        elif args.command == 'status':
+            manager.show_status(args.target)
+        
         elif args.command == 'test':
-            success = manager.run_tests(args.test_type)
+            success = manager.test_connections()
             if not success:
                 return 1
         
         elif args.command == 'clean':
             deleted_count = manager.clean_backups(args.days)
-            print(f"✅ Cleaned {deleted_count} old files")
-        
-        elif args.command == 'sync':
-            # Use default model if not specified
-            model = args.model if args.model else 'consultation_sessions'
-            success = manager.sync_databases(args.source, args.target, model)
-            if not success:
-                return 1
-        
-        elif args.command == 'status':
-            manager.show_status()
+            print(f"Cleaned {deleted_count} old files")
         
         return 0
         
     except Exception as e:
-        print(f"❌ Error: {e}")
+        print(f"Error: {e}")
         return 1
 
 if __name__ == '__main__':

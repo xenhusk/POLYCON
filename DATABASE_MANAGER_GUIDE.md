@@ -1,49 +1,70 @@
-# 🗄️ POLYCON Database Manager Guide
+# 🗄️ POLYCON Simplified Database Manager Guide
 
 ## 📋 **Overview**
 
-The POLYCON Database Manager is a powerful, model-aware tool that provides comprehensive database management capabilities for both local and production environments. It works directly with your SQLAlchemy models, providing type-safe operations and automatic adaptation to model changes.
+The POLYCON Simplified Database Manager is a reliable, lightweight tool that provides essential database management capabilities for both local and production environments. It uses direct SQL operations with PostgreSQL tools (`pg_dump`/`psql`) for maximum reliability and integrity.
+
+**Key Benefits:**
+- ✅ **No Flask dependency** - Direct SQL operations only
+- ✅ **Clear database targeting** - Always knows which DB it's using
+- ✅ **No app context confusion** - Direct `psycopg2` connections
+- ✅ **Reliable sync operations** - SQL dumps for data integrity
+- ✅ **Production protection** - Manual confirmation for production changes
 
 ## 🚀 **Quick Start**
 
 ### **Basic Commands**
 ```bash
+# Test database connections
+python db_manager.py test
+
 # Check database status
-python db_manager.py status
+python db_manager.py status --target local
+python db_manager.py status --target production
 
 # Create backup
 python db_manager.py backup --target local
+python db_manager.py backup --target production
 
-# Export data
-python db_manager.py export --model users --format json
-
-# Run migrations
-python db_manager.py migrate --target local
-
-# Query data
-python db_manager.py query --query-type count --model users
+# Sync databases
+python db_manager.py sync --source production --target local
+python db_manager.py clean-sync --source local --target production
 ```
 
 ## 📊 **Available Commands**
 
-### **1. Status Check**
+### **1. Connection Testing**
 ```bash
-python db_manager.py status
+python db_manager.py test
 ```
 **What it does:**
-- Shows connection status for local and production databases
-- Displays model statistics (record counts)
-- Shows recent activity (bookings, consultation sessions)
-- Lists available backups and exports
+- Tests connections to both local and production databases
+- Verifies credentials and network connectivity
+- Shows connection status for each database
+- Essential first step before any operations
 
-### **2. Database Backup**
+### **2. Database Status**
+```bash
+# Local database status
+python db_manager.py status --target local
+
+# Production database status
+python db_manager.py status --target production
+```
+**What it does:**
+- Shows table statistics (record counts)
+- Displays total records across all tables
+- Shows recent activity (bookings, consultation sessions)
+- Uses direct SQL queries for accurate data
+
+### **3. Database Backup**
 ```bash
 # Full backup
 python db_manager.py backup --target local
 python db_manager.py backup --target production
 
 # Specific tables
-python db_manager.py backup --target local --tables users consultations
+python db_manager.py backup --target local --tables users bookings
 ```
 **What it does:**
 - Creates PostgreSQL dumps using `pg_dump`
@@ -51,224 +72,164 @@ python db_manager.py backup --target local --tables users consultations
 - Automatically generates timestamped filenames
 - Stores backups in `database/backups/` directory
 
-### **3. Data Export**
+### **4. Database Restore**
 ```bash
-# Export to JSON
-python db_manager.py export --model users --format json
+# Restore with drop strategy (clean sync)
+python db_manager.py restore --file backup_file.sql --target local --strategy drop
 
-# Export to CSV
-python db_manager.py export --model departments --format csv
-
-# Export with filters
-python db_manager.py export --model users --format json --filters '{"role": "faculty"}'
+# Restore with force strategy (overwrite)
+python db_manager.py restore --file backup_file.sql --target local --strategy force
 ```
 **What it does:**
-- Exports data using SQLAlchemy models (type-safe)
-- Supports JSON and CSV formats
-- Handles complex data types (datetime, JSON, etc.)
-- Supports filtering with JSON syntax
-- Stores exports in `database/exports/` directory
+- Restores database from SQL dump files
+- **Drop strategy**: Drops and recreates database (clean sync)
+- **Force strategy**: Overwrites existing data (may cause conflicts)
+- Handles connection termination automatically
 
-### **4. Database Migration**
+### **5. Database Sync**
 ```bash
-python db_manager.py migrate --target local
-python db_manager.py migrate --target production
+# Sync production to local (auto-complete)
+python db_manager.py sync --source production --target local
+
+# Sync local to production (manual confirmation required)
+python db_manager.py sync --source local --target production
+
+# Clean sync (always uses drop strategy)
+python db_manager.py clean-sync --source production --target local
 ```
 **What it does:**
-- Runs `db.create_all()` to create/update tables
-- Handles schema changes automatically
-- Initializes Flask app context
-- Supports both local and production environments
+- **Auto-sync to local**: Safe to sync production → local automatically
+- **Manual confirmation for production**: Protects production data
+- Creates backup from source database
+- Uses SQL dumps for reliable data transfer
+- Handles connection termination and database recreation
 
-### **5. Data Queries**
+### **6. Backup Cleanup**
 ```bash
-# Count records
-python db_manager.py query --query-type count --model users
+# Clean backups older than 30 days (default)
+python db_manager.py clean
 
-# List recent records
-python db_manager.py query --query-type list --model bookings --limit 5
-
-# Search records
-python db_manager.py query --query-type search --model users --field email --value john
-```
-**What it does:**
-- Provides model-aware querying capabilities
-- Supports counting, listing, and searching
-- Uses SQLAlchemy for type-safe operations
-- Handles relationships and constraints
-
-### **6. Database Verification**
-```bash
-python db_manager.py verify --target local
-python db_manager.py verify --target production
-```
-**What it does:**
-- Checks database integrity using models
-- Counts records in all tables
-- Detects orphaned records
-- Identifies foreign key constraint violations
-
-### **7. Data Seeding**
-```bash
-python db_manager.py seed
-```
-**What it does:**
-- Creates sample data using models
-- Adds default departments, periods, and venues
-- Useful for development and testing
-
-### **8. Table Reset**
-```bash
-python db_manager.py reset --model users --confirm
-```
-**What it does:**
-- Resets specific tables (deletes all records)
-- Requires confirmation for safety
-- Uses models for type-safe operations
-
-### **9. Backup Cleanup**
-```bash
+# Clean backups older than 7 days
 python db_manager.py clean --days 7
 ```
 **What it does:**
 - Removes old backup files
 - Configurable retention period
 - Helps manage disk space
+- Safe operation (only deletes old files)
 
 ## 🔧 **Configuration**
 
 ### **Environment Variables**
-The DB manager automatically loads configuration from:
-1. `database_config.env` file
-2. Environment variables
+The DB manager automatically loads configuration from `database_config.env`:
 
 **Required Configuration:**
 ```env
-# Local Database
-DATABASE_URL=postgresql://postgres:password@localhost:5432/polycon
-
-# Production Database
+# Production Database URL
 PRODUCTION_DATABASE_URL=postgresql://user:pass@host:port/db
 
-# Alternative format
+# Local Database Components
 LOCAL_DB_USER=postgres
 LOCAL_DB_NAME=polycon
 LOCAL_DB_PASSWORD=your_password
+
+# Alternative: Full Local Database URL
+DATABASE_URL=postgresql://postgres:password@localhost:5432/polycon
 ```
 
-### **Model Support**
-The DB manager automatically supports all models from `models.py`:
+### **Database Support**
+The simplified DB manager works with any PostgreSQL database and automatically detects all tables:
 
-| **Model** | **Table** | **Description** |
-|-----------|-----------|-----------------|
-| User | users | User accounts and profiles |
-| Department | departments | Academic departments |
-| Venue | venues | Consultation venues |
-| Period | periods | Academic periods |
-| Program | programs | Academic programs |
-| Semester | semesters | Academic semesters |
-| Booking | bookings | Consultation bookings |
-| ConsultationSession | consultation_sessions | Consultation records |
-| Student | students | Student profiles |
-| Faculty | faculty | Faculty profiles |
-| Course | courses | Course information |
-| Grade | grades | Student grades |
-| TeacherSchedule | teacher_schedules | Faculty schedules |
-| ConcernCategory | concern_categories | Concern classifications |
-| Notification | notifications | System notifications |
+| **Table** | **Description** |
+|-----------|-----------------|
+| users | User accounts and profiles |
+| departments | Academic departments |
+| venues | Consultation venues |
+| periods | Academic periods |
+| programs | Academic programs |
+| semesters | Academic semesters |
+| bookings | Consultation bookings |
+| consultation_sessions | Consultation records |
+| students | Student profiles |
+| faculty | Faculty profiles |
+| courses | Course information |
+| grades | Student grades |
+| teacher_schedules | Faculty schedules |
+| concern_categories | Concern classifications |
+| notifications | System notifications |
 
-## 🔄 **Handling Model Changes**
+## 🔄 **Sync Strategies**
 
-### **Automatic Adaptation**
-The enhanced DB manager automatically adapts to most changes in `models.py`:
-
-#### **✅ New Columns (Automatic)**
-```python
-# Add new column to existing model
-class User(db.Model):
-    # ... existing columns ...
-    phone_number = db.Column(db.String(20), nullable=True)  # NEW
-```
-**Result:** Automatically included in exports, queries, and migrations.
-
-#### **✅ New Relationships (Automatic)**
-```python
-# Add new relationship
-class User(db.Model):
-    # ... existing columns ...
-    audit_logs = db.relationship('AuditLog', backref='user', lazy=True)  # NEW
-```
-**Result:** Automatically handled in integrity checks and exports.
-
-### **⚠️ New Models (Manual Update Required)**
-```python
-# Add completely new model
-class AuditLog(db.Model):
-    __tablename__ = 'audit_logs'
-    # ... columns ...
-```
-
-**Required Steps:**
-1. **Update imports** in `db_manager.py`:
-```python
-from models import (
-    # ... existing imports ...
-    AuditLog  # ADD THIS
-)
-```
-
-2. **Update model mappings**:
-```python
-self.models = {
-    # ... existing models ...
-    'audit_logs': AuditLog,  # ADD THIS
-}
-```
-
-3. **Run migration**:
+### **Drop Strategy (Recommended)**
 ```bash
-python db_manager.py migrate --target local
+python db_manager.py sync --source production --target local --strategy drop
 ```
+**What it does:**
+1. Creates backup from source database
+2. Terminates all connections to target database
+3. Drops target database completely
+4. Recreates target database
+5. Restores data from backup
 
-4. **Test new model**:
+**Benefits:**
+- ✅ **Clean sync** - No conflicts or duplicate data
+- ✅ **Reliable** - Guaranteed to work
+- ✅ **Safe** - No data corruption possible
+
+### **Force Strategy (Use with Caution)**
 ```bash
-python db_manager.py query --query-type count --model audit_logs
+python db_manager.py sync --source production --target local --strategy force
 ```
+**What it does:**
+1. Creates backup from source database
+2. Attempts to restore over existing data
+3. May cause conflicts if data exists
+
+**Risks:**
+- ⚠️ **Potential conflicts** - May fail if data exists
+- ⚠️ **Data corruption** - Possible if restore fails partially
 
 ## 🛠️ **Advanced Usage**
 
-### **Filtered Exports**
+### **Production to Local Sync (Safe)**
 ```bash
-# Export only faculty users
-python db_manager.py export --model users --format json --filters '{"role": "faculty"}'
-
-# Export recent bookings
-python db_manager.py export --model bookings --format csv --filters '{"status": "confirmed"}'
+# This is safe and will auto-complete
+python db_manager.py sync --source production --target local
 ```
+**Result:** Local database will be completely replaced with production data.
+
+### **Local to Production Sync (Protected)**
+```bash
+# This requires manual confirmation
+python db_manager.py sync --source local --target production
+```
+**Result:** 
+1. Creates backup file
+2. Shows manual restore command
+3. Requires you to manually run the restore command
 
 ### **Batch Operations**
 ```bash
 # Backup both databases
-python db_manager.py backup --target local && python db_manager.py backup --target production
+python db_manager.py backup --target local
+python db_manager.py backup --target production
 
-# Export multiple models
-python db_manager.py export --model users --format json
-python db_manager.py export --model departments --format json
-python db_manager.py export --model venues --format json
+# Test connections
+python db_manager.py test
+
+# Check status of both
+python db_manager.py status --target local
+python db_manager.py status --target production
 ```
 
 ### **Data Analysis**
 ```bash
-# Get model statistics
-python db_manager.py status
+# Compare database sizes
+python db_manager.py status --target local
+python db_manager.py status --target production
 
-# Count records by model
-python db_manager.py query --query-type count --model users
-python db_manager.py query --query-type count --model bookings
-python db_manager.py query --query-type count --model consultation_sessions
-
-# Search for specific data
-python db_manager.py query --query-type search --model users --field email --value admin
+# Check recent activity
+python db_manager.py status --target production
 ```
 
 ## 🚨 **Troubleshooting**
@@ -277,36 +238,48 @@ python db_manager.py query --query-type search --model users --field email --val
 
 #### **1. Connection Failed**
 ```
-❌ Connection failed - password authentication failed
+Local database connection: FAILED - password authentication failed
 ```
 **Solution:**
-```bash
-# Set environment variable
-$env:DATABASE_URL="postgresql://postgres:your_password@localhost:5432/polycon"
-```
+- Check `LOCAL_DB_PASSWORD` in `database_config.env`
+- Verify local PostgreSQL is running
+- Test connection: `python db_manager.py test`
 
-#### **2. Model Not Found**
+#### **2. PostgreSQL Not Found**
 ```
-❌ Unknown model: your_model
+PostgreSQL installation not found
 ```
 **Solution:**
-- Check if model is imported in `db_manager.py`
-- Check if model is added to `self.models` dictionary
-- Run migration: `python db_manager.py migrate --target local`
+- Install PostgreSQL
+- Add PostgreSQL bin directory to PATH
+- Or update `find_postgresql_path()` method in `db_manager.py`
 
 #### **3. Permission Denied**
 ```
-❌ Permission denied for table
+Permission denied for table
 ```
 **Solution:**
 - Check database user permissions
 - Verify database connection settings
-- Ensure user has SELECT/INSERT/UPDATE/DELETE permissions
+- Ensure user has necessary privileges
+
+#### **4. Database in Use**
+```
+ERROR: database "polycon" is being accessed by other users
+```
+**Solution:**
+- The tool automatically terminates connections
+- If it fails, manually terminate connections:
+```sql
+SELECT pg_terminate_backend(pid) 
+FROM pg_stat_activity 
+WHERE datname = 'polycon' AND pid <> pg_backend_pid();
+```
 
 ### **Debug Mode**
 ```bash
 # Run with verbose output
-python db_manager.py status 2>&1 | tee debug.log
+python db_manager.py status --target local 2>&1 | tee debug.log
 ```
 
 ## 📚 **Best Practices**
@@ -323,36 +296,59 @@ python db_manager.py clean --days 30
 # Always backup before changes
 python db_manager.py backup --target local
 python db_manager.py backup --target production
-
-# Make your changes to models.py
-# Then run migration
-python db_manager.py migrate --target local
 ```
 
-### **3. Data Verification**
+### **3. Safe Sync Workflow**
 ```bash
-# Regular integrity checks
-python db_manager.py verify --target local
-python db_manager.py verify --target production
+# 1. Test connections
+python db_manager.py test
+
+# 2. Check current status
+python db_manager.py status --target local
+python db_manager.py status --target production
+
+# 3. Sync production to local (safe)
+python db_manager.py sync --source production --target local
+
+# 4. Verify sync
+python db_manager.py status --target local
 ```
 
-### **4. Export Before Cleanup**
+### **4. Production Protection**
 ```bash
-# Export important data before cleanup
-python db_manager.py export --model users --format json
-python db_manager.py export --model consultation_sessions --format json
+# For local to production sync, always use manual confirmation
+python db_manager.py sync --source local --target production
+# Then manually run the provided restore command
 ```
 
 ## 🎯 **Summary**
 
-The POLYCON Database Manager provides:
+The POLYCON Simplified Database Manager provides:
 
-- ✅ **Model-aware operations** - Works directly with SQLAlchemy models
-- ✅ **Type-safe operations** - No more raw SQL errors
-- ✅ **Automatic adaptation** - Handles most model changes automatically
-- ✅ **Comprehensive features** - Backup, export, import, migrate, verify
-- ✅ **Production-ready** - Supports both local and production environments
-- ✅ **Easy maintenance** - Minimal code changes required for new models
+- ✅ **Reliable operations** - Direct SQL with PostgreSQL tools
+- ✅ **Clear targeting** - Always knows which database it's using
+- ✅ **Safe sync** - Production protection with manual confirmation
+- ✅ **No dependencies** - No Flask or app context issues
+- ✅ **Easy maintenance** - Simple, focused functionality
+- ✅ **Production-ready** - Handles both local and production environments
 
-**Use this as your primary database management tool!** 🚀
+**This is your reliable database management tool!** 🚀
 
+## 🔄 **Migration from Enhanced Version**
+
+If you were using the enhanced version with Flask dependencies:
+
+### **What's Different:**
+- ❌ **No model-aware exports** - Use `pg_dump` for data export
+- ❌ **No JSON/CSV exports** - Use SQL dumps instead
+- ❌ **No model queries** - Use direct SQL queries
+- ❌ **No seeding** - Use your application for data seeding
+
+### **What's Better:**
+- ✅ **More reliable** - No Flask context issues
+- ✅ **Clearer targeting** - Always uses correct database
+- ✅ **Faster sync** - Direct SQL operations
+- ✅ **No Unicode errors** - Clean, simple output
+- ✅ **Production safe** - Manual confirmation for production changes
+
+**The simplified version prioritizes reliability and integrity over flexibility!** 🎯
