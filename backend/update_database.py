@@ -12,7 +12,7 @@ sys.path.append(os.path.dirname(__file__))
 
 from app import create_app
 from extensions import db
-from models import Period, Booking, ConsultationSession
+from models import Period, Booking, ConsultationSession, Feedback
 
 def update_database():
     """Update the database with new models and create default periods."""

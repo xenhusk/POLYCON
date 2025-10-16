@@ -107,7 +107,13 @@ function History() {
           setFeedbackSessionData({
             sessionId: data.session_data.session_id,
             teacherId: data.session_data.teacher_id,
-            studentId: data.session_data.student_id
+            studentId: data.session_data.student_id,
+            sessionDate: data.session_data.session_date,
+            teacherName: data.session_data.teacher_name,
+            program: data.session_data.program,
+            yearSection: data.session_data.year_section,
+            summary: data.session_data.summary,
+            concern: data.session_data.concern
           });
           setShowFeedbackPopup(true);
         }
@@ -153,7 +159,13 @@ function History() {
         setFeedbackSessionData({
           sessionId: data.sessionID,
           teacherId: data.teacher_id,
-          studentId: data.student_id
+          studentId: data.student_id,
+          sessionDate: data.session_date,
+          teacherName: data.teacher_name,
+          program: data.program,
+          yearSection: data.year_section,
+          summary: data.summary,
+          concern: data.concern
         });
         setTimeout(() => {
           setShowFeedbackPopup(true);
@@ -897,6 +909,12 @@ function History() {
           studentId={feedbackSessionData.studentId}
           teacherId={feedbackSessionData.teacherId}
           onFeedbackSubmitted={handleFeedbackSubmitted}
+          sessionDate={feedbackSessionData.sessionDate}
+          teacherName={feedbackSessionData.teacherName}
+          program={feedbackSessionData.program}
+          yearSection={feedbackSessionData.yearSection}
+          summary={feedbackSessionData.summary}
+          concern={feedbackSessionData.concern}
         />
       )}
     </div>
