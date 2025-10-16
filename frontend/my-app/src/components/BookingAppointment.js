@@ -691,7 +691,7 @@ function BookingAppointment({ closeModal, role: propRole }) {
                               {student.firstName} {student.lastName}
                             </div>
                             <div className="text-xs text-gray-500">
-                              {getDisplayProgram(student)} • {student.year_section || 'Unknown Section'}
+                              ID: {student.idNumber} • {student.year_section || getDisplayProgram(student)}
                             </div>
                           </div>
                         </li>
@@ -974,7 +974,7 @@ function BookingAppointment({ closeModal, role: propRole }) {
                               {student.firstName} {student.lastName}
                             </div>
                             <div className="text-xs text-gray-500">
-                              {getDisplayProgram(student)} • {student.year_section || 'Unknown Section'}
+                              ID: {student.idNumber} • {student.year_section || getDisplayProgram(student)}
                             </div>
                           </div>
                         </li>

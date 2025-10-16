@@ -344,6 +344,7 @@ function StudentAppointments() {
           const [firstName, ...rest] = s.name.split(" ");
           return {
             id: s.id,
+            idNumber: s.idNumber,
             profile_picture: s.profile,
             firstName,
             lastName: rest.join(" "),

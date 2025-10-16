@@ -216,8 +216,9 @@ function EnrollmentModal({ closeModal }) {
                         <div>
                           <div className="font-medium text-xs sm:text-sm">
                             {student.firstName} {student.lastName}
-                          </div>                          <div className="text-xs text-gray-500">
-                            {student.program || student.programName || 'Unknown Program'} • {student.year_section || 'Unknown Section'}
+                          </div>
+                          <div className="text-xs text-gray-500">
+                            ID: {student.idNumber} • {student.year_section || student.program || student.programName || 'Unknown Program'}
                           </div>
                         </div>
                       </li>
