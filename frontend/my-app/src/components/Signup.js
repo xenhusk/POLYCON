@@ -1,8 +1,8 @@
 import React, { useState, useEffect } from "react";
-import API_URL from '../apiConfig';
+import API_URL from "../apiConfig";
 import { EyeOutlined, EyeInvisibleOutlined } from "@ant-design/icons";
 import logo from "./icons/DarkLogo.png";
-import TermsModal from "./TermsModal";
+import Terms_ConditionsModal from "./Terms_ConditionsModal";
 import EmailVerificationModal from "./EmailVerificationModal";
 
 const Signup = ({ onSwitchToLogin }) => {
@@ -17,6 +17,8 @@ const Signup = ({ onSwitchToLogin }) => {
   const [showConfirmPassword, setShowConfirmPassword] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
   const [showTerms, setShowTerms] = useState(false);
+  const [genderDropdownOpen, setGenderDropdownOpen] = useState(false);
+  const [deptDropdownOpen, setDeptDropdownOpen] = useState(false);
   const [formData, setFormData] = useState({
     idNumber: "",
     firstName: "",
@@ -46,7 +48,6 @@ const Signup = ({ onSwitchToLogin }) => {
     termsAccepted: "",
   });
 
-
   useEffect(() => {
     if (formData.department) {
       setFilteredPrograms([]);
@@ -54,9 +55,7 @@ const Signup = ({ onSwitchToLogin }) => {
     // Fetch available departments from the backend
     const fetchDepartments = async () => {
       try {
-        const departmentsRes = await fetch(
-          `${API_URL}/account/departments`
-        );
+        const departmentsRes = await fetch(`${API_URL}/account/departments`);
         const departmentsData = await departmentsRes.json();
         setDepartments(departmentsData);
       } catch (error) {
@@ -68,24 +67,40 @@ const Signup = ({ onSwitchToLogin }) => {
 
   const handleChange = (e) => {
     const { name, value, type, checked } = e.target;
-    // Determine the new value based on the input type
-    const newValue = type === "checkbox" ? checked : value;
+    let newValue = type === "checkbox" ? checked : value;
 
+    // 1. Apply Auto-Capitalization Logic for Names
+    if (name === "firstName" || name === "lastName") {
+      if (typeof newValue === "string" && newValue.length > 0) {
+        // Capitalize the first letter only and preserve the rest
+        newValue = newValue.charAt(0).toUpperCase() + newValue.slice(1);
+      }
+    }
+
+    // 1.a. Auto-uppercase for Year & Section
+    if (name === "year_section") {
+      // Converts all lowercase letters to uppercase, leaves numbers untouched
+      newValue = newValue.replace(/[a-z]/g, (char) => char.toUpperCase());
+    }
+
+    // 2. Update formData state (Consolidated into one call)
     setFormData((prev) => ({
       ...prev,
       [name]: newValue,
+      // Clear the program when the department changes
       ...(name === "department" && { program: "" }),
     }));
 
-    // Clear field-specific error when user types
+    // 3. Clear field-specific error when user types
     if (fieldErrors[name]) {
       setFieldErrors((prev) => ({ ...prev, [name]: "" }));
     }
 
-    // Clear general error message
+    // 4. Clear general error message
     if (errorMessage) setErrorMessage("");
 
-    if (name === "department") fetchPrograms(value);
+    // 5. Fetch programs if the department changes
+    if (name === "department") fetchPrograms(newValue);
   };
 
   const fetchPrograms = async (departmentID) => {
@@ -145,6 +160,27 @@ const Signup = ({ onSwitchToLogin }) => {
     return errors;
   };
 
+  const handleIdNumberChange = (e) => {
+    let value = e.target.value.replace(/[^\d]/g, ""); // 1. Remove all non-digits
+
+    // 2. Apply the XX-XXXX-XXX pattern
+    if (value.length > 2) {
+      value = value.substring(0, 2) + "-" + value.substring(2);
+    }
+    if (value.length > 7) {
+      // Note: 2 (digits) + 1 (dash) + 4 (digits) = 7. We place the next dash at index 7.
+      value = value.substring(0, 7) + "-" + value.substring(7);
+    }
+
+    // 3. Cap the length at the maximum allowed characters (11: 2+1+4+1+3)
+    if (value.length > 11) {
+      value = value.substring(0, 11);
+    }
+
+    // Update the formData state
+    setFormData({ ...formData, idNumber: value });
+  };
+
   const handleSubmit = async (e) => {
     e.preventDefault();
     setErrorMessage("");
@@ -182,28 +218,27 @@ const Signup = ({ onSwitchToLogin }) => {
 
       if (response.ok) {
         setIsLoading(false);
-        
+
         // Save email for potential resend verification
-        localStorage.setItem('pendingVerificationEmail', formData.email);
-        
+        localStorage.setItem("pendingVerificationEmail", formData.email);
+
         // Show verification modal
         setShowVerificationModal(true);
       } else {
         setIsLoading(false);
-        
+
         // Show error message for failed signup
         setErrorMessage(data.error || "Signup failed. Please try again.");
       }
     } catch (error) {
       setIsLoading(false);
-      
+
       // Show error message for network errors
       setErrorMessage("Network error. Please try again.");
     } finally {
       setSignupClicked(false);
     }
   };
-
 
   // Helper function to render field error
   const renderFieldError = (fieldName) => {
@@ -230,7 +265,9 @@ const Signup = ({ onSwitchToLogin }) => {
               <h2 className="text-lg font-bold text-[#057DCD] mb-1">
                 Personal Information
               </h2>
-              <p className="text-gray-600 text-xs">Tell us about yourself - Step 1 of 2</p>
+              <p className="text-gray-600 text-xs">
+                Tell us about yourself - Step 1 of 2
+              </p>
             </div>
 
             <div className="grid grid-cols-1 md:grid-cols-2 gap-3 mb-3">
@@ -291,36 +328,62 @@ const Signup = ({ onSwitchToLogin }) => {
                 type="text"
                 name="idNumber"
                 placeholder="Enter your ID number"
+                pattern="^\d{2}-\d{4}-\d{3}$"
                 value={formData.idNumber}
-                onChange={handleChange}
+                onChange={handleIdNumberChange}
                 required
               />
               {renderFieldError("idNumber")}
             </div>
 
             {/* Gender */}
-            <div className="mb-4">
+            <div className="mb-4 relative">
               <label className="block text-xs font-medium text-gray-700 mb-1">
                 Gender
               </label>
-              <select
-                className={`w-full px-3 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-[#057DCD] focus:border-transparent transition-all duration-200 text-gray-900 bg-white text-sm ${
+              <button
+                type="button"
+                className={`w-full flex justify-between items-center px-3 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-[#057DCD] focus:border-transparent transition-all duration-200 text-gray-900 text-sm ${
                   fieldErrors.sex
                     ? "border-red-500 focus:ring-red-500"
                     : "border-gray-300"
-                }`}
-                name="sex"
-                id="sex"
-                value={formData.sex}
-                onChange={handleChange}
-                required
+                } bg-white`}
+                onClick={() => setGenderDropdownOpen((open) => !open)}
               >
-                <option value="" disabled>
-                  Select your gender
-                </option>
-                <option value="Male">Male</option>
-                <option value="Female">Female</option>
-              </select>
+                <span>{formData.sex || "Select your gender"}</span>
+                <svg
+                  className="w-4 h-4 ml-2 text-gray-400"
+                  fill="none"
+                  stroke="currentColor"
+                  viewBox="0 0 24 24"
+                >
+                  <path
+                    strokeLinecap="round"
+                    strokeLinejoin="round"
+                    strokeWidth={2}
+                    d="M19 9l-7 7-7-7"
+                  />
+                </svg>
+              </button>
+              {genderDropdownOpen && (
+                <div className="absolute left-0 right-0 mt-1 z-30 bg-white border border-gray-300 rounded-lg shadow-lg overflow-hidden transition-all duration-200 animate-fade-in text-sm">
+                  {["Male", "Female"].map((gender) => (
+                    <button
+                      key={gender}
+                      type="button"
+                      className="w-full text-left px-3 py-2 hover:bg-gray-100 text-gray-900"
+                      onClick={() => {
+                        handleChange({
+                          target: { name: "sex", value: gender },
+                        });
+                        setGenderDropdownOpen(false);
+                      }}
+                    >
+                      {gender}
+                    </button>
+                  ))}
+                </div>
+              )}
               {renderFieldError("sex")}
             </div>
 
@@ -371,7 +434,6 @@ const Signup = ({ onSwitchToLogin }) => {
             }`}
           >
             <div className="flex flex-col items-center w-full animate-modal-fade">
-
               <div className="w-full max-w-md mx-auto">
                 <div className="text-center mb-4">
                   <img
@@ -382,37 +444,64 @@ const Signup = ({ onSwitchToLogin }) => {
                   <h2 className="text-lg font-bold text-[#057DCD] mb-1">
                     Account & Academic Details
                   </h2>
-                  <p className="text-gray-600 text-xs">Create your account - Step 2 of 2</p>
+                  <p className="text-gray-600 text-xs">
+                    Create your account - Step 2 of 2
+                  </p>
                 </div>
-
                 {/* Department and Year & Section - Side by Side */}
                 <div className="grid grid-cols-1 md:grid-cols-3 gap-3 mb-3">
                   {/* Department */}
-                  <div className="md:col-span-2">
+                  <div className="md:col-span-2 relative">
                     <label className="block text-xs font-medium text-gray-700 mb-1">
                       Department
                     </label>
-                    <select
-                      className={`w-full px-3 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-[#057DCD] focus:border-transparent transition-all duration-200 text-gray-900 bg-white text-sm ${
+                    <button
+                      type="button"
+                      className={`w-full flex justify-between items-center px-3 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-[#057DCD] focus:border-transparent transition-all duration-200 text-gray-900 text-sm ${
                         fieldErrors.department
                           ? "border-red-500 focus:ring-red-500"
                           : "border-gray-300"
-                      }`}
-                      name="department"
-                      id="Department"
-                      value={formData.department}
-                      onChange={handleChange}
-                      required
+                      } bg-white`}
+                      onClick={() => setDeptDropdownOpen((open) => !open)}
                     >
-                      <option value="" disabled>
-                        Select your department
-                      </option>
-                      {departments.map((dept) => (
-                        <option key={dept.id} value={dept.id}>
-                          {dept.name}
-                        </option>
-                      ))}
-                    </select>
+                      <span className="truncate whitespace-nowrap overflow-hidden">
+                        {departments.find((d) => d.id === formData.department)
+                          ?.name || "Select your department"}
+                      </span>
+
+                      <svg
+                        className="w-4 h-4 ml-2 text-gray-400"
+                        fill="none"
+                        stroke="currentColor"
+                        viewBox="0 0 24 24"
+                      >
+                        <path
+                          strokeLinecap="round"
+                          strokeLinejoin="round"
+                          strokeWidth={2}
+                          d="M19 9l-7 7-7-7"
+                        />
+                      </svg>
+                    </button>
+                    {deptDropdownOpen && (
+                      <div className="absolute left-0 right-0 mt-1 z-30 bg-white border border-gray-300 rounded-lg shadow-lg overflow-y-auto transition-all duration-200 animate-fade-in text-sm">
+                        {departments.map((dept) => (
+                          <button
+                            key={dept.id}
+                            type="button"
+                            className="w-full text-left px-3 py-2 hover:bg-gray-100 text-gray-900"
+                            onClick={() => {
+                              handleChange({
+                                target: { name: "department", value: dept.id },
+                              });
+                              setDeptDropdownOpen(false);
+                            }}
+                          >
+                            {dept.name}
+                          </button>
+                        ))}
+                      </div>
+                    )}
                     {renderFieldError("department")}
                   </div>
 
@@ -437,7 +526,6 @@ const Signup = ({ onSwitchToLogin }) => {
                     {renderFieldError("year_section")}
                   </div>
                 </div>
-
                 {/* Program */}
                 {formData.department && (
                   <div className="mb-3">
@@ -470,7 +558,6 @@ const Signup = ({ onSwitchToLogin }) => {
                     {renderFieldError("program")}
                   </div>
                 )}
-
                 {/* Email */}
                 <div className="mb-3">
                   <label className="block text-xs font-medium text-gray-700 mb-1">
@@ -492,7 +579,6 @@ const Signup = ({ onSwitchToLogin }) => {
                   />
                   {renderFieldError("email")}
                 </div>
-
                 {/* Password */}
                 <div className="mb-3">
                   <label className="block text-xs font-medium text-gray-700 mb-1">
@@ -529,7 +615,6 @@ const Signup = ({ onSwitchToLogin }) => {
                   </div>
                   {renderFieldError("password")}
                 </div>
-
                 {/* Confirm Password */}
                 <div className="mb-4">
                   <label className="block text-xs font-medium text-gray-700 mb-1">
@@ -555,7 +640,9 @@ const Signup = ({ onSwitchToLogin }) => {
                       formData.confirmNewPassword.length > 0 && (
                         <span
                           className="absolute right-3 top-1/2 transform -translate-y-1/2 cursor-pointer text-gray-600 hover:text-gray-800"
-                          onClick={() => setShowConfirmPassword(!showConfirmPassword)}
+                          onClick={() =>
+                            setShowConfirmPassword(!showConfirmPassword)
+                          }
                         >
                           {showConfirmPassword ? (
                             <EyeOutlined size={18} />
@@ -566,14 +653,18 @@ const Signup = ({ onSwitchToLogin }) => {
                       )}
                   </div>
                   {renderFieldError("confirmNewPassword")}
-                </div>                {/* General error message - keeping for backward compatibility */}
+                </div>{" "}
+                {/* General error message - keeping for backward compatibility */}
                 {errorMessage && (
                   <p className="text-center text-red-500 text-sm font-medium mb-4">
                     {errorMessage}
                   </p>
                 )}
-
-                <label className={`my-4 mx-auto flex justify-center items-center text-sm md:text-sx text-gray-600 ${fieldErrors.termsAccepted ? 'text-red-500' : ''}`}>
+                <label
+                  className={`my-4 mx-auto flex justify-center items-center text-sm md:text-sx text-gray-600 ${
+                    fieldErrors.termsAccepted ? "text-red-500" : ""
+                  }`}
+                >
                   <input
                     className="mr-2 w-4 h-4 border-gray-300 peer"
                     type="checkbox"
@@ -590,12 +681,15 @@ const Signup = ({ onSwitchToLogin }) => {
                       onClick={() => setShowTerms(true)}
                     >
                       Terms and Conditions
-                    </button>.
+                    </button>
+                    .
                   </span>
                 </label>
                 {renderFieldError("termsAccepted")}
-                <TermsModal open={showTerms} onClose={() => setShowTerms(false)} />
-
+                <Terms_ConditionsModal
+                  isOpen={showTerms}
+                  onClose={() => setShowTerms(false)}
+                />
                 {/* Action Buttons */}
                 <div className="flex gap-3 mt-4">
                   <button
@@ -607,7 +701,7 @@ const Signup = ({ onSwitchToLogin }) => {
                   >
                     Back
                   </button>
-                  
+
                   <button
                     disabled={isLoading}
                     type="submit"
@@ -658,7 +752,7 @@ const Signup = ({ onSwitchToLogin }) => {
         email={formData.email}
         onSuccess={() => {
           // Optionally redirect to login or show success message
-          console.log('Email verification successful');
+          console.log("Email verification successful");
         }}
         onCloseSignup={() => {
           // Close verification modal and switch to login
