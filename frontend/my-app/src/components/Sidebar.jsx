@@ -18,6 +18,8 @@ import { ReactComponent as DepartmentAdd } from './icons/Briefcase.svg';
 import { ReactComponent as SemesterAdd } from './icons/Timer.svg';
 import { ReactComponent as ScheduleIcon } from './icons/schedule.svg';
 import { ReactComponent as ComparativeIcon } from './icons/Comparative.svg';
+import { ReactComponent as VenuesIcon } from './icons/flag-2.svg';
+import { ReactComponent as PeriodsIcon } from './icons/grid-2.svg';
 import logo from './icons/logo2.png';
 // Import missing icons from react-icons/fa
 import { ReactComponent as Leaderboard } from './icons/ranking.svg';
@@ -59,7 +61,11 @@ const Sidebar = ({ onExpandChange }) => {
   const menuItemRefs = useRef({});
   const pointerRef = useRef(null); // Add ref for the pointer element
   const navigate = useNavigate();
-
+  
+  // State for User Management dropdown
+  const [isUserManagementOpen, setIsUserManagementOpen] = useState(false);
+  const userManagementRef = useRef(null);
+ 
   // Add new state for mobile sidebar visibility
   const [isMobile, setIsMobile] = useState(false);
   const [mobileOpen, setMobileOpen] = useState(false);
@@ -115,6 +121,20 @@ const Sidebar = ({ onExpandChange }) => {
       document.removeEventListener('mousedown', handleClickOutside);
     };
   }, [isMobile, mobileOpen]);
+
+  // Handle clicks outside User Management dropdown
+  useEffect(() => {
+    const handleClickOutside = (event) => {
+      if (isUserManagementOpen && userManagementRef.current && !userManagementRef.current.contains(event.target)) {
+        setIsUserManagementOpen(false);
+      }
+    };
+    
+    document.addEventListener('mousedown', handleClickOutside);
+    return () => {
+      document.removeEventListener('mousedown', handleClickOutside);
+    };
+  }, [isUserManagementOpen]);
   
   // Toggle sidebar on pointer click for mobile
   const handlePointerClick = () => {
@@ -317,14 +337,52 @@ const Sidebar = ({ onExpandChange }) => {
     </li>
   );
 
+  // Helper to render a dropdown menu item
+  const renderDropdownMenuItem = (id, IconComponent, label) => (
+    <li 
+      className={`dropdown-item relative flex items-center cursor-pointer px-4 py-3 rounded-lg transition-all duration-200 hover:bg-blue-50 hover:shadow-sm ${
+        activeItem === id ? 'bg-blue-100 text-blue-700 shadow-sm' : 'text-gray-700 hover:text-blue-600'
+      }`}
+      onClick={() => {
+        setActiveItem(id);
+        setIsUserManagementOpen(false); // Close dropdown after selection
+        if (isMobile) setMobileOpen(false); // Close sidebar on item click in mobile
+        const path = menuPaths[userRole]?.[id];
+        if (path) {
+          navigate(path);
+        }
+      }}
+    >
+      <div className="flex-shrink-0 mr-3">
+        <IconComponent className={`w-5 h-5 transition-colors duration-200 ${
+          activeItem === id ? 'text-blue-600' : 'text-gray-500'
+        }`} />
+      </div>
+      <span className="text-sm font-medium transition-colors duration-200">{label}</span>
+      {activeItem === id && (
+        <div className="absolute right-3 w-2 h-2 bg-blue-500 rounded-full"></div>
+      )}
+    </li>
+  );
+
   // NEW: Update pointer position calculation for desktop screens
   useEffect(() => {
     if (isMobile) return;
+
+    // Define User Management dropdown items
+    const userManagementItems = ['add_users', 'course', 'program', 'department'];
+    const isDropdownItem = userManagementItems.includes(activeItem);
 
     // Don't wait, calculate immediately
     const updatePointerPosition = () => {
       const activeMenuItem = menuItemRefs.current[activeItem];
       if (activeMenuItem && sidebarRef.current) {
+        // Hide pointer if active item is a dropdown item
+        if (isDropdownItem) {
+          setPointerVisible(false);
+          return;
+        }
+
         // Simple calculation based on offset from top
         const position = activeMenuItem.offsetTop + (activeMenuItem.offsetHeight / 2);
         setPointerPosition(position);
@@ -333,7 +391,8 @@ const Sidebar = ({ onExpandChange }) => {
         console.log("Desktop pointer updated:", {
           activeItem,
           position,
-          element: activeMenuItem
+          element: activeMenuItem,
+          isDropdownItem
         });
       }
     };
@@ -351,10 +410,19 @@ const Sidebar = ({ onExpandChange }) => {
     if (isMobile) return;
     
     const resizeObserver = new ResizeObserver(() => {
+      const userManagementItems = ['add_users', 'course', 'program', 'department'];
+      const isDropdownItem = userManagementItems.includes(activeItem);
+      
+      if (isDropdownItem) {
+        setPointerVisible(false);
+        return;
+      }
+      
       const ref = menuItemRefs.current[activeItem];
       if (ref) {
         const pos = ref.offsetTop + (ref.offsetHeight / 2);
         setPointerPosition(pos);
+        setPointerVisible(true);
       }
     });
     
@@ -440,26 +508,26 @@ const Sidebar = ({ onExpandChange }) => {
             onMouseEnter={() => !isFrozen && !isMobile && setIsOpen(true)}
             onMouseLeave={() => !isFrozen && !isMobile && setIsOpen(false)}
           >
-            {!isMobile && (
-          <div 
-            className="pointer-icon desktop-pointer"
-            style={{
-              position: 'absolute',
-              right: '-20px',
-              top: `${pointerPosition}px`,
-              transform: 'translateY(330%)',
-              transition: 'top 0.3s cubic-bezier(0.4, 0, 0.2, 1)', // Added smooth transition
-              zIndex: 999,
-              pointerEvents: 'none',
-            }}
-          >
-            <PointerIcon 
-              width="40" 
-              height="40" 
-              className="fill-current text-[#057DCD]" 
-            />
-          </div>
-        )}
+             {!isMobile && pointerVisible && (
+           <div 
+             className="pointer-icon desktop-pointer"
+             style={{
+               position: 'absolute',
+               right: '-20px',
+               top: `${pointerPosition}px`,
+               transform: 'translateY(330%)',
+               transition: 'top 0.3s cubic-bezier(0.4, 0, 0.2, 1)', // Added smooth transition
+               zIndex: 999,
+               pointerEvents: 'none',
+             }}
+           >
+             <PointerIcon 
+               width="40" 
+               height="40" 
+               className="fill-current text-[#057DCD]" 
+             />
+           </div>
+         )}
 
         {/* For mobile: Add close button in the sidebar */}
         {isMobile && mobileOpen && (
@@ -502,12 +570,48 @@ const Sidebar = ({ onExpandChange }) => {
             {userRole === 'admin' && !isMobile && (
               <ul className="mt-2 space-y-3 relative"> {/* Changed from mt-6 to mt-2 */}
                 {renderMenuItem("homeadmin", HomeIcon, "Home")}
-                {renderMenuItem("add_users", UserAdd, "Users")}
-                {renderMenuItem("course", CourseAdd, "Courses")}
-                {renderMenuItem("program", ProgramAdd, "Programs")}
-                {renderMenuItem("department", DepartmentAdd, "Departments")}
-                {renderMenuItem("venues", DepartmentAdd, "Venues")}
-                {renderMenuItem("periods", DepartmentAdd, "Periods")}
+                
+                {/* User Management Dropdown */}
+                <li className="relative" ref={userManagementRef}>
+                  <div 
+                    className="sidebar-item relative h-9 flex items-center cursor-pointer px-2"
+                    onClick={() => setIsUserManagementOpen(!isUserManagementOpen)}
+                  >
+                    <div className="flex-shrink-0 -translate-y-[0px]">
+                      <svg 
+                        className={`w-6 h-6 icon-white transition-transform duration-200 ${
+                          isUserManagementOpen ? 'rotate-180' : ''
+                        }`} 
+                        fill="none" 
+                        stroke="currentColor" 
+                        viewBox="0 0 24 24"
+                      >
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
+                      </svg>
+                    </div>
+                    <span className={`sidebar-label ${
+                      ((isOpen && !isMobile) || mobileOpen) ? "opacity-100" : "opacity-0"
+                    }`}>
+                      User Management
+                    </span>
+                  </div>
+                  
+                   {/* Dropdown Menu */}
+                   <div className={`absolute left-full top-0 ml-3 w-52 bg-white rounded-xl shadow-xl border border-gray-100 py-3 z-[1000] dropdown-container ${isUserManagementOpen ? 'dropdown-open' : 'dropdown-closed'}`}>
+                     <div className="dropdown-content">
+                       <ul className="space-y-0.5">
+                         {renderDropdownMenuItem("add_users", UserAdd, "Users")}
+                         {renderDropdownMenuItem("course", CourseAdd, "Courses")}
+                         {renderDropdownMenuItem("program", ProgramAdd, "Programs")}
+                         {renderDropdownMenuItem("department", DepartmentAdd, "Departments")}
+                       </ul>
+                     </div>
+                   </div>
+                </li>
+                
+                {/* Remaining items */}
+                {renderMenuItem("venues", VenuesIcon, "Venues")}
+                {renderMenuItem("periods", PeriodsIcon, "Periods")}
                 {renderMenuItem("semester", SemesterAdd, "Semesters")}
                 {renderMenuItem("leaderboard", Leaderboard, "Leaderboard")}
               </ul>

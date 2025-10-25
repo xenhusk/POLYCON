@@ -40,8 +40,8 @@ function Home() {
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-gray-50 to-blue-50 font-poppins">
-      {/* Hero Section - Hidden for admin on mobile */}
-      {!(userRole === 'admin' && isMobile) && (
+      {/* Hero Section - Hidden for admin completely since HomeAdmin has its own hero section */}
+      {userRole !== 'admin' && (
         <motion.section
           initial={{ opacity: 0 }}
           animate={{ opacity: 1 }}
