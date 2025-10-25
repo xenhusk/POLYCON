@@ -57,6 +57,34 @@ const Help_Main_Content = () => {
         }
       );
     }
+    if (location.pathname === "/help/getstarted/Info_Teacher_Consultation_Schedules") {
+      links.push(
+        {
+          label: "Features",
+          href: "#consultation-schedule-features",
+          className: "text-gray-600 hover:text-[#057DCD]",
+        },
+        {
+          label: "Tips",
+          href: "#consultation-schedule-tips",
+          className: "text-gray-600 hover:text-[#057DCD]",
+        }
+      );
+    }
+    if (location.pathname === "/help/getstarted/Info_Teacher_Leaderboard") {
+      links.push(
+        {
+          label: "Features",
+          href: "#leaderboard-features",
+          className: "text-gray-600 hover:text-[#057DCD]",
+        },
+        {
+          label: "Tips",
+          href: "#leaderboard-tips",
+          className: "text-gray-600 hover:text-[#057DCD]",
+        }
+      );
+    }
     if (location.pathname === "/help/getstarted/Info_Login") {
       links.push(
         {
@@ -94,26 +122,17 @@ const Help_Main_Content = () => {
 
     // GetStart Features section links
     const infoPages = {
-      Info_Grade: [
-        "#grade_features", 
-        "#tips_troubleshooting_grade"
-      ],
-      Info_History: [
-        "#history_features", 
-        "#tips_section_history"
-      ],
+      Info_Grade: ["#grade_features", "#tips_troubleshooting_grade"],
+      Info_History: ["#history_features", "#tips_section_history"],
       Info_Set_Schedule: [
         "#schedule_features",
-        "#tips_troubleshooting_schedule"
+        "#tips_troubleshooting_schedule",
       ],
       Info_Appointments: [
         "#appointment_features",
-        "#tips_section_appointments"
+        "#tips_section_appointments",
       ],
-      Info_Dashboard: [
-        "#dashboard_features", 
-        "#tips_section_dashboard"
-      ],
+      Info_Dashboard: ["#dashboard_features", "#tips_section_dashboard"],
     };
 
     const currentPage = location.pathname.split("/").pop();
@@ -136,11 +155,11 @@ const Help_Main_Content = () => {
     const Features = {
       Info_Polycon_Analysis: [
         { label: "Analysis Features", href: "#analysis_features" },
-        { label: "Tips & Troubleshooting", href: "#tips_analysis" }
+        { label: "Tips & Troubleshooting", href: "#tips_analysis" },
       ],
       Info_Concern_Analysis: [
         { label: "Concern Features", href: "#concern_analysis_features" },
-        { label: "Tips & Troubleshooting", href: "#tips_concern_analysis" }
+        { label: "Tips & Troubleshooting", href: "#tips_concern_analysis" },
       ],
       Info_Consultation_Booking: [
         { label: "Booking Steps", href: "#booking_steps" },
@@ -148,7 +167,10 @@ const Help_Main_Content = () => {
       ],
       Info_Enrolled_Student: [
         { label: "Enrolled Features", href: "#enrolled_features" },
-        { label: "Tips & Troubleshooting", href: "#tips_troubleshooting_enrolled" },
+        {
+          label: "Tips & Troubleshooting",
+          href: "#tips_troubleshooting_enrolled",
+        },
       ],
       Info_Calendar_Management: [
         { label: "Calendar Features", href: "#Info_Calendar_Management" },
@@ -210,7 +232,7 @@ const Help_Main_Content = () => {
           {/* Sidebar */}
           <div className="hidden lg:block w-64 flex-shrink-0 mr-4">
             <div className="fixed top-6">
-              <div className="bg-white rounded-lg shadow-sm border border-gray-200 p-6 w-64 h-[43rem] overflow-y-auto">
+              <div className="bg-white rounded-lg shadow-sm border border-gray-200 p-6 w-64 h-[42rem] overflow-y-auto">
                 <h3 className="text-sm font-semibold text-gray-900 uppercase tracking-wide mb-4">
                   Getting Started
                 </h3>
@@ -223,26 +245,42 @@ const Help_Main_Content = () => {
                   >
                     Overview
                   </Link>
-                  {!isTeacher && (
-                    <>
-                      <Link
-                        to="/help/getstarted/Info_Login"
-                        className={`block px-3 py-1 text-sm rounded-md ${sidebarActive(
-                          "/help/getstarted/Info_Login"
-                        )}`}
-                      >
-                        Account Login
-                      </Link>
-                      <Link
-                        to="/help/getstarted/Info_Signup"
-                        className={`block px-3 py-1 text-sm rounded-md ${sidebarActive(
-                          "/help/getstarted/Info_Signup"
-                        )}`}
-                      >
-                        Account Registration
-                      </Link>
-                    </>
-                  )}
+                  {!isTeacher && !isStudent && (
+                      <>
+                        <Link
+                          to="/help/getstarted/Info_Teacher_Consultation_Schedules"
+                          className={`block px-3 py-1 text-sm rounded-md ${sidebarActive(
+                            "/help/getstarted/Info_Teacher_Consultation_Schedules"
+                          )}`}
+                        >
+                          Teacher Consultation Schedules
+                        </Link>
+                        <Link
+                          to="/help/getstarted/Info_Teacher_Leaderboard"
+                          className={`block px-3 py-1 text-sm rounded-md ${sidebarActive(
+                            "/help/getstarted/Info_Teacher_Leaderboard"
+                          )}`}
+                        >
+                          Teacher Leaderboard
+                        </Link>
+                        <Link
+                          to="/help/getstarted/Info_Login"
+                          className={`block px-3 py-1 text-sm rounded-md ${sidebarActive(
+                            "/help/getstarted/Info_Login"
+                          )}`}
+                        >
+                          Account Login
+                        </Link>
+                        <Link
+                          to="/help/getstarted/Info_Signup"
+                          className={`block px-3 py-1 text-sm rounded-md ${sidebarActive(
+                            "/help/getstarted/Info_Signup"
+                          )}`}
+                        >
+                          Account Registration
+                        </Link>
+                      </>
+                    )}
                   <Link
                     to="/help/getstarted/Info_Dashboard"
                     className={`block px-3 py-1 text-sm rounded-md ${sidebarActive(

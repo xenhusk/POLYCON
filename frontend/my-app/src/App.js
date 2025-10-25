@@ -22,6 +22,8 @@ import Help from "./components/help/Helpbar";
 import Help_Overview from "./components/help/getstarted/Help_Overview";
 import Help_Login from "./components/help/getstarted/Help_Login";
 import Help_SignUp from "./components/help/getstarted/Help_SignUp";
+import Help_Teacher_Consultation_Schedules from "./components/help/getstarted/Help_Teacher_Consultation_Schedules";
+import Help_Teacher_Leaderboard from "./components/help/getstarted/Help_Teacher_Leaderboard";
 import Help_Dashboard from "./components/help/getstarted/Help_Dashboard";
 import Help_History from "./components/help/getstarted/Help_History";
 import Help_Appointments from "./components/help/getstarted/Help_Appointment";
@@ -982,6 +984,8 @@ function App() {
                         {/* Help routes - publicly accessible */}
                         <Route path="/help/getstarted/" element={<Help />}>
                           <Route index element={<Help_Overview />} />
+                          <Route path="Info_Teacher_Consultation_Schedules" element={<Help_Teacher_Consultation_Schedules />} />
+                          <Route path="Info_Teacher_Leaderboard" element={<Help_Teacher_Leaderboard />} />
                           <Route path="Info_Login" element={<Help_Login />} />
                           <Route
                             path="Info_SignUp"
