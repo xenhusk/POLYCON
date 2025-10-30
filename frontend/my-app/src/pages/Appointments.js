@@ -332,11 +332,20 @@ function StudentAppointments() {
     const categorizedAppointments = { pending: [], upcoming: [] };
     console.log("Appointments.js - Raw bookings data:", bookings); // Log raw bookings
     bookings.forEach((booking) => {      // Build appointment object for displaying in AppointmentItem
+      console.log("Appointments.js - Processing booking:", booking.id, {
+        teacherDepartmentId: booking.teacherDepartmentId,
+        teacherDepartment: booking.teacherDepartment,
+        teacherName: booking.teacherName,
+        teacherProfile: booking.teacherProfile
+      });
+      
       const appointmentItem = {
         id: booking.id,
         teacher: {
           profile_picture: booking.teacherProfile,
           teacherName: booking.teacherName,
+          department_id: booking.teacherDepartmentId,
+          department: booking.teacherDepartment,
         },
         studentNames: booking.studentNames,
         // Transform studentProfiles to match AppointmentItem expected fields
@@ -357,6 +366,7 @@ function StudentAppointments() {
       };
       console.log("Appointments.js - Raw booking.created_at:", booking.created_at, typeof booking.created_at);
       console.log("Appointments.js - Constructed appointmentItem:", appointmentItem); // Log constructed item
+      console.log("Appointments.js - Teacher object in appointmentItem:", appointmentItem.teacher); // Log teacher object specifically
       if (booking.status === "pending") {
         categorizedAppointments.pending.push(appointmentItem);
       } else if (booking.status === "confirmed") {
@@ -1021,19 +1031,34 @@ function TeacherAppointments() {
   const sortedData = useMemo(() => {
     console.log("TeacherAppointments - Raw appointmentsData:", appointmentsData); // Log raw data
 
-    const transformAppointment = (app) => ({
-      ...app,
-      info: Array.isArray(app.studentProfiles) ? app.studentProfiles.map((s) => {
-        const [firstName, ...rest] = (s.name || '').split(" "); 
-        return {
-          id: s.id, // Keep this as the unique key for React lists or other internal uses
-          idNumber: s.idNumber, // Assuming 's.idNumber' holds the student's ID number
-          profile_picture: s.profile,
-          firstName,
-          lastName: rest.join(" "),
-        };
-      }) : [], 
-    });
+    const transformAppointment = (app) => {
+      console.log("TeacherAppointments - Transforming appointment:", app.id, {
+        teacherDepartmentId: app.teacherDepartmentId,
+        teacherDepartment: app.teacherDepartment,
+        teacherName: app.teacherName,
+        teacherProfile: app.teacherProfile
+      });
+      
+      return {
+        ...app,
+        teacher: {
+          profile_picture: app.teacherProfile,
+          teacherName: app.teacherName,
+          department_id: app.teacherDepartmentId,
+          department: app.teacherDepartment,
+        },
+        info: Array.isArray(app.studentProfiles) ? app.studentProfiles.map((s) => {
+          const [firstName, ...rest] = (s.name || '').split(" "); 
+          return {
+            id: s.id, // Keep this as the unique key for React lists or other internal uses
+            idNumber: s.idNumber, // Assuming 's.idNumber' holds the student's ID number
+            profile_picture: s.profile,
+            firstName,
+            lastName: rest.join(" "),
+          };
+        }) : [],
+      };
+    };
 
     const upcomingApps = appointmentsData
       .filter((app) => app.status === "confirmed")
@@ -1124,20 +1149,24 @@ function TeacherAppointments() {
       [bookingID]: { schedule: "", venue: "" },
     }));
   };
-  async function confirmBooking(bookingID, schedule, venue) {
-    if (!schedule || !venue) {
+  async function confirmBooking(bookingID, schedule, venue_id, custom_venue) {
+    if (!schedule || !venue_id) {
       showErrorNotification("Schedule and venue are required to confirm the booking.");
       throw new Error(
         "Schedule and venue are required to confirm the booking."
       );
     }
     try {
+      const payload = { bookingID, schedule, venue_id };
+      if (custom_venue) {
+        payload.venue = custom_venue;
+      }
       const response = await fetch(
         `${API_URL}/bookings/confirm_booking`,
         {
           method: "POST",
           headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({ bookingID, schedule, venue }),
+          body: JSON.stringify(payload),
         }
       );
       if (!response.ok) {
