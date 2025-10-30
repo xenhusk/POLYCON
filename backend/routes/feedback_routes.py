@@ -251,11 +251,39 @@ def check_pending_feedback():
             ).first()
             
             if not existing_feedback:
+                # Get teacher details
+                teacher = User.query.filter_by(id_number=session.teacher_id).first()
+                teacher_name = f"{teacher.first_name} {teacher.last_name}" if teacher else "Unknown Teacher"
+                
+                # Get student details for section/program info
+                student_user = User.query.filter_by(id_number=student_id).first()
+                student_record = None
+                program_name = "N/A"
+                year_section = "N/A"
+                
+                if student_user:
+                    from models import Student, Program
+                    student_record = Student.query.filter_by(user_id=student_user.id).first()
+                    if student_record:
+                        year_section = student_record.year_section
+                        program = Program.query.get(student_record.program_id)
+                        if program:
+                            program_name = program.name
+                
+                # Create a short summary (4-5 words from the full summary)
+                summary_words = session.summary.split()[:5] if session.summary else []
+                short_summary = " ".join(summary_words) if summary_words else "No summary available"
+                
                 pending_sessions.append({
                     'session_id': session.id,
                     'teacher_id': session.teacher_id,
                     'student_id': student_id,
-                    'session_date': session.session_date.isoformat() if session.session_date else None
+                    'session_date': session.session_date.isoformat() if session.session_date else None,
+                    'teacher_name': teacher_name,
+                    'program': program_name,
+                    'year_section': year_section,
+                    'summary': short_summary,
+                    'concern': session.concern[:50] + "..." if session.concern and len(session.concern) > 50 else session.concern or "No concern details"
                 })
         
         if pending_sessions:

@@ -61,26 +61,55 @@ const MobileMenuPanel = ({
         {
             title: "Getting Started",
             links: [
-                { to: "/help/getstarted/", label: "Overview", condition: true },
+                { 
+                  to: "/help/getstarted/", 
+                  label: "Overview", 
+                  condition: true 
+                },
+                { 
+                  to: "/help/getstarted/Info_Teacher_Consultation_Schedules", 
+                  label: "Consultation Schedules", 
+                  condition: !isTeacher || !isStudent 
+                },
+                { 
+                  to: "/help/getstarted/Info_Teacher_Leaderboard", 
+                  label: "Teacher Leaderboard", 
+                  condition: !isTeacher || !isStudent 
+                },
                 { 
                     to: "/help/getstarted/Info_Login", 
                     label: "Account Login", 
-                    condition: !isTeacher || isStudent 
+                    condition: !isTeacher || !isStudent 
                 },
                 { 
                     to: "/help/getstarted/Info_Signup", 
                     label: "Account Registration", 
-                    condition: !isTeacher || isStudent 
+                    condition: !isTeacher || !isStudent 
                 },
-                { to: "/help/getstarted/Info_Dashboard", label: "Dashboard", condition: true },
-                { to: "/help/getstarted/Info_Appointments", label: "Appointments", condition: true },
+                { 
+                  to: "/help/getstarted/Info_Dashboard", 
+                  label: "Dashboard", condition: true 
+                },
+                { 
+                  to: "/help/getstarted/Info_Appointments", 
+                  label: "Appointments", 
+                  condition: true 
+                },
                 { 
                     to: "/help/getstarted/Info_Set_Schedule", 
                     label: "Schedule", 
                     condition: isTeacher 
                 },
-                { to: "/help/getstarted/Info_History", label: "History", condition: true },
-                { to: "/help/getstarted/Info_Grade", label: "Grade", condition: true },
+                { 
+                  to: "/help/getstarted/Info_History", 
+                  label: "History", 
+                  condition: true 
+                },
+                { 
+                  to: "/help/getstarted/Info_Grade", 
+                  label: "Grade", 
+                  condition: true 
+                },
             ]
         },
         {
@@ -123,8 +152,16 @@ const MobileMenuPanel = ({
         {
             title: "Support",
             links: [
-                { to: "/help/support/FAQ", label: "FAQ", condition: true },
-                { to: "/help/support/Contact", label: "Contact Support", condition: true },
+                { 
+                  to: "/help/support/FAQ", 
+                  label: "FAQ", 
+                  condition: true 
+                },
+                { 
+                  to: "/help/support/Contact", 
+                  label: "Contact Support", 
+                  condition: true 
+                },
             ]
         }
     ], [isTeacher, isStudent]); // Re-run if roles change
@@ -256,7 +293,7 @@ const Help = () => {
   return (
     <div className="min-h-screen flex flex-col bg-gray-50">
       {/* Header (Visible on all screens, but menu button is mobile-only) */}
-      <div className="border-b bg-[#057DCD] shadow-lg relative z-50">
+      <div className="block lg:hidden border-b bg-[#057DCD] shadow-lg relative z-50">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="flex justify-between items-center py-3">
             {/* Left: Logo */}

@@ -208,3 +208,105 @@
   fill: #057DCD !important;
 }
 
+/* Enhanced Dropdown Styles */
+.dropdown-container {
+  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+  transform-origin: top left;
+  backdrop-filter: blur(8px);
+  -webkit-backdrop-filter: blur(8px);
+}
+
+.dropdown-container.dropdown-closed {
+  opacity: 0;
+  transform: scale(0.95) translateY(-8px);
+  pointer-events: none;
+  visibility: hidden;
+}
+
+.dropdown-container.dropdown-open {
+  opacity: 1;
+  transform: scale(1) translateY(0);
+  pointer-events: auto;
+  visibility: visible;
+}
+
+.dropdown-content {
+  position: relative;
+}
+
+.dropdown-content::before {
+  content: '';
+  position: absolute;
+  top: -8px;
+  left: -8px;
+  right: -8px;
+  bottom: -8px;
+  background: linear-gradient(135deg, rgba(255, 255, 255, 0.1), rgba(255, 255, 255, 0.05));
+  border-radius: 16px;
+  z-index: -1;
+}
+
+/* Enhanced dropdown item styles */
+.dropdown-item {
+  position: relative;
+  transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+  border-radius: 8px;
+  margin: 2px 0;
+}
+
+.dropdown-item:hover {
+  transform: translateX(2px);
+  box-shadow: 0 2px 8px rgba(59, 130, 246, 0.15);
+}
+
+.dropdown-item:active {
+  transform: translateX(1px) scale(0.98);
+}
+
+/* Active state indicator */
+.dropdown-item .active-indicator {
+  position: absolute;
+  right: 12px;
+  top: 50%;
+  transform: translateY(-50%);
+  width: 6px;
+  height: 6px;
+  background: linear-gradient(135deg, #3b82f6, #1d4ed8);
+  border-radius: 50%;
+  box-shadow: 0 0 0 2px rgba(59, 130, 246, 0.2);
+  animation: pulse-indicator 2s infinite;
+}
+
+@keyframes pulse-indicator {
+  0%, 100% {
+    box-shadow: 0 0 0 2px rgba(59, 130, 246, 0.2);
+  }
+  50% {
+    box-shadow: 0 0 0 4px rgba(59, 130, 246, 0.1);
+  }
+}
+
+/* Focus states for accessibility */
+.dropdown-item:focus {
+  outline: 2px solid #3b82f6;
+  outline-offset: 2px;
+}
+
+.dropdown-item:focus:not(:focus-visible) {
+  outline: none;
+}
+
+/* Smooth icon transitions */
+.dropdown-item svg {
+  transition: all 0.2s ease-in-out;
+}
+
+.dropdown-item:hover svg {
+  transform: scale(1.05);
+}
+
+/* Ensure dropdown appears above other elements */
+.dropdown-menu {
+  z-index: 1000;
+}
+

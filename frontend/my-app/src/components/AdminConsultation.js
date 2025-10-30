@@ -338,7 +338,6 @@ const AdminConsultation = () => {
                   <button
                     onClick={() => setShowFeedbackModal(true)}
                     className="w-12 h-12 bg-white/20 hover:bg-white/30 rounded-full flex items-center justify-center transition-all duration-200 group-hover:scale-110"
-                    title="How feedback is calculated"
                   >
                     <svg className="w-6 h-6 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                       <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8.228 9c.549-1.165 2.03-2 3.772-2 2.21 0 4 1.343 4 3 0 1.4-1.278 2.575-3.006 2.907-.542.104-.994.54-.994 1.093m0 3h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
@@ -1015,98 +1014,117 @@ const AdminConsultation = () => {
             
             {/* Modal Body */}
             <div className="p-6 overflow-y-auto max-h-[70vh]">
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
-                {/* Left Column - Rating System */}
-                <div className="space-y-6">
-                  <div className="flex items-start space-x-4">
-                    <div className="w-8 h-8 bg-[#057DCD] text-white rounded-full flex items-center justify-center text-sm font-bold flex-shrink-0 mt-1">
-                      1
+              {/* Simple Explanation */}
+              <div className="bg-gradient-to-r from-blue-50 to-indigo-50 p-6 rounded-xl border border-blue-200 mb-8">
+                <h3 className="text-xl font-bold text-blue-800 mb-4 flex items-center">
+                  <svg className="w-6 h-6 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+                  </svg>
+                  How Teacher Rankings Work
+                </h3>
+                <div className="space-y-4">
+                  <p className="text-gray-700 leading-relaxed">
+                    Our teacher leaderboard ranks faculty based on three key factors that matter most for student success. 
+                    The system prioritizes <strong>student satisfaction</strong> while also recognizing teachers who spend quality time 
+                    with students and maintain consistent availability.
+                  </p>
+                  <p className="text-gray-700 leading-relaxed">
+                    Teachers are scored using a simple formula that combines their average student ratings (60%), 
+                    total consultation time (25%), and number of sessions (15%). This balanced approach ensures 
+                    that quality teaching is rewarded while preventing gaming of the system.
+                  </p>
+                </div>
+              </div>
+              
+              <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+                {/* Student Ratings */}
+                <div className="bg-white p-6 rounded-xl border border-gray-200 shadow-sm">
+                  <div className="flex items-center mb-4">
+                    <div className="w-10 h-10 bg-yellow-100 rounded-full flex items-center justify-center mr-3">
+                      <svg className="w-6 h-6 text-yellow-600" fill="currentColor" viewBox="0 0 20 20">
+                        <path d="M9.049 2.927c.3-.921 1.603-.921 1.902 0l1.07 3.292a1 1 0 00.95.69h3.462c.969 0 1.371 1.24.588 1.81l-2.8 2.034a1 1 0 00-.364 1.118l1.07 3.292c.3.921-.755 1.688-1.54 1.118l-2.8-2.034a1 1 0 00-1.175 0l-2.8 2.034c-.784.57-1.838-.197-1.539-1.118l1.07-3.292a1 1 0 00-.364-1.118L2.98 8.72c-.783-.57-.38-1.81.588-1.81h3.461a1 1 0 00.951-.69l1.07-3.292z" />
+                      </svg>
                     </div>
                     <div>
-                      <h3 className="font-bold text-gray-800 mb-3 text-lg">Student Feedback Ratings</h3>
-                      <p className="text-gray-600 leading-relaxed mb-4">
-                        Students provide ratings from 1.0 to 5.0 stars after each consultation session. 
-                        These ratings reflect their satisfaction with the teacher's guidance and support.
-                      </p>
-                      <div className="flex items-center space-x-2 mb-3">
-                        <span className="text-sm text-gray-500 font-medium">Rating Scale:</span>
-                        <div className="flex space-x-1">
-                          {[1, 2, 3, 4, 5].map((star) => (
-                            <svg key={star} className="w-5 h-5 text-yellow-400" fill="currentColor" viewBox="0 0 20 20">
-                              <path d="M9.049 2.927c.3-.921 1.603-.921 1.902 0l1.07 3.292a1 1 0 00.95.69h3.462c.969 0 1.371 1.24.588 1.81l-2.8 2.034a1 1 0 00-.364 1.118l1.07 3.292c.3.921-.755 1.688-1.54 1.118l-2.8-2.034a1 1 0 00-1.175 0l-2.8 2.034c-.784.57-1.838-.197-1.539-1.118l1.07-3.292a1 1 0 00-.364-1.118L2.98 8.72c-.783-.57-.38-1.81.588-1.81h3.461a1 1 0 00.951-.69l1.07-3.292z" />
-                            </svg>
-                          ))}
-                        </div>
-                      </div>
+                      <h3 className="font-bold text-gray-800 text-lg">Student Ratings</h3>
+                      <p className="text-sm text-gray-600">60% of total score</p>
                     </div>
                   </div>
-
-                  <div className="flex items-start space-x-4">
-                    <div className="w-8 h-8 bg-[#057DCD] text-white rounded-full flex items-center justify-center text-sm font-bold flex-shrink-0 mt-1">
-                      2
-                    </div>
-                    <div>
-                      <h3 className="font-bold text-gray-800 mb-3 text-lg">Average Rating Calculation</h3>
-                      <p className="text-gray-600 leading-relaxed mb-4">
-                        Each teacher's average rating is calculated by summing all their individual ratings 
-                        and dividing by the total number of feedback entries received.
-                      </p>
-                      <div className="bg-blue-50 p-4 rounded-lg border border-blue-200">
-                        <code className="text-sm text-blue-800 font-mono">
-                          Average Rating = (Sum of all ratings) ÷ (Number of feedback entries)
-                        </code>
-                      </div>
-                    </div>
+                  <p className="text-gray-600 text-sm leading-relaxed mb-4">
+                    Students rate their consultation experience from 1 to 5 stars. 
+                    Higher ratings mean better student satisfaction and learning outcomes.
+                  </p>
+                  <div className="flex items-center space-x-1">
+                    {[1, 2, 3, 4, 5].map((star) => (
+                      <svg key={star} className="w-4 h-4 text-yellow-400" fill="currentColor" viewBox="0 0 20 20">
+                        <path d="M9.049 2.927c.3-.921 1.603-.921 1.902 0l1.07 3.292a1 1 0 00.95.69h3.462c.969 0 1.371 1.24.588 1.81l-2.8 2.034a1 1 0 00-.364 1.118l1.07 3.292c.3.921-.755 1.688-1.54 1.118l-2.8-2.034a1 1 0 00-1.175 0l-2.8 2.034c-.784.57-1.838-.197-1.539-1.118l1.07-3.292a1 1 0 00-.364-1.118L2.98 8.72c-.783-.57-.38-1.81.588-1.81h3.461a1 1 0 00.951-.69l1.07-3.292z" />
+                      </svg>
+                    ))}
+                    <span className="text-xs text-gray-500 ml-2">1-5 stars</span>
                   </div>
                 </div>
 
-                {/* Right Column - Ranking System */}
-                <div className="space-y-6">
-                  <div className="flex items-start space-x-4">
-                    <div className="w-8 h-8 bg-[#057DCD] text-white rounded-full flex items-center justify-center text-sm font-bold flex-shrink-0 mt-1">
-                      3
+                {/* Consultation Time */}
+                <div className="bg-white p-6 rounded-xl border border-gray-200 shadow-sm">
+                  <div className="flex items-center mb-4">
+                    <div className="w-10 h-10 bg-green-100 rounded-full flex items-center justify-center mr-3">
+                      <svg className="w-6 h-6 text-green-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" />
+                      </svg>
                     </div>
                     <div>
-                      <h3 className="font-bold text-gray-800 mb-3 text-lg">Combined Score Ranking</h3>
-                      <p className="text-gray-600 leading-relaxed mb-4">
-                        Teachers are ranked using a combined score that prioritizes feedback quality, 
-                        consultation duration, and activity level to ensure fair and comprehensive evaluation.
-                      </p>
-                      <div className="bg-green-50 p-4 rounded-lg border border-green-200">
-                        <code className="text-sm text-green-800 font-mono">
-                          Combined Score = (Average Rating × 50) + (Total Duration Hours × 0.5) + (Total Consultations × 0.1)
-                        </code>
-                      </div>
+                      <h3 className="font-bold text-gray-800 text-lg">Consultation Time</h3>
+                      <p className="text-sm text-gray-600">25% of total score</p>
                     </div>
                   </div>
-
-                  <div className="flex items-start space-x-4">
-                    <div className="w-8 h-8 bg-[#057DCD] text-white rounded-full flex items-center justify-center text-sm font-bold flex-shrink-0 mt-1">
-                      4
-                    </div>
-                    <div>
-                      <h3 className="font-bold text-gray-800 mb-3 text-lg">What This Means</h3>
-                      <ul className="text-gray-600 space-y-2">
-                        <li className="flex items-start">
-                          <span className="text-[#057DCD] mr-2">•</span>
-                          <span><strong>Rating priority:</strong> Student feedback quality has the highest impact on rankings</span>
-                        </li>
-                        <li className="flex items-start">
-                          <span className="text-[#057DCD] mr-2">•</span>
-                          <span><strong>Duration matters:</strong> Teachers who spend more time in consultations rank higher</span>
-                        </li>
-                        <li className="flex items-start">
-                          <span className="text-[#057DCD] mr-2">•</span>
-                          <span><strong>Activity counts:</strong> Total consultation sessions also contribute to rankings</span>
-                        </li>
-                        <li className="flex items-start">
-                          <span className="text-[#057DCD] mr-2">•</span>
-                          <span><strong>Balanced evaluation:</strong> The system rewards quality, dedication, and consistency</span>
-                        </li>
-                      </ul>
-                    </div>
+                  <p className="text-gray-600 text-sm leading-relaxed mb-4">
+                    Total hours spent in consultations. More time typically means 
+                    more thorough and helpful guidance for students.
+                  </p>
+                  <div className="bg-green-50 p-3 rounded-lg">
+                    <p className="text-xs text-green-700 font-medium">
+                      <strong>Example:</strong> 20 hours = 16 points
+                    </p>
                   </div>
                 </div>
+
+                {/* Session Count */}
+                <div className="bg-white p-6 rounded-xl border border-gray-200 shadow-sm">
+                  <div className="flex items-center mb-4">
+                    <div className="w-10 h-10 bg-purple-100 rounded-full flex items-center justify-center mr-3">
+                      <svg className="w-6 h-6 text-purple-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z" />
+                      </svg>
+                    </div>
+                    <div>
+                      <h3 className="font-bold text-gray-800 text-lg">Session Count</h3>
+                      <p className="text-sm text-gray-600">15% of total score</p>
+                    </div>
+                  </div>
+                  <p className="text-gray-600 text-sm leading-relaxed mb-4">
+                    Total number of consultation sessions. Rewards consistent 
+                    availability while keeping focus on quality over quantity.
+                  </p>
+                  <div className="bg-purple-50 p-3 rounded-lg">
+                    <p className="text-xs text-purple-700 font-medium">
+                      <strong>Example:</strong> 15 sessions = 3 points
+                    </p>
+                  </div>
+                </div>
+              </div>
+
+              {/* Simple Formula */}
+              <div className="mt-8 bg-gray-50 p-6 rounded-xl border border-gray-200">
+                <h3 className="font-bold text-gray-800 mb-4 text-lg">Final Score Calculation</h3>
+                <div className="bg-white p-4 rounded-lg border border-gray-200">
+                  <code className="text-sm text-gray-800 font-mono">
+                    Final Score = (Average Rating × 60) + (Total Hours × 0.8) + (Total Sessions × 0.2)
+                  </code>
+                </div>
+                <p className="text-sm text-gray-600 mt-3">
+                  Teachers with higher scores rank higher on the leaderboard. This system ensures that 
+                  student satisfaction is the most important factor while still recognizing teacher dedication and availability.
+                </p>
               </div>
             </div>
           </div>
