@@ -504,8 +504,6 @@ export default function Departments() {
               </div>
             </motion.div>
           </div>
-      ):
-      )
           {showAddModal && createPortal(
             <div className="fixed bg-black/60 backdrop-blur-md flex items-center justify-center p-4" style={{ 
               position: 'fixed',
