@@ -131,8 +131,16 @@ def transcribe():
             # Transcribe the audio using AssemblyAI (without sentiment analysis)
             transcription_data = transcribe_audio_with_assemblyai(converted_path, speaker_count)
             
+            # Log the raw AssemblyAI transcription for debugging
+            current_app.logger.info(f"AssemblyAI raw transcription length: {len(transcription_data.get('full_text', ''))} characters")
+            current_app.logger.debug(f"AssemblyAI raw transcription: {transcription_data.get('full_text', '')[:500]}")
+            
             # Process the transcription with Gemini to identify roles
             processed_transcription = identify_roles_in_transcription(transcription_data["full_text"])
+            
+            # Log the processed transcription for debugging
+            current_app.logger.info(f"Processed transcription length: {len(processed_transcription)} characters")
+            current_app.logger.debug(f"Processed transcription: {processed_transcription[:500]}")
         else:
             # When transcription is disabled, provide empty/default values
             processed_transcription = "Transcription was disabled for this session."
