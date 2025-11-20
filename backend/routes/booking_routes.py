@@ -75,11 +75,22 @@ def get_bookings():
         teacher_name = "Unknown Teacher"
         teacher_profile = None
         
+        teacher_department_id = None
+        teacher_department_name = None
+        
         if teacher_user:
             # Now find the faculty using the user's primary key ID
             teacher = Faculty.query.filter_by(user_id=teacher_user.id).first()
             teacher_name = f"{teacher_user.first_name} {teacher_user.last_name}" if teacher_user else "Unknown Teacher"
             teacher_profile = teacher_user.profile_picture
+            
+            # Get teacher's department information
+            if teacher_user.department_id:
+                teacher_department_id = teacher_user.department_id
+                from models import Department
+                department = Department.query.get(teacher_department_id)
+                if department:
+                    teacher_department_name = department.name
           # For students, also convert from IDs to actual user objects
         student_users = []
         student_profiles = []
@@ -121,6 +132,8 @@ def get_bookings():
             'teacherID': b.teacher_id,
             'teacherName': teacher_name,
             'teacherProfile': teacher_profile,
+            'teacherDepartmentId': teacher_department_id,
+            'teacherDepartment': teacher_department_name,
             'studentNames': student_names,
             'studentProfiles': student_profiles,
             'created_at': format_created_at_for_api(b.created_at),
@@ -143,11 +156,22 @@ def get_all_bookings_admin():
         teacher_name = "Unknown Teacher"
         teacher_profile = None
         
+        teacher_department_id = None
+        teacher_department_name = None
+        
         if teacher_user:
             # Now find the faculty using the user's primary key ID
             teacher = Faculty.query.filter_by(user_id=teacher_user.id).first()
             teacher_name = f"{teacher_user.first_name} {teacher_user.last_name}" if teacher_user else "Unknown Teacher"
             teacher_profile = teacher_user.profile_picture
+            
+            # Get teacher's department information
+            if teacher_user.department_id:
+                teacher_department_id = teacher_user.department_id
+                from models import Department
+                department = Department.query.get(teacher_department_id)
+                if department:
+                    teacher_department_name = department.name
             
         # For students, also convert from IDs to actual user objects
         student_users = []
@@ -220,6 +244,8 @@ def get_all_bookings_admin():
             'teacherID': b.teacher_id,
             'teacherName': teacher_name,
             'teacherProfile': teacher_profile,
+            'teacherDepartmentId': teacher_department_id,
+            'teacherDepartment': teacher_department_name,
             'studentNames': student_names,
             'studentProfiles': student_profiles,
             'created_at': format_created_at_for_api(b.created_at),
@@ -534,8 +560,54 @@ def confirm_booking():
             except ValueError:
                 return jsonify({"error": "Invalid schedule format"}), 400
                 
-        if data.get('venue'):
-            booking.venue = data.get('venue')
+        # Handle venue - check for venue_id first (numeric ID), then venue (name string)
+        venue_id_value = data.get('venue_id')
+        venue_string = data.get('venue')  # For custom venues
+        
+        if venue_id_value:
+            if venue_id_value != 'others':
+                try:
+                    booking.venue_id = int(venue_id_value)
+                except (ValueError, TypeError):
+                    return jsonify({"error": "Invalid venue_id format"}), 400
+            else:
+                # If venue_id is 'others', treat it as a custom venue
+                if venue_string:
+                    # Get teacher's department to create custom venue
+                    from models import Department
+                    teacher_user = User.query.filter_by(id_number=booking.teacher_id).first()
+                    if teacher_user and teacher_user.department_id:
+                        from models import Venue
+                        # Create a temporary venue entry for custom venue
+                        temp_venue = Venue(
+                            name=f"Custom: {venue_string}",
+                            department_id=teacher_user.department_id,
+                            is_available=False  # Mark as unavailable since it's custom
+                        )
+                        db.session.add(temp_venue)
+                        db.session.flush()  # Get the ID without committing
+                        booking.venue_id = temp_venue.id
+                    else:
+                        return jsonify({"error": "Custom venue requires teacher department information"}), 400
+                else:
+                    booking.venue_id = None
+        elif venue_string:
+            # If only venue string is provided (legacy support)
+            from models import Department
+            teacher_user = User.query.filter_by(id_number=booking.teacher_id).first()
+            if teacher_user and teacher_user.department_id:
+                from models import Venue
+                temp_venue = Venue(
+                    name=f"Custom: {venue_string}",
+                    department_id=teacher_user.department_id,
+                    is_available=False
+                )
+                db.session.add(temp_venue)
+                db.session.flush()
+                booking.venue_id = temp_venue.id
+            else:
+                return jsonify({"error": "Custom venue requires teacher department information"}), 400
+                
         db.session.commit()        # Emit socket notification for booking confirmation
         try:
             # Get detailed booking data for notification

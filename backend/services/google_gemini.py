@@ -10,7 +10,7 @@ load_dotenv()
 genai.configure(api_key=os.getenv('GEMINI_API_KEY'))
 
 # Initialize the model
-model = genai.GenerativeModel(model_name="gemini-2.0-flash-lite-preview-02-05")
+model = genai.GenerativeModel(model_name="gemini-flash-lite-latest")
 
 def generate_summary(text):
     prompt = (
@@ -29,27 +29,82 @@ def generate_summary(text):
         return f"Error generating summary: {str(e)}"
 
 def identify_roles_in_transcription(transcription):
+    """
+    Annotate transcription with role labels (Teacher/Student) without generating new content.
+    CRITICAL: Only annotate existing text, do NOT add, modify, or generate any new content.
+    """
+    import logging
+    logger = logging.getLogger(__name__)
+    
+    # Log the original transcription for debugging
+    logger.info(f"Original transcription length: {len(transcription)} characters")
+    logger.debug(f"Original transcription: {transcription[:200]}...")
+    
+    # If transcription is empty or very short, return as-is
+    if not transcription or len(transcription.strip()) < 10:
+        logger.warning("Transcription is too short, skipping role identification")
+        return transcription
+    
     prompt = (
         "You are provided with a transcript of a conversation between a teacher and one or more students. "
-        "Your task is to analyze the transcript and annotate each sentence with the correct role label. "
-        "For each sentence, prefix it with either 'Teacher:' or 'Student:'. "
+        "Your task is to ONLY annotate the EXISTING sentences in the transcript with role labels. "
+        "CRITICAL RULES:\n"
+        "1. DO NOT add, modify, or generate any new content\n"
+        "2. DO NOT expand on what was said\n"
+        "3. DO NOT add explanations or context\n"
+        "4. ONLY prefix each existing sentence with 'Teacher:' or 'Student:' (or 'Student 1:', 'Student 2:', etc.)\n"
+        "5. Preserve the exact original text - only add the role prefix\n"
+        "6. If the transcript already has speaker labels (e.g., 'Speaker 0:', 'Speaker 1:'), map them to Teacher/Student\n\n"
+        "For each sentence in the transcript, prefix it with either 'Teacher:' or 'Student:'. "
         "If there are multiple students, assign each a unique identifier (e.g., Student 1, Student 2, etc.) "
-        "based on the context of the conversation. \n\n"
-        "Please ensure the output is well-formatted and each line starts with the correct role label. \n\n"
-        "Transcript:\n"
+        "based on the speaker labels or context. \n\n"
+        "Transcript to annotate:\n"
         f"{transcription}\n\n"
-        "Output format:\n"
-        "Teacher: [Teacher's statement]\n"
-        "Student 1: [Student's statement]\n"
-        "Student 2: [Student's statement]\n"
-        "..."
+        "Output ONLY the annotated transcript with role prefixes. Do NOT add any other text, explanations, or content.\n"
+        "Example output format:\n"
+        "Teacher: [exact original text]\n"
+        "Student 1: [exact original text]\n"
+        "Student 2: [exact original text]\n"
     )
 
     try:
         response = model.generate_content(prompt)
-        return response.text.strip()  # Return the formatted role-annotated conversation
+        annotated_text = response.text.strip()
+        
+        # Log the annotated transcription for debugging
+        logger.info(f"Annotated transcription length: {len(annotated_text)} characters")
+        logger.debug(f"Annotated transcription: {annotated_text[:200]}...")
+        
+        # Basic validation: if annotated text is significantly longer (more than 2x), 
+        # it might have generated new content - log a warning
+        if len(annotated_text) > len(transcription) * 2:
+            logger.warning(
+                f"Annotated text is {len(annotated_text)} chars vs original {len(transcription)} chars. "
+                "Possible content generation detected. Returning original transcription."
+            )
+            # Return original with simple role prefix if it has speaker labels
+            if "Speaker" in transcription:
+                # Simple mapping: Speaker 0 -> Teacher, others -> Student
+                lines = transcription.split('\n')
+                result = []
+                for line in lines:
+                    if line.strip():
+                        if "Speaker 0:" in line or "Speaker A:" in line:
+                            result.append(line.replace("Speaker 0:", "Teacher:").replace("Speaker A:", "Teacher:"))
+                        else:
+                            # Replace other speaker labels with Student
+                            import re
+                            line = re.sub(r'Speaker \d+:', 'Student:', line)
+                            line = re.sub(r'Speaker [B-Z]:', 'Student:', line)
+                            result.append(line)
+                return '\n'.join(result)
+            return transcription
+        
+        return annotated_text
     except Exception as e:
-        return f"Error identifying roles: {str(e)}"
+        logger.error(f"Error in identify_roles_in_transcription: {e}")
+        # Return original transcription if role identification fails
+        return transcription
 
 def generate_concern_insights_and_recommendations(concerns_data, category_stats, total_sessions):
     """

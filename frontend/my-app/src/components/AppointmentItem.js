@@ -41,31 +41,63 @@ function AppointmentItem({ appointment, role, onStartSession, onCancel, onConfir
 
   // Fetch venues for teacher's department
   const fetchVenues = async () => {
-    if (!appointment.teacher?.department_id && !appointment.teacher?.department) return;
+    console.log('AppointmentItem fetchVenues: appointment.teacher:', appointment.teacher);
+    
+    // Always try to fetch venues, even if department info is missing
+    if (!appointment.teacher?.department_id && !appointment.teacher?.department) {
+      console.log('AppointmentItem: No department info, fetching all venues');
+      // Fallback: fetch all venues if no department info
+      setLoadingVenues(true);
+      try {
+        const response = await fetch(`${API_URL}/venues/get_venues`);
+        const allVenues = await response.json();
+        console.log('AppointmentItem: Fetched all venues:', allVenues);
+        setVenues(allVenues);
+      } catch (error) {
+        console.error('Error fetching all venues:', error);
+        setVenues([]);
+      } finally {
+        setLoadingVenues(false);
+      }
+      return;
+    }
     
     setLoadingVenues(true);
     try {
       // Get department ID from teacher info
       let departmentId = appointment.teacher?.department_id;
+      console.log('AppointmentItem: department_id:', departmentId);
+      
       if (!departmentId && appointment.teacher?.department) {
         // If department is a string, we might need to extract ID or fetch departments
         // For now, we'll fetch all venues and filter by department name
+        console.log('AppointmentItem: Fetching all venues and filtering by department name:', appointment.teacher.department);
         const response = await fetch(`${API_URL}/venues/get_venues`);
         const allVenues = await response.json();
         const filteredVenues = allVenues.filter(venue => 
           venue.department_name === appointment.teacher.department
         );
+        console.log('AppointmentItem: Filtered venues:', filteredVenues);
         setVenues(filteredVenues);
         return;
       }
       
       if (departmentId) {
+        console.log('AppointmentItem: Fetching venues by department ID:', departmentId);
         const response = await fetch(`${API_URL}/venues/get_venues_by_department/${departmentId}`);
         const venuesData = await response.json();
+        console.log('AppointmentItem: Department venues:', venuesData);
         setVenues(venuesData);
+      } else {
+        // Fallback if we still don't have department ID
+        console.log('AppointmentItem: No department ID, fetching all venues as fallback');
+        const response = await fetch(`${API_URL}/venues/get_venues`);
+        const allVenues = await response.json();
+        setVenues(allVenues);
       }
     } catch (error) {
       console.error('Error fetching venues:', error);
+      setVenues([]);
     } finally {
       setLoadingVenues(false);
     }
@@ -200,7 +232,9 @@ function AppointmentItem({ appointment, role, onStartSession, onCancel, onConfir
     setIsLoading(true);
     setActionType('confirm');
     try {
-      await onConfirm(id, schedule, venue_id);
+      // Get custom_venue if venue_id is 'others'
+      const customVenue = confirmInputs[id]?.custom_venue;
+      await onConfirm(id, schedule, venue_id, customVenue);
       setMessage({ type: 'success', content: 'Appointment confirmed successfully' });
       setTimeout(() => setMessage({ type: '', content: '' }), 3000);
     } catch (error) {
