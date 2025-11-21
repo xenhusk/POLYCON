@@ -96,6 +96,7 @@ import { ToastProvider } from "./contexts/ToastContext"; // Add ToastProvider im
 import { ActionButtonDataProvider } from "./context/ActionButtonDataContext";
 import ProtectedRoute from "./routes/ProtectedRoute";
 import AuthTest from "./components/AuthTest";
+import Presentation from "./final-presentation/Presentation";
 const PreloaderTest = React.lazy(() => import("./components/PagePreloader"));
 
 // Update the variants to only include fade in (no fade out)
@@ -942,6 +943,11 @@ function App() {
                         <Route
                           path="/consultation-leaderboard"
                           element={<PublicConsultation />}
+                        />
+                        {/* Presentation route - publicly accessible */}
+                        <Route
+                          path="/presentation"
+                          element={<Presentation />}
                         />
                         {/* Protected routes (any authenticated user) */}
                         <Route element={<ProtectedRoute />}>
