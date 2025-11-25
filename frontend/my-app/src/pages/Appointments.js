@@ -180,6 +180,7 @@ function StudentAppointments() {
   } = useQuery("studentAppointments", fetchStudentAppointments, {
     staleTime: 30000, // 30 seconds caching
     refetchOnWindowFocus: false,
+    refetchOnMount: 'always', // Always refetch when component mounts to get latest booking status
   });
 
   const [appointments, setAppointments] = useState({
@@ -878,6 +879,7 @@ function TeacherAppointments() {
   } = useQuery("teacherAppointments", fetchTeacherAppointments, {
     staleTime: 30000,
     refetchOnWindowFocus: false,
+    refetchOnMount: 'always', // Always refetch when component mounts to get latest booking status
   });
 
   const [sortedAppointments, setSortedAppointments] = useState({

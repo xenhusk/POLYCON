@@ -103,19 +103,13 @@ const FinalDocument = () => {
       userId
     });
     
-    // Try localStorage first (faster) - but validate the data
-    if (userRole && userId && userRole !== 'faculty') {
+    // Use localStorage data if available and valid
+    if (userRole && userId) {
       console.log('Using localStorage data');
       setUserRole(userRole);
       setCurrentUserId(userId);
     } else if (userEmail) {
-      // Clear corrupted localStorage data
-      if (userRole === 'faculty') {
-        console.log('Clearing corrupted localStorage data...');
-        localStorage.removeItem('userRole');
-        localStorage.removeItem('userId');
-      }
-      // Fallback to API call
+      // Fallback to API call if localStorage data is missing
       console.log('Fetching user data from API...');
       fetch(`${API_URL}/user/get_user_by_email?email=${userEmail}`)
         .then(response => {

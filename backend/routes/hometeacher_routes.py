@@ -68,6 +68,7 @@ for category, keywords in CATEGORY_KEYWORDS.items():
 concern_analytics_cache = {
     'data': {},  # Stores cached data by cache key
     'last_session_count': 0,  # Track total consultation sessions
+    'last_concern_hash': '',  # Track hash of all concerns to detect content changes
     'last_updated': None  # Track when cache was last updated
 }
 
@@ -230,21 +231,57 @@ def generate_cache_key(teacher_id, department_id, semester_val, school_year):
     key_string = json.dumps(key_data, sort_keys=True)
     return hashlib.md5(key_string.encode()).hexdigest()
 
+def get_concern_content_hash():
+    """Generate a hash of all concern content to detect when concerns change"""
+    try:
+        # Get a sample of concern content to create a hash
+        # We check both count and a hash of recent concerns
+        concerns = db.session.query(ConsultationSession.concern).filter(
+            ConsultationSession.concern.isnot(None)
+        ).order_by(ConsultationSession.id.desc()).limit(100).all()
+        
+        concern_text = '|'.join([c[0] for c in concerns if c[0]])
+        return hashlib.md5(concern_text.encode()).hexdigest()
+    except Exception as e:
+        print(f"DEBUG: Error generating concern hash: {e}")
+        return ''
+
 def is_cache_valid():
-    """Check if cache is still valid by comparing session counts"""
+    """Check if cache is still valid by comparing session counts AND concern content"""
     current_session_count = ConsultationSession.query.count()
-    return current_session_count == concern_analytics_cache['last_session_count']
+    current_concern_hash = get_concern_content_hash()
+    
+    # Cache is valid only if both session count AND concern content match
+    session_match = current_session_count == concern_analytics_cache['last_session_count']
+    concern_match = current_concern_hash == concern_analytics_cache['last_concern_hash']
+    
+    if not session_match:
+        print(f"DEBUG: Session count changed: {concern_analytics_cache['last_session_count']} -> {current_session_count}")
+    if not concern_match:
+        print(f"DEBUG: Concern content changed (hash mismatch)")
+    
+    return session_match and concern_match
 
 def update_cache_metadata():
-    """Update cache metadata with current session count and timestamp"""
+    """Update cache metadata with current session count, concern hash, and timestamp"""
     current_session_count = ConsultationSession.query.count()
+    current_concern_hash = get_concern_content_hash()
     
-    # If session count changed, clear all cache data as it's now invalid
-    if current_session_count != concern_analytics_cache['last_session_count']:
-        print(f"DEBUG: Session count changed from {concern_analytics_cache['last_session_count']} to {current_session_count}, clearing all cache")
+    # If session count OR concern content changed, clear all cache data as it's now invalid
+    session_changed = current_session_count != concern_analytics_cache['last_session_count']
+    concern_changed = current_concern_hash != concern_analytics_cache['last_concern_hash']
+    
+    if session_changed or concern_changed:
+        reason = []
+        if session_changed:
+            reason.append(f"session count {concern_analytics_cache['last_session_count']} -> {current_session_count}")
+        if concern_changed:
+            reason.append("concern content changed")
+        print(f"DEBUG: Cache invalidated ({', '.join(reason)}), clearing all cache")
         concern_analytics_cache['data'].clear()
     
     concern_analytics_cache['last_session_count'] = current_session_count
+    concern_analytics_cache['last_concern_hash'] = current_concern_hash
     concern_analytics_cache['last_updated'] = datetime.now()
 
 def get_cached_data(cache_key):
@@ -253,7 +290,7 @@ def get_cached_data(cache_key):
         return concern_analytics_cache['data'][cache_key]
     elif not is_cache_valid():
         # Clear invalid cache entries
-        print("DEBUG: Cache invalid due to session count mismatch, clearing cache")
+        print("DEBUG: Cache invalid due to session count or concern content mismatch, clearing cache")
         concern_analytics_cache['data'].clear()
         update_cache_metadata()
     return None
@@ -265,10 +302,13 @@ def set_cached_data(cache_key, data):
 
 def get_cache_info():
     """Get information about current cache state for debugging"""
+    current_concern_hash = get_concern_content_hash()
     return {
         'total_cached_entries': len(concern_analytics_cache['data']),
         'cached_keys': [key[:8] + '...' for key in concern_analytics_cache['data'].keys()],
         'last_session_count': concern_analytics_cache['last_session_count'],
+        'last_concern_hash': concern_analytics_cache['last_concern_hash'][:8] + '...' if concern_analytics_cache['last_concern_hash'] else None,
+        'current_concern_hash': current_concern_hash[:8] + '...' if current_concern_hash else None,
         'last_updated': concern_analytics_cache['last_updated'],
         'current_session_count': ConsultationSession.query.count(),
         'cache_valid': is_cache_valid()
@@ -1520,14 +1560,16 @@ def get_cache_status():
 
 @hometeacher_bp.route('/clear_cache', methods=['POST'])
 def clear_cache():
-    """Clear all cached data - useful for debugging"""
+    """Clear all cached data - useful for debugging and after data updates"""
     concern_analytics_cache['data'].clear()
     concern_analytics_cache['last_session_count'] = 0
+    concern_analytics_cache['last_concern_hash'] = ''
     concern_analytics_cache['last_updated'] = None
     
     return jsonify({
         'message': 'Cache cleared successfully',
-        'cache_size': len(concern_analytics_cache['data'])
+        'cache_size': len(concern_analytics_cache['data']),
+        'note': 'Next analytics request will regenerate data with fresh concerns'
     }), 200
 
 @hometeacher_bp.route('/optimization_stats', methods=['GET'])
