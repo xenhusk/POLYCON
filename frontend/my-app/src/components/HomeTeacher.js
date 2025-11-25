@@ -115,13 +115,14 @@ const HomeTeacher = () => {
         const getTeacherId = async () => {
             setIsLoadingTeacherId(true);
             
-            // First try localStorage
+            // First try localStorage - prioritize teacherID keys which should contain id_number
             let storedTeacherID = localStorage.getItem('teacherID');
             
-            // If not found, also check alternate keys
+            // If not found, also check alternate keys including idNumber
             if (!storedTeacherID) {
                 storedTeacherID = localStorage.getItem('teacherId') || 
                                   localStorage.getItem('facultyID') ||
+                                  localStorage.getItem('idNumber') ||
                                   localStorage.getItem('userID') ||
                                   localStorage.getItem('userId');
             }
