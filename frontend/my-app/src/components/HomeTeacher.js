@@ -7,6 +7,7 @@ import API_URL from '../apiConfig';
 
 const HomeTeacher = () => {
     const [teacherId, setTeacherId] = useState(null);
+    const [isLoadingTeacherId, setIsLoadingTeacherId] = useState(true);
     const [semesters, setSemesters] = useState([]);
     const [departments, setDepartments] = useState([]);
     const [selectedSemester, setSelectedSemester] = useState(null);
@@ -110,22 +111,55 @@ const HomeTeacher = () => {
             })
             .catch(err => console.error("Error fetching departments:", err));
 
-        const storedTeacherID = localStorage.getItem('teacherID');
-        if (storedTeacherID) {
-            setTeacherId(storedTeacherID);
-        } else {
-            fetch(`${API_URL}/hometeacher/getTeacherId`, {
-                method: 'GET',
-                credentials: 'include'
-            })
-                .then(response => response.json())
-                .then(data => {
-                    console.log("Fetched Teacher ID:", data.teacherId);
+        // Function to get teacher ID with retry logic
+        const getTeacherId = async () => {
+            setIsLoadingTeacherId(true);
+            
+            // First try localStorage
+            let storedTeacherID = localStorage.getItem('teacherID');
+            
+            // If not found, also check alternate keys
+            if (!storedTeacherID) {
+                storedTeacherID = localStorage.getItem('teacherId') || 
+                                  localStorage.getItem('facultyID') ||
+                                  localStorage.getItem('userID') ||
+                                  localStorage.getItem('userId');
+            }
+            
+            if (storedTeacherID && storedTeacherID !== 'undefined' && storedTeacherID !== 'null') {
+                console.log("Found teacherID in localStorage:", storedTeacherID);
+                setTeacherId(storedTeacherID);
+                // Ensure it's also stored under teacherID key
+                localStorage.setItem('teacherID', storedTeacherID);
+                setIsLoadingTeacherId(false);
+                return;
+            }
+            
+            // If still not found, fetch from API
+            try {
+                const response = await fetch(`${API_URL}/hometeacher/getTeacherId`, {
+                    method: 'GET',
+                    credentials: 'include'
+                });
+                const data = await response.json();
+                if (data.teacherId) {
+                    console.log("Fetched Teacher ID from API:", data.teacherId);
                     setTeacherId(data.teacherId);
                     localStorage.setItem('teacherID', data.teacherId);
-                })
-                .catch(error => console.error("Error fetching teacher ID:", error));
-        }
+                }
+            } catch (error) {
+                console.error("Error fetching teacher ID:", error);
+            } finally {
+                setIsLoadingTeacherId(false);
+            }
+        };
+
+        // Call getTeacherId with a small delay to ensure localStorage is populated after login
+        const timeoutId = setTimeout(() => {
+            getTeacherId();
+        }, 100);
+
+        return () => clearTimeout(timeoutId);
     }, []);
 
     useEffect(() => {
@@ -175,6 +209,16 @@ const HomeTeacher = () => {
     const handleBookingClick = () => {
         navigate('/booking-teacher');
     };
+
+    // Show loading state while waiting for teacher ID
+    if (isLoadingTeacherId) {
+        return (
+            <div className="flex flex-col items-center justify-center min-h-screen">
+                <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-[#0065A8]"></div>
+                <p className="mt-4 text-gray-600">Loading dashboard...</p>
+            </div>
+        );
+    }
 
     return (
         <div className="flex flex-col items-center min-h-screen relative">
