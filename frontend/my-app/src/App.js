@@ -97,6 +97,7 @@ import { ActionButtonDataProvider } from "./context/ActionButtonDataContext";
 import ProtectedRoute from "./routes/ProtectedRoute";
 import AuthTest from "./components/AuthTest";
 import Presentation from "./final-presentation/Presentation";
+import IcitePresentation from "./icite-presentation/Presentation";
 const PreloaderTest = React.lazy(() => import("./components/PagePreloader"));
 
 // Update the variants to only include fade in (no fade out)
@@ -948,6 +949,11 @@ function App() {
                         <Route
                           path="/presentation"
                           element={<Presentation />}
+                        />
+                        {/* ICITE Presentation route - publicly accessible */}
+                        <Route
+                          path="/icite-presentation"
+                          element={<IcitePresentation />}
                         />
                         {/* Protected routes (any authenticated user) */}
                         <Route element={<ProtectedRoute />}>
