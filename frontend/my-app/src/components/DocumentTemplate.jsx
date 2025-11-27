@@ -378,7 +378,7 @@ const DocumentTemplate = ({
                         fontSize: '11pt',
                     }}
                     >
-                    {student.program} {student.year_section}
+                    {student.year_section || student.program || 'N/A'}
                     </p>
                 </td>
                 </tr>
