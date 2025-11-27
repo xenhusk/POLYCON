@@ -33,8 +33,24 @@ export const storeUserAuth = (userData, role) => {
     console.error("No valid primary user id found. Not overwriting existing ID keys.");
   }
   
-  // For teacher: store teacherID if available
-  if (userData.teacherId) {
+  // Store idNumber separately if provided (used by stats APIs)
+  if (userData.idNumber) {
+    localStorage.setItem("idNumber", userData.idNumber);
+  }
+  
+  // For teacher/faculty: store teacherID - use teacherId from response (which is now id_number) or fallback to idNumber
+  if (role === "faculty") {
+    const teacherIdentifier = userData.teacherId || userData.idNumber || primaryId;
+    if (teacherIdentifier) {
+      localStorage.setItem("teacherID", teacherIdentifier);
+      localStorage.setItem("teacherId", teacherIdentifier);
+      localStorage.setItem("facultyID", teacherIdentifier);
+      console.log("Setting teacherID for faculty:", teacherIdentifier);
+    } else {
+      console.error("No valid teacher id found for faculty role.");
+    }
+  } else if (userData.teacherId) {
+    // Also store if teacherId is explicitly provided (for other cases)
     localStorage.setItem("teacherID", userData.teacherId);
     localStorage.setItem("teacherId", userData.teacherId);
     localStorage.setItem("facultyID", userData.teacherId);

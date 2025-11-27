@@ -54,7 +54,8 @@ def login():
         'email': user.email,
         'role': user.role,
         'firstName': user.first_name,  # Changed from user.firstName
-        'lastName': user.last_name     # Changed from user.lastName
+        'lastName': user.last_name,     # Changed from user.lastName
+        'idNumber': user.id_number  # Add idNumber for all users - used by stats APIs
     }
     
     if user.role == 'student':
@@ -70,7 +71,7 @@ def login():
     elif user.role == 'faculty':
         faculty_info = Faculty.query.filter_by(user_id=user.id).first()
         if faculty_info:
-            response_data['teacherId'] = faculty_info.id # frontend uses teacherId
+            response_data['teacherId'] = user.id_number  # Use id_number instead of faculty.id - this is what stats API expects
             response_data['isActive'] = faculty_info.is_active
             # department info for faculty if needed
             if user.department:
