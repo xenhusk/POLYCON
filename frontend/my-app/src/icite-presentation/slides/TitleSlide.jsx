@@ -42,15 +42,40 @@ const TitleSlide = () => {
         className="absolute top-1/2 right-[25vw] w-[4vw] h-[4vw] min-w-[30px] min-h-[30px] max-w-[60px] max-h-[60px] bg-blue-200 rounded-full opacity-25"
       />
 
+      {/* STI Logo - Bottom Left Corner */}
+      <motion.div
+        initial={{ opacity: 0, scale: 0.8 }}
+        animate={{ opacity: 1, scale: 1 }}
+        transition={{ duration: 0.8, delay: 0.4 }}
+        className="absolute bottom-[3vh] left-[3vw] z-20 w-[10vw] h-auto min-w-[80px] max-w-[150px] flex items-center justify-center"
+      >
+        <motion.img
+          src={`${process.env.PUBLIC_URL || ''}/sti-logo.png`}
+          alt="STI Logo"
+          initial={{ opacity: 0 }}
+          animate={{ opacity: 1 }}
+          transition={{ duration: 0.8, delay: 0.6 }}
+          className="w-full h-auto object-contain"
+          onError={(e) => {
+            console.error("STI Logo failed to load. Trying alternative path...");
+            if (e.target.src !== '/sti-logo.png') {
+              e.target.src = '/sti-logo.png';
+            } else {
+              e.target.style.display = 'none';
+            }
+          }}
+        />
+      </motion.div>
+
       {/* Safe zone padding for navigation controls */}
       <div className="relative z-10 w-full h-full flex items-center justify-center px-[clamp(40px,5vw,80px)] py-[clamp(40px,5vh,70px)]">
         <div className="w-full h-full max-w-[95vw] max-h-[90vh] grid grid-cols-1 lg:grid-cols-2 gap-[2vh] lg:gap-[2vw] items-center overflow-hidden">
-          {/* Left Side - Logos */}
+          {/* Left Side - POLYCON Logo */}
           <motion.div
             initial={{ opacity: 0, scale: 0.8 }}
             animate={{ opacity: 1, scale: 1 }}
             transition={{ duration: 0.8, delay: 0.2 }}
-            className="flex flex-col items-center justify-center gap-[2vh] order-2 lg:order-1 h-full"
+            className="flex items-center justify-center order-2 lg:order-1 h-full"
           >
             {/* POLYCON Logo Circle */}
             <div className="relative flex-shrink-0">
@@ -58,7 +83,7 @@ const TitleSlide = () => {
                 initial={{ opacity: 0, scale: 0.5 }}
                 animate={{ opacity: 1, scale: 1 }}
                 transition={{ duration: 1, delay: 0.4, type: "spring" }}
-                className="w-[22vw] h-[22vw] min-w-[160px] min-h-[160px] max-w-[280px] max-h-[280px] aspect-square bg-white rounded-full flex items-center justify-center shadow-2xl relative overflow-hidden p-[1.5vw]"
+                className="w-[30vw] h-[30vw] min-w-[200px] min-h-[200px] max-w-[400px] max-h-[400px] aspect-square bg-white rounded-full flex items-center justify-center shadow-2xl relative overflow-hidden p-[2vw]"
               >
                 <motion.img
                   src="/polycon-icon.png"
@@ -70,31 +95,6 @@ const TitleSlide = () => {
                 />
               </motion.div>
             </div>
-            {/* STI Logo */}
-            <motion.div
-              initial={{ opacity: 0, scale: 0.8 }}
-              animate={{ opacity: 1, scale: 1 }}
-              transition={{ duration: 0.8, delay: 0.8 }}
-              className="w-[18vw] h-auto min-w-[140px] max-w-[220px] flex items-center justify-center flex-shrink-0"
-            >
-              <motion.img
-                src={`${process.env.PUBLIC_URL || ''}/sti-logo.png`}
-                alt="STI Logo"
-                initial={{ opacity: 0 }}
-                animate={{ opacity: 1 }}
-                transition={{ duration: 0.8, delay: 1 }}
-                className="w-full h-auto object-contain"
-                onError={(e) => {
-                  console.error("STI Logo failed to load. Trying alternative path...");
-                  // Try alternative path
-                  if (e.target.src !== '/sti-logo.png') {
-                    e.target.src = '/sti-logo.png';
-                  } else {
-                    e.target.style.display = 'none';
-                  }
-                }}
-              />
-            </motion.div>
           </motion.div>
 
           {/* Right Side - Text Content */}
