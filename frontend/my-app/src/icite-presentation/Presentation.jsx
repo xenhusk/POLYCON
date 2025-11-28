@@ -12,6 +12,7 @@ import ResearchSolutionSlide from "./slides/ResearchSolutionSlide";
 import GeneralObjectivesSlide from "./slides/GeneralObjectivesSlide";
 import SpecificObjectivesSlide from "./slides/SpecificObjectivesSlide";
 import LiteraryReviewSlide from "./slides/LiteraryReviewSlide";
+import SDGAlignmentSlide from "./slides/SDGAlignmentSlide";
 import MethodologyTitleSlide from "./slides/MethodologyTitleSlide";
 import MethodologyPhases1_3Slide from "./slides/MethodologyPhases1_3Slide";
 import MethodologyPhases4_5Slide from "./slides/MethodologyPhases4_5Slide";
@@ -32,15 +33,16 @@ const slides = [
   { id: 6, component: GeneralObjectivesSlide },
   { id: 7, component: SpecificObjectivesSlide },
   { id: 8, component: LiteraryReviewSlide },
-  { id: 9, component: MethodologyTitleSlide },
-  { id: 10, component: MethodologyPhases1_3Slide },
-  { id: 11, component: MethodologyPhases4_5Slide },
-  { id: 12, component: MethodologyPhases6_7Slide },
-  { id: 13, component: ResultsTitleSlide },
-  { id: 14, component: ResultsExpertEvaluationSlide },
-  { id: 15, component: ResultsPSSUQChartSlide },
-  { id: 16, component: ConclusionSlide },
-  { id: 17, component: ThankYouSlide },
+  { id: 9, component: SDGAlignmentSlide },
+  { id: 10, component: MethodologyTitleSlide },
+  { id: 11, component: MethodologyPhases1_3Slide },
+  { id: 12, component: MethodologyPhases4_5Slide },
+  { id: 13, component: MethodologyPhases6_7Slide },
+  { id: 14, component: ResultsTitleSlide },
+  { id: 15, component: ResultsExpertEvaluationSlide },
+  { id: 16, component: ResultsPSSUQChartSlide },
+  { id: 17, component: ConclusionSlide },
+  { id: 18, component: ThankYouSlide },
 ];
 
 const IcitePresentation = () => {
