@@ -24,6 +24,7 @@ Sync Strategies:
 
 import os
 import sys
+import shutil
 import subprocess
 import argparse
 import psycopg2
@@ -31,6 +32,19 @@ from datetime import datetime, timedelta
 from typing import Dict, List, Optional
 import urllib.parse
 from pathlib import Path
+
+
+def _load_env_file(path: Path) -> None:
+    """Merge simple KEY=value lines into os.environ (same rules as database_config.env)."""
+    if not path.is_file():
+        return
+    with open(path, 'r', encoding='utf-8', errors='replace') as f:
+        for line in f:
+            line = line.strip()
+            if line and not line.startswith('#') and '=' in line:
+                key, value = line.split('=', 1)
+                os.environ[key.strip()] = value.strip()
+
 
 class SimplifiedDatabaseManager:
     """Simplified database management with direct SQL operations"""
@@ -49,16 +63,11 @@ class SimplifiedDatabaseManager:
     
     def load_config(self):
         """Load database configuration from environment and config files"""
-        # Try to load from config file
-        config_file = self.project_root / 'database_config.env'
-        if config_file.exists():
-            with open(config_file, 'r') as f:
-                for line in f:
-                    line = line.strip()
-                    if line and not line.startswith('#') and '=' in line:
-                        key, value = line.split('=', 1)
-                        os.environ[key.strip()] = value.strip()
-        
+        # Same credentials as Flask: backend/.env (not loaded automatically for standalone scripts)
+        _load_env_file(self.project_root / 'backend' / '.env')
+        # Optional overrides / production URL without touching the app .env
+        _load_env_file(self.project_root / 'database_config.env')
+
         # Database URLs
         # Construct local database URL from individual components
         local_user = os.getenv('LOCAL_DB_USER', 'postgres')
@@ -75,15 +84,17 @@ class SimplifiedDatabaseManager:
         self.production_config = self.parse_db_url(self.production_db_url) if self.production_db_url else None
     
     def parse_db_url(self, url: str) -> Optional[Dict]:
-        """Parse database URL into components"""
+        """Parse database URL into components (supports postgresql:// and postgresql+psycopg2://)."""
         try:
             parsed = urllib.parse.urlparse(url)
+            user = urllib.parse.unquote(parsed.username) if parsed.username else None
+            password = urllib.parse.unquote(parsed.password) if parsed.password else None
             return {
                 'host': parsed.hostname,
                 'port': parsed.port or 5432,
-                'database': parsed.path[1:],
-                'username': parsed.username,
-                'password': parsed.password,
+                'database': parsed.path.lstrip('/').split('?')[0],
+                'username': user,
+                'password': password,
                 'url': url
             }
         except Exception as e:
@@ -91,8 +102,44 @@ class SimplifiedDatabaseManager:
             return None
     
     def find_postgresql_path(self) -> Optional[str]:
-        """Find PostgreSQL installation path"""
+        """Find PostgreSQL client tools directory (directory containing psql)."""
+        psql_name = 'psql.exe' if os.name == 'nt' else 'psql'
+
+        for env_key in ('POSTGRESQL_BIN', 'PG_BIN'):
+            raw = os.environ.get(env_key, '').strip().strip('"')
+            if not raw:
+                continue
+            candidate = Path(raw)
+            if (candidate / psql_name).is_file():
+                return str(candidate)
+            nested = candidate / 'bin' / psql_name
+            if nested.is_file():
+                return str(candidate / 'bin')
+
+        which_psql = shutil.which('psql')
+        if which_psql:
+            return str(Path(which_psql).parent)
+
+        if os.name == 'nt':
+            def _version_sort_key(bin_dir: Path) -> int:
+                try:
+                    return int(bin_dir.parent.name)
+                except ValueError:
+                    return -1
+
+            for root in (
+                Path(r'C:\Program Files\PostgreSQL'),
+                Path(r'C:\Program Files (x86)\PostgreSQL'),
+            ):
+                if not root.is_dir():
+                    continue
+                bins = [p for p in root.glob('*/bin') if (p / psql_name).is_file()]
+                if bins:
+                    bins.sort(key=_version_sort_key, reverse=True)
+                    return str(bins[0])
+
         possible_paths = [
+            r"C:\Program Files\PostgreSQL\18\bin",
             r"C:\Program Files\PostgreSQL\17\bin",
             r"C:\Program Files\PostgreSQL\16\bin",
             r"C:\Program Files\PostgreSQL\15\bin",
@@ -100,6 +147,7 @@ class SimplifiedDatabaseManager:
             r"C:\Program Files\PostgreSQL\13\bin",
             r"C:\Program Files\PostgreSQL\12\bin",
             r"C:\Program Files\PostgreSQL\11\bin",
+            r"C:\Program Files (x86)\PostgreSQL\18\bin",
             r"C:\Program Files (x86)\PostgreSQL\17\bin",
             r"C:\Program Files (x86)\PostgreSQL\16\bin",
             r"C:\Program Files (x86)\PostgreSQL\15\bin",
@@ -108,22 +156,10 @@ class SimplifiedDatabaseManager:
             r"C:\Program Files (x86)\PostgreSQL\12\bin",
             r"C:\Program Files (x86)\PostgreSQL\11\bin",
         ]
-        
-        # Try to find in PATH first
-        try:
-            result = subprocess.run(['where', 'psql'], capture_output=True, text=True)
-            if result.returncode == 0:
-                psql_path = result.stdout.strip().split('\n')[0]
-                pg_path = os.path.dirname(psql_path)
-                return pg_path
-        except:
-            pass
-        
-        # Try predefined paths
         for path in possible_paths:
-            if os.path.exists(path) and os.path.exists(os.path.join(path, "psql.exe")):
+            if os.path.exists(path) and os.path.exists(os.path.join(path, psql_name)):
                 return path
-        
+
         return None
     
     def backup_database(self, target: str = 'local', tables: Optional[List[str]] = None) -> str:

@@ -14,6 +14,7 @@ eventlet
 google-generativeai
 google-cloud-storage
 pydub
+audioop-lts; python_version>='3.13'
 Pillow
 gunicorn
 apscheduler
