@@ -28,6 +28,21 @@ def format_created_at_for_api(created_datetime):
     else:
         return created_datetime.astimezone(timezone.utc).isoformat()
 
+
+def _unique_student_ids_preserve_order(student_ids):
+    """Remove duplicate student PKs from booking JSON (avoids double profiles / wrong speaker counts)."""
+    if not student_ids:
+        return []
+    seen = set()
+    out = []
+    for sid in student_ids:
+        if sid in seen:
+            continue
+        seen.add(sid)
+        out.append(sid)
+    return out
+
+
 booking_bp = Blueprint('booking_bp', __name__, url_prefix='/bookings')
 
 @booking_bp.route('/get_bookings', methods=['GET'])
@@ -95,7 +110,7 @@ def get_bookings():
         student_users = []
         student_profiles = []
         
-        for student_id in b.student_ids:
+        for student_id in _unique_student_ids_preserve_order(b.student_ids):
             if isinstance(student_id, int):
                 # Already a numeric ID
                 student_user = User.query.filter_by(id=student_id).first()
@@ -177,7 +192,7 @@ def get_all_bookings_admin():
         student_users = []
         student_profiles = []
         
-        for student_id in b.student_ids:
+        for student_id in _unique_student_ids_preserve_order(b.student_ids):
             if isinstance(student_id, int):
                 # Already a numeric ID
                 student_user = User.query.filter_by(id=student_id).first()
@@ -397,6 +412,8 @@ def create_booking():
 
     if not student_ids and data['studentIDs']: # Check if conversion resulted in empty list but original was not
         return jsonify({"error": "No valid student IDs could be processed from the input"}), 400
+
+    student_ids = _unique_student_ids_preserve_order(student_ids)
     
     try:
         # Generate a unique ID using UUID

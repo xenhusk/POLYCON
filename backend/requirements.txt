@@ -14,6 +14,7 @@ eventlet
 google-generativeai
 google-cloud-storage
 pydub
+imageio-ffmpeg>=0.5.0
 audioop-lts; python_version>='3.13'
 Pillow
 gunicorn

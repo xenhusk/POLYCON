@@ -24,6 +24,20 @@ const formatProgramWithSection = (student) => {
   return `${program} ${section}`;
 };
 
+/** Split comma-separated student id list and dedupe (same id twice should not add an extra speaker). */
+const parseUniqueStudentIds = (studentIds) => {
+  const raw = Array.isArray(studentIds)
+    ? studentIds
+    : String(studentIds || "").split(",");
+  return [
+    ...new Set(
+      raw
+        .map((id) => String(id).trim())
+        .filter((id) => id !== "")
+    ),
+  ];
+};
+
 const fetchUserDetails = async (idNumber) => {
   try {
     console.log(`Fetching user details for ID: ${idNumber}`);
@@ -117,7 +131,11 @@ const Session = () => {
           if (response.ok) {
             const teacherIdNum = data.teacher_id.split("/").pop();
             setTeacherId(teacherIdNum);
-            const studentIdNums = data.student_ids.map((id) => id.split("/").pop());
+            const studentIdNums = [
+              ...new Set(
+                data.student_ids.map((id) => String(id).split("/").pop().trim()).filter(Boolean)
+              ),
+            ];
             setStudentIds(studentIdNums.join(", "));
             console.log("Session teacherIdNum:", teacherIdNum);
             console.log("Session studentIdNums:", studentIdNums);
@@ -155,8 +173,10 @@ const Session = () => {
       if (teacherIDFromQuery) {
         setTeacherId(teacherIDFromQuery);
         fetchUserDetails(teacherIDFromQuery).then(setTeacherInfo);
-      }    if (studentIDsFromQuery) {
-        const studentIdArr = studentIDsFromQuery.split(",").map((id) => id.trim());
+      }          if (studentIDsFromQuery) {
+        const studentIdArr = parseUniqueStudentIds(
+          studentIDsFromQuery.split(",").map((id) => id.trim())
+        );
         setStudentIds(studentIdArr.join(", "));
         
         console.log("Student ID array:", studentIdArr);
@@ -291,18 +311,13 @@ const Session = () => {
     const formData = new FormData();
     formData.append("audio", audioBlob, "session-audio.webm");
 
-    // Calculate speaker count dynamically based on participants.
-    const teacherIdElement = teacherId.trim();
-    const studentIdsElement = studentIds.trim();
-    const studentIdsArray = studentIdsElement
-      .split(",")
-      .filter((id) => id.trim() !== "");
-
-    const expectedSpeakers = 1 + studentIdsArray.length; // Teacher + students
+    // Calculate speaker count: teacher + unique students (duplicate IDs in URL/booking must not increment).
+    const uniqueStudentIds = parseUniqueStudentIds(studentIds);
+    const expectedSpeakers = 1 + uniqueStudentIds.length; // Teacher + students
     formData.append("speaker_count", expectedSpeakers);
     formData.append("transcription_enabled", transcriptionEnabled);
 
-    console.log(`Calculated speaker count: ${expectedSpeakers}`);
+    console.log(`Calculated speaker count: ${expectedSpeakers} (unique students: ${uniqueStudentIds.length})`);
     console.log(`Transcription enabled: ${transcriptionEnabled}`);
 
     const response = await fetch(
@@ -379,10 +394,7 @@ const Session = () => {
       setSummary(generatedSummary);
       setProcessingProgress(80);
 
-      // Ensure student_ids is an array
-      let studentIdsArray = Array.isArray(studentIds)
-        ? studentIds
-        : studentIds.split(",").map((id) => id.trim());
+      const studentIdsArray = parseUniqueStudentIds(studentIds);
 
       const payload = {
         teacher_id: teacherId,
@@ -535,7 +547,7 @@ const Session = () => {
 
   const storeConsultation = async (transcription, summary, notes) => {
     const teacherIdElement = teacherId;
-    const studentIdsElement = studentIds.split(",").map((id) => id.trim());
+    const studentIdsElement = parseUniqueStudentIds(studentIds);
     try {
       const audioUploadResponse = await uploadAudio(audioBlob);
       const audioFilePath = audioUploadResponse.audioUrl;

@@ -71,9 +71,10 @@ def transcribe():
         speaker_count = int(request.form.get('speaker_count', 1))
         transcription_enabled = request.form.get('transcription_enabled', 'false').lower() == 'true'
 
-        # Save the raw audio file to a temporary directory
+        # Save under a unique name (browser often sends the same filename, e.g. session-audio.webm)
         temp_dir = tempfile.gettempdir()
-        raw_path = os.path.join(temp_dir, audio_file.filename)
+        safe_name = f"consultation_upload_{uuid.uuid4().hex}_{audio_file.filename or 'audio.webm'}"
+        raw_path = os.path.join(temp_dir, safe_name)
         audio_file.save(raw_path)
 
         # Convert the raw audio file and get the path of the converted file
@@ -155,6 +156,7 @@ def transcribe():
             "transcription_enabled": transcription_enabled
         })
     except Exception as e:
+        current_app.logger.exception("consultation transcribe failed")
         return jsonify({"error": str(e)}), 500
 
 @consultation_bp.route('/identify_roles', methods=['POST'])

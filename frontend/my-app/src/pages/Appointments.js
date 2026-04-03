@@ -1220,7 +1220,8 @@ function TeacherAppointments() {
   async function startSession(appointment) {
     const teacherID = localStorage.getItem("teacherID");
     // Use student.idNumber for the studentIDs query parameter
-    const studentIDs = Array.isArray(appointment.info) ? appointment.info.map((student) => student.idNumber) : [];
+    const studentIDsRaw = Array.isArray(appointment.info) ? appointment.info.map((student) => student.idNumber).filter(Boolean) : [];
+    const studentIDs = [...new Set(studentIDsRaw)];
 
     // Construct teacherInfo object for Session.js
     // Session.js expects 'name', 'profile_picture', 'department', and 'role'.
