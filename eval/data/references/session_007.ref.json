@@ -1,0 +1,25 @@
+{
+  "session_id": "007",
+  "source_set": 7,
+  "title": "Next.js App Router Migration Error",
+  "speaker_count": 2,
+  "transcription_enabled": true,
+  "participants": [
+    "Teacher",
+    "Student"
+  ],
+  "audio_file": "audio/session_007.m4a",
+  "structured_notes": {
+    "concern": "The STUDENT experienced broken navigation links (404 errors) while upgrading a project to the new App router.",
+    "action_taken": "The TEACHER reviewed the folder structure and identified a misunderstanding of the new directory-based routing conventions.",
+    "outcome": "The STUDENT learned that route files must be named `page.js` inside designated folders, and that components can now safely co-exist in the app directory.",
+    "remarks": "The STUDENT needs to adapt to the new framework patterns. Restructuring the folders will immediately fix the 404 errors."
+  },
+  "reference_transcript": "Teacher: How is the code update for your project going, Alex?\nStudent: It is difficult. I am trying to move from the old Next.js Pages router to the new App router. Now, my navigation links are completely broken.\nTeacher: The new App router changes how folders work. Show me your folder structure right now.\nStudent: I moved my 'about.js' file into the new 'app' folder, but going to the '/about' URL in my browser gives a 404 error.\nTeacher: In the App router, the folder name becomes the path, not the file name. You need to make a folder named 'about' and put a file named 'page.js' inside it.\nStudent: Oh, so the file must always be named 'page.js' to work as a page?\nTeacher: Yes, for it to be a public route. The same goes for your other pages. Your 'contact.js' should become a folder named 'contact' with a 'page.js' inside.\nStudent: What happens if I have components like a navigation bar? Can they stay in the app folder?\nTeacher: Yes, you can place components in the app folder now. Only files named 'page.js' or 'route.js' become accessible URLs. Everything else is ignored by the router.\nStudent: That makes the file structure much cleaner. I will reorganize the folders now. Thanks for clarifying that.",
+  "reference_summary": "The STUDENT struggled with 404 errors after moving files to the new App router. The TEACHER explained the new folder-based routing system requiring `page.js` files. The STUDENT will reorganize the project directory to fix the navigation.",
+  "metadata": {
+    "source": "Scopus Data-20260609T070025Z-3-001",
+    "dataset": "academic_consultation_scripts",
+    "dialogue_turns": 10
+  }
+}

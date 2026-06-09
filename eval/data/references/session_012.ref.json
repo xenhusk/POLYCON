@@ -1,0 +1,25 @@
+{
+  "session_id": "012",
+  "source_set": 12,
+  "title": "Structuring System Recommendations",
+  "speaker_count": 2,
+  "transcription_enabled": true,
+  "participants": [
+    "Teacher",
+    "Student"
+  ],
+  "audio_file": "audio/session_012.m4a",
+  "structured_notes": {
+    "concern": "The STUDENT was unsure how to properly format and write the recommendations section to meet academic standards.",
+    "action_taken": "The TEACHER instructed the STUDENT to link recommendations directly to existing system limitations and to provide actionable, technical solutions rather than vague ideas.",
+    "outcome": "The STUDENT will draft specific technical recommendations, such as integrating an external SMS API for queue notifications.",
+    "remarks": "Academic writing should be precise and useful for future developers. The STUDENT will prepare a draft for the next meeting."
+  },
+  "reference_transcript": "Student: Sir, I am writing the final chapter of my documentation. How should I write the recommendations section?\nTeacher: Your recommendations should address the limitations you found during testing. They show that you understand what the system still lacks. What is a feature you wanted to add but didn't have time for?\nStudent: I wanted to add an SMS notification feature when a user's queue number is near, but I only finished the web dashboard notifications.\nTeacher: Perfect. Write that as a recommendation for future developers. But be specific. Do not just say \"add SMS.\"\nStudent: How specific should I be?\nTeacher: Mention which technology or API they could use, like Twilio or a local SMS gateway, to achieve it. Explain briefly how it would connect to the existing system logic.\nStudent: So I should give clear technical suggestions, not just broad ideas?\nTeacher: Exactly. Clear, technical suggestions make your work much stronger. It provides a real roadmap. Add three specific technical recommendations based on your current limitations and show me the draft.\nStudent: I will draft the technical recommendations today. Thank you for the guidance.",
+  "reference_summary": "The STUDENT sought advice on writing the recommendations chapter. The TEACHER emphasized the importance of providing specific, technical suggestions based on the current system's limitations. The STUDENT will focus on technical clarity in the draft.",
+  "metadata": {
+    "source": "Scopus Data-20260609T070025Z-3-001",
+    "dataset": "academic_consultation_scripts",
+    "dialogue_turns": 9
+  }
+}

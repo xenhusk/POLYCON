@@ -1,0 +1,25 @@
+{
+  "session_id": "004",
+  "source_set": 4,
+  "title": "Vercel Deployment and Environment Variables",
+  "speaker_count": 2,
+  "transcription_enabled": true,
+  "participants": [
+    "Teacher",
+    "Student"
+  ],
+  "audio_file": "audio/session_004.m4a",
+  "structured_notes": {
+    "concern": "The STUDENT's deployed web application crashed because it could not connect to the database, resulting in a 500 Server Error.",
+    "action_taken": "The TEACHER found that the STUDENT misunderstood how to handle environment variables and accidentally pushed sensitive data to a public repository.",
+    "outcome": "The STUDENT learned to secure the `.env` file using `.gitignore` and manually input credentials into the hosting dashboard.",
+    "remarks": "This was a critical security lesson. The STUDENT must remove the exposed file from GitHub immediately before doing anything else."
+  },
+  "reference_transcript": "Student: Sir, my portfolio works fine on my computer, but when I deploy it on Vercel, the database connection fails. It gives a 500 Server Error.\nTeacher: A 500 error on deployment often means missing credentials. The server cannot talk to the database. Did you add your environment variables to Vercel?\nStudent: I pushed my `.env` file to my GitHub repository along with all my other code. Vercel should see it, right?\nTeacher: No, you must never push your `.env` file to GitHub for security reasons. It should be in your `.gitignore` file. You are exposing your database passwords to the public.\nStudent: Oh, I see. That is a big security risk. I will delete the `.env` file from my GitHub repository immediately.\nTeacher: Yes, please do that first. After it is removed, you need to enter those variables directly in the Vercel dashboard.\nStudent: Where do I find that in Vercel?\nTeacher: Go to your project settings, find the 'Environment Variables' section, and paste your database URL and any other keys there. Once you save them, you must trigger a new deployment.\nStudent: So Vercel injects those keys securely during the build process?\nTeacher: Exactly. That is the standard and safe way to handle secrets in web development.\nStudent: Understood. I will clean my GitHub history and reconfigure the Vercel settings right away.",
+  "reference_summary": "The STUDENT experienced a server error after deploying a project. The TEACHER explained that environment variables must be securely added to the hosting dashboard, not uploaded to GitHub. The STUDENT will secure the repository and reconfigure the settings.",
+  "metadata": {
+    "source": "Scopus Data-20260609T070025Z-3-001",
+    "dataset": "academic_consultation_scripts",
+    "dialogue_turns": 11
+  }
+}

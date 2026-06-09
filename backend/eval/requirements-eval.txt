@@ -1,0 +1,8 @@
+# Install from backend/: pip install -r eval/requirements-eval.txt
+jiwer>=3.0
+rouge-score>=0.1.2
+pandas>=2.0
+openpyxl>=3.1
+python-docx>=1.1
+openai>=1.0
+sentence-transformers>=2.2

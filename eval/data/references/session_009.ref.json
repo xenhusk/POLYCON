@@ -1,0 +1,25 @@
+{
+  "session_id": "009",
+  "source_set": 9,
+  "title": "Descriptive Analytics Visualization",
+  "speaker_count": 2,
+  "transcription_enabled": true,
+  "participants": [
+    "Teacher",
+    "Student"
+  ],
+  "audio_file": "audio/session_009.m4a",
+  "structured_notes": {
+    "concern": "The analytics dashboard charts were overcrowded and difficult to read because too many daily data points were displayed on an annual graph.",
+    "action_taken": "The TEACHER reviewed the UI design and suggested data aggregation techniques instead of removing data entirely.",
+    "outcome": "The STUDENT will aggregate the data by month for the default overview and add interactive drill-down filters for deeper daily analysis.",
+    "remarks": "Good UI requires clear data presentation. The STUDENT grasped the concept of summarizing data visually for better user experience."
+  },
+  "reference_transcript": "Teacher: Alex, how are the descriptive analytics coming along for the platform?\nStudent: I have the data pulling from the database, but the charts look very messy. I am trying to show all the data points for the whole year on one small graph.\nTeacher: That is too much information for one view. The chart will just look like a solid block of color. You need to simplify the view to make it readable.\nStudent: Should I just limit the query to the last 30 days and delete the rest?\nTeacher: Do not delete data, but group it. Group the data by month instead of showing every single day on the X-axis. This gives a broad overview of the year.\nStudent: That makes sense. But what if the user wants to see the specific days of a busy month?\nTeacher: Add a dropdown menu filter. When they select a specific month, the chart redraws to show the daily breakdown for just that month. It is called drill-down data.\nStudent: A monthly summary with a drill-down filter makes much more sense. It keeps the UI clean.\nTeacher: Exactly. Data visualization is about clarity, not just dumping numbers on a screen. Change your query logic to group the data first.\nStudent: I will rewrite the chart logic tonight. Thank you, Sir.",
+  "reference_summary": "The STUDENT struggled with messy and unreadable charts in the system's analytics dashboard. The TEACHER advised grouping the data by month and using filters to manage the visual clutter. The STUDENT will rewrite the chart logic for better clarity.",
+  "metadata": {
+    "source": "Scopus Data-20260609T070025Z-3-001",
+    "dataset": "academic_consultation_scripts",
+    "dialogue_turns": 10
+  }
+}

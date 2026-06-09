@@ -1,0 +1,25 @@
+{
+  "session_id": "013",
+  "source_set": 13,
+  "title": "Handling Git Merge Conflicts",
+  "speaker_count": 2,
+  "transcription_enabled": true,
+  "participants": [
+    "Teacher",
+    "Student"
+  ],
+  "audio_file": "audio/session_013.m4a",
+  "structured_notes": {
+    "concern": "The STUDENT encountered a Git merge conflict while collaborating with a partner and was afraid of losing data or breaking the repository.",
+    "action_taken": "The TEACHER explained the safe workflow for resolving conflicts locally using a code editor rather than resorting to dangerous force-push commands.",
+    "outcome": "The STUDENT learned to pull changes, review the highlighted conflicts in the editor, and manually select the correct code with their partner before committing.",
+    "remarks": "Collaboration requires careful version control and communication. The students will resolve the issue together safely."
+  },
+  "reference_transcript": "Student: Sir, my partner and I are having a big problem. We both edited the main layout file, and now GitHub won't let me push my code. It says there is a conflict.\nTeacher: This is a standard Git merge conflict. It happens when two people change the exact same lines of code. Do not panic.\nStudent: I am afraid I will delete my partner's work if I type the wrong command, or if I force the push.\nTeacher: Never use the force push command when collaborating. First, pull the latest code from the repository to your computer.\nStudent: Okay, I pulled it. The terminal says 'Automatic merge failed'.\nTeacher: That is expected. Now open the layout file in your code editor. The editor will highlight the conflicts. It will show your changes and your partner's changes side by side, separated by some symbols like `<<<<<<<`.\nStudent: Oh, I see the strange symbols. So I can just delete the symbols and pick which lines of code to keep?\nTeacher: Yes. Talk to your partner, decide which code is correct, edit the file so it looks right, save it, and then commit the fixed file. Communication is key here.\nStudent: We will sit together and resolve the highlighted conflicts now. It looks much simpler than I thought.",
+  "reference_summary": "The STUDENT was blocked by a Git merge conflict caused by overlapping edits with a partner. The TEACHER advised against force-pushing and guided the STUDENT on how to pull the code and manually resolve the conflicts in the editor. The STUDENT and their partner will collaborate to fix the file.",
+  "metadata": {
+    "source": "Scopus Data-20260609T070025Z-3-001",
+    "dataset": "academic_consultation_scripts",
+    "dialogue_turns": 9
+  }
+}

@@ -1,0 +1,145 @@
+{
+  "version": "1.0",
+  "generated_at": "2026-06-09T07:36:05.011370+00:00",
+  "source_archive": "Scopus Data-20260609T070025Z-3-001.zip",
+  "source_pdf": "SCOPUS DATA.pdf",
+  "session_count": 15,
+  "audio_format": "m4a",
+  "sessions": [
+    {
+      "session_id": "001",
+      "source_set": 1,
+      "title": "Real-Time Update Issues (Socket.io)",
+      "audio": "audio/session_001.m4a",
+      "reference": "references/session_001.ref.json",
+      "speaker_count": 2,
+      "dialogue_turns": 14
+    },
+    {
+      "session_id": "002",
+      "source_set": 2,
+      "title": "POS Inventory Relations (PostgreSQL)",
+      "audio": "audio/session_002.m4a",
+      "reference": "references/session_002.ref.json",
+      "speaker_count": 2,
+      "dialogue_turns": 12
+    },
+    {
+      "session_id": "003",
+      "source_set": 3,
+      "title": "AI Transcription Latency",
+      "audio": "audio/session_003.m4a",
+      "reference": "references/session_003.ref.json",
+      "speaker_count": 2,
+      "dialogue_turns": 12
+    },
+    {
+      "session_id": "004",
+      "source_set": 4,
+      "title": "Vercel Deployment and Environment Variables",
+      "audio": "audio/session_004.m4a",
+      "reference": "references/session_004.ref.json",
+      "speaker_count": 2,
+      "dialogue_turns": 11
+    },
+    {
+      "session_id": "005",
+      "source_set": 5,
+      "title": "Queueing System UI Optimization",
+      "audio": "audio/session_005.m4a",
+      "reference": "references/session_005.ref.json",
+      "speaker_count": 2,
+      "dialogue_turns": 10
+    },
+    {
+      "session_id": "006",
+      "source_set": 6,
+      "title": "Filtering Duplicate Data Logic",
+      "audio": "audio/session_006.m4a",
+      "reference": "references/session_006.ref.json",
+      "speaker_count": 2,
+      "dialogue_turns": 11
+    },
+    {
+      "session_id": "007",
+      "source_set": 7,
+      "title": "Next.js App Router Migration Error",
+      "audio": "audio/session_007.m4a",
+      "reference": "references/session_007.ref.json",
+      "speaker_count": 2,
+      "dialogue_turns": 10
+    },
+    {
+      "session_id": "008",
+      "source_set": 8,
+      "title": "Handling API Error Responses",
+      "audio": "audio/session_008.m4a",
+      "reference": "references/session_008.ref.json",
+      "speaker_count": 2,
+      "dialogue_turns": 9
+    },
+    {
+      "session_id": "009",
+      "source_set": 9,
+      "title": "Descriptive Analytics Visualization",
+      "audio": "audio/session_009.m4a",
+      "reference": "references/session_009.ref.json",
+      "speaker_count": 2,
+      "dialogue_turns": 10
+    },
+    {
+      "session_id": "010",
+      "source_set": 10,
+      "title": "Protecting API Routes with Middleware",
+      "audio": "audio/session_010.m4a",
+      "reference": "references/session_010.ref.json",
+      "speaker_count": 2,
+      "dialogue_turns": 9
+    },
+    {
+      "session_id": "011",
+      "source_set": 11,
+      "title": "Database Seeding for Testing",
+      "audio": "audio/session_011.m4a",
+      "reference": "references/session_011.ref.json",
+      "speaker_count": 2,
+      "dialogue_turns": 9
+    },
+    {
+      "session_id": "012",
+      "source_set": 12,
+      "title": "Structuring System Recommendations",
+      "audio": "audio/session_012.m4a",
+      "reference": "references/session_012.ref.json",
+      "speaker_count": 2,
+      "dialogue_turns": 9
+    },
+    {
+      "session_id": "013",
+      "source_set": 13,
+      "title": "Handling Git Merge Conflicts",
+      "audio": "audio/session_013.m4a",
+      "reference": "references/session_013.ref.json",
+      "speaker_count": 2,
+      "dialogue_turns": 9
+    },
+    {
+      "session_id": "014",
+      "source_set": 14,
+      "title": "Converting Excel Logic to Code",
+      "audio": "audio/session_014.m4a",
+      "reference": "references/session_014.ref.json",
+      "speaker_count": 2,
+      "dialogue_turns": 10
+    },
+    {
+      "session_id": "015",
+      "source_set": 15,
+      "title": "System Evaluation Metrics",
+      "audio": "audio/session_015.m4a",
+      "reference": "references/session_015.ref.json",
+      "speaker_count": 2,
+      "dialogue_turns": 9
+    }
+  ]
+}

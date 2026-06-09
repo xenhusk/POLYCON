@@ -1,0 +1,25 @@
+{
+  "session_id": "006",
+  "source_set": 6,
+  "title": "Filtering Duplicate Data Logic",
+  "speaker_count": 2,
+  "transcription_enabled": true,
+  "participants": [
+    "Teacher",
+    "Student"
+  ],
+  "audio_file": "audio/session_006.m4a",
+  "structured_notes": {
+    "concern": "The STUDENT's data import script was allowing duplicate records to be saved in the database due to variations in business names.",
+    "action_taken": "The TEACHER explained that checking by name alone is flawed due to typing variations and suggested data normalization.",
+    "outcome": "The STUDENT was told to use emails as unique keys and to enforce this with a database-level constraint.",
+    "remarks": "Ensuring high data quality is a priority for lead tracking. The STUDENT will update the import logic and database schema."
+  },
+  "reference_transcript": "Student: Sir, I wrote a script to import business leads for my project. But I keep getting duplicate entries in my database.\nTeacher: Duplicate data can ruin your system's accuracy. How are you checking if a business already exists before you save it?\nStudent: I have an IF statement that checks if the business name is the same. If it is different, I save it to the table.\nTeacher: Names can be typed differently. 'Hotel ABC', 'hotel abc', and 'Hotel ABC Inc.' would save as three different places. You need a better unique identifier.\nStudent: What should I use instead? Sometimes the names are all I have from the web scrape.\nTeacher: If you only have names, you must format them first. Convert everything to lowercase and remove spaces and punctuation before comparing. But ideally, use their official business email or their exact phone number as the unique key.\nStudent: I can scrape the emails. That is much more specific than the business name.\nTeacher: Yes. Also, add a 'UNIQUE' constraint to that email column directly in your PostgreSQL database. This prevents duplicates at the database level, even if your code makes a mistake.\nStudent: So the database will automatically reject the duplicate entry?\nTeacher: Exactly. It is a safety net. Update your code to handle the rejection error gracefully.\nStudent: I will use the email address as the unique check and update my database rules. Thank you, Sir.",
+  "reference_summary": "The STUDENT had an issue with duplicate entries in a database. The TEACHER advised against using simple name checks and suggested using unique identifiers like emails, backed by database constraints to prevent duplicate insertions. The STUDENT will apply these strict rules.",
+  "metadata": {
+    "source": "Scopus Data-20260609T070025Z-3-001",
+    "dataset": "academic_consultation_scripts",
+    "dialogue_turns": 11
+  }
+}

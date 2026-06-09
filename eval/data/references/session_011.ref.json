@@ -1,0 +1,25 @@
+{
+  "session_id": "011",
+  "source_set": 11,
+  "title": "Database Seeding for Testing",
+  "speaker_count": 2,
+  "transcription_enabled": true,
+  "participants": [
+    "Teacher",
+    "Student"
+  ],
+  "audio_file": "audio/session_011.m4a",
+  "structured_notes": {
+    "concern": "The application lacked test data during evaluation, and the STUDENT was wasting significant time doing manual data entry after every database reset.",
+    "action_taken": "The TEACHER recommended automating the data population process with a database seeding script.",
+    "outcome": "The STUDENT will create a JSON file of dummy data and a script to automatically populate the PostgreSQL database.",
+    "remarks": "Automation improves development speed and testing quality. The STUDENT understood the value of seeding."
+  },
+  "reference_transcript": "Teacher: Alex, when I tested your system yesterday, there was no data to look at. Testing an empty system is difficult because I cannot see how the tables and charts behave.\nStudent: I am sorry, Sir. I usually type in test data manually through the frontend every time I rebuild the database, but it takes too long to do it every day.\nTeacher: You should not do that manually. It wastes your development time. You need to write a database seeding script.\nStudent: What does a seeding script do?\nTeacher: It is a separate script that automatically inserts dummy data into your PostgreSQL tables when you run it from the terminal. It creates a populated state instantly.\nStudent: Can I just use a JSON file with sample data and loop through it in Node.js to insert the records?\nTeacher: Yes, that is a perfect approach. Create a JSON file with 20 sample users and a few dozen transactions. Write a small script to read that file and run the `INSERT` commands.\nStudent: That will make testing much faster. I will build the seed script today and include it in the project folder.\nTeacher: Make sure you also add a command to run the seed script easily.",
+  "reference_summary": "The TEACHER noted the difficulty of evaluating an empty system. The STUDENT admitted to wasting time manually entering test data. They agreed that the STUDENT will write a database seeding script to automatically inject dummy data, improving the testing process.",
+  "metadata": {
+    "source": "Scopus Data-20260609T070025Z-3-001",
+    "dataset": "academic_consultation_scripts",
+    "dialogue_turns": 9
+  }
+}

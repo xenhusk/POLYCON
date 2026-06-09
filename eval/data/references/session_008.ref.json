@@ -1,0 +1,25 @@
+{
+  "session_id": "008",
+  "source_set": 8,
+  "title": "Handling API Error Responses",
+  "speaker_count": 2,
+  "transcription_enabled": true,
+  "participants": [
+    "Teacher",
+    "Student"
+  ],
+  "audio_file": "audio/session_008.m4a",
+  "structured_notes": {
+    "concern": "The backend server was crashing and requiring manual restarts due to unhandled form submission errors.",
+    "action_taken": "The TEACHER inspected the Express.js routes and found missing error-handling logic around database queries.",
+    "outcome": "The STUDENT was instructed to implement `try-catch` blocks and send proper HTTP 500 error status codes to the client instead of allowing the app to terminate.",
+    "remarks": "Proper error handling is crucial for system stability and user experience. The STUDENT will update all API routes."
+  },
+  "reference_transcript": "Student: Sir, my Express backend crashes sometimes when a user submits a form. I have to go to the terminal and restart the whole server manually.\nTeacher: A server crash usually means a critical error is not being caught properly by your code. Let's look at your API route for the form.\nStudent: Here it is. It takes the form data, validates it, and inserts it into the database using a simple query.\nTeacher: I see the problem. You do not have a `try-catch` block around your database code. If the database fails to respond, or if the data is bad, the error goes up and breaks the entire Node app.\nStudent: How should I write it so the app stays alive?\nTeacher: Wrap your database query in a `try` block. In the `catch` block, you write the code to handle the failure. Send a simple 500 error message back to the frontend.\nStudent: So instead of crashing, it just tells the user something went wrong?\nTeacher: Exactly. You use `res.status(500).json()` to return an error object. Then your frontend can show a nice error message to the user, and your server keeps running for everyone else.\nStudent: I will wrap all my database calls in try-catch blocks immediately to keep the server stable.",
+  "reference_summary": "The STUDENT reported that their Express server kept crashing on form submissions. The TEACHER identified that uncaught database errors were causing the shutdown. The STUDENT will add `try-catch` blocks to ensure the server remains online even if an operation fails.",
+  "metadata": {
+    "source": "Scopus Data-20260609T070025Z-3-001",
+    "dataset": "academic_consultation_scripts",
+    "dialogue_turns": 9
+  }
+}

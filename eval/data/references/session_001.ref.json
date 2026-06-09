@@ -1,0 +1,25 @@
+{
+  "session_id": "001",
+  "source_set": 1,
+  "title": "Real-Time Update Issues (Socket.io)",
+  "speaker_count": 2,
+  "transcription_enabled": true,
+  "participants": [
+    "Teacher",
+    "Student"
+  ],
+  "audio_file": "audio/session_001.m4a",
+  "structured_notes": {
+    "concern": "The STUDENT's system was failing to display real-time updates on the frontend without a manual page refresh, despite successfully saving data to the database.",
+    "action_taken": "The TEACHER guided the STUDENT through a step-by-step code review of both the client-side and server-side files. They checked the browser console and identified a mismatched event name in the Socket.io setup, as well as a missing CORS configuration.",
+    "outcome": "The bug was successfully identified. The STUDENT was instructed to match the event listener names exactly and to configure the backend CORS policy to allow the frontend's specific port to connect.",
+    "remarks": "The STUDENT understood the core logic but needs to pay closer attention to naming conventions and basic network security policies. A follow-up meeting is scheduled for Friday."
+  },
+  "reference_transcript": "Teacher: Good afternoon, Alex. Please take a seat. How is the progress on your project so far?\nStudent: Good afternoon, Sir. The main system is mostly done. The data saves to my database without any issues. However, I am having trouble with the real-time update feature. The frontend interface does not update unless I manually refresh the page.\nTeacher: I see. Real-time features can be tricky. Are you using WebSockets to handle this?\nStudent: Yes, I am using Socket.io to connect my Node backend to my Next.js frontend. The backend terminal shows that the server emits the event, but the browser console on the client side does not show anything. It just does not catch the data.\nTeacher: Let us look into it step by step. First, please show me your client-side code. Let's check the event listeners.\nStudent: Here is the component file.\nTeacher: Ah, look right here. Your frontend is listening for an event called `updateData`. Now, let us open your server file where the socket emits the data. Do you see the difference?\nStudent: Oh, it says `dataUpdated`. The names do not match. I completely missed that naming mismatch while typing.\nTeacher: That is a very common mistake. They need to match exactly for the socket to catch the trigger. Let me ask you another thing: have you checked your network settings? Since your Next.js frontend and your backend run on different local ports, you need to configure your CORS policy in the backend.\nStudent: What do I need to put in the CORS policy? I have not set it up yet.\nTeacher: You need to explicitly allow your frontend's specific port, which is usually port 3000, to communicate with your backend. If you do not do this, the browser will block the socket connection for security reasons.\nStudent: I understand now. I did not realize that would block the socket connection entirely. I will fix the event names and add the CORS configuration right now.\nTeacher: Good. Make those two adjustments and run a full test. Let's review the final output during our next scheduled meeting on Friday.\nStudent: Understood. I have noted down the fixes. Thank you for your time and help, Sir.",
+  "reference_summary": "The STUDENT consulted the TEACHER regarding a malfunctioning real-time update feature in their system. Through a collaborative code review, they pinpointed simple event naming mismatches and missing network permissions that were blocking the connection. The STUDENT left the consultation with a clear, actionable solution.",
+  "metadata": {
+    "source": "Scopus Data-20260609T070025Z-3-001",
+    "dataset": "academic_consultation_scripts",
+    "dialogue_turns": 14
+  }
+}

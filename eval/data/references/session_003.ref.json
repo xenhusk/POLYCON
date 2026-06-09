@@ -1,0 +1,25 @@
+{
+  "session_id": "003",
+  "source_set": 3,
+  "title": "AI Transcription Latency",
+  "speaker_count": 2,
+  "transcription_enabled": true,
+  "participants": [
+    "Teacher",
+    "Student"
+  ],
+  "audio_file": "audio/session_003.m4a",
+  "structured_notes": {
+    "concern": "The AI transcription feature had a high delay (up to 10 seconds), causing a poor user experience during live consultations.",
+    "action_taken": "The TEACHER investigated the data flow and found that audio was sent in large, complete files instead of streams.",
+    "outcome": "The STUDENT was advised to update the API call and use the browser's MediaRecorder with a specific timeslice to process audio in continuous, small chunks.",
+    "remarks": "Implementing streaming will significantly improve system speed. The STUDENT will review the API docs and test the new latency."
+  },
+  "reference_transcript": "Student: Sir, I need help with the consultation system we are building. The AI transcription takes too long to load on the screen.\nTeacher: How long is the delay between the speech and the text showing up?\nStudent: Sometimes it takes almost ten seconds. It makes the system feel very slow during a live meeting.\nTeacher: Are you sending the whole audio file at once, or are you streaming it in chunks?\nStudent: I think the API waits for the user to stop speaking, saves a temporary file, and then sends it to the AI.\nTeacher: That is the problem right there. You are processing data in batches instead of real-time. You need to change the API request to use audio streaming.\nStudent: How do I enable audio streaming in the frontend?\nTeacher: You can use the MediaRecorder API in the browser. Set the `timeslice` property to something small, like 1000 milliseconds. This will send data every one second.\nStudent: So it sends one second of audio continuously instead of waiting for the person to finish talking?\nTeacher: Yes. The AI will process these small chunks and return text much faster. The delay should drop to one or two seconds.\nStudent: That will make a huge difference. I will check the API documentation for streaming options and update the MediaRecorder settings.\nTeacher: Good. Test it with a fake meeting scenario and record the new latency times. We will compare them.",
+  "reference_summary": "The STUDENT reported a ten-second delay in the AI transcription tool. The TEACHER identified that sending whole audio files was causing the lag and recommended switching to audio streaming using the MediaRecorder API. The STUDENT will implement this fix to improve real-time performance.",
+  "metadata": {
+    "source": "Scopus Data-20260609T070025Z-3-001",
+    "dataset": "academic_consultation_scripts",
+    "dialogue_turns": 12
+  }
+}

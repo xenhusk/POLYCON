@@ -1,0 +1,25 @@
+{
+  "session_id": "005",
+  "source_set": 5,
+  "title": "Queueing System UI Optimization",
+  "speaker_count": 2,
+  "transcription_enabled": true,
+  "participants": [
+    "Teacher",
+    "Student"
+  ],
+  "audio_file": "audio/session_005.m4a",
+  "structured_notes": {
+    "concern": "The queueing kiosk UI experienced heavy flashing and lag because the entire page re-rendered when a new number was added.",
+    "action_taken": "The TEACHER analyzed the React state management and found the state was placed too high in the component tree without proper isolation.",
+    "outcome": "The STUDENT was instructed to isolate state changes to smaller, specific components and ensure unique `key` props were used for list items.",
+    "remarks": "UI optimization is vital for public-facing office kiosks. Refactoring the components will solve the visual glitch and improve performance."
+  },
+  "reference_transcript": "Teacher: Let's talk about the automated queueing system you are building for the kiosk. How is the interface performing?\nStudent: The core logic works, but when the line gets long, the screen flashes every time a new number is added. It is very distracting for the users in the office.\nTeacher: The flashing means the whole React component is re-rendering completely instead of just updating the new item. Are you storing the queue list in a main state that triggers a full page refresh?\nStudent: Yes, I put the state at the very top of my component tree so the header and the footer can also access the current queue count.\nTeacher: That explains it. Every time the queue state changes, React redraws the header, the footer, and the entire list. You need to isolate the state.\nStudent: How do I isolate it if multiple parts of the screen need the data?\nTeacher: You can use a state management tool, or simply pass the total count as a separate prop, while keeping the main list state localized to the specific component that displays the numbers.\nStudent: Oh, so I break the layout into smaller components, and only the list component re-renders when a new number arrives.\nTeacher: Correct. Also, make sure you are using unique `key` props for each item in the list so React knows exactly which element to add without redrawing the others.\nStudent: I will break down the layout and check my keys. That should stop the full screen from flashing.",
+  "reference_summary": "The STUDENT noticed bad visual flashing in the kiosk interface of a queueing system. The TEACHER pointed out that improper state management in React was causing full-page re-renders. The STUDENT will restructure the components to ensure only the necessary parts of the screen update.",
+  "metadata": {
+    "source": "Scopus Data-20260609T070025Z-3-001",
+    "dataset": "academic_consultation_scripts",
+    "dialogue_turns": 10
+  }
+}

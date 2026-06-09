@@ -1,0 +1,25 @@
+{
+  "session_id": "010",
+  "source_set": 10,
+  "title": "Protecting API Routes with Middleware",
+  "speaker_count": 2,
+  "transcription_enabled": true,
+  "participants": [
+    "Teacher",
+    "Student"
+  ],
+  "audio_file": "audio/session_010.m4a",
+  "structured_notes": {
+    "concern": "The backend API was exposed, allowing unauthenticated users to modify or delete database records directly by bypassing the frontend interface.",
+    "action_taken": "The TEACHER explained the necessity of securing backend routes independent of frontend UI restrictions to prevent unauthorized access.",
+    "outcome": "The STUDENT was tasked with writing custom middleware to verify authentication tokens before allowing the route logic to execute.",
+    "remarks": "Security must always be handled on the server side. The STUDENT will prioritize this fix immediately."
+  },
+  "reference_transcript": "Student: Sir, I finished the login feature, but I realized something bad. Anyone can type the API URL directly in their browser or use a tool to delete data, even if they are not logged in.\nTeacher: That is a major security flaw. Your frontend might hide the delete buttons, but your backend API routes are still fully exposed to the public. You need middleware.\nStudent: How does middleware fix this exposure?\nTeacher: Middleware is a function that runs before your main route code. You write a function to check if the incoming request has a valid authentication token in its headers.\nStudent: And if the token is missing or invalid?\nTeacher: The middleware stops the request right there. It sends a '401 Not Authorized' response and never lets the code reach your database.\nStudent: So I just add this function in front of all my delete and update routes?\nTeacher: Exactly. Protect all routes that modify data. The frontend is just for display; true security must be enforced on the backend.\nStudent: I will write the token validation function and apply it to my routes right now.",
+  "reference_summary": "The STUDENT discovered a severe vulnerability where backend API routes could be accessed without logging in. The TEACHER explained the concept of middleware to verify user tokens. The STUDENT will implement this security layer to protect the application's data.",
+  "metadata": {
+    "source": "Scopus Data-20260609T070025Z-3-001",
+    "dataset": "academic_consultation_scripts",
+    "dialogue_turns": 9
+  }
+}

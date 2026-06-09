@@ -1,0 +1,36 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "title": "POLYCON eval session reference",
+  "type": "object",
+  "required": [
+    "session_id",
+    "speaker_count",
+    "transcription_enabled",
+    "structured_notes",
+    "reference_transcript",
+    "reference_summary",
+    "audio_file"
+  ],
+  "properties": {
+    "session_id": { "type": "string", "pattern": "^[0-9]{3}$" },
+    "source_set": { "type": "integer", "minimum": 1 },
+    "title": { "type": "string" },
+    "speaker_count": { "type": "integer", "minimum": 1 },
+    "transcription_enabled": { "type": "boolean" },
+    "participants": { "type": "array", "items": { "type": "string" } },
+    "audio_file": { "type": "string" },
+    "structured_notes": {
+      "type": "object",
+      "required": ["concern", "action_taken", "outcome", "remarks"],
+      "properties": {
+        "concern": { "type": "string", "minLength": 1 },
+        "action_taken": { "type": "string", "minLength": 1 },
+        "outcome": { "type": "string", "minLength": 1 },
+        "remarks": { "type": "string" }
+      }
+    },
+    "reference_transcript": { "type": "string", "minLength": 1 },
+    "reference_summary": { "type": "string", "minLength": 1 },
+    "metadata": { "type": "object" }
+  }
+}

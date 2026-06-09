@@ -1,0 +1,25 @@
+{
+  "session_id": "015",
+  "source_set": 15,
+  "title": "System Evaluation Metrics",
+  "speaker_count": 2,
+  "transcription_enabled": true,
+  "participants": [
+    "Teacher",
+    "Student"
+  ],
+  "audio_file": "audio/session_015.m4a",
+  "structured_notes": {
+    "concern": "The STUDENT needed guidance on how to present system evaluation data effectively and honestly for their final academic defense.",
+    "action_taken": "The TEACHER explained how to contextualize the System Usability Scale (SUS) score and visually represent the data for the panel.",
+    "outcome": "The STUDENT will calculate the final score, create bar charts, and transparently include negative feedback to support their future recommendations.",
+    "remarks": "Honesty in system evaluation shows academic maturity and a deep understanding of software iteration. The STUDENT is ready to finalize the presentation slides."
+  },
+  "reference_transcript": "Student: Sir, we are preparing for our final system presentation. How should we present our user testing results?\nTeacher: You need clear, objective metrics. Do not just stand there and say \"the users liked it.\" What evaluation tool did you use for the testing?\nStudent: We used the System Usability Scale (SUS) questionnaire for our 30 test users. We have all the raw scores in a spreadsheet.\nTeacher: Good. Calculate the final average SUS score. If it is above 68, your system is considered usable by industry standards. Show a bar chart breaking down the scores.\nStudent: I will make a chart for the presentation. Should we mention the negative feedback too, or hide it?\nTeacher: Absolutely mention it. Mentioning user struggles shows you did a real, honest evaluation. No system is perfect on the first version.\nStudent: Won't the panel subtract points if we admit the system has flaws?\nTeacher: Not if you handle it correctly. Use the negative feedback to explain your future recommendations chapter. It shows you know how to iterate and improve the software.\nStudent: I see. I will prepare the charts and list the negative points as areas for future improvement. Thank you for all your help, Sir.",
+  "reference_summary": "The STUDENT asked for advice on presenting final testing results. The TEACHER instructed them to use clear SUS metrics, visual charts, and to embrace negative feedback as a bridge to system recommendations. The STUDENT will update the presentation slides accordingly to ensure a strong defense.",
+  "metadata": {
+    "source": "Scopus Data-20260609T070025Z-3-001",
+    "dataset": "academic_consultation_scripts",
+    "dialogue_turns": 9
+  }
+}

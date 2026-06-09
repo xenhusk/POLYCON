@@ -1,0 +1,25 @@
+{
+  "session_id": "002",
+  "source_set": 2,
+  "title": "POS Inventory Relations (PostgreSQL)",
+  "speaker_count": 2,
+  "transcription_enabled": true,
+  "participants": [
+    "Teacher",
+    "Student"
+  ],
+  "audio_file": "audio/session_002.m4a",
+  "structured_notes": {
+    "concern": "The STUDENT struggled to design the database relations between inventory stock and customer debt, resulting in missing itemized records.",
+    "action_taken": "The TEACHER explained how to use a junction table in PostgreSQL to track credit purchases properly without cluttering the main inventory table.",
+    "outcome": "The STUDENT learned to create a `credit_transactions` table to link customers and items cleanly, and was advised to use database indexing for performance.",
+    "remarks": "The database structure will be much more stable and provide better transaction history for the users."
+  },
+  "reference_transcript": "Teacher: Have a seat, Alex. How is the retail management system coming along?\nStudent: The basic POS is working, Sir. But I am confused about linking the inventory table with the debt management table in PostgreSQL.\nTeacher: Let us review the process. What exactly happens in the system when a customer buys items on credit?\nStudent: The stock quantity goes down immediately. But I do not know how to record the exact items they owe money for in a clean way. Right now, it just shows a total debt amount.\nTeacher: That can cause issues later if a customer asks for an itemized receipt of their debt. You need a junction table in your database.\nStudent: A junction table? How does that work in this case?\nTeacher: Let us call it `credit_transactions`. It should connect the `customer_id`, the `item_id`, the `quantity`, and the `transaction_date`. This keeps your main inventory clean while saving the exact details of the debt.\nStudent: That makes sense. It separates the physical stock records from the payment status records.\nTeacher: Exactly. This way, if someone pays half their debt, you can update the specific transaction status. Draft the new PostgreSQL schema using this concept.\nStudent: Will this make the queries slower if I need to load a lot of customer records at once?\nTeacher: Not if you index the primary and foreign keys properly. Add indexes to the `customer_id` in your new table, and it will be very fast.\nStudent: I will write down the new tables now and draw the connections. Thank you, Sir.",
+  "reference_summary": "The STUDENT needed help linking inventory to debt records. The TEACHER explained the concept of a junction table and indexing. The STUDENT now knows how to restructure the database and will provide an updated design for review.",
+  "metadata": {
+    "source": "Scopus Data-20260609T070025Z-3-001",
+    "dataset": "academic_consultation_scripts",
+    "dialogue_turns": 12
+  }
+}

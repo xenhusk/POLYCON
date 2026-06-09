@@ -1,0 +1,25 @@
+{
+  "session_id": "014",
+  "source_set": 14,
+  "title": "Converting Excel Logic to Code",
+  "speaker_count": 2,
+  "transcription_enabled": true,
+  "participants": [
+    "Teacher",
+    "Student"
+  ],
+  "audio_file": "audio/session_014.m4a",
+  "structured_notes": {
+    "concern": "The STUDENT was overwhelmed trying to convert complex, nested Excel formulas into code logic for an automation project.",
+    "action_taken": "The TEACHER recommended breaking down the complex logic into smaller, manageable, and testable helper functions.",
+    "outcome": "The STUDENT will write separate functions for date calculation and fee multiplication to simplify the code architecture and ensure accuracy.",
+    "remarks": "Modular programming reduces errors when translating business logic. The STUDENT feels more confident tackling the task."
+  },
+  "reference_transcript": "Teacher: How is your project going, Alex? The workflow automation app.\nStudent: It is going well. But my supervisor gave me a huge Excel sheet with complicated formulas, and I need to recreate that logic in my system's code.\nTeacher: Excel formulas can look intimidating when you try to turn them into code. Break it down. What does the main formula actually calculate?\nStudent: It calculates a penalty fee if a document is submitted past a deadline, based on the number of late days and the type of document.\nTeacher: Do not try to write one giant function to do all of that. Create a small helper function that just calculates the days between two dates. Test that first.\nStudent: And then use that result for the next part?\nTeacher: Yes. Then create another function that applies the specific fee multiplier based on the document type. Keep the steps separate.\nStudent: Building small, separate functions sounds much easier than translating a nested Excel formula all at once.\nTeacher: Exactly. It is called modular logic. Test each small function individually. It makes debugging much easier if the final calculation is wrong.\nStudent: I will start by writing the date calculation function today. Thank you for the advice.",
+  "reference_summary": "The STUDENT struggled to translate complex Excel formulas into application code. The TEACHER suggested a modular approach: breaking the formula into small, testable helper functions rather than one giant block of code. The STUDENT will use this strategy to handle the logic safely.",
+  "metadata": {
+    "source": "Scopus Data-20260609T070025Z-3-001",
+    "dataset": "academic_consultation_scripts",
+    "dialogue_turns": 10
+  }
+}
